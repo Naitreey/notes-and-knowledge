@@ -1,0 +1,14 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+SIZE	sort_demo.c	3;"	d	file:
+insertion_sort	insertion_sort.c	/^void insertion_sort(int * arr, int n) {$/;"	f
+main	sort_demo.c	/^int main(int argc, char *argv[]) {$/;"	f
+merge	merge_sort.c	/^static void merge(int * arr, int start, int middle, int end) {$/;"	f	file:
+merge_sort	merge_sort.c	/^void merge_sort(int * arr, int n) {$/;"	f
+real_merge_sort	merge_sort.c	/^static void real_merge_sort(int * arr, int start, int end) {$/;"	f	file:
+selection_sort	selection_sort.c	/^void selection_sort(int * arr, int n) {$/;"	f
+sort	sort.c	/^void sort(int * arr, int n, char * method) {$/;"	f

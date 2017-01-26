@@ -1,0 +1,800 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 9.0' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       157,          7]
+NotebookDataLength[     25647,        791]
+NotebookOptionsPosition[     20116,        630]
+NotebookOutlinePosition[     23062,        705]
+CellTagsIndexPosition[     22988,        700]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+
+Cell[CellGroupData[{
+Cell["Random Knowledge", "Subtitle",
+ CellChangeTimes->{{3.6181877665378757`*^9, 3.618187773694562*^9}}],
+
+Cell[CellGroupData[{
+
+Cell[TextData[StyleBox["Memoization",
+ FontFamily->"Corbel"]], "Section",
+ CellChangeTimes->{{3.606792413782609*^9, 3.6067924166266985`*^9}},
+ CellTags->"memoization"],
+
+Cell["Example:", "Text",
+ CellChangeTimes->{{3.6067924403790064`*^9, 3.606792442847971*^9}}],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"f", "[", "i_", "]"}], ":=", 
+  RowBox[{
+   RowBox[{"f", "[", "i", "]"}], "=", "rhs"}]}]], "Input",
+ CellChangeTimes->{{3.6067924453793325`*^9, 3.6067924673034906`*^9}}],
+
+Cell["\<\
+\:5982\:679c\:4e00\:4e2a\:7a0b\:5e8f\:53ef\:80fd\:53cd\:590d\:8c03\:7528\:5df2\
+\:7ecf\:7b97\:5f97\:7684\:7ed3\:679c, \:5c31\:53ef\:4ee5\:4f7f\:7528\:8fd9\
+\:4e2a\:6280\:5de7.\
+\>", "Text",
+ CellChangeTimes->{{3.606792481976884*^9, 3.606792494040599*^9}}],
+
+Cell["\:89e3\:91ca:", "Text",
+ CellChangeTimes->{{3.6067925268249426`*^9, 3.6067925273093615`*^9}}],
+
+Cell[TextData[{
+ Cell[BoxData[
+  RowBox[{"f", "[", "i", "]"}]],
+  FormatType->"InputForm"],
+ " \:5b58\:50a8\:6240\:6709\:9047\:5230\:8fc7\:7684 ",
+ Cell[BoxData["rhs"],
+  FormatType->"InputForm"],
+ " \:503c. \:5728\:9047\:5230\:76f8\:540c\:7684 ",
+ Cell[BoxData[
+  RowBox[{"f", "[", "i_", "]"}]],
+  FormatType->"InputForm"],
+ " \:5339\:914d\:8868\:8fbe\:5f0f\:65f6, \:53ea\:6709\:7b2c\:4e00\:6b21\:9700\
+\:8981\:8ba1\:7b97 ",
+ Cell[BoxData["rhs"],
+  FormatType->"InputForm"],
+ " , \:4e4b\:540e\:76f4\:63a5\:66ff\:6362 ",
+ Cell[BoxData[
+  RowBox[{"f", "[", "i", "]"}]],
+  FormatType->"InputForm"],
+ " \:4e2d\:5b58\:50a8\:7684\:7ed3\:679c. "
+}], "Text",
+ CellChangeTimes->{{3.606792531653434*^9, 3.6067926010733156`*^9}, {
+   3.6067926444834347`*^9, 3.6067928784355154`*^9}, {3.6067932576692514`*^9, 
+   3.606793327715952*^9}, {3.6067935785902076`*^9, 3.606793608389826*^9}, {
+   3.6067936822328873`*^9, 3.606793889293256*^9}, 3.6067941346071644`*^9}]
+}, Closed]],
+
+Cell[CellGroupData[{
+
+Cell[TextData[Cell[BoxData[
+ FormBox["$", TraditionalForm]]]], "Section",
+ CellChangeTimes->{{3.606801896592425*^9, 3.6068019386747074`*^9}, 
+   3.606802130583249*^9}],
+
+Cell[TextData[{
+ Cell[BoxData[
+  FormBox["$", TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " is probably the only non-alphanumeric ascii character without a special \
+meaning in Mathematica and thus the only one you could use as a delimiter for \
+various parts within a variable name."
+}], "Text",
+ CellChangeTimes->{{3.606801946855173*^9, 3.6068019635285854`*^9}}],
+
+Cell[TextData[{
+ "Because it is so unique, it is also used internally for the same purpose, \
+e.g. ",
+ Cell[BoxData[
+  FormBox["Module", TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " and ",
+ Cell[BoxData[
+  FormBox["Unique", TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " will generate variable names ending in ",
+ Cell[BoxData[
+  FormBox["$", TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " + an arbitrary integer. In some cases, also ",
+ Cell[BoxData[
+  FormBox["Function", TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " will generate variable names ending in ",
+ Cell[BoxData[
+  FormBox["$", TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " for its arguments."
+}], "Text",
+ CellChangeTimes->{{3.6068019792958856`*^9, 3.606802037145317*^9}}],
+
+Cell[TextData[{
+ "To stay out of potential problems do not use variables ending in ",
+ Cell[BoxData[
+  FormBox["$", TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " or ",
+ Cell[BoxData[
+  FormBox["$", TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ "+integer. Another case where ",
+ Cell[BoxData[
+  FormBox["$", TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " seems to be used as some kind of internal convention are symbols which \
+serve as global variables like ",
+ Cell[BoxData[
+  FormBox["$FrontEnd", TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ ", ",
+ Cell[BoxData[
+  FormBox["$Context", TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ ", ",
+ Cell[BoxData[
+  FormBox["$Path", TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " ..., but you can avoid conflicts by using a lowercase letter for the \
+second letter of the variable name."
+}], "Text",
+ CellChangeTimes->{{3.606802048224388*^9, 3.6068021058395834`*^9}}]
+}, Closed]],
+
+Cell[CellGroupData[{
+
+Cell[TextData[Cell[BoxData[
+ FormBox[";", TraditionalForm]]]], "Section",
+ CellChangeTimes->{{3.6068021181844454`*^9, 3.6068021245444546`*^9}}],
+
+Cell[TextData[{
+ "\:7531 ",
+ Cell[BoxData[
+  FormBox[";", TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " \:76f8\:8fde\:7684\:591a\:4e2a ",
+ Cell[BoxData["expr"],
+  FormatType->"InputForm"],
+ " \:4ecd\:662f\:4e00\:4e2a ",
+ Cell[BoxData["expr"],
+  FormatType->"InputForm"],
+ ", \:53ef\:4ee5\:8d4b\:7ed9\:4e00\:4e2a symbol, \:5e76\:4e14\:6709\:81ea\
+\:5df1\:7684 head, \:6574\:4e2a ",
+ Cell[BoxData["expr"],
+  FormatType->"InputForm"],
+ " \:8fd0\:884c\:7684\:7ed3\:679c\:7684 head \:5c31\:662f\:6574\:4e2a\:8868\
+\:8fbe\:5f0f\:7684 head."
+}], "Text",
+ CellChangeTimes->{{3.6068021443974676`*^9, 3.6068021827921743`*^9}, {
+  3.60680236964659*^9, 3.606802374615794*^9}}]
+}, Closed]],
+
+Cell[CellGroupData[{
+
+Cell[TextData[{
+ "Difference between ",
+ Cell[BoxData[
+  FormBox[":=", TraditionalForm]]],
+ " and ",
+ Cell[BoxData[
+  FormBox["=", TraditionalForm]]],
+ " "
+}], "Section",
+ CellChangeTimes->{{3.6068022261873293`*^9, 3.6068023075154285`*^9}}],
+
+Cell[TextData[{
+ "\:53c2\:89c1 ",
+ StyleBox["Mathematica",
+  FontSlant->"Italic"],
+ " Book p. 311."
+}], "Text",
+ CellChangeTimes->{{3.6068023163287373`*^9, 3.606802333361768*^9}}],
+
+Cell[TextData[{
+ "\:5bf9\:4e8e ",
+ Cell[BoxData[
+  FormBox[":=", TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " , \:5b9a\:4e49\:65f6\:4e0d\:8ba1\:7b97 ",
+ Cell[BoxData["rhs"],
+  FormatType->"InputForm"],
+ " , \:6bcf\:6b21\:9047\:5230 ",
+ Cell[BoxData["lhs"],
+  FormatType->"InputForm"],
+ " \:65f6\:90fd\:4f1a\:91cd\:65b0\:8ba1\:7b97 ",
+ Cell[BoxData["rhs"],
+  FormatType->"InputForm"],
+ " . \:5bf9\:4e8e ",
+ Cell[BoxData[
+  FormBox["=", TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " , \:5219\:662f\:5728\:5b9a\:4e49\:65f6\:4e00\:6b21\:6027\:8ba1\:7b97, \
+\:4e4b\:540e\:53ea\:66ff\:6362\:800c\:4e0d\:8ba1\:7b97."
+}], "Text",
+ CellChangeTimes->{{3.6068023414874306`*^9, 3.606802451185318*^9}}],
+
+Cell["\:9700\:8981\:5bf9\:8fd9\:4e24\:8005\:4f5c\:51fa\:533a\:522b\:662f\:56e0\
+\:4e3a:", "Text",
+ CellChangeTimes->{{3.6068024602173777`*^9, 3.6068024808444805`*^9}}],
+
+Cell[TextData[{
+ "\:5f88\:591a\:8fd0\:7b97\:4e0d\:662f\:7b80\:5355\:5730\:5728\:4e00\:822c\
+\:6027\:7684\:7ed3\:8bba\:4e2d\:505a\:53d8\:91cf\:66ff\:6362\:6765\:5f97\:5230\
+\:5177\:4f53\:7ed3\:679c, \:751a\:81f3\:6839\:672c\:65e0\:6cd5\:76f4\:63a5\
+\:5f97\:5230\:4e00\:822c\:6027\:7684\:8ba1\:7b97\:7ed3\:679c. \:56e0\:6b64\
+\:5bf9\:4e8e\:8fd9\:4e9b\:8fd0\:7b97, \:4e0d\:80fd\:5728\:5b9a\:4e49\:65f6\
+\:5c31\:8ba1\:7b97\:53f3\:7aef ",
+ Cell[BoxData["rhs"],
+  FormatType->"InputForm"],
+ ", \:5fc5\:987b\:7b49\:9047\:5230\:5177\:4f53\:503c\:65f6\:518d\:8ba1\:7b97. \
+\:5982\:679c\:4e00\:4e2a\:5b9a\:4e49\:5177\:6709\:8fd9\:6837\:7684\:6027\:8d28\
+, \:5219\:9700\:8981\:7528 ",
+ Cell[BoxData[
+  FormBox[":", TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " \:6765\:63a8\:8fdf\:8ba1\:7b97; \:5982\:679c\:4e00\:4e2a\:5b9a\:4e49\:53ea\
+\:662f\:7b80\:5355\:5730\:5bf9\:901a\:7528\:7ed3\:679c\:505a\:66ff\:6362, \
+\:5219\:7528 ",
+ Cell[BoxData[
+  FormBox["=", TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " \:5373\:53ef."
+}], "Text",
+ CellChangeTimes->{{3.606802490946541*^9, 3.6068025387166862`*^9}}],
+
+Cell[TextData[{
+ "\:76f8\:5e94\:5730, \:5728\:4e00\:4e2a\:8868\:8fbe\:5f0f\:4e2d\:53ef\:4ee5\
+\:6709\:591a\:4e2a\:66ff\:6362, \:4e5f\:53ef\:80fd\:51fa\:73b0\:8fd9\:79cd\
+\:4e0d\:80fd\:76f4\:63a5\:8ba1\:7b97 ",
+ Cell[BoxData["rhs"],
+  FormatType->"InputForm"],
+ " \:7684\:60c5\:51b5, \:6240\:4ee5\:5bf9\:5e94\:5730\:6709 ",
+ Cell[BoxData[
+  FormBox["->", TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " \:4e0e ",
+ Cell[BoxData[
+  FormBox[":>", TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " \:7684\:533a\:5206."
+}], "Text",
+ CellChangeTimes->{{3.6068026090357075`*^9, 3.606802639647831*^9}}]
+}, Closed]],
+
+Cell[CellGroupData[{
+
+Cell["Clear all definitions", "Section",
+ CellChangeTimes->{{3.606803881724703*^9, 3.606803883631178*^9}, {
+  3.6068044495994897`*^9, 3.6068045065650425`*^9}}],
+
+Cell[BoxData[
+ RowBox[{"Clear", "[", "\"\<Global`*\>\"", "]"}]], "Code",
+ CellChangeTimes->{{3.6068045095185122`*^9, 3.6068045349738536`*^9}}],
+
+Cell["\<\
+clears all the definitions made during the current Mathematica session.\
+\>", "Text",
+ CellChangeTimes->{3.606804545849867*^9}]
+}, Closed]],
+
+Cell[CellGroupData[{
+
+Cell[TextData[{
+ "Use ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"{", 
+    RowBox[{"a", ",", "b", ",", "c"}], "}"}], TraditionalForm]]],
+ " and ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"{", 
+    RowBox[{"x", ",", "y", ",", "z"}], "}"}], TraditionalForm]]],
+ " to get ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{"a", ",", "x"}], "}"}], ",", 
+     RowBox[{"{", 
+      RowBox[{"b", ",", "y"}], "}"}], ",", 
+     RowBox[{"{", 
+      RowBox[{"c", ",", "z"}], "}"}]}], "}"}], TraditionalForm]]]
+}], "Section",
+ CellChangeTimes->{{3.606812156862962*^9, 3.606812230010769*^9}, {
+  3.613293160003909*^9, 3.6132931713955455`*^9}}],
+
+Cell["\:65b9\:6cd51:", "Text",
+ CellChangeTimes->{{3.6068122440034842`*^9, 3.6068122464568863`*^9}}],
+
+Cell[BoxData[
+ RowBox[{"Transpose", "[", 
+  RowBox[{"{", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{"a", ",", "b", ",", "c"}], "}"}], ",", 
+    RowBox[{"{", 
+     RowBox[{"x", ",", "y", ",", "z"}], "}"}]}], "}"}], "]"}]], "Input",
+ CellChangeTimes->{{3.6068122515510354`*^9, 3.606812303008678*^9}}],
+
+Cell["\:65b9\:6cd52:", "Text",
+ CellChangeTimes->{{3.6068123121970005`*^9, 3.606812313025196*^9}}],
+
+Cell[BoxData[
+ RowBox[{"Partition", "[", 
+  RowBox[{
+   RowBox[{"Riffle", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{"a", ",", "b", ",", "c"}], "}"}], ",", 
+     RowBox[{"{", 
+      RowBox[{"x", ",", "y", ",", "z"}], "}"}]}], "]"}], ",", "2"}], 
+  "]"}]], "Input",
+ CellChangeTimes->{{3.606812322447962*^9, 3.6068123475751524`*^9}, {
+  3.6068123997207413`*^9, 3.606812401330267*^9}}],
+
+Cell["\:65b9\:6cd53:", "Text",
+ CellChangeTimes->{{3.6068123537943287`*^9, 3.6068123545756464`*^9}}],
+
+Cell[BoxData[
+ RowBox[{"Thread", "[", 
+  RowBox[{"{", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{"a", ",", "b", ",", "c"}], "}"}], ",", 
+    RowBox[{"{", 
+     RowBox[{"x", ",", "y", ",", "z"}], "}"}]}], "}"}], "]"}]], "Input",
+ CellChangeTimes->{{3.606812368920741*^9, 3.6068123949233065`*^9}}]
+}, Closed]],
+
+Cell[CellGroupData[{
+
+Cell[TextData[{
+ "Avoid ",
+ Cell[BoxData[
+  FormBox["For", TraditionalForm]]],
+ " loop"
+}], "Section",
+ CellChangeTimes->{{3.613293119578136*^9, 3.6132931437212343`*^9}}],
+
+Cell[TextData[{
+ "\:7528 ",
+ Cell[BoxData[
+  FormBox["Do", TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " \:6765\:4ee3\:66ff\:53ea\:662f\:9700\:8981\:8fd0\:884c\:4e00\:5b9a\:6b21\
+\:6570\:7684\:6216\:53ea\:9700\:8981\:4ece m \:8fd0\:884c\:81f3 n \:7684 ",
+ Cell[BoxData[
+  FormBox["For", TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " loop. ",
+ Cell[BoxData[
+  FormBox["Do", TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " loop \:6bd4 ",
+ Cell[BoxData[
+  FormBox["For", TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " loop \:9ad8\:6548, \:5e76\:4e14\:8bed\:6cd5\:66f4\:6e05\:6670.\n\:7528 ",
+ Cell[BoxData[
+  FormBox["While", TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " \:6765\:4ee3\:66ff\:9700\:8981\:8fdb\:884c\:5224\:65ad\:7684 ",
+ Cell[BoxData[
+  FormBox["For", TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " loop."
+}], "Text",
+ CellChangeTimes->{{3.6132932417995787`*^9, 3.613293272817986*^9}}]
+}, Closed]],
+
+Cell[CellGroupData[{
+
+Cell["Namespace", "Section",
+ CellChangeTimes->{{3.6185460878693495`*^9, 3.6185461012298098`*^9}}],
+
+Cell["Symbol \:9ed8\:8ba4\:4e3a\:5168\:5c40\:7684.", "Text",
+ CellChangeTimes->{{3.6185461177472134`*^9, 3.618546131029704*^9}}]
+}, Open  ]],
+
+Cell[TextData[{
+ "standard ",
+ StyleBox["Mathematica",
+  FontSlant->"Italic"],
+ " sequence specification"
+}], "Section",
+ CellChangeTimes->{{3.619953766217061*^9, 3.6199537693580875`*^9}}]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Evaluation", "Subtitle",
+ CellChangeTimes->{{3.6147276222798805`*^9, 3.614727630233673*^9}, 
+   3.6181880278827276`*^9}],
+
+Cell[CellGroupData[{
+
+Cell["Evaluation Process", "Section",
+ CellChangeTimes->{{3.618187791509011*^9, 3.6181878046353874`*^9}, {
+  3.618187995379637*^9, 3.618188052072649*^9}}],
+
+Cell["\<\
+The general principle that Mathematica follows in evaluating expressions is \
+to go on applying transformation rules until the expressions no longer change.\
+\>", "Text",
+ CellChangeTimes->{{3.6183868089983597`*^9, 3.618386811670605*^9}}],
+
+Cell[TextData[{
+ StyleBox["Mathematica",
+  FontSlant->"Italic"],
+ " \:5bf9\:4e00\:4e2a\:8868\:8fbe\:5f0f\:7684\:8fd0\:7b97\:8fc7\:7a0b\:662f\
+\:6811\:72b6\:7684. \:6bcf\:4e00\:4e2a\:5b50\:8868\:8fbe\:5f0f\:5bf9\:5e94\
+\:4e00\:4e2a\:5b50\:8fd0\:7b97\:94fe. \:5bf9\:4e00\:4e2a\:8868\:8fbe\:5f0f\
+\:800c\:8a00, \:7531\:5b83\:4f38\:5c55\:5f00\:53bb\:7684\:6240\:6709\:5b50\
+\:8fd0\:7b97\:94fe\:8fd0\:7b97\:5b8c\:6bd5\:540e\:8fd9\:4e2a\:8868\:8fbe\:5f0f\
+\:7684\:8fd0\:7b97\:5c31\:5b8c\:6210\:4e86."
+}], "Text",
+ CellChangeTimes->{{3.6181878124017935`*^9, 3.6181879720491495`*^9}}]
+}, Closed]],
+
+Cell[CellGroupData[{
+
+Cell["Standard Evaluation Procedure", "Section",
+ CellChangeTimes->{{3.618188057542019*^9, 3.618188064362442*^9}}],
+
+Cell["\<\
+\:5bf9\:4e00\:4e2a\:8868\:8fbe\:5f0f\:7684\:6807\:51c6\:8fd0\:7b97\:6d41\:7a0b\
+\:662f\:5148\:8fd0\:7b97 head \:518d\:8fd0\:7b97\:5404\:4e2a element, \
+recursively.\
+\>", "Text",
+ CellChangeTimes->{{3.6181880823798504`*^9, 3.6181881900771637`*^9}, {
+  3.6181928266161547`*^9, 3.618192863057602*^9}}],
+
+Cell["\<\
+\:5f53 head \
+\:5305\:542b\:5bf9\:4e8e\:5143\:7d20\:8fd0\:7b97\:7684\:6307\:793a\:7684\:65f6\
+\:5019, \:53ef\:80fd\:6574\:4e2a\:8868\:8fbe\:5f0f\:7684\:8fd0\:7b97\:5c31\
+\:4e0d\:6309\:7167\:6807\:51c6\:6d41\:7a0b\:8fdb\:884c\:4e86.\
+\>", "Text",
+ CellChangeTimes->{{3.618192953761633*^9, 3.6181930704920344`*^9}}],
+
+Cell[TextData[{
+ "\:4f3c\:4e4e\:6240\:6709\:4e0d\:662f\:6309\:7167 Standard Evaluation \
+Procedure \:8fdb\:884c\:8fd0\:7b97\:7684\:8868\:8fbe\:5f0f, \:5176 head \
+\:90fd\:6709\:67d0\:4e9b ",
+ Cell[BoxData[
+  FormBox["Hold", TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " \:7c7b\:5c5e\:6027. \:56e0\:4e3a\:5b83\:4eec\:8981\:6309\:7167\:81ea\:5df1\
+\:7684\:65b9\:5f0f\:8fd0\:7b97\:5404\:4e2a\:5143\:7d20\:6216\:8fdb\:884c\:5176\
+\:4ed6\:7684\:64cd\:4f5c, \:800c\:4e0d\:662f\:6309\:7167\:6807\:51c6\:6d41\
+\:7a0b\:8fdb\:884c."
+}], "Text",
+ CellChangeTimes->{{3.618192748382851*^9, 3.618192817865379*^9}, {
+  3.6181928762462635`*^9, 3.6181929394790955`*^9}}]
+}, Closed]],
+
+Cell[CellGroupData[{
+
+Cell["Iteration & Recursion", "Section",
+ CellChangeTimes->{{3.618260553155918*^9, 3.6182605617956705`*^9}}],
+
+Cell["\<\
+Iteration (\:8fed\:4ee3) computing is the repetition of a block of statements \
+within a computer program. It can be used both as a general term, synonymous \
+with repetition, and to describe a specific form of repetition with a mutable \
+state.
+When used in the first sense, recursion is an example of iteration, but \
+typically using a recursive notation, which is typically not the case for \
+iteration.
+However, when used in the second (more restricted) sense, iteration describes \
+the style of programming used in imperative programming languages. This \
+contrasts with recursion, which has a more declarative approach.\
+\>", "Text",
+ CellChangeTimes->{{3.618260570198614*^9, 3.618260596586182*^9}, {
+  3.618260733060051*^9, 3.618260748682721*^9}, {3.6182607913621397`*^9, 
+  3.618260824720348*^9}}],
+
+Cell[BoxData[
+ RowBox[{"Do", "["}]], "Input",
+ CellChangeTimes->{{3.6182609775350614`*^9, 3.618260985170145*^9}}],
+
+Cell["\<\
+Recursion (\:9012\:5f52) in computer science is a method where the solution \
+to a problem depends on solutions to smaller instances of the same problem \
+(as opposed to iteration).\
+\>", "Text",
+ CellChangeTimes->{
+  3.6182609161552267`*^9, {3.6182609566251388`*^9, 3.6182609606017876`*^9}}],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"fact", "[", "17", "]"}], "//.", 
+  RowBox[{"{", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"fact", "[", "0", "]"}], "\[Rule]", "1"}], ",", 
+    RowBox[{
+     RowBox[{"fact", "[", "n_", "]"}], ":>", 
+     RowBox[{"n", " ", 
+      RowBox[{"fact", "[", 
+       RowBox[{"n", "-", "1"}], "]"}]}]}]}], "}"}]}]], "Input",
+ CellChangeTimes->{{3.614298437339059*^9, 3.614298445855547*^9}, {
+   3.6142985262922955`*^9, 3.614298542778412*^9}, {3.6177103150057945`*^9, 
+   3.6177103263735175`*^9}, 3.618260523876423*^9},
+ CellLabel->"In[2]:="],
+
+Cell[BoxData["355687428096000"], "Output",
+ GeneratedCell->False,
+ CellAutoOverwrite->False,
+ CellChangeTimes->{
+  3.6142984487931767`*^9, 3.6142985281987705`*^9, {3.6177103203260756`*^9, 
+   3.617710326889142*^9}, 3.618260523876423*^9},
+ CellLabel->"Out[2]="]
+}, Open  ]]
+}, Closed]]
+}, Closed]],
+
+Cell[CellGroupData[{
+
+Cell["Syntax Hightlighting", "Subtitle",
+ CellChangeTimes->{{3.619009110942718*^9, 3.6190091167090497`*^9}}],
+
+Cell[CellGroupData[{
+
+Cell["Local Variables", "Section",
+ CellChangeTimes->{{3.619009121747841*^9, 3.619009125216976*^9}}],
+
+Cell[TextData[{
+ "\:5c40\:57df\:53d8\:91cf\:9ed8\:8ba4\:6807\:8bb0\:4e3a\:6d45\:7eff\:8272. \
+\:5982 ",
+ Cell[BoxData[
+  FormBox["Module", TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ ", ",
+ Cell[BoxData[
+  FormBox["With", TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ ", ",
+ Cell[BoxData[
+  FormBox["Function", TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " \:7b49."
+}], "Text",
+ CellChangeTimes->{{3.619009136858626*^9, 3.6190091712527137`*^9}, 
+   3.6190092439950123`*^9, {3.6190093090551243`*^9, 3.6190093129773965`*^9}, 
+   3.6190093893296475`*^9, {3.6190094198324676`*^9, 3.619009420035602*^9}, 
+   3.61900945089802*^9, 3.6192442836772346`*^9, {3.6192443250093203`*^9, 
+   3.6192443464960413`*^9}}],
+
+Cell[BoxData[
+ RowBox[{"Module", "[", 
+  RowBox[{
+   RowBox[{"{", "x", "}"}], ",", 
+   RowBox[{"x", "^", "2"}]}], "]"}]], "Input",
+ CellChangeTimes->{{3.6192443123208237`*^9, 3.619244319977643*^9}}],
+
+Cell[BoxData[
+ RowBox[{"x_", "\[Rule]", 
+  RowBox[{"x", "^", "2"}]}]], "Input",
+ CellChangeTimes->{{3.6190094614771166`*^9, 3.6190094735565853`*^9}}],
+
+Cell[TextData[{
+ "\:91c7\:7528\:5c40\:57df\:503c\:7684\:53d8\:91cf\:9ed8\:8ba4\:6807\:8bb0\
+\:4e3a\:6de1\:84dd\:8272. \:5982 ",
+ Cell[BoxData[
+  FormBox["Block", TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ ", ",
+ Cell[BoxData[
+  FormBox["Table", TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ ", ",
+ Cell[BoxData[
+  FormBox["Sum", TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " \:7b49."
+}], "Text",
+ CellChangeTimes->{{3.6190094256143126`*^9, 3.619009448007148*^9}, {
+  3.6192442759263334`*^9, 3.619244303288686*^9}, {3.6192443483400316`*^9, 
+  3.6192443724208746`*^9}}],
+
+Cell[BoxData[
+ RowBox[{"Block", "[", 
+  RowBox[{
+   RowBox[{"{", "x", "}"}], ",", "x"}], "]"}]], "Input",
+ CellChangeTimes->{{3.619267408216818*^9, 3.6192674225067887`*^9}}],
+
+Cell[BoxData[
+ RowBox[{"Table", "[", 
+  RowBox[{"i", ",", 
+   RowBox[{"{", 
+    RowBox[{"i", ",", "4"}], "}"}]}], "]"}]], "Input",
+ CellChangeTimes->{{3.6190094821745405`*^9, 3.6190094924567823`*^9}}]
+}, Open  ]]
+}, Closed]]
+},
+WindowSize->{1157, 544},
+WindowMargins->{{Automatic, 91}, {42, Automatic}},
+FrontEndVersion->"9.0 for Microsoft Windows (64-bit) (November 20, 2012)",
+StyleDefinitions->Notebook[{
+   Cell[
+    StyleData[StyleDefinitions -> "Default.nb"]], 
+   Cell[
+    StyleData["Subtitle"], ShowSelection -> True, 
+    CellMargins -> {{0, 0}, {0, 0}}, FontFamily -> "Arial Rounded MT Bold", 
+    FontSize -> 18, FontWeight -> "SemiBold", FontColor -> 
+    RGBColor[0.96, 0.96, 0.96], Background -> 
+    RGBColor[0., 0., 0.5019607843137255]], 
+   Cell[
+    StyleData["Subsubtitle"], FontFamily -> "Microsoft YaHei UI", FontSize -> 
+    10], 
+   Cell[
+    StyleData["Section"], FontFamily -> "Corbel", FontColor -> 
+    RGBColor[0., 0., 0.5019607843137255]], 
+   Cell[
+    StyleData["Subsection"], FontFamily -> "Arial Rounded MT Bold", FontColor -> 
+    RGBColor[0.5019607843137255, 0., 0.]], 
+   Cell[
+    StyleData["Text"], CellDingbat -> 
+    StyleBox["\[FilledSmallSquare]", Alignment -> Center, 
+      RGBColor[0., 0., 0.9019607843137255]], FontFamily -> 
+    "Microsoft YaHei UI", FontSize -> 12], 
+   Cell[
+    StyleData["ItemParagraph"], CellDingbat -> 
+    StyleBox["\[CloverLeaf]", Alignment -> Baseline, 
+      RGBColor[0., 0., 0.5019607843137255]], MenuCommandKey -> "9"], 
+   Cell[
+    StyleData["InlineCell"], CellGroupingRules -> "InputGrouping", 
+    TextClipboardType -> "InputText", StripStyleOnPaste -> True, ContextMenu -> 
+    FEPrivate`FrontEndResource["ContextMenus", "Input"], ShowAutoStyles -> 
+    True, ShowCodeAssist -> True, LanguageCategory -> "Mathematica", 
+    FormatType -> "InputForm", ScriptLevel -> 0, MenuSortingValue -> 10000, 
+    StyleMenuListing -> None, FontFamily -> "Courier New", FontWeight -> 
+    "Bold"], 
+   Cell[
+    StyleData["Code"], InitializationCell -> False, Background -> 
+    GrayLevel[0.9]], 
+   Cell[
+    StyleData["Item"], CellDingbat -> 
+    StyleBox["\[FilledSmallCircle]", Alignment -> Baseline, 
+      RGBColor[0., 0., 0.5019607843137255]], FontFamily -> 
+    "Microsoft YaHei UI", FontSize -> 12], 
+   Cell[
+    StyleData["Input"], CellLabelAutoDelete -> False], 
+   Cell[
+    StyleData["Output"], CellLabelAutoDelete -> False], 
+   Cell[
+    StyleData["Comment"], CellFrame -> False, CellDingbat -> "\[Dagger]", 
+    CellMargins -> {{54, 25}, {Inherited, Inherited}}, LineSpacing -> {1, 3}, 
+    MenuCommandKey -> None, FontFamily -> "Microsoft YaHei UI", FontSize -> 
+    10, FontColor -> RGBColor[0.5, 0.5, 0], $CellContext`MenuPosition -> 
+    8000]}, Visible -> False, FrontEndVersion -> 
+  "9.0 for Microsoft Windows (64-bit) (November 20, 2012)", StyleDefinitions -> 
+  "PrivateStylesheetFormatting.nb"]
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{
+ "memoization"->{
+  Cell[708, 27, 167, 3, 100, "Section",
+   CellTags->"memoization"]}
+ }
+*)
+(*CellTagsIndex
+CellTagsIndex->{
+ {"memoization", 22895, 694}
+ }
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[CellGroupData[{
+Cell[579, 22, 104, 1, 47, "Subtitle"],
+Cell[CellGroupData[{
+Cell[708, 27, 167, 3, 100, "Section",
+ CellTags->"memoization"],
+Cell[878, 32, 92, 1, 38, "Text"],
+Cell[973, 35, 203, 5, 36, "Input"],
+Cell[1179, 42, 265, 5, 38, "Text"],
+Cell[1447, 49, 99, 1, 38, "Text"],
+Cell[1549, 52, 949, 24, 38, "Text"]
+}, Closed]],
+Cell[CellGroupData[{
+Cell[2535, 81, 167, 3, 60, "Section"],
+Cell[2705, 86, 374, 8, 62, "Text"],
+Cell[3082, 96, 786, 24, 63, "Text"],
+Cell[3871, 122, 960, 29, 87, "Text"]
+}, Closed]],
+Cell[CellGroupData[{
+Cell[4868, 156, 143, 2, 60, "Section"],
+Cell[5014, 160, 674, 19, 38, "Text"]
+}, Closed]],
+Cell[CellGroupData[{
+Cell[5725, 184, 240, 9, 64, "Section"],
+Cell[5968, 195, 179, 6, 38, "Text"],
+Cell[6150, 203, 710, 21, 38, "Text"],
+Cell[6863, 226, 167, 2, 38, "Text"],
+Cell[7033, 230, 1108, 23, 62, "Text"],
+Cell[8144, 255, 607, 16, 38, "Text"]
+}, Closed]],
+Cell[CellGroupData[{
+Cell[8788, 276, 159, 2, 62, "Section"],
+Cell[8950, 280, 142, 2, 62, "Code"],
+Cell[9095, 284, 137, 3, 38, "Text"]
+}, Closed]],
+Cell[CellGroupData[{
+Cell[9269, 292, 664, 24, 64, "Section"],
+Cell[9936, 318, 100, 1, 38, "Text"],
+Cell[10039, 321, 299, 8, 36, "Input"],
+Cell[10341, 331, 98, 1, 38, "Text"],
+Cell[10442, 334, 392, 11, 36, "Input"],
+Cell[10837, 347, 100, 1, 38, "Text"],
+Cell[10940, 350, 296, 8, 36, "Input"]
+}, Closed]],
+Cell[CellGroupData[{
+Cell[11273, 363, 170, 6, 64, "Section"],
+Cell[11446, 371, 954, 28, 63, "Text"]
+}, Closed]],
+Cell[CellGroupData[{
+Cell[12437, 404, 98, 1, 62, "Section"],
+Cell[12538, 407, 128, 1, 38, "Text"]
+}, Open  ]],
+Cell[12681, 411, 188, 6, 100, "Section"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[12906, 422, 126, 2, 47, "Subtitle"],
+Cell[CellGroupData[{
+Cell[13057, 428, 154, 2, 100, "Section"],
+Cell[13214, 432, 248, 4, 61, "Text"],
+Cell[13465, 438, 576, 10, 61, "Text"]
+}, Closed]],
+Cell[CellGroupData[{
+Cell[14078, 453, 114, 1, 62, "Section"],
+Cell[14195, 456, 309, 6, 38, "Text"],
+Cell[14507, 464, 323, 6, 38, "Text"],
+Cell[14833, 472, 663, 13, 62, "Text"]
+}, Closed]],
+Cell[CellGroupData[{
+Cell[15533, 490, 108, 1, 62, "Section"],
+Cell[15644, 493, 815, 14, 156, "Text"],
+Cell[16462, 509, 113, 2, 36, "Input"],
+Cell[16578, 513, 302, 6, 61, "Text"],
+Cell[CellGroupData[{
+Cell[16905, 523, 562, 15, 36, "Input"],
+Cell[17470, 540, 260, 6, 36, "Output"]
+}, Open  ]]
+}, Closed]]
+}, Closed]],
+Cell[CellGroupData[{
+Cell[17791, 553, 108, 1, 47, "Subtitle"],
+Cell[CellGroupData[{
+Cell[17924, 558, 100, 1, 100, "Section"],
+Cell[18027, 561, 730, 20, 38, "Text"],
+Cell[18760, 583, 198, 5, 36, "Input"],
+Cell[18961, 590, 149, 3, 36, "Input"],
+Cell[19113, 595, 596, 18, 38, "Text"],
+Cell[19712, 615, 173, 4, 36, "Input"],
+Cell[19888, 621, 200, 5, 36, "Input"]
+}, Open  ]]
+}, Closed]]
+}
+]
+*)
+
+(* End of internal cache information *)

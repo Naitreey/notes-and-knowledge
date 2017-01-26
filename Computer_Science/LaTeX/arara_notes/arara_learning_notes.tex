@@ -1,0 +1,201 @@
+\documentclass[a4paper]{article}
+
+%文献宏包 \usepackage[style=numeric,backend=biber]{biblatex}
+
+\usepackage[a4paper]{geometry}
+
+%中文宏包
+%\usepackage[UTF8,winfonts,fancyhdr,hyperref,fntef]{ctex}
+\usepackage{xeCJK}
+
+\usepackage[pdfborder={0 0 0},colorlinks=false]{hyperref}
+\usepackage{graphicx,amsmath,amssymb,bm,mathtools,subcaption,caption,cleveref}
+
+%文献源 \addbibresource{•}
+
+%设置字体
+%\setmainfont[Ligatures=TeX]{Helvetica}
+%\setsansfont{}
+\setmonofont{Courier New}
+\setCJKmainfont[BoldFont={SimHei},ItalicFont={楷体}]{SimSun}%Hiragino Sans GB W3/W6
+%\setCJKsansfont{}
+\setCJKmonofont{幼圆}
+
+%代码宏包
+\usepackage{listings}
+%\lstset{language=Mathematica,frame=single,texcl=true,mathescape=true}
+
+\title{arara learning notes}
+\author{Naitree Zhu}
+\date{\today}
+
+\begin{document}
+\maketitle
+%目录 \tableofcontents
+
+\part{General Intro}
+add instructions in source code to tell arara what to do. By default, arara a derivative is defined in a line of its own, started with a comment sign \verb|%|, followed by \verb|arara:| and the name of the task.
+
+Once arara finds a directive, it will look for the associated \emph{rule}. After extracting all directives from a source code and mapping each of them to their respective rules, arara executes the queue of commands and the status is reported.
+
+The application was written in Java, so arara runs on top of a Java virtual machine.
+
+An optional configuration file in which we can add rule paths, set the default language and define custom extensions and directive patterns.
+
+arara reads directives everywhere.
+
+Updating arara: simply download the \verb|arara.jar| file and copy it to the arara home directory, replacing the current one.
+\part{Concepts}
+\section{Rule file}
+A rule is a formal description of how arara should handle a certain task. A rule is a plain text file written in the YAML format.
+The default rules are placed inside a special subdirectory inside arara home directory.
+
+In a rule file, \verb|!config| keyword is mandatory and it must be the first line of any arara rule. Comments can be added by starting a \verb|#| symbol in a new line. 
+\paragraph{\texttt{identifier}}
+a unique identifier for the rule. Rcommend to use lowercase letters without spaces, accents or punctuation symbols. As a convention, name the filename the name of identifier.
+\paragraph{\texttt{name}} The \verb|name| key holds the name of the task. When running arara, this value will be displayed in the output.
+\paragraph{\texttt{command}} System command to be executed. You can use any type of command, interactive or noninteractive. By default arara is running in silent mode, an interactive command which  might require the user input will be halted and the execution will fail. You can use a special \verb|--verbose| flag with arara when executing it in order to interact with such commands.
+arara has support for multiple commands inside one rule. Simply replace \verb|command| by \verb|commands| and provide a list of commands (one command per line) to be executed, proceeded by \verb|-| to indicate a command.
+\paragraph{\texttt{arguments}} denotes a list of arguments for the rule command. You can define as many arguments as your command requires. For every argument in the arguments list, we have a \verb|-| mark and the proper indentation. And required keys for an argument are:
+\subparagraph{\texttt{indentifier}} A unique identifier for the argument. 
+\subparagraph{\texttt{flag}} Represents the argument value. 
+\section{Directives}
+A \emph{directive} is a special comment inserted in the \verb|.tex| file in which you indicate how arara should behave. You can insert as many directives as you want, and in any position of the \verb|.tex| file. arara will read the whole file and extract the directives. 
+A directive should be placed in a line of its own, in the form \verb|% arara: <directive>|---actually, the prefix search can be altered.
+\subsection*{empty directive}
+Empty directive has only the rule identifier. The syntax is \verb|% arara: makefoo|
+\subsection*{parametrized directive}
+Parametrized directive has the rule identifier followed by its arguments. The syntax for a parametrized directive is \verb|% arara: makefoo: {arglist}|. The arguments is in the form \verb|arg: value|; a list of argument--value pairs are separated by comma.
+
+You can disable a directive simply by replacing \verb|% arara:| by \verb|% !arara|.
+\section{Orb tags}
+An orb tag consists of a \verb|@| character followed by braces \verb|{\dots}|. A \verb|@{argument}| expression will be evaluated to the value of \verb|argument|, which equals to the content of the \verb|flag| key.
+The \verb|@{identifier}| might hold the value of \verb|default| if there were no directive parameters of the name \verb|identifier| in source code, and might left empty if there was no \verb|default| key defined for that argument's \verb|identifier|.
+
+\begin{lstlisting}[caption=directive in source file,label=directive]
+% arara: makebar: { one: hello }
+\end{lstlisting}
+\begin{lstlisting}[numbers=left,caption=rule file,label=rule]
+!config
+identifier: makebar
+name: MakeBar
+command: makebar @{one} @{two} @{file}
+arguments:
+- identifier: one
+  flag: -i @{parameters.one}
+- identifier: two
+  flag: -j @{parameters.two}
+\end{lstlisting}
+Providing an example source directive \ref{directive} and a rule file \ref{rule}, The whole procedure is summarized as follows:
+\begin{enumerate}
+  \item arara processes a file named \verb|mydoc.tex|
+  \item A directive \verb|makebar: {one: hello}| is found, so arara will look up the rule 
+    \verb|makebar.yaml| inside the default rules directory.
+  \item The argument \verb|one| is found and has value hello, so the corresponding \verb|flag| key will have the orb tag \verb|@{parameters.one}| expanded to \verb|hello|. They new value is now added to the \verb|command| key then \verb|@{one}| is expanded to \verb|-i hello|.
+  \item The argument \verb|two| is not defined , so \verb|command| key has \verb|@{two}| expanded to an empty string, since there's no \verb|default| key in the argument definition.
+  \item There is no more arguments, so \verb|@{file}| expands to \verb|mydoc|.
+  \item The final command is: \verb|makebar -i hello mydoc|.
+\end{enumerate}
+\part{Running Command}
+Running in terminal, a simple \verb|arara mydoc| would do it, provided that \verb|mydoc| has the proper directives. The default behavior is to run in silent mode, that is only the name and the execution status of the current task are displayed.
+If you have an interactive command, the execution will halt and the command will fail. 
+arara has a set of flags that can change the default behavior or even enhance the compilation workflow.
+\begin{enumerate}
+  \item Flag \verb|-l| or \verb|--log| enables the logging feature of arara. All streams from all commands will be logged and, at the end of the execution, an \verb|arara.log| file will be generated.
+  \item Flag \verb|-v| or \verb|--verbose| enables all streams to be flushed to the terminal---exactly the opposite of the silent mode. This flag also allows user input if the current command requires so. 
+\end{enumerate}
+
+The combination of two flags when integrating arara in an IDE can have both terminal and file output at the same time without any cost.
+\part{Message and log}
+\section{Messages}
+Messages are feedbacks to a terminal or IDE after execution.
+Those messages are usually associated with errors, like telling in which directive and line an error ocurred, or that a certain rule does not exist or has an incorrect format.
+\section{Logs}
+arara holds every single bit of information spit out from program. The arara log is useful for keeping track of the execution flow as well as providing feedback on how both rules and directives are being expanded. 
+Log file contains information about the directive extraction and parsing, rules checking and expansion, rule checking and expansion, deployment of tasks and execution of commands. The arara messages are also logged.
+
+When \verb|--log| and \verb|--verbose| flags are used together, arara will log everything, including the input stream.
+\part{Specific Rule descriptions}
+\section{biber}
+\subsection*{Parameters}
+\paragraph{\texttt{options}}
+Used to provide	flags which were not mapped. It is recommended to enclose the value with single or double quotes.
+\section{pdfLaTeX}
+\subsection{Parameters}
+All parameters are optional.
+\paragraph{\texttt{action}}
+This parameter sets the interaction mode flag. Possible options are \verb|batchmode|, \verb|nonstopmode|, \verb|scrollmode|, and \verb|errorstopmode|. If not defined, no flag will be set.
+\paragraph{\texttt{shell}}
+This is a \emph{boolean parameter}, which sets the shell escape mode. If true(1), shell escape will be enabled; if false, the feature will be completely disabled. If not defined, the default behavior is rely on restricted mode.
+\paragraph{\texttt{synctex}}
+This parameter is defined as \emph{boolean parameter} and sets the generation of Sync\TeX data for previewers. If true, data will be generated. If not defined, no flag will be set.
+\paragraph{\texttt{draft}}
+This is a boolean parameter which sets the draft mode, that is, no PDF output is generated. When value set to true, the draft mode is enabled; if false, disabled. If not defined, no flag will be set.
+\paragraph{\texttt{options}}
+This parameters is used to provide flags which were not mapped. It is recommended to enclose the value with single or double quotes.
+\section{XeLaTeX}
+Except for \verb|draft| undefined, all parameters are identical to those of pdf\LaTeX.
+\section{Clean}
+This rule maps the removal command from the underlying operating system. \emph{No} parameters for this rule, except for the reserved directive key \verb|files| which \emph{must} be used. If \verb|files| is note used in the directive, arara will simply ignore this rule. 
+\part{Organizing directives}
+For each directive, there will be call to the command line tool, and this might take some time.
+
+If an argument value has spaces, enclose it with quotes. Try to avoid values with spaces, but if you really need them, enclose the value with single quotes. If you want to make sure that both rules and directives are being mapped and expanded correctly, enable the logging option of arara and verify the output.
+
+Directives should be organized at the top of the file. So the compilation chain is clear. If there's something wrong with a directive, don't worry, arara will be able to track the inconsistency down and warn about it.
+\part{Something Special}
+\section{Special directive arguments}
+arara has two reserved directive arguments which cannot be defined as arguments of a corresponding rule: \verb|files| and \verb|items|.
+Those directive arguments do not hold a single value as the usual directive argument does, but they actually refer to a list of values instead. And in the YAML format, a list is defined as a sequence of elements separated by a comma and enclosed in \verb|[]|.
+For example, \verb|item: [ a, b, c ]| is a list and refers to the elements \verb|a|, \verb|b|, and \verb|c|. 
+\paragraph{\texttt{files}}
+When not defined with a proper value in the directive, \verb|files| contains only one value: the current file reference. When we explicitly add this argument to a directive, the value is overriden, and arara considers one iteration per element. 
+For example \verb|foo: { files: [ a, b, c ]}|, arara will perform the execution of task \verb|foo| three times, one for each value of \verb|files|, each value of \verb|files| will then be expanded to the \verb|@{file}| orb tag in the rule context accordingly.
+\section{Special orb tags}
+In the rule context, arara has four reserved keywords which cannot be assigned as arguments identifiers; each of them has its own purpose and semantics. They are \verb|@{file}|, \verb|@{item}| \verb|@{parameters}| \verb|@{SystemUtils}|
+\paragraph{\texttt{file}}
+This orb tags always resolve to the filename processed by arara, while it is determined instead by, if provided, the directive argument \verb|files| in the source file.
+The variable always hold an string value and it is never empty.
+\paragraph{\texttt{item}}
+The \verb|@{item}| orb tag resolves to each element of the list of items defined through the directive argument \verb|items|(if provided). The variable always hold an string value and it is empty by default.
+\paragraph{\texttt{paramters}}
+This orb tag is actually a map, that is, a collection of variables. The \verb|@{parameters}| orb tag is set with all the directive arguments and their corresponding values.
+The access to the value of directive argument is done through \verb|parameters.<argument>|, so if we want to access the value of directive \verb|one|, the syntax is \verb|@{parameters.one}|.
+\paragraph{\texttt{SystemUtils}} 
+This orb tag is also a map---it provides a lot of methods and properties in order to write cross-platform rules.
+
+Since these are special \emph{reserved} keywords, arara will raise an error if there's an attempt to assign one of them as rule argument identifier.
+
+\part{Something More}
+In a rule file, prefix \verb|<arara>| is used as a mark which notifies arara the following strings should be enclosed in single or double quotes when executing.
+Do not modify the default rules. Just create new rules and put them in a new directory. Make sure to add this directory to the search path in the configuration file.
+
+A rule that calls \verb|peflatex|, for example, is easy to maintain: you just need to ensure there's an actual \verb|pdflatex| command available in the operating system. But there are cases in which you need to call system-specific commands.
+Instead of creating different rules dealing with one same task for respective operating systems, we can utilize what is provided by \verb|@{SystemUtils}| class to build one cross-platform generic rule.
+For example, we can write a generic \verb|clean| rule to remove all the auxiliary files. Furthermore, we can use reserved directive argument \verb|files| to clean multiple files in one execution. So the directive in source file should be:
+\begin{lstlisting}[mathescape=true]
+% arara: clean: {files: [filename.aux,filename.log,$\dots$]}
+\end{lstlisting}
+which corresponding to the generic \verb|clean| rule:
+\begin{lstlisting}[basicstyle=\ttfamily,numbers=left]
+!config
+identifier: clean
+name: CleaningTool
+command: <arara> @{isWindows("cmd /c del","rm -f")} "@{file}"
+arguments: []
+\end{lstlisting}
+If by any chance this rule is called without the \verb|files| directive argument, that is, an empty directive \verb|% arara: clean|, the rule will be expanded to \verb|rm -f filename.tex| and the \verb|.tex| file will be gone!
+
+So idea of solution is: if the current \verb|@{file}| is different than the original file, run the task; otherwise, the whole command is expanded to an empty string---empty commands are discarded by arara.
+\begin{lstlisting}[basicstyle=\ttfamily,numbers=left]
+!config
+identifier: clean
+name: CleaningTool
+command: <arara> @{remove}
+arguments:
+- identifier: remove
+  default: <arara> @{isFalse(file == getOriginalFile(), isWindows("cmd /c del",
+"rm -f").concat('"').concat(file).concat('"'))}
+\end{lstlisting}
+\end{document}
+

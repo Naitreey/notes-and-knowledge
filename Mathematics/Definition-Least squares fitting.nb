@@ -1,0 +1,202 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 9.0' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       157,          7]
+NotebookDataLength[      6581,        193]
+NotebookOptionsPosition[      5818,        162]
+NotebookOutlinePosition[      6162,        177]
+CellTagsIndexPosition[      6119,        174]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+
+Cell[CellGroupData[{
+Cell["Least squares fitting", "Title",
+ CellChangeTimes->{{3.592820123961892*^9, 3.592820133769395*^9}}],
+
+Cell["\<\
+en.wikipedia.org/wiki/Least_squares\:200e\
+\>", "Subsubtitle",
+ CellChangeTimes->{3.5928587929099874`*^9}],
+
+Cell["\<\
+The method of least squares is a standard approach to the approximate \
+solution of overdetermined systems, i.e., sets of equations in which there \
+are more equations than unknowns. \[OpenCurlyDoubleQuote]Least squares\
+\[CloseCurlyDoubleQuote] means that the overall solution minimizes the sum of \
+the squares of the errors made in the results of every single equation.
+The best fit in the least-squares sense minimizes the sum of squared \
+residuals, a residual being the difference between an observed value and the \
+fitted value provided by a model. When the problem has substantial \
+uncertainties in the independent variable (the \[OpenCurlyQuote]x\
+\[CloseCurlyQuote] variable), then simple regression and least squares \
+methods have problems; in such cases, the methodology required for fitting \
+errors-in-variables models may be considered instead of that for least squares.
+Least squares problems fall into two categories: linear or ordinary least \
+squares and non-linear least squares, depending on whether or not the \
+residuals are linear in all unknowns.The linear least-squares problem occurs \
+in statistical regression analysis; it has a closed-form solution. A \
+closed-form solution (or closed-form expression) is any formula that can be \
+evaluated in a finite number of standard operations. The non-linear problem \
+has no closed-form solution and is usually solved by iterative refinement; at \
+each iteration the system is approximated by a linear one, and thus the core \
+calculation is similar in both cases.\
+\>", "Text",
+ CellChangeTimes->{
+  3.5928201634930944`*^9, {3.5928202380835323`*^9, 3.592820238236636*^9}, {
+   3.592820395045601*^9, 3.5928203952307186`*^9}, 3.5928204313656693`*^9}],
+
+Cell[CellGroupData[{
+
+Cell["Linear least squares", "Section",
+ CellChangeTimes->{{3.5928209668802276`*^9, 3.5928209769469*^9}}],
+
+Cell[TextData[{
+ "A regression model is a linear one when the model comprises a ",
+ StyleBox["linear combination of the parameters",
+  FontWeight->"Bold"],
+ ", i.e.,"
+}], "Text",
+ CellChangeTimes->{3.5928211249791374`*^9}],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"f", "[", 
+   RowBox[{"x", ",", "\[Beta]"}], "]"}], "=", 
+  RowBox[{
+   UnderoverscriptBox["\[Sum]", 
+    RowBox[{"j", "=", "1"}], "m"], 
+   RowBox[{
+    SubscriptBox["\[Beta]", "j"], 
+    RowBox[{
+     SubscriptBox["\[Phi]", "j"], "[", "x", 
+     "]"}]}]}]}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"where", " ", "the", " ", "functions"}], ",", 
+  RowBox[{
+   SubscriptBox["\[Phi]", "j"], "[", "x", "]"}], ",", 
+  RowBox[{"are", " ", "functions", " ", "of", " ", 
+   RowBox[{"x", "."}]}]}]}], "DisplayFormula",
+ CellChangeTimes->{{3.592821154900972*^9, 3.5928212432191563`*^9}}],
+
+Cell[TextData[{
+ "\:6ce8\:610f\:ff0c\:6307\:7684\:662fparameters\:4e3a\:7ebf\:6027\:7ec4\:5408\
+\:3002\:800c\:975e",
+ Cell[BoxData[
+  RowBox[{
+   SubscriptBox["\[Phi]", "j"], "[", "x", "]"}]],
+  CellChangeTimes->{{3.592821154900972*^9, 3.5928212432191563`*^9}}],
+ "\:662f\:7ebf\:6027\:3002"
+}], "Text",
+ CellChangeTimes->{{3.592821279283058*^9, 3.5928213518161335`*^9}}]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Non-linear least squares", "Title",
+ CellChangeTimes->{3.5928214547150183`*^9}],
+
+Cell["\<\
+There is no closed-form solution to a non-linear least squares problem. \
+Instead, numerical algorithms are used to find the value of the parameters \
+\[Beta] which minimize the objective.\
+\>", "Text",
+ CellChangeTimes->{{3.5928215257080727`*^9, 3.5928215352443957`*^9}}],
+
+Cell[CellGroupData[{
+
+Cell["\<\
+Differences between linear and non-linear least squares\
+\>", "Section",
+ CellChangeTimes->{{3.5928215548323765`*^9, 3.5928215666501465`*^9}}],
+
+Cell[TextData[{
+ "The model function, f, in LLSQ (linear least squares) is a linear \
+combination of parameters of the form ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"f", "=", 
+    RowBox[{
+     RowBox[{
+      RowBox[{
+       SubscriptBox["X", "1"], 
+       SubscriptBox["\[Beta]", "1"]}], "+", 
+      RowBox[{
+       SubscriptBox["X", "2"], 
+       SubscriptBox["\[Beta]", "2"]}], "+"}], "..."}]}], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ ",The model may represent a straight line, a parabola or any other linear \
+combination of functions. In NLLSQ (non-linear least squares) the parameters \
+appear as functions, such as ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    SuperscriptBox["\[Beta]", "2"], ",", 
+    SuperscriptBox["\[ExponentialE]", "\[Beta]x"]}], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " and so forth.If the derivatives ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    FractionBox["\[PartialD]", 
+     RowBox[{"\[PartialD]", 
+      SubscriptBox["\[Beta]", "j"]}]], "f"}], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " are either constant or depend only on the values of the independent \
+variable, the model is linear in the parameters. Otherwise the model is \
+non-linear."
+}], "Text",
+ CellChangeTimes->{{3.5928217173960648`*^9, 3.5928218956677647`*^9}}]
+}, Open  ]]
+}, Open  ]]
+},
+WindowSize->{1350, 631},
+WindowMargins->{{0, Automatic}, {Automatic, 0}},
+FrontEndVersion->"9.0 for Microsoft Windows (64-bit) (November 20, 2012)",
+StyleDefinitions->"Default.nb"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[CellGroupData[{
+Cell[579, 22, 104, 1, 84, "Title"],
+Cell[686, 25, 116, 3, 26, "Subsubtitle"],
+Cell[805, 30, 1734, 25, 182, "Text"],
+Cell[CellGroupData[{
+Cell[2564, 59, 105, 1, 75, "Section"],
+Cell[2672, 62, 222, 6, 30, "Text"],
+Cell[2897, 70, 619, 18, 78, "DisplayFormula"],
+Cell[3519, 90, 370, 9, 31, "Text"]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[3938, 105, 85, 1, 84, "Title"],
+Cell[4026, 108, 282, 5, 30, "Text"],
+Cell[CellGroupData[{
+Cell[4333, 117, 152, 3, 75, "Section"],
+Cell[4488, 122, 1302, 36, 82, "Text"]
+}, Open  ]]
+}, Open  ]]
+}
+]
+*)
+
+(* End of internal cache information *)

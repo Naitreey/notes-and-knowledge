@@ -1,0 +1,782 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 9.0' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       157,          7]
+NotebookDataLength[     30474,        773]
+NotebookOptionsPosition[     27400,        677]
+NotebookOutlinePosition[     27744,        692]
+CellTagsIndexPosition[     27701,        689]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+
+Cell[CellGroupData[{
+Cell["Hilbert space", "Title",
+ CellChangeTimes->{3.5922897663740287`*^9}],
+
+Cell["\<\
+http://en.wikipedia.org/wiki/Hilbert_space\
+\>", "Subsubtitle",
+ CellChangeTimes->{3.592289904039755*^9}],
+
+Cell["\<\
+The mathematical concept of a Hilbert space, named after David Hilbert, \
+generalizes the notion of Euclidean space. It extends the methods of vector \
+algebra and calculus from the two-dimensional Euclidean plane and \
+three-dimensional space to spaces with any finite or infinite number of \
+dimensions. A Hilbert space is an abstract vector space possessing the \
+structure of an inner product that allows length and angle to be measured. \
+Furthermore, Hilbert spaces must be complete, a property that stipulates the \
+existence of enough limits in the space to allow the techniques of calculus \
+to be used.
+Hilbert spaces arise naturally and frequently in mathematics, physics, and \
+engineering, typically as infinite-dimensional function spaces. The earliest \
+Hilbert spaces were studied from this point of view in the first decade of \
+the 20th century by David Hilbert, Erhard Schmidt, and Frigyes Riesz. They \
+are indispensable tools in the theories of partial differential equations, \
+quantum mechanics, Fourier analysis (which includes applications to signal \
+processing and heat transfer)\[LongDash]and ergodic theory, which forms the \
+mathematical underpinning of thermodynamics. John von Neumann coined the term \
+Hilbert space for the abstract concept that underlies many of these diverse \
+applications. The success of Hilbert space methods ushered in a very fruitful \
+era for functional analysis. Apart from the classical Euclidean spaces, \
+examples of Hilbert spaces include spaces of square-integrable functions, \
+spaces of sequences, Sobolev spaces consisting of generalized functions, and \
+Hardy spaces of holomorphic functions.
+Geometric intuition plays an important role in many aspects of Hilbert space \
+theory. Exact analogs of the Pythagorean theorem and parallelogram law hold \
+in a Hilbert space. At a deeper level, perpendicular projection onto a \
+subspace (the analog of \[OpenCurlyDoubleQuote]dropping the altitude\
+\[CloseCurlyDoubleQuote] of a triangle) plays a significant role in \
+optimization problems and other aspects of the theory. An element of a \
+Hilbert space can be uniquely specified by its coordinates with respect to a \
+set of coordinate axes (an orthonormal basis), in analogy with Cartesian \
+coordinates in the plane. When that set of axes is countably infinite, this \
+means that the Hilbert space can also usefully be thought of in terms of \
+infinite sequences that are square-summable. Linear operators on a Hilbert \
+space are likewise fairly concrete objects: in good cases, they are simply \
+transformations that stretch the space by different factors in mutually \
+perpendicular directions in a sense that is made precise by the study of \
+their spectrum.\
+\>", "Text",
+ CellChangeTimes->{3.5922898502025557`*^9}],
+
+Cell[CellGroupData[{
+
+Cell["Example:Euclidean Space", "Section",
+ CellChangeTimes->{{3.5922898745666933`*^9, 3.592289883435107*^9}}],
+
+Cell[TextData[{
+ "One of the most familiar examples of a Hilbert space is the Euclidean space \
+consisting of three-dimensional vectors, denoted by ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["R", "3"], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ ", and equipped with the dot product. ",
+ "The dot product takes two vectors x and y, and produces a real number x\
+\[CenterDot]y."
+}], "Text",
+ CellChangeTimes->{{3.5922899162248263`*^9, 3.5922899451980195`*^9}}],
+
+Cell["\<\
+The dot product satisfies the properties:\
+\>", "Text",
+ CellChangeTimes->{
+  3.592289976080476*^9, {3.5922900651231174`*^9, 3.592290066624111*^9}}],
+
+Cell[CellGroupData[{
+
+Cell["\<\
+It is symmetric in x and y: \[LineSeparator]x \[CenterDot] y = y \[CenterDot] \
+x.\
+\>", "ItemNumbered",
+ CellChangeTimes->{{3.5922900094715924`*^9, 3.592290036046196*^9}}],
+
+Cell["\<\
+It is linear in its first argument: \[LineSeparator](ax1 + bx2) \[CenterDot] \
+y = ax1 \[CenterDot] y + bx2 \[CenterDot] y \[LineSeparator]for any scalars \
+a, b, and vectors x1, x2, and y.\
+\>", "ItemNumbered",
+ CellChangeTimes->{{3.5922900094715924`*^9, 3.592290044639888*^9}}],
+
+Cell["\<\
+It is positive definite: \[LineSeparator]for all vectors x, x \[CenterDot] x \
+\[GreaterEqual] 0, with equality if and only if x = 0.\
+\>", "ItemNumbered",
+ CellChangeTimes->{{3.5922900094715924`*^9, 3.5922900552749367`*^9}}]
+}, Open  ]],
+
+Cell["\<\
+An operation on pairs of vectors that, like the dot product, satisfies these \
+three properties is known as a (real) inner product. A vector space equipped \
+with such an inner product is known as a (real) inner product space. Every \
+finite-dimensional inner product space is also a Hilbert space.The basic \
+feature of the dot product that connects it with Euclidean geometry is that \
+it is related to both the length (or norm) of a vector, denoted ||x||, and to \
+the angle \[Theta] between two vectors x and y by means of the formula:\
+\>", "Text",
+ CellChangeTimes->{
+  3.592290118012152*^9, {3.5922901937803383`*^9, 3.5922902017546225`*^9}}],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"x", "\[CenterDot]", "y"}], "=", 
+  RowBox[{
+   RowBox[{"\[LeftDoubleBracketingBar]", "x", "\[RightDoubleBracketingBar]"}],
+    " ", 
+   RowBox[{"\[LeftDoubleBracketingBar]", "y", "\[RightDoubleBracketingBar]"}],
+    " ", 
+   RowBox[{"Cos", "[", "\[Theta]", "]"}]}]}]], "DisplayFormula",
+ CellChangeTimes->{{3.5922902249199653`*^9, 3.5922902469040875`*^9}, {
+  3.59229029047795*^9, 3.592290333875697*^9}, {3.592290369020977*^9, 
+  3.5922903975098476`*^9}}]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Definition", "Section",
+ CellChangeTimes->{{3.5922904253906636`*^9, 3.5922904268806496`*^9}}],
+
+Cell["\<\
+A Hilbert space H is a real or complex inner product space that is also a \
+complete metric space with respect to the distance function induced by the \
+inner product.[2] To say that H is a complex inner product space means that H \
+is a complex vector space on which there is an inner product \
+\[LeftAngleBracket]x,y\[RightAngleBracket] associating a complex number to \
+each pair of elements x,y of H that satisfies the following properties:\
+\>", "Text",
+ CellChangeTimes->{{3.5922904423108706`*^9, 3.592290487232628*^9}}],
+
+Cell["\<\
+The inner product of a pair of elements is equal to the complex conjugate of \
+the inner product of the swapped elements:\
+\>", "ItemNumbered",
+ CellChangeTimes->{{3.5922905062852488`*^9, 3.592290587262885*^9}, {
+  3.592290986093763*^9, 3.592291011738751*^9}}],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"\[LeftAngleBracket]", 
+   RowBox[{"y", ",", "x"}], "\[RightAngleBracket]"}], "=", 
+  OverscriptBox[
+   RowBox[{"\[LeftAngleBracket]", 
+    RowBox[{"x", ",", "y"}], "\[RightAngleBracket]"}], 
+   "_"]}]], "DisplayFormula",
+ CellChangeTimes->{{3.592291020154325*^9, 3.5922910485251164`*^9}}],
+
+Cell["\<\
+The inner product is linear in its first argument.For all complex numbers a \
+and b,\
+\>", "ItemNumbered",
+ CellChangeTimes->{{3.5922905062852488`*^9, 3.5922906766897335`*^9}, {
+  3.5922910563362923`*^9, 3.5922910619019775`*^9}}],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"\[LeftAngleBracket]", 
+   RowBox[{
+    RowBox[{"a", " ", 
+     SubscriptBox["x", "1"]}], "+", 
+    RowBox[{"b", " ", 
+     SubscriptBox["x", 
+      RowBox[{"2", ","}]], "y"}]}], "\[RightAngleBracket]"}], "=", 
+  RowBox[{
+   RowBox[{"a", 
+    RowBox[{"\[LeftAngleBracket]", 
+     RowBox[{
+      SubscriptBox["x", "1"], ",", "y"}], "\[RightAngleBracket]"}]}], "+", 
+   RowBox[{"b", 
+    RowBox[{"\[LeftAngleBracket]", 
+     RowBox[{
+      SubscriptBox["x", "2"], ",", "y"}], 
+     "\[RightAngleBracket]"}]}]}]}]], "DisplayFormula",
+ CellChangeTimes->{{3.592290732385628*^9, 3.5922908010331745`*^9}}],
+
+Cell["\<\
+The inner product of an element with itself is positive definite:\
+\>", "ItemNumbered",
+ CellChangeTimes->{
+  3.5922908194683847`*^9, {3.592291065981678*^9, 3.5922910772511444`*^9}}],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"\[LeftAngleBracket]", 
+   RowBox[{"x", ",", "x"}], "\[RightAngleBracket]"}], "\[GreaterEqual]", 
+  "0"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+  "where", " ", "the", " ", "case", " ", "of", " ", "equality", " ", "holds", 
+   " ", "precisely", " ", "when", " ", "x"}], "=", "0."}]}], "DisplayFormula",
+ CellChangeTimes->{{3.5922908309439845`*^9, 3.5922908599251842`*^9}}],
+
+Cell["\<\
+It follows from properties 1 and 2 that a complex inner product is antilinear \
+in its second argument, meaning that\
+\>", "Item",
+ CellChangeTimes->{3.59229109287049*^9}],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"\[LeftAngleBracket]", 
+   RowBox[{"x", ",", 
+    RowBox[{
+     SubscriptBox["ay", "1"], "+", 
+     SubscriptBox["by", "2"]}]}], "\[RightAngleBracket]"}], "=", 
+  RowBox[{
+   RowBox[{
+    OverscriptBox["a", "_"], 
+    RowBox[{"\[LeftAngleBracket]", 
+     RowBox[{"x", ",", 
+      SubscriptBox["y", "1"]}], "\[RightAngleBracket]"}]}], "+", 
+   RowBox[{
+    OverscriptBox["b", "_"], 
+    RowBox[{"\[LeftAngleBracket]", 
+     RowBox[{"x", ",", 
+      SubscriptBox["y", "2"]}], 
+     "\[RightAngleBracket]"}]}]}]}]], "DisplayFormula",
+ CellChangeTimes->{{3.59229111154286*^9, 3.592291190975959*^9}}],
+
+Cell["\<\
+The norm is the real-valued function\
+\>", "Text",
+ CellChangeTimes->{3.5922912219574814`*^9}],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"\[LeftDoubleBracketingBar]", "x", "\[RightDoubleBracketingBar]"}], 
+  "=", 
+  SqrtBox[
+   RowBox[{"\[LeftAngleBracket]", 
+    RowBox[{"x", ",", "x"}], "\[RightAngleBracket]"}]]}]], "DisplayFormula",
+ CellChangeTimes->{{3.59229125669349*^9, 3.5922912697981725`*^9}}],
+
+Cell["\<\
+and the distance d between two points x,y in H is defined in terms of the \
+norm by\
+\>", "Text",
+ CellChangeTimes->{3.5922912900085583`*^9}],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"\[LeftDoubleBracketingBar]", 
+   RowBox[{"x", "-", "y"}], "\[RightDoubleBracketingBar]"}], "=", 
+  SqrtBox[
+   RowBox[{"\[LeftAngleBracket]", 
+    RowBox[{
+     RowBox[{"x", "-", "y"}], ",", 
+     RowBox[{"x", "-", "y"}]}], "\[RightAngleBracket]"}]]}]], "DisplayFormula",
+ CellChangeTimes->{{3.5922913043780775`*^9, 3.592291319427044*^9}}],
+
+Cell["\<\
+That this function is a distance function means (1) that it is symmetric in x \
+and y, (2) that the distance between x and itself is zero, and otherwise the \
+distance between x and y must be positive, and (3) that the triangle \
+inequality holds, meaning that the length of one leg of a triangle xyz cannot \
+exceed the sum of the lengths of the other two legs:\
+\>", "Text",
+ CellChangeTimes->{3.592291394355142*^9}],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"\[LeftDoubleBracketingBar]", 
+   RowBox[{"x", "-", "z"}], "\[RightDoubleBracketingBar]"}], 
+  "\[LessSlantEqual]", 
+  RowBox[{
+   RowBox[{"\[LeftDoubleBracketingBar]", 
+    RowBox[{"x", "-", "y"}], "\[RightDoubleBracketingBar]"}], "+", 
+   RowBox[{"\[LeftDoubleBracketingBar]", 
+    RowBox[{"y", "-", "z"}], 
+    "\[RightDoubleBracketingBar]"}]}]}]], "DisplayFormula",
+ CellChangeTimes->{{3.5922914684442196`*^9, 3.592291502014455*^9}}],
+
+Cell["\<\
+This last property is ultimately a consequence of the more fundamental Cauchy\
+\[Dash]Schwarz inequality, which asserts:\
+\>", "Text",
+ CellChangeTimes->{{3.5922915158681517`*^9, 3.592291521206689*^9}}],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"\[LeftBracketingBar]", 
+   RowBox[{"\[LeftAngleBracket]", 
+    RowBox[{"x", ",", "y"}], "\[RightAngleBracket]"}], 
+   "\[RightBracketingBar]"}], "\[LessEqual]", 
+  RowBox[{
+   RowBox[{"\[LeftDoubleBracketingBar]", "x", "\[RightDoubleBracketingBar]"}],
+    " ", 
+   RowBox[{
+   "\[LeftDoubleBracketingBar]", "y", 
+    "\[RightDoubleBracketingBar]"}]}]}], "\[IndentingNewLine]", 
+ RowBox[{"with", " ", "equality", " ", "if", " ", "and", " ", "only", " ", 
+  "if", " ", "x", " ", "and", " ", "y", " ", "are", " ", "linearly", " ", 
+  RowBox[{"dependent", "."}]}]}], "DisplayFormula",
+ CellChangeTimes->{{3.592291563794899*^9, 3.5922916144504523`*^9}}],
+
+Cell["\<\
+Of special importance is the notion of a closed linear subspace of a Hilbert \
+space that, with the inner product induced by restriction, is also complete \
+(being a closed set in a complete metric space) and therefore a Hilbert space \
+in its own right.\
+\>", "Text",
+ CellChangeTimes->{3.5922917742941513`*^9}],
+
+Cell[CellGroupData[{
+
+Cell["Other Examples", "Subsection",
+ CellChangeTimes->{{3.592292290300519*^9, 3.5922923046970577`*^9}}],
+
+Cell["\<\
+Lebesgue spaces
+Sobolev spaces\
+\>", "Text",
+ CellChangeTimes->{{3.5922923186643085`*^9, 3.5922923304140935`*^9}, {
+  3.5922924866530933`*^9, 3.592292487298524*^9}}]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Application", "Section",
+ CellChangeTimes->{{3.5922925016350193`*^9, 3.592292504450884*^9}}],
+
+Cell["\<\
+Many of the applications of Hilbert spaces exploit the fact that Hilbert \
+spaces support generalizations of simple geometric concepts like projection \
+and change of basis from their usual finite dimensional setting. In \
+particular, the spectral theory of continuous self-adjoint linear operators \
+on a Hilbert space generalizes the usual spectral decomposition of a matrix, \
+and this often plays a major role in applications of the theory to other \
+areas of mathematics and physics.\
+\>", "Text",
+ CellChangeTimes->{3.592292525872073*^9}],
+
+Cell[CellGroupData[{
+
+Cell["Sturm\[Dash]Liouville theory", "Subsection",
+ CellChangeTimes->{3.592292557307897*^9}],
+
+Cell["\<\
+In the theory of ordinary differential equations, spectral methods on a \
+suitable Hilbert space are used to study the behavior of eigenvalues and \
+eigenfunctions of differential equations. For example, the \
+Sturm\[Dash]Liouville problem arises in the study of the harmonics of waves \
+in a violin string or a drum, and is a central problem in ordinary \
+differential equations.\
+\>", "Text",
+ CellChangeTimes->{
+  3.59229261902309*^9, {3.59229276702816*^9, 3.5922927674954367`*^9}, 
+   3.5922928288611684`*^9}],
+
+Cell["\<\
+The problem only has solutions for certain values of \[Lambda], called \
+eigenvalues of the system, and this is a consequence of the spectral theorem \
+for compact operators applied to the integral operator defined by the Green's \
+function for the system. Furthermore, another consequence of this general \
+result is that the eigenvalues \[Lambda] of the system can be arranged in an \
+increasing sequence tending to infinity.\
+\>", "Text",
+ CellChangeTimes->{
+  3.59229261902309*^9, {3.59229276702816*^9, 3.5922927674954367`*^9}, 
+   3.5922928288611684`*^9}]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Partial differential equations", "Subsection",
+ CellChangeTimes->{3.592292907578311*^9}],
+
+Cell["\<\
+Hilbert spaces form a basic tool in the study of partial differential \
+equations.For many classes of partial differential equations, such as linear \
+elliptic equations, it is possible to consider a generalized solution (known \
+as a weak solution) by enlarging the class of functions. Many weak \
+formulations involve the class of Sobolev functions, which is a Hilbert space. 
+Hilbert spaces allow for many elliptic partial differential equations to be \
+formulated in a similar way, and the Lax\[Dash]Milgram theorem is then a \
+basic tool in their analysis. With suitable modifications, similar techniques \
+can be applied to parabolic partial differential equations and certain \
+hyperbolic partial differential equations.\
+\>", "Text",
+ CellChangeTimes->{
+  3.5922929167914133`*^9, 3.592293067020992*^9, {3.5922931097953568`*^9, 
+   3.592293110267638*^9}}]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Ergodic theory", "Subsection",
+ CellChangeTimes->{3.5922932124499245`*^9}],
+
+Cell["\<\
+The field of ergodic theory is the study of the long-term behavior of chaotic \
+dynamical systems. The protypical case of a field that ergodic theory applies \
+to is thermodynamics, in which\[LongDash]though the microscopic state of a \
+system is extremely complicated (it is impossible to understand the ensemble \
+of individual collisions between particles of matter)\[LongDash]the average \
+behavior over sufficiently long time intervals is tractable. The laws of \
+thermodynamics are assertions about such average behavior. In particular, one \
+formulation of the zeroth law of thermodynamics asserts that over \
+sufficiently long timescales, the only functionally independent measurement \
+that one can make of a thermodynamic system in equilibrium is its total \
+energy, in the form of temperature.\
+\>", "Text",
+ CellChangeTimes->{3.5922932354271455`*^9}]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Fourier analysis", "Subsection",
+ CellChangeTimes->{3.592293244976471*^9}],
+
+Cell["\<\
+One of the basic goals of Fourier analysis is to decompose a function into a \
+(possibly infinite) linear combination of given basis functions: the \
+associated Fourier series. The classical Fourier series associated to a \
+function f defined on the interval [0, 1] is a series of the form:\
+\>", "Text",
+ CellChangeTimes->{3.5922942606181164`*^9, 3.5922947689883566`*^9}],
+
+Cell[BoxData[{
+ RowBox[{
+  UnderoverscriptBox["\[Sum]", 
+   RowBox[{"n", "=", 
+    RowBox[{"-", "\[Infinity]"}]}], "\[Infinity]"], 
+  RowBox[{
+   SubscriptBox["a", "n"], 
+   SuperscriptBox["\[ExponentialE]", 
+    RowBox[{
+    "2", "\[Pi]\[ImaginaryI]n\[Theta]"}]]}]}], "\[IndentingNewLine]", \
+"where", "\[IndentingNewLine]", 
+ RowBox[{
+  SubscriptBox["a", "n"], "=", 
+  RowBox[{
+   SubsuperscriptBox["\[Integral]", "0", "1"], 
+   RowBox[{
+    RowBox[{"f", "[", "\[Theta]", "]"}], 
+    SuperscriptBox["\[ExponentialE]", 
+     RowBox[{
+      RowBox[{"-", "2"}], "\[Pi]\[ImaginaryI]n\[Theta]"}]], 
+    RowBox[{"\[DifferentialD]", "\[Theta]"}]}]}]}]}], "DisplayFormula",
+ CellChangeTimes->{{3.5922947941580276`*^9, 3.5922949151201525`*^9}}],
+
+Cell[TextData[{
+ "A significant problem in classical Fourier series asks in what sense the \
+Fourier series converges, if at all, to the function f. Hilbert space methods \
+provide one possible answer to this question.The functions ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    RowBox[{
+     SubscriptBox["e", "n"], "(", "\[Theta]", ")"}], "=", 
+    SuperscriptBox["\[ExponentialE]", 
+     RowBox[{"2", "\[Pi]\[ImaginaryI]n\[Theta]"}]]}], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " form an orthogonal basis of the Hilbert space ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    SuperscriptBox["L", "2"], "(", 
+    RowBox[{"[", 
+     RowBox[{"0", ",", "1"}], "]"}], ")"}], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ ". Consequently, any square-integrable function can be expressed as a series:"
+}], "Text",
+ CellChangeTimes->{
+  3.5922949370531*^9, {3.5922949765862875`*^9, 3.5922950629504952`*^9}}],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{
+   RowBox[{"f", "[", "\[Theta]", "]"}], "=", 
+   RowBox[{
+    UnderscriptBox["\[Sum]", "n"], 
+    RowBox[{
+     SubscriptBox["a", "n"], 
+     RowBox[{
+      SubscriptBox["e", "n"], "[", "\[Theta]", "]"}]}]}]}], ",", 
+  RowBox[{
+   SubscriptBox["a", "n"], "=", 
+   RowBox[{"\[LeftAngleBracket]", 
+    RowBox[{"f", ",", 
+     SubscriptBox["e", "n"]}], "\[RightAngleBracket]"}]}]}]], "DisplayFormula",
+ CellChangeTimes->{{3.5922950698590727`*^9, 3.5922951538671684`*^9}}],
+
+Cell[TextData[{
+ "and, moreover, this series converges in the Hilbert space sense (that is, \
+in the ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["L", "2"], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " mean).\n\nThe problem can also be studied from the abstract point of view: \
+every Hilbert space has an orthonormal basis, and every element of the \
+Hilbert space can be written in a unique way as a sum of multiples of these \
+basis elements. The coefficients appearing on these basis elements are \
+sometimes known abstractly as the Fourier coefficients of the element of the \
+space.The abstraction is especially useful when it is more natural to use \
+different basis functions for a space. In many circumstances, it is desirable \
+not to decompose a function into trigonometric functions, but rather into \
+orthogonal polynomials or wavelets for instance,and in higher dimensions into \
+spherical harmonics.\nIn various applications to physical problems, a \
+function can be decomposed into physically meaningful eigenfunctions of a \
+differential operator (typically the Laplace operator): this forms the \
+foundation for the spectral study of functions, in reference to the spectrum \
+of the differential operator.\n\nSpectral theory also underlies certain \
+aspects of the Fourier transform of a function.Whereas Fourier analysis \
+decomposes a function defined on a compact set into the discrete spectrum of \
+the Laplacian,",
+ "the Fourier transform of a function is the decomposition of a function \
+defined on all of Euclidean space into its components in the continuous \
+spectrum of the Laplacian. "
+}], "Text",
+ CellChangeTimes->{{3.592295173685296*^9, 3.5922951782253027`*^9}, {
+  3.5922953568549905`*^9, 3.592295401384486*^9}, {3.5922954623148766`*^9, 
+  3.5922954625229855`*^9}, {3.5922955095557137`*^9, 3.5922955106274223`*^9}, {
+  3.592295557085195*^9, 3.592295566801631*^9}}]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Quantum mechanics", "Subsection",
+ CellChangeTimes->{3.5922956881574235`*^9}],
+
+Cell["\<\
+In the mathematically rigorous formulation of quantum mechanics, developed by \
+John von Neumann, the possible states (more precisely, the pure states) of a \
+quantum mechanical system are represented by unit vectors (called state \
+vectors) residing in a complex separable Hilbert space, known as the state \
+space, well defined up to a complex number of norm 1 (the phase factor). In \
+other words, the possible states are points in the projectivization of a \
+Hilbert space, usually called the complex projective space. The exact nature \
+of this Hilbert space is dependent on the system; for example, the position \
+and momentum states for a single non-relativistic spin zero particle is the \
+space of all square-integrable functions, while the states for the spin of a \
+single proton are unit elements of the two-dimensional complex Hilbert space \
+of spinors. Each observable is represented by a self-adjoint linear operator \
+acting on the state space. Each eigenstate of an observable corresponds to an \
+eigenvector of the operator, and the associated eigenvalue corresponds to the \
+value of the observable in that eigenstate.
+The time evolution of a quantum state is described by the \
+Schr\[ODoubleDot]dinger equation, in which the Hamiltonian, the operator \
+corresponding to the total energy of the system, generates time evolution.
+The inner product between two state vectors is a complex number known as a \
+probability amplitude. During an ideal measurement of a quantum mechanical \
+system, the probability that a system collapses from a given initial state to \
+a particular eigenstate is given by the square of the absolute value of the \
+probability amplitudes between the initial and final states. The possible \
+results of a measurement are the eigenvalues of the operator\[LongDash]which \
+explains the choice of self-adjoint operators, for all the eigenvalues must \
+be real. The probability distribution of an observable in a given state can \
+be found by computing the spectral decomposition of the corresponding operator.
+For a general system, states are typically not pure, but instead are \
+represented as statistical mixtures of pure states, or mixed states, given by \
+density matrices: self-adjoint operators of trace one on a Hilbert space. \
+Moreover, for general quantum mechanical systems, the effects of a single \
+measurement can influence other parts of a system in a manner that is \
+described instead by a positive operator valued measure. Thus the structure \
+both of the states and observables in the general theory is considerably more \
+complicated than the idealization for pure states.
+Heisenberg\[CloseCurlyQuote]s uncertainty principle is represented by the \
+statement that the operators corresponding to certain observables do not \
+commute, and gives a specific form that the commutator must have.\
+\>", "Text",
+ CellChangeTimes->{
+  3.592296048528157*^9, {3.5922962642767487`*^9, 3.592296265108305*^9}}]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Orthonormal bases", "Section",
+ CellChangeTimes->{3.5922978596051884`*^9}],
+
+Cell[TextData[{
+ "The notion of an orthonormal basis from linear algebra generalizes over to \
+the case of Hilbert spaces.In a Hilbert space H, an orthonormal basis is a \
+family ",
+ Cell[BoxData[
+  FormBox[
+   SubscriptBox[
+    RowBox[{"{", 
+     SubscriptBox["e", "k"], "}"}], 
+    RowBox[{"k", "\[Element]", "B"}]], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " of elements of H satisfying the conditions:"
+}], "Text",
+ CellChangeTimes->{
+  3.592297872972042*^9, {3.592297909645337*^9, 3.5922979752387867`*^9}}],
+
+Cell[CellGroupData[{
+
+Cell["\<\
+Orthogonality: Every two different elements of B are orthogonal.\
+\>", "ItemNumbered",
+ CellChangeTimes->{{3.59229799837711*^9, 3.5922980172711353`*^9}}],
+
+Cell["\<\
+Normalization: Every element of the family has norm 1.\
+\>", "ItemNumbered",
+ CellChangeTimes->{{3.59229799837711*^9, 3.5922980192524476`*^9}}],
+
+Cell[TextData[{
+ "Completeness: The linear span of the family ",
+ Cell[BoxData[
+  FormBox[
+   SubscriptBox["e", "k"], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ ", k \[Element] B, is dense in H."
+}], "ItemNumbered",
+ CellChangeTimes->{{3.59229799837711*^9, 3.592298033171666*^9}}]
+}, Open  ]],
+
+Cell["\<\
+A system of vectors satisfying the first two conditions basis is called an \
+orthonormal system or an orthonormal set (or an orthonormal sequence if B is \
+countable). Such a system is always linearly independent. Completeness of an \
+orthonormal system of vectors of a Hilbert space can be equivalently restated \
+as:\
+\>", "Text",
+ CellChangeTimes->{3.5922980878288717`*^9}],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"if", " ", 
+   RowBox[{"\[LeftAngleBracket]", 
+    RowBox[{"v", ",", 
+     SubscriptBox["e", "k"]}], "\[RightAngleBracket]"}]}], "=", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"0", " ", "for", " ", "all", " ", "k"}], "\[Element]", 
+    RowBox[{"H", " ", "then", " ", "v"}]}], "=", "0."}]}]], "DisplayFormula",
+ CellChangeTimes->{{3.5922980989472356`*^9, 3.592298141599489*^9}}],
+
+Cell["\<\
+This is related to the fact that the only vector orthogonal to a dense linear \
+subspace is the zero vector, for if S is any orthonormal set and v is \
+orthogonal to S, then v is orthogonal to the closure of the linear span of S, \
+which is the whole space.\
+\>", "Text",
+ CellChangeTimes->{3.5922981693718853`*^9}]
+}, Open  ]],
+
+Cell["\<\
+Many more on wikipedia that i do not know yet. \
+\>", "Section",
+ CellChangeTimes->{{3.592298268566834*^9, 3.5922983347246885`*^9}}]
+}, Open  ]]
+},
+WindowSize->{1060, 689},
+WindowMargins->{{0, Automatic}, {0, Automatic}},
+FrontEndVersion->"9.0 for Microsoft Windows (64-bit) (November 20, 2012)",
+StyleDefinitions->"Default.nb"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[CellGroupData[{
+Cell[579, 22, 74, 1, 84, "Title"],
+Cell[656, 25, 115, 3, 26, "Subsubtitle"],
+Cell[774, 30, 2797, 40, 372, "Text"],
+Cell[CellGroupData[{
+Cell[3596, 74, 110, 1, 75, "Section"],
+Cell[3709, 77, 473, 11, 51, "Text"],
+Cell[4185, 90, 158, 4, 30, "Text"],
+Cell[CellGroupData[{
+Cell[4368, 98, 182, 4, 47, "ItemNumbered"],
+Cell[4553, 104, 289, 5, 65, "ItemNumbered"],
+Cell[4845, 111, 235, 4, 47, "ItemNumbered"]
+}, Open  ]],
+Cell[5095, 118, 658, 10, 87, "Text"],
+Cell[5756, 130, 490, 11, 25, "DisplayFormula"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[6283, 146, 99, 1, 75, "Section"],
+Cell[6385, 149, 536, 8, 68, "Text"],
+Cell[6924, 159, 270, 5, 30, "ItemNumbered"],
+Cell[7197, 166, 323, 8, 25, "DisplayFormula"],
+Cell[7523, 176, 239, 5, 30, "ItemNumbered"],
+Cell[7765, 183, 632, 19, 25, "DisplayFormula"],
+Cell[8400, 204, 192, 4, 30, "ItemNumbered"],
+Cell[8595, 210, 414, 9, 48, "DisplayFormula"],
+Cell[9012, 221, 181, 4, 29, "Item"],
+Cell[9196, 227, 629, 19, 25, "DisplayFormula"],
+Cell[9828, 248, 104, 3, 30, "Text"],
+Cell[9935, 253, 300, 7, 27, "DisplayFormula"],
+Cell[10238, 262, 151, 4, 30, "Text"],
+Cell[10392, 268, 374, 9, 27, "DisplayFormula"],
+Cell[10769, 279, 428, 7, 68, "Text"],
+Cell[11200, 288, 471, 11, 25, "DisplayFormula"],
+Cell[11674, 301, 212, 4, 30, "Text"],
+Cell[11889, 307, 684, 15, 48, "DisplayFormula"],
+Cell[12576, 324, 322, 6, 49, "Text"],
+Cell[CellGroupData[{
+Cell[12923, 334, 104, 1, 40, "Subsection"],
+Cell[13030, 337, 175, 5, 49, "Text"]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[13254, 348, 98, 1, 75, "Section"],
+Cell[13355, 351, 554, 9, 87, "Text"],
+Cell[CellGroupData[{
+Cell[13934, 364, 92, 1, 40, "Subsection"],
+Cell[14029, 367, 523, 10, 68, "Text"],
+Cell[14555, 379, 570, 10, 68, "Text"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[15162, 394, 94, 1, 40, "Subsection"],
+Cell[15259, 397, 872, 14, 125, "Text"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[16168, 416, 80, 1, 40, "Subsection"],
+Cell[16251, 419, 872, 13, 125, "Text"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[17160, 437, 80, 1, 40, "Subsection"],
+Cell[17243, 440, 382, 6, 49, "Text"],
+Cell[17628, 448, 737, 21, 117, "DisplayFormula"],
+Cell[18368, 471, 916, 23, 70, "Text"],
+Cell[19287, 496, 503, 15, 43, "DisplayFormula"],
+Cell[19793, 513, 1911, 31, 260, "Text"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[21741, 549, 83, 1, 40, "Subsection"],
+Cell[21827, 552, 2969, 41, 410, "Text"]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[24845, 599, 80, 1, 75, "Section"],
+Cell[24928, 602, 524, 14, 51, "Text"],
+Cell[CellGroupData[{
+Cell[25477, 620, 163, 3, 30, "ItemNumbered"],
+Cell[25643, 625, 153, 3, 30, "ItemNumbered"],
+Cell[25799, 630, 291, 8, 30, "ItemNumbered"]
+}, Open  ]],
+Cell[26105, 641, 386, 7, 68, "Text"],
+Cell[26494, 650, 405, 10, 25, "DisplayFormula"],
+Cell[26902, 662, 325, 6, 49, "Text"]
+}, Open  ]],
+Cell[27242, 671, 142, 3, 75, "Section"]
+}, Open  ]]
+}
+]
+*)
+
+(* End of internal cache information *)

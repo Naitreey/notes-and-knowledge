@@ -1,0 +1,299 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 9.0' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       157,          7]
+NotebookDataLength[      8598,        289]
+NotebookOptionsPosition[      7673,        253]
+NotebookOutlinePosition[      8019,        268]
+CellTagsIndexPosition[      7976,        265]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+
+Cell[CellGroupData[{
+Cell["Determinant", "Title",
+ CellChangeTimes->{{3.598404443664906*^9, 3.5984044460975204`*^9}}],
+
+Cell[CellGroupData[{
+
+Cell[TextData[{
+ "Determinant of an ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"n", "\[Times]", "n"}], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " matrix ",
+ Cell[BoxData[
+  FormBox["A", TraditionalForm]],
+  FormatType->"TraditionalForm"]
+}], "Section",
+ CellChangeTimes->{{3.5984045079185514`*^9, 3.5984045474307733`*^9}}],
+
+Cell[CellGroupData[{
+
+Cell["1.The Leibniz formula", "Subsection",
+ CellChangeTimes->{{3.598405123910325*^9, 3.5984051247358704`*^9}}],
+
+Cell[TextData[{
+ "The Leibniz formula for the determinant of an ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"n", "\[Times]", "n"}], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " matrix ",
+ Cell[BoxData[
+  FormBox["A", TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " is"
+}], "Text",
+ CellChangeTimes->{{3.598404788522664*^9, 3.5984048144798903`*^9}}],
+
+Cell[BoxData[
+ FormBox[
+  RowBox[{
+   RowBox[{"det", "(", "A", ")"}], "=", 
+   RowBox[{
+    UnderscriptBox["\[Sum]", 
+     RowBox[{"\[Sigma]", "\[Element]", 
+      SubscriptBox["S", "n"]}]], 
+    RowBox[{
+     RowBox[{"sgn", "(", "\[Sigma]", ")"}], " ", 
+     RowBox[{
+      UnderoverscriptBox["\[Product]", 
+       RowBox[{"i", "=", "1"}], "n"], 
+      SubscriptBox["A", 
+       RowBox[{"i", ",", 
+        SubscriptBox["\[Sigma]", "i"]}]]}]}]}]}], 
+  TraditionalForm]], "DisplayFormula",
+ CellChangeTimes->{{3.59840467881689*^9, 3.5984047719016333`*^9}}],
+
+Cell[TextData[{
+ "Here the sum is computed over all permutations \[Sigma] of the set {1, 2, \
+..., n}. A permutation is a function that reorders this set of integers. The \
+value in the ith position after the reordering \[Sigma] is denoted ",
+ Cell[BoxData[
+  FormBox[
+   SubscriptBox["\[Sigma]", "i"], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ ".The set of all such permutations (also known as the symmetric group on ",
+ Cell[BoxData[
+  FormBox["n", TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " elements) is denoted ",
+ Cell[BoxData[
+  FormBox[
+   SubscriptBox["S", "n"], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ ". For each permutation \[Sigma], sgn(\[Sigma]) denotes the signature of \
+\[Sigma], a value that is +1 whenever the reordering given by \[Sigma] can be \
+achieved by successively interchanging two entries an even number of times, \
+and \[Minus]1 whenever it can be achieved by an odd number of such \
+interchanges."
+}], "Text",
+ CellChangeTimes->{{3.5984048491268854`*^9, 3.598404867233901*^9}, {
+  3.598404920789446*^9, 3.5984049415090203`*^9}}]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["2.Using Levi-Civita symbol", "Subsection",
+ CellChangeTimes->{{3.5984051619405622`*^9, 3.598405174780085*^9}}],
+
+Cell[TextData[{
+ "It is sometimes useful to extend the Leibniz formula to a summation in \
+which not only permutations, but all sequences of ",
+ Cell[BoxData[
+  FormBox["n", TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " indices in the range ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"1", ",", "...", ",", "n"}], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " occur, ensuring that the contribution of a sequence will be zero unless it \
+denotes a permutation. Thus the totally \
+antisymmetric(\:5168\:53cd\:5bf9\:79f0\:7684) Levi-Civita symbol ",
+ Cell[BoxData[
+  FormBox[
+   SubscriptBox["\[Epsilon]", 
+    RowBox[{
+     SubscriptBox["i", "1"], ",", "...", ",", 
+     SubscriptBox["i", "n"]}]], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " extends the signature of a permutation."
+}], "Text",
+ CellChangeTimes->{{3.5984051944051094`*^9, 3.59840522521856*^9}, {
+  3.59840528134781*^9, 3.5984053653116355`*^9}}],
+
+Cell[BoxData[
+ FormBox[
+  RowBox[{
+   RowBox[{"det", "(", "A", ")"}], "=", 
+   RowBox[{
+    RowBox[{
+     RowBox[{
+      UnderoverscriptBox["\[Sum]", 
+       RowBox[{
+        SubscriptBox["i", "1"], ",", "...", ",", 
+        RowBox[{
+         SubscriptBox["i", "n"], "=", "1"}]}], "n"], 
+      RowBox[{
+       SubscriptBox["\[Epsilon]", 
+        RowBox[{
+         SubscriptBox["i", "1"], ",", "...", ",", 
+         SubscriptBox["i", "n"]}]], 
+       SubscriptBox["a", 
+        RowBox[{"1", ",", 
+         SubscriptBox["i", "1"]}]]}]}], "..."}], 
+    SubscriptBox["a", 
+     RowBox[{"n", ",", 
+      SubscriptBox["i", "n"]}]]}]}], TraditionalForm]], "Input",
+ CellChangeTimes->{{3.5984053999446206`*^9, 3.598405471326995*^9}, {
+  3.598405502060437*^9, 3.5984055497991214`*^9}}]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Matrix inverse", "Section",
+ CellChangeTimes->{{3.5984126305844235`*^9, 3.5984126340217037`*^9}}],
+
+Cell[BoxData[
+ FormBox[
+  RowBox[{
+   TemplateBox[{"A"},
+    "Inverse"], "=", 
+   RowBox[{
+    FractionBox[
+     TemplateBox[{"C"},
+      "Transpose"], 
+     TemplateBox[{"A"},
+      "Abs"]], "=", 
+    RowBox[{
+     FractionBox["1", 
+      TemplateBox[{"A"},
+       "Abs"]], 
+     RowBox[{"(", "\[NoBreak]", GridBox[{
+        {
+         SubscriptBox["C", "11"], 
+         SubscriptBox["C", "21"], "\[CenterEllipsis]", 
+         SubscriptBox["C", "n1"]},
+        {
+         SubscriptBox["C", "12"], 
+         SubscriptBox["C", "22"], "\[CenterEllipsis]", 
+         SubscriptBox["C", "n2"]},
+        {"\[VerticalEllipsis]", "\[VerticalEllipsis]", 
+         "\[DescendingEllipsis]", "\[VerticalEllipsis]"},
+        {
+         SubscriptBox["C", 
+          RowBox[{"1", " ", "n"}]], 
+         SubscriptBox["C", 
+          RowBox[{"2", " ", "n"}]], "\[Placeholder]", 
+         SubscriptBox["C", "nn"]}
+       },
+       GridBoxAlignment->{
+        "Columns" -> {{Center}}, "ColumnsIndexed" -> {}, 
+         "Rows" -> {{Baseline}}, "RowsIndexed" -> {}},
+       GridBoxSpacings->{"Columns" -> {
+           Offset[0.27999999999999997`], {
+            Offset[0.7]}, 
+           Offset[0.27999999999999997`]}, "ColumnsIndexed" -> {}, "Rows" -> {
+           Offset[0.2], {
+            Offset[0.4]}, 
+           Offset[0.2]}, "RowsIndexed" -> {}}], "\[NoBreak]", ")"}]}]}]}], 
+  TraditionalForm]], "Input",
+ CellChangeTimes->{{3.5984126434719768`*^9, 3.5984128106993675`*^9}, {
+  3.5984128801885047`*^9, 3.5984129288277845`*^9}}],
+
+Cell["so that", "Text",
+ CellChangeTimes->{{3.598412948786031*^9, 3.598412949728657*^9}}],
+
+Cell[BoxData[
+ FormBox[
+  RowBox[{
+   SubscriptBox[
+    TemplateBox[{"A"},
+     "Inverse"], 
+    RowBox[{"i", "\[InvisibleComma]", "j"}]], "=", 
+   RowBox[{
+    RowBox[{
+     FractionBox["1", 
+      TemplateBox[{"A"},
+       "Abs"]], 
+     SubscriptBox[
+      RowBox[{"(", 
+       TemplateBox[{"C"},
+        "Transpose"], ")"}], 
+      RowBox[{"i", "\[InvisibleComma]", "j"}]]}], "=", 
+    RowBox[{
+     FractionBox["1", 
+      TemplateBox[{"A"},
+       "Abs"]], 
+     SubscriptBox["C", 
+      RowBox[{"j", "\[InvisibleComma]", "i"}]]}]}]}], 
+  TraditionalForm]], "Input",
+ CellChangeTimes->{{3.59841295467494*^9, 3.598413096540208*^9}}],
+
+Cell["\<\
+where |A| is the determinant of A, C is the matrix of cofactors(\:4f59\:5b50\
+\:5f0f).\
+\>", "Text",
+ CellChangeTimes->{{3.598413104951791*^9, 3.598413169657735*^9}}]
+}, Open  ]]
+}, Open  ]]
+},
+WindowSize->{707, 544},
+WindowMargins->{{Automatic, 214}, {11, Automatic}},
+FrontEndVersion->"9.0 for Microsoft Windows (64-bit) (November 20, 2012)",
+StyleDefinitions->"Default.nb"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[CellGroupData[{
+Cell[579, 22, 96, 1, 105, "Title"],
+Cell[CellGroupData[{
+Cell[700, 27, 332, 11, 93, "Section"],
+Cell[CellGroupData[{
+Cell[1057, 42, 111, 1, 50, "Subsection"],
+Cell[1171, 45, 363, 12, 39, "Text"],
+Cell[1537, 59, 555, 17, 71, "DisplayFormula"],
+Cell[2095, 78, 1097, 24, 237, "Text"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[3229, 107, 116, 1, 50, "Subsection"],
+Cell[3348, 110, 937, 24, 167, "Text"],
+Cell[4288, 136, 776, 24, 73, "Input"]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[5113, 166, 103, 1, 93, "Section"],
+Cell[5219, 169, 1515, 45, 101, "Input"],
+Cell[6737, 216, 89, 1, 38, "Text"],
+Cell[6829, 219, 637, 24, 66, "Input"],
+Cell[7469, 245, 176, 4, 38, "Text"]
+}, Open  ]]
+}, Open  ]]
+}
+]
+*)
+
+(* End of internal cache information *)
+

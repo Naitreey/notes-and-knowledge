@@ -1,0 +1,884 @@
+\RequirePackage[l2tabu, orthodox]{nag}
+\documentclass{article}
+
+%\usepackage[a4paper,hscale=0.61,hmargin={1:2},marginparwidth=3cm]{geometry}
+\usepackage[a4paper,hcentering,textwidth=0.63\paperwidth,includemp,marginparwidth=3cm]{geometry}
+\usepackage{xeCJK}
+
+\usepackage[pdfborder={0 0 0},colorlinks]{hyperref}
+\usepackage{graphicx,amsmath,amssymb,bm,mathtools,subcaption,caption,cleveref}
+\usepackage[Q=yes]{examplep}
+\usepackage{listings}
+\usepackage{enumitem}
+\usepackage{booktabs}
+
+%customize description list to get fixed-width label
+\setlist[description]{leftmargin=6em,style=nextline,font=\normalfont}
+%文献源 \addbibresource{•}
+
+%设置字体
+\setmainfont{Adobe Garamond Pro}
+\setCJKmainfont[BoldFont={Adobe Heiti Std R},ItalicFont={Adobe Kaiti Std R}]{Adobe Song Std L}
+\setCJKmonofont{Adobe Fangsong Std R}
+\setCJKsansfont{Hiragino Sans GB W3}
+
+%代码宏包
+\usepackage{listings}
+\lstset{basicstyle=\ttfamily,texcl=true,mathescape=true,morecomment=[s][\normalfont\itshape]{<}{>}} 
+% [LaTeX]TeX or mathematica or etc?
+
+%一些定义
+\newcommand{\key}[1]{\PVerb{#1}}
+\newcommand{\syntax}[1]{\PVerb{#1}}
+\newcommand{\command}[1]{\PVerb{#1}}
+\newcommand{\dq}[1]{``#1''}
+\newcommand{\sq}[1]{`#1'}
+\newcommand{\marginnote}[1]{\marginpar{\footnotesize #1}}
+
+\title{Vim Note}
+\author{Naitree Zhu}
+\date{\today}
+
+\begin{document}
+\maketitle
+%目录 \tableofcontents
+\part{Moral Lessions}
+To learn Vim, Learning to \emph{touch type} is imperative.
+Touch typing is more than just not looking at the keyboard; it means doing it by feel. When touch typists make an error, they know it even before their eyes process the information on the screen in front of them. They feel it in their fingers, like a misplaced step.
+
+When we make a typing error, we can use the backspace key to erase the mistake and then make a correction.
+Expert typists recommend to delete the entire word; then type it out again.
+It will also be a good practice on typing speed.
+
+Deciphering the meaning of Vim's Normal mode command sequences can be challenging, but you'll get better at it with \emph{practice}.
+
+
+Normal mode is Vim's natural resting state.
+
+Vim script enables us to add new functionality to Vim or to change existing functionality.
+
+Traditionally, Vim runs inside of the terminal, with no graphical user interface(GUI), that is, Vim has a TUI(textual user interface). GVim or MacVim provide a bridge into the world of Vim. In them, more fonts and more colors for syntax highlighting are provided. Moreover, some of the conventions of the operating system are honored. But be aware that there's always a better way.
+
+Vim is optimized for repetition. Its efficiency stems from the way it tracks our most recent actions. We can always replay the last change with a single keystroke. \emph{Learn to craft our actions so that they perform a useful unit of work when replayed. Mastering this concept is the key to becoming effective with Vim.}
+
+The ideal (Dot Formula): \emph{One keystroke to move, one keystroke to execute}.
+
+Vim provides a \emph{modal} user interface. This means that the result of pressing any key on the keyboard may differ depending on which mode is active at the time. It's vital to know which mode is active and how to switch between Vim's modes.
+
+\part{General Concepts}
+\section{Modes}
+Some 7 modes:\\
+Normal mode. Visual mode. Select mode. Insert mode. Replace mode. Visual Replace mode. Command-Line mode. Operator-Pending mode.
+
+\section{Terminology}
+\begin{description}
+  \item[buffer] A buffer is an in-memory representation of a file. When we open a file in Vim, its contents are read into a buffer, which takes the same name as the file. After editing a buffer, we can write the contents of the buffer back into the file.
+\end{description}
+
+\section{Syntax}
+\begin{description}
+  \item[\syntax{[count]}] An optional number that may precede the command to multiply or iterate the command. Many of the commands that are available in Normal mode can be \emph{prefixed} with a count. If no number is given, a count of one is used, unless otherwise noted.
+\end{description}
+
+\part{Commands}
+\section{Special Keys}
+\begin{description}
+  \item[\key{i_<Ctrl-v>}] Insert next non-digit literally. For special keys, the terminal code is inserted. The characters typed right after \key{<Ctrl-v>} are not considered for mapping. When \key{<Ctrl-v>} is mapped (e.g.\ to paste text) you can often use \key{i_<Ctrl-Q>} instead. \syntax{<C-v>} can also be used to enter any characters by character code: \syntax{<C-v>{code}}. The \syntax{{code}} can be decimal, octal or hexadecimal value of a character. There are five ways to enter the character value (\cref{tab:characterValues}).
+    \begin{table}[htbp]
+      \caption{The values of characters.}
+      \label{tab:characterValues}
+      \begin{tabular}{llcll}
+	\toprule
+	leading char & mode        & max number of digits & max value &              \\ 
+	\midrule
+	(none)       & decimal     & 3                    & 255       &              \\ 
+	o or O       & octal       & 3                    & 377       & (255)        \\ 
+	x or X       & hexadecimal & 2                    & ff        & (255)        \\ 
+	u            & hexadecimal & 4                    & ffff      & (65535)      \\ 
+	U            & hexadecimal & 8                    & 7fffffff  & (2147483647) \\
+	\bottomrule
+      \end{tabular}
+    \end{table}
+    Normally a maximum number of digits are required. Thus to enter a space (value 32) you would type 032.
+  \item[\syntax{<C-k>}] Enter digraph\footnote{Digraph is a pair of characters that are chosen to be descriptive to represent a special character. For more details run \syntax{:h digraphs}. The conventions of default digraphs are summarized in \syntax{:h digraphs-default}.  For a full list of available digraphs run \syntax{:digraphs}. For a shortened more usable list run \syntax{:h digraph-table}.}.
+\end{description}
+\section{Normal mode Commands}
+Many Normal mode commands can be executed with a \emph{count}, which causes them to be run multiple times. However, there are cases where it's better smply to repeat a command than take the time to count how many times you would execute it.
+
+Much of the power of Normal mode stems from the way that operator commands can be combined with motions.
+
+\begin{description}
+  \item[x] delete the character under the cursor.
+  \item[i] insert text \emph{before} the cursor. Entering insert mode. \texttt{I}: insert text at the beginning of the line.
+  \item[a] append text \emph{after} the cursor. Entering insert mode. \texttt{A}: append text at the end of the line.
+  \item[<ESC>] escape to normal mode, from insert mode, wrong command input, etc.
+  \item[d] delete \emph{operator}. syntax: \texttt{d} + \texttt{motion specifier}. \texttt{dd} delete a whole line. \texttt{ndd} or \texttt{dnd}: delete that number of whole lines. \verb|D|: Capital \verb|D| would delete from under the cursor to the end of the line. And \verb|nD| would do the deletion spaning n lines (delete from the current position to the end of following $n-1$ lines).
+  \item[\syntax{gU}] make uppercase operator. When acting on the current line, other than \syntax{gUgU}, there is a shorthand \syntax{gUU}.
+  \item[w] jump the cursor to the first character of the next word. \texttt{dw}: delete from the character under the cursor until the start of the next word, excluding its first character. \syntax{W}: 只把空格看作 word 之间的分割标志.
+  \item[e] jump the cursor to the last character of the current word. \texttt{de}: delete from under cursor to the last character of the current word, including its last character. \syntax{E}: 只把空格看作 word 之间的分割标志.
+  \item[\$] jump the cursor to the end of the line. \texttt{d\$}: delete from under cursor to the end of the line, including the last character.
+\item[number + motion specifier] repeat a motion that many times. 
+\item[u] undo the last \syntax{[count]} \emph{change}.
+\item[U] return the last line which was modified to its original state (reverse all changes in last modified line). \texttt{U} is not actually a true "undo" command as it does not actually navigate undo history like u and CTRL-R. This means that (somewhat confusingly) U is itself undo-able with u; it creates a new change to reverse previous changes.
+\item[<Ctrl-r>] redo the commands in undo history.
+\item[\syntax{R}] Enter Replace mode to replace consecutively until leaving it for Normal mode by \texttt{<Enter>}. \syntax{r{char}} is to overwrite the character under under the cursor and get back to Normal mode.
+\item[\syntax{gR}] Enter Virtual Replace mode. \syntax{gr{char}} is to virtually overwrite and get back to Normal mode.
+\item[\syntax{<Insert>}] Enter Insert mode from Normal mode or toggle between Insert mode and Replace mode.
+\item[c] \emph{cut} and \emph{change} operator. \texttt{c + [n] + motion}: cut the corresponding amount of text and put the cursor into Insert mode. In accordance to operator \verb|d|, there are commands like \texttt{cc} (to delete an entire line and put into Insert mode) and \texttt{ncc} (for n following lines) or \texttt{cnc} (the same as \verb|ncc|). \texttt{C}: capital \verb|C| deletes from under the cursor to the end of the line and put into Insert mode. \verb|nC| would do the deletion spanning n lines (delete from the current position and more $n-1$ lines).
+\texttt{cw} 与 \texttt{dw} 对删除到什么位置做的处理不同, 这是因为剪切(并修改)与删除的目的不同.
+\item[<Ctrl-g>] show the location of cursor in the file and file status.
+\item[G] move (go) cursor to the bottom of the file. \texttt{gg}: move cursor to the start of the file. \texttt{n + G}: move cursor to the start of particular line.
+\item[\syntax{/{char}}] search operator. Matched cases will be highlighted by default. \texttt{n}: redo the last search in forward direction. \texttt{N}: redo the last search in backward direction. 
+(一般情况下, \texttt{n} 和 \texttt{N} 等同于 go to the next/last case. 但并不完全等价. 本质上 \texttt{n} 和 \texttt{N} (按照当前的程序环境设置)重新执行了那个搜索命令.) The search prompt is, in essence, just another form of Command-Line mode.
+\item[\syntax{?}] do the search in the backward direction. \syntax{n} and \syntax{N} are also available.
+\item[\syntax{*}] Search forward for the next occurrence of the word nearest to the cursor. The word used for the search is the first of:
+\begin{itemize}
+  \item the keyword under the cursor.
+  \item the first keyword after the cursor, in the current line.
+  \item the non-blank word under the cursor.
+  \item the first non-blank word after the cursor, in the current line.
+\end{itemize}
+\item[<Ctrl-o>] move the cursor backward to its previous position. Keep pressing it would go backward further along its history. 
+\item[<Ctrl-i>] move the cursor forward to its next position in history(which means it must already be at one of historical position.)
+\item[\syntax{&}] Repeat last substitute. Synonym for \verb|:s|. Note that the flags are not remembered, thus it might actually work differently. Use \verb|:&&| to keep the flags.
+\item[v] enter character-wise Visual mode. Expand selection area by motion specifiers. Operators can be operated on the selected text, such as delete(\texttt{d}). Ex commands (\verb|:|) can be operated on visually selected texts by simply type \verb|:| after visual selection is completed. Then in the command line, the selected texts will be represented by \verb|'<,'>|.
+\item[\syntax{V}] enter line-wise Visual mode.
+\item[\syntax{<C-v>}] enter block-wise Visual mode. When \syntax{<C-v>} is mapped under Windows, \syntax{<C-q>} can be used.
+\item[\syntax{gv}] reselect the the range of text that was last selected in Visual mode. However, it might get confused if the last selection has been deleted.
+\item[o] open a new line below the cursor and enter in Insert mode. \texttt{O}: open a line above the cursor.
+\item[y] yank (copy) operator. use it the way similar with \texttt{d}. For example, \syntax{yy} will yank (copy) the entire line.
+\item[<Ctrl-w>] jump between windows.
+
+\item[\syntax{[count].}] repeat the last change \syntax{[count]} times. Note that the definition of a \emph{change} is flexible.
+\item[>] shift operator. Shift lines one ``shiftwidth'' rightwards. For example, \verb|>G| means to shift from the current line until the end of the file(note that \texttt{G} is motion which goes to the end of the file).
+\item[f] find operator. \verb|f{char}|: find the next occurrence of \texttt{char} in the current line. \verb|;| will repeat the last find operation and \verb|,| will repeat the last find operation in the opposite direction. Capital \texttt{F} find in the opposite direction. 
+\item[\syntax{s}] delete the character under the cursor and put into Insert mode. \texttt{ns}: delete n consecutive characters from under the cursor and start Insert. \texttt{S}: capital S deletes all texts of current line and start Insert, equals to \verb|cc|. \texttt{nS}: delete n lines from the current line and start Insert, equals to \verb|ncc|.
+\item[\syntax{t}] till operator. Move the cursor until before the next occurrence of \verb|{char}|. \texttt{T}: capital \verb|T| is the operator which do the operation in the opposite direction---move until after the last occurrence of \verb|{char}|. \verb|;| and \verb|,| do the last \dq{till move} in the same and opposite direction respectively.
+\item[\syntax{<C-a>}, \syntax{<C-x>}] add or subtract a number of \syntax{[count]}. They perform addition and subtraction on the number or alphabetic character (when the number is in hexadecimal) under or after the cursor. So if the cursor is not already positioned on a number, then the command will look ahead for a digit on the current line. If it finds one, it jumps straight to it. The CTRL-A and CTRL-X commands work for (signed) decimal numbers, unsigned octal and hexadecimal numbers and alphabetic characters.
+\item[\syntax{zz}] Redraw the screen with the current line in the middle of the window.
+\item[\syntax{ga}] Print the encoding value (ASCII or Unicode) of the character under the cursor in decimal, hexadecimal and octal.
+\item[\syntax{q:,q/,q?}] Open the Command-Line window and start editing Ex commands or search strings.
+\end{description}
+\part{Command-Line mode}
+As a general rule, we could say that Ex commands are long range and have the capacity to modify many lines in a single move.
+
+
+For historical reasons, the commands that we execute from Command-Line mode are called Ex commands.\footnote{\syntax{ed} was the original Unix text editor. Source code was usually printed onto a roll of paper and edited on a teletype terminal. Commands entered at the terminal would be sent to a mainframe computer for processing, and the output from each command would be printed.
+
+\syntax{ed} went through several generations of improvements, including \syntax{em} (dubbed the editor for mortals), \syntax{en} and eventually \syntax{ex}. \syntax{ex} added a feature that turned the terminal screen into an interactive window that showed the contents of a file. Now it was possible to see changes as they were made in real time. The screen-editing mode was activated by entering the \syntax{:visual} command, or just \syntax{:vi} for short. And that is where the name \syntax{vi} comes from.
+
+Vim stands for \emph{vi improved}.} Command-Line mode is also enabled when we press \syntax{/} to bring up a search prompt or \syntax{<C-r>=} to access the expression register.
+\section{Ex special characters}
+\begin{description}
+  \item[\texttt{\%}] stands for the current file name.
+  \item[\texttt{\#}] stands for the alternate file name.
+  \item[\texttt{\#n}] stands for the file name of the buffer n.
+\end{description}
+\section{Commands}
+\begin{description}
+  \item[\syntax{:h[elp]}] get help.
+  \item[\syntax{:h key-notation}] open help section of notations of key used in Vim.
+  \item[\syntax{:{address}}] Enter only an \syntax{<address>} as an Ex command will jump the cursor to the specified position, e.g.\ the start of an individual line, the start of the text which matched the specified pattern, the start of the last line of the specified range.
+  \item[\syntax{:[range]d[elete] [x]}] Delete \syntax{[range]} lines (default: current line) [into register x].
+  \item[\syntax{:[range]y[ank] [x]}] Yank \syntax{[range]} lines [into register x].
+  \item[\syntax{:[line]pu[t] [x]}] Put the text [from register x] after \syntax{[line]} (default current line).
+  \item[\syntax{:[line]pu[t]! [x]}] Put the text before \syntax{[line]}  (default current line).
+  \item[\syntax{:[range]co[py] {address}}] Copy the lines given by \syntax{[range]} to below the line given by \syntax{{address}}.
+ As the syntax indicates, \command{:copy} command does not use register. This feature can be useful when you do not want the current value in the default register to be overwritten.
+  \item[\syntax{:t}] Synonym for \command{:copy}. The command does not use register.
+  \item[\syntax{:[range]m[ove] {address}}] Move the lines given by \syntax{[range]} to below the line given by \syntax{{address}}. The command does not use register.
+  \item[\syntax{:[range]j[oin][!]}] Join \syntax{[range]} lines. With \syntax{[!]} the \syntax{join} does not insert or delete any spaces. If a \syntax{[range]} has equal start and end values, this command does nothing. The default behavior is to join the current line with the line below it.
+  \item[\syntax{:norm[al][!] {commands}}] Execute Normal mode commands \syntax{{commands}} and return to Normal mode afterward. \syntax{{commands}} are executed like they are typed. For \syntax{undo}, all commands are undone together. Execution stops when an error is encountered. \syntax{{commands}} should be a complete command. If \syntax{{commands}} does not finish a command, the last one will be aborted as if \syntax{<Esc>} or \syntax{<C-C>} was typed. If the \syntax{[!]} is given, mappings will not be used. \syntax{{commands}} cannot start with a space. Put a count of 1 before it, namely ``\syntax{1 }'' is one space.
+  \item[\syntax{:{range}norm[al][!] {commands}}] Execute Normal mode commands \syntax{{commands}} for each line in the \syntax{{range}}. Before executing the \syntax{{commands}}, the cursor will be positioned in the first column of the range, for each line. Except for that, it is the same as the ``\syntax{:normal}'' command without a range.
+  \item[\syntax{:[range]s[ubstitute]/{pattern}/{string}/[flags] [count]}] For each line in \syntax{[range]} replace a match of \syntax{{pattern}} with \syntax{{string}}. When \syntax{[range]} and \syntax{[count]} are omited, replace in the current line only. When \syntax{[count]} is given, replace in \syntax{[count]} lines, starting in the current line only.
+  \item[\syntax{:[range]g[lobal]/{pattern}/[cmd]}] Execute the Ex command \syntax{[cmd]} (default ``\syntax{:p}'') on the lines within \syntax{[range]} where \syntax{{pattern}} matches.
+  \item[\syntax{:[range]g[lobal]!/{pattern}/[cmd]}] Execute the Ex command \syntax{[cmd]} (default ``\syntax{:p}'') on the lines within \syntax{[range]} where \syntax{{pattern}} does NOT match.
+  \item[\syntax{[count]@:}] Repeat last Command-line command \syntax{[count]} times.
+  \item[\syntax{<C-d>}] List names  that match the pattern in front of the cursor.
+  \item[\syntax{<Tab>}] A match is done and inserted on the pattern in front of the cursor. When typed again and there were multiple matches, the next match is inserted like a cycle. When the pattern is supposed to match with filepaths, \syntax{<Tab>} willmatch directories and filenames relative to the current working directory.
+  \item[\syntax{<S-Tab>}] The last match is inserted. The matches cycle in the opposite direction. 
+  \item[\syntax{<C-n>,<C-p>}] Recall Command-Line commands in the forward\slash backward direction. After using \syntax{<Tab>} (\syntax{'wildchar'} setting) or \syntax{<S-Tab>} which got multiple matches, go to next\slash previous match.
+  \item[\syntax{<UP>,<DOWN>}] Recall older or newer Command-Line command from history, which matches the characters that has already been typed.
+  \item[\syntax{<left>},\syntax{<right>}] At the Command-Line prompt, we are limited in the motion commands that we can use. The \syntax{<left>} and \syntax{<right>} arrow keys are available to move the cursor one character at a time in either direction.
+  \item[\syntax{<C-r>_<C-w>,<C-r>_<C-a>}] Insert the word or WORD under the cursor into current Command-Line prompt.
+  \item[\syntax{|}] Used to separate commands, so that multiple commands can be entered in one line.
+  \item[\syntax{<C-f>}] Open Command-Line window.
+    %buffer
+  \item[\syntax{:ls[!]}] Show all buffers. When the \syntax{!} is included the list will also show unlisted buffers.
+    There are indicators (\cref{tab:bufferindicator}) proceeding the name of a buffer. Each buffer has a unique number. That number will not change, and can be used as a reference to the buffer.
+    \begin{table}[hbtp]
+      \centering
+      \begin{tabular}{cl}
+	\verb|u|&unlisted buffer\\
+	\verb|%|&the buffer in the current window\\
+	\verb|#|&the alternate buffer for the \syntax{:e #} and \syntax{<C-^>} commands\\
+	\verb|a|&active buffer, loaded and visible\\
+	\verb|h|&hidden buffer, loaded but currently not displayed in a window\\
+	\verb|-|&a buffer with \syntax{modifiable} off\\
+	\verb|=|&a readonly buffer\\
+	\verb|+|&a modified buffer\\
+	\verb|x|&a buffer with read errors
+      \end{tabular}
+      \caption{The indicators of buffer.}
+      \label{tab:bufferindicator}
+    \end{table}
+  \item[\syntax{:[N]b[uffer][!] [N]}] Edit buffer \syntax{[N]} from the buffer list. If \syntax{[N]} is not given, the current buffer remains being edited.
+  \item[\syntax{:[N]b[uffer][!] {bufname}}] Edit buffer named \verb|{bufname}|. The \verb|{bufname}| need only contain enough characters from the filepath to uniquely identify the buffer. Note that \syntax{<Tab>}-autocompletion can be used here.
+  \item[\syntax{:[N]bp[revious][!] [N]}] Go to \syntax{[N]}th previous buffer in the buffer list. \syntax{[N]} defaults to one. Wraps around the start of the buffer list.
+  \item[\syntax{:[N]bn[ext][!] [N]}] Go to \syntax{[N]}th next buffer in buffer list.  \syntax{[N]} defaults to one. Wraps around the end of the buffer list.
+  \item[\syntax{:bf[irst]}] Go to first buffer in buffer list.
+  \item[\syntax{:bl[ast][!]}] Go to last buffer in buffer list.
+  \item[\syntax{:[N]bd[elete][!] [N]}] Delete buffer \syntax{[N]}. If the buffer is change, this will fail, unless wen \syntax{!} is specified. Any window for this buffer are closed. If the buffer to be deleted is the current buffer, another buffer will be displayed instead. Note that deleting a buffer has no effect on its associated file: it simply removes the in-memory representation of the file.
+  \item[\syntax{:bd[elete][!] {bufname}}] Delete buffer by name.
+  \item[\syntax{:bd[elete][!] N1 N2 ...}] Delete buffers \syntax{N1}, \syntax{N2}, etc. The arguments can be buffer numbers or buffer names.
+  \item[\syntax{:N,Mbd[elete][!]}] Delete buffers ranging from \syntax{N} to \syntax{M} (inclusively).
+  \item[\syntax{:bufdo[!] {cmd}}] 
+    %argument list
+  \item[\syntax{:ar[gs]}] Print the argument list, with the current file in square brackets. We can change the contents of the argument list at any time.
+  \item[\syntax{:ar[gs][!] [++opt] [+cmd] {arglist}}] Define \syntax{{arglist}} as the new argument list and edit the first one. This fails when changes have been made and Vim does not want to abandon the current buffer. Add \syntax{!} to override this prevention and discard any changes to the current buffer. The \syntax{{arglist}} can include filenames, wildcards, or even the output from a shell command.
+  \item[\syntax{:[count]arge[dit][!] [++opt] [+cmd] {name}}] 
+  \item[\syntax{:[count]arga[dd] {name} ..}] 
+  \item[\syntax{:argd[elete] {pattern} ..}] 
+  \item[\syntax{:{range}argd[elete]}] 
+  \item[\syntax{:[count]argu[ment][!] [count] [++opt] [+cmd]}] 
+  \item[\syntax{:[count]n[ext][!] [++opt] [+cmd]}] 
+  \item[\syntax{:[count]prev[ious][!] [count] [++opt] [+cmd]}] 
+  \item[\syntax{:[count]wn[ext][!] [++opt] [file]}] 
+  \item[\syntax{:[count]wp[revious][!] [++opt] [file]}] 
+  \item[\syntax{:fir[st][!] [++opt] [+cmd]}] 
+  \item[\syntax{:la[st][!] [++opt] [+cmd]}] 
+  \item[\syntax{:argdo[!] {cmd}}] 
+  \item[:w] write whole file to the current file. \texttt{:w filename}: write to that file. You can write selected part of file to another file by first \emph{visually} select the text and write it into a file.
+  \item[\syntax{:wa[ll]}] Write all changed buffers.
+  \item[\syntax{:r}] retrieve something. Retrieve a file by \texttt{:r filename}. The file retrieved will be placed below the cursor line. Retrieve the output of an external command by place the command after \texttt{:r}.
+  \item[\syntax{:!}] type \texttt{:!} followed by an external command to execute that command.
+  \item[\syntax{:[range]s[ubstitute]/{pattern}/{string}/[flags] [count]}] For each line in \syntax{[range]}, replace a match of \syntax{{pattern}} with \syntax{{string}}.
+Use \verb|g| flag to substitute globally in the current line. \verb|gc| flag to substitute by confirm.
+\end{description}
+
+\section{Address}
+An \syntax{{address}} can be one of the followings:
+\begin{itemize}
+  \item a single address. A single address can be multiple types.
+    \begin{itemize}
+      \item A line number. The following table lists the available line number commands.\\
+	\begin{tabular}[hbtp]{ll}
+	  \hline
+	  Command&Meaning\\
+	  \hline
+	  \syntax{<number>}&Normal line number\\
+	  \verb|$|&Last line of the file\\
+	  0&Virtual line above first line of the file\\
+	  \syntax{.}&Line where the cursor is placed\\
+	  \hline
+	\end{tabular}\\
+	Line 0 does not really exist, but it can be useful as an address in certain contexts. For example, when copying some text to the top the file.
+      \item A pattern. In Command-Line, a search pattern start with \syntax{/}.
+      \item A mark \syntax{'m}, which indicates the line containing mark \syntax{m}.
+    \end{itemize}
+  \item a range of addresses.
+    \begin{itemize}
+      \item Generally, the range takes the form
+	\begin{lstlisting}
+	:{start},{end}
+	\end{lstlisting}
+	All types of addresses listed above can be used. Note that when the range starts with a pattern, an additional \syntax{/} needs to be appended after pattern to indicate the end of the pattern.
+      \item a range of text generated by Visual selection. It is a special case of the range. It takes the form 
+	\begin{lstlisting}
+	'<,'>
+	\end{lstlisting}
+	The \syntax{'<} and \syntax{'>} are marks standing for the first and the last line of the Visual selection, respectively.
+	These marks persist even when we leave Visual mode. Thus they can be typed manually in Command-Line prompt and will always represent the most resent Visual selection.
+      \item The \verb|%| command stands for all the lines in the current file.
+    \end{itemize}
+  \item An address can be modified with an offset, which adds on or subtract from the \syntax{{address}} before it:
+    \begin{lstlisting}
+    :{address}$\pm$n
+    \end{lstlisting}
+    If \syntax{n} is omitted, it defaults to 1.
+\end{itemize}
+
+\section{Command-Line Window}
+\subsection{Open}
+There are two ways to open the command-line window:
+\begin{enumerate}
+  \item From Command-line mode, use the key specified with the 'cedit' option.
+    The default is CTRL-F when 'compatible' is not set.
+  \item From Normal mode, use the "\command{q:}", "\command{q/}" or "\command{q?}" command.
+\end{enumerate}
+
+\subsection{Edit}
+In the command-line window the command line can be edited just like editing
+text in any window.
+It is possible to use ":", "/" and other commands that use the command-line,
+but it's not possible to open another command-line window then.
+
+The command-line window is not a normal window.  It is not possible to move to
+another window or edit another buffer.  All commands that would do this are
+disabled in the command-line window.
+
+\subsection{Close}
+There are several ways to leave Command-Line window.
+\begin{description}
+  \item[\syntax{<CR>}] 
+Execute the command-line under the cursor.  Works both in Insert mode and Normal mode.
+  \item[\syntax{<C-c>}] Switch to Command-Line mode. The command under cursor is used as Command-Line command. Works both in Insert and in Normal mode.
+  \item[\syntax{:close}] 
+  \item[\syntax{:q[uit]}] Quit the window and go back to Normal mode.
+  \item[\syntax{:qa[ll]}] Quit all, a.k.a exit Vim, unless there are some buffers which haven been changed.
+  \item[\syntax{:qa[ll]!}] Quit all and discard any changes to any buffers.
+\end{description}
+The executed command applies to the window and buffer where the command-line was started from.
+\section{Insert mode Commands}
+Insert mode is specialized for one task---entering text.
+
+Replace mode is a special case of Insert mode. It is identical to Insert mode, except that it overwrites existing text in  the document. Vim also has an variant of Replace mode, Virtual Replace mode. In Virtual Replace mode, we overwrite characters of real space of screen columns, rather than dealing with the actual characters that would eventually be saved in a file. This tend to produce fewer surprises.
+
+Under Insert mode, there is a sub-mode called Insert Normal mode that lets us enter a single Normal mode command then get back to Insert mode immediately.
+
+Autocompletion is the most advanced functionality available from Insert mode.
+
+\begin{description}
+  \item[\syntax{<BS>}] the backspace key. Delete one character backward.
+  \item[\syntax{<C-h>}] Delete back one character, the same as backspace key.
+  \item[\syntax{<C-w>}] Delete back one word.
+  \item[\syntax{<C-u>}] Delete back to the start of the line.
+\end{description}
+These commands are not unique to Insert mode or even to Vim. They are also availablein Vim's Command-line mode as well as in the bash shell.
+
+\begin{description}
+  \item[\syntax{<Esc>}] Switch to Normal mode from Insert mode.
+  \item[\syntax{<C-[>}] Switch to Normal mode from Insert mode.\vphantom{]}
+  \item[\syntax{<C-o>}] Switch to Insert Normal mode from Insert mode.
+Insert Normal mode is a special version of Normal mode. We can type a single command ,after which we'll be returned to Insert mode immediately.
+\item[\syntax{<C-r>}] Insert the contents of a register.  Between typing \syntax{<CTRL-r>} and the second character \syntax{{register}}, \sq{\syntax{"}} will be displayed to indicate that you are expected to enter the name of a register. For example, to paste the text that was lastest added to buffer press \syntax{<C-r>0}. To access expression register press \syntax{<C-r>=}. If the register contains a lot of text, you might notice a slight delay before the screen updates. Besides, you might end up with unwanted line breaks or extra indentation. That's because Vim inserts the text from the register as if it were being typed one character at a time. Thus the command should be convenient if a few words are needed to be pasted in the middle of typing a new line.
+  
+\end{description}
+
+
+In Insert mode, we can press \syntax{<C-r>0} to paste the text that we just yanked at the current cursor position. The general format of the command is \syntax{<C-r>{register}}, where \syntax{{register}} is the address of the register we want to insert.
+
+\section{Visual mode commands}
+Visual mode allows us to define a selection of text and then operate upon it.
+Vim has three variants of Visual mode, namely character-wise, line-wise and block-wise Visual mode. We can switch between them in the same way that we enable them from Normal mode.
+
+Character-wise Visual mode is suitable for visually selecting individual words. Line-wise Visual mode is suitable for selecting one or many lines entirely. Block-wise Visual mode is suitable for columnar or irregular regions of text.
+
+Many of the commands from Normal mode work the same in Visual mode.
+For example, \syntax{h,j,k,l} as cursor keys, \syntax{f{char}} and \syntax{;/,} find operations, \syntax{/,n,N} search commands.
+Some commands retain the same functions but with slight differences.
+For example, we start off by making the selection and then trigger the operator commands.
+
+Except for \syntax{<Esc>}, \syntax{v,V,<C-v>} can also toggle back to Normal mode in their respective type of Visual mode. But it might feels inconsistent.
+
+
+When repeating a Visual mode operator, the operator will be applied to the
+\emph{same amount} of text as the last time:
+\begin{itemize}
+  \item Linewise Visual mode: The same number of lines.
+  \item Blockwise Visual mode: The same number of lines and columns.
+  \item Normal Visual mode within one line: The same number of characters.
+  \item Normal Visual mode with several lines: The same number of lines, in the last line the same number of characters as in the last line the last time.
+\end{itemize}
+The start position of visual selection is cursor position.
+
+Visual mode is generally adequate for one-off changes on a complex range of text. If we want to set up the dot command so that it repeats something useful, then we're better off staying out of Visual mode. We should construct operator commands when working through a repetitive set of changes.
+
+\begin{description}
+  \item[\syntax{o}] The range of a Visual mode selection is marked by two ends. \syntax{o} is used to toggle the free end.
+  \item[\syntax{u}] Visual mode equivalence for Normal mode \syntax{gu}.
+  \item[\syntax{U}] Visual mode equivalence for Normal mode \syntax{gU}.
+  \item[\syntax{r}] In Visual mode, \syntax{r{char}} will replace every character under selection with \syntax{{char}}.
+  \item[\syntax{i,a}] \syntax{i} and \syntax{a} are used to form the first half of a text object.
+\end{description}
+
+\subsection{Block-wise Visual mode}
+When making changes at columns of text in Block-wise Visual mode, the change will be made in parallel on every row of text.
+
+Text selection need not necessarily be rectangular. It can be extended to the end of line with \verb|$| command.
+
+In Block-wise Visual mode, \syntax{I} and \syntax{A} are used for inserting text at the leftmost and rightmost positions respectively of the visual block.
+
+
+\section{Select mode commands}
+In Select mode, when we type any printable character, Vim deletes the selected text and enters Insert mode, and the typed character is inserted.
+
+We can toggle between Visual and Select modes by pressing \syntax{<C-g>}.
+The only visible difference is the message at the bottom of screen, which switches between \syntax{--VISUAL--} and \syntax{--SELECT--}.
+
+In Vim, there is little use for Select mode.
+The only possible usage is when using Select mode to highlights the active placeholder.
+\part{Visual}
+\section{Changing the Visual area}
+\begin{description}
+  \item[\PVerb{v_o}] Go to other end of highlighted text.
+\end{description}
+\part{Motion}
+\section{Operator}
+\begin{description}
+  \item[operator + \syntax{[count]} + motion] 
+  Operators are listed in \cref{tab:operators}.
+  \begin{table}[htpb]
+    \centering
+    \begin{tabular}{ll}
+      \syntax{c}&change\\
+      \syntax{d}&delete\\
+      \syntax{y}&yank into register\\
+      \syntax{>}&shift right\\
+      \syntax{<}&shift left\\
+      \syntax{!}&filter lines through an external program\\
+      \syntax{zf}&define a fold\\
+      \syntax{g~}&swap case\\
+      \syntax{gu}&make lowercase\\
+      \syntax{gU}&make uppercase\\
+      \syntax{=}&auto-indent\\
+      \syntax{gq}&text formatting\\
+      \syntax{g@}&call function set with the \verb|'operatorfunc'| option\\ 
+      \syntax{g?}&ROT13 encoding
+    \end{tabular}
+    \caption{}
+    \label{tab:operators}
+  \end{table}
+\end{description}
+\section{Left--right motions}
+\begin{description}
+  \item[\syntax{[N]h}] [N] characters to the left.
+  \item[\syntax{[N]l}] [N] characters to the right.
+  \item[\syntax{0}] To the beginning of the line.
+  \item[\syntax{g0}] To the beginning of the screen line.
+  \item[\syntax{^}] To the first non-blank character of the line.
+  \item[\syntax{g^}] To the first non-blank character of the screen line.
+  \item[\syntax{[N]$%stopzone
+    }] To the end of the line. With [N], go to the end of $N-1$ line downwards.
+  \item[\syntax{[N]g$%stopzone
+    }] To the end of the screen line. With [N], go to the end of $N-1$ screen line downwards.
+  \item[\syntax{[N]f{char}}] To [N]-th occurrence of \verb|{char}| to the right.
+    \marginpar{\footnotesize 使用 \syntax{f F t T ; ,} motions 时尽量选择出现次数很少又离目标比较近的字符.}
+  \item[\syntax{[N]F{char}}] To [N]-th occurrence of \verb|{char}| to the left.
+  \item[\syntax{[N]t{char}}] Till before [N]-th occurrence of \verb|{char}| to the right.
+  \item[\syntax{[N]T{char}}] Till after [N]-th occurrence of \verb|{char}| to the left.
+  \item[\syntax{[N];}] Repeat last \verb|f,t,F,T| [N] times.
+  \item[\syntax{[N],}] Repeat last \verb|f,t,F,T| [N] times in opposite direction.
+\end{description}
+\section{Up--down motions}
+\begin{description}
+  \item[\syntax{[N]k}] [N] lines upward.
+  \item[\syntax{[N]gk}] [N] screen lines upward.
+  \item[\syntax{[N]j}] [N] lines downward.
+  \item[\syntax{[N]gj}] [N] screen lines downward.
+  \item[\syntax{[N]-}] [N] lines upward, on the first non-blank character.
+  \item[\syntax{[N]+}] [N] lines downward, on the first non-blank character.
+  \item[\syntax{[N]_}] [N]$-1$ lines downward, on the first non-blank character.
+  \item[\syntax{[N]G}] Go to line [N], default last line, on the first non-blank character.
+  \item[\syntax{[N]gg}] Go to line [N], default first line, on the first non-blank character.
+  \item[\syntax{:[range]}] Set the cursor on the last line number in [range].
+  \item[\Q{\{N\}\%}] Go to \verb|{N}| percentage in the file.
+  \item[\syntax{{N}go}] Go to \verb|{N}| byte in the buffer.
+  \item[\syntax{:[range]go[to] [N]}] Go to {N} byte in the buffer.  Default [N] is one, start of the file.  When giving [range], the last number in it used as the byte count.
+\end{description}
+\section{Word motions}
+\begin{description}
+  \item[\syntax{[N]w}] [N] words forward.
+  \item[\syntax{[N]W}] [N] WORDS forward.
+  \item[\syntax{[N]e}] Forward to the end of word [N]. To the end of the current word if the cursor is not placed at the end of current word.
+  \item[\syntax{[N]E}] Forward to the end of WORD [N]. To the end of the current WORD if the cursor is not placed at the end of current WORD.
+  \item[\syntax{[N]b}] To the beginning of [N] words backward. To the beginning of the current word if the cursor is not placed at the beginning of current word.
+  \item[\syntax{[N]B}] To the beginning of [N] WORDS backward. To the beginning of the current word if the cursor is not placed at the beginning of current word.
+  \item[\syntax{[N]ge}] To the end of [N] words backward.
+  \item[\syntax{[N]gE}] To the end of [N] WORDS backward.
+\end{description}
+\section{Text object motions}
+\subsection{Definitions of text objects}
+\begin{description}
+  \item[word] A word consists of a sequence of letters, digits and underscores, or a sequence of other non-blank characters, separated with white space (spaces, tabs, <EOL>).  This can be changed with the 'iskeyword' option.  An empty line is also considered to be a word.
+  \item[WORD] A WORD consists of a sequence of non-blank characters, separated with white space.  An empty line is also considered to be a WORD.
+  \item[sentence] A sentence is defined as ending at a `.', `!' or `?' followed by either the end of a line, or by a space or tab.  Any number of closing `)', `]', `\syntax{"}' and `\syntax{'}' characters may appear after the `.', `!' or `?' before the spaces, tabs or end of line.  A paragraph and section boundary is also a sentence boundary.
+  \item[paragraph] A paragraph begins after each empty line, and also at each of a set of paragraph macros, specified by the pairs of characters in the 'paragraphs' option. A section boundary is also a paragraph boundary. Note that a blank line (only containing white space) is NOT a paragraph boundary.
+\end{description}
+\subsection{Text object motions}
+\begin{description}
+  \item[\PVerb{(}] sentence backward.
+  \item[\PVerb{)}] sentence forward.
+  \item[\PVerb{{}] paragraph backward.
+  \item[\PVerb{}}] paragraph forward.
+  \item[\PVerb{[[}] section backward or to the previous \verb|{| in the first column.
+  \item[\PVerb{[]}] section backward or to the previous \verb|}| in the first column.
+  \item[\PVerb{]]}] section forward or to the next \verb|{| in the first column.
+  \item[\PVerb{][}] section forward or the next \verb|}| in the first column.
+\end{description}
+\section{Text object selection}
+This is a series of commands that can only be used while in \emph{Visual mode} or after an \emph{operator}. The commands that start with \dq{a} select \dq{a}n object including white space, the commands starting with \dq{i} select an \dq{inner} object without white space, or just the white space.
+
+\subsection{Text objects}
+\begin{description}
+  \item[\syntax{aw}] \dq{a word}. Select \syntax{[count]} words. Leading or trailing white space  if present  is included, but not counted. If a white space is present both before and after the word, by default the trailing white space will be included.
+  \item[\syntax{iw}] \dq{inner word}. Select \syntax{[count]} words. White space between words is counted too.
+  \item[\syntax{aW}] \dq{a WORD}. Select \syntax{[count]} WORDs.
+  \item[\syntax{iW}] \dq{inner WORD}. Select \syntax{[count]} WORDs.
+  \item[\syntax{as}] \dq{a sentence}. Select \syntax{[N]} sentences.
+  \item[\syntax{is}] \dq{inner sentence}.
+  \item[\syntax{ap}] \dq{a paragraph}. Select \syntax{[N]} paragraphs. Exception: a blank line (only containing white space) is also a paragraph boundary. 
+  \item[\syntax{ip}] \dq{inner paragraph}.
+  \item[\syntax{a]}, \syntax{a[}] \dq{a \syntax{[ ]} block}. Select \syntax{[N]} \sq{[ ]} blocks. This goes backwards to the \syntax{[N]} unclosed `\syntax{[}', and finds the matching \sq{\syntax{]}}.  The enclosed text is selected, including the \sq{\syntax{[}} and \sq{\syntax{]}}.
+  \item[\syntax{i]}, \syntax{i[}] \dq{inner \syntax{[ ]} block}.  Select \syntax{[N]} \sq{\syntax{[ ]}} blocks.  This goes backwards to the \syntax{[N]} unclosed \sq{\syntax{[}}, and finds the matching \sq{\syntax{]}}.  The enclosed text is selected, excluding the \sq{\syntax{[}} and \sq{\syntax{]}}.
+  \item[\vphantom{(}\syntax{a)}, \syntax{a(}\vphantom{)}, \syntax{ab}] \dq{a block}. Select \syntax{[N]} blocks. Does not include white space outside of the parenthesis.
+  \item[\vphantom{(}\syntax{i)}, \syntax{i(}\vphantom{)}, \syntax{ib}] \dq{inner block}.
+  \item[\syntax{a>}, \syntax{a<}] \dq{a \syntax{<>} block}.
+  \item[\syntax{i>}, \syntax{i<}] \dq{inner \syntax{<>} block}.
+  \item[\Q{a\}}, \Q{a\{}, \syntax{ab}] \dq{a block}.
+  \item[\Q{i\}}, \Q{i\{}, \syntax{ib}] \dq{inner block}.
+  \item[\syntax{a"}] \dq{a double quote string}. Only works within one line. When the cursor starts on a quote, Vim will figure out which quote pairs form a string by searching from the start of the line. Any trailing white space is included, unless there is none, then leading white space is included.
+  \item[\syntax{a'}] \dq{a single quote string}.
+  \item[\syntax{i"}, \syntax{i'}] corresponding \dq{inner quote string}.
+\end{description}
+
+\section{Search command as motion}
+\begin{description}
+  \item[\syntax{/,?,n,N}] Search command can be a quick and precise motion at the whole-file range. It can also be used in Visual mode to select and in Operator-Pending mode to operate on very flexible range of text.
+\end{description}
+Be careful about the exact position at which the cursor is to be set in forward and backward search respectively.
+\section{Marks}
+Lowercase marks are local to each individual buffer. Uppercase marks include the file name, so they are global. They can be used to jump between files.
+Numbered marks 0 to 9 are quite different.  They can not be set directly. They are only present when using a viminfo file.
+Basically \verb|0| is the location of the cursor when you last exited Vim, \verb|1| the last but one
+time, etc.
+
+A mark is not visible in any way. It's just a position that is remembered.
+If a file is removed from the buffer list, all its marks are lost.
+If a line containing a lowercase mark is deleted, that mark is erased.
+However, lowercase marks are restored when using undo and redo.
+A uppercase mark is kept, even if the line is deleted.
+
+\subsection{Set marks}
+\begin{description}
+  \item[\syntax{m{a-zA-Z}}] Set mark at cursor position. 
+  \item[\syntax{m', m`}] Set the previous context mark.
+\end{description}
+\subsection{Mark motions}
+    With backtick \verb|`|, the cursor is positioned at the exact location where the mark was set. The motion is exclusive.
+
+    With single quote \verb|'|, the cursor is positioned on the first non-blank character in the line of the specified location. The motion is linewise.
+\begin{description}
+  \item[\PVerb{'{a-z},`{a-z}}] Jump to the mark in the current buffer.
+  \item[\syntax{'{A-Z0-9},`{A-Z0-9}}] Jump to the mark in the file where it was set. (Not a motion when in another file.) 
+  \item[\PVerb{'[, `[}] To the start of the previously changed or yanked text.
+  \item[\PVerb{'<, `<}] To the start of the last Visual selection in the current buffer.
+  \item[\PVerb{'>, `>}] To the end of the last Visual selection in the current buffer.
+  \item[\PVerb{'', ``}] To the position before the last jump, or where the last \PVerb{m',m`} command was given.
+  \item[\PVerb{'", `"}] To the cursor position when last exiting the current buffer. As long as the buffer is visible in a window the position won't be changed. 
+  \item[\PVerb{'^, `^}] To the position where the cursor was the last time when Insert mode was stopped.
+  \item[\PVerb{'., `.}] To the position where the last change was made.
+  \item[\PVerb{'(, `(}] To the start of the current sentence.
+  \item[\PVerb{'), `)}] To the end of the current sentence.
+  \item[\PVerb{'{, `{}] To the start of the current paragraph.
+  \item[\PVerb{'}, `}}] To the end of the current paragraph.
+\end{description}
+\section{Jumps}
+Jumps can move cursor in a file or between files, whereas regular motions can only move cursor in a file.
+Long-range motions are always also categorized as jumps. But not all jumps are also motions. Some of them simply do the jumps.
+
+A jump is formed when one of the following commands is executed:
+\begin{lstlisting}[columns=flexible]
+',`,G,/,?,n,N,%,(,),[[,]],{,},:s,:tag (Ctrl-]),L,M,H,
+<and any commands that start editing a new file>
+\end{lstlisting}
+The position before jump is remembered, can be returned to by \verb|``| or \verb|''| (which are also jumps).
+
+Each window has a separate jump list. When you split a window, the jumplist will be copied to the new window.
+\subsection{Jump list}
+\begin{description}
+  \item[\PVerb{:jumps}] Print the jump list. (Not a motion.)
+  \item[\PVerb{[N]<C-o>}] Go to [N] count older cursor position in jump list. (Not a motion.)
+  \item[\PVerb{[N]<C-i>}] Go to [N] count newer cursor position in jump list. (Not a motion.)
+\end{description}
+
+If you use a jump command, the current line number is inserted at the end of
+the jump list.  If the same line was already in the jump list, it is removed.
+The result is that when repeating \verb|<C-o>| you will get back to old positions
+only once.
+
+When you are not at the latest cursor position (index 0 in jump list), if you give another jump command, the current (but older) line will be re-inserted into jump list, becoming the newest jump list entry (index 1).
+\subsection{Change list}
+When making a change the cursor position is remembered. This forms the change list. By default, it's remembered for each session. When \verb|undofile| is set, the change list (file) is permanent.
+
+Unlike jump list, change list should manifests a history of changes along time, so same line can appear multiple times on the list. However, when two undo-able changes are in the same line and at a column position less than '\PVerb{textwidth}' apart only the last one is remembered.
+\begin{description}
+  \item[\PVerb{:changes}] Print the change list.
+  \item[\PVerb{[N]g;}] Go to [N] older position in change list.
+  \item[\PVerb{g,}] Go to [N] newer position in change list.
+\end{description}
+\section{Various motions}
+\begin{description}
+  \item[\Q{\%}] Find the next item in this line after or under the cursor and jump to its match. \verb|matchit| plugin extends its functionality.
+\end{description}
+\part{Editing}
+\section{Current status checking}
+\begin{description}
+  \item[\syntax{<C-g>}] 
+  \item[\syntax{:f[ile][!]}] Print the current file name, hte cursor position, and the file status.
+\end{description}
+\section{Edit file}
+When Vim is launched, it adopts the same directory that was active in the shell.
+\begin{description}
+  \item[\syntax{:e[dit]}] Edit the current file (not its buffer). This is useful to re-edit the current file, when it has been changed outside of Vim. This fails when changes have been made to the current buffer (which represents the current file).
+  \item[\syntax{:e[dit] [++opt] [+cmd] {file}}] Edit \syntax{{file}}. It can accept a filepath relative to the working directory.
+  \item[\syntax{:e[dit]!}] Edit the current file. Discard any changes to the current buffer and re-edit the corresponding file.
+  \item[\syntax{:e[dit]! [++opt] [+cmd] {file}}] Edit \syntax{{file}} always. Discard any changes to the current buffer.
+  \item[\syntax{:[N]fin[d][!] [++opt] [+cmd] {file}}] Find (the [N]th matched) \verb|{file}| in \verb|'path'| then edit it.
+\end{description}
+\section{The current directory}
+\begin{description}
+  \item[\syntax{:pw[d]}] Print the current working directory.
+\end{description}
+\part{Insert}
+\section{Commands to insert text}
+\begin{description}
+  \item[\PVerb{gi}] Insert text in the same position as where Insert mode was stopped last time in the current buffer. The position is found by \verb|`^|.
+\end{description}
+\part{Change}
+\section{Copy and move text}
+\begin{description}
+  \item[\syntax{["x][N]p]}] Put the text [from register \syntax{x}] after the cursor [N] times. It can be used in Visual Mode to replace the selected text.
+\end{description}
+\part{Windows}
+%
+\section{Opening a window}
+\begin{description}
+  \item[\syntax{<C-w>s}] Split current window in two. The result is two viewports on the same file.
+  \item[\syntax{:[N]sp[lit] [++opt] [+cmd] [file]}] Split current window in two. Make new window \syntax{N} high. The default result is two viewports on the same file. With \syntax{[file]} setting, the file will be loaded in the new window.
+  \item[\syntax{<C-w>v}] Split current window vertically.
+  \item[\syntax{:[N]vs[plit] [++opt] [+cmd] [file]}] split vertically.
+
+  \item[\syntax{:[N]sf[ind] {file}}] Search for file in \verb|'path'| and edit it in split window.
+\end{description}
+\section{Closing a window}
+\begin{description}
+  \item[\syntax{<C-w>q}] Quit current window. When quitting the last window, exit Vim.
+  \item[\syntax{:q[uit][!]}] Quit current window. When quitting the last window, exit Vim. If this was the last window for a buffer, any changes to that buffer are lost.
+  \item[\syntax{:wq}] Write the file and quit the current window.
+  \item[\syntax{<C-w>c}] Close current window. If the current window is the only window in a tab page, close the tab page with it.
+  \item[\syntax{:clo[se][!]}] Close current window. When the buffer was changed and \syntax{[!]} is used, the buffer becomes hidden. When there is only one window in the current tab page and there is another tab page, this closes the current tab page.
+  \item[\syntax{<C-w>o}] Make the current window the only one on the screen. All other windows are closed.
+  \item[\syntax{:on[ly][!]}] Make the current window the only one on the screen. All other windows are closed. Windows that have buffers that are modified are not removed, unless the \syntax{[!]} is given, then they become hidden.
+\end{description}
+\section{Moving cursor to other window}
+\begin{description}
+  \item[\syntax{[N]<C-w>w}] Move cursor cyclically to the next window. With count, go to N-th window (windows are numbered from top-left to bottom-right).
+  \item[\syntax{[N]<C-w><C-w>}] Same as \syntax{[N]<C-w>w}.
+  \item[\syntax{[N]<C-w>j}] Move cursor to N-th window below current one.
+  \item[\syntax{[N]<C-w>k}] Move cursor to N-th window above current one.
+  \item[\syntax{[N]<C-w>h}] Move cursor to N-th window left of current one.
+  \item[\syntax{[N]<C-w>l}] Move cursor to N-th window right of current one.
+  \item[\syntax{<C-w>t}] Move cursor to top-left window.
+  \item[\syntax{<C-w>b}] Move cursor to bottom-right window.
+  \item[\syntax{<C-w>p}] Go to last accessed window.
+\end{description}
+\section{Window resizing}
+\begin{description}
+  \item[\syntax{[N]<C-w>-}] Decrease current window height by \syntax{N}, default 1.
+  \item[\syntax{[N]<C-w>+}] Increase current window height by \syntax{N}, default 1.
+  \item[\syntax{:res[ize] -[N]}] Decrease current window height by N (default 1).
+  \item[\syntax{:res[ize] +[N]}] Increase current window height by N (default 1).
+  \item[\syntax{:res[ize] [N]}] Set current window height to \syntax{N}, default highest possible.
+  \item[\syntax{:vertical res[ize] [N]}] Set current window width to \syntax{N}, default widest possible.
+  \item[\syntax{<C-w>=}] Make all windows equally high and wide, but \syntax{'winheight'} and \syntax{'winwidth'} is used for the current window.
+  \item[\syntax{[N]<C-w>_}] Set current window height to \syntax{N}, default highest possible.
+  \item[\syntax{z{N}<CR>}] Set current window height to \syntax{N}.
+  \item[\syntax{[N]<C-w><}] Decrease current window width by \syntax{N}, default 1.
+  \item[\syntax{[N]<C-w>>}] Increase current window width by \syntax{N}, default 1.
+  \item[\syntax{[N]<C-w>|}] Set current window width to \syntax{N}, default widest possible.
+\end{description}
+\section{Window rearranging}
+\begin{description}
+  \item[\syntax{<C-w>r}] Rotate windows downwards/rightwards cyclically.
+  \item[\syntax{<C-w>R}] Rotate windows upwards/leftwards cyclically.
+  \item[\syntax{[N]<C-w>x}] Exchange current window with next one. If there is no next window, exchange with previous window. With count, exchange current window with N-th window (first window is 1). The cursor is put in the other window.
+  \item[\syntax{<C-w>K}] Move the current window to be at the very top, using the full width of the screen.
+  \item[\syntax{<C-w>J}] Move the current window to be at the very bottom, using the full width of the screen.
+  \item[\syntax{<C-w>H}] Move the current window to be at the far left, using the full height of the screen.
+  \item[\syntax{<C-w>L}] Move the current window to be at the far right, using the full height of the screen.
+  \item[\syntax{[N]<C-w>T}] Move the current window to a new tab page. Default it comes after the current tab page. When a count is specified the new tab page will be opened before the tab page with this index.
+\end{description}
+%
+\part{Tab pages}
+A tab page is a container that can hold a collection of windows. It can be used to partition work into different workspace.
+%
+\section{Open tab}
+\begin{description}
+  \item[\syntax{:[count]tabe[dit] [++opt] [+cmd] [file]}] 
+  \item[\syntax{:[count]tabnew [++opt] [+cmd] [file]}] Open a new tab page with an empty window or editing \syntax{[file]}, after the current tab page.
+  \item[\syntax{:[count]tab {cmd}}] Execute \syntax{{cmd}} and when it opens a new window open a new tab page instead.  When \syntax{[count]} is omitted the tab page appears after the current one. When \syntax{[count]} is specified the new tab page comes after tab page \syntax{[count]}.
+\end{description}
+\section{Close tab}
+\begin{description}
+  \item[\syntax{:tabc[lose][!]} [count]] Close current tab page or the \syntax{[count]} tab page, no matter how many windows there are in the tab.
+  \item[\syntax{:tabo[nly][!]}] Close all other tab pages.
+\end{description}
+\section{Switching between tabs}
+\begin{description}
+  \item[\syntax{[N]gt}] 
+  \item[\syntax{:tabn[ext] [N]}] Go to the next or \syntax{[N]}th tab page, cyclically.
+  \item[\syntax{[N]gT}] 
+  \item[\syntax{:tabp[revious] [N]}] Got to the previous or \syntax{[N]} tab pages back, cyclically.
+  \item[\syntax{:tabfir[st]}] Go to the first tab page.
+  \item[\syntax{:tabl[ast]}] Go to the last tab page.
+\end{description}
+\section{Rearranging tabs}
+\begin{description}
+  \item[\syntax{:[N]tabm[ove] [N]}] Move the current tab page to after tab page \syntax{[N]}. N=0 makes the current tab the first one. Without N the tab page is made the last one.
+\end{description}
+\part{Register}
+\begin{description}
+  \item[\syntax{=}] the expression register. Most of Vim's registers contain text either as a string of characters or as entire lines of text. The expression register is different. It can evaluate a piece of Vim script code and return the result.
+\end{description}
+
+\part{Mapping}
+\section{Mapping and Modes}
+\begin{table}
+  \centering
+  \begin{tabular}{ll}
+    \verb|:map|&Normal mode, Visual mode, Operator-pending mode\\
+    \verb|:vamp|&Visual\\
+    \verb|:nmap|&Normal\\
+    \verb|:omap|&Operator-pending\\
+    \verb|:map!|&Insert mode, Command-line mode\\
+    \verb|:imap|&Insert\\
+    \verb|:cmap|&Command-line
+  \end{tabular}
+\end{table}
+\section{List Mappings}
+Use map command of different modes to view all mappings defined for respective modes. Supply map command with key bindings to check specific mapping. The first column indicates the mode in which the mapping is defined.
+\begin{table}
+  \centering
+  \begin{tabular}{cl}
+    \verb|<Space>|&Normal, Visual, Select and Operator-pending\\
+    \verb|n|&Normal\\
+    \verb|v|&Visual and Select\\
+    \verb|s|&Select\\
+    \verb|x|&Visual\\
+    \verb|o|&Operator-pending\\
+    \verb|!|&Insert and Command-line\\
+    \verb|i|&Insert\\
+    \verb|l|&\verb|:lmap|\\
+    \verb|c|&Command-line
+  \end{tabular}
+\end{table}
+\section{Remappings}
+Normal mappings check possible further remappings for the target key sequence.
+``No-remap'' mappings doesn't do this. That is, the target key sequence is treated as ``final''.
+\begin{table}
+  \centering
+  \begin{tabular}{ll}
+    \verb|:noremap|&Normal, Visual, Operator-pending\\
+    \verb|:vnoremap|&Visual\\
+    \verb|:nnoremap|&Normal\\
+    \verb|:onoremap|&Operator-pending\\
+    \verb|:noremap|&Insert, Command-line\\
+    \verb|:inoremap|&Insert\\
+    \verb|:cnoremap|&Command-line
+  \end{tabular}
+\end{table}
+\section{Delete Mappings}
+To remove a mapping for specific modes use ``un-map'' commands.
+\begin{table}
+  \centering
+  \begin{tabular}{ll}
+    \verb|:unmap|&Normal, Visual, Operator-pending\\
+    \verb|:vunmap|&Visual\\
+    \verb|:ounmap|&Operator-pending\\
+    \verb|:unmap!|&Insert, Command-line\\
+    \verb|:iunmap|&Insert\\
+    \verb|:cunmap|&Command-line
+  \end{tabular}
+\end{table}
+
+To remove all mappings related to specific modes, use corresponding \verb|:mapclear| command.
+\section{Additional Keywords}
+\verb|<script>|, \verb|buffer|, \verb|unique|, \verb|<Nop|.
+\part{Options}
+\begin{description}
+  \item[\syntax{'ignorecase'}]  To do case-insensitive search.(Uppercase and lowercase letters are not distinguished.) To do case-insensitive search for just once, add \verb|\c| after search command.
+  \item[\syntax{'incsearch'}] show incomplete matches for a search phrase.
+  \item[\syntax{'hlsearch'}] highlight all mathcing phrases.
+  \item[\syntax{'hidden'}] When off a buffer is unloaded when it is abandoned.  When on a buffer becomes hidden when it is abandoned. Warning: Think twice when using \syntax{:q!} and the likes after setting the \syntax{'hidden'} option on.
+  \item[\syntax{'path'}] A list of directories which will be searched when using \verb|find| like commands.
+  \item[\syntax{'wrap'}] When on, ``actual lines'' longer than the width of the window will wrap and displaying continues on the next ``display line''. It doesn't affect the text in the buffer.
+\end{description}
+
+Minimal configuration file:
+\begin{verbatim}
+set nocompatible
+filetype plugin on
+\end{verbatim}
+in which the first line sets Vim not compatible with Vi and the second line enables build-in plugins including the functionality of Vim script.
+To load this configuration file instead of \verb|vimrc| when launching Vim, the following line can be entered in terminal: \verb|vim -u directory/of/file.vim|.
+\section{Change GUI font}
+\begin{enumerate}
+  \item First, type \verb|:set guifont=*| to activate the font selector menu.
+  \item Set the desirable font.
+  \item Type \verb|:set guifont=?| to view the exact font value set by Vim.
+  \item Put that value to \verb|vimrc| file by the following code:
+    \begin{lstlisting}
+if has('gui_running')
+set guifont=$font value$
+endif
+    \end{lstlisting}
+\end{enumerate}
+
+Menlo alternative on Windows: Meslo LG. 
+\part{Random Knowledge}
+Rules of action acted on text:
+\begin{description}
+  \item[Rule 1] $\text{Operator} + \text{Motion} = \text{Action}\,.$
+  \item[Rule 2] An operator that is invoked twice will act on the current line.
+\end{description}
+
+  \verb|$ vim -u NONE -N| run Vim in terminal without loading \verb|vimrc| file (\verb|-u NONE| flag) but still with \verb|'nocompatible'| option (\verb|-N| flag).
+
+In Vim, we can define our own custom operators and motion commands.
+
+If the motion includes a count and the operator also had a count before it, the two counts are multiplied. For example: "2d3w" deletes six words.
+
+由于 \% 可以从一个括号跳到对应的括号处, 因此可以用 \% 配合着各种 operator 来快速对光标下括号以及它们所包含的内容进行操作.
+
+The definition of \emph{change} can be very flexible. \emph{A change could be anything that modifies the text in the document}. For example, all the operations that happens from entering Insert mode (including the operation which triggered Insert mode) to exiting back to Normal mode (including the operation which triggered Normal mode) count as \emph{one} change.
+
+Note that moving around in Insert mode with Up, Down, Left, Right arrow keys resets the change, so a new undo chunk is created. It's just as though we had switched back to Normal mode to move around with the h, j, k, l keys.
+
+各种 operator 可以和所有 motion 来搭配使用. 除了和特殊的 motion 操作搭配, 也应该注意和最常用的左下上右 \verb|h,j,k,l| 来搭配使用.
+
+\begin{table}
+  \centering
+ \begin{tabular}{llll}
+  Intent&Act&Repeat&Reverse\\
+  Make a change&\verb|{edit}|&\verb|.|&\verb|u|\\
+  Find/till the next character&\verb|f{char}/t{char}|&\verb|;|&\verb|,|\\
+  Find/till the previous character&\verb|F{char}/T{char}|&\verb|;|&\verb|,|\\
+  Search for the next match&\verb|/pattern|&\verb|n|&\verb|N|\\
+  Search for the previous match&\verb|?pattern|&\verb|n|&\verb|N|\\
+  Substitute&\verb|:s/old/new|&\verb|&|&\verb|u|\\
+  Execute a sequence of changes&\verb|qx{changes}q|&\verb|@x|&\verb|u|
+\end{tabular}
+  \caption{Repeatable Actions}
+  \label{tab:RepeatableActions}
+\end{table}
+
+写作时可以将每一步思路作为一个 change. 每写出一步思路, 退出一次 Insert mode 再切入. 从而便于按照思路来删除和修改:
+Make each ``undoable chunk'' corresponding to a thought.
+对于少量的拼写错误, 则使用 Insert mode 下的删除命令即可. 例如, \syntax{<C-h>,<C-w>,<C-u>}.
+
+在写作途中, 除了 \verb|<CR>|, 也可以用 \verb|<ESC>o| open a new line. This command gives the new line the possibility of undo.
+
+As a general rule, if you've paused for long enough to ask the question, ``should I leave Insert mode?'' then do it.
+
+\syntax{[count]} 出现在命令中的不同位置时意义不同. 例如, \syntax{d2w} 表示 \syntax{delete} operator + 2 \syntax{word} motion; \syntax{2dw} 表示 2 \syntax{delete} operator + \syntax{word} motion. 但是两者的效果没有区别.
+
+什么时候应该小量地修改再重复操作, 什么时候应该 count 修改一次到位, 这是需要建立习惯的.
+
+Operator-Pending mode is a state that accepts only motion commands.
+It is activated when we invoke an operator command, and then nothing happends until we provide a motion, which completes the operation.
+While Operator-Pending mode is active, we can return to Normal mode in the usual manner by pressing \syntax{<ESC>}, which aborts the operation.
+
+or most cases of commands starting with \syntax{g}, \syntax{z}, \syntax{CTRL-w}, or \syntax{[}\vphantom{]} etc., the first keystrokes merely acts as a prefix for the second. These commands don't initiate Operator-Pending mode. Instead, we can think of them as namespaces that expand the number of available command. Only the operator commands initiate the Operator-Pending mode.
+
+\end{document}

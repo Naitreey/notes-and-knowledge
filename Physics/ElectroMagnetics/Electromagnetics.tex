@@ -1,0 +1,32 @@
+\documentclass{article}
+\begin{document}
+\section{电磁感应}
+从各种场的起源可以很容易理解不同场的有源性和无源性:
+\begin{enumerate}
+  \item 库伦电场 (静电场) 是由电荷产生的, 它有直接的物质基础, 因此有源;
+  \item 静磁场是由电流产生的, 或者说是由电荷运动这个行为所产生的, 无直接的物质基础, 故无源;
+  \item 感生电场和感生磁场都是由于另一种场的变化而产生的, 也没有直接的物质基础, 故无源.
+\end{enumerate}
+可以看出有源场是有直接物质基础的, 因此相对更本质; 无源场则是因为某种行为或现象衍生出来的. 但磁场是与电场同样重要的场, 研究磁场的意义并没有因它的衍生性减弱, 因为磁场的真实性和相对于电场的不同特性并没有因此而不同 (我们确实在同一座标系下分别观测到了这两种性质迥异的场).
+\section{Q \& A}
+\begin{question}
+  带电粒子进入匀强磁场中受 Lorentz 力为什么一定沿圆周轨迹运动?
+\end{question}
+\begin{answer}
+  设粒子的运动轨迹为一个任意的轨迹. 在轨迹上的任意一点, 粒子的速度都沿切线. 因此粒子受的 Lorentz 力沿法向. 取自然坐标系为法向和切向, 在该点上对粒子列牛二定律方程:
+  \begin{align*}
+    \vec{F}&=m\vec{a}\\
+    \intertext{即}
+    q\vec{v}\times\vec{B}&=m(\vec{a}_t+\vec{a}_n)
+  \end{align*}
+  Lorentz 力沿法向, 所以 $a_t=0$; 曲线运动中任意点法向加速度为 $a_t=\frac{v^2}{\rho}$\,. 得到
+  \begin{equation*}
+    qvB=m\frac{v^2}{\rho}\,.
+  \end{equation*}
+  因为 $v$ 不变, 所以得到轨迹上各点的曲率半径相同 (且非零). 这样的轨迹只有圆. (曲线上每两个无限近的点之间的轨迹都弯曲了相同的程度.)
+\end{answer}
+\begin{question}
+  Hertz's experiment 中, 电容 $C$ 的作用是什么? 开口处不就相当于一个 $C$ 么?
+\includegraphics{files/hertz-experiment}
+\end{question}
+\end{document}

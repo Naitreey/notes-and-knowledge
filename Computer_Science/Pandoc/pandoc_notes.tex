@@ -1,0 +1,74 @@
+% arara: xelatex: {action: nonstopmode,synctex: yes} 
+% arara: biber 
+% arara: xelatex: {action: nonstopmode,synctex: yes} 
+% arara: xelatex: {action: nonstopmode,synctex: yes}
+\RequirePackage[l2tabu, orthodox]{nag}
+\documentclass{article}
+
+%文献宏包 
+%\usepackage[style=numeric,backend=biber]{biblatex}
+
+\usepackage[a4paper]{geometry}
+
+%中文宏包
+%\usepackage[UTF8,winfonts,fancyhdr,hyperref,fntef]{ctex}
+\usepackage{xeCJK}
+
+\usepackage[pdfborder={0 0 0},colorlinks=false]{hyperref}
+\usepackage{graphicx,amsmath,amssymb,bm,mathtools,subcaption,caption,cleveref}
+
+%数学定义
+
+%single & double quotes
+\newcommand{\sq}[1]{`#1'}
+\newcommand{\dq}[1]{``#1''}
+
+%文献源 \addbibresource{•}
+
+%设置字体
+%\setmainfont[Ligatures=TeX]{Helvetica}
+%\setsansfont{Helvetica}%Arial
+%\setmonofont{}
+\setCJKmainfont[BoldFont={SimHei},ItalicFont={楷体}]{SimSun}%Hiragino Sans GB W3/W6
+%\setCJKsansfont{Hiragino Sans GB W3}
+\setCJKmonofont{幼圆}
+
+%代码宏包
+%\usepackage{listings}
+%\lstset{language=,frame=single,texcl=true,mathescape=true}%[LaTeX]TeX or mathematica or etc?
+
+\title{Pandoc Notes}
+\author{Naitree Zhu}
+\date{Last modified \today}
+
+\begin{document}
+\maketitle
+%目录 \tableofcontents
+
+Verify \textsf{pandoc} is installed and to check its version: type
+\verb|pandoc --version| in terminal.
+
+在 terminal 中输入 \verb|pandoc| 打开程序, 再输入所有需要转换的代码或文字, 然后在 windows 下 \verb|<Ctrl-z>| (在 Linux or Mac OS 下 \verb|<Ctrl-d>|) 就得到了转换后的输出.
+
+\verb|pandoc| 默认从 markdown 转换为 HTML 4. 设置默认转换格式: \verb|pandoc -f xx -t xxx| 则从 xx 转换为 xxx.
+
+将一种格式的文件转换为另一种格式的文件的基本操作:
+
+\begin{verbatim}
+pandoc file1.a -f xx -t xxx -s -o file2.b
+\end{verbatim}
+
+The \verb|-s| flag tells \verb|pandoc| to create a \dq{standalone} file and \verb|-o| flag tells to put the output in the file \verb|file2.b|. Note that \verb|-f xx| and \verb|-t xxx| can be \emph{omitted} if \verb|a| and \verb|b| are filename extensions of corresponding formats. So \verb|pandoc file1.a -s -o file2.b| could be sufficient.
+
+For creating a PDF directly, a \LaTeX~distribution must be installed in the operating system.
+
+\verb|pandoc --help| to get a list of all the supported options.
+
+type \verb|man pandoc| on Linux or Mac OS to get \textsf{pandoc} manual page and \verb|man pandoc_markdown| to get a description of pandoc's markdown syntax.
+
+
+
+
+\end{document}
+
+

@@ -1,0 +1,146 @@
+\RequirePackage[l2tabu, orthodox]{nag}
+\documentclass[a4paper]{article}
+\usepackage[a4paper]{geometry}
+\usepackage[colorlinks=false, pdfborder={0 0 0}]{hyperref}
+\usepackage{array,multirow,amsmath,amssymb,esint,bm,siunitx,cleveref}
+\renewcommand{\arraystretch}{2.5}
+\title{Green's Function}
+\author{Naitree Zhu}
+\date{Last modified: \today}
+\begin{document}
+\maketitle
+In mathematics, a Green's function\footnote{More information:\url{http://en.wikipedia.org/wiki/Green\%27s_function}} is the impulse response of an inhomogeneous differential equation defined on a domain, with specified initial conditions or boundary conditions. Via the superposition principle, the convolution of a Green's function with an arbitrary function $f(x)$ on that domain is the solution to the inhomogenous differential equation for $f(x)$.
+
+Green's functions are named after the British mathematician George Green, who first developed the concept in the 1830s. In the modern study of linear partial differential equations, Green's functions are studied largely from the point of view of fundamental solutions instead.
+
+Under many-body theory, the term is also used in physics, specifically in quantum field theory, aerodynamics, aeroacoustics, electrodynamics and statistical field theory, to refer to various types of correlation functions, even those that do not fit the mathematical definition.
+\part{Definition and Use}
+A Green's function, $G(x,s)$, of a linear differential operator$L=L(x)$ acting on distributions over a subset of the Euclidean space $R^{n}$, at a point s, is any solution of 
+\begin{equation}
+L^{*}\,G(x,s)=\delta(x-s)
+\end{equation}
+where $\delta$ is the Dirac delta function and $L^{*}$ is the adjoint $L$. In the case of a self-adjoint operator, the equation can be written as 
+\begin{equation}
+L\,G(x,s)=\delta(x-s)
+\end{equation}
+If the kernel of L is non-trivial, then the Green's function is not unique. However, in practice, some combination of symmetry, boundary conditions and/or other externally imposed criteria will give a unique Green's function. Also, Green's functions in general are distributions, not necessarily proper functions.
+
+Green's functions are also useful tools in solving wave equations and diffusion equations. In quantum mechanics, the Green's function of the Hamiltonian is a key concept with important links to the concept of density of states. As a side note, the Green's function as used in physics is usually defined with the opposite sign; that is,
+\begin{equation}
+L\,G(x,s)=-\delta(x-s)
+\end{equation}
+This definition does not significantly change any of the properties of the Green's function.
+\part{Motivation}
+Loosely speaking, if such a function $G$ can be found for the operator $L$, then if we multiply the equation (2) for the Green's function by $f(s)$, and then perform an integration in the $s$ variable, we obtain:
+\begin{align*}
+\int L\,G(x,s)\,f(s)\,\mathrm{d}s&=\int \delta(x-s)\,f(s)\,\mathrm{d}s\\&=f(x)\\&=L\,u(x)
+\end{align*}
+i.e.
+\[
+L\,u(x)=\int L\,G(x,s)\,f(s)\,\mathrm{d}s
+\]
+Because the operator $L = L(x)$ is linear and acts on the variable $x$ alone, we can take the operator $L$ outside of the integration on the right-hand side (Note it's definitive integral over the region that the operator $L$ is acting on), obtaining
+\[
+L\,u(x)=L\left(\int G(x,s)\,f(s)\,\mathrm{d}s\right)
+\]
+Provided operator $L$ is arbitrary, so it suggests
+\begin{equation}
+u(x)=\int G(x,s)\,f(s)\,\mathrm{d}s
+\end{equation}
+Thus, we can obtain the function $u(x)$ through knowledge of the Green's function in equation (2) and the source term on the right-hand side in equation (3). This process relies upon the linearity of the operator $L$. The problem now lies in finding the Green's function $G$ that satisfies equation (2). For this reason, the Green's function is also sometimes called the fundamental solution associated to the operator $L$.
+
+Not every operator $L$ admits a Green's function. A Green's function can also be thought of as a right inverse of $L$. Aside from the difficulties of finding a Green's function for a particular operator, the integral in equation (4), may be quite difficult to evaluate. However the method gives a theoretically exact result.
+\part{Finding Green's functions}
+\section{Eigenvalue expansions}
+If a differential operator $L$ admits a set of eigenvectors $\Psi_{n}(x)$ (i.e., a set of functions $\Psi_{n}$ and scalars $\lambda_{n}$ satisfying $L\Psi_{n}=\lambda_{n}\Psi_{n}$) that is complete, then it is possible to construct a Green's function from these eigenvectors and eigenvalues.
+``Complete'' means that the set of functions $\lbrace\Psi_{n}\rbrace$ satisfies the following completeness relation:
+\begin{equation}
+\delta(x-x')=\sum_{n=0}^\infty\Psi_n^\dag(x)\Psi_{n}(x')
+\end{equation}
+Then the following holds:
+\begin{equation}
+G(x,x')=\sum_{n=0}^\infty\frac{\Psi_{n}^\dag(x)\,\Psi_{n}(x')}{\lambda_{n}}
+\end{equation}
+where \dag represents complex conjugation.
+
+Applying the operator $L$ to each side of this equation results in the completeness relation, which was assumed true.
+
+The general study of the Green's function written in the above form, and its relationship to the function spaces formed by the eigenvectors, is known as Fredholm theory.
+\section{Table of Green's functions}
+The following table gives an overview of Green's functions of frequently appearing differential operators, where $\theta(t)$ is the Heaviside step function,$r=\sqrt{x^2+y^2+z^2}$ and $\rho=\sqrt{x^2+y^2}$.
+\begin{table}[h]
+\centering
+\caption{Green's functions of some common operators}
+\begin{tabular}{|>{$}c<{$}|>{$}c<{$}|>{$}m{4.85cm}<{$}|}
+\hline
+\text{Differential Operator}\,L & \text{Green's Function}\,G & \text{Example of application}\\
+\hline
+\displaystyle \partial_t+\gamma &\displaystyle \theta(t)e^{-\gamma t}&\\
+\hline
+\displaystyle \left(\partial_t +\gamma\right)^2&\displaystyle \theta(t)te^{-\gamma t}&\\
+\hline
+\multirow{2}{*}{$\displaystyle \partial_t^2 + 2\gamma\partial_{t}+\omega_0^2$} & \displaystyle \theta(t)e^{-\gamma t}\frac{1}
+{\omega}sin(\omega t) & \text{one-dimensional damped harmo-}\\ &\text{with }\omega=\sqrt{\omega_0^2 
+-\gamma^2}&\text{nic oscillator}\\
+\hline
+\displaystyle \Delta_{2D}=\partial_x^2 +\partial_y^2 & \displaystyle \frac{1}{2\pi}\ln \rho &\\
+\hline
+\displaystyle \Delta=\partial_x^2 +\partial_y^2+\partial_z^2 &\displaystyle \frac{-1}{4\pi r}& \text{Poisson equation}\\
+\hline
+\text{Helmholtz operator}\,\displaystyle \Delta +k^2&\displaystyle \frac{-e^{-ikr}}{4\pi r}&\text{stationary Schr\"{o}dinger equation}\\
+\hline
+\text{D'Alembert operator}\, \displaystyle \square=\frac{1}{c^2}\partial_t^2-\Delta &\displaystyle \frac{\delta(t-\frac{r}{c})}{4\pi r}&\text{wave equation}\\
+\hline
+\displaystyle \partial_t-D\Delta &\displaystyle \theta(t)\left(\frac{1}{4\pi Dt}\right)^{\frac{3}{2}}e^{\frac{r^2}{4Dt}}&\text{diffusion}\\
+\hline
+\end{tabular}
+\end{table}
+\part{Green's functions for the Laplacian}
+Green's functions for linear differential operators involving the Laplacian may be readily put to use using the second of Green's identities:
+\begin{equation}
+\int_V \left(\varphi\nabla^{2}\psi-\psi\nabla^{2}\varphi\right)\mathrm{d}V=\oint_S\left(\varphi\frac{\partial\psi}{\partial n}-\psi\frac{\partial \varphi}{\partial n}\right)\mathrm{d}S
+\end{equation}
+Suppose that the linear differential operator $L$ is the Laplacian $\nabla^2$, and that there is a  Green's function $G$ for the Laplacian.
+
+According to the defining property of the Green's function,
+\begin{equation}
+L\,G(x,x')=\nabla^2 G(x,x')=\delta(x-x')
+\end{equation}
+Let $\psi=G$ in Green's second identity.Then:
+\begin{equation}
+\int_V \left(\varphi\delta(x-x')-G(x,x')\nabla'^2\varphi\right)\mathrm{d}V'=\oint_S\left(\varphi\frac{\partial G(x,x')}{\partial n'}-G(x,x')\frac{\partial \varphi}{\partial n'}\right)\mathrm{d}S'
+\end{equation}
+Using this expression, it is possible to solve Laplace's equation $\nabla^2\varphi=0$ or Poisson's equation $\nabla^2\varphi(x)=-\rho(x)$, subject to either Dirichlet or Neumann boundary conditions. In other words, we can solve for $\varphi(x)$ everywhere inside a volume where one of the following conditions are satisfied:
+\begin{enumerate}
+\item the value of $\varphi(x)$ is specified on the bounding surface of the volume.
+\item the normal derivative of $\varphi(x)$ is specified on the bounding surface.
+\end{enumerate}
+This is specified followingly.
+
+Suppose the problem is to solve for $\varphi(x)$ inside the region. Then according to the defining property of the Dirac delta function, we have：
+\begin{equation}
+\varphi(x)=\int_V G(x,x')\rho(x')\mathrm{d}V'+\oint_S\left(\varphi\frac{\partial G(x,x')}{\partial n'}-G(x,x')\frac{\partial \varphi}{\partial n'}\right)\mathrm{d}S'
+\end{equation}
+\begin{enumerate}
+\item If the problem is to solve a Dirichlet boundary value problem, the Green's function should be chosen such that $G(x,x')$ vanishes when either $x$ or $x'$ is on the bounding surface. Thus only the first of the two terms in the surface integral remains.
+\item If the problem is to solve a Neumann boundary value problem, the Green's function is chosen such that its normal derivative vanishes on the bounding surface, as it would seem to be the most logical choice. However, this is not possible. Intuitively, Green's function suggests that a source of field exists in the region. So the integral of field at the boundary,i.e. flux outward the region must be nonzero. And mathematically,
+\begin{equation}
+\oint_S \frac{\partial G(x,x')}{\partial n'}\mathrm{d}S'=\int_V \nabla'^2 G(x,x')\mathrm{d}V'=\int_V \delta(x-x')\mathrm{d}V'=1
+\end{equation}
+so $\frac{\partial G(x,x')}{\partial n'}$ can not be 0 at the boundary, otherwise the first integral equals to zero and divergence theorem is violated. Thus, the simplest form the normal derivative can take is that of a constant, namely letting $\frac{\partial G(x,x')}{\partial n'}=\frac{1}{S}$, where $S$ is the surface area of the surface. The first surface term in eq.~(10) becomes 
+\begin{equation}
+\oint_S \frac{\partial G(x,x')}{\partial n'}\mathrm{d}S'=\left<\varphi\right>_S
+\end{equation}
+where $\left<\varphi\right>_S$ is the average value of the potential on the surface. This number is not known in general, but is often unimportant, as the goal is often to obtain the electric field given by the gradient of the potential, rather than the potential itself.
+\end{enumerate}
+
+Supposing the boundary goes out to infinity and $G=0$ at infinity (Dirichlet problem), the corresponding Green's function is
+\begin{equation}
+G(x,x')=\frac{1}{\lvert x-x' \rvert}
+\end{equation}
+Applying this to eq.~(10) gives familiar expression for electric potential:
+\begin{equation}
+\varphi(x)=\int_V \frac{\rho(x')}{\lvert x-x' \rvert}\mathrm{d}V'
+\end{equation}
+Notice that because of the defining property eq.~(8) of Green's function for Laplacian and infinity boundary condition stated above, the corresponding Green's function eq.~(13) is exactly what a point charge would behave under the same boundary condition.
+\end{document}

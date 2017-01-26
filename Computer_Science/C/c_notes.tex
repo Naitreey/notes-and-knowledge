@@ -1,0 +1,5015 @@
+\section{Tips}
+\begin{tip}
+   Avoid a "dangling" newline when reading single character user input.
+\end{tip}
+\begin{solution}
+  To get a single character from the user in C, many beginning programmers use either scanf() with the format specifier \%c or getchar(). Both functions read a character from the standard input stream (the difference between them is that getchar() returns an int, whereas scanf() expects a pointer to char).
+
+  But both have the same pitfall: when the user enters a character s/he afterwards presses the enter key. Thus there are actually two characters in the input stream: the character entered and the newline character.
+
+  If you don't remove the newline character from the input stream, it could interfere with input functions later in the program. It seems that the input is ignored.
+  There are several workarounds:
+  For a simple solution, you could add a space before the format specifier when you use scanf(), for example:
+
+  \begin{verbatim}
+  scanf(" %c", &ch);
+  \end{verbatim}
+
+  The leading space tells scanf() to skip any whitespace characters (including newline) before reading the next character, resulting in the same behavior as with the other format specifiers.
+
+  You could also use \verb|getchar()| after a \verb|scanf()/getchar()| call to remove the newline character. Similarly you could use
+
+  \begin{verbatim}
+  scanf("%c%*c", &ch);
+  \end{verbatim}
+
+  which will read two characters, storing the first in "ch" and throwing away the second. Both solutions only work if you are sure the next character to read will be '\verb|\n|'.
+
+  All three workarounds mentioned above aren't very stable. Consider the case when the user enters more than one character (by accident or on purpose). They will all fail in that situation.
+
+  A better approach is flushing the input buffer after every scanf()/getchar() call, but don't use fflush(stdin)!
+
+  Or, depending on your requirements, you could also forget about scanf()/getchar(), use fgets() to get a line of text from the user and parse it yourself.
+
+  Reference: \url{http://faq.cprogramming.com/cgi-bin/smartfaq.cgi?answer=1352443831&id=1043284392}
+\end{solution}
+\begin{tip}
+    比较好的交互式输入方法. 要求: 允许用户输入任何东西, 任何长度, 输入后 stdin buffer 中不
+    残留内容.
+\end{tip}
+\begin{solution}
+    在交互式输入中尽量不使用 \code{scanf}, 因为用户输入可能是任何形式的, 而 \code{scanf}
+    实际上只适合 formatted input.
+
+    基本思路是基于 \code{fgets} 进行输入, 然后进行所需的转换.
+
+    基于 \code{fgets} 得到以下输入函数:
+    \begin{verbatim}
+char * s_gets(char * s, int size) {
+    char * ret_val = fgets(s, size, stdin);
+    char * pnewline;
+    char useless;
+    if (ret_val) {
+        if ((pnewline = strchr(s, '\n')) != NULL) {
+            *pnewline = '\0';
+        }
+        else {
+            while ((useless = getchar()) != '\n' && useless != EOF) {
+                continue;
+            }
+        }
+    }
+    return ret_val;
+}
+    \end{verbatim}
+\end{solution}
+\begin{tip}
+  User friendly, smooth interactive input.
+\end{tip}
+\begin{solution}
+  \begin{verbatim}
+#include <stdio.h>
+#include <ctype.h>
+char GetInput(void);
+char GetFirst(void);
+void Count(void);
+int main(void)
+{
+	char ch;
+	while( (ch=GetInput())!='q' )
+	{
+		switch ( ch )
+		{
+			case 'a' :
+				printf( "sdf.\n" );
+				break;
+			case 'b' :
+				printf( "\a" );
+				break;
+			case 'c' :
+				Count();
+				break;
+			default :
+				printf( "error." );
+				break;
+		}
+	}
+	printf( "done.\n" );
+	return 0;
+}
+char GetInput(void)
+{
+	char chh;
+	printf( "a. advice	b. bell\n" );
+	printf( "c. count	q. quit.\n" );
+	printf( "input:" );
+	while( (chh=GetFirst())!='a' && chh!='b' && chh!='c' && chh !='q' )
+	{
+		if( isspace(chh) )
+		{
+			continue;
+		}
+		printf( "you should enter correct letter.\n" );
+	}
+	return chh;
+}
+char GetFirst(void)
+{
+	char chhh=getchar();
+	while( getchar()!='\n' )
+	{
+		continue;
+	}
+	return chhh;
+}
+void Count(void)
+{
+	int num;
+	int i;
+	int sum=0;
+	printf( "input count:" );
+	scanf( "%d" , &num );
+	for( i=1 ; i<=num ; i++ )
+	{
+		sum+=i;
+	}
+	printf( "sum: %d\n" , sum);
+}
+  \end{verbatim}
+\end{solution}
+\begin{tip}
+  another user-friendly character-based input function. the function below allows for:
+  \begin{enumerate}
+    \item leading space characters are igonred.
+    \item trailing characters are consumed.
+    \item if the first (nonblank) character is not one of the allowed, prompt for another input.
+  \end{enumerate}
+\end{tip}
+\begin{solution}
+  \begin{verbatim}
+char InputChar(void)
+{
+	char choice;
+
+	printf( "four hotels to choose from:\n" );
+	printf( "a.	b.\n" );
+	printf( "c.	d.\n" );
+	printf( "q.\n" );
+	printf( "input choice:" );
+
+	while(1)
+	{
+		while(isspace(choice=getchar()))
+		{
+			continue;
+		}
+
+		while( getchar()!='\n' )
+		{
+			continue;
+		}
+
+		if( !((choice>='a' && choice<='d') || choice=='q') )
+		{
+			printf( "please input a,b,c,d or q.\n" );
+			printf( "input choice:" );
+		}
+		else
+		{
+			break;
+		}
+	}
+	return choice;
+}
+  \end{verbatim}
+\end{solution}
+\begin{tip}
+  a user-friendly number-based input function.
+\end{tip}
+\begin{solution}
+  \begin{verbatim}
+int InputNum(void)
+{
+	int code, status;
+	
+	while( (status=scanf( "%d" , &code ))!=1 || (code<1 || code>5) )
+	{
+		if( status!=1 )
+		{
+			scanf( "%*s");
+		}
+		printf( "Please input integer from 1 to 5.\n" );
+	}
+}
+  \end{verbatim}
+\end{solution}
+
+\section{Programming Exercise}
+\begin{question}
+  Have a program request the user to enter an uppercase letter. Use nested loops to produce
+  a pyramid pattern like this:
+      A
+     ABA
+    ABCBA
+   ABCDCBA
+  ABCDEDCBA
+\end{question}
+\begin{solution}
+  \begin{verbatim}
+#include<stdio.h>
+int main(void)
+{
+  int i,j,rows;
+  char start='A',end,letter;
+  printf("input:");
+  scanf("%c",&end);
+  rows=end-start+1;
+  for( i=1 ; i<=rows ; i++ )
+  {
+    for( j=1 ; j<=rows-i ; j++ )
+    {
+      printf(" ");
+    }
+
+    for( letter=start ; letter<start+i ; letter++ )
+    {
+      printf("%c",letter);
+    }
+
+    for( letter-=2 ; letter>=start ; letter-- )
+    {
+      printf("%c",letter);
+    }
+
+    printf("\n");
+  }
+  return 0;
+}
+  \end{verbatim}
+\end{solution}
+
+\begin{question}
+  Write a program that reads a single word into a character array and then prints the word
+  backward.
+\end{question}
+\begin{solution}
+  \begin{verbatim}
+#include<stdio.h>
+#include<string.h>
+int main(void)
+{
+	char word[25];
+	int i;
+	scanf("%s",word);
+	for( i=strlen(word) ; i>=1 ; i-- )
+	{
+		printf("%c",word[i-1]);
+	}
+	
+	return 0;
+}
+  \end{verbatim}
+\end{solution}
+\begin{question}
+  Consider these two infinite series:
+1.0 + 1.0/2.0 + 1.0/3.0 + 1.0/4.0 + ...
+1.0 - 1.0/2.0 + 1.0/3.0 - 1.0/4.0 + ...
+Write a program that evaluates running totals of these two series up to some limit of
+number of terms.
+\end{question}
+\begin{solution}
+  \begin{verbatim}
+#include<stdio.h>
+int main(void)
+{
+	int num,i;
+	double sum1,sum2;
+	printf("number of terms to compute:\n");
+	while( scanf("%d",&num)==1 )
+	{
+	for( sum1=sum2=0.0,i=1 ; i<=num ; i++ )
+	{
+		sum1+=1.0/((double)i);
+		sum2+=(-1+2*(i%2))*1.0/((double)i);
+	}
+	
+	printf("%f %f\n",sum1,sum2);
+	}
+
+	return 0;
+}
+  \end{verbatim}
+\end{solution}
+\begin{question}
+  Write a program that reads in a line of input and then prints the line in reverse order.
+You can store the input in an array of char; assume that the line is no longer than 255
+characters.
+\end{question}
+\begin{solution}
+  \begin{verbatim}
+#include<stdio.h>
+int main(void)
+{
+	char line[256];
+	int i;
+	printf("input:\n");
+	for( i=0 ; i<256 && line[i-1]!='\n' ; i++ )
+	{
+		scanf("%c",&line[i]);
+	}
+	for( i-- ; i>=0 ; i-- )
+	{
+		printf("%c",line[i]);
+	}
+	return 0;
+}
+  \end{verbatim}
+\end{solution}
+\begin{question}
+Daphne invests \$100 at 10\% simple interest. (That is, every year, the investment earns
+an interest equal to 10\% of the original investment.) Deirdre invests \$100 at 5\% interest
+compounded annually. (That is, interest is 5\% of the current balance, including previous
+addition of interest.) Write a program that finds how many years it takes for the value
+of Deirdre’s investment to exceed the value of Daphne’s investment. Also show the two
+values at that time.
+\end{question}
+\begin{solution}
+  \begin{verbatim}
+#include<stdio.h>
+int main(void)
+{
+	double money_Daphne=100,money_Deirdre=100;
+	int n;
+	do
+	{
+		money_Daphne+=0.1*100;
+		money_Deirdre+=0.05*money_Deirdre;
+		n++;
+	}
+	while(money_Daphne>=money_Deirdre);
+	printf("%d, %f %f\n",n,money_Daphne,money_Deirdre);
+	return 0;
+}
+  \end{verbatim}
+\end{solution}
+\begin{question}
+  A word counting program.
+\end{question}
+\begin{solution}
+  \begin{enumerate}
+    \item Approach 1:
+  \begin{verbatim}
+#include<stdio.h>
+#include<ctype.h>
+#include<stdbool.h>
+int main(void)
+{
+	char ch1,ch2;
+	int count_word=0,count_line=0,count_char=0;
+	bool flag=true;
+	ch1=getchar();
+	if( isalnum(ch1) )
+	{
+		count_char++;
+	}
+	while(flag)
+	{
+		ch2=getchar();
+		if( isalnum(ch2) )
+		{
+			count_char++;
+		}
+
+		if( (isalnum(ch1)) && (!isalnum(ch2)) )
+		{
+			count_word++;
+		}
+
+		if( ch1!='\n'&&ch2=='\n' )
+		{
+			count_line++;
+		}
+
+		//hit Enter twice to finish input.
+		if( ch1=='\n'&&ch2=='\n' )
+		{
+			flag=false;
+		}
+
+		ch1=ch2;
+	}
+	printf("characters:%d\nwords:%d\nlines:%d\n",count_char,count_word,count_line);
+	return 0;
+}
+  \end{verbatim}
+\item Approach 2:
+  \begin{verbatim}
+#include <stdio.h>
+#include <ctype.h>
+int main(void)
+{
+	int count_char=0, count_word=0;
+	char ch1, ch2;
+	ch1=getchar();
+	while( ch1!=EOF )
+	{
+		ch2=getchar();
+		/*count*/
+		if( isalnum(ch1) )
+		{
+			count_char++;
+		}
+		if( isalnum(ch1) && (ch2 ==' ' || ch2==',' || ch2=='.' || ch2=='?' || ch2=='\n' || ch2=='"' || ch2==';' || ch2=='!' || ch2=='\'') )
+		{
+			count_word++;
+		}
+		/*count finish*/
+		ch1=ch2;
+	}
+	printf( "letter: %d\nword: %d\nletter/word: %.2f\n", count_char, count_word, (float)count_char/count_word );
+	return 0;
+}
+  \end{verbatim}
+\end{enumerate}
+\end{solution}
+\begin{question}
+  Single \verb|<CR>| is ignored. Only the first character of input line has effect.
+\end{question}
+\begin{solution}
+  \begin{verbatim}
+#include<stdio.h>
+#include<ctype.h>
+int main(void)
+{
+	char first_char;
+	printf("input:");
+	while( (first_char=getchar())!='q' )
+	{
+		if( first_char=='\n' )
+		{
+			printf("input:");
+			continue;
+		}
+		if( islower(first_char) )
+		{
+			switch ( first_char )
+			{
+				case 'a' :
+					printf("ahwww.\n");
+					break;
+				case 'b' :
+					printf("bewww.\n");
+					break;
+				default :
+					printf("neiii.\n");
+					break;
+			}
+		}
+		else if(isupper(first_char))
+		{
+			printf("should be lowercase.\n");
+		}
+
+		while( getchar()!='\n' )
+		{
+			continue;
+		}
+
+		printf("input:");
+	}
+	return 0;
+}
+  \end{verbatim}
+\end{solution}
+\begin{question}
+  Print eight character-code pairs per line.
+\end{question}
+\begin{solution}
+  \begin{verbatim}
+#include<stdio.h>
+int main(void)
+{
+	char ch;
+	int n=0;
+	while( (ch=getchar())!='#' )
+	{
+		printf("%c: %d.",ch,ch);
+		(++n)%8==0 ? printf("\n"):printf(" ");
+	}
+	return 0;
+}
+  \end{verbatim}
+\end{solution}
+\begin{question}
+  write a program that reads input up to #, replaces each period
+  with an exclamation mark, replaces each exclamation mark initially present with two
+  exclamation marks, and reports at the end the number of substitutions it has made.
+\end{question}
+\begin{solution}
+  \begin{enumerate}
+    \item if--else:
+      \begin{verbatim}
+#include<stdio.h>
+int main(void)
+{
+	char ch;
+	int substitution=0;
+	while( (ch=getchar())!='#' )
+	{
+		if( ch=='.' )
+		{
+			putchar('!');
+			substitution++;
+		}
+		else if( ch=='!' )
+		{
+			putchar('!');
+			putchar('!');
+			substitution++;
+		}
+		else
+		{
+			putchar(ch);
+		}
+	}
+	printf("%d\n",substitution);
+	return 0;
+}
+      \end{verbatim}
+    \item switch:
+      \begin{verbatim}
+#include<stdio.h>
+int main(void)
+{
+	char ch;
+	int substitution=0;
+	while( (ch=getchar())!='#' )
+	{
+		switch ( ch )
+		{
+			case '.' :
+				putchar('!');
+				substitution++;
+				break;
+			case '!' :
+				putchar('!');
+				putchar('!');
+				substitution++;
+				break;
+			default :
+				putchar(ch);
+				break;
+		}
+	}
+	printf("%d\n",substitution);
+	return 0;
+}
+      \end{verbatim}
+  \end{enumerate}
+\end{solution}
+\begin{question}
+  Write a program that reads input up to # and reports the number of times that the
+  sequence ei occurs.
+\end{question}
+\begin{solution}
+  \begin{verbatim}
+#include<stdio.h>
+int main(void)
+{
+	char ch1,ch2;
+	int n=0;
+	ch1=getchar();
+	if( ch1!='\n' )
+	{
+		while( (ch2=getchar())!='\n' )
+		{
+			if( ch1=='e' && ch2=='i' )
+			{
+				n++;
+			}
+			ch1=ch2;
+		}
+	}
+	printf("%d\n",n);
+	return 0;
+}
+  \end{verbatim}
+\end{solution}
+\begin{question}
+  Write a program that requests the hours worked in a week and then prints the gross pay,
+  the taxes, and the net pay. Assume the following:
+  a. Basic pay rate = \$10.00/hr
+  b. Overtime (in excess of 40 hours) = time and a half
+  c. Tax rate: \#15\% of the first \$300
+		 20\% of the next \$150
+		 25\% of the rest
+  Use #define constants, and don’t worry if the example does not conform to current
+  tax law.
+  Modify assumption a. in exercise 7 so that the program presents a menu of pay rates
+  from which to choose. Use a switch to select the pay rate. The beginning of a run
+  should look something like this:
+  *****************************************************************
+  Enter the number corresponding to the desired pay rate or action:
+1) \$8.75/hr
+ 2) \$9.33/hr
+ 3) \$10.00/hr
+  4) \$11.20/hr
+5) quit
+*****************************************************************
+If choices 1 through 4 are selected, the program should request the hours worked. The
+program should recycle until 5 is entered. If something other than choices 1 through 5
+is entered, the program should remind the user what the proper choices are and then
+recycle. Use #defined constants for the various earning rates and tax rates.
+\end{question}
+\begin{solution}
+  \begin{verbatim}
+#include<stdio.h>
+#define PAY_RATE_1 8.75
+#define PAY_RATE_2 9.33
+#define PAY_RATE_3 10.00
+#define PAY_RATE_4 11.20
+#define TIME_RATE 1.5
+#define TAX_RATE_1 0.15 
+#define TAX_RATE_2 0.20 
+#define TAX_RATE_3 0.25 
+#define BASE_1 300 
+#define BASE_2 150 
+#define TIME_BASE 40 
+int main(void)
+{
+	float pay_gross,pay_net,tax;
+	float pay_rate;
+	int time,n;
+	char ch;
+	printf("*****************************************************************\n");
+	printf("Enter the number corresponding to the desired pay rate or action:\n");
+	printf("1) $8.75/hr		 2) $9.33/hr\n");
+	printf("3) $10.00/hr		 4) $11.20/hr\n");
+	printf("5) quit\n");
+	printf("*****************************************************************\n");
+	printf("Input number:");
+	while(scanf("%d",&n),n!=5)
+	{
+		switch ( n )
+		{
+			case 1 :
+				pay_rate=PAY_RATE_1;
+				break;
+			case 2 :
+				pay_rate=PAY_RATE_2;
+				break;
+			case 3 :
+				pay_rate=PAY_RATE_3;
+				break;
+			case 4 :
+				pay_rate=PAY_RATE_4;
+				break;
+			default :
+				printf("Please enter 1--5.\n");
+				printf("Input number:");
+				continue;
+		}
+		printf("Input time:");
+		scanf("%d",&time);
+		if( time<TIME_BASE )
+		{
+			pay_gross=time*pay_rate;
+		}
+		else
+		{
+			pay_gross=TIME_BASE*pay_rate+(time-TIME_BASE)*TIME_RATE*pay_rate;
+		}
+		if( pay_gross<BASE_1 )
+		{
+			tax=pay_gross*TAX_RATE_1;
+		}
+		else if( pay_gross<BASE_2 )
+		{
+			tax=BASE_1*TAX_RATE_1+(pay_gross-BASE_1)*TAX_RATE_2;
+		}
+		else if( pay_gross>BASE_2 )
+		{
+			tax=BASE_1*TAX_RATE_1+(BASE_2)*TAX_RATE_2+(pay_gross-BASE_1-BASE_2)*TAX_RATE_3;
+		}
+		pay_net=pay_gross-tax;
+		printf("gross: %f.\nnet: %f.\ntax: %f.\n",pay_gross,pay_net,tax);
+		printf("*****************************************************************\n");
+		printf("Enter the number corresponding to the desired pay rate or action:\n");
+		printf("1) $8.75/hr		 2) $9.33/hr\n");
+		printf("3) $10.00/hr		 4) $11.20/hr\n");
+		printf("5) quit\n");
+		printf("*****************************************************************\n");
+		printf("Input number:");
+	}
+	return 0;
+}
+  \end{verbatim}
+\end{solution}
+\begin{question}
+   The ABC Mail Order Grocery sells artichokes for \$2.05 per pound, beets for \$1.15 per
+   pound, and carrots for \$1.09 per pound. It gives a 5\% discount for orders of \$100 or
+   more prior to adding shipping costs. It charges \$6.50 shipping and handling for any
+   order of 5 pounds or under, \$14.00 shipping and handling for orders over 5 pounds
+   and under 20 pounds, and \$14.00 plus \$0.50 per pound for shipments of 20 pounds or
+   more. Write a program that uses a switch statement in a loop such that a response of a
+   lets the user enter the pounds of artichokes desired, b the pounds of beets, c the pounds
+   of carrots, and q allows the user to exit the ordering process. The program should keep
+   track of cumulative totals. That is, if the user enters 4 pounds of beets and later enters
+   5 pounds of beets, the program should use report 9 pounds of beets. The program then
+   should compute the total charges, the discount, if any, the shipping charges, and the
+   grand total. The program then should display all the purchase information: the cost per
+   pound, the pounds ordered, and the cost for that order for each vegetable, the total cost
+   of the order, the discount (if there is one), the shipping charge, and the grand total of all
+   the charges.
+\end{question}
+\begin{solution}
+  \begin{verbatim}
+#include<stdio.h>
+int main(void)
+{
+	const float price_artichokes=2.05, price_beets=1.15, price_carrots=1.09;
+	const float discount_rate=0.05, discount_base=100;
+	const float shipping_break_1=5.0, shipping_break_2=20;
+	const float shipping_fee_1=6.50, shipping_fee_2=14.00;
+	const float shipping_rate=0.50;
+	char ch;
+	int amount_artichokes=0,amount_beets=0,amount_carrots=0;
+	int amount_total;
+	int num;
+	float cost_artichokes,cost_beets,cost_carrots;
+	float price_total;
+	float discount=0.0;
+	float shipping_fee;
+	float charge;
+	printf("Enter `a' for artichoke, b for beet, c for carrot, and q to quit.\n");
+	while( (ch=getchar())!='q' )
+	{
+		if( ch == '\n' )
+		{
+			continue;
+		}
+		if( !( ch == 'a' || ch == 'b' || ch == 'c' || ch == 'q' ) )
+		{
+			printf("Please choose a,b,c, or q.\n");
+			continue;
+		}
+		switch ( ch )
+		{
+			case 'a' :
+				printf("input amount of artichokes:\n");
+				scanf("%d",&num);
+				amount_artichokes+=num;
+				break;
+			case 'b' :
+				printf("input amount of beets:\n");
+				scanf("%d",&num);
+				amount_beets+=num;
+				break;
+			case 'c' :
+				printf("input amount of carrots:\n");
+				scanf("%d",&num);
+				amount_carrots+=num;
+				break;
+			default :
+				continue;
+		}
+		printf("Enter `a' for artichoke, b for beet, c for carrot, and q to quit.\n");
+	}
+	cost_artichokes=amount_artichokes*price_artichokes;
+	cost_beets=amount_beets*price_beets;
+	cost_carrots=amount_carrots*price_carrots;
+	price_total=cost_artichokes+cost_beets+cost_carrots;
+	amount_total=amount_artichokes+amount_beets+amount_carrots;
+	if( price_total>=discount_base )
+	{
+		discount=price_total*discount_rate;
+	}
+	if( amount_total<=shipping_break_1 )
+	{
+		shipping_fee=shipping_fee_1;
+	}
+	else if( amount_total<shipping_break_2 )
+	{
+		shipping_fee=shipping_fee_2;
+	}
+	else
+	{
+		shipping_fee=shipping_fee_2+(amount_total-shipping_break_2)*shipping_rate;
+	}
+	charge=price_total+shipping_fee-discount;
+	printf("The cost per pound: %f\nThe pounds ordered: %d\nthe cost for artichokes: %f\nthe cost for beets: %f\nthe cost for carrots: %f\nTotal cost: %f\nDiscount: %f\nShipping charge: %f\ngrand total: %f\n",price_total/amount_total,amount_total,cost_artichokes,cost_beets,cost_carrots,price_total,discount,shipping_fee,charge);
+	return 0;
+}
+  \end{verbatim}
+\end{solution}
+\begin{question}
+  binary search (guess) algorithm.
+\end{question}
+\begin{solution}
+  \begin{verbatim}
+#include <stdio.h>
+int main(void)
+{
+	int guess=50;
+	const int MAX=100;
+	const int MIN=0;
+	int upper=MAX,lower=MIN;
+	char ch;
+	printf( "come up with a number between 0--100 in your mind, and let me guess.\nTell me if my guess is higher or lower than the correct number.\n" );
+	printf( "is it %d?\n", guess );
+	while( (ch=getchar())!='y' )
+	{
+
+		if( ch=='h' )
+		{
+			upper=guess;
+		}
+		else
+		{
+			lower=guess;
+		}
+
+		guess=lower+(upper-lower)/2;
+
+		printf( "Then is it %d?\n", guess );
+
+		while( getchar()!='\n' )
+		{
+			continue;
+		}
+
+	}
+	printf( "great.\n" );
+	return 0;
+}
+  \end{verbatim}
+\end{solution}
+\begin{question}
+Write a program that shows you a menu offering you the choice of addition, subtraction,
+multiplication, or division. After getting your choice, the program asks for two numbers,
+then performs the requested operation. The program should accept only the offered
+menu choices. It should use type float for the numbers and allow the user to try again
+if he or she fails to enter a number. In the case of division, the program should prompt
+the user to enter a new value if 0 is entered as the value for the second number. A typical
+program run should look like this:
+  
+Enter the operation of your choice:
+a. add
+ s. subtract
+m. multiply
+ d. divide
+q. quit
+a
+Enter first number: 22.4
+Enter second number: one
+one is not an number.
+Please enter a number, such as 2.5, -1.78E8, or 3: 1
+22.4 + 1 = 23.4
+Enter the operation of your choice:
+a. add
+ s. subtract
+m. multiply
+ d. divide
+q. quit
+d
+Enter first number: 18.4
+Enter second number: 0
+Enter a number other than 0: 0.2
+18.4 / 0.2 = 92
+Enter the operation of your choice:
+a. add
+ s. subtract
+m. multiply
+ d. divide
+q. quit
+q
+Bye.
+\end{question}
+\begin{solution}
+  \begin{verbatim}
+//prompt Choices
+//input one letter
+//	care about misbehavior
+//prompt numbers
+//input two numbers
+//	care about misbehavior
+//choose and perform operation
+//output result
+//prompt Choices
+#include <stdio.h>
+#include <ctype.h>
+#include <stdbool.h>
+
+char InputChar(void);
+float InputNum(void);
+void ConsumeTrailingChar(void);
+int main(void)
+{
+	float num1,num2;
+	float result;
+	char ch;
+	while( (ch=InputChar())!='q' )
+	{
+		printf( "enter two numbers for the operation.\n" );
+		printf( "enter first number:" );
+		num1=InputNum();
+		printf( "enter second number:" );
+		num2=InputNum();
+
+		switch ( ch )
+		{
+			case 'a' :
+				result=num1+num2;
+				printf( "%.2f + %.2f = %.2f\n", num1, num2, result );
+				break;
+			case 's' :
+				result=num1-num2;
+				printf( "%.2f - %.2f = %.2f\n", num1, num2, result );
+				break;
+			case 'm' :
+				result=num1*num2;
+				printf( "%.2f * %.2f = %.2f\n", num1, num2, result );
+				break;
+			case 'd' :
+				while( num2==0 )
+				{
+					printf( "the second number should be nonzero.\n" );
+					num2=InputNum();
+				}
+
+				result=num1/num2;
+				printf( "%.2f / %.2f = %.2f\n", num1, num2, result );
+				break;
+			default :
+				printf( "error.\n" );
+				break;
+		}
+	}
+	return 0;
+}
+
+//character input function
+char InputChar(void)
+{
+	char input;
+
+	//message is displayed each time InputChar() is called
+	printf( "Enter the operation of your choice:\n" );
+	printf( "a. add		s. subtract\n" );
+	printf( "m. multiply	d. divide\n" );
+	printf( "q. quit\n" );
+	printf( "input:" );
+
+	//while always true. flow is controlled by continue & break
+	while(true)
+	{
+		input=getchar();
+
+		//space characters is ignored like nothing happened 
+		if( isspace(input) )
+		{
+			continue;
+		}
+		//wrong characters are signified
+		else if( input!='a' && input!='s' && input!='m' && input!='d' && input!='q' )
+		{
+			printf( "Please enter 'a', 's', 'm', 'd', or 'q'.\n" );
+			continue;
+		}
+		//correct input break the loop
+		else
+		{
+			break;
+		}
+	}
+
+	//rest of input are consumed
+	ConsumeTrailingChar();
+
+	return input;
+}
+
+//number input function
+float InputNum(void)
+{
+	float num;
+
+	while( scanf( "%f" , &num )!=1 )
+	{
+		printf( "Please input number.\n" );
+
+		//if 'scanf' fail, characters remain in buffer
+		ConsumeTrailingChar();
+	}
+
+	//if 'scanf' succeed, loop is skipped, and trailing character is consumed here
+	ConsumeTrailingChar();
+	return num;
+}
+
+//consume trailing characters up to '\n'
+void ConsumeTrailingChar(void)
+{
+	while( (getchar())!='\n' )
+	{
+		continue;
+	}
+}
+  \end{verbatim}
+\end{solution}
+\begin{question}
+  convert a number from decimal to the specified base.
+\end{question}
+\begin{solution}
+  \begin{verbatim}
+#include <stdio.h>
+void DecimalToBase(int num, int base);
+int main(void)
+{
+	int n,b;
+
+	printf( "input number and desired base:" );
+	while( (scanf( "%d %d" , &n, &b ))==2 )
+	{
+		DecimalToBase(n,b);
+
+		putchar('\n');
+		printf( "input number and desired base:" );
+	}
+	return 0;
+}
+
+//each recursive call of DecimalToBase generates a digits. Lowest first.
+void DecimalToBase(int num, int base)
+{
+	int result=num/base;
+	//residue is the current digit
+	int residue=num%base;
+
+	//if num is larger than base, there are more digits
+	if(result!=0)
+		DecimalToBase(result, base);
+	//because the lower digits are generated earlier, the order of output should be opposite to the function call. printf when recursion returns from bottom
+	printf( "%d", residue );
+}
+  \end{verbatim}
+\end{solution}
+\begin{question}
+  Generate Fibonacci number using loop.
+\end{question}
+\begin{solution}
+  \begin{verbatim}
+int Fib(int n)
+{
+	int num1, num2;
+	num1=num2=1;
+	int num_new;
+	int i;
+	
+	for( i=3 ; i<=n ; i++ )
+	{
+		//generate the next Fibonacci number by adding previous two.
+		num_new=num1+num2;
+		//set new pair of numbers
+		num1=num2;
+		num2=num_new;
+	}
+	return num_new;
+}
+  \end{verbatim}
+\end{solution}
+
+\begin{question}
+  Write a function to show the elements of an one-dimensional array. Write another function based on the former one-dimensional form to deal with two-dimensional array.
+\end{question}
+\begin{solution}
+  \begin{verbatim}
+void show_array1D(double * ptr, int n)
+{
+	int i;
+	for( i=0 ; i<n ; i++ )
+	{
+		printf( "%.2f ", ptr[i] );
+	}
+}
+
+void show_array2D(double (*ptr)[COLS], int rows)
+{
+	int i,j;
+	for( i=0 ; i<rows ; i++ )
+	{
+		show_array1D(ptr[i],COLS);
+		putchar('\n');
+	}
+}
+  \end{verbatim}
+\end{solution}
+
+\begin{question}
+  Write an one-dimensional copy \&\ paste function to copy the contents of one array to another. Write a two-dimensional copy \&\ paste function based on the former one-dimensional form.
+\end{question}
+\begin{solution}
+  \begin{verbatim}
+void copy1D(double * p_s, double * p_t, int n)	//p_s --> pointer to source array. p_t --> pointer to target array.
+{
+	int i;
+	for( i=0 ; i<n ; i++ )
+	{
+		p_t[i]=p_s[i];
+	}
+}
+
+void copy2D(double (*p_s)[COLS], double (*p_t)[COLS], int rows )
+{
+	int i;
+	for( i=0 ; i<rows ; i++ )
+	{
+		copy1D(p_s[i], p_t[i], COLS);
+	}
+}
+  \end{verbatim}
+\end{solution}
+
+\begin{question}
+Write a function that returns the index of the largest value stored in an array-of-double.
+Test the function in a simple program.
+\end{question}
+\begin{solution}
+  \begin{verbatim}
+//要求出最大值的位置, 必须先求出最大值, 再与各元素逐个比较.
+int Max(int ar[], int n)
+{
+	int max=ar[0];
+	int i;
+	for( i=1 ; i<n ; i++ )
+	{
+		if( max<ar[i] )
+		{
+			max=ar[i];
+		}
+	}
+	return max;
+}
+
+int Position(int ar[], int n)
+{
+	int i;
+	int max=Max(ar,n);
+	for( i=0 ; i<n ; i++ )
+	{
+		if( max==ar[i] )
+		{
+			break;
+		}
+	}
+	return i;
+}
+  \end{verbatim}
+\end{solution}
+
+\begin{question}
+Write a function that reverses the contents of an array of double and test it in a simple
+program.
+\end{question}
+\begin{solution}
+  \begin{verbatim}
+//无论array的长度是奇数还是偶数, 只需要每次首尾对调, 直到中间位置
+void Reverse(int * ar, int n)
+{
+	int i;
+	int middle=n/2-1;	//middle index is 1 lesser than n/2
+	int temp;
+	for( i=0 ; i<=middle ; i++ )
+	{
+		temp=ar[n-i-1];	//index is 1 less than number
+		ar[n-i-1]=ar[i];
+		ar[i]=temp;
+	}
+}
+  \end{verbatim}
+\end{solution}
+
+\begin{question}
+Write a program that prompts the user to enter three sets of five double numbers each.
+(You may assume the user responds correctly and doesn’t enter non-numeric data.) The
+program should accomplish all of the following:
+a. Store the information in a 3×5 array.
+b. Compute the average of each set of five values.
+c. Compute the average of all the values.
+d. Determine the largest value of the 15 values.
+e. Report the results.
+Each major task should be handled by a separate function using the traditional C
+approach to handling arrays. Accomplish task “b” by using a function that computes
+and returns the average of a one-dimensional array; use a loop to call this function three
+times. The other tasks should take the entire array as an argument, and the functions
+performing tasks “c” and “d” should return the answer to the calling program.
+\end{question}
+\begin{solution}
+  \begin{verbatim}
+#include <stdio.h>
+#define ROWS 3
+#define COLS 5
+
+void Input1D(double * p_num, int n);		//input every subarray
+void Input2D(double (*p_arr)[COLS], int rows);	//input whole array
+
+double Total1D(double *p_num, int n);		//total every subarray
+double Average1D(double * p_num, int n);	//average of every subarray
+double Average2D(double (*p_arr)[COLS], int rows);//average of whole array
+
+double Max(double * ptr, int n);		//max of an array, always use one-dimensional form
+
+int main(void)
+{
+	double num_arr[ROWS][COLS];
+	int i;
+
+	Input2D(num_arr, ROWS);
+
+	for( i=0 ; i<ROWS ; i++ )
+	{
+		printf( "The average of No.%d set of numbers is %.2f\n", i+1, Average1D(num_arr[i], COLS) );
+	}
+
+	printf( "The average of all numbers is %.2f\n", Average2D(num_arr, ROWS) );
+	printf( "The largest number of all is %.2f\n", Max(*num_arr, ROWS*COLS) );
+
+	return 0;
+}
+
+//input one-dimensional array. check if the input is valid. If not, ask for re-input.
+void Input1D(double * p_num, int n)
+{
+	int i;
+	int flag;
+
+	for( i=0 ; i<n ; i++ )
+	{
+		flag=scanf( "%lf" , p_num+i );//is the input a `double'? (flag)
+		if( !flag )//if not, re-input
+		{
+			printf( "wrong input. Re-input:\n" );
+			i=-1;	//set index to -1 for `i++` statement to reset index for re-input
+
+			while( getchar()!='\n' )	//consume invalid inputs
+			{
+				continue;
+			}
+		}
+	}
+}
+
+//overall input function. prompt for input. use loop to input every subarray. 
+void Input2D(double (*p_arr)[COLS], int rows)
+{
+	int i;
+	char * number;
+
+	printf( "Input three sets of 5 double's.\n" );
+
+	for( i=0 ; i<rows ; i++ )//choose first/second/third for corresponding input
+	{
+		switch ( i )
+		{
+			case 0 :
+				number="first";
+				break;
+			case 1 :
+				number="second";
+				break;
+			case 2 :
+				number="third";
+				break;
+			default :
+				number="error";
+				break;
+		}
+		printf( "Now input the %s set of 5 double's:\n", number );//prompt each input line
+
+		Input1D(p_arr[i],COLS);
+	}
+}
+
+//total of subarray
+double Total1D(double *p_num, int n)
+{
+	int total=0;
+	int i;
+
+	for( i=0 ; i<n ; i++ )
+	{
+		total+=p_num[i];
+	}
+
+	return total;
+}
+
+//average of subarray, compute total using Total1D
+double Average1D(double * p_num, int n)
+{
+	int average;
+
+	average=Total1D(p_num,n)/n;
+
+	return average;
+}
+
+//total of array, compute total of each subarray using Total1D
+double Average2D(double (*p_arr)[COLS], int rows)
+{
+	int total=0;
+	int average;
+	int i;
+
+	for( i=0 ; i<rows ; i++ )
+	{
+		total+=Total1D(p_arr[i],COLS);
+	}
+	average=total/(rows*COLS);
+
+	return average;
+}
+
+//compute max of an array. whatever the dimensions of an array is, it's always stored in memory sequentially. So one-dimensional form always work.
+double Max(double * ptr, int n)
+{
+	int max=ptr[0];
+	int i;
+
+	for( i=1 ; i<n ; i++ )
+	{
+		if( max<ptr[i] )
+		{
+			max=ptr[i];
+		}
+	}
+
+	return max;
+}
+  \end{verbatim}
+\end{solution}
+
+\begin{question}
+Design and test a function that fetches up to the next n characters from input, storing the results in an array whose address is passed as an argument. It stops after n characters or after the first blank, tab, or newline, whichever comes first.
+\end{question}
+\begin{solution}
+  \begin{verbatim}
+int Input(char * str, int n)
+{
+	int count=0;
+	char temp;
+
+	//input check and store
+	while( count<n && temp!=' ' && temp!='\t' && temp!='\n' )
+	{
+		str[count]=temp;
+		count++;
+		temp=getchar();
+	}
+
+	return count;
+}
+
+void Output(char * str, int n)
+{
+	int i;
+	for( i=0 ; i<n ; i++ )
+	{
+		putchar(str[i]);
+	}
+	putchar('\n');
+}
+  \end{verbatim}
+\end{solution}
+
+\begin{question}
+Design and test a function that reads the first word or up to n characters from a line of input into an array and
+discards the rest of the line. It should skip over leading whitespace. Define a word as a
+sequence of characters with no blanks, tabs, or newlines in it.  
+\end{question}
+\begin{solution}
+  \begin{verbatim}
+//first loop for consuming leading whitespace characters
+//second loop storing input and check for break
+int Input(char * str, int n)
+{
+	int count=0;	//initial count=0
+	char temp;	//store input in temp for conditon checking
+
+	//consume whitespace characters
+	//because an input char has to be stored lest it's valid, in the second loop assignment has to come before fetching another input.
+	while( (temp=getchar())==' ' || temp=='\t' || temp=='\n' )
+	{
+		continue;
+	}
+
+	//if conditions are satisfied, store input, increase count, and fetch next input.
+	while( count<n && temp!=' ' && temp!='\t' && temp!='\n' )
+	{
+		str[count]=temp;
+		count++;
+		temp=getchar();
+	}
+
+	//clear buffer
+	//it can't be `while(getchar()!='\n'), because if temp=='\n' then there's no trailing chars in buffer, getchar() will prompt for another input.
+	while( temp!='\n' )
+	{
+		temp=getchar();
+	}
+
+	return count;
+}
+
+void Output(char * str, int n)
+{
+	int i;
+	for( i=0 ; i<n ; i++ )
+	{
+		putchar(str[i]);
+	}
+	putchar('\n');
+}
+  \end{verbatim}
+\end{solution}
+
+\begin{question}
+   Design and test a function that searches the string specified by the first function
+   parameter for the first occurrence of a character specified by the second function
+   parameter. Have the function return a pointer to the character if successful, and a null
+   if the character is not found in the string. (This duplicates the way that the library
+   strchr() function works.) Test the function in a complete program that uses a loop to
+   provide input values for feeding to the function.
+\end{question}
+\begin{solution}
+  \begin{verbatim}
+char * StrChr(char * str, char ch)
+{
+	while( *str!=ch && *str!='\0' )
+	{
+		str++;
+	}
+
+	if( *str )
+	{
+		return str;
+	}
+	else
+	{
+		return NULL;
+	}
+}
+  \end{verbatim}
+\end{solution}
+
+\begin{question}
+Write a function called is_within() that takes a character and a string pointer as its two
+function parameters. Have the function return a nonzero value (true) if the character is
+in the string and zero (false) otherwise. Test the function in a complete program that uses
+a loop to provide input values for feeding to the function.
+\end{question}
+\begin{solution}
+  \begin{verbatim}
+/*--------------------------------------------------main.c-------------------*/
+#include <stdio.h>
+#include "funcs.h"
+
+int is_within(char * pts, char ch);
+
+int main(void)
+{
+	char string[20];
+	char ch;
+
+	puts("input string:");
+	while(s_gets(string,20))
+	{
+		puts("input char:");
+		while( (ch=getchar())!=EOF )
+		{
+			while( getchar()!='\n' )
+			{
+				continue;
+			}
+
+			printf( "%c is %s.\n", ch, is_within(string, ch) ? "found" : "not found" );
+			puts("input char:");
+		}
+
+		puts("input string:");
+	}
+
+	return 0;
+}
+
+int is_within(char * pts, char ch)
+{
+	while( *pts!=ch && *pts!='\0' )
+	{
+		pts++;
+	}
+
+	return (int) *pts;
+}
+/*-------------------------------------------------------s_gets.c---------------------------------*/
+#include <stdio.h>
+#include <string.h>
+
+char * s_gets(char * string, int length)
+{
+	char * ret_val;
+	char * newline;
+
+	ret_val=fgets(string, length, stdin);
+
+	if( ret_val )
+	{
+		newline=strchr(string, '\n');
+
+		if( *newline )
+		{
+			*newline='\0';
+		}
+		else
+		{
+			while( getchar()!='\n' )
+			{
+				continue;
+			}
+		}
+	}
+
+	return ret_val;
+}
+  \end{verbatim}
+\end{solution}
+
+\begin{question}
+  The strncpy(s1,s2,n) function copies exactly n characters from s2 to s1, truncating
+  s2 or padding it with extra null characters as necessary. The target string may not be
+  null-terminated if the length of s2 is n or more. The function returns s1. Write your own
+  version of this function; call it mystrncpy(). Test the function in a complete program
+  that uses a loop to provide input values for feeding to the function.
+\end{question}
+\begin{solution}
+  \begin{verbatim}
+char * strncpy(char *dest, const char *src, size_t n)
+{
+    size_t i;
+
+    for (i = 0; i < n && src[i] != '\0'; i++)
+        dest[i] = src[i];
+    for ( ; i < n; i++)
+        dest[i] = '\0';
+
+    return dest;
+}
+  \end{verbatim}
+\end{solution}
+
+\begin{question}
+Write a function called string_in() that takes two string pointers as arguments. If
+the second string is contained in the first string, have the function return the address
+at which the contained string begins. For instance, string_in("hats", "at") would
+return the address of the a in hats. Otherwise, have the function return the null pointer.
+Test the function in a complete program that uses a loop to provide input values for
+feeding to the function.
+\end{question}
+\begin{solution}
+  \begin{verbatim}
+//the outer loop search for the matching of first char
+//the inner loop check if the following chars are matched as well
+char * string_in(const char * str1, const char * str2)
+{
+	const char * temp1;
+	const char * temp2;
+
+	while( *str1 )			//if test fails, then *str=='\0', end is reached, then return NULL for "not found".
+	{
+		if( *str1==*str2 )	//if the first char of str2 is matched
+		{
+			temp1=str1;	//use temp pointer to increment and compare
+		       	temp2=str2;
+			while (*temp1++==*temp2++)			//compare for equality and increment both
+			{
+				if( *temp2=='\0' )			//if str2 reaches end then all chars have been matched
+				{
+					return (char *) str1;		//return starting point in str1
+				}
+			}
+		}
+		str1++;			//search forward
+	}
+
+	return NULL;
+}
+  \end{verbatim}
+\end{solution}
+
+\begin{question}
+Write a function that replaces the contents of a string with the string reversed. Test the
+function in a complete program that uses a loop to provide input values for feeding to
+the function.
+\end{question}
+\begin{solution}
+  \begin{verbatim}
+void reverse(char * str)
+{
+	char * end=strchr(str, '\0');//find the end of string
+	char temp;
+
+	end--;//one backward from '\0'
+	while( str<end )
+	{
+		temp=*end;
+		*end=*str;
+		*str=temp;
+		str++;
+		end--;
+	}
+}
+  \end{verbatim}
+\end{solution}
+
+\begin{question}
+ Write a function that takes a string as an argument and removes the spaces from the
+ string. Test it in a program that uses a loop to read lines until you enter an empty line.
+ The program should apply the function to each input string and display the result.
+\end{question}
+\begin{solution}
+  \begin{verbatim}
+void Remove_Space(char * str)
+{
+	char *space;
+	while( (space=strchr(str, ' '))!=NULL )//find first space, break if none found.
+	{
+		*space='\0';		       //mark space as end of string, so that strcat 
+		strcat(str, space+1);	       //will concatenate from that position.
+	}				       //concatenate the part of string before 
+}					       //space with the part after space.
+  \end{verbatim}
+\end{solution}
+
+\begin{question}
+  Write a program that reads in up to 10 strings or to EOF, whichever comes first. Have it
+  offer the user a menu with five choices: print the original list of strings, print the strings
+  in ASCII collating sequence, print the strings in order of increasing length, print the
+  strings in order of the length of the first word in the string, and quit. Have the menu
+  recycle until the user enters the quit request. The program, of course, should actually
+  perform the promised tasks.
+\end{question}
+\begin{solution}
+  \begin{verbatim}
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+#include "funcs.h"
+#define ROWS 10
+#define COLS 30
+
+int InputStrings(char (*strs)[COLS], int n);			//input lines of strings
+char InputChoice(void);						//prompt choices and fetch input
+void PrintStrings(char (*strs)[COLS], int count, char * opt);	//print strings, `opt` to select different methods for printing
+void SortStrings_byASCII(char ** pts, int n);			//method1: sort strings by ASCII
+void SortStrings_byLength(char ** pts, int n);			//method2: sort by length of string
+void SortStrings_byWord(char ** pts, int n);			//method3: sort by length of first word
+size_t wordlen(char * str);					//auxiliary function to get length of first word
+
+int main(void)
+{
+	char strings[ROWS][COLS];
+	char letter;	//choice input by user
+	int count;	//number of lines of string input
+
+	count=InputStrings(strings, ROWS);	
+
+	while( (letter=InputChoice())!='e' )	//get choice. 'e' is quit
+	{
+		switch ( letter )		//different choice directs to different printing operation.
+		{
+			case 'a' :
+				PrintStrings(strings, count, "Original");
+				break;
+			case 'b' :
+				PrintStrings(strings, count, "ASCII");
+				break;
+			case 'c' :
+				PrintStrings(strings, count, "Length");
+				break;
+			case 'd' :
+				PrintStrings(strings, count, "First Word");
+				break;
+			default :
+				puts("error.");
+				break;
+		}
+	}
+
+	return 0;
+}
+
+//prompt choices and get choice, with input validity check and leading/trailing chars consumption
+char InputChoice(void)
+{
+	char input;
+
+	//prompt choices
+	puts("/*-----------------------------------------------------------------*/");
+	puts("Choose one of the followings: (respond with letter)");
+	puts("a. Print the originial strings.");
+	puts("b. Print strings by ASCII collating sequence.");
+	puts("c. Print strings in order of increasing length.");
+	puts("d. Print strings in order of increasing length of the first word.");
+	puts("e. Quit.");
+	puts("/*-----------------------------------------------------------------*/");
+
+	while( isspace(input=getchar()) )	//consume leading spaces
+	{
+		continue;
+	}
+
+	while( input<'a' || input>'e')		//check range
+	{
+		puts("Please input letters between a--e.");
+
+		while( getchar()!='\n' )	//consume trailing chars
+		{
+			continue;
+		}
+
+		input=getchar();		//get next input
+	}
+
+	return input;
+}
+
+//input strings
+int InputStrings(char (*strs)[COLS], int n)
+{
+	int count=0;
+
+	puts("Input up to 10 lines or press Ctrl+D at the beginning of a line to stop input.");
+
+	while( count<n && s_gets(strs[count], COLS)!=NULL )	//input until n strings or EOF
+	{
+		count++;	//count number of strings input
+	}
+
+	return count;
+}
+
+//perform selected operations on strings and print them.
+//different operations are handled in seperate subsequent functions, while printing is handled uniformly
+//use an array of pointer variables to point to each string, sort string by exchanging addresses stored in each poniters,
+//then output strings in order of sorted pointers.
+//pass the address of pointers to subsequent sorting function, so that they can change the address stored in them.
+void PrintStrings(char (*strs)[COLS], int count, char * opt)	
+{
+	char * pts[count];		//VLA, pointers to strings
+	int i;
+
+	for( i=0 ; i<count ; i++ )	//initialize pointers
+	{
+		pts[i]=strs[i];
+	}
+
+	switch ( *opt )
+	{
+		case 'O' :	//no operation is needed, simply output
+			break;
+		case 'A' :	//ASCII collating sequence
+			SortStrings_byASCII(pts, count);
+			break;
+		case 'L' :	//increasing Length
+			SortStrings_byLength(pts, count);
+			break;
+		case 'F' :	//length of First word
+			SortStrings_byWord(pts, count);
+			break;
+		default :
+			puts("error.");
+			break;
+	}
+
+	for( i=0 ; i<count ; i++ )	//output strings in order of sorted pointer variables.
+	{
+		puts(pts[i]);
+	}
+}
+
+void SortStrings_byASCII(char ** pts, int n)
+{
+	char * temp;		//temp for swap
+	int i,j;
+
+	for( i=0 ; i<n-1 ; i++ )//selection sort algorithm
+	{
+		for( j=i+1 ; j<n ; j++ )
+		{
+			if( strcmp(pts[i], pts[j])>0 )	//by ASCII collating sequence
+			{
+				temp=pts[j];
+				pts[j]=pts[i];
+				pts[i]=temp;
+			}
+		}
+	}
+}
+
+void SortStrings_byLength(char ** pts, int n)
+{
+	char * temp;		//temp for swap
+	int i,j;
+
+	for( i=0 ; i<n-1 ; i++ )//selection sort algorithm
+	{
+		for( j=i+1 ; j<n ; j++ )
+		{
+			if( strlen(pts[i])>strlen(pts[j]) )	//by string length
+			{
+				temp=pts[j];
+				pts[j]=pts[i];
+				pts[i]=temp;
+			}
+		}
+	}
+}
+
+//length of first word
+size_t wordlen(char * str)
+{
+	size_t count=0;
+
+	while( *str!=' ' && *str!='\0' )	//define word as being separated by ' ' char, or terminated by '\0'
+	{
+		count++;
+		str++;
+	}
+
+	return count;
+}
+
+void SortStrings_byWord(char ** pts, int n)
+{
+	char * temp;		//temp for swap
+	int i,j;
+
+	for( i=0 ; i<n-1 ; i++ )//selection sort algorithm
+	{
+		for( j=i+1 ; j<n ; j++ )
+		{
+			if( wordlen(pts[i])>wordlen(pts[j]) )	//by length of first word
+			{
+				temp=pts[j];
+				pts[j]=pts[i];
+				pts[i]=temp;
+			}
+		}
+	}
+}
+  \end{verbatim}
+\end{solution}
+
+\begin{question}
+  Write a program that reads input up to EOF and reports the number of words, the
+  number of uppercase letters, the number of lowercase letters, the number of punctuation
+  characters, and the number of digits. Use the ctype.h family of functions.
+\end{question}
+\begin{solution}
+  \begin{verbatim}
+#include <stdio.h>
+#include <ctype.h>
+
+#define LENGTH 1000
+
+void InputArticle(char * ptc);
+void Count(char * ptc);
+
+int main(void)
+{
+	char article[LENGTH];
+
+	InputArticle(article);
+
+	Count(article, count);
+
+	return 0;
+}
+
+void InputArticle(char * ptc)
+{
+	while((*ptc=getchar())!=EOF)
+	{
+	  ptc++;
+	}
+
+	*ptc='\0';
+}
+
+void Count(char * ptc)
+{
+	unsigned int ct_word=0;
+	unsigned int ct_upper=0;
+	unsigned int ct_lower=0;
+	unsigned int ct_punct=0;
+	unsigned int ct_digit=0;
+
+	while( *ptc )
+	{
+		if( isalnum(*ptc) && !isalnum(*(ptc+1)) )
+		{
+			ct_word++;
+		}
+
+		if( isupper(*ptc) )
+		{
+			ct_upper++;
+		}
+		else if( islower(*ptc))
+		{
+			ct_lower++;
+		}
+		else if( ispunct(*ptc) && isspace(*(ptc+1)) )
+		{
+			ct_punct++;
+		}
+		else if( isdigit(*ptc) )
+		{
+			ct_digit++;
+		}
+
+		ptc++;
+	}
+
+	printf( "words: %u\nuppercase: %u\nlowercase: %u\npunctuation: %u\ndigit: %u\n", ct_word, ct_upper, ct_lower, ct_punct, ct_digit );
+}
+  \end{verbatim}
+\end{solution}
+
+\begin{question}
+Write a power-law program that works on a command-line basis. The first command-line
+argument should be the type double number to be raised to a certain power, and the
+second argument should be the integer power.
+\end{question}
+\begin{solution}
+  \begin{verbatim}
+#include <stdio.h>
+#include <stdlib.h>
+
+double Power(double num, int pow);
+
+int main(int argc, char *argv[])
+{
+	double ans;
+	double num;
+	char *ptn;
+	int pow;
+
+	num=strtod(argv[1], &ptn);
+	pow=atoi(argv[2]);
+
+	if(argc>3)
+	{
+		printf( "%s: wrong usage.\n", argv[0] );
+	}
+	else
+	{
+		ans=Power(num, pow);
+		printf( "%.2f\n", ans );
+	}
+
+	return 0;
+}
+
+double Power(double num, int pow)
+{
+	int i;
+	double ans=1;
+
+	for( i=0 ; i<pow ; i++ )
+	{
+		ans*=num;
+	}
+
+	return ans;
+}
+  \end{verbatim}
+\end{solution}
+
+\begin{question}
+  Use the character classification functions to prepare an implementation of atoi(); have
+  this version return the value of 0 if the input string is not a pure number.
+\end{question}
+\begin{solution}
+  \begin{verbatim}
+//from the last digit to the first digit, multiply digit with corresponding base number, then add them
+int aToi(char * pts)
+{
+	char * pte;		//pointer to end
+	pte=pts;		//pte points to the end of number
+
+	int num;		//the digit number of a digit char
+	int ans;		//result
+	int base=1;		//the base number of every digit. the lowest digit has base 1, the next base 10, 100, etc.
+
+	if( !isdigit(*pts) )	//check whether the first char is digit, if not, return 0.
+	{
+		return 0;
+	}
+
+	while( isdigit(*pte) )	//find the lowest digit in string, after this, pte points to the character next to the lowest digit
+	{
+		pte++;
+	}
+
+	//pte move backward to the beginning of the string, do the computation
+	//pte-- comes first because (1) at the beginning, pte needs to -1 to points to the last digit
+	//			    (2) at the end, pte needs to firstly points to beginning of the string,
+	//				do the computation, then being checked by condition
+	while( pte!=pts )	
+	{			
+		pte--;		
+		num=*pte-'0';	//the digit number of digit char
+		ans+=num*base;	
+		base*=10;	//base*10 each time: 10^(n-1) for n-th digit
+	}
+
+	return ans;
+}
+  \end{verbatim}
+\end{solution}
+
+\begin{question}
+  Write a program that reads a string and echoes it to the display. The input string should be the second argument. Have the
+  program recognize and implement the following optional command-line arguments:
+  -p Print input as is
+  -u Map input to all uppercase
+  -l Map input to all lowercase
+  Also, if there are no optional command-line arguments, let the program behave as if the –p
+  argument had been used.
+\end{question}
+\begin{solution}
+  The following program is capable of:
+  fetch string either input at command-line or in program;
+  in both cases, optional argument can be specified or omitted.
+  \begin{verbatim}
+#include <stdio.h>
+#include <ctype.h>
+#include "funcs.h"
+
+void ToLower(char * str);
+void ToUpper(char * str);
+void Output(char * str);
+
+int main(int argc, char *argv[])
+{
+	char words[100];			//if input string is not provided on command-line, which get stored and pointed to
+						//by argv[n], then use `words` to store input in program
+	if( argc==1 )				//if only command name is entered, prompt for input and print as is. (same as -p)
+	{
+		argv[1]=s_gets(words, 100);
+		puts(argv[1]);
+	}
+	else if( argc==2 && argv[1][0]!='-' )	//if command name and something else are provided while `-` specifier is lacked,
+	{					// print input string (now is argv[1]) as is.
+		puts(argv[1]);
+	}
+	else if( argv[1][0]=='-' )		//if `-` is present, there're two possibilities.
+	{
+		if( argc==2 )			//if string is not provided, prompt for input one string
+		{
+			argv[2]=s_gets(words, 100);//can I use argv[2] if only argv[0], argv[1] is defined at the beginning?
+		}				   //but this is more uniform.
+		if( argc==3 )	//if string is provided, do nothing here.
+		{
+			;
+		}		
+		switch ( argv[1][1] )   //divert to specified operation based on the specifier, then print the modified string
+		{
+			case 'p' :	//simply print, thus no operation here
+				break;
+			case 'u' :
+				ToUpper(argv[2]);	//it seems that the string input from command-line is not considered `const`
+				break;			//thus modification (replace char with corresponding uppercase/lowercase
+			case 'l' :			//char) of string is allowed
+				ToLower(argv[2]);
+				break;
+			default :
+				puts("wrong optional argument.");
+				break;
+		}
+		puts(argv[2]);
+	}
+	else if( argc>3 )		//if usage is wrong, print and do nothing
+	{
+		printf( "%s: wrong usage.\n", argv[0] );
+	}
+	
+
+	return 0;
+}
+
+void ToUpper(char *str)
+{
+	while( *str )					//convert until reaching null
+	{
+		*str=toupper(*str);
+		str++;
+	}
+}
+
+void ToLower(char *str)
+{
+	while( *str )
+	{
+		*str=tolower(*str);
+		str++;
+	}
+}
+  \end{verbatim}
+\end{solution}
+
+\begin{question}
+Gasoline consumption commonly is computed in miles per gallon in the U.S. and in
+liters per 100 kilometers in Europe. What follows is part of a program that asks the user
+to choose a mode (metric or U.S.) and then gathers data and computes fuel consumption:
+\begin{verbatim}
+// pe12-2b.c
+// compile with pe12-2a.c
+#include <stdio.h>
+#include "pe12-2a.h"
+int main(void)
+{
+int mode;
+printf("Enter 0 for metric mode, 1 for US mode: ");
+scanf("%d", &mode);
+while (mode >= 0)
+{
+set_mode(mode);
+get_info();
+show_info();
+printf("Enter 0 for metric mode, 1 for US mode");
+printf(" (-1 to quit): ");
+scanf("%d", &mode);
+}
+printf("Done.\n");
+return 0;
+}
+\end{verbatim}
+Here is some sample output:
+\begin{verbatim}
+Enter 0 for metric mode, 1 for US mode: 0
+Enter distance traveled in kilometers: 600
+Enter fuel consumed in liters: 78.8
+Fuel consumption is 13.13 liters per 100 km.
+Enter 0 for metric mode, 1 for US mode (-1 to quit): 1
+Enter distance traveled in miles: 434
+Enter fuel consumed in gallons: 12.7
+Fuel consumption is 34.2 miles per gallon.
+Enter 0 for metric mode, 1 for US mode (-1 to quit): 3
+Invalid mode specified. Mode 1(US) used.
+Enter distance traveled in miles: 388
+Enter fuel consumed in gallons: 15.3
+Fuel consumption is 25.4 miles per gallon.
+Enter 0 for metric mode, 1 for US mode (-1 to quit): -1
+Done.
+\end{verbatim}
+If the user enters an incorrect mode, the program comments on that and uses the most
+recent mode. Supply a pe12-2a.h header file and a pe12-2a.c source code file to make
+this work. The source code file should define three file-scope, internal-linkage variables.
+One represents the mode, one represents the distance, and one represents the fuel
+consumed. The get_info() function prompts for data according to the mode setting
+and stores the responses in the file-scope variables. The show_info() function calculates
+and displays the fuel consumption based on the mode setting. You can assume the user
+responds with numeric input.
+\end{question}
+\begin{solution}
+  \begin{verbatim}
+//pe12-2a.c
+#include <stdio.h>
+
+static int mode;
+static float fuel;
+static float distance;
+
+void set_mode(int input)
+{
+	extern int mode;
+
+	if( input > 1 )
+	{
+		printf("Invalid mode specified. Mode 1 is used.\n");
+		mode=1;
+	}
+	else
+	{
+		mode=input;
+	}
+}
+
+void get_info(void)
+{
+	extern float distance;
+	extern float fuel;
+
+	if( mode==0 )
+	{
+		printf("Enter distance traveled in kilometers: ");
+		scanf( "%f" , &distance );
+		printf("Enter fuel consumed in liters: ");
+		scanf( "%f" , &fuel );
+	}
+	else
+	{
+		printf("Enter distance traveled in miles: ");
+		scanf( "%f" , &distance );
+		printf("Enter fuel consumed in gallons: ");
+		scanf( "%f" , &fuel );
+	}
+}
+
+void show_info(void)
+{
+	if( mode==0 )
+	{
+		printf( "Fuel consumption is %.2f liters per 100 km.\n", 100*fuel/distance);
+	}
+	else
+	{
+		printf( "Fuel consumption is %.2f miles per gallon.\n", distance/fuel );
+	}
+}
+
+//pe12-2a.h
+void set_mode(int input);
+void get_info(void);
+void show_info(void);
+  \end{verbatim}
+\end{solution}
+
+\begin{question}
+Redesign the program described in Programming Exercise 2 so that it uses only automatic
+variables. Have the program offer the same user interface—that is, it should prompt the
+user to enter a mode, and so on. You’ll have to come up with a different set of function
+calls, however.
+\end{question}
+\begin{solution}
+  \begin{verbatim}
+#include <stdio.h>
+
+int set_mode(void);
+void get_info(float *p_distance, float *p_fuel, int mode);
+void show_info(float *p_distance, float *p_fuel, int mode);
+
+int main(void)
+{
+	int mode;
+	float distance, fuel;
+	float *p_distance, *p_fuel;
+
+	p_distance=&distance;
+	p_fuel=&fuel;
+
+	while ((mode=set_mode()) >= 0)
+	{
+		get_info(p_distance, p_fuel, mode);
+		show_info(p_distance, p_fuel, mode);
+	}
+	printf("Done.\n");
+
+	return 0;
+}
+
+int set_mode(void)
+{
+	int mode;
+	printf("Enter 0 for metric mode, 1 for US mode, -1 to quit: ");
+	scanf("%d", &mode);
+	if( mode>1 )
+	{
+		printf("Invalid mode specified. Mode 1 is used.\n");
+		mode=1;
+	}
+
+	return mode;
+}
+void get_info(float *p_distance, float *p_fuel, int mode)
+{
+	if( mode==0 )
+	{
+		printf("Enter distance traveled in kilometers: ");
+		scanf( "%f" , p_distance );
+		printf("Enter fuel consumed in liters: ");
+		scanf( "%f" , p_fuel );
+	}
+	else
+	{
+		printf("Enter distance traveled in miles: ");
+		scanf( "%f" , p_distance );
+		printf("Enter fuel consumed in gallons: ");
+		scanf( "%f" , p_fuel );
+	}
+
+}
+
+void show_info(float *p_distance, float *p_fuel, int mode)
+{
+	if( mode==0 )
+	{
+		printf( "Fuel consumption is %.2f liters per 100 km.\n", 100*(*p_fuel)/(*p_distance));
+	}
+	else
+	{
+		printf( "Fuel consumption is %.2f miles per gallon.\n", (*p_distance)/(*p_fuel) );
+	}
+}
+  \end{verbatim}
+\end{solution}
+
+\begin{question}
+Write a program that generates a list of 100 random numbers in the range 1–10
+in sorted decreasing order. (You can adapt the sorting algorithm from Chapter 11,
+“Character Strings and String Functions,” to type int. In this case, just sort the numbers
+themselves.)
+\end{question}
+\begin{solution}
+  \begin{verbatim}
+#include <stdio.h>
+#include <time.h>
+#include <stdlib.h>
+
+//get input for the range of numbers, and the number of them. use pointer to store input. return a status number.
+int Input(int * pts, int * pte, int * number);
+//generate random integers in range from `start' to `end', a total n of them, and store them in memory pointed to by `pti'.
+void RandomInteger(int start, int end, int n, int * pti);
+//sort `n' numbers pointed to by `pti' with decending order.
+void SortDecending(int * pti, int n);
+
+int main(void)
+{
+	int num;	//number of random integers
+	int i;		//index
+	int start, end;	//range of random integers
+	int * arr_int;	//pointer to memory storing integers
+
+	srand((unsigned int)time(0));				//set seed
+	while( Input(&start, &end, &num) )			//get input, check status
+	{
+		arr_int=(int *) malloc(num*sizeof(int));	//allocate memory
+		RandomInteger(start, end, num, arr_int);	//generate
+		SortDecending(arr_int, num);			//sort
+		for( i=0 ; i<num ; i++ )			//output
+		{
+			printf( "%d ", arr_int[i] );
+		}
+		putchar('\n');
+		free(arr_int);					//Do not forget to FREE the allocated memory
+	}
+
+	return 0;
+}
+
+void RandomInteger(int start, int end, int n, int * pti)
+{
+	int upper=end-start;					//upper boundary for random number from 0--upper
+	int divisor=upper+1;					//divisor should be upper+1 for modulus ranging from 0 to upper
+	int i;							//index
+
+	for( i=0 ; i<n ; i++ )
+	{
+		pti[i]=rand()%divisor+start;			//generate and store
+	}
+}
+
+void SortDecending(int * pti, int n)
+{
+	int temp;
+	int i, j;
+
+	for( i=0 ; i<n-1 ; i++ )
+	{
+		for( j=i+1 ; j<n ; j++ )			//PLEASE remember j starts at i+1, NOT at 1
+		{
+			if( pti[i]<pti[j] )
+			{
+				temp=pti[j];
+				pti[j]=pti[i];
+				pti[i]=temp;
+			}
+		}
+	}
+}
+
+int Input(int * pts, int * pte, int * number)
+{
+	int status;
+	puts("range of random number. invalid input to quit.");
+	status=scanf("%d %d", pts, pte);			//status=number of input
+	if( status==2 )
+	{
+		puts("number of random number.");
+		scanf( "%d" , number );
+
+		return 1;					//if valid, prompt input and return 1 for `true'
+	}
+	else
+	{
+		return 0;					//if invalid, return 0 for `false'
+	}
+}
+  \end{verbatim}
+\end{solution}
+
+\begin{question}
+Write a program that generates 1,000 random numbers in the range 1–10. Don’t save or
+print the numbers, but do print how many times each number was produced. Have the
+program do this for 10 different seed values. Do the numbers appear in equal amounts?
+You can use the functions from this chapter or the ANSI C rand() and srand()
+functions, which follow the same format that our functions do. This is one way to
+examine the randomness of a particular random-number generator.
+\end{question}
+\begin{solution}
+  \begin{verbatim}
+#include <stdio.h>
+#include <time.h>
+#include <unistd.h>
+#include <stdlib.h>
+
+void RandomInteger(int start, int end, int n, int * count);
+
+int main(void)
+{
+	int i,j;					//index
+	int * count;					//an array of number countings, its index indicates the number generated
+	int num=1000;
+	int start=1, end=10;
+
+	for( j=0; j<10; j++ )
+	{
+		srand((unsigned int)time(0));			
+		sleep(3);				//sleep a while, for srand() to generate a different seed from time()
+		count=(int *) calloc(num, sizeof(int));		//calloc() function can allocate memory and initialize them to 0
+		RandomInteger(start, end, num, count);	
+		for( i=1 ; i<=10 ; i++ )
+		{
+			printf( "%7d ", i );
+		}
+		putchar('\n');
+
+		for( i=0 ; i<10 ; i++ )			
+		{
+			printf( "%7d ", count[i] );
+		}
+		putchar('\n');
+		free(count);					
+	}
+
+	return 0;
+}
+
+void RandomInteger(int start, int end, int n, int * count)
+{
+	int upper=end-start;					//upper boundary for random number from 0--upper
+	int divisor=upper+1;					//divisor should be upper+1 for modulus ranging from 0 to upper
+	int i;							//index
+	int rand_num;
+
+	for( i=0 ; i<n ; i++ )
+	{
+		rand_num=rand()%divisor+start;			
+		count[rand_num-1]++;				//count[i] for counting number i+1
+	}
+}
+  \end{verbatim}
+\end{solution}
+
+\begin{question}
+Write a program with the following behavior. First, it asks you how many words you
+wish to enter. Then it has you enter the words, and then it displays the words. Use
+malloc() and the answer to the first question (the number of words) to create a dynamic
+array of the corresponding number of pointers-to-char. (Note that because each element
+in the array is a pointer-to-char, the pointer used to store the return value of malloc()
+should be a pointer-to-a-pointer-to-char.) When reading the string, the program should
+read the word into a temporary array of char, use malloc() to allocate enough storage
+to hold the word, and store the address in the array of char pointers. Then it should
+copy the word from the temporary array into the allocated storage. Thus, you wind up
+with an array of character pointers, each pointing to an object of the precise size needed
+to store the particular word. A sample run could look like this:
+\begin{verbatim}
+How many words do you wish to enter? 5
+Enter 5 words now:
+I enjoyed doing this exerise
+Here are your words:
+I
+enjoyed
+doing
+this
+exercise
+\end{verbatim}
+\end{question}
+\begin{solution}
+  \begin{verbatim}
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+//allocate memory for an array of `n' pointer-to-char. return its address, which is type (char **)
+char ** make_pointers(int n);
+//input `n' words, which are pointed to by pointers of `ptw'
+void InputWords(int n, char ** ptw);
+//output `n' words
+void OutputWords(int n, char ** ptw);
+
+int main(void)
+{
+	int number;						//number of words
+	char **ptw;						//name of array of pointers
+
+	printf( "How many words do you wish to enter? " );
+	scanf( "%d" , &number );
+	ptw=make_pointers(number);
+	printf( "Enter %d words now:\n", number );
+	InputWords(number, ptw);
+	puts("Here are your ten words:");
+	OutputWords(number, ptw);
+
+	return 0;
+}
+char ** make_pointers(int number)
+{
+	char ** ptw;
+	ptw=(char **) malloc(number*sizeof(char *));		//NOTE types
+
+	return ptw;
+}
+
+void InputWords(int number, char ** ptw)
+{
+	char temp[50];						//temporary array big enough to fetch one input word
+	int i;
+
+	for( i=0 ; i<number ; i++ )
+	{
+		scanf( "%s" , temp );
+		ptw[i]=(char *) malloc((strlen(temp)+1)*sizeof(char));	//allocate and assign enough memory to store one word,
+		strcpy(ptw[i], temp);					// DO NOT forget `\0` char
+	}
+}
+
+void OutputWords(int number, char ** ptw)
+{
+	int i;
+
+	for( i=0 ; i<number ; i++ )
+	{
+		puts(ptw[i]);
+	}
+}
+  \end{verbatim}
+\end{solution}
+
+\begin{question}
+  a simple-minded \verb|cat| program.
+\end{question}
+\begin{solution}
+  \begin{verbatim}
+/* a simple `cat` program
+ * aim:
+ * 1. ccat
+ * 2. ccat file_in1 file_in2 ...
+ * 3. ccat -o file_out
+ * 4. ccat -o file_out file_in1 file_in2 ... */
+
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
+#define LEN 4096
+
+//read in the content of stream `in`, write to stream `out`.
+void ReadAndWriteFile(FILE * in, FILE * out);
+//close stream `pf`. the `name` of file is passed to assist printing error message
+void CloseFile(FILE * pf, char * name);
+
+int main(int argc, char *argv[])
+{
+	FILE *in, *out;			//in/out file pointer
+	int i;
+
+	if( argc==1 )			//func 1: if only `ccat` is given, read in from `stdin` and print out to `stdout`.
+	{
+		ReadAndWriteFile(stdin, stdout);
+	}
+	else if( argv[1][0]=='-' )	//func 3,4: if `-` arg is given, prepare a file for output
+	{
+		if( strcmp(argv[1], "-o")!=0 )	//check validity
+		{
+			fprintf(stderr, "%s: argument '%s' can not be recognized.\n" , argv[0], argv[1]);
+			exit(EXIT_FAILURE);
+		}
+
+		if( (out=fopen(argv[2], "a"))==NULL )	//open the output file in `append` mode
+		{
+			fprintf(stderr, "can not open file '%s' for appending.\n" , argv[2]);
+			exit(EXIT_FAILURE);
+		}
+
+		if( argc==3 )		//func 3: if no input file, read from stdin
+		{
+			ReadAndWriteFile(stdin, out);
+			CloseFile(out, argv[2]);
+		}
+		else			//func 4: otherwise read in every input file and write its content to output file
+		{
+			for( i=3 ; i<argc ; i++ )
+			{
+				if( (in=fopen(argv[i], "r"))==NULL )	//open every input file in `read` mode
+				{
+					fprintf(stderr, "can not open file '%s' for reading.\n" , argv[i]);
+					exit(EXIT_FAILURE);
+				}
+
+				ReadAndWriteFile(in, out);
+				CloseFile(in, argv[i]);
+			}
+			CloseFile(out, argv[2]);
+		}
+	}
+	else				//func 2: if no output file, open input files for reading and write to stdout
+	{
+		for( i=1 ; i<argc ; i++ )
+		{
+			if( (in=fopen(argv[i], "r"))==NULL )
+			{
+				fprintf(stderr, "can not open file '%s' for reading.\n" , argv[i]);
+				exit(EXIT_FAILURE);
+			}
+
+			ReadAndWriteFile(in, stdout);
+			CloseFile(in, argv[i]);
+		}
+	}
+
+	return 0;
+}
+
+void CloseFile(FILE * pf, char * name)
+{
+	if( fclose(pf)!=0 )
+	{
+		fprintf(stderr, "file '%s' didn't closed successfully.\n" , name);
+		exit(EXIT_FAILURE);
+	}
+}
+
+void ReadAndWriteFile(FILE * in, FILE * out)
+{
+	static char buffer[LEN];
+	while( fgets(buffer, LEN, in)!=NULL )
+	{
+		fputs(buffer, out);
+	}
+}
+  \end{verbatim}
+\end{solution}
+
+\begin{question}
+  almost sane \verb|wc| program.
+\end{question}
+\begin{solution}
+  \begin{verbatim}
+#include <stdio.h>
+#include <stdlib.h>
+#include <ctype.h>
+
+int main(int argc, char **argv)
+{
+	FILE *file;			//file stream to be counted
+	int cc=0, wc=0, lc=0;		//char, word, line count
+	char ch;			//store input char
+	
+	if( argc<2 )			//if no input file, use stdin
+	{
+		file=stdin;
+	}
+	else if( (file=fopen(argv[1], "r"))==NULL)	//if there is input file, open it
+	{
+		fprintf(stderr, "file %s open error.\n" , argv[1]);
+		exit(EXIT_FAILURE);
+	}
+	//cc. every byte counts for a character
+	//wc. every alpha-numeric combination counts for a word
+	//lc. every '\n' indicates a complete line
+	while ( (ch=getc(file))!=EOF )
+	{
+		if( isalnum(ch) )			//idea is: encountering an alnum char indicates entering a word, wc++,
+		{					//then characters of the word is counted by inner loop
+			wc++;				//other characters are counted by outer loop
+		}					//lines and EOF are checked by outer loop
+		while( isalnum(ch) )
+		{
+			cc++;
+			ch=getc(file);
+		}
+		if( ch=='\n' )
+		{
+			lc++;
+		}
+		if( ch==EOF )
+			break;
+		cc++;
+	}
+	fclose(file);
+	printf( "characters: %d\nwords: %d\nlines: %d\n" , cc, wc, lc );
+
+	return 0;
+}
+  \end{verbatim}
+\end{solution}
+
+\begin{question}
+  Write a program that takes zero command-line arguments or one command-line
+  argument. If there is one argument, it is interpreted as the name of a file. If there is no
+  argument, the standard input (stdin) is to be used for input. Assume that the input
+  consists entirely of floating-point numbers. Have the program calculate and report the
+  arithmetic mean (the average) of the input numbers.
+\end{question}
+\begin{solution}
+  \begin{verbatim}
+#include <stdio.h>
+#include <stdlib.h>
+
+#define LEN 100
+
+int main(int argc, char *argv[])
+{
+	FILE *pf;
+	double temp;
+	double total=0.0;
+	int i=0;
+
+	if( argc<2 )
+	{
+		while( fscanf(stdin, "%lf" , &temp)==1 && i<LEN )	//read from stdin, thus text mode and fscanf()
+		{
+			total+=temp;
+			i++;
+		}
+	}
+	else
+	{
+		if( (pf=fopen(argv[1], "rb"))==NULL )
+		{
+			fprintf(stderr, "file %s cannot be opened for reading.\n" , argv[1]);
+			exit(EXIT_FAILURE);
+		}
+
+		while( fread(&temp, sizeof(double), 1, pf)==1 )		//read from binary data file, thus binary mode and fread()
+		{
+			total+=temp;
+			i++;
+		}
+
+		fclose(pf);
+	}
+
+	printf( "The arithmetic mean of %d numbers is %.2f\n" , i, total/i );
+
+	return 0;
+}
+  \end{verbatim}
+\end{solution}
+
+\begin{question}
+Write a program that takes two command-line arguments. The first is a character, and
+the second is a filename. The program should print only those lines in the file containing
+the given character.
+\end{question}
+\begin{solution}
+  \begin{verbatim}
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(int argc, char *argv[])
+{
+	FILE * pf;
+	char ch;
+
+	if( argc!=3 )
+	{
+		puts("wrong usage.");
+		exit(EXIT_FAILURE);
+	}
+	if( (pf=fopen(argv[2], "r"))==NULL )
+	{
+		fprintf(stderr, "file %s cannot be opened for reading.\n" , argv[2]);
+		exit(EXIT_FAILURE);
+	}
+
+	//idea: search for ch. if match, then go back to the last '\n' (for the first line, go to the beginnig),
+	//      print the line until reaching another '\n'.
+	//this has no limit on the length of an individual line
+	while( (ch=getc(pf))!=EOF )
+	{
+		if( ch==argv[1][0] )
+		{
+			while( getc(pf)!='\n' )		    //while didn't reach the last '\n', move file position indicator
+			{				    //back 1 byte.
+				fseek(pf, -2L, SEEK_CUR);   //to move back, should be -2L not -1L, because getc move it forward
+				if( ftell(pf)==0L )	    //if reaching beginning, break
+				{
+					break;
+				}
+			}
+
+			while( (ch=getc(pf))!='\n' && ch!=EOF )		//putc until the next '\n' or EOF
+			{
+				putc(ch, stdout);
+			}
+			putchar('\n');	//the next '\n' didn't get printed, thus print a '\n'
+		}			//then, position indicator is just going to the next line
+	}
+
+	fclose(pf);
+	return 0;
+}
+  \end{verbatim}
+\end{solution}
+
+\begin{question}
+Write a program that opens two files. You can obtain the filenames either by using
+command-line arguments or by soliciting the user to enter them.
+a. Have the program print line 1 of the first file, line 1 of the second file, line 2 of the
+first file, line 2 of the second file, and so on, until the last line of the longer file (in
+terms of lines) is printed.
+b. Modify the program so that lines with the same line number are printed on the
+same line.
+\end{question}
+\begin{solution}
+  \begin{verbatim}
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
+#define LEN 20
+
+int main(int argc, char *argv[])
+{
+	FILE *file1, *file2;
+	int ch1=0, ch2=0;		//two chars because we need a char to indicate the condition of reaching EOF in each file
+	char name1[LEN], name2[LEN];	//store two filenames
+
+	if( argc==1 )			//if no file is present on command line, prompt user to input them
+	{
+		puts("first file:");
+		scanf( "%s" , name1 );
+		puts("second file:");
+		scanf( "%s" , name2 );
+	}
+	else if( argc==3 )		//if two files are present on command line, copy them to named array. Hence always use
+	{				//the named array for consistency, rather than argv[i]
+		strncpy(name1, argv[1], LEN);
+		strncpy(name2, argv[2], LEN);
+	}
+	else				//otherwise wrong usage
+	{
+		fputs("usage error.\n", stderr);
+	}
+
+	if( (file1=fopen(name1, "r"))==NULL )
+	{
+		fprintf(stderr, "file %s cannot be opened for reading.\n" , name1);
+		exit(EXIT_FAILURE);
+	}
+	if( (file2=fopen(name2, "r"))==NULL )
+	{
+		fprintf(stderr, "file %s cannot be opened for reading.\n" , name1);
+		exit(EXIT_FAILURE);
+	}
+	//idea:
+	//      if file1 didn't reach EOF,
+	//        print one line in file1
+	//	if file2 didn't reach EOF,
+	//	  print one line in file2
+	// 	repeat this process until both files have reached EOF
+	// 	use a loop with getc() to print a line, rather than fgets(), because we don't how long a line would be
+	// 	prepend a '<' or '>' before each line to indicate its origin
+	while( !(ch1==EOF && ch2==EOF) )				//if both files have reached EOF, break.
+	{
+		if( ch1!=EOF )
+		{
+			putchar('<');
+			while( (ch1=getc(file1))!='\n' && ch1!=EOF )	//a '\n' or EOF indicate the end of a line
+			{
+				putc(ch1,stdout);
+			}
+			putchar('\n');//(a) ONLY			//(a): '\n' didn't get output. Hence append a '\n'.
+		}
+		if( ch2!=EOF )
+		{
+			putchar('>');
+			while( (ch2=getc(file2))!='\n' && ch2!=EOF )
+			{
+				putc(ch2,stdout);
+			}
+			putchar('\n');//(a) ONLY
+		}
+		//putchar('\n');//(b) ONLY				//only one '\n' is needed, for the same lines of two files
+	}								//residing on the same line. Any file reaching EOF doesn't
+									//affect outputing '\n'
+	fclose(file1);
+	fclose(file2);
+
+	return 0;
+}
+  \end{verbatim}
+\end{solution}
+
+\begin{question}
+  Write a program that takes as command-line arguments a character and zero or more
+  filenames. If no arguments follow the character, have the program read the standard
+  input. Otherwise, have it open each file in turn and report how many times the character
+  appears in each file. The filename and the character itself should be reported along with
+  the count. Include error-checking to see whether the number of arguments is correct and
+  whether the files can be opened. If a file can’t be opened, have the program report that
+  fact and go on to the next file.
+\end{question}
+\begin{solution}
+  \begin{verbatim}
+#include <stdio.h>
+#include <stdlib.h>
+
+int Count(FILE *pf, char match);
+
+int main(int argc, char *argv[])
+{
+	char match;		//character to match with
+	int ct;			//count
+	FILE *pf;		//file stream
+	int i;			//index
+
+	if( argc<2 )		//wrong usage
+	{
+		fprintf(stderr, "%s: wrong usage.\n" , argv[0]);
+		exit(EXIT_FAILURE);
+	}
+
+	match=argv[1][0];	//only if argc>=2 this assignment can be made.
+
+	if( argc==2 )		//if no file present, read from stdin, count and print result
+	{
+		ct=Count(stdin, match);
+		printf( "the number of '%c' character in the input: %d\n" , match, ct );
+	}
+	else			//otherwise open every file, read, count, and print result. Then close file.
+	{
+		for( i=2 ; i<argc ; i++ )
+		{
+			if( (pf=fopen(argv[i], "r"))==NULL )	//if a file cannot be opened for reading, continue to the next file
+			{
+				fprintf(stderr, "cannot open %s for reading.\n" , argv[i]);
+				continue;
+			}
+
+			ct=Count(pf, match);
+			printf( "the number of '%c' character in %s: %d\n" , match, argv[i], ct );
+
+			fclose(pf);
+		}
+	}
+
+	return 0;
+}
+
+//read from stream `pf`, count the number of matching and return it
+int Count(FILE *pf, char match)
+{
+	int ct=0;
+	char ch;
+
+	while( (ch=getc(pf))!=EOF )
+	{
+		if( ch==match )
+		{
+			ct++;
+		}
+	}
+
+	return ct;
+}
+  \end{verbatim}
+\end{solution}
+
+\begin{question}
+Write a program that takes two command-line arguments. The first is a string; the
+second is the name of a file. The program should then search the file, printing all lines
+containing the string. Because this task is line oriented rather than character oriented,
+use fgets() instead of getc(). Use the standard C library function strstr() (briefly
+described in exercise 7 of Chapter 11) to search each line for the string. Assume no lines
+are longer than 255 characters.
+\end{question}
+\begin{solution}
+  \begin{verbatim}
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+int main(int argc, char *argv[])
+{
+	char buffer[255];
+	FILE *pf;
+
+	if( argc!=3 )
+	{
+		fprintf(stderr, "wrong usage.\n");
+		exit(EXIT_FAILURE);
+	}
+	if( (pf=fopen(argv[2], "r"))==NULL )
+	{
+		fprintf(stderr, "%s cannot be opened for reading.\n" , argv[2]);
+		exit(EXIT_FAILURE);
+	}
+
+	while( fgets(buffer, 255, pf)!=NULL )
+	{
+		if( strstr(buffer, argv[1])!=NULL )
+		{
+			fputs(buffer, stdout);
+		}
+	}
+
+	fclose(pf);
+	return 0;
+}
+  \end{verbatim}
+\end{solution}
+
+\begin{question}
+Create a text file consisting of 20 rows of 30 integers. The integers should be in the range
+0–9 and be separated by spaces. The file is a digital representation of a picture, with
+the values 0 through 9 representing increasing levels of darkness. Write a program that
+reads the contents of the file into a 20-by-30 array of ints. In a crude approach toward
+converting this digital representation to a picture, have the program use the values
+in this array to initialize a 20-by-31 array of chars, with a 0 value corresponding to a
+space character, a 1 value to the period character, and so on, with each larger number
+represented by a character that occupies more space. For example, you might use # to
+represent 9. The last character (the 31st) in each row should be a null character, making
+it an array of 20 strings. Have the program display the resulting picture (that is, print the
+strings) and also store the result in a text file. For example, suppose you start with this
+data:
+0 0 9 0 0 0 0 0 0 0 0 0 5 8 9 9 8 5 2 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 9 0 0 0 0 0 0 0 5 8 9 9 8 5 5 2 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 5 8 1 9 8 5 4 5 2 0 0 0 0 0 0 0 0 0
+0 0 0 0 9 0 0 0 0 0 0 0 5 8 9 9 8 5 0 4 5 2 0 0 0 0 0 0 0 0
+0 0 9 0 0 0 0 0 0 0 0 0 5 8 9 9 8 5 0 0 4 5 2 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 5 8 9 1 8 5 0 0 0 4 5 2 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 5 8 9 9 8 5 0 0 0 0 4 5 2 0 0 0 0 0
+5 5 5 5 5 5 5 5 5 5 5 5 5 8 9 9 8 5 5 5 5 5 5 5 5 5 5 5 5 5
+8 8 8 8 8 8 8 8 8 8 8 8 5 8 9 9 8 5 8 8 8 8 8 8 8 8 8 8 8 8
+9 9 9 9 0 9 9 9 9 9 9 9 9 9 9 9 9 9 9 9 9 9 3 9 9 9 9 9 9 9
+8 8 8 8 8 8 8 8 8 8 8 8 5 8 9 9 8 5 8 8 8 8 8 8 8 8 8 8 8 8
+5 5 5 5 5 5 5 5 5 5 5 5 5 8 9 9 8 5 5 5 5 5 5 5 5 5 5 5 5 5
+0 0 0 0 0 0 0 0 0 0 0 0 5 8 9 9 8 5 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 5 8 9 9 8 5 0 0 0 0 6 6 0 0 0 0 0 0
+0 0 0 0 2 2 0 0 0 0 0 0 5 8 9 9 8 5 0 0 5 6 0 0 6 5 0 0 0 0
+0 0 0 0 3 3 0 0 0 0 0 0 5 8 9 9 8 5 0 5 6 1 1 1 1 6 5 0 0 0
+0 0 0 0 4 4 0 0 0 0 0 0 5 8 9 9 8 5 0 0 5 6 0 0 6 5 0 0 0 0
+0 0 0 0 5 5 0 0 0 0 0 0 5 8 9 9 8 5 0 0 0 0 6 6 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 5 8 9 9 8 5 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 5 8 9 9 8 5 0 0 0 0 0 0 0 0 0 0 0 0
+\end{question}
+\begin{solution}
+  firstly, generate a text-based number file.
+  \begin{verbatim}
+#include <stdlib.h>
+#include <time.h>
+#include <stdio.h>
+
+int main(void)
+{
+	int i,j;
+	FILE *pf;
+
+	srand((unsigned int)time(0));
+	pf=fopen("NumArr", "w");
+	for( i=0 ; i<20 ; i++ )
+	{
+		for( j=0 ; j<30 ; j++ )
+		{
+			fprintf(pf, "%d ", rand()%10);
+		}
+		putc('\n',pf);
+	}
+	fclose(pf);
+
+	return 0;
+}
+  \end{verbatim}
+  solution with fixed-size array.
+  \begin{verbatim}
+#include <stdio.h>
+#include <ctype.h>
+#include <stdlib.h>
+
+//for fixed number of rows and columns
+#define ROW 20
+#define COL 30
+
+void OutputPic(char (*pic)[COL+1], FILE *stream);		//print char array (a.k.a. pic) to `stream`
+char WhichChar(int number);					//generate char according to input number
+void FetchNumber(int (*arr)[COL], FILE *pf);			//fetch numbers from `pf` stream and store them in array
+void DrawPic(char (*pic)[COL+1], int (*num)[COL]);		//generate char array based on number array
+
+int main(int argc, char *argv[])
+{
+	FILE *pf, *pf_pic;	//file in (number file), file out (picture)
+	int num[ROW][COL];	//number storage
+	char pic[ROW][COL+1];	//char storage, +1 because of trailing '\0' at the end of each line
+
+	if( argc!=3 )		//usage: $picture file.in file.out
+	{
+		fprintf( stderr, "%s: wrong usage.\n" , argv[0] );
+		exit(EXIT_FAILURE);
+	}
+
+	if ( (pf=fopen(argv[1], "r"))==NULL )	//r mode
+	{
+		fprintf( stderr, "%s cannot be opened for reading.\n" , argv[1] );
+		exit(EXIT_FAILURE);
+	}
+	if ( (pf_pic=fopen(argv[2], "w"))==NULL )//w mode
+	{
+		fprintf( stderr, "%s cannot be opened for writing.\n" , argv[2] );
+		exit(EXIT_FAILURE);
+	}
+
+	FetchNumber(num, pf);
+	DrawPic(pic, num);
+
+	OutputPic(pic, stdout);
+	OutputPic(pic, pf_pic);
+
+	fclose(pf);
+	fclose(pf_pic);
+
+	return 0;
+}
+
+void FetchNumber(int (*arr)[COL], FILE *pf)
+{
+	int i,j;
+
+	for( i=0 ; i<ROW ; i++ )
+	{
+		for( j=0 ; j<COL ; j++ )
+		{
+			fscanf(pf, "%d" , &arr[i][j]);
+		}
+	}
+}
+
+void DrawPic(char (*pic)[COL+1], int (*num)[COL])
+{
+	int i,j;
+
+	for( i=0 ; i<ROW ; i++ )
+	{
+		for( j=0 ; j<COL ; j++ )
+		{
+			pic[i][j]=WhichChar(num[i][j]);
+		}
+		pic[i][COL]='\0';	//append null char at the end of each line
+	}
+}
+
+char WhichChar(int number)
+{
+	char ch;
+	switch ( number )		//10 choices
+	{
+		case 0 :
+			ch=' ';
+			break;
+		case 1 :
+			ch='.';
+			break;
+		case 2 :
+			ch='\'';
+			break;
+		case 3 :
+			ch=':';
+			break;
+		case 4 :
+			ch='~';
+			break;
+		case 5 :
+			ch='*';
+			break;
+		case 6 :
+			ch='=';
+			break;
+		case 7 :
+			ch='@';
+			break;
+		case 8 :
+			ch='%';
+			break;
+		case 9 :
+			ch='#';
+			break;
+		default :
+			fputs("error when drawing picture.\n", stderr);
+			break;
+	}
+	return ch;
+}
+
+void OutputPic(char (*pic)[COL+1], FILE *stream)
+{
+	int i;
+
+	for( i=0 ; i<ROW ; i++ )
+	{
+		fprintf(stream, "%s\n" , pic[i]);	//'\n' is needed additionally. Hence fprintf() is best suited here
+	}
+}
+  \end{verbatim}
+\end{solution}
+
+\begin{question}
+  Question above, with arbitrarily-sized array. Use dynamically allocated memory and VLA respectively.
+\end{question}
+\begin{solution}
+  program to generate a text-based number file.
+  \begin{verbatim}
+#include <stdlib.h>
+#include <time.h>
+#include <stdio.h>
+
+int main(int argc, char **argv)
+{
+	int i,j;
+	int row, col;
+	FILE *pf;
+
+	if( argc!=4 )
+	{
+	  exit(EXIT_FAILURE);
+	}
+
+	row=atoi(argv[1]);
+	col=atoi(argv[2]);
+
+	srand((unsigned int)time(0));
+	pf=fopen(argv[3], "w");
+	for( i=0 ; i<row ; i++ )
+	{
+		for( j=0 ; j<col ; j++ )
+		{
+			fprintf(pf, "%d ", rand()%10);
+		}
+		putc('\n',pf);
+	}
+	fclose(pf);
+
+	return 0;
+}
+  \end{verbatim}
+  solution with VLA.
+  \begin{verbatim}
+#include <stdio.h>
+#include <ctype.h>
+#include <stdlib.h>
+
+int GetCol(FILE *pf);							//get the number of columns in `pf`
+int GetRow(FILE *pf);							//get the number of rows in `pf`
+void OutputPic(int row, int col, char (*pic)[col+1], FILE *stream);	//print char array (a.k.a. pic) to `stream` (VLA)
+char WhichChar(int number);						//generate char according to input number (VLA)
+void FetchNumber(int row, int col, int (*arr)[col], FILE *pf);	//fetch numbers from `pf` stream and store them in array (VLA)
+void DrawPic(int row, int col, char (*pic)[col+1], int (*num)[col]);	//generate char array based on number array (VLA)
+
+int main(int argc, char *argv[])
+{
+	FILE *pf, *pf_pic;	//file in (number file), file out (picture)
+	int row, col;		//dimensions of number file
+
+	if( argc!=3 )		//usage: $picture file.in file.out
+	{
+		fprintf( stderr, "%s: wrong usage.\n" , argv[0] );
+		exit(EXIT_FAILURE);
+	}
+
+	if ( (pf=fopen(argv[1], "r"))==NULL )	//r mode
+	{
+		fprintf( stderr, "%s cannot be opened for reading.\n" , argv[1] );
+		exit(EXIT_FAILURE);
+	}
+	if ( (pf_pic=fopen(argv[2], "w"))==NULL )//w mode
+	{
+		fprintf( stderr, "%s cannot be opened for writing.\n" , argv[2] );
+		exit(EXIT_FAILURE);
+	}
+
+	//get dimensons of number file
+	col=GetCol(pf);		 			//GetCol() has to go first, because of file position indicator
+	row=GetRow(pf);
+
+	int num[row][col];	//number storage (VLA)
+	char pic[row][col+1];	//char storage, +1 because of trailing '\0' at the end of each line (VLA)
+
+	rewind(pf);		//reset file position indicator, for GetCol() and GetRow() moved it
+	FetchNumber(row, col, num, pf);
+	DrawPic(row, col, pic, num);
+
+	OutputPic(row, col, pic, stdout);
+	OutputPic(row, col, pic, pf_pic);
+
+	fclose(pf);
+	fclose(pf_pic);
+
+	return 0;
+}
+
+int GetCol(FILE *pf)
+{
+	int col=0;
+	char ch;
+	while( (ch=getc(pf))!='\n' )
+	{
+		if( isdigit(ch) )	//because every number is seperated by a space char
+		{
+			col++;
+		}
+	}
+	return col;
+}
+
+int GetRow(FILE *pf)
+{
+	int row=1;	//GetCol() has already moved file position indicator to the end of the first line. Hence initialize row to 1
+	char ch;
+	while( (ch=getc(pf))!=EOF )
+	{
+		if( ch=='\n' )
+		{
+			row++;
+		}
+	}
+	return row;
+}
+
+
+void FetchNumber(int row, int col, int (*arr)[col], FILE *pf)
+{
+	int i,j;
+
+	for( i=0 ; i<row ; i++ )
+	{
+		for( j=0 ; j<col ; j++ )
+		{
+			fscanf(pf, "%d" , &arr[i][j]);
+		}
+	}
+}
+
+void DrawPic(int row, int col, char (*pic)[col+1], int (*num)[col])
+{
+	int i,j;
+
+	for( i=0 ; i<row ; i++ )
+	{
+		for( j=0 ; j<col ; j++ )
+		{
+			pic[i][j]=WhichChar(num[i][j]);
+		}
+		pic[i][col]='\0';	//append null char at the end of each line
+	}
+}
+
+char WhichChar(int number)
+{
+	char ch;
+	switch ( number )		//10 choices
+	{
+		case 0 :
+			ch=' ';
+			break;
+		case 1 :
+			ch='.';
+			break;
+		case 2 :
+			ch='\'';
+			break;
+		case 3 :
+			ch=':';
+			break;
+		case 4 :
+			ch='~';
+			break;
+		case 5 :
+			ch='*';
+			break;
+		case 6 :
+			ch='=';
+			break;
+		case 7 :
+			ch='@';
+			break;
+		case 8 :
+			ch='%';
+			break;
+		case 9 :
+			ch='#';
+			break;
+		default :
+			fputs("error when drawing picture.\n", stderr);
+			break;
+	}
+	return ch;
+}
+
+void OutputPic(int row, int col, char (*pic)[col+1], FILE *stream)
+{
+	int i;
+
+	for( i=0 ; i<row ; i++ )
+	{
+		fprintf(stream, "%s\n" , pic[i]);	//'\n' is needed additionally. Hence fprintf() is best suited here
+	}
+}
+  \end{verbatim}
+  solution with dynamically allocated memory. This is not very easy to understand. Note that only two factors differ dramatically  from the VLA version: 
+  \begin{enumerate}
+    \item \verb|num| and \verb|pic| arrays have been replaced with \verb|**num| and \verb|**pic|.
+    \item \verb|num| and \verb|pic| now use a complicated way to allocate memory and construct 2D array.
+  \end{enumerate}
+  \begin{verbatim}
+#include <stdio.h>
+#include <ctype.h>
+#include <stdlib.h>
+
+int GetCol(FILE *pf);			
+int GetRow(FILE *pf);
+void OutputPic(int row, char **pic, FILE *stream);		//print char array (a.k.a. pic) to `stream`
+char WhichChar(int number);					//generate char according to input number
+void FetchNumber(int row, int col, int **num, FILE *pf);	//fetch numbers from `pf` stream and store them in array
+void DrawPic(int row, int col, char **pic, int **num);		//generate char array based on number array
+
+int main(int argc, char *argv[])
+{
+	FILE *pf, *pf_pic;	//file in (number file), file out (picture)
+	int row, col;		//dimensions of number file
+	int **num;		//num is pointed to a pointer-to-int
+	char **pic;		//pic is pointed to a pointer-to-char
+	int i;
+
+	if( argc!=3 )		//usage: $picture file.in file.out
+	{
+		fprintf( stderr, "%s: wrong usage.\n" , argv[0] );
+		exit(EXIT_FAILURE);
+	}
+
+	if ( (pf=fopen(argv[1], "r"))==NULL )	//r mode
+	{
+		fprintf( stderr, "%s cannot be opened for reading.\n" , argv[1] );
+		exit(EXIT_FAILURE);
+	}
+	if ( (pf_pic=fopen(argv[2], "w"))==NULL )//w mode
+	{
+		fprintf( stderr, "%s cannot be opened for writing.\n" , argv[2] );
+		exit(EXIT_FAILURE);
+	}
+
+	//get dimensons of number file
+	col=GetCol(pf);		 			//GetCol() has to go first, because of file position indicator
+	row=GetRow(pf);
+
+/*IMPORTANT-------dynamically allocate one dimensional memory and use this memory to construct two dimensional array---------- */
+
+	/* 条件: 数组的行列数只能在运行过程中得知. 因此若不用 VLA 则只能用 malloc() 类函数动态分配内存.
+	 * 分析: 1. 由于列数未知, 无法声明一个 int (*)[COL] 型的指针来接收 malloc(row*col*sizeof(int)) 所分配空间的地址.
+	 *       2. 用于行数未知, 无法声明一个指针数组来依次指向所分配空间的每一行的首地址.
+	 *       因此无法简单地用指针在这个分配的空间中模拟一个二维数组出来.
+	 * 解决方法:
+	 * 	 分配二维数组所占空间时, 顺带分配一些存放地址的空间, 让这些空间分别保存每行的首地址. 这些空间就成了每行的指针.
+	 * 	 让这些指针空间位于所分配的空间的起始位置, 下面可以看到这样恰好可以像二维数组那样使用所有数据.
+	 * 	 结果是, 可以完全像二维数组那样使用这些数据. 与二维数组唯一不同的是, 这里 "数组" 的 "名字" num 代表的地址与
+	 * 	 "数组" 的第一行地址num[0]、第一个元素的地址&num[0][0] 是不同的. 此外, num 是变量, 一般数组的名字是常量.
+	 * 其他后果: 由于 num 和 pic 的类型从 int (*)[n] 和 char (*)[n] 变成了 int** 和 char**, 使用它们的函数变量声明也要修改. */
+
+	num=(int**)malloc(row*sizeof(int*)+row*col*sizeof(int));	//int* 是 pointer-to-int, 即地址类, 8 bytes.
+	for( i=0 ; i<row ; i++ )					//row*sizeof(int*) 即是指针所占空间, 加上数据所占空间
+	{								//num 是 int**, 是为了模拟 num[i] 能得到 i 行首地址.
+		num[i]=(int*)(num+row)+i*col;				//num 是 int**, 即是 pointer to pointer-to-int. num 指向
+	}	//注意 num 指向的是指针, 因此要先 +row,			//指针. 因此 num+1 移动一个地址所占空间. 根据左边赋值关系,
+       		//即向前挪 row 个地址占的空间, 再 typecast 成 int*, 	//num+1 处保存有第 1 行的地址, *(num+1) 即 num[1] 就得到了
+		//之后再 +i*col 时, 每次就挪 i*col 个 int 占的空间.	//第一行地址.
+		//这样才能到达正确的每行起始地址, 然后把这个地址赋给
+		//起始处预留的 row 个放地址的空间.
+
+	pic=(char**)malloc(row*sizeof(char*)+row*(col+1)*sizeof(char));	
+	for( i=0 ; i<row ; i++ )
+	{
+		pic[i]=(char*)(pic+row)+i*(col+1);
+	}
+
+/*IMPORTANT----------------------------------------------------------------------------------------------------------------*/
+
+	rewind(pf);		//reset file position indicator, for GetCol() and GetRow() moved it
+	FetchNumber(row, col, num, pf);
+	DrawPic(row, col, pic, num);
+
+	OutputPic(row, pic, stdout);
+	OutputPic(row, pic, pf_pic);
+
+	free(num);		//NOTE: DO NOT forget to free the allocated memory
+	free(pic);
+
+	fclose(pf);
+	fclose(pf_pic);
+
+	return 0;
+}
+
+int GetCol(FILE *pf)
+{
+	int col=0;
+	char ch;
+	while( (ch=getc(pf))!='\n' )
+	{
+		if( isdigit(ch) )	//because every number is seperated by a space char
+		{
+			col++;
+		}
+	}
+	return col;
+}
+
+int GetRow(FILE *pf)
+{
+	int row=1;	//GetCol() has already moved file position indicator to the end of the first line. Hence initialize row to 1
+	char ch;
+	while( (ch=getc(pf))!=EOF )
+	{
+		if( ch=='\n' )
+		{
+			row++;
+		}
+	}
+	return row;
+}
+
+
+void FetchNumber(int row, int col, int **num, FILE *pf)
+{
+	int i,j;
+
+	for( i=0 ; i<row ; i++ )
+	{
+		for( j=0 ; j<col ; j++ )
+		{
+			fscanf(pf, "%d" , &num[i][j]);
+		}
+	}
+}
+
+void DrawPic(int row, int col, char **pic, int **num)
+{
+	int i,j;
+
+	for( i=0 ; i<row ; i++ )
+	{
+		for( j=0 ; j<col ; j++ )
+		{
+			pic[i][j]=WhichChar(num[i][j]);
+		}
+		pic[i][col]='\0';	//append null char at the end of each line
+	}
+}
+
+char WhichChar(int number)
+{
+	char ch;
+	switch ( number )		//10 choices
+	{
+		case 0 :
+			ch=' ';
+			break;
+		case 1 :
+			ch='.';
+			break;
+		case 2 :
+			ch='\'';
+			break;
+		case 3 :
+			ch=':';
+			break;
+		case 4 :
+			ch='~';
+			break;
+		case 5 :
+			ch='*';
+			break;
+		case 6 :
+			ch='=';
+			break;
+		case 7 :
+			ch='@';
+			break;
+		case 8 :
+			ch='%';
+			break;
+		case 9 :
+			ch='#';
+			break;
+		default :
+			fputs("error when drawing picture.\n", stderr);
+			break;
+	}
+	return ch;
+}
+
+void OutputPic(int row, char **pic, FILE *stream)	//no VLA, col is not needed
+{
+	int i;
+
+	for( i=0 ; i<row ; i++ )
+	{
+		fprintf(stream, "%s\n" , pic[i]);	//'\n' is needed additionally. Hence fprintf() is best suited here
+	}
+}
+  \end{verbatim}
+\end{solution}
+
+\begin{question}
+Digital images, particularly those radioed back from spacecraft, may have glitches. Add
+a de-glitching function to the question above. It should compare each value to its
+immediate neighbors to the left and right, above and below. If the value differs by more
+than 1 from each of its neighbors, replace the value with the average of the neighboring
+values. You should round the average to the nearest integer value. Note that the points
+along the boundaries have fewer than four neighbors, so they require special handling.
+\end{question}
+\begin{solution}
+  Using VLA solution here.
+  The majority of the program remains the same as before. But a set of de-glitching functions is added.
+  \begin{verbatim}
+#include <stdio.h>
+#include <ctype.h>
+#include <stdlib.h>
+
+int GetCol(FILE *pf);							//get the number of columns in `pf`
+int GetRow(FILE *pf);							//get the number of rows in `pf`
+void OutputPic(int row, int col, char (*pic)[col+1], FILE *stream);	//print char array (a.k.a. pic) to `stream` (VLA)
+char WhichChar(int number);						//generate char according to input number (VLA)
+void FetchNumber(int row, int col, int (*arr)[col], FILE *pf);	//fetch numbers from `pf` stream and store them in array (VLA)
+/*------------------------de-glitching part------------------------------------------------------------*/
+//de-glitching main control function
+void DeGlitching(int row, int col, int (*num)[col]);
+//process four corners. corners can be dealt together. different `offset_i` and `offset_j` are all needed identify each corner.
+void DeGlitching_Corner(int i, int j, int offset_i, int offset_j, int col, int (*num)[col]);
+//upper and lower boundaries have the same j offsets, opposite i offsets. Hence only `offset_i` is needed to identify difference
+void DeGlitching_Perimeter_Horizontal(int i, int j, int offset_i, int col, int (*num)[col]);
+//left and right boundaries are similar
+void DeGlitching_Perimeter_Vertical(int i, int j, int offset_j, int col, int (*num)[col]);
+//all internal points can have four offsets
+void DeGlitching_Internal(int i, int j, int col, int (*num)[col]);
+/*------------------------------------------------------------------------------------------------------*/
+void DrawPic(int row, int col, char (*pic)[col+1], int (*num)[col]);	//generate char array based on number array (VLA)
+
+int main(int argc, char *argv[])
+{
+	FILE *pf, *pf_pic;	//file in (number file), file out (picture)
+	int row, col;		//dimensions of number file
+
+	if( argc!=3 )		//usage: $picture file.in file.out
+	{
+		fprintf( stderr, "%s: wrong usage.\n" , argv[0] );
+		exit(EXIT_FAILURE);
+	}
+
+	if ( (pf=fopen(argv[1], "r"))==NULL )	//r mode
+	{
+		fprintf( stderr, "%s cannot be opened for reading.\n" , argv[1] );
+		exit(EXIT_FAILURE);
+	}
+	if ( (pf_pic=fopen(argv[2], "w"))==NULL )//w mode
+	{
+		fprintf( stderr, "%s cannot be opened for writing.\n" , argv[2] );
+		exit(EXIT_FAILURE);
+	}
+
+	//get dimensons of number file
+	col=GetCol(pf);		 			//GetCol() has to go first, because of file position indicator
+	row=GetRow(pf);
+
+	int num[row][col];	//number storage (VLA)
+	char pic[row][col+1];	//char storage, +1 because of trailing '\0' at the end of each line (VLA)
+
+	rewind(pf);		//reset file position indicator, for GetCol() and GetRow() moved it
+	FetchNumber(row, col, num, pf);
+	DeGlitching(row, col, num);
+	DrawPic(row, col, pic, num);
+
+	OutputPic(row, col, pic, stdout);
+	OutputPic(row, col, pic, pf_pic);
+
+	fclose(pf);
+	fclose(pf_pic);
+
+	return 0;
+}
+
+int GetCol(FILE *pf)
+{
+	int col=0;
+	char ch;
+	while( (ch=getc(pf))!='\n' )
+	{
+		if( isdigit(ch) )	//because every number is seperated by a space char
+		{
+			col++;
+		}
+	}
+	return col;
+}
+
+int GetRow(FILE *pf)
+{
+	int row=1;	//GetCol() has already moved file position indicator to the end of the first line. Hence initialize row to 1
+	char ch;
+	while( (ch=getc(pf))!=EOF )
+	{
+		if( ch=='\n' )
+		{
+			row++;
+		}
+	}
+	return row;
+}
+
+
+void FetchNumber(int row, int col, int (*arr)[col], FILE *pf)
+{
+	int i,j;
+
+	for( i=0 ; i<row ; i++ )
+	{
+		for( j=0 ; j<col ; j++ )
+		{
+			fscanf(pf, "%d" , &arr[i][j]);
+		}
+	}
+}
+
+void DeGlitching(int row, int col, int (*num)[col])
+{
+	int i,j;
+
+	for( i=0 ; i<row ; i++ )
+	{
+		for( j=0 ; j<col ; j++ )
+		{
+			if( i==0 )		//tedious condition checkings
+			{
+				if( j==0 )
+				{
+					DeGlitching_Corner(i,j,1,1,col,num);
+				}
+				else if( j==col-1 )
+				{
+					DeGlitching_Corner(i,j,1,-1,col,num);
+				}
+				else
+				{
+					DeGlitching_Perimeter_Horizontal(i,j,1,col,num);
+				}
+			}
+			else if( i==row-1 )
+			{
+				if( j==0 )
+				{
+					DeGlitching_Corner(i,j,-1,1,col,num);
+				}
+				else if( j==col-1 )
+				{
+					DeGlitching_Corner(i,j,-1,-1,col,num);
+				}
+				else
+				{
+					DeGlitching_Perimeter_Horizontal(i,j,-1,col,num);
+				}
+			}
+			else
+			{
+				if( j==0 )
+				{
+					DeGlitching_Perimeter_Vertical(i,j,1,col,num);
+				}
+				else if( j==col-1 )
+				{
+					DeGlitching_Perimeter_Vertical(i,j,-1,col,num);
+				}
+				else
+				{
+					DeGlitching_Internal(i,j,col,num);
+				}
+			}
+		}
+	}
+}
+
+void DeGlitching_Corner(int i, int j, int offset_i, int offset_j, int col, int (*num)[col])
+{
+	double average;
+
+	if( abs(num[i][j]-num[i][j+offset_j])>1 && 
+	    abs(num[i][j]-num[i+offset_i][j])>1 )
+	{
+		average=(double)(num[i][j+offset_j]+num[i+offset_i][j])/2.0;	//typecast to float number so as to compute average
+		num[i][j]=(int)(average+0.5);		//for positive number, typecasting (n+0.5) to int yields round(n)
+	}
+}
+
+void DeGlitching_Perimeter_Horizontal(int i, int j, int offset_i, int col, int (*num)[col])
+{
+	double average;
+
+	if( abs(num[i][j]-num[i+offset_i][j])>1 &&
+	           abs(num[i][j]-num[i][j-1])>1 &&
+		   abs(num[i][j]-num[i][j+1])>1 )
+	{
+		average=(double)(num[i+offset_i][j]+num[i][j-1]+num[i][j+1])/3.0;
+		num[i][j]=(int)(average+0.5);
+	}
+}
+
+void DeGlitching_Perimeter_Vertical(int i, int j, int offset_j, int col, int (*num)[col])
+{
+	double average;
+
+	if( abs(num[i][j]-num[i][j+offset_j])>1 &&
+		   abs(num[i][j]-num[i-1][j])>1 &&
+		   abs(num[i][j]-num[i+1][j])>1 )
+	{
+		average=(double)(num[i][j+offset_j]+num[i-1][j]+num[i+1][j])/3.0;
+		num[i][j]=(int)(average+0.5);
+	}
+}
+
+void DeGlitching_Internal(int i, int j, int col, int (*num)[col])
+{
+	double average;
+
+	if( abs(num[i][j]-num[i][j-1])>1 &&
+	    abs(num[i][j]-num[i][j+1])>1 &&
+	    abs(num[i][j]-num[i-1][j])>1 &&
+	    abs(num[i][j]-num[i+1][j])>1 )
+	{
+		average=(double)(num[i][j-1]+num[i][j+1]+num[i-1][j]+num[i+1][j])/4.0;
+		num[i][j]=(int)(average+0.5);
+	}
+}
+
+void DrawPic(int row, int col, char (*pic)[col+1], int (*num)[col])
+{
+	int i,j;
+
+	for( i=0 ; i<row ; i++ )
+	{
+		for( j=0 ; j<col ; j++ )
+		{
+			pic[i][j]=WhichChar(num[i][j]);
+		}
+		pic[i][col]='\0';	//append null char at the end of each line
+	}
+}
+
+char WhichChar(int number)
+{
+	char ch;
+	switch ( number )		//10 choices
+	{
+		case 0 :
+			ch=' ';
+			break;
+		case 1 :
+			ch='.';
+			break;
+		case 2 :
+			ch='\'';
+			break;
+		case 3 :
+			ch=':';
+			break;
+		case 4 :
+			ch='~';
+			break;
+		case 5 :
+			ch='*';
+			break;
+		case 6 :
+			ch='=';
+			break;
+		case 7 :
+			ch='@';
+			break;
+		case 8 :
+			ch='%';
+			break;
+		case 9 :
+			ch='#';
+			break;
+		default :
+			fputs("error when drawing picture.\n", stderr);
+			break;
+	}
+	return ch;
+}
+
+void OutputPic(int row, int col, char (*pic)[col+1], FILE *stream)
+{
+	int i;
+
+	for( i=0 ; i<row ; i++ )
+	{
+		fprintf(stream, "%s\n" , pic[i]);	//'\n' is needed additionally. Hence fprintf() is best suited here
+	}
+}
+  \end{verbatim}
+\end{solution}
+
+\begin{question}
+  Write a program that prompts the user to enter the day, month, and year. The month
+  can be a month number, a month name, or a month abbreviation. The program then
+  should return the total number of days in the year up through the given day. (Do take
+  leap years into account.)
+\end{question}
+\begin{solution}
+  \begin{verbatim}
+#include <stdio.h>
+#include <string.h>
+#include <stdbool.h>
+#include <ctype.h>
+
+#define LEN 40
+
+struct month {				//put all informations of a month in a structure
+	char name[LEN];
+	char abbr[4];
+	int days;
+	int number;
+};
+
+struct month allmonths[12]={		//one year, an array of 12 struct month
+	{"january", "jan", 31, 1},
+	{"february", "feb", 28, 2},
+	{"march", "mar", 31, 3},
+	{"april", "apr", 30, 4},
+	{"may", "may", 31, 5},
+	{"june", "jun", 30, 6},
+	{"july", "jul", 31, 7},
+	{"august", "aug", 31, 8},
+	{"september", "sep", 30, 9}, 
+	{"october", "oct", 31, 10},
+	{"november", "nov", 30, 11},
+	{"december", "dec", 31, 12}
+};
+
+struct date {				//all infos about date in a structure
+	int day_in;
+	char month_in_str[LEN];
+	int month_in;
+	int year_in;			//generated by month_in_str
+};
+
+int WhichMonth(char * month_str);	//return month number
+bool GetDate(struct date *p_in);	//get input date, return false if input is invalid, 
+					// otherwise store them in a struct date and return true
+void ToLower(char * str);		//convert input month to lowercase
+int sum_days(struct date *p_in);	//compute sum of days
+bool LeapYearQ(int year);		//check for leap year
+void SetFebDay(int year);		//set number of days of Feb based on LeapYearQ()
+void ConsumeLine(void);			//consume trailing chars
+
+int main(void)
+{
+	struct date input;
+	int total;
+	while( GetDate(&input) )	//continue if input is valid
+	{
+		total=sum_days(&input);
+		printf( "%d\n" , total );
+	}
+	return 0;
+}
+
+bool GetDate(struct date *p_in)
+{
+	extern struct month allmonths[12];	//declare external static identifier
+	int ret;				//value returned by scanf()
+	puts("input day month year, separated by space:");
+	ret=scanf( "%d %s %d" , &p_in->day_in, p_in->month_in_str, &p_in->year_in );
+	ConsumeLine();
+	if( ret!=3 )
+	{
+		puts("wrong format.");
+		return false;
+	}
+	SetFebDay(p_in->year_in);		//set days of Feb based on input year
+	p_in->month_in=WhichMonth(p_in->month_in_str);//set input month number
+	if( p_in->month_in==0 )
+	{
+		puts("wrong month input.");
+		return false;
+	}
+	if( p_in->day_in < 1 || p_in->day_in > allmonths[p_in->month_in-1].days )//check for validity of input day of input month
+	{
+		printf("wrong day for %s of %d\n", p_in->month_in_str, p_in->year_in);
+		return false;
+	}
+	return true;
+}
+
+void ToLower(char * str)
+{
+	while( *str )
+	{
+		*str=tolower(*str);
+		str++;
+	}
+}
+
+int WhichMonth(char * month_str)
+{
+	int i;
+	ToLower(month_str);
+	for( i=0 ; i<12 ; i++ )
+	{
+		if( strcmp(allmonths[i].name, month_str)==0 || strcmp(allmonths[i].abbr, month_str)==0 )//match fullname or abbr.
+		{
+			return i+1;
+		}
+	}
+	return 0;
+}
+
+int sum_days(struct date *p_in)
+{
+	extern struct month allmonths[12];
+	int total=0;
+	int i;
+	for( i=0 ; i<p_in->month_in-1 ; i++ )
+	{
+		total+=allmonths[i].days;
+	}
+	total+=p_in->day_in;
+
+	return total;
+}
+
+bool LeapYearQ(int year)	//leap year algorithm
+{
+	bool leap;
+	if( year%4!=0 )
+	{
+		leap=0;
+	}
+	else if( year%100!=0 )
+	{
+		leap=1;
+	}
+	else if( year%400!=0 )
+	{
+		leap=0;
+	}
+	else
+	{
+		leap=1;
+	}
+	return leap;
+}
+
+void SetFebDay(int year)
+{
+	extern struct month allmonths[12];
+	if( LeapYearQ(year) )
+	{
+		allmonths[1].days=29;
+	}
+	else
+	{
+		allmonths[1].days=28;
+	}
+}
+
+void ConsumeLine(void)
+{
+	while( getchar()!='\n' )
+	{
+		continue;
+	}
+}
+  \end{verbatim}
+\end{solution}
+
+\begin{question}
+  A function to prints the book descriptions in
+  the order entered, then alphabetized by title, and then in order of increased value.
+\end{question}
+\begin{solution}
+  \begin{verbatim}
+struct book {		/* set up book template */
+	char title[MAXTITL];
+	char author[MAXAUTL];
+	float value;
+};
+
+void PrintSorted(struct book *p_books, int count, int (*pfunc)(struct book *, struct book *));
+int CompareNothing(struct book * ptr1, struct book * ptr2);
+int CompareAlpha(struct book * ptr1, struct book * ptr2);
+int ComparePrice(struct book * ptr1, struct book * ptr2);
+
+void PrintSorted(struct book *p_books, int count, int (*pfunc)(struct book *, struct book *))
+{
+	struct book *ptrs[count];
+	struct book *temp;
+	int i,j;
+	for( i=0 ; i<count ; i++ )
+	{
+		ptrs[i]=p_books+i;
+	}
+
+	for( i=0 ; i<count-1 ; i++ )
+	{
+		for( j=i+1 ; j<count ; j++ )
+		{
+			if( (*pfunc)(ptrs[i], ptrs[j])>0 )
+			{
+				temp=ptrs[j];
+				ptrs[j]=ptrs[i];
+				ptrs[i]=temp;
+			}
+		}
+	}
+	
+	for (i = 0; i < count; i++)
+		printf("%s by %s: $%.2f\n",ptrs[i]->title, ptrs[i]->author, ptrs[i]->value);
+}
+
+int CompareNothing(struct book * ptr1, struct book * ptr2)
+{
+	return -1;	//return any negative value to prevent swapping, so that the original order is preserved.
+}
+
+int CompareAlpha(struct book * ptr1, struct book * ptr2)
+{
+	return strcmp(ptr1->title, ptr2->title);
+}
+
+int ComparePrice(struct book * ptr1, struct book * ptr2)
+{
+	return ptr1->value > ptr2->value;
+}
+  
+  \end{verbatim}
+\end{solution}
+
+\begin{question}
+The Colossus Airlines fleet consists of one plane with a seating capacity of 12. It makes
+one flight daily. Write a seating reservation program with the following features:
+a. The program uses an array of 12 structures. Each structure should hold a seat
+identification number, a marker that indicates whether the seat is assigned, the last
+name of the seat holder, and the first name of the seat holder.
+b. The program displays the following menu:
+To choose a function, enter its letter label:
+a) Show number of empty seats
+b) Show list of empty seats
+c) Show alphabetical list of seats
+d) Assign a customer to a seat assignment
+e) Delete a seat assignment
+f) Quit
+c. The program successfully executes the promises of its menu. Choices d) and e)
+require additional input, and each should enable the user to abort an entry.
+d. After executing a particular function, the program shows the menu again, except
+for choice f).
+e. Data is saved in a file between runs. When the program is restarted, it first loads in
+the data, if any, from the file.
+
+Colossus Airlines acquires a second plane (same capacity) and expands
+its service to four flights daily (Flights 102, 311, 444, and 519). Expand the program to
+handle four flights. Have a top-level menu that offers a choice of flights and the option
+to quit. Selecting a particular flight should then bring up a menu similar to that of
+exercise 8. However, one new item should be added: confirming a seat assignment. Also,
+the quit choice should be replaced with the choice of exiting to the top-level menu. Each
+display should indicate which flight is currently being handled. Also, the seat assignment
+display should indicate the confirmation status.
+\end{question}
+\begin{solution}
+  \begin{verbatim}
+#include <stdio.h>
+#include <stdbool.h>
+
+#define NUM 12
+#define LEN 40
+#define FLT 4
+
+struct seat {
+	bool assigned;
+	char last[LEN];
+	char first[LEN];
+};
+
+struct seat flight[FLT][NUM];
+
+char *flightnumber[FLT]={"102", "311", "444", "519"};
+
+char GetTopMenuItem(void);
+char Get2ndMenuItem(int num);
+int EmptySeatNumber(struct seat *allseats, int n, int num);
+void EmptySeatList(struct seat *allseats, int n, int num);
+void ConsumeLine(void);
+void AssignSeat(struct seat *allseats, int num);
+void DeleteSeat(struct seat *allseats, int num);
+void SwitchAction(int num, char ch);
+void ReadFromFile(struct seat (*flight)[NUM]);
+void SaveToFile(struct seat (*flight)[NUM]);
+
+int main(void)
+{
+	char input_top, input_2nd;
+	ReadFromFile(flight);
+	while( (input_top=GetTopMenuItem())!='e' )
+	{
+		while( (input_2nd=Get2ndMenuItem(input_top-'a'))!='f' )
+		{
+			SwitchAction(input_top-'a', input_2nd);
+		}
+	}
+	SaveToFile(flight);
+	return 0;
+}
+
+char GetTopMenuItem(void)
+{
+	char input;
+	puts("Choose a flight:");
+	printf("(a) %s (b) %s (c) %s (d) %s (e) quit\n", flightnumber[0], flightnumber[1], flightnumber[2], flightnumber[3]);
+	scanf( "%c" , &input );
+	ConsumeLine();
+	return input;
+}
+
+char Get2ndMenuItem(int num)
+{
+	char input;
+	printf("To choose a function for flight %s, enter its letter label:\n", flightnumber[num]);
+	puts("a) Show number of empty seats");
+	puts("b) Show list of empty seats");
+	puts("c) Show alphabetical list of seats");
+	puts("d) Assign a customer to a seat assignment");
+	puts("e) Delete a seat assignment");
+	puts("f) Return");
+	scanf( "%c" , &input );
+	ConsumeLine();
+	return input;
+}
+
+int EmptySeatNumber(struct seat *allseats, int n, int num)
+{
+	int total=0;
+	int i;
+	for( i=0 ; i<n ; i++ )
+	{
+		if( allseats[i].assigned==false )
+		{
+			total++;
+		}
+	}
+	printf( "empty seat %d at flight %s\n" , total, flightnumber[num] );
+	return total;
+}
+
+void EmptySeatList(struct seat *allseats, int n, int num)
+{
+	int i;
+	if( EmptySeatNumber(allseats, NUM, num)==0 )
+	{
+		printf( "No available seat on %s.\n" , flightnumber[num] );
+	}
+	else
+	{
+		printf( "There are available seats on %s.\n" , flightnumber[num] );
+		for( i=0 ; i<n ; i++ )
+		{
+			if( allseats[i].assigned==false )
+			{
+				printf( "No. %d  " , i+1 );
+			}
+			if( (i+1)%2==0 )
+			{
+				putchar('\n');
+			}
+		}
+	}
+}
+
+void ConsumeLine(void)
+{
+	while( getchar()!='\n' )
+	{
+		continue;
+	}
+}
+
+void AssignSeat(struct seat *allseats, int num)
+{
+	int number;
+	char ch;
+	puts("input desired seat number:");
+	while( scanf("%d", &number)==1 )
+	{
+		ConsumeLine();
+		if( allseats[number-1].assigned==true )
+		{
+			printf("sorry on flight %s the seat is already taken.", flightnumber[num]);
+			puts("(a) input another seat, or (b) list available seats.");
+			scanf( "%c" , &ch );
+			ConsumeLine();
+			switch ( ch )
+			{
+				case 'a' :
+					puts("input desired seat number:");
+					continue;
+				case 'b' :
+					EmptySeatList(allseats, NUM, num);
+					puts("input desired seat number:");
+					continue;
+				default :
+					puts("error in AssignSeat.");
+					break;
+			}
+		}
+		else
+		{
+			puts("input your last & first name:");	
+			scanf( "%s %s" , allseats[number-1].last, allseats[number-1].first );
+			ConsumeLine();
+			allseats[number-1].assigned=true;
+			printf("your seat is set on flight %s.\n", flightnumber[num]);
+			break;
+		}
+	}
+}
+
+void DeleteSeat(struct seat *allseats, int num)
+{
+	int number;
+	char ch;
+	puts("the number of seat you want to delete:");
+	scanf( "%d" , &number );
+	ConsumeLine();
+	if( allseats[number-1].assigned==false )
+	{
+		puts("sorry, the seat is not taken yet.");
+	}
+	else
+	{
+		printf( "the seat on flight %s is assigned to %s %s.\nAre you sure about deleting it?" , flightnumber[num], allseats[number-1].first, allseats[number-1].last);
+		scanf( "%c" , &ch );
+		ConsumeLine();
+		if( ch=='y' )
+		{
+			allseats[number-1].assigned=false;
+			printf("ok, seat on flight %s deleted.", flightnumber[num]);
+		}
+	}
+}
+
+void SwitchAction(int num, char ch)
+{
+	switch ( ch )
+	{
+		case 'a' :
+			EmptySeatNumber(flight[num], NUM, num);
+			break;
+		case 'b' :
+			EmptySeatList(flight[num], NUM, num);
+			break;
+		case 'c' :
+			break;
+		case 'd' :
+			AssignSeat(flight[num], num);
+			break;
+		case 'e' :
+			DeleteSeat(flight[num], num);
+			break;
+		default :
+			puts("error in SwitchAction");
+			break;
+	}
+}
+
+void ReadFromFile(struct seat (*flight)[NUM])
+{
+	FILE *pf;
+	if( (pf=fopen("data", "rb"))!=NULL )
+	{
+		fread(flight, sizeof(struct seat [NUM]), FLT, pf);
+		fclose(pf);
+	}
+}
+
+void SaveToFile(struct seat (*flight)[NUM])
+{
+	FILE *pf;
+	pf=fopen("data", "wb");
+	fwrite(flight, sizeof(struct seat [NUM]), FLT, pf);
+	fclose(pf);
+}
+  \end{verbatim}
+\end{solution}
+
+\begin{question}
+  Write a function called transform() that takes four arguments: the name of a source
+  array containing type double data, the name of a target array of type double, an int
+  representing the number of array elements, and the name of a function (or, equivalently,
+  a pointer to a function). The transform() function should apply the indicated function
+  to each element in the source array, placing the return value in the target array. For
+  example, the call
+  transform(source, target, 100, sin);
+  would set target[0] to sin(source[0]), and so on, for 100 elements. Test the function
+  in a program that calls transform() four times, using two functions from the math.h
+  library and two suitable functions of your own devising as arguments to successive calls
+  of the transform() function.
+\end{question}
+\begin{solution}
+  \begin{verbatim}
+#include <stdio.h>
+#include <math.h>
+
+void Map(double (*pfunc)(double), const double *source, double *target, int n);
+double Add(const double n);
+double Square(const double n);
+
+int main(void)
+{
+	double source[10]={0,1.7,3.14};
+	double target[10];
+	double (*pfunc[4])(double)={sin, cos, Add, Square};
+	int i,j;
+	for( i=0; i<4; i++)
+	{
+		Map(pfunc[i], source, target, 3);
+		for( j=0 ; j<3 ; j++ )
+		{
+			printf( "%f " , target[j] );
+		}
+		putchar('\n');
+	}
+
+
+	return 0;
+}
+void Map(double (*pfunc)(double), const double *source, double *target, int n)
+{
+	int i;
+	for( i=0 ; i<n ; i++ )
+	{
+		target[i]=(*pfunc)(source[i]);
+	}
+}
+
+double Add(const double n)
+{
+	return n+1;
+}
+
+double Square(const double n)
+{
+	return n*n;
+}
+  \end{verbatim}
+\end{solution}
+
+\begin{question}
+  A word counting program, with occurrence number of each word.
+  Using basic binary search tree data structure and algorithms.
+\end{question}
+\begin{solution}
+  The tree package consists of \verb|tree.h| and \verb|tree.c| two files. The main file deals with meta control procedures. The tree package has been slightly modified to better fit the word-related data structure.
+  \begin{verbatim}
+/*-----------------tree.h--------------*/
+#ifndef _TREE_H_
+#define _TREE_H_
+
+#include <stdbool.h>
+
+/*data structure:
+ * basic binary search tree (unbalanced)
+ *data object components:
+ * Trnode: constituting element of a tree
+    	   1. item
+	   2. pointer to left subtree/subnode
+	   3. pointer to right subtree/subnode
+ * Item: hold the informations about a word being counted
+           1. pointer to word (because the length of a word is variable, we store pointer-to-word to make sure the size of item is fixed.)
+           2. word count
+ * Tree: a structure keep track of the root of tree and its size  	   
+ 	   1. pointer to root node
+   	   2. node count
+ */
+struct word_data {
+	char *pword;
+	int count;
+};
+typedef struct word_data Item;
+
+struct node {
+	Item item;
+	struct node *left;
+	struct node *right;
+};
+typedef struct node Trnode;
+
+struct tree {
+	Trnode *root;
+	int size;
+};
+typedef struct tree Tree;
+
+void InitializeTree(Tree *ptree);
+bool TreeIsEmpty(const Tree *ptree);
+bool TreeIsFull(const Tree *ptree);
+int TreeItemCount(const Tree *ptree);
+Item MakeItem(const char *buffer);
+bool AddItem(const Item *pitem, Tree *ptree);
+bool InTree(const Item *pitem, const Tree *ptree);
+bool DeleteItem(Item *pitem, Tree *ptree);
+void Traverse(Tree *ptree, void (*pfunc)(Item item));
+void DeleteAll(Tree *ptree);
+
+#endif
+  \end{verbatim}
+  \begin{verbatim}
+/*-----------------tree.c--------------*/
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include "tree.h"
+
+/*the structure used by SeekItem().
+  1. `parent' points to the parent node of the node containing the `item'
+  2. `current` points to the node containing the `item'
+ */
+struct find {
+	Trnode * parent;
+	Trnode * current;
+};
+typedef struct find Find;
+
+/*------------local function prototypes--------------*/
+
+static Find SeekItem(const Item *pitem, const Tree *ptree);
+static Trnode * MakeNode(const Item *pitem);
+static void AddNode(Trnode *new_node, Trnode *root);
+static bool ToLeft(const Item *pitem_node, const Item *pitem_root);
+static bool ToRight(const Item *pitem_node, const Item *pitem_root);
+static void DeleteNode(Trnode **ppnode);
+static void InOrder(Trnode *pnode, void (*pfunc)(Item item));
+static void DeleteAllNodes(Trnode * pnode);
+
+/*------------definitions of tree package interface functions---------*/
+
+void InitializeTree(Tree *ptree)
+{
+	ptree->root=NULL;
+	ptree->size=0;
+}
+
+bool TreeIsEmpty(const Tree *ptree)
+{
+	return ptree->size==0;
+}
+
+//bool TreeIsFull(const Tree *ptree)
+//{
+//	return ptree->size==MSIZE;
+//}
+
+int TreeItemCount(const Tree *ptree)
+{
+	return ptree->size;
+}
+
+/* description: construct an `item' object from the input word in `buffer'
+ * return value: the constructed `item'*/
+Item MakeItem(const char *buffer)
+{
+	int size=strlen(buffer);
+	Item item;
+	/*to save space, we allocate the exact amount of space needed to store the word. Then store its address in Item*/
+	item.pword=(char *)malloc(size+1);
+	strcpy(item.pword, buffer);
+	item.count=1;
+	return item;
+}
+
+/*description: add item to tree.
+ *return value: `true' if successful.
+ *note: firstly seek item in tree (SeekItem()). If it's in tree, count++.
+        If it's not in tree, create a node with this item (MakeNode()), then add this node to tree (AddNode()). */
+bool AddItem(const Item *pitem, Tree *ptree)
+{
+	Trnode *new_node;
+	Find result=SeekItem(pitem, ptree);
+	if( result.current!=NULL )//if the item is already in tree, count++
+	{
+		(result.current->item.count)++;
+		return true;
+	}
+	else			  //otherwise create a node and add the node to tree
+	{
+		new_node=MakeNode(pitem);
+		if( new_node==NULL )
+		{
+			fputs("couldn't make node.\n", stderr);
+			return false;
+		}
+		if( ptree->root==NULL )//make node the root node of tree
+		{
+			ptree->root=new_node;
+		}
+		else		       //find place to add node
+		{
+			AddNode(new_node, ptree->root);
+		}
+		ptree->size++;
+		return true;
+	}
+}
+
+bool InTree(const Item *pitem, const Tree *ptree)
+{
+	return ((SeekItem(pitem, ptree)).current)!=NULL;
+}
+
+/* description: delete `item' in `tree'
+ * return value: true if successful
+ * note: to delete an item, the containing node has to be deleted. Then the left and right subtrees of it and its parent node has to be connected. These details are dealt with in DeleteNode()*/
+bool DeleteItem(Item *pitem, Tree *ptree)
+{
+	Find result=SeekItem(pitem, ptree);
+	if( result.current==NULL )//didn't find the item
+	{
+		return false;
+	}
+	else if( result.parent==NULL )//current!=NULL and parent==NULL, means the item is at root node
+	{
+		DeleteNode(&ptree->root);
+	}
+	/*we must determine in which subtree of parent node contains the item/the node, because we need that pointer to connect the rest of subtree after the node is deleted. And to modify the value of the pointer, we need to pass the address of the pointer*/
+	else if( result.current==result.parent->left )
+	{
+		DeleteNode(&result.parent->left);
+	}
+	else
+	{
+		DeleteNode(&result.parent->right);
+	}
+	ptree->size--;
+	return true;
+}
+
+/* description: traverse tree and apply `pfunc' to each item.
+ * note: the traversing is performed recursively by InOrder()*/
+void Traverse(Tree *ptree, void (*pfunc)(Item item))
+{
+	if( ptree->root!=NULL )
+	{
+		InOrder(ptree->root, pfunc);
+	}
+}
+
+/* description: delete tree, reset everything
+ * note: deletion of all nodes are handled in DeleteAllNodes()*/
+void DeleteAll(Tree *ptree)
+{
+	if( ptree->root!=NULL )
+	{
+		DeleteAllNodes(ptree->root);
+	}
+	ptree->root=NULL;
+	ptree->size=0;
+}
+
+/*-------------------local functions-------------------*/
+
+//the function can also be implemented recursively
+static Find SeekItem(const Item *pitem, const Tree *ptree)
+{
+	Find result;
+	result.parent=NULL;
+	result.current=ptree->root;
+
+	if( result.current==NULL )//if root doesn't exist
+	{
+		return result;
+	}
+
+	/*determine to left or to right at every node,
+	 * if neither way to go, the node contains the item to be found*/
+	while( result.current!=NULL )
+	{
+		if( ToLeft(pitem, &(result.current->item)) )
+		{
+			result.parent=result.current;
+			result.current=result.current->left;
+		}
+		else if( ToRight(pitem, &(result.current->item)) )
+		{
+			result.parent=result.current;
+			result.current=result.current->right;
+		}
+		else
+			break;
+	}
+	return result;
+}
+
+static Trnode * MakeNode(const Item *pitem)
+{
+	Trnode *new_node=(Trnode *)malloc(sizeof(Trnode));
+	if( new_node!=NULL )
+	{
+		new_node->item=*pitem;
+		new_node->left=NULL;
+		new_node->right=NULL;
+	}
+	return new_node;
+}
+
+/*recursively find correct place for adding node*/
+static void AddNode(Trnode *new_node, Trnode *root)
+{
+	if( ToLeft(&new_node->item, &root->item) )
+	{
+		if( root->left==NULL )
+		{
+			root->left=new_node;
+		}
+		else
+		{
+			AddNode(new_node, root->left);
+		}
+	}
+	else if( ToRight(&new_node->item, &root->item) )
+	{
+		if( root->right==NULL )
+		{
+			root->right=new_node;
+		}
+		else
+		{
+			AddNode(new_node, root->right);
+		}
+	}
+	else
+	{
+		fputs("location error in AddNote.\n", stderr);
+	}
+}
+
+//if items are word-dominated, use strcmp()
+static bool ToLeft(const Item *pitem_new, const Item *pitem_root)
+{
+	if( strcmp(pitem_new->pword, pitem_root->pword)<0 )
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+static bool ToRight(const Item *pitem_new, const Item *pitem_root)
+{
+	if( strcmp(pitem_new->pword, pitem_root->pword)>0 )
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+/*if the node to be deleted doesn't have left subtree, attach its right subtree to the parent node, replacing the node to be deleted. Vice versa. Then free memory of both `pword' and the node.
+ *if the node to be deleted has two subtrees, attach its left subtree to parent node, find lowest node in left subtree to attach the right subtree. Then free memory of both `pword' and the node.*/
+static void DeleteNode(Trnode **ppnode)
+{
+	Trnode *temp;
+	if( (*ppnode)->left==NULL )
+	{
+		temp=*ppnode;
+		(*ppnode)=(*ppnode)->right;
+		free(temp->item.pword);
+		free(temp);
+	}
+	else if( (*ppnode)->right==NULL )
+	{
+		temp=*ppnode;
+		*ppnode=(*ppnode)->left;
+		free(temp->item.pword);
+		free(temp);
+	}
+	else
+	{
+		temp=(*ppnode)->left;
+		//find the lowest node in left subtree to attach the right node
+		while( temp->right!=NULL )
+		{
+			temp=temp->right;
+		}
+		temp->right=(*ppnode)->right;
+		temp=*ppnode;
+		*ppnode=(*ppnode)->left;
+		free(temp);
+	}
+}
+
+/*apply `pfun' recursively in the order of left-item-right, bottom-up*/
+static void InOrder(Trnode *pnode, void (*pfunc)(Item item))
+{
+	if( pnode->left!=NULL )
+	{
+		InOrder(pnode->left, pfunc);
+	}
+	(*pfunc)(pnode->item);
+	if( pnode->right!=NULL )
+	{
+		InOrder(pnode->right, pfunc);
+	}
+}
+
+/*similar with InOrder(), but the left and right subtree should be visited and freed before item, otherwise will lose track of right subtree*/
+static void DeleteAllNodes(Trnode * pnode)
+{
+	if( pnode->left!=NULL )
+	{
+		DeleteAllNodes(pnode->left);
+	}
+	if( pnode->right!=NULL )
+	{
+		DeleteAllNodes(pnode->right);
+	}
+	//before freeing node, we should firstly free space occuped by word.
+	free(pnode->item.pword);
+	free(pnode);
+}
+  \end{verbatim}
+  \begin{verbatim}
+/*-----------word_counting.c--------------*/
+#include <stdio.h>
+#include <ctype.h>
+#include <string.h>
+#include <stdlib.h>
+#include "tree.h"
+/*---for time---*/
+#include <time.h>
+/*--------------*/
+
+#define MWLEN 30	//the maximum size of "sane" English words
+
+/*-----------------function prototypes-------------------*/
+
+/* description: open `filename' for reading.
+ * return value: Return pointer to file when success.
+ * note: Gather details about opening a file in this function*/
+static FILE * OpenFile(char *filename);
+/* description: input a single word from `pfile' into `buffer'.
+ * return value: Valid input return `true', otherwise `false'.
+ * note: Deal with details about filtering words among ascii sequences*/
+static bool InputWord(FILE *pfile, char *buffer);
+/* description: show the counting of a word
+ * note: the `item' object has information needed*/
+static void DisplayCounts(Item item);
+/* description: convert string to lowercase*/
+static void ToLower(char *str);
+
+/*------------------------main()-----------------------*/
+
+int main(int argc, char *argv[])
+{
+	FILE *pfile;
+	char buffer[MWLEN];
+	Item item;
+	Tree wordtree;
+
+	if( argc!=2 )
+	{
+		fprintf(stderr, "%s: wrong usage.\n" , argv[0]);
+		exit(EXIT_FAILURE);
+	}
+
+	pfile=OpenFile(argv[1]);
+
+	InitializeTree(&wordtree);
+
+	/*---for time---*/
+	clock_t begin, end;
+	begin=clock();
+	/*--------------*/
+
+	while( InputWord(pfile, buffer) )
+	{
+		ToLower(buffer);
+		item=MakeItem(buffer);
+		AddItem(&item, &wordtree);
+	}
+
+	/*---for time---*/
+	end=clock();
+	/*--------------*/
+
+	fclose(pfile);
+
+	Traverse(&wordtree, DisplayCounts);
+
+	DeleteAll(&wordtree);
+
+	/*---for time---*/
+	printf( "time: %f\n" , (double)(end-begin)/CLOCKS_PER_SEC );	//clock_t type is integral type
+	/*--------------*/
+
+	return 0;
+}
+
+/*-------------------function definitions----------------*/
+
+static FILE * OpenFile(char *filename)
+{
+	FILE *pfile;
+	if( (pfile=fopen(filename, "r"))==NULL )
+	{
+		fprintf(stderr, "error in opening file %s for reading.\n" , filename);
+		exit(EXIT_FAILURE);
+	}
+	else
+	{
+		return pfile;
+	}
+}
+
+static bool InputWord(FILE *pfile, char *buffer)
+{
+	char ch;
+	int i;
+	/*find the first alphabetic char*/
+	while( !isalpha(ch=getc(pfile)) )
+	{
+		if( ch==EOF )	//special treatment for EOF
+		{
+			break;
+		}
+		else
+		{
+			continue;
+		}
+	}
+	/*fill buffer, until `i' reaching maximum or encountering non-alphabetic char. Don't forget the first char which is generated in the while loop above*/
+	for( i=0 ; i<MWLEN-1 && isalpha(ch) ; i++ )
+	{
+		buffer[i]=ch;
+		ch=getc(pfile);
+	}
+	buffer[i]='\0';		//terminate string with null
+	/*if the non-alphabetic char is EOF, signal the main() to end input*/
+	if( ch!=EOF )
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+static void ToLower(char *str)
+{
+	while( *str!='\0' )
+	{
+		*str=tolower(*str);
+		str++;
+	}
+}
+
+static void DisplayCounts(Item item)
+{
+	/*here for uniformity, we construct format string dynamically at runtime using sprintf()*/
+	char format[10];
+	sprintf(format, "%%%ds:%%-d\n" , MWLEN);
+	printf( format , item.pword, item.count );
+}
+  \end{verbatim}
+\end{solution}

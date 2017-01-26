@@ -1,0 +1,73 @@
+\documentclass{article}
+%
+\usepackage[a4paper]{geometry}
+\usepackage{graphicx}
+\usepackage{fontspec}
+\usepackage{xeCJK}
+\usepackage[titletoc,title]{appendix}
+\usepackage[colorlinks]{hyperref}
+\usepackage[Q=yes]{examplep}
+\usepackage{enumitem}
+\usepackage{listings}
+\usepackage{gensymb}%for \celsius
+\usepackage{setspace}
+%
+\setlist[description]{leftmargin=8em, style=nextline}
+%
+%\setmainfont{Linux Libertine O}
+\setmainfont{Times New Roman}
+\setCJKmainfont[BoldFont={SimHei},ItalicFont={KaiTi}]{SimSun}
+\setCJKmonofont{FangSong}
+\setCJKsansfont{YouYuan}
+%
+\lstset{columns=flexible,basicstyle=\normalfont\ttfamily}
+%
+\renewcommand{\abstractname}{摘要}
+%
+%
+\onehalfspacing
+\begin{document}
+LaTeX\footnote{发音: /ˈleɪtɛx/} 是一种高质量文档标记语言, 属于所见即所想 (WYSIWYM) 系统\footnote{相应地, Word 属于所见即所得 (WYSIWYG) 系统.}, 在技术领域使用很广, \emph{是一种主流的文档制作系统}.
+
+有大量的例子可以体现 {\LaTeX} 的广泛使用. 以下举几个比较近的例子:
+\begin{enumerate}
+  \item 很多程序和语言的文档是用 {\LaTeX} 写成的. 例如:
+    \begin{itemize}
+      \item PostgreSQL 数据库的官方使用文档. 文档链接: \url{http://www.postgresql.org/files/documentation/pdf/9.4/postgresql-9.4-A4.pdf}
+      \item GNU Compiler Collection (GCC) 编译器的官方使用文档. 文档链接: \url{https://gcc.gnu.org/onlinedocs/gcc-4.9.2/gcc.pdf}
+    \end{itemize}
+  \item 很多书籍是使用 {\LaTeX} 写成的. 例如:
+    \begin{itemize}
+      \item Introduction to Algorithms (算法导论).
+      \item Computer Systems: A Programmer's Perspective (深入理解计算机系统).
+    \end{itemize}
+\end{enumerate}
+
+自从学会使用 {\LaTeX} 写文档, 我很少用 word 写东西. 我为什么这么选择? 从根本上来说, 最关键的是以下几个原因:
+\begin{enumerate}
+  \item 高效率, 节省时间. 能够以很少的时间投入得到阅读性很好的文档输出.\footnote{很明显, 浪费时间就是浪费生命.}
+  \item 写作时专注于文章内容和文章结构, 不会被文档格式等不重要的东西打搅写作思路. 预设的文档格式将由 {\LaTeX} 编译器在编译时自动生成.
+  \item 优雅而简洁 (elegant and simple). 这和我喜欢 Linux、Vim 的原因相同.\footnote{优雅和简洁的背后仍然是高效率带来的畅快感.}
+\end{enumerate}
+
+此外, 其他人已经总结出来 {\LaTeX} 与 word 之间的优劣对比, 见下.
+一般而言, {\LaTeX} 相对于所见即所得系统有如下优点:
+\begin{itemize}
+  \item 高质量,它制作的版面看起来更专业,数学公式尤其赏心悦目。
+  \item 结构化,它的文档结构清晰。
+  \item 批处理,它的源文件是文本文件,便于批处理,虽然解释 (parse) 源文
+    件可能很费劲。
+  \item 跨平台,它几乎可以运行于所有电脑硬件和操作系统平台。
+  \item 免费,多数 TEX 软件都是免费的,虽然也有一些商业软件。
+\end{itemize}
+相应地, {\LaTeX} 由于其工作流程,设计原则,资源的缺乏,以及历史局限
+性等原因也存在一些缺陷:
+\begin{itemize}
+  \item 语法不如 HTML 和 XML 严谨、清晰。
+  \item 制作过程繁琐,有时需要反复编译,不能直接或实时看到结果。
+  \item 宏包鱼龙混杂,水准参差不齐,风格不够统一。
+  \item 排版样式比较统一,但因而缺乏灵活性。
+  \item 相对于商业软件,用户支持不够好,文档不完善。
+\end{itemize}
+其他对比, 可参见 \url{tex.stackexchange.com/questions/1756/why-should-i-use-latex}
+\end{document}

@@ -1,0 +1,133 @@
+# Design pattern for shell script
+* 将要实现的功能分类, 提炼出功能模块.
+* 从各种要实现的功能中抽象出一般化的辅助组件.
+* 将各个功能模块分别在独立的脚本中实现.
+	- 实现的方法是: 在脚本中构建需要的变量; 将所需功能构建为函数, 而不要在脚本中直接进行操作.
+* 在主控脚本中 source 各个功能脚本, 并执行各个功能函数.
+* 函数的返回值用于判断函数 (即命令) 的运行状态, 不能返回函数的计算结果.
+* 函数与环境交互的几种方式:
+    - 函数内直接使用或修改全局量, 不显性传入或传出. 常用于在程序中具有特定含义的一些量的
+      使用和操纵. 缺点是难以维护.
+	- 为了体现变量在函数中被修改, 可以使用 nameref 或 `{!var}` indirection 语法, 明显地将
+      变量传入函数, 再进行赋值等操作.
+	- 将输入以 positional params 传入函数, 结果输出至 stdout, 然后用 `$()` 之类的结构捕获
+      函数的输出.
+    - 函数执行的状态通过 return 来返回, 成功则返回 0, 其他则返回非 0, 适当时可定义返回值
+      的意义.
+* 传入函数的变量若不是为了改变自身的值, 应尽快赋值给名字 make sense 的局域变量, 而不要一直使用 `$1, $2` 这种东西.
+* 可以用 `readonly`, `declare -r` 实现变量值、数组值和函数定义不能被更改, 类似 `const`.
+* Use XXXHandler function and `trap` to catch signal and take actions before exiting. Also, echo a message signifying that the signal is caught.
+* 你要达成什么目的就应采用什么形式: 如果一个功能适合看作是函数, 各个参数适合看作是变量, 就应使用函数的形式 `func(x,y,z)`; 若适合看作是命令, 各个参数适合看作是设置项, 就应使用命令的形式 `foo -p1 bla -p2 bla ...`.
+* For both consistency and functionality, always use `declare` to declare a variable. 注意一点, declare 是一个(built-in) 命令, 它有自己的返回值, 因此获取不到 $() 的返回值.
+* 属于统一类型的多个变量可以用 `associative array` 来统一表示. 这么做的好处一个是变量统一分类, 有实际意义的是便于循环时统一代码. 若达不到这第二个好处, 就不一定要倾向于 associative array.
+* deal carefully with rm, mv, cp. 不是因为它们危险, 而是因为如果它们默认处于 interactive mode, 那么如果不添加 `-f`, 它们会 fail fucking silently.
+* 如果需要给多个独立的变量同时赋值, 可以用 `read` 给多个变量, 结合 while 后:
+    ```
+    while read a b c d; then
+        ...
+    done < some-input
+    ```
+  类似于 python 中 `for a, b, c, d in some-input`
+* By convention, environment variables (PAGER, EDITOR, ..) and internal shell variables (SHELL, BASH_VERSION, ..) are capitalized. All other variable names should be lower case. Keeping to this convention, you can rest assured that you don't need to know every environment variable used by UNIX tools or shells in order to avoid overwriting them. If it's your variable, lowercase it. If you export it, uppercase it.
+* 当一个命令/函数的 stdout 被捕获时, 为了提示可以向 stderr 输出错误信息. 通过 `1>&2`
+* 为了对脚本尽量安全地 debug 或安全地运行, 可以 `set -e`
+* 函数最好有明确的返回值
+* 构造 associative array 是从 sed/awk 等工具中一次性返回多个值的清晰方法; 此外也可以将输出构造成 key=value 形式并结合 eval 来赋值
+* you can never be too careful dealling with `>` and `>>`, 看清楚自己用的他妈是哪个
+* never use "``" for command substitution, it's not properly nested. Use `$()`
+* 方便地输出多行信息可以使用 `cat` + here document 的方式.
+* `hash` builtin 的用处: 提高 shell 找命令的速度. 若将一个命令在 PATH 的不同路径之间移动,
+  可能需要更新 hash.
+`hash` 还可以用来临时地让某个程序可以被 shell 找到, 而无需修改 PATH.
+* 一些有助于发现变成错误、规范化流程的脚本初始设定:
+    set -o pipefail
+    shopt -s globasciiranges
+    export LC_COLLATE=C
+    unalias rm cp mv &>/dev/null || true
+* 其他常用的初始设定:
+    shopt -s extglob
+    shopt -s globstar
+* debug shell script:
+    - 执行脚本之前用 `bash -n` (或 `set -n`) 来检验有无基本 shell 语法错误
+    - 使用 `set -x` 来检验每个命令的执行情况
+    - 使用 `set -e` 来避免出错后未即使终止, 使威胁扩大.
+    - 使用 `shopt -s extdebug` 来增加 debug 强度 (相当于, `set -ET`), 并配合 trap on DEBUG,
+      RETURN, ERR 检测每层命令的执行情况
+    - 使用 `set -u` 来检查变量拼写错误等情况
+    - 使用 `caller` builtin 实现类似 python traceback 的 stack trace 效果
+        raise() {
+            declare strerr=$1
+            declare -a frame_infos
+            declare -i frame=0
+            declare frame_info
+            while frame_info=$(caller $frame); do
+                frame_infos[frame++]=$frame_info
+            done
+            ((frame=${#frame_infos[@]}-1))
+            declare info
+            echo "Traceback (most recent call last):"
+            while [[ $frame -ge 0 ]]; do
+                info=(${frame_infos[frame--]})
+                printf '  File "%s", line %s, in %s\n' "${info[2]}" "${info[0]}" "${info[1]}"
+            done
+            echo "Exception: $strerr"
+            exit 1
+        }
+    - `PS4='${BASH_SOURCE[0]}@${LINENO}(${FUNCNAME[0]}): '`
+* profile shell script:
+    - `PS4='+ $(date "+%s.%N") ${BASH_SOURCE}@${LINENO}: '`
+
+* About collating sequence and pattern matching:
+    - 设置 `export LC_COLLATE=C` 保证 collating sequence 为正常的 numeric value order.
+    - 为避免 range expression ([m-n]) 中由于 locale 导致包含非预期字符, 合适时尽量使用
+      posix character class ([:alpha:], [:lower:], etc), 而不是显性的 [a-z] 之类的 range.
+* 对于局部的或临时的或内部使用的量, 可以像 python 那样以 `_` 起始, 例如 `_cdpath`.
+* 构造 true/false 的方式以及条件分支处理方式:
+    - 对于简单的 if 条件处理, 例如只是执行一个 pipeline 或一个 compound command,
+      可以使用 && 或 || 这种 operator 构成 command list.
+      如 `true && do_something`, `false || do_something`,
+      `[[ ... ]] && something` 这比 if 条件语句高效.
+    - 对于复杂的条件分支处理, 考虑到可读性最好使用 if/else 的方式.
+    - 对于简单的 true/false flag, 可以直接将 true/false 命令赋值之. 再所需的地方执行命令.
+      也可以通过赋任意字符串表示 true, 不赋值或不定义表示 false. 通过 [[ $var ]] 来检查.
+    - 对于函数, 通过返回 0/非0 来表示返回成功/失败.
+* shell 中在可能的情况下, 和保证可读性的情况下避免使用 `for`, `while` 等循环, 因为太慢,
+  可以使用 `find`, `xargs` 之类的来代替. 意思是, 尽量将循环的流程在工具中执行, 即用 C 来
+  完成.
+* 对纯数值的比较应尽量使用 `(( ... ))` 结构.
+* 类似传递指针进函数的方式:
+    - `declare -n nameref`, 然后传递 `nameref` 进函数. 这可以完全指针化.
+    - 在函数里执行 `read "$1" <<< "$2"`, 其中 `$1` 是参数名, `$2` 是参数值.
+* dracut source is a great place to learn bash (and many more).
+* 寻找函数的定义位置:
+    ```
+    whereisfunc() {
+        declare ret=0
+        shopt -s extdebug
+        declare -F "$1" || ret=1
+        shopt -u extdebug
+        return $ret
+    }
+    ```
+
+# mock shell script
+- 我见过的 shell script 大部分都很 messy.
+- 函数返回值问题.
+- 默认全局变量, 没有静态函数 (file scope with internal linkage)
+- 只有整数运算.
+- 奇怪的语法.
+	- if then fi, while do done, case esac, test operators.
+- true/false, success/failure 0,1
+- 空格不能随便加. sef=, { sef; }
+- 分号不能忘
+- until loop? Are you kidding me?
+- # comment 不能随便放置在行末
+- no (decent) debugger (bash -x)
+- shell script 等价于将 script 一行一行地从 shell 里敲进去, 但是你却不能直接复制一个 indent 好的脚本进命令行来执行. 因为 `<Tab>` completion.
+- awkward arithmetic comparison in `[ ]`.
+- how many ways to declare a variable, or even not to do that?
+	- `declare`
+	- `local`
+	- `readonly`
+	- not at all
+

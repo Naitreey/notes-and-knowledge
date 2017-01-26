@@ -1,0 +1,933 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 9.0' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       157,          7]
+NotebookDataLength[     27942,        924]
+NotebookOptionsPosition[     21977,        751]
+NotebookOutlinePosition[     24852,        821]
+CellTagsIndexPosition[     24809,        818]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+
+Cell[CellGroupData[{
+Cell["Options for Dynamic objects", "Subtitle",
+ CellChangeTimes->{{3.614467880051259*^9, 3.614467889661768*^9}}],
+
+Cell[CellGroupData[{
+
+Cell["TrackedSymbols", "Section",
+ CellChangeTimes->{{3.606801110861063*^9, 3.606801115377021*^9}}],
+
+Cell[TextData[{
+ "an option to ",
+ Cell[BoxData[
+  FormBox["Refresh", TraditionalForm]]],
+ " , ",
+ Cell[BoxData[
+  FormBox["Manipulate", TraditionalForm]]],
+ " and related functions that specifies which symbols should trigger updates \
+when their values are changed."
+}], "ItemParagraph",
+ CellChangeTimes->{3.614463248547283*^9}],
+
+Cell[TextData[{
+ "an option to ",
+ Cell[BoxData[
+  FormBox["Refresh", TraditionalForm]]],
+ " , ",
+ Cell[BoxData[
+  FormBox["Manipulate", TraditionalForm]]],
+ " and related functions that specifies which symbols should trigger updates \
+when their values are changed."
+}], "Text",
+ CellChangeTimes->{{3.6068011267373676`*^9, 3.6068011769141817`*^9}, {
+  3.6144631467093005`*^9, 3.6144631561321497`*^9}}],
+
+Cell[TextData[{
+ "When a list of symbols is given, the typical usage is ",
+ Cell[BoxData[
+  RowBox[{"TrackedSymbols", ":>", 
+   RowBox[{"{", 
+    RowBox[{"x", ",", "y", ",", "z", ",", "..."}], "}"}]}]]],
+ " ."
+}], "Text",
+ CellChangeTimes->{{3.606801184243116*^9, 3.6068012338649406`*^9}}]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Initialization", "Section",
+ CellChangeTimes->{{3.6068012513197727`*^9, 3.606801254070066*^9}}],
+
+Cell[TextData[{
+ "an option for ",
+ Cell[BoxData[
+  FormBox["Dynamic", TraditionalForm]]],
+ " , ",
+ Cell[BoxData[
+  FormBox["DynamicModule", TraditionalForm]]],
+ " , ",
+ Cell[BoxData[
+  FormBox["Manipulate", TraditionalForm]]],
+ " and related constructs that specifies an expression to be evaluated when \
+the construct is first displayed."
+}], "ItemParagraph",
+ CellChangeTimes->{3.6144639415743427`*^9}],
+
+Cell[TextData[{
+ "The typical usage is ",
+ Cell[BoxData[
+  RowBox[{"Initialization", ":>", "expr"}]]],
+ " ."
+}], "Text",
+ CellChangeTimes->{{3.6068013384065495`*^9, 3.6068013591587152`*^9}}],
+
+Cell[CellGroupData[{
+
+Cell["Some notes", "Subsection",
+ CellChangeTimes->{{3.6068013691441607`*^9, 3.6068013707379866`*^9}}],
+
+Cell[TextData[{
+ "\:5bf9\:4e8e ",
+ Cell[BoxData[
+  FormBox["TrackedSymbols", TraditionalForm]]],
+ " \:548c ",
+ Cell[BoxData[
+  FormBox["Initialization", TraditionalForm]]],
+ " , \:8981\:7528 ",
+ Cell[BoxData[
+  FormBox[":>", TraditionalForm]]],
+ " \:7684\:539f\:56e0:"
+}], "Text",
+ CellChangeTimes->{{3.6068016670310764`*^9, 3.606801761258953*^9}}],
+
+Cell[TextData[{
+ "\:8fd9\:4e24\:4e2a\:9009\:9879\:76ee\:7684\:662f\:4fdd\:8bc1\:52a8\:6001\
+\:5355\:5143\:6bcf\:6b21\:663e\:793a\:65f6\:90fd\:6709\:4e00\:4e2a\:56fa\:5b9a\
+\:7684\:521d\:59cb\:72b6\:6001, \:56e0\:6b64\:5b83\:4eec\:7684\:503c\:5e94\
+\:8be5\:63a8\:8fdf\:5230\:52a8\:6001\:7ed3\:6784\:663e\:793a\:7684\:65f6\:5019\
+\:6267\:884c, \:5e76\:4e14\:4e00\:65e6\:8fd9\:4e2a\:52a8\:6001\:7ed3\:6784\
+\:91cd\:65b0\:663e\:793a\:5c31\:8981\:6267\:884c (\:6bd4\:5982\:663e\:793a\
+\:8f93\:51fa\:65f6, \:6253\:5f00 notebook \:65f6, copy & paste \:81f3\:65b0\
+\:4f4d\:7f6e\:540e). \:4e3a\:4e86\:63a8\:8fdf\:8d4b\:503c, \:9700\:8981 ",
+ Cell[BoxData[
+  FormBox[":>", TraditionalForm]]],
+ " . \:8bbe\:60f3\:91c7\:7528 ",
+ Cell[BoxData[
+  FormBox["->", TraditionalForm]]],
+ ", \:5219\:8d4b\:503c\:66ff\:6362\:4f1a\:5728\:8f93\:5165\:81f3 kernel \
+\:540e\:5c31\:6267\:884c, \:4ee5\:540e\:4e0d\:518d\:6539\:53d8, \:8fd9\:5c31\
+\:8fbe\:4e0d\:5230\:6bcf\:6b21\:521d\:59cb\:5316\:7684\:76ee\:7684."
+}], "Text",
+ CellChangeTimes->{{3.6068017757057133`*^9, 3.606801820850893*^9}}]
+}, Open  ]]
+}, Open  ]]
+}, Closed]],
+
+Cell[CellGroupData[{
+
+Cell["Options for Tracing expressions", "Subtitle",
+ CellChangeTimes->{{3.6180295669673796`*^9, 3.618029591167934*^9}}],
+
+Cell[CellGroupData[{
+
+Cell["TraceOn", "Section",
+ CellChangeTimes->{{3.6180296111404305`*^9, 3.6180296126375885`*^9}}],
+
+Cell[TextData[{
+ "is an option for ",
+ Cell[BoxData["Trace"], "InlineFormula"],
+ " and related functions which specifies when tracing should be switched on. "
+}], "ItemParagraph",
+ CellChangeTimes->{{3.6180297283723755`*^9, 3.618029741652897*^9}}],
+
+Cell[TextData[{
+ "With the setting ",
+ Cell[BoxData[
+  RowBox[{"TraceOn", "->", 
+   StyleBox["patt", "TI"]}]], "InlineFormula"],
+ ", ",
+ Cell[BoxData["Trace"], "InlineFormula"],
+ " and related functions do not start tracing until they encounter \
+expressions to evaluate which match the pattern ",
+ Cell[BoxData[
+  StyleBox["patt", "TI"]], "InlineFormula"],
+ ". This pattern is also tested against tags associated with the evaluation. "
+}], "Text",
+ CellChangeTimes->{{3.6180298028903885`*^9, 3.618029814827216*^9}}]
+}, Closed]],
+
+Cell[CellGroupData[{
+
+Cell["TraceOff", "Section",
+ CellChangeTimes->{{3.618029977227281*^9, 3.6180299794152384`*^9}}],
+
+Cell[TextData[{
+ "is an option for ",
+ Cell[BoxData["Trace"], "InlineFormula"],
+ " and related functions which specifies forms inside which tracing should be \
+switched off."
+}], "ItemParagraph",
+ CellChangeTimes->{{3.6180299837445164`*^9, 3.6180299877296786`*^9}}],
+
+Cell[TextData[{
+ "The setting for ",
+ Cell[BoxData["TraceOff"], "InlineFormula"],
+ " gives a pattern which is compared with expressions to be evaluated. If the \
+pattern matches the expression, then tracing will be switched off while that \
+expression is being evaluated. The pattern is also tested against tags \
+associated with the evaluation. "
+}], "Text",
+ CellChangeTimes->{{3.618030094897895*^9, 3.61803010088321*^9}}]
+}, Closed]],
+
+Cell[CellGroupData[{
+
+Cell["TraceDepth", "Section",
+ CellChangeTimes->{{3.6180340368669558`*^9, 3.618034038773811*^9}}],
+
+Cell[TextData[{
+ "an option for ",
+ Cell[BoxData["Trace"], "InlineFormula"],
+ " and related functions which specifies the maximum nesting of evaluation \
+chains that are to be included. "
+}], "ItemParagraph",
+ CellChangeTimes->{{3.618034117337788*^9, 3.6180341217760963`*^9}}],
+
+Cell[TextData[{
+ "By using ",
+ Cell[BoxData[
+  FormBox["TraceDepth", TraditionalForm]]],
+ ", you can pick out the big steps in a computation, without seeing the \
+details."
+}], "Text",
+ CellChangeTimes->{{3.6180342374647503`*^9, 3.6180342771686416`*^9}}]
+}, Closed]],
+
+Cell[CellGroupData[{
+
+Cell["TraceForward", "Section",
+ CellChangeTimes->{{3.6180344895029016`*^9, 3.618034492690827*^9}}],
+
+Cell[TextData[{
+ "an option for ",
+ Cell[BoxData["Trace"], "InlineFormula"],
+ " and related functions which specifies whether to include later expressions \
+on the evaluation chain that contains the pattern ",
+ Cell[BoxData[
+  StyleBox["form", "TI"]], "InlineFormula"],
+ " sought. "
+}], "ItemParagraph",
+ CellChangeTimes->{{3.6180345687182646`*^9, 3.618034571985114*^9}}],
+
+Cell[TextData[{
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"TraceForward", "\[Rule]", "True"}], TraditionalForm]]],
+ " includes the final expression on the evaluation chain that contains ",
+ Cell[BoxData[
+  StyleBox["form", "TI"]], "InlineFormula"],
+ ". "
+}], "Text",
+ CellChangeTimes->{{3.618034631646265*^9, 3.618034644101365*^9}}],
+
+Cell[TextData[{
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"TraceForward", "\[Rule]", "All"}], TraditionalForm]]],
+ " ",
+ "includes all expressions after ",
+ Cell[BoxData[
+  StyleBox["form", "TI"]], "InlineFormula"],
+ " on the evaluation chain that contains ",
+ Cell[BoxData[
+  StyleBox["form", "TI"]], "InlineFormula"],
+ ". "
+}], "Text",
+ CellChangeTimes->{{3.6180346529749165`*^9, 3.618034669352738*^9}}]
+}, Closed]],
+
+Cell[CellGroupData[{
+
+Cell["TraceBackward", "Section",
+ CellChangeTimes->{{3.6180348959471254`*^9, 3.6180349002134175`*^9}}],
+
+Cell[TextData[{
+ "an option for ",
+ Cell[BoxData["Trace"], "InlineFormula"],
+ " and related functions which specifies whether to include preceding \
+expressions on the evaluation chain that contains the pattern ",
+ Cell[BoxData[
+  StyleBox["form", "TI"]], "InlineFormula"],
+ " sought."
+}], "ItemParagraph",
+ CellChangeTimes->{{3.6180349787935963`*^9, 3.6180349854665318`*^9}}],
+
+Cell[TextData[{
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"TraceBackward", "\[Rule]", "True"}], TraditionalForm]]],
+ " includes the first expression on the evaluation chain that contains ",
+ Cell[BoxData[
+  StyleBox["form", "TI"]], "InlineFormula"],
+ ". "
+}], "Text",
+ CellChangeTimes->{{3.618035003653788*^9, 3.61803502009066*^9}}],
+
+Cell[TextData[{
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"TraceBackward", "\[Rule]", "All"}], TraditionalForm]]],
+ " includes all expressions before ",
+ Cell[BoxData[
+  StyleBox["form", "TI"]], "InlineFormula"],
+ " on the evaluation chain that contains ",
+ Cell[BoxData[
+  StyleBox["form", "TI"]], "InlineFormula"],
+ ". "
+}], "Text",
+ CellChangeTimes->{{3.6180350272793846`*^9, 3.6180350411375127`*^9}}],
+
+Cell[TextData[{
+ Cell[BoxData[
+  FormBox["TraceForward", TraditionalForm]]],
+ " and ",
+ Cell[BoxData[
+  FormBox["TraceBackward", TraditionalForm]]],
+ " allows you to look forward and backward in a particular evaluation chain."
+}], "Text",
+ CellChangeTimes->{3.6180351320230064`*^9}]
+}, Closed]],
+
+Cell[CellGroupData[{
+
+Cell["TraceAbove", "Section",
+ CellChangeTimes->{{3.6180352449208145`*^9, 3.6180352471867933`*^9}}],
+
+Cell[TextData[{
+ "an option for ",
+ Cell[BoxData["Trace"], "InlineFormula"],
+ " and related functions which specifies whether to include evaluation chains \
+which contain the evaluation chain containing the pattern ",
+ Cell[BoxData[
+  StyleBox["form", "TI"]], "InlineFormula"],
+ " sought. "
+}], "ItemParagraph",
+ CellChangeTimes->{3.618035440178039*^9}],
+
+Cell[TextData[{
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"TraceAbove", "\[Rule]", "True"}], TraditionalForm]]],
+ " includes the first and last expressions in all evaluation chains within \
+which the evaluation chain containing ",
+ Cell[BoxData[
+  StyleBox["form", "TI"]], "InlineFormula"],
+ " occurs. "
+}], "Text",
+ CellChangeTimes->{{3.6180354220970106`*^9, 3.618035434005006*^9}}],
+
+Cell[TextData[{
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"TraceAbove", "\[Rule]", "All"}], TraditionalForm]]],
+ " ",
+ "includes all expressions in these evaluation chains. "
+}], "Text",
+ CellChangeTimes->{{3.618035461850507*^9, 3.61803547985015*^9}}],
+
+Cell[TextData[{
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"TraceAbove", "\[Rule]", 
+    RowBox[{"{", 
+     RowBox[{
+      StyleBox["backward", "TI"], ",", 
+      StyleBox["forward", "TI"]}], 
+     StyleBox["}", "TI"]}]}], TraditionalForm]]],
+ " allows you to specify separately which expressions to include in the \
+backward and forward directions. Each of the options can be ",
+ Cell[BoxData[
+  FormBox["True", TraditionalForm]]],
+ " or ",
+ Cell[BoxData[
+  FormBox["All", TraditionalForm]]],
+ "."
+}], "Text",
+ CellChangeTimes->{{3.6180356078225727`*^9, 3.6180356794941797`*^9}}]
+}, Closed]],
+
+Cell[CellGroupData[{
+
+Cell["TraceOriginal", "Section",
+ CellChangeTimes->{{3.6180438149327106`*^9, 3.618043817995535*^9}}],
+
+Cell["\<\
+an option to specify whether to look at expressions before their heads and \
+arguments are evaluated.\
+\>", "ItemParagraph",
+ CellChangeTimes->{{3.6180501704141884`*^9, 3.6180502188971395`*^9}}]
+}, Closed]],
+
+Cell[CellGroupData[{
+
+Cell["MatchLocalNames", "Section",
+ CellChangeTimes->{{3.618050686771695*^9, 3.6180506913190775`*^9}}],
+
+Cell[TextData[{
+ "option for ",
+ Cell[BoxData["Trace"], "InlineFormula"],
+ " and related functions that specifies whether symbols such as ",
+ Cell[BoxData[
+  StyleBox["x", "TI"]], "InlineFormula"],
+ " should match symbols with local names of the form ",
+ Cell[BoxData[
+  StyleBox[
+   RowBox[{
+    StyleBox["x", "TI"], "$", 
+    StyleBox["nnn", "TI"]}]]], "InlineFormula"],
+ ". "
+}], "ItemParagraph",
+ CellChangeTimes->{{3.618050734708976*^9, 3.618050739397044*^9}}],
+
+Cell[TextData[{
+ "The default is ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"MatchLocalNames", "->", "True"}], TraditionalForm]]],
+ ". By setting it ",
+ Cell[BoxData[
+  FormBox["False", TraditionalForm]]],
+ ", the pattern in ",
+ Cell[BoxData[
+  FormBox["Trace", TraditionalForm]]],
+ " will match only global symbols."
+}], "Text",
+ CellChangeTimes->{{3.61805074394444*^9, 3.618050872638425*^9}}]
+}, Closed]]
+}, Closed]],
+
+Cell[CellGroupData[{
+
+Cell["Options for generic usage", "Subtitle",
+ CellChangeTimes->{{3.614470236774288*^9, 3.6144702747314863`*^9}}],
+
+Cell[CellGroupData[{
+
+Cell["Background", "Section",
+ CellChangeTimes->{{3.6144702926093087`*^9, 3.614470294265832*^9}}],
+
+Cell[TextData[{
+ "an option that specifies what background color to use. It is used in \
+functions such as ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+   "Style", ",", "Graphics", ",", "Plot", ",", "Text", ",", "Pane", ",", 
+    "Button"}], TraditionalForm]]],
+ " and ",
+ Cell[BoxData[
+  FormBox["Cell", TraditionalForm]]],
+ "."
+}], "ItemParagraph",
+ CellChangeTimes->{
+  3.6144703284410768`*^9, {3.614470413349454*^9, 3.614470499370224*^9}}],
+
+Cell[TextData[{
+ "When an object has option ",
+ Cell[BoxData[
+  RowBox[{"Background", "->", 
+   StyleBox["color", "TI"]}]], "InlineFormula"],
+ ", the specified color will normally be used as a background throughout the \
+region defined by the object."
+}], "Text",
+ CellChangeTimes->{{3.6144705277948933`*^9, 3.6144705373115025`*^9}}],
+
+Cell[TextData[{
+ Cell[BoxData[
+  RowBox[{"Background", "\[Rule]", "None"}]], "InlineFormula"],
+ " specifies that no background should be used, so that in effect the \
+background is transparent."
+}], "Text",
+ CellChangeTimes->{{3.6154217659911666`*^9, 3.615421784566612*^9}}],
+
+Cell[TextData[{
+ Cell[BoxData[
+  RowBox[{"Background", "\[Rule]", "Automatic"}]], "InlineFormula"],
+ " specifies a background that follows the system appearance for the \
+particular object or window used."
+}], "Text",
+ CellChangeTimes->{{3.6154220587600603`*^9, 3.6154220699042387`*^9}}],
+
+Cell[TextData[{
+ "In constructs such as ",
+ Cell[BoxData["Grid"], "InlineFormula"],
+ ", ",
+ Cell[BoxData["Item"], "InlineFormula"],
+ " can be used to specify that a background should fill the complete region \
+for a particular item."
+}], "Text",
+ CellChangeTimes->{{3.615497492027683*^9, 3.615497507570997*^9}}],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"Grid", "[", 
+  RowBox[{"{", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"Item", "[", 
+       RowBox[{"a", ",", 
+        RowBox[{"Background", "\[Rule]", "LightBlue"}]}], "]"}], ",", "b"}], 
+     "}"}], ",", 
+    RowBox[{"{", 
+     RowBox[{"c", ",", "d"}], "}"}]}], "}"}], "]"}]], "Input",
+ CellLabel->"In[68]:="],
+
+Cell[BoxData[
+ TagBox[GridBox[{
+    {
+     ItemBox["a",
+      Background->RGBColor[0.87, 0.94, 1],
+      StripOnInput->False], "b"},
+    {"c", "d"}
+   },
+   AutoDelete->False,
+   GridBoxItemSize->{"Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}],
+  "Grid"]], "Output",
+ CellChangeTimes->{{3.6154225644819827`*^9, 3.615422591047926*^9}},
+ CellLabel->"Out[68]="]
+}, Open  ]],
+
+Cell[TextData[{
+ "For objects such as ",
+ Cell[BoxData["Grid"], "InlineFormula"],
+ ", ",
+ Cell[BoxData["Column"], "InlineFormula"],
+ ", and ",
+ Cell[BoxData["Row"], "InlineFormula"],
+ ", the setting for ",
+ Cell[BoxData["Background"], "InlineFormula"],
+ " can be a list that specifies backgrounds for individual columns, rows, or \
+elements."
+}], "Text",
+ CellChangeTimes->{{3.6154221246662493`*^9, 3.6154221636131735`*^9}}],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"Grid", "[", 
+  RowBox[{
+   RowBox[{"Table", "[", 
+    RowBox[{"x", ",", 
+     RowBox[{"{", "4", "}"}], ",", 
+     RowBox[{"{", "7", "}"}]}], "]"}], ",", 
+   RowBox[{"Background", "\[Rule]", 
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"{", 
+       RowBox[{"LightBlue", ",", "LightRed"}], "}"}], ",", "None"}], 
+     "}"}]}]}], "]"}]], "Input",
+ CellLabel->"In[1]:="],
+
+Cell[BoxData[
+ TagBox[GridBox[{
+    {"x", "x", "x", "x", "x", "x", "x"},
+    {"x", "x", "x", "x", "x", "x", "x"},
+    {"x", "x", "x", "x", "x", "x", "x"},
+    {"x", "x", "x", "x", "x", "x", "x"}
+   },
+   AutoDelete->False,
+   GridBoxBackground->{"Columns" -> {
+       RGBColor[0.87, 0.94, 1], 
+       RGBColor[1, 0.85, 0.85]}, "Rows" -> {{None}}},
+   GridBoxItemSize->{"Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}],
+  "Grid"]], "Output",
+ CellChangeTimes->{3.6154987985950327`*^9},
+ CellLabel->"Out[1]="]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"Grid", "[", 
+  RowBox[{
+   RowBox[{"Table", "[", 
+    RowBox[{"x", ",", 
+     RowBox[{"{", "4", "}"}], ",", 
+     RowBox[{"{", "7", "}"}]}], "]"}], ",", 
+   RowBox[{"Background", "\[Rule]", 
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"{", 
+       RowBox[{"LightBlue", ",", 
+        RowBox[{"{", "}"}], ",", "LightRed"}], "}"}], ",", "None"}], 
+     "}"}]}]}], "]"}]], "Input",
+ CellLabel->"In[2]:="],
+
+Cell[BoxData[
+ TagBox[GridBox[{
+    {"x", "x", "x", "x", "x", "x", "x"},
+    {"x", "x", "x", "x", "x", "x", "x"},
+    {"x", "x", "x", "x", "x", "x", "x"},
+    {"x", "x", "x", "x", "x", "x", "x"}
+   },
+   AutoDelete->False,
+   GridBoxBackground->{"Columns" -> {
+       RGBColor[0.87, 0.94, 1], {}, 
+       RGBColor[1, 0.85, 0.85]}, "Rows" -> {{None}}},
+   GridBoxItemSize->{"Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}],
+  "Grid"]], "Output",
+ CellChangeTimes->{3.6154987987171154`*^9},
+ CellLabel->"Out[2]="]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"Grid", "[", 
+  RowBox[{
+   RowBox[{"Table", "[", 
+    RowBox[{"x", ",", 
+     RowBox[{"{", "4", "}"}], ",", 
+     RowBox[{"{", "7", "}"}]}], "]"}], ",", 
+   RowBox[{"Background", "\[Rule]", 
+    RowBox[{"{", 
+     RowBox[{"None", ",", 
+      RowBox[{"{", 
+       RowBox[{"LightBlue", ",", "LightRed"}], "}"}]}], "}"}]}]}], 
+  "]"}]], "Input",
+ CellLabel->"In[3]:="],
+
+Cell[BoxData[
+ TagBox[GridBox[{
+    {"x", "x", "x", "x", "x", "x", "x"},
+    {"x", "x", "x", "x", "x", "x", "x"},
+    {"x", "x", "x", "x", "x", "x", "x"},
+    {"x", "x", "x", "x", "x", "x", "x"}
+   },
+   AutoDelete->False,
+   GridBoxBackground->{"Columns" -> {{None}}, "Rows" -> {
+       RGBColor[0.87, 0.94, 1], 
+       RGBColor[1, 0.85, 0.85]}},
+   GridBoxItemSize->{"Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}],
+  "Grid"]], "Output",
+ CellChangeTimes->{3.615498798740138*^9},
+ CellLabel->"Out[3]="]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"Grid", "[", 
+  RowBox[{
+   RowBox[{"Table", "[", 
+    RowBox[{"x", ",", 
+     RowBox[{"{", "4", "}"}], ",", 
+     RowBox[{"{", "7", "}"}]}], "]"}], ",", 
+   RowBox[{"Background", "\[Rule]", 
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"{", 
+       RowBox[{"{", 
+        RowBox[{"LightBlue", ",", "LightRed"}], "}"}], "}"}], ",", "None"}], 
+     "}"}]}]}], "]"}]], "Input",
+ CellLabel->"In[4]:="],
+
+Cell[BoxData[
+ TagBox[GridBox[{
+    {"x", "x", "x", "x", "x", "x", "x"},
+    {"x", "x", "x", "x", "x", "x", "x"},
+    {"x", "x", "x", "x", "x", "x", "x"},
+    {"x", "x", "x", "x", "x", "x", "x"}
+   },
+   AutoDelete->False,
+   GridBoxBackground->{"Columns" -> {{
+        RGBColor[0.87, 0.94, 1], 
+        RGBColor[1, 0.85, 0.85]}}, "Rows" -> {{None}}},
+   GridBoxItemSize->{"Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}],
+  "Grid"]], "Output",
+ CellChangeTimes->{3.615498798767146*^9},
+ CellLabel->"Out[4]="]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"Grid", "[", 
+  RowBox[{
+   RowBox[{"Table", "[", 
+    RowBox[{"x", ",", 
+     RowBox[{"{", "4", "}"}], ",", 
+     RowBox[{"{", "7", "}"}]}], "]"}], ",", 
+   RowBox[{"Background", "\[Rule]", 
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"{", 
+         RowBox[{"{", 
+          RowBox[{"LightBlue", ",", "LightRed"}], "}"}], "}"}], ",", 
+        RowBox[{"{", 
+         RowBox[{
+          RowBox[{"1", "\[Rule]", "Pink"}], ",", 
+          RowBox[{
+           RowBox[{"-", "1"}], "\[Rule]", "Pink"}]}], "}"}]}], "}"}], ",", 
+      "None"}], "}"}]}]}], "]"}]], "Input",
+ CellLabel->"In[5]:="],
+
+Cell[BoxData[
+ TagBox[GridBox[{
+    {"x", "x", "x", "x", "x", "x", "x"},
+    {"x", "x", "x", "x", "x", "x", "x"},
+    {"x", "x", "x", "x", "x", "x", "x"},
+    {"x", "x", "x", "x", "x", "x", "x"}
+   },
+   AutoDelete->False,
+   GridBoxBackground->{"Columns" -> {{
+        RGBColor[0.87, 0.94, 1], 
+        RGBColor[1, 0.85, 0.85]}}, 
+     "ColumnsIndexed" -> {
+      1 -> RGBColor[1, 0.5, 0.5], -1 -> RGBColor[1, 0.5, 0.5]}, 
+     "Rows" -> {{None}}},
+   GridBoxItemSize->{"Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}],
+  "Grid"]], "Output",
+ CellChangeTimes->{3.615498798792164*^9},
+ CellLabel->"Out[5]="]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"Grid", "[", 
+  RowBox[{
+   RowBox[{"Table", "[", 
+    RowBox[{"x", ",", 
+     RowBox[{"{", "4", "}"}], ",", 
+     RowBox[{"{", "7", "}"}]}], "]"}], ",", 
+   RowBox[{"Background", "\[Rule]", 
+    RowBox[{"{", 
+     RowBox[{"None", ",", "None", ",", 
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"{", 
+         RowBox[{
+          RowBox[{"{", 
+           RowBox[{"1", ",", "2"}], "}"}], ",", 
+          RowBox[{"{", 
+           RowBox[{"1", ",", "3"}], "}"}]}], "}"}], "\[Rule]", "LightRed"}], 
+       "}"}]}], "}"}]}]}], "]"}]], "Input",
+ CellLabel->"In[6]:="],
+
+Cell[BoxData[
+ TagBox[GridBox[{
+    {"x", "x", "x", "x", "x", "x", "x"},
+    {"x", "x", "x", "x", "x", "x", "x"},
+    {"x", "x", "x", "x", "x", "x", "x"},
+    {"x", "x", "x", "x", "x", "x", "x"}
+   },
+   AutoDelete->False,
+   GridBoxBackground->{
+    "Columns" -> {{None}}, "Rows" -> {{None}}, 
+     "ItemsIndexed" -> {{{1, 2}, {1, 3}} -> RGBColor[1, 0.85, 0.85]}},
+   GridBoxItemSize->{"Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}],
+  "Grid"]], "Output",
+ CellChangeTimes->{3.6154987988131866`*^9},
+ CellLabel->"Out[6]="]
+}, Open  ]]
+}, Closed]]
+}, Closed]]
+},
+WindowSize->{1350, 671},
+WindowMargins->{{0, Automatic}, {Automatic, 0}},
+CellContext->Notebook,
+FrontEndVersion->"10.0 for Microsoft Windows (64-bit) (September 9, 2014)",
+StyleDefinitions->Notebook[{
+   Cell[
+    StyleData[StyleDefinitions -> "Default.nb"]], 
+   Cell[
+    StyleData["Subtitle"], ShowSelection -> True, 
+    CellMargins -> {{0, 0}, {0, 0}}, FontFamily -> "Arial Rounded MT Bold", 
+    FontSize -> 18, FontWeight -> "SemiBold", FontColor -> 
+    RGBColor[0.96, 0.96, 0.96], Background -> 
+    RGBColor[0., 0., 0.5019607843137255]], 
+   Cell[
+    StyleData["Subsubtitle"], FontFamily -> "Microsoft YaHei UI", FontSize -> 
+    10], 
+   Cell[
+    StyleData["Section"], FontFamily -> "Consolas", FontColor -> 
+    RGBColor[0., 0., 0.5019607843137255]], 
+   Cell[
+    StyleData["Subsection"], FontFamily -> "Arial Rounded MT Bold", FontColor -> 
+    RGBColor[0.5019607843137255, 0., 0.]], 
+   Cell[
+    StyleData["Text"], CellDingbat -> 
+    StyleBox["\[FilledSmallSquare]", Alignment -> Center, 
+      RGBColor[0., 0., 0.9019607843137255]], FontFamily -> 
+    "Microsoft YaHei UI", FontSize -> 12], 
+   Cell[
+    StyleData["InlineCell"], CellGroupingRules -> "InputGrouping", 
+    TextClipboardType -> "InputText", StripStyleOnPaste -> True, ContextMenu -> 
+    FEPrivate`FrontEndResource["ContextMenus", "Input"], ShowAutoStyles -> 
+    True, ShowCodeAssist -> True, LanguageCategory -> "Mathematica", 
+    FormatType -> "InputForm", ScriptLevel -> 0, MenuSortingValue -> 10000, 
+    StyleMenuListing -> None, FontFamily -> "Courier New", FontWeight -> 
+    "Bold"], 
+   Cell[
+    StyleData["Code"], InitializationCell -> False, Background -> 
+    GrayLevel[0.9]], 
+   Cell[
+    StyleData["Item"], CellDingbat -> 
+    StyleBox["\[FilledSmallCircle]", Alignment -> Baseline, 
+      RGBColor[0., 0., 0.5019607843137255]], FontFamily -> 
+    "Microsoft YaHei UI", FontSize -> 12], 
+   Cell[
+    StyleData["ItemParagraph"], CellDingbat -> 
+    StyleBox["\[CloverLeaf]", Alignment -> Baseline, 
+      RGBColor[0., 0., 0.5019607843137255]], MenuCommandKey -> "9"], 
+   Cell[
+    StyleData["Input"], CellLabelAutoDelete -> False, MenuCommandKey -> None], 
+   Cell[
+    StyleData["Output"], CellLabelAutoDelete -> False], 
+   Cell[
+    StyleData["Comment"], CellFrame -> False, CellDingbat -> "\[Dagger]", 
+    CellMargins -> {{54, 25}, {Inherited, Inherited}}, LineSpacing -> {1, 3}, 
+    MenuCommandKey -> None, FontFamily -> "Microsoft YaHei UI", FontSize -> 
+    10, FontColor -> RGBColor[0.5, 0.5, 0], $CellContext`MenuPosition -> 
+    8000]}, Visible -> False, FrontEndVersion -> 
+  "10.0 for Microsoft Windows (64-bit) (September 9, 2014)", StyleDefinitions -> 
+  "PrivateStylesheetFormatting.nb"]
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[CellGroupData[{
+Cell[579, 22, 113, 1, 47, "Subtitle"],
+Cell[CellGroupData[{
+Cell[717, 27, 99, 1, 99, "Section"],
+Cell[819, 30, 330, 10, 51, "ItemParagraph"],
+Cell[1152, 42, 402, 11, 62, "Text"],
+Cell[1557, 55, 289, 8, 38, "Text"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[1883, 68, 101, 1, 99, "Section"],
+Cell[1987, 71, 405, 13, 51, "ItemParagraph"],
+Cell[2395, 86, 190, 6, 38, "Text"],
+Cell[CellGroupData[{
+Cell[2610, 96, 102, 1, 54, "Subsection"],
+Cell[2715, 99, 348, 12, 38, "Text"],
+Cell[3066, 113, 1067, 18, 86, "Text"]
+}, Open  ]]
+}, Open  ]]
+}, Closed]],
+Cell[CellGroupData[{
+Cell[4194, 138, 119, 1, 47, "Subtitle"],
+Cell[CellGroupData[{
+Cell[4338, 143, 96, 1, 79, "Section"],
+Cell[4437, 146, 247, 5, 28, "ItemParagraph"],
+Cell[4687, 153, 516, 13, 62, "Text"]
+}, Closed]],
+Cell[CellGroupData[{
+Cell[5240, 171, 95, 1, 61, "Section"],
+Cell[5338, 174, 265, 6, 28, "ItemParagraph"],
+Cell[5606, 182, 424, 8, 62, "Text"]
+}, Closed]],
+Cell[CellGroupData[{
+Cell[6067, 195, 97, 1, 61, "Section"],
+Cell[6167, 198, 276, 6, 28, "ItemParagraph"],
+Cell[6446, 206, 254, 7, 38, "Text"]
+}, Closed]],
+Cell[CellGroupData[{
+Cell[6737, 218, 99, 1, 61, "Section"],
+Cell[6839, 221, 371, 9, 51, "ItemParagraph"],
+Cell[7213, 232, 327, 9, 38, "Text"],
+Cell[7543, 243, 400, 13, 38, "Text"]
+}, Closed]],
+Cell[CellGroupData[{
+Cell[7980, 261, 102, 1, 61, "Section"],
+Cell[8085, 264, 376, 9, 51, "ItemParagraph"],
+Cell[8464, 275, 327, 9, 38, "Text"],
+Cell[8794, 286, 399, 12, 38, "Text"],
+Cell[9196, 300, 282, 8, 38, "Text"]
+}, Closed]],
+Cell[CellGroupData[{
+Cell[9515, 313, 99, 1, 61, "Section"],
+Cell[9617, 316, 353, 9, 51, "ItemParagraph"],
+Cell[9973, 327, 378, 10, 38, "Text"],
+Cell[10354, 339, 246, 7, 38, "Text"],
+Cell[10603, 348, 574, 18, 63, "Text"]
+}, Closed]],
+Cell[CellGroupData[{
+Cell[11214, 371, 100, 1, 61, "Section"],
+Cell[11317, 374, 204, 4, 28, "ItemParagraph"]
+}, Closed]],
+Cell[CellGroupData[{
+Cell[11558, 383, 102, 1, 61, "Section"],
+Cell[11663, 386, 465, 14, 28, "ItemParagraph"],
+Cell[12131, 402, 391, 13, 38, "Text"]
+}, Closed]]
+}, Closed]],
+Cell[CellGroupData[{
+Cell[12571, 421, 113, 1, 47, "Subtitle"],
+Cell[CellGroupData[{
+Cell[12709, 426, 97, 1, 79, "Section"],
+Cell[12809, 429, 439, 14, 28, "ItemParagraph"],
+Cell[13251, 445, 333, 8, 38, "Text"],
+Cell[13587, 455, 274, 6, 38, "Text"],
+Cell[13864, 463, 287, 6, 38, "Text"],
+Cell[14154, 471, 311, 8, 38, "Text"],
+Cell[CellGroupData[{
+Cell[14490, 483, 351, 12, 36, "Input"],
+Cell[14844, 497, 365, 12, 53, "Output"]
+}, Open  ]],
+Cell[15224, 512, 424, 12, 38, "Text"],
+Cell[CellGroupData[{
+Cell[15673, 528, 392, 13, 36, "Input"],
+Cell[16068, 543, 512, 14, 93, "Output"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[16617, 562, 426, 14, 36, "Input"],
+Cell[17046, 578, 516, 14, 93, "Output"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[17599, 597, 389, 13, 36, "Input"],
+Cell[17991, 612, 510, 14, 93, "Output"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[18538, 631, 421, 14, 36, "Input"],
+Cell[18962, 647, 514, 14, 93, "Output"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[19513, 666, 649, 21, 36, "Input"],
+Cell[20165, 689, 612, 17, 93, "Output"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[20814, 711, 590, 19, 36, "Input"],
+Cell[21407, 732, 530, 14, 125, "Output"]
+}, Open  ]]
+}, Closed]]
+}, Closed]]
+}
+]
+*)
+
+(* End of internal cache information *)

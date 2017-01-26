@@ -1,0 +1,301 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 9.0' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       157,          7]
+NotebookDataLength[     12100,        292]
+NotebookOptionsPosition[     10751,        247]
+NotebookOutlinePosition[     11095,        262]
+CellTagsIndexPosition[     11052,        259]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+
+Cell[CellGroupData[{
+Cell[TextData[StyleBox["Nonlinear system", "Title"]], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10000.},
+ CellChangeTimes->{{3.592044042618249*^9, 3.592044066024754*^9}, {
+   3.592044097084334*^9, 3.592044103814786*^9}, 3.592044170412449*^9}],
+
+Cell[TextData[ButtonBox["http://en.wikipedia.org/wiki/Nonlinear_system",
+ BaseStyle->"Hyperlink",
+ ButtonData->{
+   URL["http://en.wikipedia.org/wiki/Nonlinear_system"], None},
+ ButtonNote->"http://en.wikipedia.org/wiki/Nonlinear_system"]], "Subsubtitle",
+ CellGroupingRules->{GroupTogetherGrouping, 10000.},
+ CellChangeTimes->{{3.592044324691948*^9, 3.5920443682007656`*^9}, {
+  3.5920461791341915`*^9, 3.5920461791361933`*^9}}],
+
+Cell[TextData[StyleBox["a nonlinear system is the opposite of a linear \
+system,that is a system that does not satisfy the superposition principle(\
+\:53e0\:52a0\:539f\:7406), which means that the output is not directly \
+proportional to the input.\na nonlinear system of equations is a set of \
+simultaneous equations in which the unknowns (or the unknown functions in the \
+case of differential equations) appear as variables of a polynomial of degree \
+higher than one or in the argument of a function which is not a polynomial of \
+degree one. In other words, in a nonlinear system of equations, the \
+equation(s) to be solved cannot be written as a linear combination of the \
+unknown variables or functions that appear in it (them). It does not matter \
+if nonlinear known functions appear in the equations. In particular, a \
+differential equation is linear if it is linear in terms of the unknown \
+function and its derivatives, even if nonlinear in terms of the other \
+variables appearing in it.",
+ FontFamily->"Arial Unicode MS",
+ FontSize->16]], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10000.},
+ CellChangeTimes->{{3.592044042618249*^9, 3.592044066024754*^9}, {
+   3.592044097084334*^9, 3.592044114518876*^9}, 3.592044170412449*^9}],
+
+Cell[TextData[StyleBox["In mathematics,a linear function (or map) f(x) is one \
+which satisfies both of the following properties:\n\
+additivity(Superposition),f(x+y)=f(x)+f(y)\n\
+homogeneity,f(\[Alpha]x)=\[Alpha]f(x)\nThe conditions of additivity and \
+homogeneity are often combined in the superposition principle:\nf(\[Alpha]x+\
+\[Beta]y)=\[Alpha]f(x)+\[Beta]f(y)\nAn equation written as \nf(x)=C\nis \
+called linear if f(x) is a linear map(as defined above) and nonlinear \
+otherwise.The equation is called homogeneous if C=0.\nThe definition f(x)=C \
+is very general in that x can be any sensible mathematical \
+object(number,vector,function,etc.),and the function f(x) can be any \
+mapping,including integration or differentation associated constraints(such \
+as boundary values).If f(x) contains differentiation of x,the result will be \
+a differential equation.",
+ FontFamily->"Arial Unicode MS",
+ FontSize->16]], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10000.},
+ CellChangeTimes->{{3.592044042618249*^9, 3.592044066024754*^9}, {
+  3.592044097084334*^9, 3.5920441276911826`*^9}, {3.5920441592840776`*^9, 
+  3.592044170412449*^9}, {3.592279174472367*^9, 3.5922791754510145`*^9}, {
+  3.5922799783019876`*^9, 3.5922799786822395`*^9}, {3.5922802209845963`*^9, 
+  3.5922802304248495`*^9}}],
+
+Cell[TextData[{
+ StyleBox["Nonlinear algebraic equations, which are also called polynomial \
+equations, are defined by equating polynomials to zero. For example,\n",
+  FontFamily->"Arial Unicode MS",
+  FontSize->16],
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    RowBox[{
+     SuperscriptBox["x", "2"], "+", "x", "-", "1"}], "=", "0"}], 
+   TraditionalForm]]],
+ "\n",
+ StyleBox["One of the greatest difficulties of nonlinear problems is that it \
+is not generally possible to combine known solutions into new solutions. In \
+linear problems, for example, a family of linearly independent solutions can \
+be used to construct general solutions through the superposition principle.",
+  FontFamily->"Arial Unicode MS",
+  FontSize->16]
+}], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10000.},
+ CellChangeTimes->{{3.592044042618249*^9, 3.592044066024754*^9}, {
+  3.592044097084334*^9, 3.5920441276911826`*^9}, {3.5920441592840776`*^9, 
+  3.592044170412449*^9}}]
+}, Open  ]],
+
+Cell["\<\
+\:7ebf\:6027\:65b9\:7a0b\:ff08\:65e0\:8bba\:4ee3\:6570\:6216\:5fae\:5206\:6216\
+\:5176\:4ed6\:ff09\:ff0c\:6307\:7684\:662f\:ff0c\:5bf9\:4e8e\:65b9\:7a0b\:6240\
+\:8981\:6c42\:51fa\:7684\:672a\:77e5\:91cfx\:800c\:8a00\:ff0c\:5728\:65b9\
+\:7a0b\:6d89\:53ca\:5b83\:4e2d\:7684\:6bcf\:4e00\:9879\:90fd\:6ee1\:8db3\:7ebf\
+\:6027\:6761\:4ef6\:ff0c\:5373\:542bx\:7684\:6bcf\:4e00\:9879\:90fd\:6ee1\
+\:8db3superposition principle\:7684\:4e24\:4e2a\:6761\:4ef6\:3002\:5219\:79f0\
+\:65b9\:7a0b\:4e3a\:7ebf\:6027\:7684\:3002
+\:7ebf\:6027\:7684\:6700\:6839\:672c\:7684\:5b9a\:4e49\:ff0c\:5c31\:5e94\:8be5\
+\:662f\:6307\:7cfb\:7edf\:7684\:8f93\:5165\:8f93\:51fa\:4e4b\:95f4\:7684\:5173\
+\:7cfb\:662f\:7ebf\:6027\:7684\:ff0c\:6216\:8bf4\:662f\:6b63\:6bd4\:7684\:3002
+\:6ce8\:610f\:5230\:ff0c\:6309\:7167superposition principle\:7684\:6761\:4ef6\
+\:5b9a\:4e49\:7684F(x)\:7684\:7ebf\:6027\:662f\:6ca1\:6709\:57fa\:51c6\:503c\
+\:ff08\:6bd4\:5982\:5e38\:6570\:9879\:6216\:4e0d\:542bx\:7684\:975e\:5e38\
+\:6570\:9879\:ff09\:7684\:7ebf\:6027\:ff0c\:4e5f\:5c31\:662f\:9f50\:6b21\:7684\
+\:ff08homogeneous\:ff09\:7ebf\:6027\:3002
+\:5bf9\:4e8e\:975e\:9f50\:6b21\:7684\:65b9\:7a0b\:ff0c\:8981\:5e94\:7528\:8fd9\
+\:6837\:7684\:7ebf\:6027\:6761\:4ef6\:53ea\:80fd\:662f\:5c06\:542bx\:7684\
+\:90e8\:5206\:5212\:51fa\:6765\:4f5c\:4e3aF(x)\:6765\:8fdb\:884c\:5224\:65ad\
+\:3002
+\:5f53\:628a\:65b9\:7a0b\:5de6\:8fb9\:6574\:4f53\:770b\:4f5cF(x)\:65f6\:ff0c\
+\:5982\:679c\:5305\:542b\:5e38\:6570\:9879\:6216\:4e0d\:542bx\:7684\:975e\
+\:5e38\:6570\:9879\:ff0c\:5c31\:662f\:975e\:9f50\:6b21\:7684\:ff0c\:4f46\:662f\
+\:8fd9\:4e9b\:9879\:53ea\:76f8\:5f53\:4e8e\:8f93\:51fa\:7684\:57fa\:51c6\:503c\
+\:3002\:8f93\:5165\:8f93\:51fa\:4ecd\:7136\:662f\:7ebf\:6027\:7684\:ff0c\:76f8\
+\:5f53\:4e8eax+b.\
+\>", "Text",
+ CellChangeTimes->{{3.592630441594816*^9, 3.592630479630267*^9}, {
+  3.592630518892093*^9, 3.592630717513899*^9}, {3.5927084712047434`*^9, 
+  3.5927086859258823`*^9}, {3.5927087191268907`*^9, 3.5927089156535597`*^9}, {
+  3.592709053061623*^9, 3.592709252517653*^9}}],
+
+Cell[CellGroupData[{
+
+Cell["System of polynomial equations", "Title",
+ CellChangeTimes->{3.592044523769184*^9}],
+
+Cell["\<\
+http://en.wikipedia.org/wiki/Systems_of_polynomial_equations\
+\>", "Subsubtitle",
+ CellChangeTimes->{3.5920445454235272`*^9}],
+
+Cell["\<\
+A system of polynomial equations is a set of simultaneous equations f1 = 0, \
+..., fh = 0 where the fi are polynomials in several variables, say x1, ..., \
+xn, over some field k.\
+\>", "Text",
+ CellChangeTimes->{3.5920445542693853`*^9}]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Linear system", "Title",
+ CellChangeTimes->{{3.5920447129355564`*^9, 3.5920447233734703`*^9}}],
+
+Cell["\<\
+http://en.wikipedia.org/wiki/Linear_system\
+\>", "Subsubtitle",
+ CellChangeTimes->{3.592044732556553*^9}],
+
+Cell[TextData[{
+ "A linear system is a mathematical model of a system based on the use of a \
+linear operator. Linear systems typically exhibit features and properties \
+that are much simpler than the general, nonlinear case.\nLinear operator = \
+linear map\nLet V and W be vector spaces over the same field K. A function f: \
+V \[RightArrow] W is said to be a linear map if for any two vectors x and y \
+in V and any scalar \[Alpha] in K, the following two conditions are \
+satisfied:\n",
+ StyleBox["additivity(Superposition),f(x+y)=f(x)+f(y)\n\
+homogeneity,f(\[Alpha]x)=\[Alpha]f(x)",
+  FontFamily->"Arial Unicode MS",
+  FontSize->16],
+ "\n"
+}], "Text",
+ CellChangeTimes->{
+  3.592044800074275*^9, {3.59204494054145*^9, 3.5920449407195396`*^9}, 
+   3.5920450748185043`*^9, {3.5920451563995495`*^9, 3.5920451788364162`*^9}}]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Algebraic equation(Ploynomial equation)", "Title",
+ CellChangeTimes->{{3.5920452567472878`*^9, 3.5920452666548786`*^9}}],
+
+Cell["http://en.wikipedia.org/wiki/Polynomial_equation", "Subsubtitle",
+ CellChangeTimes->{3.592045273451352*^9}],
+
+Cell["\<\
+In mathematics, an algebraic equation or polynomial equation is an equation \
+of the form
+P = Q
+where P and Q are polynomials with coefficients in some field, often the \
+field of the rational numbers.
+Some but not all polynomial equations with rational coefficients have a \
+solution that is an algebraic expression with a finite number of operations \
+involving just those coefficients (that is, can be solved algebraically). \
+This can be done for all such equations of degree one, two, three, or four; \
+but for degree five or more it can only be done for some equations but not \
+for all.
+\
+\>", "Text",
+ CellChangeTimes->{{3.5920453339374175`*^9, 3.5920453575350485`*^9}, {
+  3.592045425315559*^9, 3.5920454329246006`*^9}}]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Linear equation", "Title",
+ CellChangeTimes->{{3.592045601904024*^9, 3.5920456059366894`*^9}}],
+
+Cell["\<\
+http://en.wikipedia.org/wiki/Linear_equation\
+\>", "Subsubtitle",
+ CellChangeTimes->{3.592045617977664*^9}],
+
+Cell[TextData[{
+ "A linear equation is an algebraic equation in which each term is either a \
+constant or the product of a constant and (the first power of) a single \
+variable.\nLinear equations can have one or more variables. \nA linear \
+equation can involve more than two variables. The general linear equation in \
+n variables is:\n",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    RowBox[{
+     RowBox[{
+      RowBox[{
+       RowBox[{
+        SubscriptBox["a", "1"], 
+        SubscriptBox["x", "1"]}], "+", 
+       RowBox[{
+        SubscriptBox["a", "2"], 
+        SubscriptBox["x", "2"]}], "+"}], "..."}], "+", 
+     RowBox[{
+      SubscriptBox["a", "n"], 
+      SubscriptBox["x", "n"]}]}], "=", "b"}], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ "\nIn this form, a1, a2, \[Ellipsis], an are the coefficients, x1, x2, \
+\[Ellipsis], xn are the variables, and b is the constant."
+}], "Text",
+ CellChangeTimes->{{3.592045628508641*^9, 3.59204563194992*^9}, {
+  3.5920456626842775`*^9, 3.592045731510869*^9}}]
+}, Open  ]]
+},
+WindowSize->{1350, 631},
+WindowMargins->{{0, Automatic}, {Automatic, 0}},
+FrontEndVersion->"9.0 for Microsoft Windows (64-bit) (November 20, 2012)",
+StyleDefinitions->"Default.nb"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[CellGroupData[{
+Cell[579, 22, 252, 3, 58, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10000.}],
+Cell[834, 27, 429, 7, 26, "Subsubtitle",
+ CellGroupingRules->{GroupTogetherGrouping, 10000.}],
+Cell[1266, 36, 1256, 18, 179, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10000.}],
+Cell[2525, 56, 1303, 20, 251, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10000.}],
+Cell[3831, 78, 960, 22, 101, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10000.}]
+}, Open  ]],
+Cell[4806, 103, 2046, 30, 106, "Text"],
+Cell[CellGroupData[{
+Cell[6877, 137, 89, 1, 84, "Title"],
+Cell[6969, 140, 135, 3, 26, "Subsubtitle"],
+Cell[7107, 145, 246, 5, 30, "Text"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[7390, 155, 100, 1, 84, "Title"],
+Cell[7493, 158, 115, 3, 26, "Subsubtitle"],
+Cell[7611, 163, 825, 16, 154, "Text"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[8473, 184, 126, 1, 84, "Title"],
+Cell[8602, 187, 113, 1, 26, "Subsubtitle"],
+Cell[8718, 190, 739, 15, 125, "Text"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[9494, 210, 100, 1, 84, "Title"],
+Cell[9597, 213, 117, 3, 26, "Subsubtitle"],
+Cell[9717, 218, 1018, 26, 103, "Text"]
+}, Open  ]]
+}
+]
+*)
+
+(* End of internal cache information *)

@@ -1,0 +1,4909 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 9.0' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       157,          7]
+NotebookDataLength[    192172,       4900]
+NotebookOptionsPosition[    173814,       4505]
+NotebookOutlinePosition[    174177,       4521]
+CellTagsIndexPosition[    174134,       4518]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+
+Cell[CellGroupData[{
+Cell["P11", "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10003.},
+ CellChangeTimes->{3.594089962932028*^9, 3.594163833426197*^9}],
+
+Cell[TextData[StyleBox["\:6258\:5361\:9a6c\:514b\:57fa\:672c\:5de5\:4f5c\:539f\
+\:7406\:ff1a\n\:5229\:7528\:7535\:5bb9\:5668\:653e\:7535\:ff0c\:4f7f\:771f\
+\:7a7a\:5ba4\:5f62\:6210\:73af\:5f62\:78c1\:573a\:ff0c\:7136\:540e\:53d8\:538b\
+\:5668\:521d\:7ea7\:7ebf\:5708\:50a8\:5b58\:7684\:7535\:80fd\:653e\:7535\:ff0c\
+\:4e0e\:4e4b\:8026\:5408\:7684\:6b21\:7ea7\:7ebf\:5708\:5373\:771f\:7a7a\:73af\
+\:5185\:90e8\:4ea7\:751f\:611f\:5e94\:7535\:573a\:ff0c\:611f\:5e94\:7535\:573a\
+\:4ea7\:751f\:7b49\:79bb\:5b50\:4f53\:73af\:7535\:6d41\:ff0c\:7b49\:79bb\:5b50\
+\:4f53\:88ab\:6d41\:8fc7\:5b83\:7684\:73af\:5f62\:7535\:6d41\:52a0\:70ed\:800c\
+\:5347\:6e29\:ff0c\:540c\:65f6\:73af\:5f62\:7535\:6d41\:4ea7\:751f\:7684\:89d2\
+\:5411\:78c1\:573a\:4e0e\:73af\:5411\:78c1\:573a\:53e0\:52a0\:540e\:5f62\:6210\
+\:65cb\:8f6c\:7684\:78c1\:529b\:7ebf\:ff0c\:8fd9\:6837\:53ef\:4ee5\:8f83\:597d\
+\:7684\:514b\:670d\:6f02\:79fb\:ff0c\:7ea6\:675f\:7b49\:79bb\:5b50\:4f53\:3002\
+",
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"]], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10003.},
+ CellChangeTimes->{{3.5940900004788733`*^9, 3.594090014387969*^9}, {
+   3.594090052079294*^9, 3.594090075675399*^9}, 3.594090148979123*^9, 
+   3.594090185036727*^9, {3.5940902754253883`*^9, 3.59409030133566*^9}, 
+   3.594163833426197*^9, {3.59434342177809*^9, 3.5943434440458517`*^9}, {
+   3.594343477753098*^9, 3.594343505130965*^9}, {3.5943435603932853`*^9, 
+   3.594343578488803*^9}}]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["P20", "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10000.},
+ CellChangeTimes->{{3.594084591271551*^9, 3.5940845936780195`*^9}, 
+   3.59416381533844*^9}],
+
+Cell[TextData[StyleBox["\:7b49\:79bb\:5b50\:4f53\:7684\:63cf\:8ff0\:6027\:5b9a\
+\:4e49\:ff1a\n\:5f53\:7269\:8d28\:7684\:6e29\:5ea6\:4ece\:4f4e\:5230\:9ad8\
+\:53d8\:5316\:65f6\:ff0c\:7269\:8d28\:5c06\:9010\:6b21\:7ecf\:5386\:56fa\:4f53\
+\:3001\:6db2\:4f53\:548c\:6c14\:4f53\:4e09\:79cd\:72b6\:6001\:ff1b\:5f53\:6e29\
+\:5ea6\:8fdb\:4e00\:6b65\:5347\:9ad8\:65f6\:ff0c\:6c14\:4f53\:4e2d\:7684\:539f\
+\:5b50\:3001\:5206\:5b50\:5c06\:51fa\:73b0\:7535\:79bb\:72b6\:6001\:ff0c\:5f62\
+\:6210\:7535\:5b50\:79bb\:5b50\:7ec4\:6210\:7684\:4f53\:7cfb\:ff0c\:8fd9\:79cd\
+\:7531\:5927\:91cf\:5e26\:7535\:7c92\:5b50\:ff08\:6709\:65f6\:8fd8\:6709\:4e2d\
+\:6027\:7c92\:5b50\:ff09\:7ec4\:6210\:7684\:4f53\:7cfb\:4fbf\:662f\:7b49\:79bb\
+\:5b50\:4f53\:3002",
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"]], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10000.},
+ CellChangeTimes->{{3.5940798443344536`*^9, 3.594079907114094*^9}, {
+   3.5940799403202353`*^9, 3.59407997304242*^9}, {3.5940800091241903`*^9, 
+   3.5940801170325603`*^9}, {3.594083768160352*^9, 3.594083782579912*^9}, 
+   3.594084577785757*^9, 3.5941638040561953`*^9, {3.594345029745779*^9, 
+   3.5943450317460804`*^9}}],
+
+Cell[TextData[StyleBox["\:7b49\:79bb\:5b50\:4f53\:662f\:7269\:8d28\:5b58\:5728\
+\:7684\:53e6\:4e00\:79cd\:72b6\:6001\:ff0c\:79f0\:7269\:8d28\:7b2c\:56db\:6001\
+\:3002",
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"]], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10000.},
+ CellChangeTimes->{{3.5940841259952025`*^9, 3.5940841789107966`*^9}, 
+   3.594084235205987*^9, 3.5941638040561953`*^9, {3.5943451804416995`*^9, 
+   3.594345182301307*^9}}],
+
+Cell[TextData[StyleBox["\:7b49\:79bb\:5b50\:4f53\:5e7f\:6cdb\:5b58\:5728\:4e8e\
+\:5b87\:5b99\:7a7a\:95f4\:ff0c\:5b87\:5b99\:7a7a\:95f4\:4e2d\:53ef\:89c1\:7269\
+\:8d2899%\:662f\:7b49\:79bb\:5b50\:4f53\:3002\n\:5730\:7403\:8868\:9762\:51e0\
+\:4e4e\:6ca1\:6709\:81ea\:7136\:5b58\:5728\:7684\:7b49\:79bb\:5b50\:4f53\:ff0c\
+\:53ea\:5b58\:5728\:4e8e\:95ea\:7535\:548c\:5b9e\:9a8c\:5ba4\:4e2d\:6c14\:4f53\
+\:653e\:7535\:7b49\:60c5\:5f62\:4e0b\:3002",
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"]], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10000.},
+ CellChangeTimes->{{3.5940842190170135`*^9, 3.594084295211592*^9}, {
+   3.594084337153191*^9, 3.5940844181069074`*^9}, 3.5941638040561953`*^9}]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["P21", "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10001.},
+ CellChangeTimes->{{3.594084659418267*^9, 3.59408466037158*^9}, 
+   3.5941638222767377`*^9}],
+
+Cell[TextData[StyleBox["\:7b49\:79bb\:5b50\:4f53\:662f\:7531\:5927\:91cf\:5e26\
+\:7535\:7c92\:5b50\:7ec4\:6210\:7684\:591a\:7c92\:5b50\:4f53\:7cfb\:ff0c\:4e24\
+\:4e2a\:5e26\:7535\:7c92\:5b50\:4e4b\:95f4\:672c\:6765\:662f\:7b80\:5355\:7684\
+\:5e93\:4ed1\:4f5c\:7528\:ff0c\:4f46\:7531\:4e8e\:5927\:91cf\:5e26\:7535\:7c92\
+\:5b50\:7684\:5b58\:5728\:ff0c\:4f1a\:51fa\:73b0\:7535\:8377\:5c4f\:853d\:73b0\
+\:8c61\:ff0c\:8fd9\:662f\:7b49\:79bb\:5b50\:4f53\:7684\:91cd\:8981\:7279\:5f81\
+\:4e4b\:4e00\:3002",
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"]], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10001.},
+ CellChangeTimes->{{3.594084681060932*^9, 3.594084815786161*^9}, {
+  3.5941637996080523`*^9, 3.5941638222767377`*^9}}],
+
+Cell[TextData[StyleBox["\:7535\:8377\:5c4f\:853d\:73b0\:8c61\:ff1a\n\:5728\
+\:7b49\:79bb\:5b50\:4f53\:4e2d\:8003\:5bdf\:4efb\:4e00\:4e2a\:5e26\:7535\:7c92\
+\:5b50\:ff0c\:7531\:4e8e\:5b83\:7684\:9759\:7535\:573a\:4f5c\:7528\:ff0c\:5728\
+\:5b83\:9644\:8fd1\:4f1a\:5438\:5f15\:5f02\:53f7\:7535\:8377\:7684\:7c92\:5b50\
+\:ff0c\:540c\:65f6\:6392\:65a5\:540c\:53f7\:7535\:8377\:7684\:7c92\:5b50\:ff0c\
+\:4ece\:800c\:5728\:5176\:5468\:56f4\:4f1a\:51fa\:73b0\:51c0\:7684\:5f02\:53f7\
+\:7535\:8377\:4e91\:ff0c\:8fd9\:6837\:5c31\:524a\:5f31\:4e86\:8fd9\:4e2a\:5e26\
+\:7535\:7c92\:5b50\:5bf9\:8fdc\:5904\:5176\:4ed6\:5e26\:7535\:7c92\:5b50\:7684\
+\:4f5c\:7528\:ff0c\:8fd9\:5c31\:662f\:7535\:8377\:5c4f\:853d\:73b0\:8c61\:3002\
+\:56e0\:6b64\:5728\:7b49\:79bb\:5b50\:4f53\:4e2d\:ff0c\:4e00\:4e2a\:5e26\:7535\
+\:7c92\:5b50\:53ca\:5176\:5468\:56f4\:7684\:5f02\:53f7\:7535\:8377\:4e91\:5bf9\
+\:8f83\:8fdc\:5904\:7684\:53e6\:4e00\:4e2a\:5e26\:7535\:7c92\:5b50\:4f5c\:7528\
+\:7684\:603b\:6548\:679c\:5c31\:662f\[OpenCurlyDoubleQuote]\:5c4f\:853d\:5e93\
+\:4ed1\:52bf\[CloseCurlyDoubleQuote]\:ff0c\:800c\:4e0d\:518d\:662f\:4e00\:4e2a\
+\:5355\:72ec\:7c92\:5b50\:4f5c\:7528\:7684\:5e93\:4ed1\:52bf\:3002",
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"]], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10001.},
+ CellChangeTimes->{{3.5940849033405857`*^9, 3.594085101172126*^9}, 
+   3.5940882170921206`*^9, {3.594088260494891*^9, 3.5940883158715963`*^9}, {
+   3.5940883695203857`*^9, 3.5940883958418317`*^9}, 3.594088584488058*^9, {
+   3.5940886351936646`*^9, 3.5940886770303965`*^9}, {3.5941637996080523`*^9, 
+   3.5941638222767377`*^9}, {3.594345959541448*^9, 3.594346009256504*^9}, {
+   3.5943461231740823`*^9, 3.5943461242053814`*^9}, {3.594346194063609*^9, 
+   3.594346223394322*^9}}]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["P28", "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10002.},
+ CellChangeTimes->{3.5940887767769995`*^9, 3.5941638273943844`*^9}],
+
+Cell[TextData[{
+ StyleBox["\:7b49\:79bb\:5b50\:4f53\:7684\:4e25\:683c\:5b9a\:4e49\:ff1a\n\
+\:5e76\:975e\:4efb\:4f55\:5e26\:7535\:7c92\:5b50\:7ec4\:6210\:7684\:4f53\:7cfb\
+\:90fd\:662f\:7b49\:79bb\:5b50\:4f53\:ff0c\:53ea\:6709\:5177\:5907\:4e86\:7b49\
+\:79bb\:5b50\:7279\:6027\:7684\:5e26\:7535\:7c92\:5b50\:4f53\:7cfb\:ff0c\:624d\
+\:53ef\:79f0\:4e3a\:7b49\:79bb\:5b50\:4f53\:3002\n\:7b49\:79bb\:5b50\:4f53\
+\:662f\:5177\:6709\:4ee5\:4e0b\:4e09\:4e2a\:7279\:6027\:7684\:4f53\:7cfb:\n1.\
+\:7531\:5927\:91cf\:6b63\:8d1f\:5e26\:7535\:7c92\:5b50\:7ec4\:6210\:ff08\:6709\
+\:65f6\:8fd8\:6709\:4e2d\:6027\:7c92\:5b50\:ff09\n2.\:5728\:7a7a\:95f4\:5c3a\
+\:5ea6",
+  FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"l", "\[GreaterGreater]", 
+    SubscriptBox["\[Lambda]", "D"]}], TraditionalForm]]],
+ StyleBox["\:ff08\:5fb7\:62dc\:5c4f\:853d\:957f\:5ea6\:ff09",
+  FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+ StyleBox["\:548c\:65f6\:95f4\:5c3a\:5ea6",
+  FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"\[Tau]", "\[GreaterGreater]", 
+    RowBox[{"1", "/", 
+     SubscriptBox["\[Omega]", "pe"]}]}], TraditionalForm]]],
+ StyleBox["\:ff08\:7b49\:79bb\:5b50\:4f53\:632f\:8361\:9891\:7387\:ff09\:4e0a",
+  FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+ StyleBox["\:5177\:6709\:51c6\:7535\:4e2d\:6027\n3.\:5728\:7535\:78c1\:53ca\
+\:5176\:5b83\:957f\:7a0b\:529b\:4f5c\:7528\:4e0b\:7c92\:5b50\:7684\:8fd0\:52a8\
+\:548c\:884c\:4e3a\:662f\:4ee5\:96c6\:4f53\:6548\:5e94\:4e3a\:4e3b",
+  FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"]
+}], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10002.},
+ CellChangeTimes->{{3.594088850301733*^9, 3.594088867217945*^9}, 
+   3.594089025356388*^9, {3.594089058060422*^9, 3.594089078711632*^9}, {
+   3.594089153556239*^9, 3.594089168732297*^9}, {3.5940892332370543`*^9, 
+   3.594089272880469*^9}, {3.5940894161064043`*^9, 3.5940894602030563`*^9}, {
+   3.594089500882019*^9, 3.594089574155587*^9}, 3.5940896835729694`*^9, 
+   3.5940897554682055`*^9, 3.5941638273943844`*^9, 3.5943463206390038`*^9, {
+   3.594347452281042*^9, 3.5943476094691505`*^9}, 3.5943477018604245`*^9, {
+   3.5943480065482683`*^9, 3.5943480312072363`*^9}, {3.5943481164507847`*^9, 
+   3.594348117653966*^9}, {3.5943481765740833`*^9, 3.5943481767459583`*^9}}]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["P34", "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10004.},
+ CellChangeTimes->{3.5940904149202585`*^9, 3.594163838192266*^9}],
+
+Cell[TextData[StyleBox["\:7b49\:79bb\:5b50\:4f53\:4e2d\:5e26\:7535\:7c92\:5b50\
+\:95f4\:65e2\:6709\:77ed\:7a0b\:5e93\:4ed1\:4f5c\:7528\:5f15\:8d77\:7684\:78b0\
+\:649e\:ff0c\:53c8\:5b58\:5728\:957f\:7a0b\:5e93\:4ed1\:4f5c\:7528\:5f15\:8d77\
+\:7684\:96c6\:4f53\:8fd0\:52a8\:ff0c\:5176\:4e2d\:53c8\:6709\:5916\:52a0\:7684\
+\:5f3a\:78c1\:573a\:ff0c\:8fd8\:6709\:81ea\:8eab\:4ea7\:751f\:7684\:7535\:78c1\
+\:573a\:ff0c\:56e0\:6b64\:8981\:7cbe\:786e\:63cf\:8ff0\:7b49\:79bb\:5b50\:4f53\
+\:7684\:884c\:4e3a\:53ca\:5176\:56f0\:96be\:3002",
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"]], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10004.},
+ CellChangeTimes->{{3.594090424811835*^9, 3.594090585146473*^9}, {
+   3.594090628463134*^9, 3.594090740793707*^9}, 3.5940944078189697`*^9, 
+   3.594163838192266*^9}],
+
+Cell["\:7b49\:79bb\:5b50\:4f53\:7684\:63cf\:8ff0\:65b9\:6cd5\:ff1a", "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10004.},
+ CellChangeTimes->{{3.5943487103458133`*^9, 3.594348719338646*^9}},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell[TextData[StyleBox["1.\:5355\:7c92\:5b50\:8f68\:9053\:63cf\:8ff0\:6cd5\
+\:ff1a\n\:7814\:7a76\:7b49\:79bb\:5b50\:4f53\:4e2d\:5355\:4e2a\:5e26\:7535\
+\:7c92\:5b50\:5728\:5916\:52a0\:7684\:7535\:573a\:6216\:78c1\:573a\:4f5c\:7528\
+\:4e0b\:7684\:8fd0\:52a8\:ff0c\:7b49\:79bb\:5b50\:4f53\:4e2d\:5176\:4ed6\:5e26\
+\:7535\:7c92\:5b50\:5bf9\:5b83\:7684\:4f5c\:7528\:88ab\:5b8c\:5168\:5ffd\:7565\
+\:3002\n\:5355\:4e2a\:7c92\:5b50\:7684\:8fd0\:52a8\:8f68\:9053\:53ea\:9700\
+\:7528\:725b\:987f\:529b\:5b66\:65b9\:7a0b\:548c\:7c92\:5b50\:7684\:521d\:59cb\
+\:6761\:4ef6\:ff08\:7a7a\:95f4\:4f4d\:7f6e\:548c\:901f\:5ea6\:ff09\:5c31\:53ef\
+\:4ee5\:5b8c\:5168\:786e\:5b9a\:3002\n\:8fd9\:662f\:4e00\:79cd\:8fd1\:4f3c\
+\:65b9\:6cd5\:ff0c\:4f46\:5b83\:5904\:7406\:95ee\:9898\:7684\:65b9\:6cd5\:7b80\
+\:5355\:ff0c\:7269\:7406\:56fe\:50cf\:76f4\:89c2\:ff0c\:80fd\:591f\:7ed9\:51fa\
+\:5e26\:7535\:7c92\:5b50\:5728\:4e00\:4e9b\:590d\:6742\:7684\:7535\:78c1\:573a\
+\:4e0b\:8fd0\:52a8\:7684\:8f68\:8ff9\:ff0c\:80fd\:8f83\:597d\:5730\:89e3\:91ca\
+\:7b49\:79bb\:5b50\:4f53\:7684\:8bb8\:591a\:6027\:8d28\:3002",
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"]], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10004.},
+ CellChangeTimes->{{3.594090424811835*^9, 3.594090585146473*^9}, {
+   3.594090628463134*^9, 3.594090905458227*^9}, {3.594090936977084*^9, 
+   3.5940909778404703`*^9}, 3.5940944078189697`*^9, 3.594163838192266*^9}],
+
+Cell[TextData[StyleBox["2.\:78c1\:6d41\:4f53\:63cf\:8ff0\:6cd5\:ff1a\n\:628a\
+\:7b49\:79bb\:5b50\:4f53\:770b\:6210\:662f\:5bfc\:7535\:7684\:6d41\:4f53\:ff0c\
+\:7528\:7ecf\:5178\:6d41\:4f53\:529b\:5b66\:548c\:7535\:52a8\:529b\:5b66\:76f8\
+\:7ed3\:5408\:7684\:65b9\:6cd5\:ff0c\:7814\:7a76\:5bfc\:7535\:6d41\:4f53\:548c\
+\:78c1\:573a\:7684\:76f8\:4e92\:4f5c\:7528\:ff0c\:5b83\:7740\:91cd\:4e8e\:7b49\
+\:79bb\:5b50\:4f53\:7684\:6574\:4f53\:884c\:4e3a\:ff0c\:4e0d\:8003\:8651\:5176\
+\:4e2d\:5355\:4e2a\:7c92\:5b50\:7684\:8fd0\:52a8\:72b6\:6001\:3002\n\:7b49\
+\:79bb\:5b50\:4f53\:4e0e\:666e\:901a\:6d41\:4f53\:4e0d\:540c\:ff0c\:7b49\:79bb\
+\:5b50\:4f53\:662f\:5bfc\:7535\:7684\:6d41\:4f53\:ff0c\:5b83\:7684\:8fd0\:52a8\
+\:6bd4\:666e\:901a\:6d41\:4f53\:8981\:590d\:6742\:5f97\:591a\:ff0c\:5b83\:540c\
+\:65f6\:670d\:4ece\:6d41\:4f53\:529b\:5b66\:548c\:7535\:52a8\:529b\:5b66\:7684\
+\:89c4\:5f8b\:ff0c\:5f62\:6210\:4e86\:7814\:7a76\:5bfc\:7535\:6d41\:4f53\:5728\
+\:7535\:78c1\:573a\:4e2d\:8fd0\:52a8\:89c4\:5f8b\:7684\:79d1\:5b66\:ff0c\:79f0\
+\:4e3a\:78c1\:6d41\:4f53\:529b\:5b66\:3002\n\:78c1\:6d41\:4f53\:63cf\:8ff0\
+\:6cd5\:4e3b\:8981\:7528\:4e8e\:63cf\:8ff0\:7b49\:79bb\:5b50\:4f53\:7684\:5b8f\
+\:89c2\:8fd0\:52a8\:ff0c\:5982\:7b49\:79bb\:5b50\:4f53\:7684\:96c6\:4f53\:9707\
+\:8361\:3001\:5b8f\:89c2\:5e73\:8861\:3001\:5b8f\:89c2\:4e0d\:7a33\:5b9a\:6027\
+\:3001\:4ee5\:53ca\:5404\:79cd\:6ce2\:52a8\:73b0\:8c61\:3002",
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"]], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10004.},
+ CellChangeTimes->{{3.594090996326665*^9, 3.594090996482951*^9}, {
+   3.5940910280797853`*^9, 3.594091066700877*^9}, {3.594091099298768*^9, 
+   3.5940911914361196`*^9}, {3.594091235619605*^9, 3.594091506730736*^9}, 
+   3.5940944078189697`*^9, 3.594163838192266*^9}],
+
+Cell["\<\
+3.\:7edf\:8ba1\:63cf\:8ff0\:6cd5\:ff1a
+\:7b49\:79bb\:5b50\:4f53\:662f\:7531\:5927\:91cf\:5fae\:89c2\:7c92\:5b50\:7ec4\
+\:6210\:7684\:4f53\:7cfb\:ff0c\:5bf9\:4e8e\:8fd9\:6837\:7684\:4f53\:7cfb\:ff0c\
+\:7528\:7edf\:8ba1\:529b\:5b66\:65b9\:6cd5\:624d\:53ef\:63ed\:793a\:5176\:66f4\
+\:6df1\:523b\:7684\:8fd0\:52a8\:89c4\:5f8b\:3002\:7b49\:79bb\:5b50\:4f53\:7684\
+\:7edf\:8ba1\:63cf\:8ff0\:6cd5\:662f\:6700\:57fa\:672c\:7684\:63cf\:8ff0\:6cd5\
+\:3002
+\:7edf\:8ba1\:529b\:5b66\:6700\:57fa\:672c\:7684\:63cf\:8ff0\:662f\:5b9a\:4e49\
+\:7c92\:5b50\:7684\:4f4d\:7f6e\:3001\:901f\:5ea6\:3001\:65f6\:95f4\:7684\:5206\
+\:5e03\:51fd\:6570\:ff0c\:7136\:540e\:786e\:5b9a\:5206\:5e03\:51fd\:6570\:6ee1\
+\:8db3\:7684\:65b9\:7a0b\:ff0c\:5373\:52a8\:7406\:5b66\:65b9\:7a0b\:3002\
+\>", "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10004.},
+ CellChangeTimes->{{3.594091523467085*^9, 3.5940915250766425`*^9}, {
+   3.5940915651426425`*^9, 3.5940915662678566`*^9}, {3.5940915972933455`*^9, 
+   3.5940918050253224`*^9}, 3.5940944078189697`*^9, 3.594163838192266*^9},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell[TextData[{
+ "4.\:7c92\:5b50\:6a21\:62df\:6cd5\:ff1a\n\
+\:5728\:6709\:4e9b\:7b49\:79bb\:5b50\:4f53\:95ee\:9898\:4e2d\:ff0c\:65e0\:8bba\
+\:7528\:78c1\:6d41\:4f53\:63cf\:8ff0\:6cd5\:8fd8\:662f\:7edf\:8ba1\:63cf\:8ff0\
+\:6cd5\:ff0c\:90fd\:4e0d\:8db3\:4ee5\:63cf\:8ff0\:7b49\:79bb\:5b50\:4f53\:884c\
+\:4e3a\:ff0c\:4e8e\:662f\:4eba\:4eec\:4e0d\:5f97\:4e0d\:53bb\:8ddf\:8e2a\:6bcf\
+\:4e2a\:7c92\:5b50\:7684\:8f68\:9053\:ff0c\:4ee5\:4e86\:89e3\:6574\:4e2a\:4f53\
+\:7cfb\:7684\:884c\:4e3a\:3002\n\:7b49\:79bb\:5b50\:4f53\:6a21\:62df\:5c31\
+\:662f\:901a\:8fc7\:8ddf\:8e2a\:5927\:91cf\:5e26\:7535\:7c92\:5b50\:5728\:81ea\
+\:6d3d\:573a\:548c\:5916\:52a0\:7535\:78c1\:573a\:7684\:4f5c\:7528\:4e0b\:7684\
+\:8fd0\:52a8\:6765\:4e86\:89e3\:7b49\:79bb\:5b50\:4f53\:7684\:67d0\:4e9b\:884c\
+\:4e3a\:3002\n\:6838\:805a\:53d8\:88c5\:7f6e\:4e2d\:6bcf1",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["m", "3"], TraditionalForm]]],
+ "\:7b49\:79bb\:5b50\:4f53\:7684\:603b\:7c92\:5b50\:6570\:7ea6\:4e3a",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["10", "19"], TraditionalForm]]],
+ "\:4e2a\:ff0c\:5982\:679c\:5bf9\:8fd9\:4e9b\:7c92\:5b50\:7684\:8fd0\:52a8\
+\:8f68\:9053\:90fd\:52a0\:4ee5\:8003\:8651\:ff0c\:8ba1\:7b97\:673a\:5bb9\:91cf\
+\:662f\:4e0d\:591f\:7684\:3002\:5982\:679c\:53ea\:5c40\:9650\:4e8e\:7814\:7a76\
+\:67d0\:7c7b\:7b49\:79bb\:5b50\:4f53\:7684\:67d0\:4e9b\:7279\:6b8a\:884c\:4e3a\
+\:ff0c\:53ea\:9700\:8981\:8003\:5bdf\:4e00\:4e2a\:76f8\:5bf9\:5c0f\:7684\:6a21\
+\:62df\:4f53\:7cfb\:ff0c\:4f7f\:5f97\:5176\:5c3a\:5ea6\:548c\:5176\:4e2d\:7684\
+\:7c92\:5b50\:6570\:ff0c\:8db3\:4ee5\:63cf\:8ff0\:6240\:60f3\:8981\:7814\:7a76\
+\:7684\:7b49\:79bb\:5b50\:4f53\:73b0\:8c61\:ff0c\:8fd9\:6837\:5c31\:53ef\:7528\
+\:8ba1\:7b97\:673a\:6a21\:62df\:3002"
+}], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10004.},
+ CellChangeTimes->{{3.5940918088225145`*^9, 3.5940918145730343`*^9}, {
+   3.5940918671403437`*^9, 3.5940922603675637`*^9}, {3.594092425624406*^9, 
+   3.5940925797548294`*^9}, 3.5940944078189697`*^9, 3.594163838192266*^9},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["P43", "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.},
+ CellChangeTimes->{{3.594092610539113*^9, 3.5940926128517246`*^9}, 
+   3.5941638442865562`*^9}],
+
+Cell[TextData[StyleBox["\:5e26\:7535\:7c92\:5b50\:5728\:4e0d\:5747\:5300\:78c1\
+\:573a\:4e2d\:7684\:6f02\:79fb",
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"]], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.},
+ CellChangeTimes->{{3.5943516718551936`*^9, 3.594351687383486*^9}, 
+   3.5943784996307664`*^9}],
+
+Cell[TextData[{
+ "\:5bf9\:4e0d\:5747\:5300\:78c1\:573a\:ff0c\:7c92\:5b50\:8fd0\:52a8\:65b9\
+\:7a0b\:975e\:7ebf\:6027\:ff0c\:96be\:4ee5\:6c42\:5f97\:5b83\:7684\:7cbe\:786e\
+\:89e3\:3002\:5982\:679c\:78c1\:573a\:7684\:4e0d\:5747\:5300\:6027\:5f88\:5c0f\
+\:ff0c\:5373\:5728\:56de\:65cb\:534a\:5f84",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    SubscriptBox["r", "c"],
+    FontFamily->"Arial"], TraditionalForm]]],
+ "\:8303\:56f4\:5185\:78c1\:573a",
+ StyleBox["B",
+  FontFamily->"Arial"],
+ "\:7684\:53d8\:5316\:6ee1\:8db3\:7f13\:6162\:53d8\:5316\:6761\:4ef6\:ff1a"
+}], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.},
+ CellChangeTimes->{{3.5940926779049034`*^9, 3.5940927709361176`*^9}, {
+   3.5940934790612965`*^9, 3.5940935239094453`*^9}, 3.5940943474355536`*^9, 
+   3.5941638442865562`*^9, 3.594351462902294*^9},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell[BoxData[
+ StyleBox[
+  RowBox[{"\[VerticalSeparator]", 
+   RowBox[{
+    SubscriptBox[
+     OverscriptBox["r", "\[RightVector]"], "c"], "\[CenterDot]", 
+    RowBox[{"\[Del]", 
+     OverscriptBox["B", "\[RightVector]"]}]}], "\[VerticalSeparator]", 
+   RowBox[{"\[LessLess]", "B"}]}],
+  FontFamily->"Arial"]], "DisplayFormula",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.},
+ CellChangeTimes->{{3.594093566351026*^9, 3.594093769870474*^9}, 
+   3.5940943474355536`*^9, 3.5941638442865562`*^9, {3.594425430042413*^9, 
+   3.594425443793522*^9}},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell["\<\
+\:4ea6\:5373\:5728\:4e00\:4e2a\:56de\:65cb\:8f68\:9053\:8fd0\:52a8\:8fc7\:7a0b\
+\:4e2d\:7c92\:5b50\:6240\:611f\:53d7\:7684\:78c1\:573a\:57fa\:672c\:4e0d\:53d8\
+\:ff0c\:8fd9\:6837\:7c92\:5b50\:7684\:8fd0\:52a8\:53ef\:8fd1\:4f3c\:5730\:770b\
+\:4e3a\:4e24\:90e8\:5206\:ff1a\:5728\:5747\:5300\:78c1\:573a\:4e2d\:7ed5\:78c1\
+\:529b\:7ebf\:56de\:65cb\:8fd0\:52a8\:548c\:78c1\:573a\:5fae\:5c0f\:7684\:4e0d\
+\:5747\:5300\:6027\:5f15\:8d77\:7684\:56de\:65cb\:4e2d\:5fc3\:7684\:6f02\:79fb\
+\:3002\
+\>", "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.},
+ CellChangeTimes->{{3.594093863036151*^9, 3.5940939524735823`*^9}, 
+   3.5940940149326115`*^9, {3.5940941660966463`*^9, 3.5940942234306974`*^9}, {
+   3.594094317526609*^9, 3.594094374703817*^9}, 3.5941638442865562`*^9},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell[TextData[{
+ "1.\:68af\:5ea6\:6f02\:79fb\:ff1a\n\:8bbe\:78c1\:573aB\:6cbfz\:8f74\:ff0c\
+\:5728y\:8f74\:65b9\:5411\:6709\:68af\:5ea6\:ff0c\:5373",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    RowBox[{
+     OverscriptBox["B", "\[RightVector]"], "=", 
+     RowBox[{"(", 
+      RowBox[{"0", ",", "0", ",", 
+       RowBox[{"B", "(", "y", ")"}]}], ")"}]}],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ "\:ff0c\:56e0\:6b64",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    RowBox[{
+     RowBox[{"\[Del]", "B"}], "=", 
+     RowBox[{
+      FractionBox[
+       RowBox[{"\[PartialD]", "B"}], 
+       RowBox[{"\[PartialD]", "y"}]], 
+      SubscriptBox[
+       OverscriptBox["e", "^"], "y"]}]}],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ "\:ff0c\:7c92\:5b50\:8fd0\:52a8\:65b9\:7a0b\:4e3a\:ff1a"
+}], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.},
+ CellChangeTimes->{{3.594094427320903*^9, 3.5940944285242214`*^9}, {
+   3.5940944888672323`*^9, 3.594094701865052*^9}, {3.5941007945962563`*^9, 
+   3.59410079478338*^9}, 3.5941638442865562`*^9},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"m", " ", 
+   FractionBox[
+    RowBox[{"\[DifferentialD]", 
+     OverscriptBox["v", "\[RightVector]"]}], 
+    RowBox[{"\[DifferentialD]", "t"}]]}], "=", 
+  RowBox[{"q", " ", 
+   RowBox[{
+    OverscriptBox["v", "\[RightVector]"], "\[Cross]", 
+    RowBox[{
+     OverscriptBox["B", "\[RightVector]"], "[", 
+     OverscriptBox["r", "\[RightVector]"], 
+     "]"}]}]}]}]], "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.},
+ CellChangeTimes->{{3.5940947182571945`*^9, 3.594094831642705*^9}, {
+   3.594095650099459*^9, 3.5940956550687675`*^9}, 3.5941008258619776`*^9, 
+   3.5941638442865562`*^9}],
+
+Cell["\:56e0\:4e3aB\:6ee1\:8db3\:7f13\:53d8\:6761\:4ef6\:ff0c\:53ef\:5728\
+\:56de\:65cb\:4e2d\:5fc3\:5904\:5c55\:5f00\:ff0c\:4fdd\:7559\:5230\:4e00\:7ea7\
+\:5c0f\:91cf\:ff0c\:5373", "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.},
+ CellChangeTimes->{{3.5940948684668274`*^9, 3.594094932942091*^9}, 
+   3.5941008258619776`*^9, 3.5941638442865562`*^9},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell[BoxData[
+ StyleBox[
+  RowBox[{
+   OverscriptBox["B", "\[RightVector]"], "\[TildeTilde]", 
+   RowBox[{
+    SubscriptBox[
+     OverscriptBox["B", "\[RightVector]"], "0"], "+", 
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{
+       SubscriptBox[
+        OverscriptBox["r", "\[RightVector]"], "c"], "\[CenterDot]", 
+       "\[Del]"}], ")"}], 
+     SubscriptBox[
+      OverscriptBox["B", "\[RightVector]"], "0"]}]}]}], 
+  "DisplayFormulaNumbered"]], "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.},
+ CellChangeTimes->{{3.594094941724242*^9, 3.5940950031837254`*^9}, {
+   3.594095161285673*^9, 3.5940951667548904`*^9}, {3.5940956097728367`*^9, 
+   3.5940956158524785`*^9}, 3.5941008258619776`*^9, 3.5941638442865562`*^9}],
+
+Cell[TextData[{
+ "\:5176\:4e2d",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    OverscriptBox["B", "\[RightVector]"],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ "\:662f\:56de\:65cb\:4e2d\:5fc3\:5904\:7684\:78c1\:573a\:3002\:628a",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    OverscriptBox["v", "\[RightVector]"],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ "\:5206\:89e3\:4e3a\:56de\:65cb\:8fd0\:52a8",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    SubscriptBox[
+     OverscriptBox["v", "\[RightVector]"], "0"],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ "\:548c\:6f02\:79fb\:8fd0\:52a8",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    SubscriptBox[
+     OverscriptBox["v", "\[RightVector]"], "D"],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ "\:4e24\:90e8\:5206\:ff0c\:5373"
+}], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.},
+ CellChangeTimes->{{3.594095171880537*^9, 3.59409542183473*^9}, 
+   3.5941008258619776`*^9, 3.5941638442865562`*^9},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell[BoxData[
+ RowBox[{
+  OverscriptBox["v", "\[RightVector]"], "=", 
+  RowBox[{
+   SubscriptBox[
+    OverscriptBox["v", "\[RightVector]"], "0"], "+", 
+   SubscriptBox[
+    OverscriptBox["v", "\[RightVector]"], "D"]}]}]], "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.},
+ CellChangeTimes->{{3.5940954320232925`*^9, 3.594095463127462*^9}, {
+   3.5940956199621763`*^9, 3.594095624994783*^9}, 3.5941008258619776`*^9, 
+   3.5941638442865562`*^9}],
+
+Cell[TextData[{
+ "\:5e76\:5047\:8bbe",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    SubscriptBox[
+     OverscriptBox["v", "\[RightVector]"], "D"],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ "\:662f\:5e38\:77e2\:91cf\:3002\:5c06\:ff082\:ff09\:ff083\:ff09\:5f0f\:5e26\
+\:5165\:ff081\:ff09\:5f0f\:ff0c\:5f97"
+}], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.},
+ CellChangeTimes->{{3.594095474894246*^9, 3.5940954928649635`*^9}, {
+   3.5940955712955775`*^9, 3.5940955726394234`*^9}, {3.594095629167945*^9, 
+   3.594095663491623*^9}, 3.594095746280938*^9, 3.594100825862978*^9, 
+   3.5941638442865562`*^9},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"m", 
+   FractionBox[
+    RowBox[{"\[DifferentialD]", 
+     OverscriptBox["v", "\[RightVector]"]}], 
+    RowBox[{"\[DifferentialD]", "t"}]]}], "=", 
+  RowBox[{
+   RowBox[{"q", 
+    RowBox[{"(", 
+     RowBox[{
+      SubscriptBox[
+       OverscriptBox["v", "\[RightVector]"], "0"], "\[Cross]", 
+      SubscriptBox[
+       OverscriptBox["B", "\[RightVector]"], "0"]}], ")"}]}], "+", 
+   RowBox[{"q", 
+    RowBox[{"(", 
+     RowBox[{
+      SubscriptBox[
+       OverscriptBox["v", "\[RightVector]"], "D"], "\[Cross]", 
+      SubscriptBox[
+       OverscriptBox["B", "\[RightVector]"], "0"]}], ")"}]}], "+", 
+   RowBox[{"q", " ", 
+    RowBox[{
+     SubscriptBox[
+      OverscriptBox["v", "\[RightVector]"], "0"], "\[Cross]", 
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"(", 
+        RowBox[{
+         SubscriptBox[
+          OverscriptBox["r", "\[RightVector]"], "c"], "\[CenterDot]", 
+         "\[Del]"}], ")"}], 
+       SubscriptBox[
+        OverscriptBox["B", "\[RightVector]"], "0"]}], ")"}]}]}], "+", 
+   RowBox[{"q", " ", 
+    RowBox[{
+     SubscriptBox[
+      OverscriptBox["v", "\[RightVector]"], "D"], "\[Cross]", 
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"(", 
+        RowBox[{
+         SubscriptBox[
+          OverscriptBox["r", "\[RightVector]"], "c"], "\[CenterDot]", 
+         "\[Del]"}], ")"}], 
+       SubscriptBox[
+        OverscriptBox["B", "\[RightVector]"], "0"]}], 
+      ")"}]}]}]}]}]], "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.},
+ CellChangeTimes->{{3.5940957730025005`*^9, 3.5940959564499025`*^9}, 
+   3.594100825862978*^9, 3.5941638442865562`*^9}],
+
+Cell[BoxData[{
+ GraphicsBox[{
+   {Arrowheads[0.018879913490962935`], EdgeForm[{GrayLevel[0.], Opacity[1.], 
+    AbsoluteThickness[1]}], EdgeForm[None], 
+    ArrowBox[{{0.43777777777777815`, 0.3866666666666666}, {1.155555555555556, 
+     0.3866666666666666}}]}, 
+   {Arrowheads[0.018535316234148114`], EdgeForm[{GrayLevel[0.], Opacity[1.], 
+    AbsoluteThickness[1]}], EdgeForm[None], 
+    ArrowBox[{{0.4400000000000002, 0.38888888888888895`}, {0.4400000000000002,
+      0.9155555555555557}}]}, 
+   {AbsoluteThickness[1], StrokeForm[{RGBColor[0., 0., 0.], Opacity[1.]}], 
+    EdgeForm[{RGBColor[0., 0., 0.], Opacity[1.]}], EdgeForm[None], 
+    CircleBox[{0.4422222222222224, 0.38444444444444437`}, \
+{0.18541911151113916`, 0.1854191115111392}]}, 
+   CircleBox[{0.5822222222222224, 0.508888888888889}, 0.017284832429004693`], 
+   {Arrowheads[0.01778279410038923], EdgeForm[{GrayLevel[0.], Opacity[1.], 
+    AbsoluteThickness[1]}], EdgeForm[None], 
+    ArrowBox[{{0.43923710254220216`, 0.38756808385042635`}, {
+     0.5829657657785473, 0.5080151820431961}}]}, 
+   {Arrowheads[0.01778279410038923], EdgeForm[{GrayLevel[0.], Opacity[1.], 
+    AbsoluteThickness[1]}], EdgeForm[None], 
+    ArrowBox[{{0.5844444444444448, 0.5066666666666666}, {0.4644444444444447, 
+     0.6333333333333333}}]}, 
+   CircleBox[{0.3422222222222223, 0.43333333333333357`}, \
+{0.018856180831641256`, 0.01885618083164131}], 
+   LineBox[{{0.33555555555555566`, 0.43777777777777793`}, {0.3511111111111113,
+     0.4222222222222224}}], 
+   LineBox[{{0.3511111111111112, 0.43777777777777793`}, {0.3333333333333335, 
+    0.42000000000000026`}}], InsetBox[
+    StyleBox["x",
+     FontFamily->"Times New Roman",
+     FontSize->16,
+     FontSlant->"Plain"], {0.3911111111111114, 0.8866666666666667}, {
+    Left, Baseline}, {0.028888888888888895`, 0.0488888888888889}, {{1., 0.}, {
+    0., 1.}},
+    Alignment->{Left, Top}], InsetBox[
+    StyleBox[Cell["y",
+      GeneratedCell->False,
+      CellAutoOverwrite->False,
+      CellBaseline->Baseline,
+      TextAlignment->Left],
+     FontFamily->"Times New Roman",
+     FontSize->16,
+     Background->GrayLevel[1.]], {1.1222222222222225`, 0.3422222222222222}, {
+    Left, Baseline},
+    Alignment->{Left, Top}], InsetBox[
+    StyleBox[Cell["B",
+      GeneratedCell->False,
+      CellAutoOverwrite->False,
+      CellBaseline->Baseline,
+      TextAlignment->Left],
+     FontFamily->"Times New Roman",
+     FontSize->16,
+     Background->GrayLevel[1.]], {0.3333333333333335, 0.3644444444444439}, {
+    Left, Baseline},
+    Alignment->{Left, Top}], InsetBox[
+    StyleBox[Cell["q",
+      GeneratedCell->False,
+      CellAutoOverwrite->False,
+      CellBaseline->Baseline,
+      TextAlignment->Left],
+     FontFamily->"Times New Roman",
+     FontSize->16,
+     Background->GrayLevel[1.]], {0.617777777777778, 0.5177777777777772}, {
+    Left, Baseline},
+    Alignment->{Left, Top}], InsetBox[
+    StyleBox[Cell[TextData[Cell[BoxData[
+      FormBox[
+       SubscriptBox["v", "0"], TraditionalForm]]]],
+      GeneratedCell->False,
+      CellAutoOverwrite->False,
+      CellBaseline->Baseline,
+      TextAlignment->Left],
+     FontFamily->"Times New Roman",
+     FontSize->16,
+     Background->GrayLevel[1.]], {0.48000000000000015`, 0.6533333333333333}, {
+    Left, Baseline},
+    Alignment->{Left, Top}], InsetBox[
+    StyleBox[Cell[TextData[Cell[BoxData[
+      FormBox[
+       SubscriptBox["r", "c"], TraditionalForm]]]],
+      GeneratedCell->False,
+      CellAutoOverwrite->False,
+      CellBaseline->Baseline,
+      TextAlignment->Left],
+     FontFamily->"Times New Roman",
+     FontSize->16,
+     Background->GrayLevel[1.]], {0.48888888888888904`, 0.4799999999999993}, {
+    Left, Baseline},
+    Alignment->{Left, Top}], 
+   LineBox[{{0.4955555555555557, 0.38444444444444437`}, {0.4955555555555557, 
+    0.3933333333333333}, {0.4955555555555557, 0.39555555555555566`}, {
+    0.4955555555555557, 0.3977777777777778}, {0.4955555555555557, 
+    0.40000000000000013`}, {0.4955555555555557, 0.40222222222222226`}, {
+    0.4955555555555557, 0.4044444444444444}, {0.49333333333333346`, 
+    0.4044444444444444}, {0.49333333333333346`, 0.40666666666666673`}, {
+    0.49333333333333346`, 0.40888888888888886`}, {0.4911111111111112, 
+    0.40888888888888886`}, {0.488888888888889, 0.4111111111111112}, {
+    0.488888888888889, 0.41333333333333333`}, {0.48666666666666675`, 
+    0.41333333333333333`}, {0.48666666666666675`, 0.4155555555555557}, {
+    0.4844444444444445, 0.4155555555555557}, {0.4844444444444445, 
+    0.4177777777777778}, {0.4822222222222224, 0.4177777777777778}}], InsetBox[
+    StyleBox[Cell[TextData[Cell[BoxData[
+      FormBox[
+       RowBox[{
+        SubscriptBox["\[Omega]", "c"], "t"}], TraditionalForm]]]],
+      GeneratedCell->False,
+      CellAutoOverwrite->False,
+      CellBaseline->Baseline,
+      TextAlignment->Left],
+     FontFamily->"Times New Roman",
+     FontSize->16,
+     Background->GrayLevel[1.]], {0.5044444444444446, 0.40222222222222226`}, {
+    Left, Baseline},
+    Alignment->{Left, Top}]},
+  ContentSelectable->True,
+  ImagePadding->{{0., 0.}, {0., 0.}},
+  ImageSize->{501.599999999994, 370.4},
+  PlotRange->{{0., 1.3333333333333335`}, {0., 1.}},
+  PlotRangePadding->Automatic], "\[IndentingNewLine]", 
+ StyleBox[
+  RowBox[{"\:7531\:4e0a\:56fe\:5f97", "\:ff1a"}],
+  FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"]}], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.},
+ CellChangeTimes->{{3.5940966862795343`*^9, 3.594096786439932*^9}, {
+   3.594096817399451*^9, 3.594096894335447*^9}, {3.594096987875278*^9, 
+   3.5940970182283964`*^9}, {3.5940970672168674`*^9, 
+   3.5940973008286824`*^9}, {3.594097352307803*^9, 3.5940973930678205`*^9}, {
+   3.5940974833051424`*^9, 3.5940975608465414`*^9}, 3.594100825862978*^9, 
+   3.5941638442865562`*^9}],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{
+   SubscriptBox[
+    OverscriptBox["r", "\[RightVector]"], "c"], "=", 
+   RowBox[{"(", 
+    RowBox[{
+     RowBox[{
+      FractionBox[
+       SubscriptBox["v", "\[UpTee]"], 
+       SubscriptBox["\[Omega]", "c"]], 
+      RowBox[{"Sin", "[", 
+       RowBox[{
+        SubscriptBox["\[Omega]", "c"], "t"}], "]"}]}], ",", 
+     RowBox[{
+      FractionBox[
+       SubscriptBox["v", "\[UpTee]"], 
+       SubscriptBox["\[Omega]", "c"]], 
+      RowBox[{"Cos", "[", 
+       RowBox[{
+        SubscriptBox["\[Omega]", "c"], "t"}], "]"}]}], ",", "0"}], ")"}]}], 
+  ","}]], "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.},
+ CellChangeTimes->{{3.5940975715026026`*^9, 3.5940975969764857`*^9}, {
+   3.594097653716609*^9, 3.594097659361348*^9}, {3.59409769478483*^9, 
+   3.5940978073811736`*^9}, {3.5940989490332146`*^9, 3.5940989778253*^9}, 
+   3.594100825862978*^9, 3.5941638442865562`*^9}],
+
+Cell[BoxData[
+ RowBox[{
+  SubscriptBox[
+   OverscriptBox["v", "\[RightVector]"], "0"], "=", 
+  RowBox[{
+   SubscriptBox["v", "\[UpTee]"], 
+   RowBox[{
+    RowBox[{"(", 
+     RowBox[{
+      RowBox[{"Cos", "[", 
+       RowBox[{
+        SubscriptBox["\[Omega]", "c"], "t"}], "]"}], ",", 
+      RowBox[{"-", 
+       RowBox[{"Sin", "[", 
+        RowBox[{
+         SubscriptBox["\[Omega]", "c"], "t"}], "]"}]}], ",", "0"}], ")"}], 
+    "."}]}]}]], "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.},
+ CellChangeTimes->{3.594098984041421*^9, 3.594100825862978*^9, 
+  3.5941638442865562`*^9}],
+
+Cell[TextData[{
+ StyleBox["\:5c06\:ff085\:ff09\:ff086\:ff09\:5f0f\:5e26\:5165\:ff084\:ff09\
+\:5f0f\:ff0c\:5e76\:5728\:4e00\:4e2a\:56de\:65cb\:5468\:671f\:4e0a\:5bf9\:65f6\
+\:95f4\:6c42\:5e73\:5747,\:56e0\:4e3a",
+  FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    RowBox[{
+     RowBox[{
+      RowBox[{"\[LeftAngleBracket]", 
+       SubscriptBox[
+        OverscriptBox["r", "\[RightVector]"], "c"], "\[RightAngleBracket]"}], 
+      "=", "0"}], ",", 
+     RowBox[{
+      RowBox[{"\[LeftAngleBracket]", 
+       SubscriptBox[
+        OverscriptBox["v", "\[RightVector]"], "0"], "\[RightAngleBracket]"}], 
+      "=", "0"}]}],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ ",",
+ StyleBox["\:6545\:5f97\:ff084\:ff09\:7684\:5e73\:5747\:7ed3\:679c\:4e3a\:ff1a\
+",
+  FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"]
+}], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.},
+ CellChangeTimes->{{3.5940990001510983`*^9, 3.5940990415115104`*^9}, {
+   3.594099446569569*^9, 3.594099593663066*^9}, 3.594100825862978*^9, 
+   3.5941638442865562`*^9}],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{
+   RowBox[{"q", 
+    RowBox[{"(", 
+     RowBox[{
+      SubscriptBox[
+       OverscriptBox["v", "\[RightVector]"], "D"], "\[Cross]", 
+      SubscriptBox[
+       OverscriptBox["B", "\[RightVector]"], "0"]}], ")"}]}], "+", 
+   RowBox[{"q", 
+    RowBox[{"\[LeftAngleBracket]", 
+     RowBox[{
+      RowBox[{
+       SubscriptBox[
+        OverscriptBox["v", "\[RightVector]"], "0"], "\[Cross]", 
+       RowBox[{"(", 
+        RowBox[{
+         SubscriptBox[
+          OverscriptBox["r", "\[RightVector]"], "c"], "\[CenterDot]", 
+         "\[Del]"}], ")"}]}], 
+      SubscriptBox[
+       OverscriptBox["B", "\[RightVector]"], "0"]}], 
+     "\[RightAngleBracket]"}]}]}], "=", "0"}]], "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.},
+ CellChangeTimes->{{3.5940995879762964`*^9, 3.594099720812603*^9}, 
+   3.594100825863981*^9, 3.5941638442865562`*^9}],
+
+Cell[TextData[{
+ "(7)\[Cross]",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    SubscriptBox["B", "0"],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ "\:5f97\:ff1a"
+}], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.},
+ CellChangeTimes->{{3.5940997365760517`*^9, 3.5940997867903337`*^9}, 
+   3.594100825863981*^9, 3.5941638442865562`*^9},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell[BoxData[
+ RowBox[{
+  SubscriptBox[
+   OverscriptBox["v", "\[RightVector]"], "D"], "=", 
+  RowBox[{
+   RowBox[{"\[LeftAngleBracket]", 
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{
+        SubscriptBox[
+         OverscriptBox["v", "\[RightVector]"], "0"], "\[Cross]", 
+        RowBox[{"(", 
+         RowBox[{
+          SubscriptBox[
+           OverscriptBox["r", "\[RightVector]"], "c"], "\[CenterDot]", 
+          "\[Del]"}], ")"}]}], 
+       SubscriptBox[
+        OverscriptBox["B", "\[RightVector]"], "0"]}], ")"}], "\[Cross]", 
+     SubscriptBox[
+      OverscriptBox["B", "\[RightVector]"], "0"]}], "\[RightAngleBracket]"}], 
+   "/", 
+   SubsuperscriptBox["B", "0", "2"]}]}]], "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.},
+ CellChangeTimes->{{3.59409980000165*^9, 3.594099907947198*^9}, 
+   3.594100825863981*^9, 3.5941638442865562`*^9}],
+
+Cell[TextData[StyleBox["\:5c06\:ff085\:ff09\:ff086\:ff09\:5e26\:5165\:ff088\
+\:ff09\:ff0c\:6c42\:5f97\:ff1a",
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"]], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.},
+ CellChangeTimes->{{3.5940999864172735`*^9, 3.594100025537203*^9}, 
+   3.594100825863981*^9, 3.5941638442865562`*^9, 3.5943554856868677`*^9}],
+
+Cell[BoxData[
+ RowBox[{
+  SubscriptBox[
+   OverscriptBox["v", "\[RightVector]"], "D"], "=", 
+  RowBox[{
+   FractionBox[
+    RowBox[{"-", "1"}], 
+    RowBox[{"2", 
+     SubscriptBox["B", "0"]}]], 
+   FractionBox[
+    SubsuperscriptBox["v", "\[UpTee]", "2"], 
+    SubscriptBox["\[Omega]", "c"]], 
+   FractionBox[
+    RowBox[{"\[PartialD]", 
+     SubscriptBox["B", "0"]}], 
+    RowBox[{"\[PartialD]", "y"}]], 
+   SubscriptBox[
+    OverscriptBox["e", "^"], "x"]}]}]], "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.},
+ CellChangeTimes->{{3.5941000368436975`*^9, 3.5941001364317055`*^9}, 
+   3.594100825863981*^9, 3.5941638442865562`*^9}],
+
+Cell[TextData[StyleBox["\:ff089\:ff09\:5f0f\:7684\:4e00\:822c\:5f62\:5f0f\
+\:4e3a\:ff1a",
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"]], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.},
+ CellChangeTimes->{{3.5941001791044693`*^9, 3.5941001889079676`*^9}, 
+   3.594100825863981*^9, 3.5941638442865562`*^9}],
+
+Cell[BoxData[
+ RowBox[{
+  SubscriptBox[
+   OverscriptBox["v", "\[RightVector]"], "D"], "=", 
+  RowBox[{
+   RowBox[{
+    FractionBox[
+     SubscriptBox["W", "\[UpTee]"], 
+     RowBox[{"q", " ", 
+      SuperscriptBox["B", "3"]}]], 
+    RowBox[{
+     OverscriptBox["B", "\[RightVector]"], "\[Cross]", 
+     RowBox[{"\[Del]", "B"}]}]}], "=", 
+   FractionBox[
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"-", "\[Mu]"}], 
+       RowBox[{"\[Del]", "B"}]}], ")"}], "\[Cross]", 
+     OverscriptBox["B", "\[RightVector]"]}], 
+    RowBox[{"q", " ", 
+     SuperscriptBox["B", "2"]}]]}]}]], "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.},
+ CellChangeTimes->{{3.594100199815198*^9, 3.5941003090996337`*^9}, {
+   3.594100411250745*^9, 3.5941004124565454`*^9}, 3.594100825863981*^9, 
+   3.5941638442865562`*^9}],
+
+Cell[TextData[{
+ "\:5176\:4e2d\:ff0c",
+ Cell[BoxData[
+  StyleBox[
+   SubscriptBox["W", "\[UpTee]"],
+   FontFamily->"Times New Roman"]],
+  CellChangeTimes->{{3.594100199815198*^9, 3.5941003090996337`*^9}}],
+ "\:4e3a\:5e26\:7535\:7c92\:5b50\:5782\:76f4\:52a8\:80fd\:3002"
+}], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.},
+ CellChangeTimes->{{3.594100355069508*^9, 3.5941003741951847`*^9}, {
+   3.5941004094445486`*^9, 3.594100415337453*^9}, 3.594100825863981*^9, 
+   3.5941638442865562`*^9},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell[TextData[{
+ "\:68af\:5ea6\:6f02\:79fb\:4e0e\:7c92\:5b50\:7684\:7535\:8377\:53ca\:7b26\
+\:53f7\:6709\:5173\:ff0c\:56e0\:6b64\:6b63\:8d1f\:7c92\:5b50\:7684\:6f02\:79fb\
+\:65b9\:5411\:76f8\:53cd\:3002\n\:78c1\:573a\:68af\:5ea6\:6f02\:79fb\:662f\
+\:56e0\:5e26\:7535\:7c92\:5b50\:78c1\:77e9\[Mu]\:5728\:4e0d\:5747\:5300\:78c1\
+\:573a\:4e2d\:53d7\:529b\:6240\:5f15\:8d77\:7684\:ff0c\:78c1\:77e9",
+ StyleBox["\[Mu]",
+  FontFamily->"Times New Roman"],
+ "\:53d7\:7684\:529b",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    RowBox[{
+     OverscriptBox["F", "\[RightVector]"], "=", 
+     RowBox[{
+      RowBox[{"-", "\[Mu]"}], 
+      RowBox[{"\[Del]", "B"}]}]}],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ ".\n",
+ Cell[BoxData[
+  SubscriptBox[
+   OverscriptBox["v", "\[RightVector]"], "D"]],
+  CellChangeTimes->{{3.594100199815198*^9, 3.5941003090996337`*^9}, {
+   3.594100411250745*^9, 3.5941004124565454`*^9}},
+  FontFamily->"Times New Roman"],
+ "\:5373\:4e3a\:6f02\:79fb\:901f\:5ea6\:3002",
+ Cell[BoxData[
+  StyleBox[
+   RowBox[{
+    SubscriptBox[
+     OverscriptBox["v", "\[RightVector]"], "D"], "="}],
+   FontFamily->"Times New Roman"]],
+  CellChangeTimes->{{3.594100199815198*^9, 3.5941003090996337`*^9}, {
+   3.594100411250745*^9, 3.5941004124565454`*^9}}],
+ Cell[BoxData[
+  StyleBox[
+   FractionBox[
+    RowBox[{
+     OverscriptBox["F", "\[RightVector]"], "\[Cross]", 
+     OverscriptBox["B", "\[RightVector]"]}], 
+    RowBox[{"q", " ", 
+     SuperscriptBox["B", "2"]}]],
+   FontFamily->"Times New Roman"]],
+  CellChangeTimes->{{3.594100199815198*^9, 3.5941003090996337`*^9}, {
+   3.594100411250745*^9, 3.5941004124565454`*^9}}]
+}], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.},
+ CellChangeTimes->{{3.5941004341439176`*^9, 3.594100468379612*^9}, {
+   3.5941005016776824`*^9, 3.5941006474377813`*^9}, {3.5941007207983403`*^9, 
+   3.59410077815736*^9}, 3.594100825863981*^9, 3.5941638442865562`*^9},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell[TextData[{
+ "2.\:66f2\:7387\:6f02\:79fb\:ff1a\n\
+\:5982\:679c\:78c1\:529b\:7ebf\:6709\:8f7b\:5fae\:7684\:5f2f\:66f2\:ff0c\:66f2\
+\:7387\:534a\:5f84",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    RowBox[{
+     StyleBox["R",
+      FontSlant->"Plain"], "\[GreaterGreater]", 
+     SubscriptBox["r", "c"]}],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ ",\:5373\:6ee1\:8db3\:7f13\:53d8\:6761\:4ef6\:ff0c\:5219\:53ef\:4ee5\:91c7\
+\:7528\:6f02\:79fb\:8fd1\:4f3c\:3002\:5982\:679c\:7c92\:5b50\:56de\:65cb\:4e2d\
+\:5fc3\:4ee5",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    SubscriptBox["v", "\[DoubleVerticalBar]"],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ "\:7684\:901f\:7387\:6cbf\:5f2f\:66f2\:7684\:78c1\:529b\:7ebf\:8fd0\:52a8\
+\:ff0c\:540c\:65f6\:7c92\:5b50\:7ed5\:78c1\:529b\:7ebf\:505a\:56de\:65cb\:8fd0\
+\:52a8\:ff0c\:56de\:65cb\:4e2d\:5fc3\:6cbf\:5f2f\:66f2\:78c1\:529b\:7ebf\:8fd0\
+\:52a8\:65f6\:5c06\:611f\:53d7\:5230\:4e00\:4e2a\:60ef\:6027\:79bb\:5fc3\:529b\
+\:7684\:4f5c\:7528\:ff0c\:4ea7\:751f\:66f2\:7387\:6f02\:79fb\:3002"
+}], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.},
+ CellChangeTimes->{{3.594100836685151*^9, 3.594100844552368*^9}, {
+   3.5941009014082575`*^9, 3.594100970468033*^9}, {3.5941010018848553`*^9, 
+   3.594101028135255*^9}, {3.5941011216513567`*^9, 3.594101150060188*^9}, {
+   3.5941012016083527`*^9, 3.594101247966631*^9}, {3.5941013139063396`*^9, 
+   3.594101340073681*^9}, {3.594101370363761*^9, 3.594101387294983*^9}, {
+   3.594101700668362*^9, 3.5941017203163853`*^9}, {3.5941018141294947`*^9, 
+   3.5941018153052735`*^9}, 3.5941638442865562`*^9},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell[BoxData[
+ RowBox[{
+  OverscriptBox["F", "\[RightVector]"], "=", 
+  RowBox[{
+   FractionBox[
+    RowBox[{"m", " ", 
+     SubsuperscriptBox["v", "\[DoubleVerticalBar]", "2"]}], 
+    SuperscriptBox["R", "2"]], 
+   OverscriptBox["R", "\[RightVector]"]}]}]], "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.},
+ CellChangeTimes->{{3.594101821616457*^9, 3.5941018745675535`*^9}, 
+   3.594103295759852*^9, 3.5941638442865562`*^9}],
+
+Cell[TextData[StyleBox["\:53ef\:6c42\:5f97\:66f2\:7387\:6f02\:79fb\:901f\:5ea6\
+\:ff1a",
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"]], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.},
+ CellChangeTimes->{{3.594101895339322*^9, 3.59410190731526*^9}, 
+   3.594103295759852*^9, 3.5941638442865562`*^9}],
+
+Cell[BoxData[
+ RowBox[{
+  SubscriptBox[
+   OverscriptBox["v", "\[RightVector]"], "D"], "=", 
+  RowBox[{
+   RowBox[{
+    FractionBox[
+     RowBox[{"m", " ", 
+      SubsuperscriptBox["v", "\[DoubleVerticalBar]", "2"]}], 
+     RowBox[{"q", " ", 
+      SuperscriptBox["B", "2"], 
+      SuperscriptBox["R", "2"]}]], 
+    RowBox[{
+     OverscriptBox["R", "\[RightVector]"], "\[Cross]", 
+     OverscriptBox["B", "\[RightVector]"]}]}], "=", 
+   RowBox[{
+    FractionBox[
+     RowBox[{"2", 
+      SubscriptBox["W", "\[DoubleVerticalBar]"]}], 
+     RowBox[{"q", " ", 
+      SuperscriptBox["B", "2"], 
+      SuperscriptBox["R", "2"]}]], 
+    RowBox[{
+     OverscriptBox["R", "\[RightVector]"], "\[Cross]", 
+     OverscriptBox["B", "\[RightVector]"]}]}]}]}]], "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.},
+ CellChangeTimes->{{3.5941019136714716`*^9, 3.594102001729303*^9}, 
+   3.594103295759852*^9, 3.5941638442865562`*^9}],
+
+Cell["\<\
+\:53ef\:77e5\:ff0c\:6b63\:8d1f\:7c92\:5b50\:6f02\:79fb\:65b9\:5411\:76f8\:53cd\
+\:3002
+\:66f2\:7387\:534a\:5f84\:5b9a\:4e49\:ff1a\
+\>", "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.},
+ CellChangeTimes->{{3.594102019600148*^9, 3.594102091693934*^9}, 
+   3.594103295759852*^9, 3.5941638442865562`*^9},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell[BoxData[
+ RowBox[{
+  FractionBox["1", "R"], "=", 
+  RowBox[{
+   RowBox[{
+    UnderscriptBox["Limit", 
+     RowBox[{"\[CapitalDelta]l", "\[Rule]", "0"}]], 
+    FractionBox["\[CapitalDelta]\[CurlyPhi]", "\[CapitalDelta]l"]}], "=", 
+   RowBox[{
+    UnderscriptBox["Limit", 
+     RowBox[{"\[CapitalDelta]l", "\[Rule]", "0"}]], 
+    FractionBox[
+     RowBox[{"\[VerticalSeparator]", 
+      RowBox[{"\[CapitalDelta]", " ", 
+       OverscriptBox["b", "\[RightVector]"]}], "\[VerticalSeparator]"}], 
+     "\[CapitalDelta]l"]}]}]}]], "DisplayFormula",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.},
+ CellChangeTimes->{{3.5941021041912155`*^9, 3.594102363282462*^9}, 
+   3.594103295759852*^9, 3.5941638442865562`*^9}],
+
+Cell[TextData[{
+ StyleBox["\:5f0f\:4e2d\:ff0c",
+  FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    RowBox[{
+     OverscriptBox["b", "\[RightVector]"], "=", 
+     FractionBox[
+      OverscriptBox["B", "\[RightVector]"], "B"]}],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ ".\:5229\:7528",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    OverscriptBox["n", "\[RightVector]"], "=", 
+    FractionBox[
+     RowBox[{"-", 
+      OverscriptBox["R", "\[RightVector]"]}], "R"]}], TraditionalForm]],
+  FontFamily->"Times New Roman"],
+ ",\:53ef\:5f97\:ff1a"
+}], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.},
+ CellChangeTimes->{{3.5941024054374037`*^9, 3.5941024595812893`*^9}, {
+   3.59410250630177*^9, 3.5941025698368797`*^9}, 3.594103295759852*^9, 
+   3.5941638442865562`*^9},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{
+   FractionBox[
+    OverscriptBox["n", "\[RightVector]"], "R"], "=", 
+   RowBox[{
+    RowBox[{
+     UnderscriptBox["Limit", 
+      RowBox[{"\[CapitalDelta]l", "\[Rule]", "0"}]], 
+     FractionBox[
+      RowBox[{"\[CapitalDelta]", " ", 
+       OverscriptBox["b", "\[RightVector]"]}], "\[CapitalDelta]l"]}], "=", 
+    RowBox[{
+     FractionBox[
+      RowBox[{"\[PartialD]", 
+       OverscriptBox["b", "\[RightVector]"]}], 
+      RowBox[{"\[PartialD]", "l"}]], "=", 
+     RowBox[{
+      RowBox[{
+       RowBox[{"(", 
+        RowBox[{
+         OverscriptBox["b", "\[RightVector]"], "\[CenterDot]", "\[Del]"}], 
+        ")"}], 
+       OverscriptBox["b", "\[RightVector]"]}], "=", 
+      RowBox[{"-", 
+       FractionBox[
+        OverscriptBox["R", "\[RightVector]"], 
+        SuperscriptBox["R", "2"]]}]}]}]}]}], ",", Cell[
+  "\:5373\:ff1a"]}]], "DisplayFormula",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.},
+ CellChangeTimes->{{3.594102588332137*^9, 3.5941027352349505`*^9}, 
+   3.594103295759852*^9, 3.5941638442865562`*^9}],
+
+Cell[BoxData[
+ RowBox[{
+  FractionBox[
+   OverscriptBox["R", "\[RightVector]"], 
+   SuperscriptBox["R", "2"]], "=", 
+  RowBox[{
+   RowBox[{"-", 
+    RowBox[{"(", 
+     RowBox[{
+      FractionBox[
+       OverscriptBox["B", "\[RightVector]"], "B"], "\[CenterDot]", "\[Del]"}],
+      ")"}]}], 
+   FractionBox[
+    OverscriptBox["B", "\[RightVector]"], "B"]}]}]], "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.},
+ CellChangeTimes->{{3.5941027498916674`*^9, 3.594102793435529*^9}, 
+   3.5941032957608533`*^9, 3.5941638442865562`*^9}],
+
+Cell["\:4ece\:800c\:ff0c\:66f2\:7387\:6f02\:79fb\:901f\:5ea6\:4e5f\:53ef\:5199\
+\:4e3a\:ff1a", "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.},
+ CellChangeTimes->{{3.594102851233837*^9, 3.594102871141902*^9}, 
+   3.5941032957608533`*^9, 3.5941638442865562`*^9},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell[BoxData[
+ RowBox[{
+  SubscriptBox[
+   OverscriptBox["v", "\[RightVector]"], "D"], "=", 
+  RowBox[{
+   FractionBox[
+    RowBox[{"2", 
+     SubscriptBox["W", "\[DoubleVerticalBar]"]}], 
+    RowBox[{"q", " ", 
+     SuperscriptBox["B", "2"]}]], 
+   RowBox[{
+    OverscriptBox["B", "\[RightVector]"], "\[Cross]", 
+    RowBox[{"(", 
+     RowBox[{
+      FractionBox[
+       OverscriptBox["B", "\[RightVector]"], "B"], "\[CenterDot]", "\[Del]"}],
+      ")"}]}], 
+   FractionBox[
+    OverscriptBox["B", "\[RightVector]"], "B"]}]}]], "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.},
+ CellChangeTimes->{{3.594102879479429*^9, 3.594102912599381*^9}, 
+   3.5941032957608533`*^9, 3.5941638442865562`*^9}],
+
+Cell["\:5728\:67f1\:5750\:6807\:7cfb\:4e2d\:ff0c\:7531P46\:9875\:8fc7\:7a0b\
+\:ff0c\:5f97\:ff1a", "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.},
+ CellChangeTimes->{{3.594103028352104*^9, 3.5941030728088417`*^9}, {
+   3.5941031315177526`*^9, 3.5941031441481266`*^9}, 3.5941032957608533`*^9, 
+   3.5941638442865562`*^9},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]",
+ FontSize->12],
+
+Cell[BoxData[
+ RowBox[{
+  FractionBox[
+   RowBox[{"\[Del]", "B"}], "B"], "=", 
+  RowBox[{"-", 
+   FractionBox[
+    OverscriptBox["R", "\[RightVector]"], 
+    SuperscriptBox["R", "2"]]}]}]], "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.},
+ CellChangeTimes->{{3.59410315960137*^9, 3.5941031855455656`*^9}, 
+   3.5941032957608533`*^9, 3.5941638442865562`*^9}],
+
+Cell["\:5219\:ff0812\:ff09\:5f0f\:8fd8\:53ef\:5199\:4e3a\:ff1a", "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.},
+ CellChangeTimes->{{3.5941032001772633`*^9, 3.594103227139369*^9}, 
+   3.5941032957608533`*^9, 3.5941638442865562`*^9},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell[BoxData[
+ RowBox[{
+  SubscriptBox[
+   OverscriptBox["v", "\[RightVector]"], "D"], "=", 
+  RowBox[{
+   FractionBox[
+    RowBox[{"2", 
+     SubscriptBox["W", "\[DoubleVerticalBar]"]}], 
+    RowBox[{"q", " ", 
+     SuperscriptBox["B", "3"]}]], 
+   RowBox[{
+    OverscriptBox["B", "\[RightVector]"], "\[Cross]", 
+    RowBox[{"\[Del]", "B"}]}]}]}]], "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.},
+ CellChangeTimes->{{3.5941032383297863`*^9, 3.594103259924099*^9}, 
+   3.5941032957608533`*^9, 3.5941638442865562`*^9}],
+
+Cell["\<\
+\:4e00\:822c\:5730\:ff0c\:78c1\:529b\:7ebf\:5f2f\:66f2\:65f6\:5fc5\:5b9a\:5b58\
+\:5728\:78c1\:573a\:68af\:5ea6\:ff0c\:78c1\:573a\:7684\:4e0d\:5747\:5300\:6027\
+\:5f15\:8d77\:7c92\:5b50\:7684\:603b\:6f02\:79fb\:5e94\:8be5\:662f\:68af\:5ea6\
+\:6f02\:79fb\:4e0e\:66f2\:7387\:6f02\:79fb\:7684\:53e0\:52a0\:3002
+\:5219\:ff0c\:603b\:6f02\:79fb\:901f\:5ea6\:4e3a\:ff1a\
+\>", "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.},
+ CellChangeTimes->{{3.594103306788164*^9, 3.5941034108535795`*^9}, 
+   3.594163783512622*^9, 3.5941638442865562`*^9},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell[BoxData[
+ RowBox[{
+  SubscriptBox[
+   OverscriptBox["v", "\[RightVector]"], "D"], "=", 
+  RowBox[{
+   RowBox[{
+    FractionBox[
+     RowBox[{
+      SubscriptBox["W", "\[UpTee]"], "+", 
+      RowBox[{"2", 
+       SubscriptBox["W", "\[DoubleVerticalBar]"]}]}], 
+     RowBox[{"q", " ", 
+      SuperscriptBox["B", "3"]}]], 
+    RowBox[{
+     OverscriptBox["B", "\[RightVector]"], "\[Cross]", 
+     RowBox[{"\[Del]", "B"}]}]}], "=", 
+   RowBox[{
+    FractionBox[
+     RowBox[{
+      SubscriptBox["W", "\[UpTee]"], "+", 
+      RowBox[{"2", 
+       SubscriptBox["W", "\[DoubleVerticalBar]"]}]}], 
+     RowBox[{"q", " ", 
+      SuperscriptBox["B", "2"], 
+      SuperscriptBox["R", "2"]}]], 
+    RowBox[{
+     OverscriptBox["R", "\[RightVector]"], "\[Cross]", 
+     OverscriptBox["B", "\[RightVector]"]}]}]}]}]], "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.},
+ CellChangeTimes->{3.594103695578909*^9, 3.594163783512622*^9, 
+  3.5941638442865562`*^9}]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["P64", "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10006.},
+ CellChangeTimes->{{3.594103743927959*^9, 3.594103746699794*^9}, 
+   3.5941638512402706`*^9}],
+
+Cell[TextData[{
+ "\:4e00\:822c\:7684\:77e9\:65b9\:7a0b\:4e2d\:ff0c\:7269\:7406\:4e0a\:6709\
+\:610f\:4e49\:7684\:53ea\:6709",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    RowBox[{
+     RowBox[{
+      StyleBox["\[Psi]",
+       FontSlant->"Plain"], "=", 
+      StyleBox["1",
+       FontSlant->"Plain"]}], ",", 
+     RowBox[{"\[Psi]", "=", 
+      RowBox[{"m", " ", 
+       OverscriptBox["v", "\[RightVector]"]}]}], ",", 
+     RowBox[{"\[Psi]", "=", 
+      RowBox[{
+       FractionBox["1", "2"], "m", " ", 
+       SuperscriptBox["v", "2"]}]}]}],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ "\:5373\:96f6\:9636\:3001\:4e00\:9636\:3001\:4e8c\:9636\:77e9\:3002\:5b83\
+\:4eec\:4e0e\:8d28\:91cf\:3001\:52a8\:91cf\:3001\:80fd\:91cf\:5b88\:6052\:76f8\
+\:8054\:7cfb\:7684\:3002\:5bf9\:666e\:901a\:6d41\:4f53\:ff0c\:8fd9\:4e09\:79cd\
+\:77e9\:65b9\:7a0b\:53ef\:5f97\:5230\:6d41\:4f53\:529b\:5b66\:65b9\:7a0b\:7ec4\
+\:3002\:5bf9\:4e8e\:7b49\:79bb\:5b50\:4f53\:ff0c\:56e0\:4e3a\:6709\:4e0d\:540c\
+\:7c7b\:578b\:7684\:7c92\:5b50\:ff0c\:81f3\:5c11\:542b\:4e00\:79cd\:6b63\:79bb\
+\:5b50\:548c\:7535\:5b50\:ff0c\:5f53\:5b83\:4eec\:6ca1\:6709\:8fbe\:5230\:5e73\
+\:8861\:65f6\:ff0c\:5e94\:4f5c\:4e3a\:4e24\:79cd\:4e0d\:540c\:7684\:7c92\:5b50\
+\:4f53\:7cfb\:ff0c\:76f8\:5e94\:6709\:4e24\:79cd\:4e0d\:540c\:7684\:6d41\:4f53\
+\:65b9\:7a0b\:ff0c\:5373\:53cc\:6d41\:4f53\:529b\:5b66\:65b9\:7a0b\:3002\n\
+\:5728\:8ba1\:7b97\:65f6\:ff0c\:5047\:5b9a\:6ca1\:6709\:7c92\:5b50\:7684\:7535\
+\:79bb\:3001\:590d\:5408\:7b49\:60c5\:51b5\:ff0c\:53ea\:53d1\:751f\:5f39\:6027\
+\:78b0\:649e\:3002"
+}], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10006.},
+ CellChangeTimes->{{3.5941037608683434`*^9, 3.594103868881939*^9}, {
+   3.594103937723569*^9, 3.594104146151427*^9}, {3.594104223760869*^9, 
+   3.59410430584861*^9}, 3.594116584938572*^9, {3.5941637509316435`*^9, 
+   3.5941637782308936`*^9}, 3.5941638512402706`*^9},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell["\:901f\:5ea6\:77e9\:65b9\:7a0b\:ff1a", "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10006.},
+ CellChangeTimes->{{3.5941106492124753`*^9, 3.594110650384432*^9}, 
+   3.594116584938572*^9, {3.5941637509316435`*^9, 3.5941637782308936`*^9}, 
+   3.5941638512402706`*^9},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{
+   RowBox[{
+    FractionBox["\[PartialD]", 
+     RowBox[{"\[PartialD]", "t"}]], 
+    RowBox[{"(", 
+     RowBox[{"n", 
+      RowBox[{"\[LeftAngleBracket]", 
+       RowBox[{"\[Psi]", "[", 
+        OverscriptBox["v", "\[RightVector]"], "]"}], 
+       "\[RightAngleBracket]"}]}], ")"}]}], "+", 
+   RowBox[{"\[Del]", 
+    RowBox[{"\[CenterDot]", 
+     RowBox[{"(", 
+      RowBox[{"n", 
+       RowBox[{"\[LeftAngleBracket]", 
+        RowBox[{
+         RowBox[{"\[Psi]", "[", 
+          OverscriptBox["v", "\[RightVector]"], "]"}], 
+         OverscriptBox["v", "\[RightVector]"]}], "\[RightAngleBracket]"}]}], 
+      ")"}]}]}], "-", 
+   RowBox[{
+    FractionBox[
+     RowBox[{"n", " ", "q"}], "m"], 
+    RowBox[{
+     OverscriptBox["E", "\[RightVector]"], "\[CenterDot]", 
+     RowBox[{"\[LeftAngleBracket]", 
+      FractionBox[
+       RowBox[{"\[PartialD]", "\[Psi]"}], 
+       RowBox[{"\[PartialD]", 
+        OverscriptBox["v", "\[RightVector]"]}]], "\[RightAngleBracket]"}]}]}],
+    "-", 
+   RowBox[{
+    FractionBox[
+     RowBox[{"n", " ", "q"}], "m"], 
+    RowBox[{"\[LeftAngleBracket]", 
+     RowBox[{
+      RowBox[{"(", 
+       RowBox[{
+        OverscriptBox["v", "\[RightVector]"], "\[Cross]", 
+        OverscriptBox["B", "\[RightVector]"]}], ")"}], "\[CenterDot]", 
+      FractionBox[
+       RowBox[{"\[PartialD]", "\[Psi]"}], 
+       RowBox[{"\[PartialD]", 
+        OverscriptBox["v", "\[RightVector]"]}]]}], 
+     "\[RightAngleBracket]"}]}]}], "=", 
+  RowBox[{"\[Integral]", 
+   RowBox[{
+    RowBox[{"\[Psi]", "[", 
+     OverscriptBox["v", "\[RightVector]"], "]"}], 
+    SubscriptBox[
+     RowBox[{"(", 
+      FractionBox[
+       RowBox[{"\[PartialD]", "f"}], 
+       RowBox[{"\[PartialD]", "t"}]], ")"}], "c"], 
+    RowBox[{"\[DifferentialD]", 
+     OverscriptBox["v", "\[RightVector]"]}]}]}]}]], "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10006.},
+ CellChangeTimes->{{3.594110672902316*^9, 3.594110950921549*^9}, 
+   3.5941165849395647`*^9, {3.5941637509316435`*^9, 3.5941637782308936`*^9}, 
+   3.5941638512402706`*^9}],
+
+Cell[TextData[{
+ "1.\:8fde\:7eed\:6027\:65b9\:7a0b\:ff1a\n\:7531\:96f6\:9636",
+ StyleBox["\[Psi]=1",
+  FontFamily->"Times New Roman"],
+ "\:ff0c\:4ee3\:5165\:ff0818\:ff09\:5f0f\:5f97\:5230\:ff1a"
+}], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10006.},
+ CellChangeTimes->{{3.5941110172796125`*^9, 3.594111066237209*^9}, {
+   3.5941115206482377`*^9, 3.594111529133441*^9}, 3.594113745567982*^9, 
+   3.5941165849395647`*^9, {3.5941637509316435`*^9, 3.5941637782308936`*^9}, 
+   3.5941638512402706`*^9},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{
+   FractionBox[
+    RowBox[{"\[PartialD]", "n"}], 
+    RowBox[{"\[PartialD]", "t"}]], "+", 
+   RowBox[{"\[Del]", 
+    RowBox[{"\[CenterDot]", 
+     RowBox[{"(", 
+      RowBox[{"n", " ", 
+       OverscriptBox["u", "\[RightVector]"]}], ")"}]}]}]}], "=", 
+  RowBox[{"0", " ", Cell[TextData[StyleBox["\:8fde\:7eed\:6027\:65b9\:7a0b",
+    FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]",
+    FontSize->12]]]}]}]], "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10006.},
+ CellChangeTimes->{{3.5941110951930046`*^9, 3.5941111344624767`*^9}, 
+   3.5941112795624332`*^9, {3.594111315956436*^9, 3.594111330949889*^9}, 
+   3.5941165849395647`*^9, {3.5941637509316435`*^9, 3.5941637782308936`*^9}, 
+   3.5941638512402706`*^9}],
+
+Cell[TextData[{
+ "\:56e0\:53ea\:53d1\:751f\:5f39\:6027\:78b0\:649e\:ff0c\:7c92\:5b50\:6570\
+\:524d\:540e\:5b88\:6052\:ff0c\:6545\:78b0\:649e\:9879",
+ Cell[BoxData[
+  StyleBox[
+   RowBox[{
+    RowBox[{"\[Integral]", 
+     RowBox[{
+      SubscriptBox[
+       RowBox[{"(", 
+        FractionBox[
+         RowBox[{"\[PartialD]", "f"}], 
+         RowBox[{"\[PartialD]", "t"}]], ")"}], "c"], 
+      RowBox[{"\[DifferentialD]", 
+       OverscriptBox["v", "\[RightVector]"]}]}]}], "=", "0"}],
+   FontFamily->"Times New Roman"]],
+  CellChangeTimes->{{3.594110672902316*^9, 3.594110950921549*^9}}],
+ ".\:7528",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    RowBox[{
+     StyleBox["\[Rho]",
+      FontSlant->"Plain"], "=", 
+     RowBox[{"m", " ", "n"}]}],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ "\:8868\:793a\:7c92\:5b50\:8d28\:91cf\:5bc6\:5ea6\:ff0c\:5219\:5f97\:5230\
+\:8d28\:91cf\:5b88\:6052\:65b9\:7a0b\:ff1a"
+}], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10006.},
+ CellChangeTimes->{{3.5941111509721594`*^9, 3.594111260513647*^9}, {
+   3.5941114056442647`*^9, 3.594111462743847*^9}, 3.5941165849395647`*^9, {
+   3.5941637509316435`*^9, 3.5941637782308936`*^9}, 3.5941638512402706`*^9},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{
+   FractionBox[
+    RowBox[{"\[PartialD]", "\[Rho]"}], 
+    RowBox[{"\[PartialD]", "t"}]], "+", 
+   RowBox[{"\[Del]", 
+    RowBox[{"\[CenterDot]", 
+     RowBox[{"(", 
+      RowBox[{"\[Rho]", " ", 
+       OverscriptBox["u", "\[RightVector]"]}], ")"}]}]}]}], "=", 
+  RowBox[{
+  "0", " ", Cell[TextData[StyleBox["\:8d28\:91cf\:5b88\:6052\:65b9\:7a0b",
+    FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]",
+    FontSize->12]]]}]}]], "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10006.},
+ CellChangeTimes->{{3.5941114897464085`*^9, 3.5941115040207105`*^9}, {
+   3.5941120635055304`*^9, 3.5941120668026495`*^9}, 3.594116584940565*^9, {
+   3.5941637509316435`*^9, 3.5941637782308936`*^9}, 3.5941638512402706`*^9}],
+
+Cell[TextData[{
+ "2.\:8fd0\:52a8\:65b9\:7a0b\:ff1a\n\:7531\:4e00\:9636",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"\[Psi]", "=", 
+    RowBox[{"m", " ", 
+     OverscriptBox["v", "\[RightVector]"]}]}], TraditionalForm]],
+  FontFamily->"Times New Roman"],
+ "\:ff0c",
+ "\:4ee3\:5165",
+ "\:ff0818\:ff09\:5f0f\:5f97\:5230\:ff1a"
+}], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10006.},
+ CellChangeTimes->{{3.5941115328057256`*^9, 3.594111569075098*^9}, {
+   3.594113732497321*^9, 3.5941137428151608`*^9}, 3.594116584940565*^9, {
+   3.5941637509316435`*^9, 3.5941637782308936`*^9}, 3.5941638512402706`*^9},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{
+   RowBox[{
+    FractionBox[
+     RowBox[{"\[PartialD]", 
+      RowBox[{"(", 
+       RowBox[{"n", " ", "m", " ", 
+        OverscriptBox["u", "\[RightVector]"]}], ")"}]}], 
+     RowBox[{"\[PartialD]", "t"}]], 
+    RowBox[{"+", 
+     RowBox[{"\[Del]", 
+      RowBox[{"\[CenterDot]", 
+       RowBox[{"(", 
+        RowBox[{"n", " ", "m", 
+         RowBox[{"\[LeftAngleBracket]", " ", 
+          RowBox[{
+           OverscriptBox["v", "\[RightVector]"], 
+           OverscriptBox["v", "\[RightVector]"]}], "\[RightAngleBracket]"}]}],
+         ")"}]}]}]}]}], "-", 
+   RowBox[{"n", " ", 
+    OverscriptBox["F", "\[RightVector]"]}]}], "=", 
+  OverscriptBox["R", "\[RightVector]"]}]], "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10006.},
+ CellChangeTimes->{{3.5941115943899517`*^9, 3.594111660412035*^9}, {
+   3.5941117026263285`*^9, 3.5941117393176003`*^9}, {3.5941121742972884`*^9, 
+   3.5941121758443775`*^9}, 3.594116584940565*^9, {3.5941637509316435`*^9, 
+   3.5941637782308936`*^9}, 3.5941638512558675`*^9}],
+
+Cell[TextData[{
+ "\:5176\:4e2d\:ff0c",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    RowBox[{
+     OverscriptBox["F", "\[RightVector]"], "=", 
+     RowBox[{"q", "(", 
+      RowBox[{
+       OverscriptBox["E", "\[RightVector]"], "+", 
+       RowBox[{
+        OverscriptBox["u", "\[RightVector]"], "\[Cross]", 
+        OverscriptBox["B", "\[RightVector]"]}]}], ")"}]}],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ ",\:662f\:4ee5\:5e73\:5747\:901f\:5ea6",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    OverscriptBox["u", "\[RightVector]"],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ "\:8fd0\:52a8\:7684\:6d41\:4f53\:5143\:53d7\:7684",
+ StyleBox["Lorentz",
+  FontFamily->"Times New Roman"],
+ "\:529b\:3002\n\:78b0\:649e\:9879\:ff1a"
+}], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10006.},
+ CellChangeTimes->{{3.594111774649166*^9, 3.5941118883868504`*^9}, 
+   3.594116584940565*^9, {3.5941637509316435`*^9, 3.5941637782308936`*^9}, 
+   3.5941638512558675`*^9},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell[BoxData[
+ RowBox[{
+  OverscriptBox["R", "\[RightVector]"], "=", 
+  RowBox[{
+   RowBox[{"m", 
+    RowBox[{"\[Integral]", 
+     RowBox[{
+      OverscriptBox["v", "\[RightVector]"], 
+      SubscriptBox[
+       RowBox[{"(", 
+        FractionBox[
+         RowBox[{"\[PartialD]", "f"}], 
+         RowBox[{"\[PartialD]", "t"}]], ")"}], "c"], 
+      RowBox[{"\[DifferentialD]", 
+       OverscriptBox["v", "\[RightVector]"]}]}]}]}], "=", 
+   RowBox[{
+    RowBox[{"m", 
+     RowBox[{"\[Integral]", 
+      RowBox[{
+       RowBox[{"(", 
+        RowBox[{
+         OverscriptBox["u", "\[RightVector]"], "+", 
+         OverscriptBox["w", "\[RightVector]"]}], ")"}], 
+       SubscriptBox[
+        RowBox[{"(", 
+         FractionBox[
+          RowBox[{"\[PartialD]", "f"}], 
+          RowBox[{"\[PartialD]", "t"}]], ")"}], "c"], 
+       RowBox[{"\[DifferentialD]", 
+        OverscriptBox["v", "\[RightVector]"]}]}]}]}], "=", 
+    RowBox[{"m", 
+     RowBox[{"\[Integral]", 
+      RowBox[{
+       OverscriptBox["w", "\[RightVector]"], 
+       SubscriptBox[
+        RowBox[{"(", 
+         FractionBox[
+          RowBox[{"\[PartialD]", "f"}], 
+          RowBox[{"\[PartialD]", "t"}]], ")"}], "c"], 
+       RowBox[{"\[DifferentialD]", 
+        OverscriptBox["v", 
+         "\[RightVector]"]}]}]}]}]}]}]}]], "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10006.},
+ CellChangeTimes->{{3.5941119054511576`*^9, 3.5941120216498113`*^9}, 
+   3.594116584940565*^9, {3.5941637509316435`*^9, 3.5941637782308936`*^9}, 
+   3.5941638512558675`*^9}],
+
+Cell[TextData[{
+ Cell[BoxData[
+  FormBox[
+   OverscriptBox["R", "\[RightVector]"], TraditionalForm]],
+  FontFamily->"Times New Roman"],
+ "\:4e3a\:6469\:64e6\:963b\:529b\:ff0c",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    StyleBox["P",
+     FontFamily->"Times New Roman",
+     FontWeight->"Bold",
+     FontSlant->"Plain"], 
+    StyleBox["=",
+     FontFamily->"Times New Roman"], 
+    StyleBox[
+     RowBox[{
+      RowBox[{"n", " ", "m", 
+       RowBox[{"\[LeftAngleBracket]", " ", 
+        RowBox[{
+         OverscriptBox["v", "\[RightVector]"], 
+         OverscriptBox["v", "\[RightVector]"]}], "\[RightAngleBracket]"}]}], 
+      "=", 
+      RowBox[{
+       RowBox[{"n", " ", "m", 
+        OverscriptBox["u", "\[RightVector]"], 
+        OverscriptBox["u", "\[RightVector]"]}], "+", 
+       RowBox[{"p", " ", 
+        StyleBox["I",
+         FontWeight->"Bold",
+         FontSlant->"Plain"]}], 
+       StyleBox[" ",
+        FontWeight->"Bold",
+        FontSlant->"Plain"], 
+       StyleBox["+",
+        FontSlant->"Plain"], 
+       StyleBox["\[CapitalPi]",
+        FontWeight->"Bold",
+        FontSlant->"Plain"]}]}],
+     FontFamily->"Times New Roman"], "  "}], TraditionalForm]]],
+ "\:ff0c\:5219\:ff0821\:ff09\:5f0f\:53ef\:5199\:4e3a\:ff1a"
+}], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10006.},
+ CellChangeTimes->{{3.594112128058546*^9, 3.594112139341012*^9}, {
+   3.5941122613761473`*^9, 3.594112291613347*^9}, {3.594112375559085*^9, 
+   3.5941124398227825`*^9}, {3.594112476857689*^9, 3.5941125715543203`*^9}, {
+   3.5941126110504265`*^9, 3.5941126219890175`*^9}, 3.594116584940565*^9, {
+   3.5941637509316435`*^9, 3.5941637782308936`*^9}, 3.5941638512558675`*^9},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{
+   FractionBox[
+    RowBox[{"\[PartialD]", 
+     RowBox[{"(", 
+      RowBox[{"n", " ", "m", " ", 
+       OverscriptBox["u", "\[RightVector]"]}], ")"}]}], 
+    RowBox[{"\[PartialD]", "t"}]], "+", 
+   RowBox[{"\[Del]", 
+    RowBox[{"\[CenterDot]", 
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"(", 
+        RowBox[{"n", " ", "m", " ", 
+         OverscriptBox["u", "\[RightVector]"]}], ")"}], 
+       OverscriptBox["u", "\[RightVector]"]}], ")"}]}]}]}], "=", 
+  RowBox[{
+   RowBox[{"n", " ", 
+    OverscriptBox["F", "\[RightVector]"]}], "-", 
+   RowBox[{"\[Del]", "p"}], "-", 
+   RowBox[{"\[Del]", 
+    RowBox[{"\[CenterDot]", 
+     StyleBox["\[CapitalPi]",
+      FontWeight->"Bold",
+      FontSlant->"Plain"]}]}], "+", 
+   RowBox[{
+    OverscriptBox["R", "\[RightVector]"], " ", Cell[
+    "\:6d41\:4f53\:5143\:7684\:8fd0\:52a8\:65b9\:7a0b",
+     FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]",
+     FontSize->12]}]}]}]], "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10006.},
+ CellChangeTimes->{{3.5941126396469264`*^9, 3.594112823313548*^9}, 
+   3.594116584941566*^9, {3.5941637509316435`*^9, 3.5941637782308936`*^9}, 
+   3.5941638512558675`*^9}],
+
+Cell["\<\
+\:5229\:7528\:ff0819\:ff09\:ff0c\:4e0a\:5f0f\:53ef\:7b80\:5316\:4e3a\:ff1a\
+\>", "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10006.},
+ CellChangeTimes->{{3.5941128636457367`*^9, 3.5941128959926147`*^9}, 
+   3.594116584941566*^9, {3.5941637509316435`*^9, 3.5941637782308936`*^9}, 
+   3.5941638512558675`*^9},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"n", " ", "m", 
+   FractionBox[
+    RowBox[{"\[DifferentialD]", 
+     OverscriptBox["u", "\[RightVector]"]}], 
+    RowBox[{"\[DifferentialD]", "t"}]]}], "=", 
+  RowBox[{
+   RowBox[{"n", " ", 
+    OverscriptBox["F", "\[RightVector]"]}], "-", 
+   RowBox[{"\[Del]", "p"}], "-", 
+   RowBox[{"\[Del]", 
+    RowBox[{"\[CenterDot]", 
+     StyleBox["\[CapitalPi]",
+      FontWeight->"Bold",
+      FontSlant->"Plain"]}]}], "+", 
+   OverscriptBox["R", "\[RightVector]"]}]}]], "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10006.},
+ CellChangeTimes->{{3.5941129140567703`*^9, 3.5941129714134107`*^9}, 
+   3.594116584941566*^9, {3.5941637509316435`*^9, 3.5941637782308936`*^9}, 
+   3.5941638512558675`*^9}],
+
+Cell[TextData[{
+ "\:5f0f\:4e2d\:ff0c",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    RowBox[{
+     FractionBox["\[DifferentialD]", 
+      RowBox[{"\[DifferentialD]", "t"}]], 
+     RowBox[{"=", 
+      RowBox[{
+       RowBox[{
+        FractionBox["\[PartialD]", 
+         RowBox[{"\[PartialD]", "t"}]], 
+        RowBox[{"+", 
+         OverscriptBox["u", "\[RightVector]"]}]}], "\[CenterDot]", 
+       "\[Del]"}]}]}],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ "\:79f0\:4e3a\:8fd0\:6d41\:5bfc\:6570\:ff0c\:8868\:793a\:8ddf\:968f\:6d41\
+\:4f53\:5143\:8fd0\:52a8\:8f68\:9053\:8ba1\:7b97\:7684\:65f6\:95f4\:5fae\:5546\
+\:3002\:4e0a\:5f0f\:ff0c\:5de6\:8fb9\:4e3a\:6d41\:4f53\:5143\:52a8\:91cf\:53d8\
+\:5316\:7387\:ff0c\:53f3\:8fb9\:5404\:9879\:662f\:6d41\:4f53\:5143\:6240\:53d7\
+\:7684\:529b\:ff1a",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    RowBox[{
+     StyleBox["n",
+      FontSlant->"Plain"], " ", 
+     OverscriptBox["F", "\[RightVector]"]}],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ "\:4e3a\:7535\:78c1\:573a\:529b\:ff0c",
+ StyleBox["-\[Del]p",
+  FontFamily->"Times New Roman"],
+ "\:4e3a\:70ed\:538b\:529b\:ff0c",
+ StyleBox["-\[Del]\[CenterDot]",
+  FontFamily->"Times New Roman"],
+ StyleBox["\[CapitalPi]",
+  FontFamily->"Times New Roman",
+  FontWeight->"Bold"],
+ "\:4e3a\:7c98\:6027\:529b\:ff0c",
+ Cell[BoxData[
+  StyleBox[
+   OverscriptBox["R", "\[RightVector]"],
+   FontFamily->"Times New Roman"]],
+  CellChangeTimes->{{3.5941129140567703`*^9, 3.5941129714134107`*^9}}],
+ "\:4e3a\[Alpha]\:7c7b\:7c92\:5b50\:4e0e\:5404\:79cd\:4e0d\:540c\:7684\[Beta]\
+\:7c7b\:7c92\:5b50\:5f39\:6027\:78b0\:649e\:540e\:ff0c\[Alpha]\:7c7b\:7c92\
+\:5b50\:5931\:53bb\:7684\:52a8\:91cf\:ff0c\:5373\:6d41\:4f53\:5143\:53d7\:5230\
+\:7684\:6469\:64e6\:963b\:529b\:3002\:540c\:7c7b\:7c92\:5b50\:95f4\:5f39\:6027\
+\:78b0\:649e\:52a8\:91cf\:5b88\:6052\:ff0c\:6240\:4ee5",
+ Cell[BoxData[
+  StyleBox[
+   OverscriptBox["R", "\[RightVector]"],
+   FontFamily->"Times New Roman"]],
+  CellChangeTimes->{{3.5941129140567703`*^9, 3.5941129714134107`*^9}}],
+ "\:4e2d\:4e0d\:5305\:542b\:540c\:7c7b\:95f4\:7c92\:5b50\:7684\:78b0\:649e\
+\:3002"
+}], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10006.},
+ CellChangeTimes->{{3.594112992868713*^9, 3.594113101974456*^9}, {
+   3.5941132491696305`*^9, 3.5941134662208548`*^9}, {3.59411362260544*^9, 
+   3.5941136662954416`*^9}, 3.594116584941566*^9, {3.5941637509316435`*^9, 
+   3.5941637782308936`*^9}, 3.5941638512558675`*^9, 3.5944287217474194`*^9},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell[TextData[{
+ "3.\:80fd\:91cf\:65b9\:7a0b\:ff1a\n\:7531\:4e8c\:9636",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    RowBox[{
+     StyleBox["\[Psi]",
+      FontSlant->"Plain"], "=", 
+     RowBox[{
+      FractionBox["1", "2"], "m", " ", 
+      SuperscriptBox["v", "2"]}]}],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ "\:ff0c\:4ee3\:5165",
+ "\:ff0818\:ff09\:5f0f\:5f97\:5230\:ff1a"
+}], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10006.},
+ CellChangeTimes->{{3.594113682890441*^9, 3.5941137550612774`*^9}, 
+   3.594116584941566*^9, {3.5941637509316435`*^9, 3.5941637782308936`*^9}, 
+   3.5941638512558675`*^9},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell[BoxData[
+ RowBox[{
+  FractionBox[
+   RowBox[{"\[PartialD]", "K"}], 
+   RowBox[{"\[PartialD]", "t"}]], "=", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"-", "\[Del]"}], "\[CenterDot]", 
+    OverscriptBox["Q", "\[RightVector]"]}], "+", 
+   RowBox[{"q", " ", "n", " ", 
+    RowBox[{
+     OverscriptBox["u", "\[RightVector]"], "\[CenterDot]", 
+     OverscriptBox["E", "\[RightVector]"]}]}], "+", 
+   RowBox[{
+    OverscriptBox["u", "\[RightVector]"], "\[CenterDot]", 
+    OverscriptBox["R", "\[RightVector]"]}], "+", 
+   RowBox[{"X", " ", Cell[TextData[StyleBox["\:80fd\:91cf\:65b9\:7a0b",
+     FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]",
+     FontSize->12]]]}]}]}]], "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10006.},
+ CellChangeTimes->{{3.5941137915954933`*^9, 3.594113899155903*^9}, {
+   3.594113954926869*^9, 3.59411397935406*^9}, {3.5941140096211214`*^9, 
+   3.594114057956591*^9}, {3.5941150101843605`*^9, 3.5941150165455756`*^9}, {
+   3.5941150720353565`*^9, 3.5941150739116006`*^9}, 3.5941165849425664`*^9, {
+   3.5941637509316435`*^9, 3.5941637782308936`*^9}, 3.5941638512558675`*^9}],
+
+Cell[TextData[{
+ "\:5f0f\:4e2d\:ff0c",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    RowBox[{
+     StyleBox["K",
+      FontSlant->"Plain"], "=", 
+     RowBox[{"\[LeftAngleBracket]", " ", 
+      RowBox[{
+       FractionBox["1", "2"], "n", " ", "m", " ", 
+       SuperscriptBox["v", "2"]}], "\[RightAngleBracket]"}]}],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ ",",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    RowBox[{
+     OverscriptBox["Q", "\[RightVector]"], "=", 
+     RowBox[{"\[LeftAngleBracket]", " ", 
+      RowBox[{
+       FractionBox["1", "2"], "n", " ", "m", " ", 
+       SuperscriptBox["v", "2"], 
+       OverscriptBox["v", "\[RightVector]"]}], "\[RightAngleBracket]"}]}],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ ",\:4e14\:5df2\:77e5",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    RowBox[{
+     RowBox[{"\[LeftAngleBracket]", " ", 
+      RowBox[{
+       FractionBox["\[PartialD]", 
+        RowBox[{"\[PartialD]", 
+         OverscriptBox["v", "\[RightVector]"]}]], 
+       RowBox[{"(", 
+        RowBox[{
+         FractionBox["1", "2"], "m", " ", 
+         SuperscriptBox["v", "2"]}], ")"}]}], "\[RightAngleBracket]"}], "=", 
+     RowBox[{"m", 
+      OverscriptBox["u", "\[RightVector]"]}]}],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ ",",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    RowBox[{
+     RowBox[{"\[LeftAngleBracket]", " ", 
+      RowBox[{
+       RowBox[{"(", 
+        RowBox[{
+         OverscriptBox["v", "\[RightVector]"], "\[Cross]", 
+         OverscriptBox["B", "\[RightVector]"]}], ")"}], "\[CenterDot]", 
+       RowBox[{
+        FractionBox["\[PartialD]", 
+         RowBox[{"\[PartialD]", 
+          OverscriptBox["v", "\[RightVector]"]}]], 
+        RowBox[{"(", 
+         RowBox[{
+          FractionBox["1", "2"], "m", " ", 
+          SuperscriptBox["v", "2"]}], ")"}]}]}], "\[RightAngleBracket]"}], 
+     "\[Congruent]", 
+     StyleBox["0",
+      FontSlant->"Plain"]}],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ ",\:4e0a\:5f0f\:4e2d\:6700\:540e\:4e24\:9879\:662f\:5f39\:6027\:78b0\:649e\
+\:7684\:8d21\:732e\:ff1a"
+}], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10006.},
+ CellChangeTimes->{{3.594114075107958*^9, 3.594114163006221*^9}, {
+   3.5941141934654093`*^9, 3.5941141934654093`*^9}, {3.59411422560026*^9, 
+   3.5941145115739*^9}, {3.594114548161151*^9, 3.59411456950665*^9}, 
+   3.5941165849425664`*^9, {3.5941637509316435`*^9, 3.5941637782308936`*^9}, 
+   3.5941638512558675`*^9},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"\[Integral]", 
+   RowBox[{
+    FractionBox["1", "2"], "m", " ", 
+    SuperscriptBox["v", "2"], 
+    SubscriptBox[
+     RowBox[{"(", 
+      FractionBox[
+       RowBox[{"\[PartialD]", "f"}], 
+       RowBox[{"\[PartialD]", "t"}]], ")"}], "c"], 
+    RowBox[{"\[DifferentialD]", 
+     OverscriptBox["v", "\[RightVector]"]}]}]}], "=", 
+  RowBox[{
+   RowBox[{
+    FractionBox["1", "2"], "m", 
+    RowBox[{"\[Integral]", 
+     RowBox[{
+      RowBox[{"(", 
+       RowBox[{
+        SuperscriptBox["u", "2"], "+", 
+        RowBox[{"2", 
+         RowBox[{
+          OverscriptBox["u", "\[RightVector]"], "\[CenterDot]", 
+          OverscriptBox["w", "\[RightVector]"]}]}], "+", 
+        SuperscriptBox["w", "2"]}], ")"}], 
+      SubscriptBox[
+       RowBox[{"(", 
+        FractionBox[
+         RowBox[{"\[PartialD]", "f"}], 
+         RowBox[{"\[PartialD]", "t"}]], ")"}], "c"], 
+      RowBox[{"\[DifferentialD]", 
+       OverscriptBox["v", "\[RightVector]"]}]}]}]}], "=", 
+   RowBox[{
+    RowBox[{
+     RowBox[{
+      OverscriptBox["u", "\[RightVector]"], "\[CenterDot]", 
+      RowBox[{"\[Integral]", 
+       RowBox[{"m", 
+        OverscriptBox["w", "\[RightVector]"], 
+        SubscriptBox[
+         RowBox[{"(", 
+          FractionBox[
+           RowBox[{"\[PartialD]", "f"}], 
+           RowBox[{"\[PartialD]", "t"}]], ")"}], "c"], 
+        RowBox[{"\[DifferentialD]", 
+         OverscriptBox["v", "\[RightVector]"]}]}]}]}], "+", 
+     RowBox[{
+      FractionBox["1", "2"], "m", 
+      RowBox[{"\[Integral]", 
+       RowBox[{
+        SuperscriptBox["w", "2"], 
+        SubscriptBox[
+         RowBox[{"(", 
+          FractionBox[
+           RowBox[{"\[PartialD]", "f"}], 
+           RowBox[{"\[PartialD]", "t"}]], ")"}], "c"], 
+        RowBox[{"\[DifferentialD]", 
+         OverscriptBox["v", "\[RightVector]"]}]}]}]}]}], "=", 
+    RowBox[{
+     RowBox[{
+      OverscriptBox["u", "\[RightVector]"], "\[CenterDot]", 
+      OverscriptBox["R", "\[RightVector]"]}], "+", 
+     "X"}]}]}]}]], "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10006.},
+ CellChangeTimes->{{3.5941145907507315`*^9, 3.5941146712600956`*^9}, {
+   3.594114720532753*^9, 3.594114861998862*^9}, 3.5941165849425664`*^9, {
+   3.5941637509316435`*^9, 3.5941637782308936`*^9}, 3.5941638512558675`*^9}],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{Cell[TextData[StyleBox["\:8fd9\:91cc\:ff0c",
+    FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]",
+    FontSize->12]]], "X"}], "=", 
+  RowBox[{
+   FractionBox["1", "2"], "m", 
+   RowBox[{"\[Integral]", 
+    RowBox[{
+     SuperscriptBox["w", "2"], 
+     SubscriptBox[
+      RowBox[{"(", 
+       FractionBox[
+        RowBox[{"\[PartialD]", "f"}], 
+        RowBox[{"\[PartialD]", "t"}]], ")"}], "c"], 
+     RowBox[{"\[DifferentialD]", 
+      OverscriptBox["v", 
+       "\[RightVector]"]}]}]}]}]}]], "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10006.},
+ CellChangeTimes->{{3.59411488732465*^9, 3.5941149421192455`*^9}, 
+   3.5941165849425664`*^9, {3.5941637509316435`*^9, 3.5941637782308936`*^9}, 
+   3.5941638512558675`*^9}],
+
+Cell[TextData[{
+ StyleBox["X",
+  FontFamily->"Times New Roman"],
+ "\:662f\:4e0d\:540c\:7c7b\:7c92\:5b50\:7684\:5f39\:6027\:78b0\:649e\:5f15\
+\:8d77\:7684\:70ed\:80fd\:4ea4\:6362\:ff0c\:56e0\:4e3a\:5f39\:6027\:78b0\:649e\
+\:52a8\:80fd\:5b88\:6052\:ff0c\:540c\:7c7b\:7c92\:5b50\:95f4\:78b0\:649e\:65e0\
+\:8d21\:732e\:3002\n\:ff0825\:ff09\:662f\:80fd\:91cf\:65b9\:7a0b\:ff0c\:5373\
+\:603b\:52a8\:80fd\:5b88\:6052\:65b9\:7a0b\:3002\n\:5f0f\:4e2d\:ff0c\:5de6\
+\:8fb9\:4ee3\:8868\:7a7a\:95f4\:67d0\:70b9\:7684\:6d41\:4f53\:5143\:52a8\:80fd\
+\:53d8\:5316\:7387\:3002\n\:53f3\:8fb9",
+ Cell[BoxData[
+  StyleBox[
+   RowBox[{
+    RowBox[{"-", "\[Del]"}], "\[CenterDot]", 
+    OverscriptBox["Q", "\[RightVector]"]}],
+   FontFamily->"Times New Roman"]],
+  CellChangeTimes->{{3.5941137915954933`*^9, 3.594113899155903*^9}, {
+   3.594113954926869*^9, 3.59411397935406*^9}, {3.5941140096211214`*^9, 
+   3.594114057956591*^9}, {3.5941150101843605`*^9, 3.5941150165455756`*^9}, {
+   3.5941150720353565`*^9, 3.5941150739116006`*^9}}],
+ "\:8868\:793a\:4ece\:6d41\:4f53\:5143\:8868\:9762\:6d41\:5165\:7684\:51c0\
+\:80fd\:6d41\:ff0c",
+ Cell[BoxData[
+  StyleBox[
+   RowBox[{"q", " ", "n", " ", 
+    RowBox[{
+     OverscriptBox["u", "\[RightVector]"], "\[CenterDot]", 
+     OverscriptBox["E", "\[RightVector]"]}]}],
+   FontFamily->"Times New Roman"]],
+  CellChangeTimes->{{3.5941137915954933`*^9, 3.594113899155903*^9}, {
+   3.594113954926869*^9, 3.59411397935406*^9}, {3.5941140096211214`*^9, 
+   3.594114057956591*^9}, {3.5941150101843605`*^9, 3.5941150165455756`*^9}, {
+   3.5941150720353565`*^9, 3.5941150739116006`*^9}}],
+ "\:4e3a\:7535\:573a\:5bf9\:6d41\:4f53\:5143\:505a\:529f\:7684\:529f\:7387\
+\:ff0c\:5373\:6b27\:59c6\:52a0\:70ed\:529f\:7387\:ff0c",
+ Cell[BoxData[
+  StyleBox[
+   RowBox[{
+    OverscriptBox["u", "\[RightVector]"], "\[CenterDot]", 
+    OverscriptBox["R", "\[RightVector]"]}],
+   FontFamily->"Times New Roman"]],
+  CellChangeTimes->{{3.5941137915954933`*^9, 3.594113899155903*^9}, {
+   3.594113954926869*^9, 3.59411397935406*^9}, {3.5941140096211214`*^9, 
+   3.594114057956591*^9}, {3.5941150101843605`*^9, 3.5941150165455756`*^9}, {
+   3.5941150720353565`*^9, 3.5941150739116006`*^9}}],
+ "\:4e3a\:78b0\:649e\:6469\:64e6\:963b\:529b\:505a\:7684\:529f\:7387\:ff0c",
+ StyleBox["X",
+  FontFamily->"Times New Roman"],
+ "\:4e3a\:4e0d\:540c\:7c7b\:7c92\:5b50\:78b0\:649e\:4ea4\:6362\:7684\:70ed\
+\:80fd\:3002\n\:5229\:7528\:8fde\:7eed\:6027\:65b9\:7a0b\:3001\:8fd0\:52a8\
+\:65b9\:7a0b\:ff0c\:53ef\:4ee5\:628a\:80fd\:91cf\:65b9\:7a0b\:6539\:5199\:4e3a\
+\:70ed\:80fd\:5e73\:8861\:65b9\:7a0b\:7684\:5f62\:5f0f\:ff1a"
+}], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10006.},
+ CellChangeTimes->{{3.5941149515164747`*^9, 3.5941149795200357`*^9}, {
+   3.5941150818658724`*^9, 3.5941150883221507`*^9}, {3.5941151192544355`*^9, 
+   3.594115182618434*^9}, 3.5941152358797364`*^9, {3.5941152783568907`*^9, 
+   3.594115338679043*^9}, {3.5941153959930315`*^9, 3.5941155602906356`*^9}, {
+   3.594115807990282*^9, 3.5941158578106737`*^9}, {3.5941164849751563`*^9, 
+   3.5941164877710094`*^9}, 3.5941165849425664`*^9, {3.5941637509316435`*^9, 
+   3.5941637782308936`*^9}, 3.5941638512558675`*^9, 3.5943730039893813`*^9},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{
+   FractionBox["3", "2"], "n", 
+   FractionBox[
+    RowBox[{"\[DifferentialD]", "T"}], 
+    RowBox[{"\[DifferentialD]", "t"}]]}], "=", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"-", 
+     RowBox[{"(", 
+      RowBox[{
+       StyleBox["p",
+        FontWeight->"Bold"], "\[CenterDot]", "\[Del]"}], ")"}]}], 
+    "\[CenterDot]", 
+    OverscriptBox["u", "\[RightVector]"]}], "-", 
+   RowBox[{"\[Del]", 
+    RowBox[{"\[CenterDot]", 
+     OverscriptBox["q", "\[RightVector]"]}]}], "+", 
+   RowBox[{"X", " ", Cell[TextData[Cell[BoxData[
+     FormBox[
+      StyleBox["\:70ed\:80fd\:5e73\:8861\:65b9\:7a0b",
+       FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]",
+       FontSize->12], TraditionalForm]]]]]}]}]}]], "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10006.},
+ CellChangeTimes->{{3.5941158676982365`*^9, 3.5941160094101553`*^9}, 
+   3.5941165849425664`*^9, {3.5941178521280394`*^9, 3.594117868583947*^9}, {
+   3.5941637509316435`*^9, 3.5941637782308936`*^9}, 3.5941638512558675`*^9}],
+
+Cell[TextData[{
+ Cell[BoxData[
+  StyleBox[
+   RowBox[{
+    RowBox[{"-", 
+     RowBox[{"(", 
+      RowBox[{
+       StyleBox["p",
+        FontWeight->"Bold"], "\[CenterDot]", "\[Del]"}], ")"}]}], 
+    "\[CenterDot]", 
+    OverscriptBox["u", "\[RightVector]"]}],
+   FontFamily->"Times New Roman"]],
+  CellChangeTimes->{{3.5941158676982365`*^9, 3.5941160094101553`*^9}}],
+ "\:8868\:793a\:5185\:6469\:64e6\:ff08\:7c98\:6027\:529b\:ff09\:505a\:7684\
+\:529f\:7387\:ff0c",
+ Cell[BoxData[
+  StyleBox[
+   RowBox[{"-", 
+    RowBox[{"\[Del]", 
+     RowBox[{"\[CenterDot]", 
+      OverscriptBox["q", "\[RightVector]"]}]}]}],
+   FontFamily->"Times New Roman"]],
+  CellChangeTimes->{{3.5941158676982365`*^9, 3.5941160094101553`*^9}}],
+ "\:4e3a\:70ed\:4f20\:5bfc\:ff0c",
+ StyleBox["X",
+  FontFamily->"Times New Roman"],
+ "\:4e3a\:4e0d\:540c\:7c7b\:7c92\:5b50\:7684\:5f39\:6027\:78b0\:649e\:5f15\
+\:8d77\:7684\:70ed\:80fd\:4ea4\:6362\:3002\:82e5",
+ Cell[BoxData[
+  StyleBox[
+   RowBox[{
+    OverscriptBox["u", "\[RightVector]"], "=", "0"}],
+   FontFamily->"Times New Roman"]],
+  CellChangeTimes->{{3.5941158676982365`*^9, 3.5941160094101553`*^9}}],
+ "\:5219\:6d41\:4f53\:5143\:7684\:6e29\:5ea6\:53d8\:5316\:4ec5\:6765\:81ea\
+\:4e8e\:70ed\:4f20\:5bfc\:548c\:5f39\:6027\:78b0\:649e\:5f15\:8d77\:7684\:70ed\
+\:80fd\:4ea4\:6362\:3002"
+}], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10006.},
+ CellChangeTimes->{{3.594116043369865*^9, 3.5941162056120663`*^9}, 
+   3.5941165849435673`*^9, {3.5941637509316435`*^9, 3.5941637782308936`*^9}, 
+   3.5941638512558675`*^9, {3.5943734271755953`*^9, 3.594373441537113*^9}},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["P67", "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10007.},
+ CellChangeTimes->{3.594117119472228*^9, 3.594163651171378*^9, 
+  3.5941637509316435`*^9, 3.594163854975021*^9}],
+
+Cell["\:53cc\:6d41\:4f53\:529b\:5b66\:65b9\:7a0b\:7ec4\:ff1a", "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10007.},
+ CellChangeTimes->{{3.5941170908037624`*^9, 3.594117108050658*^9}, {
+   3.5941637509316435`*^9, 3.594163765667163*^9}, 3.594163854975021*^9},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell[BoxData[
+ RowBox[{"\[Piecewise]", 
+  TagBox[GridBox[{
+     {
+      RowBox[{
+       RowBox[{
+        FractionBox[
+         RowBox[{"\[PartialD]", 
+          SubscriptBox["n", "\[Alpha]"]}], 
+         RowBox[{"\[PartialD]", "t"}]], "+", 
+        RowBox[{"\[Del]", 
+         RowBox[{"\[CenterDot]", 
+          RowBox[{"(", 
+           RowBox[{
+            SubscriptBox["n", "\[Alpha]"], " ", 
+            SubscriptBox[
+             OverscriptBox["u", "\[RightVector]"], "\[Alpha]"]}], ")"}]}]}]}],
+        "=", "0"}]},
+     {
+      RowBox[{
+       RowBox[{
+        SubscriptBox["n", "\[Alpha]"], " ", 
+        SubscriptBox["m", "\[Alpha]"], 
+        FractionBox[
+         RowBox[{"\[DifferentialD]", 
+          SubscriptBox[
+           OverscriptBox["u", "\[RightVector]"], "\[Alpha]"]}], 
+         RowBox[{"\[DifferentialD]", "t"}]]}], "=", 
+       RowBox[{
+        RowBox[{
+         SubscriptBox["n", "\[Alpha]"], " ", 
+         SubscriptBox[
+          OverscriptBox["F", "\[RightVector]"], "\[Alpha]"]}], "-", 
+        RowBox[{"\[Del]", 
+         SubscriptBox["p", "\[Alpha]"]}], "-", 
+        RowBox[{"\[Del]", 
+         RowBox[{"\[CenterDot]", 
+          SubscriptBox[
+           StyleBox["\[CapitalPi]",
+            FontWeight->"Bold",
+            FontSlant->"Plain"], "\[Alpha]"]}]}], "+", 
+        SubscriptBox[
+         OverscriptBox["R", "\[RightVector]"], "\[Alpha]"]}]}]},
+     {
+      RowBox[{
+       RowBox[{
+        FractionBox["3", "2"], 
+        SubscriptBox["n", "\[Alpha]"], 
+        FractionBox[
+         RowBox[{"\[DifferentialD]", 
+          SubscriptBox["T", "\[Alpha]"]}], 
+         RowBox[{"\[DifferentialD]", "t"}]]}], "=", 
+       RowBox[{
+        RowBox[{
+         RowBox[{"-", 
+          RowBox[{"(", 
+           RowBox[{
+            SubscriptBox[
+             StyleBox["p",
+              FontWeight->"Bold"], "\[Alpha]"], "\[CenterDot]", "\[Del]"}], 
+           ")"}]}], "\[CenterDot]", 
+         SubscriptBox[
+          OverscriptBox["u", "\[RightVector]"], "\[Alpha]"]}], "-", 
+        RowBox[{"\[Del]", 
+         RowBox[{"\[CenterDot]", 
+          SubscriptBox[
+           OverscriptBox["q", "\[RightVector]"], "\[Alpha]"]}]}], "+", 
+        SubscriptBox["X", "\[Alpha]"]}]}]}
+    },
+    AutoDelete->False,
+    GridBoxAlignment->{"Columns" -> {{Left}}},
+    GridBoxItemSize->{"Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}],
+   "Grid"]}]], "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10007.},
+ CellChangeTimes->{{3.594117187220131*^9, 3.5941172037390833`*^9}, {
+   3.59411738893587*^9, 3.594117397879796*^9}, {3.594117430263262*^9, 
+   3.5941175184437647`*^9}, {3.5941175556934557`*^9, 
+   3.5941175729669056`*^9}, {3.5941176163406515`*^9, 3.594117730312688*^9}, {
+   3.5941177695947247`*^9, 3.594117793149337*^9}, {3.594117826815262*^9, 
+   3.5941178500386524`*^9}, {3.594117883977149*^9, 3.594118064966185*^9}, {
+   3.5941637429306664`*^9, 3.594163765667163*^9}, 3.594163854975021*^9}],
+
+Cell[TextData[{
+ "\:5f0f\:4e2d\:89d2\:6807\[Alpha]\:53d6\:4e3ai\:8868\:793a\:79bb\:5b50\:ff0c\
+\:53d6\:4e3ae\:8868\:793a\:7535\:5b50\:ff0c\:4e14\:ff0c\:5f0f\:4e2d\:ff1a\n",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    SubscriptBox[
+     OverscriptBox["F", "\[RightVector]"], "\[Alpha]"], "=", 
+    RowBox[{
+     SubscriptBox["q", "\[Alpha]"], "(", 
+     RowBox[{
+      OverscriptBox["E", "\[RightVector]"], "+", 
+      RowBox[{
+       SubscriptBox[
+        OverscriptBox["u", "\[RightVector]"], "\[Alpha]"], "\[Cross]", 
+       OverscriptBox["B", "\[RightVector]"]}]}], ")"}]}], TraditionalForm]],
+  FontFamily->"Times New Roman"],
+ ",\n",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    RowBox[{
+     FractionBox["\[DifferentialD]", 
+      RowBox[{"\[DifferentialD]", "t"}]], 
+     RowBox[{"=", 
+      RowBox[{
+       RowBox[{
+        FractionBox["\[PartialD]", 
+         RowBox[{"\[PartialD]", "t"}]], 
+        RowBox[{"+", 
+         SubscriptBox[
+          OverscriptBox["u", "\[RightVector]"], "\[Alpha]"]}]}], 
+       "\[CenterDot]", "\[Del]"}]}]}],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ ",\n",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    RowBox[{
+     OverscriptBox["E", "\[RightVector]"], "=", 
+     RowBox[{
+      SubscriptBox[
+       OverscriptBox["E", "\[RightVector]"], "0"], "+", 
+      SubscriptBox[
+       OverscriptBox["E", "\[RightVector]"], "1"]}]}],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ ",\n",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    RowBox[{
+     OverscriptBox["B", "\[RightVector]"], "=", 
+     RowBox[{
+      SubscriptBox[
+       OverscriptBox["B", "\[RightVector]"], "0"], "+", 
+      SubscriptBox[
+       OverscriptBox["B", "\[RightVector]"], "1"]}]}],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ ".\n",
+ Cell[BoxData[
+  FormBox[
+   SubscriptBox[
+    OverscriptBox["E", "\[RightVector]"], "0"], TraditionalForm]],
+  FontFamily->"Times New Roman"],
+ "\:548c",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    SubscriptBox[
+     OverscriptBox["B", "\[RightVector]"], "0"],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ "\:662f\:5916\:573a\:ff0c",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    SubscriptBox[
+     OverscriptBox["E", "\[RightVector]"], "1"],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ "\:548c",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    SubscriptBox[
+     OverscriptBox["B", "\[RightVector]"], "1"],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ "\:662f\:7b49\:79bb\:5b50\:4f53\:81ea\:8eab\:7684\:7535\:8377\:7535\:6d41\
+\:4ea7\:751f\:7684\:573a\:ff0c\:79f0\:4e3a\:6ce2\:573a\:3002\n",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    SubscriptBox[
+     OverscriptBox["E", "\[RightVector]"], "1"],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ "\:548c",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    SubscriptBox[
+     OverscriptBox["B", "\[RightVector]"], "1"],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ "\:7531\:4e0e\:53cc\:6d41\:4f53\:529b\:5b66\:65b9\:7a0b\:7ec4\:8026\:5408\
+\:7684",
+ StyleBox["Maxwell",
+  FontFamily->"Times New Roman"],
+ "\:65b9\:7a0b\:7ec4\:6765\:786e\:5b9a\:ff1a"
+}], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10007.},
+ CellChangeTimes->{{3.594118116868585*^9, 3.5941181700908623`*^9}, {
+   3.594118220459237*^9, 3.5941182273768225`*^9}, {3.594118266226573*^9, 
+   3.5941185628494434`*^9}, {3.5941185938419857`*^9, 
+   3.5941186106471252`*^9}, {3.5941637429306664`*^9, 3.594163765667163*^9}, 
+   3.594163854975021*^9},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell[BoxData[
+ RowBox[{"\[Piecewise]", 
+  TagBox[GridBox[{
+     {
+      RowBox[{
+       RowBox[{"\[Del]", 
+        RowBox[{"\[CenterDot]", 
+         SubscriptBox[
+          OverscriptBox["E", "\[RightVector]"], "1"]}]}], "=", 
+       RowBox[{
+        UnderscriptBox["\[Sum]", "\[Alpha]"], 
+        FractionBox[
+         RowBox[{
+          SubscriptBox["n", "\[Alpha]"], 
+          SubscriptBox["q", "\[Alpha]"]}], 
+         SubscriptBox["\[Epsilon]", "0"]]}]}]},
+     {
+      RowBox[{
+       RowBox[{"\[Del]", 
+        RowBox[{"\[CenterDot]", 
+         SubscriptBox[
+          OverscriptBox["B", "\[RightVector]"], "1"]}]}], "=", "0"}]},
+     {
+      RowBox[{
+       RowBox[{"\[Del]", 
+        RowBox[{"\[Cross]", 
+         SubscriptBox[
+          OverscriptBox["E", "\[RightVector]"], "1"]}]}], "=", 
+       RowBox[{"-", 
+        FractionBox[
+         RowBox[{"\[PartialD]", 
+          SubscriptBox[
+           OverscriptBox["B", "\[RightVector]"], "1"]}], 
+         RowBox[{"\[PartialD]", "t"}]]}]}]},
+     {
+      RowBox[{
+       RowBox[{"\[Del]", 
+        RowBox[{"\[Cross]", 
+         SubscriptBox[
+          OverscriptBox["B", "\[RightVector]"], "1"]}]}], "=", 
+       RowBox[{
+        RowBox[{
+         FractionBox["1", 
+          SuperscriptBox["c", "2"]], 
+         FractionBox[
+          RowBox[{"\[PartialD]", 
+           SubscriptBox[
+            OverscriptBox["E", "\[RightVector]"], "1"]}], 
+          RowBox[{"\[PartialD]", "t"}]]}], "+", 
+        RowBox[{
+         SubscriptBox["\[Mu]", "0"], 
+         RowBox[{
+          UnderscriptBox["\[Sum]", "\[Alpha]"], 
+          RowBox[{
+           SubscriptBox["n", "\[Alpha]"], 
+           SubscriptBox["q", "\[Alpha]"], 
+           SubscriptBox[
+            OverscriptBox["u", "\[RightVector]"], "\[Alpha]"]}]}]}]}]}]}
+    },
+    AutoDelete->False,
+    GridBoxAlignment->{"Columns" -> {{Left}}},
+    GridBoxItemSize->{"Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}],
+   "Grid"]}]], "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10007.},
+ CellChangeTimes->{{3.594118668780658*^9, 3.5941187187136526`*^9}, {
+   3.5941187992560377`*^9, 3.5941191108081026`*^9}, {3.594119172888253*^9, 
+   3.5941192836881824`*^9}, {3.5941637429306664`*^9, 3.594163765667163*^9}, 
+   3.594163854975021*^9}]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["P77", "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.},
+ CellChangeTimes->{{3.594162552476039*^9, 3.5941625536324277`*^9}, 
+   3.5941639104645443`*^9}],
+
+Cell[TextData[{
+ "\:78c1\:573a\:7684\:51bb\:7ed3\:548c\:6269\:6563\:6548\:5e94\:662f\:5bfc\
+\:7535\:6d41\:4f53\:4e0e\:78c1\:573a\:76f8\:4e92\:4f5c\:7528\:7684\:91cd\:8981\
+\:6027\:8d28\:3002\n\:7531",
+ StyleBox["Maxwell",
+  FontFamily->"Times New Roman"],
+ "\:65b9\:7a0b\:7ec4\:53ca\:6b27\:59c6\:5b9a\:5f8b\:ff1a"
+}], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.},
+ CellChangeTimes->{{3.5941625958944726`*^9, 3.5941626030358925`*^9}, {
+   3.5941626693545704`*^9, 3.594162683168582*^9}, {3.594162785250121*^9, 
+   3.5941628348958807`*^9}, 3.5941635992687654`*^9, 3.5941639104645443`*^9, 
+   3.594373986833083*^9},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{
+   RowBox[{"\[Del]", 
+    RowBox[{"\[CenterDot]", 
+     OverscriptBox["E", "\[RightVector]"]}]}], "=", "0"}], "\:ff0c", 
+  RowBox[{
+   RowBox[{"\[Del]", 
+    RowBox[{"\[CenterDot]", 
+     OverscriptBox["B", "\[RightVector]"]}]}], "=", 
+   "0"}]}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"\[Del]", 
+    RowBox[{"\[Cross]", 
+     OverscriptBox["E", "\[RightVector]"]}]}], "=", 
+   RowBox[{"-", 
+    FractionBox[
+     RowBox[{"\[PartialD]", 
+      OverscriptBox["B", "\[RightVector]"]}], 
+     RowBox[{"\[PartialD]", "t"}]]}]}], "\:ff0c", 
+  RowBox[{
+   RowBox[{"\[Del]", 
+    RowBox[{"\[Cross]", 
+     OverscriptBox["B", "\[RightVector]"]}]}], "=", 
+   RowBox[{
+    SubscriptBox["\[Mu]", "0"], 
+    OverscriptBox["j", "\[RightVector]"]}]}]}], "\[IndentingNewLine]", 
+ RowBox[{
+  OverscriptBox["j", "\[RightVector]"], "=", 
+  RowBox[{
+   SubscriptBox["\[Sigma]", "c"], 
+   RowBox[{"(", 
+    RowBox[{
+     OverscriptBox["E", "\[RightVector]"], "+", 
+     RowBox[{
+      OverscriptBox["u", "\[RightVector]"], "\[Cross]", 
+      OverscriptBox["B", "\[RightVector]"]}]}], ")"}]}]}]}], "DisplayFormula",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.},
+ CellChangeTimes->{{3.5941628649923573`*^9, 3.594163005966757*^9}, 
+   3.5941635992687654`*^9, 3.5941639104645443`*^9, {3.5943833943728356`*^9, 
+   3.5943833949822397`*^9}}],
+
+Cell[TextData[{
+ "\:6d88\:53bb",
+ Cell[BoxData[
+  StyleBox[
+   OverscriptBox["j", "\[RightVector]"],
+   FontFamily->"Times New Roman"]],
+  CellChangeTimes->{{3.5941628649923573`*^9, 3.594163005966757*^9}}],
+ "\:ff0c\:5f97\:ff1a"
+}], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.},
+ CellChangeTimes->{{3.5941630643007307`*^9, 3.594163081442991*^9}, 
+   3.5941635992687654`*^9, 3.5941639104645443`*^9},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell[BoxData[
+ RowBox[{
+  OverscriptBox["E", "\[RightVector]"], "=", 
+  RowBox[{
+   RowBox[{"-", 
+    RowBox[{
+     OverscriptBox["u", "\[RightVector]"], "\[Cross]", 
+     OverscriptBox["B", "\[RightVector]"]}]}], "+", 
+   RowBox[{
+    FractionBox["1", 
+     RowBox[{
+      SubscriptBox["\[Sigma]", "c"], 
+      SubscriptBox["\[Mu]", "0"]}]], 
+    RowBox[{"\[Del]", 
+     RowBox[{"\[Cross]", 
+      OverscriptBox["B", 
+       "\[RightVector]"]}]}]}]}]}]], "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.},
+ CellChangeTimes->{{3.5941630936941853`*^9, 3.594163129502122*^9}, 
+   3.5941635992687654`*^9, 3.5941639104645443`*^9}],
+
+Cell["\:4e24\:8fb9\:6c42\:65cb\:5ea6\:ff1a", "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.},
+ CellChangeTimes->{{3.594163160364333*^9, 3.594163168755932*^9}, 
+   3.5941635992687654`*^9, 3.5941639104645443`*^9},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell[BoxData[
+ RowBox[{
+  FractionBox[
+   RowBox[{"\[PartialD]", 
+    OverscriptBox["B", "\[RightVector]"]}], 
+   RowBox[{"\[PartialD]", "t"}]], "=", 
+  RowBox[{
+   RowBox[{"\[Del]", 
+    RowBox[{"\[Cross]", 
+     RowBox[{"(", 
+      RowBox[{
+       OverscriptBox["u", "\[RightVector]"], "\[Cross]", 
+       OverscriptBox["B", "\[RightVector]"]}], ")"}]}]}], "+", 
+   RowBox[{
+    SubscriptBox["\[Nu]", "m"], 
+    RowBox[{
+     SuperscriptBox["\[Del]", "2"], 
+     OverscriptBox["B", "\[RightVector]"]}], " ", Cell[TextData[StyleBox[
+    "\:611f\:5e94\:65b9\:7a0b",
+     FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]",
+     FontSize->12]]]}]}]}]], "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.},
+ CellChangeTimes->{{3.5941631797098727`*^9, 3.594163221792184*^9}, 
+   3.594163268609257*^9, {3.59416354601331*^9, 3.594163551810787*^9}, 
+   3.5941635992687654`*^9, 3.5941639104645443`*^9, {3.594384055332097*^9, 
+   3.594384084885688*^9}}],
+
+Cell[TextData[{
+ "\:5f0f\:4e2d\:ff0c",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    RowBox[{
+     SubscriptBox["\[Nu]", "m"], "=", 
+     FractionBox["1", 
+      RowBox[{
+       SubscriptBox["\[Sigma]", "c"], 
+       SubscriptBox["\[Mu]", "0"]}]]}],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ ",\:79f0\:4e3a\:78c1\:7c98\:6027\:7cfb\:6570\:3002"
+}], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.},
+ CellChangeTimes->{{3.5941634507924433`*^9, 3.5941635231665535`*^9}, 
+   3.5941635992687654`*^9, 3.5941639104645443`*^9},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell[TextData[{
+ "1.\:78c1\:573a\:51bb\:7ed3\:ff1a\n\
+\:5047\:8bbe\:7b49\:79bb\:5b50\:4f53\:662f\:7406\:60f3\:5bfc\:4f53\:ff0c\:5373\
+",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    RowBox[{
+     RowBox[{
+      SubscriptBox["\[Sigma]", "c"], "\[Rule]", "\[Infinity]"}], ",", 
+     RowBox[{
+      SubscriptBox["\[Nu]", "m"], "\[Rule]", "0"}]}],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ ",\:5219\:611f\:5e94\:65b9\:7a0b\:53d8\:4e3a\:ff1a"
+}], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.},
+ CellChangeTimes->{{3.5941639200436335`*^9, 3.5941640174201603`*^9}},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell[BoxData[
+ RowBox[{
+  FractionBox[
+   RowBox[{"\[PartialD]", 
+    OverscriptBox["B", "\[RightVector]"]}], 
+   RowBox[{"\[PartialD]", "t"}]], "=", 
+  RowBox[{
+   RowBox[{"\[Del]", 
+    RowBox[{"\[Cross]", 
+     RowBox[{"(", 
+      RowBox[{
+       OverscriptBox["u", "\[RightVector]"], "\[Cross]", 
+       OverscriptBox["B", "\[RightVector]"]}], ")"}]}]}], " ", 
+   StyleBox["\:51bb\:7ed3\:65b9\:7a0b",
+    FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]",
+    FontSize->12]}]}]], "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.},
+ CellChangeTimes->{{3.594164036562688*^9, 3.5941640474389167`*^9}, 
+   3.594171726840106*^9}],
+
+Cell["\<\
+\:4e24\:6761\:5b9a\:7406\:ff1a
+\:ff081\:ff09.\:901a\:8fc7\:548c\:7406\:60f3\:5bfc\:7535\:6d41\:4f53\:4e00\
+\:8d77\:8fd0\:52a8\:7684\:4efb\:4f55\:5c01\:95ed\:56de\:8def\:6240\:56f4\:66f2\
+\:9762\:7684\:78c1\:901a\:91cf\:662f\:4e0d\:53d8\:7684\:3002
+\:ff082\:ff09.\:5728\:7406\:60f3\:5bfc\:7535\:6d41\:4f53\:4e2d\:ff0c\:8d77\
+\:59cb\:4f4d\:4e8e\:4e00\:6839\:78c1\:529b\:7ebf\:4e0a\:7684\:6d41\:4f53\:5143\
+\:ff0c\:4ee5\:540e\:4e00\:76f4\:5904\:5728\:8fd9\:6839\:78c1\:529b\:7ebf\:4e0a\
+\:3002\
+\>", "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.},
+ CellChangeTimes->{{3.594164083192672*^9, 3.594164204008687*^9}, {
+   3.594164250872664*^9, 3.5941642586703176`*^9}, 3.594171726840106*^9, {
+   3.594384458113332*^9, 3.5943844582894487`*^9}, {3.5944380560834255`*^9, 
+   3.5944380561144457`*^9}},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell[TextData[{
+ StyleBox["\:8bc1\:660e\:ff1a\n\:ff081\:ff09.\:4efb\:53d6\:4e00\:4e2a\:4e0e\
+\:6d41\:4f53\:4e00\:8d77\:8fd0\:52a8\:7684\:56de\:8defC,\:56de\:8def\:4e0a\
+\:7684\:7ebf\:5143",
+  FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    RowBox[{"\[DifferentialD]", 
+     OverscriptBox["l", "\[RightVector]"]}],
+    FontFamily->"Times New Roman",
+    FontSize->14], TraditionalForm]],
+  FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]",
+  FontSize->12],
+ "\:4e0e\:6d41\:4f53\:4e00\:8d77\:8fd0\:52a8\:65f6\:ff0c\:5355\:4f4d\:65f6\
+\:95f4\:5207\:5272\:78c1\:529b\:7ebf\:5f15\:8d77\:7684\:78c1\:901a\:91cf\:53d8\
+\:5316\:4e3a\:ff1a"
+}], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.},
+ CellChangeTimes->{{3.5941642829695377`*^9, 3.5941642887513647`*^9}, {
+   3.5941643505393133`*^9, 3.594164451165681*^9}, {3.594164520094384*^9, 
+   3.5941646092822104`*^9}, 3.5941655410965495`*^9, {3.5941655933691206`*^9, 
+   3.594165597603837*^9}, 3.594171726840106*^9},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell[BoxData[
+ RowBox[{"\[CapitalDelta]\[CapitalPhi]", "=", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"(", 
+     RowBox[{
+      OverscriptBox["u", "\[RightVector]"], "\[Cross]", 
+      RowBox[{"\[DifferentialD]", 
+       OverscriptBox["l", "\[RightVector]"]}]}], ")"}], "\[CenterDot]", 
+    OverscriptBox["B", "\[RightVector]"]}], "=", 
+   RowBox[{
+    RowBox[{"(", 
+     RowBox[{
+      OverscriptBox["B", "\[RightVector]"], "\[Cross]", 
+      OverscriptBox["u", "\[RightVector]"]}], ")"}], "\[CenterDot]", 
+    RowBox[{"\[DifferentialD]", 
+     OverscriptBox["l", "\[RightVector]"]}]}]}]}]], "DisplayFormula",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.},
+ CellChangeTimes->{{3.5941644708238626`*^9, 3.594164509140256*^9}, {
+   3.594164622830517*^9, 3.5941646650700397`*^9}, {3.5941651306207075`*^9, 
+   3.5941651364962473`*^9}, 3.5941655410965495`*^9, 3.594171726840106*^9}],
+
+Cell[TextData[{
+ "\:968f\:6d41\:4f53\:8fd0\:52a8\:65f6\:ff0c\:95ed\:5408\:56de\:8defC\:6240\
+\:56f4\:9762\:79ef\:7684\:78c1\:901a\:91cf\:53d8\:5316\:7387\:5e94\:7b49\:4e8e\
+\:78c1\:573a\:968f\:65f6\:95f4\:53d8\:5316",
+ Cell[BoxData[Cell[TextData[Cell[BoxData[
+   StyleBox[
+    FractionBox[
+     RowBox[{"\[PartialD]", 
+      OverscriptBox["B", "\[RightVector]"]}], 
+     RowBox[{"\[PartialD]", "t"}]],
+    FontFamily->"Times New Roman"]]]]]]],
+ "\:548c\:968f\:6d41\:4f53\:4e00\:8d77\:8fd0\:52a8\:7684\:95ed\:5408\:56de\
+\:8def",
+ StyleBox["C",
+  FontFamily->"Times New Roman"],
+ "\:5207\:5272\:78c1\:529b\:7ebf\:4e24\:8005\:5f15\:8d77\:7684\:78c1\:901a\
+\:91cf\:53d8\:5316\:7387\:4e4b\:548c\:ff1a"
+}], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.},
+ CellChangeTimes->{{3.594164794651854*^9, 3.5941650446989155`*^9}, 
+   3.5941655410965495`*^9, 3.594171726840106*^9},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell[BoxData[
+ RowBox[{
+  FractionBox[
+   RowBox[{"\[DifferentialD]", "\[CapitalPhi]"}], 
+   RowBox[{"\[DifferentialD]", "t"}]], "=", 
+  RowBox[{
+   RowBox[{
+    FractionBox["\[DifferentialD]", 
+     RowBox[{"\[DifferentialD]", "t"}]], 
+    RowBox[{
+     SubscriptBox["\[Integral]", "s"], 
+     RowBox[{
+      RowBox[{
+       OverscriptBox["B", "\[RightVector]"], "\[CenterDot]", 
+       OverscriptBox["n", "^"]}], 
+      RowBox[{"\[DifferentialD]", "S"}]}]}]}], "=", 
+   RowBox[{
+    RowBox[{
+     RowBox[{
+      SubscriptBox["\[Integral]", "s"], 
+      RowBox[{
+       RowBox[{
+        FractionBox[
+         RowBox[{"\[PartialD]", 
+          OverscriptBox["B", "\[RightVector]"]}], 
+         RowBox[{"\[PartialD]", "t"}]], "\[CenterDot]", 
+        OverscriptBox["n", "^"]}], 
+       RowBox[{"\[DifferentialD]", "S"}]}]}], "+", 
+     RowBox[{
+      SubscriptBox["\[ContourIntegral]", "c"], 
+      RowBox[{
+       RowBox[{"(", 
+        RowBox[{
+         OverscriptBox["B", "\[RightVector]"], "\[Cross]", 
+         OverscriptBox["u", "\[RightVector]"]}], ")"}], "\[CenterDot]", 
+       RowBox[{"\[DifferentialD]", 
+        OverscriptBox["l", "\[RightVector]"]}]}]}]}], "=", 
+    RowBox[{
+     RowBox[{
+      SubscriptBox["\[Integral]", "s"], 
+      RowBox[{
+       RowBox[{
+        RowBox[{"(", 
+         RowBox[{
+          FractionBox[
+           RowBox[{"\[PartialD]", 
+            OverscriptBox["B", "\[RightVector]"]}], 
+           RowBox[{"\[PartialD]", "t"}]], "+", 
+          RowBox[{"\[Del]", 
+           RowBox[{"\[Cross]", 
+            RowBox[{"(", 
+             RowBox[{
+              OverscriptBox["B", "\[RightVector]"], "\[Cross]", 
+              OverscriptBox["u", "\[RightVector]"]}], ")"}]}]}]}], ")"}], 
+        "\[CenterDot]", 
+        OverscriptBox["n", "^"]}], 
+       RowBox[{"\[DifferentialD]", "S"}]}]}], "=", 
+     RowBox[{"0", " ", 
+      RowBox[{"(", Cell["\:6839\:636e\:51bb\:7ed3\:65b9\:7a0b",
+        FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"], 
+       ")"}]}]}]}]}]}]], "DisplayFormula",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.},
+ CellChangeTimes->{{3.5941651152909007`*^9, 3.5941654286245575`*^9}, 
+   3.5941655410965495`*^9, 3.594171726840106*^9}],
+
+Cell["\<\
+\:6b64\:5b9a\:7406\:8868\:660e\:ff0c\:4e0d\:7ba1\:5916\:754c\:78c1\:573a\:5982\
+\:4f55\:53d8\:5316\:ff0c\:968f\:7740\:7406\:60f3\:5bfc\:7535\:6d41\:4f53\:4e00\
+\:8d77\:8fd0\:52a8\:7684\:4efb\:4f55\:95ed\:5408\:56de\:8def\:6240\:56f4\:7684\
+\:78c1\:529b\:7ebf\:6570\:76ee\:662f\:4e0d\:53d8\:7684\:3002\
+\>", "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.},
+ CellChangeTimes->{{3.5941654460950813`*^9, 3.5941654829974823`*^9}, {
+   3.594165517406934*^9, 3.5941655241106834`*^9}, 3.594171726840106*^9},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell["\:ff082\:ff09.\:7531\:51bb\:7ed3\:65b9\:7a0b\:ff1a", "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.},
+ CellChangeTimes->{{3.5941656152304306`*^9, 3.594165653210075*^9}, 
+   3.5941716891236424`*^9, 3.594171726840106*^9},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell[BoxData[
+ RowBox[{
+  FractionBox[
+   RowBox[{"\[PartialD]", 
+    OverscriptBox["B", "\[RightVector]"]}], 
+   RowBox[{"\[PartialD]", "t"}]], "=", 
+  RowBox[{
+   RowBox[{"\[Del]", 
+    RowBox[{"\[Cross]", 
+     RowBox[{"(", 
+      RowBox[{
+       OverscriptBox["u", "\[RightVector]"], "\[Cross]", 
+       OverscriptBox["B", "\[RightVector]"]}], ")"}]}]}], "=", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{
+       OverscriptBox["B", "\[RightVector]"], "\[CenterDot]", "\[Del]"}], 
+      ")"}], 
+     OverscriptBox["u", "\[RightVector]"]}], "-", 
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{
+       OverscriptBox["u", "\[RightVector]"], "\[CenterDot]", "\[Del]"}], 
+      ")"}], 
+     OverscriptBox["B", "\[RightVector]"]}], "+", 
+    RowBox[{
+     OverscriptBox["u", "\[RightVector]"], 
+     RowBox[{"(", 
+      RowBox[{"\[Del]", 
+       RowBox[{"\[CenterDot]", 
+        OverscriptBox["B", "\[RightVector]"]}]}], ")"}]}], "-", 
+    RowBox[{
+     OverscriptBox["B", "\[RightVector]"], 
+     RowBox[{"(", 
+      RowBox[{"\[Del]", 
+       RowBox[{"\[CenterDot]", 
+        OverscriptBox["u", "\[RightVector]"]}]}], 
+      ")"}]}]}]}]}]], "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.},
+ CellChangeTimes->{{3.594165674384097*^9, 3.5941656754778695`*^9}, {
+   3.5941661073169975`*^9, 3.5941661672289333`*^9}, {3.5941702441160727`*^9, 
+   3.594170251335415*^9}, 3.5941716891246433`*^9, 3.594171726840106*^9}],
+
+Cell["\:6839\:636e\:8fde\:7eed\:6027\:65b9\:7a0b\:53ef\:77e5\:ff1a", "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.},
+ CellChangeTimes->{{3.594166215835638*^9, 3.5941662276649*^9}, {
+   3.5941701459978914`*^9, 3.594170153154982*^9}, 3.5941716891246433`*^9, 
+   3.594171726840106*^9},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell[BoxData[
+ RowBox[{
+  FractionBox[
+   RowBox[{"\[DifferentialD]", "\[Rho]"}], 
+   RowBox[{"\[DifferentialD]", "t"}]], "=", 
+  RowBox[{
+   RowBox[{
+    FractionBox[
+     RowBox[{"\[PartialD]", "\[Rho]"}], 
+     RowBox[{"\[PartialD]", "t"}]], "+", 
+    RowBox[{
+     OverscriptBox["u", "\[RightVector]"], "\[CenterDot]", 
+     RowBox[{"\[Del]", "\[Rho]"}]}]}], "=", 
+   RowBox[{
+    RowBox[{"-", "\[Rho]"}], 
+    RowBox[{"\[Del]", 
+     RowBox[{"\[CenterDot]", 
+      OverscriptBox["u", "\[RightVector]"]}]}]}]}]}]], "DisplayFormula",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.},
+ CellChangeTimes->{{3.594166238665965*^9, 3.5941662786226964`*^9}, 
+   3.5941716891246433`*^9, 3.594171726840106*^9}],
+
+Cell[TextData[{
+ "\:4ee5\:53ca",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    RowBox[{
+     RowBox[{"\[Del]", 
+      RowBox[{"\[CenterDot]", 
+       OverscriptBox["B", "\[RightVector]"]}]}], "=", 
+     StyleBox["0",
+      FontSlant->"Plain"]}],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ "\:ff0c\:5219\:ff0834\:ff09\:5316\:4e3a\:ff1a"
+}], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.},
+ CellChangeTimes->{{3.594170169328324*^9, 3.594170193205361*^9}, {
+   3.594170258414422*^9, 3.594170266297503*^9}, 3.5941716891246433`*^9, 
+   3.594171726840106*^9},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell[BoxData[
+ RowBox[{
+  FractionBox[
+   RowBox[{"\[DifferentialD]", 
+    OverscriptBox["B", "\[RightVector]"]}], 
+   RowBox[{"\[DifferentialD]", "t"}]], "=", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"(", 
+     RowBox[{
+      OverscriptBox["B", "\[RightVector]"], "\[CenterDot]", "\[Del]"}], ")"}], 
+    OverscriptBox["u", "\[RightVector]"]}], "+", 
+   RowBox[{
+    FractionBox[
+     OverscriptBox["B", "\[RightVector]"], "\[Rho]"], 
+    FractionBox[
+     RowBox[{"\[DifferentialD]", "\[Rho]"}], 
+     RowBox[{"\[DifferentialD]", "t"}]]}]}]}]], "DisplayFormula",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.},
+ CellChangeTimes->{{3.5941702938004026`*^9, 3.5941703046766405`*^9}, {
+   3.594170612296107*^9, 3.594170669497757*^9}, 3.5941716891246433`*^9, 
+   3.594171726841107*^9}],
+
+Cell[TextData[{
+ "\:4e24\:8fb9\:540c\:9664\:4ee5",
+ StyleBox["\[Rho]",
+  FontFamily->"Times New Roman"],
+ ",\:5f97\:ff1a"
+}], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.},
+ CellChangeTimes->{{3.594170694344071*^9, 3.594170718753147*^9}, 
+   3.5941716891246433`*^9, 3.594171726841107*^9},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{
+   FractionBox["\[DifferentialD]", 
+    RowBox[{"\[DifferentialD]", "t"}]], 
+   RowBox[{"(", 
+    FractionBox[
+     OverscriptBox["B", "\[RightVector]"], "\[Rho]"], ")"}]}], "=", 
+  RowBox[{
+   RowBox[{"(", 
+    RowBox[{
+     FractionBox[
+      OverscriptBox["B", "\[RightVector]"], "\[Rho]"], "\[CenterDot]", 
+     "\[Del]"}], ")"}], 
+   OverscriptBox["u", "\[RightVector]"]}]}]], "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.},
+ CellChangeTimes->{{3.59417072905124*^9, 3.594170765336389*^9}, 
+   3.5941716891246433`*^9, 3.594171726841107*^9}],
+
+Cell[TextData[{
+ "\:4e0a\:5f0f\:7531\:51bb\:7ed3\:65b9\:7a0b\:548c\:8fde\:7eed\:6027\:65b9\
+\:7a0b\:5f97\:5230\:3002\:5b83\:7684\:610f\:4e49\:5b9e\:9645\:4e0a\:8bc1\:660e\
+\:4e86\:5b9a\:74062\:ff1a\n\:8bbe\:5728\:4e00\:6839\:78c1\:529b\:7ebf\:4e0a\
+\:53d6\:6d41\:4f53\:7ebf\:5143",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    RowBox[{
+     StyleBox["\[Delta]",
+      FontSlant->"Plain"], " ", 
+     OverscriptBox["l", "\[RightVector]"]}],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ ",\:7ebf\:5143\:4e00\:7aef\:6d41\:901f\:4e3a",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    OverscriptBox["u", "\[RightVector]"],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ "\:ff0c\:53e6\:4e00\:7aef\:4e3a",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    OverscriptBox[
+     RowBox[{"u", "'"}], "\[RightVector]"], "=", 
+    RowBox[{
+     OverscriptBox["u", "\[RightVector]"], "+", 
+     RowBox[{
+      RowBox[{"(", 
+       RowBox[{"\[Delta]", " ", 
+        RowBox[{
+         OverscriptBox["l", "\[RightVector]"], "\[CenterDot]", "\[Del]"}]}], 
+       ")"}], 
+      OverscriptBox["u", "\[RightVector]"]}]}]}], TraditionalForm]],
+  FontFamily->"Times New Roman"],
+ ",\:56e0\:6b64\:5355\:4f4d\:65f6\:95f4\:6d41\:4f53\:7ebf\:5143\:7684\:53d8\
+\:5316\:7387\:ff1a"
+}], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.},
+ CellChangeTimes->{{3.5941708622141027`*^9, 3.594170897155323*^9}, {
+   3.5941710149244056`*^9, 3.5941711108089266`*^9}, {3.5941711765823984`*^9, 
+   3.594171411680723*^9}, 3.5941716891246433`*^9, 3.594171726841107*^9},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell[BoxData[
+ RowBox[{
+  FractionBox[
+   RowBox[{"\[DifferentialD]", 
+    RowBox[{"\:ff08", 
+     RowBox[{"\[Delta]", " ", 
+      OverscriptBox["l", "\[RightVector]"]}], "\:ff09"}]}], 
+   RowBox[{"\[DifferentialD]", "t"}]], "=", 
+  RowBox[{
+   RowBox[{"(", 
+    RowBox[{"\[Delta]", " ", 
+     RowBox[{
+      OverscriptBox["l", "\[RightVector]"], "\[CenterDot]", "\[Del]"}]}], 
+    ")"}], 
+   OverscriptBox["u", "\[RightVector]"]}]}]], "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.},
+ CellChangeTimes->{{3.5941714315659018`*^9, 3.594171462151174*^9}, 
+   3.5941716891246433`*^9, 3.594171726841107*^9}],
+
+Cell[TextData[{
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"\[Delta]", " ", 
+    OverscriptBox["l", "\[RightVector]"]}], TraditionalForm]],
+  FontFamily->"Times New Roman"],
+ "\:4e0e",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    FractionBox[
+     OverscriptBox["B", "\[RightVector]"], "\[Rho]"],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ "\:6ee1\:8db3\:540c\:6837\:7684\:65f6\:95f4\:6f14\:5316\:65b9\:7a0b\:3002\
+\:56e0\:6b64\:ff0c\:5982\:679c\:521d\:59cb\:65f6\:523b",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"\[Delta]", " ", 
+    OverscriptBox["l", "\[RightVector]"]}], TraditionalForm]],
+  FontFamily->"Times New Roman"],
+ "\:4e0e",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    FractionBox[
+     OverscriptBox["B", "\[RightVector]"], "\[Rho]"],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ "\:5e73\:884c\:ff0c\:5219\:4ee5\:540e\:4e5f\:4fdd\:6301\:5e73\:884c\:ff0c\
+\:4e14\:5b83\:4eec\:7684\:957f\:5ea6\:6210\:6bd4\:4f8b\:53d8\:5316\:3002"
+}], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.},
+ CellChangeTimes->{{3.5941714841597624`*^9, 3.594171568651792*^9}, {
+   3.5941716109968596`*^9, 3.594171636454733*^9}, 3.5941716891256447`*^9, {
+   3.594171726841107*^9, 3.5941717502826443`*^9}, {3.5941719038261256`*^9, 
+   3.594171925933776*^9}, {3.5943853375820866`*^9, 3.59438534009175*^9}},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell["\<\
+\:4ee5\:4e0a\:4e24\:5b9a\:7406\:8bf4\:660e\:ff0c\:5728\:7406\:60f3\:5bfc\:7535\
+\:6d41\:4f53\:4e2d\:ff0c\:4e0d\:4ec5\:4e0e\:6d41\:4f53\:4e00\:8d77\:8fd0\:52a8\
+\:7684\:56de\:8def\:6240\:5305\:542b\:7684\:78c1\:529b\:7ebf\:6570\:76ee\:4e0d\
+\:53d8\:ff0c\:800c\:4e14\:6d41\:4f53\:7684\:7269\:8d28\:7ebf\:5143\:53ea\:80fd\
+\:6cbf\:540c\:4e00\:6839\:78c1\:529b\:7ebf\:8fd0\:52a8\:ff0c\:800c\:6d41\:4f53\
+\:6cbf\:78c1\:529b\:7ebf\:65b9\:5411\:7684\:8fd0\:52a8\:662f\:81ea\:7531\:7684\
+\:3002\:4e00\:65e6\:6d41\:4f53\:6709\:5782\:76f4\:4e8e\:78c1\:529b\:7ebf\:65b9\
+\:5411\:7684\:8fd0\:52a8\:ff0c\:5219\:78c1\:529b\:7ebf\:4e5f\:8981\:968f\:7740\
+\:6d41\:4f53\:7269\:8d28\:4e00\:8d77\:8fd0\:52a8\:ff0c\:5373\:78c1\:529b\:7ebf\
+\:88ab\:51bb\:7ed3\:5728\:7406\:60f3\:5bfc\:7535\:6d41\:4f53\:7269\:8d28\:4e2d\
+\:ff0c\:8fd9\:79cd\:73b0\:8c61\:79f0\:4e3a\:78c1\:573a\:51bb\:7ed3\:3002\
+\>", "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.},
+ CellChangeTimes->{{3.594172065607034*^9, 3.5941722729276953`*^9}, 
+   3.5941728706531754`*^9},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell["\<\
+\:7269\:7406\:4e0a\:5b9a\:6027\:5730\:7406\:89e3\:8fd9\:4e00\:73b0\:8c61\:662f\
+\:53ef\:884c\:7684\:ff1a\:7531\:7535\:78c1\:611f\:5e94\:5b9a\:5f8b\:ff0c\:5f53\
+\:78c1\:901a\:91cf\:6709\:53d8\:5316\:65f6\:5c31\:4ea7\:751f\:611f\:5e94\:7535\
+\:573a\:548c\:7535\:6d41\:ff0c\:4ee5\:62b5\:6297\:78c1\:901a\:7684\:53d8\:5316\
+\:3002\:5bf9\:4e8e\:7406\:60f3\:5bfc\:4f53\:ff0c\:7535\:5bfc\:7387\:8d8b\:4e8e\
+\:65e0\:7a77\:ff0c\:53ea\:8981\:6709\:611f\:5e94\:7535\:573a\:ff0c\:611f\:5e94\
+\:7535\:6d41\:5c31\:65e0\:7a77\:5927\:3002\:8fd9\:6837\:611f\:5e94\:7535\:6d41\
+\:7684\:78c1\:573a\:603b\:80fd\:5b8c\:5168\:8865\:5145\:539f\:6765\:78c1\:573a\
+\:7684\:53d8\:5316\:ff0c\:4e5f\:5c31\:4e0d\:5141\:8bb8\:5bfc\:7535\:6d41\:4f53\
+\:6709\:76f8\:5bf9\:4e8e\:78c1\:573a\:7684\:6a2a\:5411\:8fd0\:52a8\:ff0c\:4ece\
+\:800c\:78c1\:573a\:88ab\:51bb\:7ed3\:5728\:7406\:60f3\:5bfc\:7535\:6d41\:4f53\
+\:4e2d\:3002\
+\>", "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.},
+ CellChangeTimes->{{3.5941722887104683`*^9, 3.594172338902547*^9}, {
+   3.594172373703125*^9, 3.594172375250274*^9}, {3.59417240691399*^9, 
+   3.5941724098831406`*^9}, {3.594172492601858*^9, 3.594172630324885*^9}, {
+   3.594172668250575*^9, 3.594172773495335*^9}, 3.5941728706531754`*^9},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell["\<\
+\:9ad8\:6e29\:7b49\:79bb\:5b50\:4f53\:662f\:7535\:5bfc\:7387\:5f88\:5927\:7684\
+\:6d41\:4f53\:ff0c\:5176\:4e2d\:78c1\:573a\:6709\:51bb\:7ed3\:73b0\:8c61\:3002\
+\:5982\:679c\:78c1\:573a\:539f\:6765\:662f\:5728\:7b49\:79bb\:5b50\:4f53\:5916\
+\:ff0c\:5219\:96be\:4ee5\:8fdb\:5165\:5176\:5185\:3002\
+\>", "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.},
+ CellChangeTimes->{{3.5941728034282055`*^9, 3.5941728706531754`*^9}},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell[TextData[{
+ "2.\:78c1\:573a\:6269\:6563\:ff1a\n\
+\:5982\:679c\:5bfc\:7535\:6d41\:4f53\:7684\:7535\:5bfc\:7387",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    SubscriptBox["\[Sigma]", "c"],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ "\:6709\:9650\:ff0c\:5e76\:5047\:5b9a\:6d41\:4f53\:9759\:6b62\:4e0d\:52a8",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    RowBox[{
+     OverscriptBox["u", "\[RightVector]"], "=", 
+     StyleBox["0",
+      FontSlant->"Plain"]}],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ "\:ff0c\:5219\:ff0832\:ff09\:5316\:4e3a\:ff1a"
+}], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.},
+ CellChangeTimes->{{3.5941729002345295`*^9, 3.594172907641713*^9}, {
+   3.5941831018714905`*^9, 3.5941832206427603`*^9}, {3.594183250864993*^9, 
+   3.5941832570219135`*^9}, 3.5941842970871468`*^9},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell[BoxData[
+ RowBox[{
+  FractionBox[
+   RowBox[{"\[PartialD]", 
+    OverscriptBox["B", "\[RightVector]"]}], 
+   RowBox[{"\[PartialD]", "t"}]], "=", 
+  RowBox[{
+   SubscriptBox["\[Nu]", "m"], 
+   RowBox[{
+    SuperscriptBox["\[Del]", "2"], 
+    OverscriptBox["B", "\[RightVector]"]}], " ", Cell[TextData[StyleBox[
+   "\:6269\:6563\:65b9\:7a0b",
+    FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]",
+    FontSize->12]]]}]}]], "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.},
+ CellChangeTimes->{{3.5941832741038475`*^9, 3.594183277760391*^9}, {
+   3.59418331117778*^9, 3.5941833615677767`*^9}, 3.5941842970871468`*^9, {
+   3.5943854148503942`*^9, 3.594385416303357*^9}}],
+
+Cell[TextData[{
+ "\:7531\:6269\:6563\:65b9\:7a0b\:80fd\:591f\:8bf4\:660e\:ff0c\:5f53",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    SubscriptBox["\[Sigma]", "c"],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ "\:6709\:9650\:65f6\:ff0c\:78c1\:529b\:7ebf\:4e0d\:5b8c\:5168\:51bb\:7ed3\
+\:5728\:7b49\:79bb\:5b50\:4f53\:4e2d\:ff0c\:7b49\:79bb\:5b50\:4f53\:4e2d\:7684\
+\:78c1\:573a\:4f1a\:968f\:65f6\:95f4\:8870\:51cf\:ff0c\:78c1\:573a\:4ece\:5f3a\
+\:7684\:533a\:57df\:5411\:5f31\:7684\:533a\:57df\:6269\:6563\:3002\n\n\:4f30\
+\:7b97\:7b49\:79bb\:5b50\:4f53\:4e2d\:78c1\:573a\:6269\:6563\:7684\:7279\:5f81\
+\:65f6\:95f4\:ff1a\n\:8bbe\:539f\:6765\:78c1\:573a\:96c6\:4e2d\:5728\:7ebf\
+\:5ea6\:4e3a",
+ StyleBox["L",
+  FontFamily->"Times New Roman",
+  FontSize->12],
+ "\:7684\:7b49\:79bb\:5b50\:533a\:57df\:5185\:ff0c",
+ Cell[BoxData[
+  StyleBox[
+   RowBox[{
+    RowBox[{
+     SuperscriptBox["\[Del]", "2"], "B"}], "\[TildeTilde]", 
+    RowBox[{"-", 
+     FractionBox["B", 
+      SuperscriptBox["L", "2"]]}]}],
+   FontFamily->"Times New Roman"]],
+  CellChangeTimes->{{3.5941832741038475`*^9, 3.594183277760391*^9}, {
+   3.59418331117778*^9, 3.5941833615677767`*^9}}],
+ ",\:5219\:65b9\:7a0b\:8fd1\:4f3c\:4e3a\:ff1a"
+}], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.},
+ CellChangeTimes->{{3.5941833870552936`*^9, 3.5941834356547627`*^9}, {
+   3.594183481229125*^9, 3.594183489401786*^9}, {3.5941835247807693`*^9, 
+   3.5941835475798087`*^9}, {3.5941835844894986`*^9, 3.5941837022163887`*^9}, 
+   3.5941842970871468`*^9, 3.5943854440027146`*^9, {3.594385477282775*^9, 
+   3.5943854784955792`*^9}},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell[BoxData[
+ RowBox[{
+  FractionBox[
+   RowBox[{"\[PartialD]", "B"}], 
+   RowBox[{"\[PartialD]", "t"}]], 
+  RowBox[{"=", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"-", 
+      SubscriptBox["\[Nu]", "m"]}], 
+     FractionBox["B", 
+      SuperscriptBox["L", "2"]]}], "=", 
+    RowBox[{"-", 
+     FractionBox["B", 
+      SubscriptBox["\[Tau]", "d"]]}]}]}]}]], "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.},
+ CellChangeTimes->{{3.594183724812249*^9, 3.594183818133624*^9}, {
+   3.5941839738975554`*^9, 3.5941839739288087`*^9}, 3.5941842970871468`*^9}],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{Cell[TextData[StyleBox["\:5f0f\:4e2d",
+    FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]",
+    FontSize->12]]], 
+   SubscriptBox["\[Tau]", "d"]}], "=", 
+  RowBox[{
+   FractionBox[
+    SuperscriptBox["L", "2"], 
+    SubscriptBox["\[Nu]", "m"]], "=", 
+   RowBox[{
+    SubscriptBox["\[Mu]", "0"], 
+    SubscriptBox["\[Sigma]", "c"], 
+    SuperscriptBox["L", "2"]}]}]}]], "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.},
+ CellChangeTimes->{{3.594183836549389*^9, 3.594183919516637*^9}, {
+   3.594184055319766*^9, 3.5941840595389724`*^9}, 3.5941842970871468`*^9}],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{Cell[TextData[{
+    StyleBox["\:4e0a\:5f0f\:7684\:89e3\:4e3a",
+     FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]",
+     FontSize->12],
+    "\:ff1a"
+   }]], 
+   RowBox[{"B", "[", "t", "]"}]}], "=", 
+  RowBox[{
+   RowBox[{"B", "[", "0", "]"}], 
+   SuperscriptBox["\[ExponentialE]", 
+    RowBox[{"-", 
+     FractionBox["t", 
+      SubscriptBox["\[Tau]", "d"]]}]]}]}]], "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.},
+ CellChangeTimes->{{3.5941839356747036`*^9, 3.594184022425444*^9}, 
+   3.5941842970871468`*^9}],
+
+Cell[TextData[{
+ "\:8bf4\:660e\:78c1\:573a\:968f\:65f6\:95f4\:6269\:6563\:6216\:8870\:51cf\
+\:ff0c",
+ Cell[BoxData[
+  StyleBox[
+   SubscriptBox["\[Tau]", "d"],
+   FontFamily->"Times New Roman"]],
+  CellChangeTimes->{{3.594183724812249*^9, 3.594183818133624*^9}, {
+   3.5941839738975554`*^9, 3.5941839739288087`*^9}}],
+ "\:4e3a\:78c1\:6269\:6563\:65f6\:95f4\:6216\:78c1\:8870\:51cf\:65f6\:95f4\
+\:3002\n\:7535\:5bfc\:7387\:8d8a\:5927\:ff0c\:8870\:51cf\:8d8a\:6162\:ff0c\
+\:82e5",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    RowBox[{
+     SubscriptBox["\[Sigma]", "c"], "\[Rule]", 
+     StyleBox["\[Infinity]",
+      FontSlant->"Plain"]}],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ "\:ff0c\:5219\:78c1\:573a\:4e0d\:8870\:51cf\:3002\n\:5bf9\:7535\:5bfc\:7387\
+\:6709\:9650\:7684\:6d41\:4f53\:ff0c\:7279\:5f81\:957f\:5ea6",
+ StyleBox["L",
+  FontFamily->"Times New Roman",
+  FontSize->12],
+ "\:8d8a\:5927\:ff0c\:8870\:51cf\:4e5f\:8d8a\:6162\:3002\:56e0\:800c\:5b87\
+\:5b99\:7b49\:79bb\:5b50\:4f53\:8870\:51cf\:5f88\:6162\:3002"
+}], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.},
+ CellChangeTimes->{{3.5941840782908354`*^9, 3.594184240159871*^9}, {
+   3.59418427994475*^9, 3.5941842970871468`*^9}, 3.5943856348195376`*^9},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["P91", "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10009.},
+ CellChangeTimes->{
+  3.5941843874325657`*^9, 3.5942032479441977`*^9, {3.5943740701573114`*^9, 
+   3.5943740927412796`*^9}}],
+
+Cell["\<\
+\:7b49\:79bb\:5b50\:4f53\:662f\:7531\:5927\:91cf\:5e26\:7535\:7c92\:5b50\:7ec4\
+\:6210\:7684\:4e00\:79cd\:8fde\:7eed\:4ecb\:8d28\:ff0c\:5176\:884c\:4e3a\:4e3b\
+\:8981\:662f\:7531\:5176\:4e2d\:5e26\:7535\:7c92\:5b50\:95f4\:957f\:7a0b\:76f8\
+\:4e92\:4f5c\:7528\:5f15\:8d77\:7684\:96c6\:4f53\:6548\:5e94\:786e\:5b9a\:7684\
+\:3002\:7b49\:79bb\:5b50\:4f53\:6ce2\:5c31\:662f\:8fd9\:79cd\:96c6\:4f53\:6548\
+\:5e94\:7684\:4e00\:79cd\:8fd0\:52a8\:5f62\:5f0f\:3002
+\:7b49\:79bb\:5b50\:4f53\:4e2d\:5b58\:5728\:7740\:4e09\:79cd\:5bf9\:7b49\:79bb\
+\:5b50\:4f53\:7684\:6270\:52a8\:80fd\:8d77\:5230\:5f39\:6027\:6062\:590d\:529b\
+\:7684\:4f5c\:7528\:529b,\:5373\:70ed\:538b\:529b\:3001\:9759\:7535\:529b\
+\:548c\:78c1\:529b\:ff0c\:56e0\:800c\:80fd\:4f7f\:6270\:52a8\:5728\:4ecb\:8d28\
+\:4e2d\:4f20\:64ad\:ff0c\:5f62\:6210\:7b49\:79bb\:5b50\:4f53\:6ce2\:3002
+\:7b49\:79bb\:5b50\:4f53\:4e2d\:7684\:6ce2\:5c31\:662f\:4ee5\:7b49\:79bb\:5b50\
+\:4f53\:4e3a\:4ecb\:8d28\:7684\:6ce2\:52a8\:73b0\:8c61\:ff0c\:5176\:5177\:4f53\
+\:7279\:5f81\:662f\:7531\:4ecb\:8d28\:6027\:8d28\:51b3\:5b9a\:7684\:3002
+\:7b49\:79bb\:5b50\:4f53\:6ce2\:5bf9\:53d7\:63a7\:6838\:805a\:53d8\:548c\:7a7a\
+\:95f4\:7b49\:79bb\:5b50\:4f53\:7814\:7a76\:90fd\:975e\:5e38\:91cd\:8981\:3002
+\:4e24\:79cd\:7814\:7a76\:65b9\:6cd5\:ff1a1.\:7b49\:79bb\:5b50\:4f53\:7684\
+\:6d41\:4f53\:63cf\:8ff0\:ff0c\:5373\:78c1\:6d41\:4f53\:529b\:5b66\:65b9\:6cd5\
+\:ff1b2.\:5206\:5e03\:51fd\:6570\:63cf\:8ff0\:7684\:52a8\:7406\:8bba\:65b9\
+\:6cd5\:3002\
+\>", "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10009.},
+ CellChangeTimes->{{3.5941844305618267`*^9, 3.594184482504975*^9}, {
+   3.5941845642708235`*^9, 3.5941846291832714`*^9}, {3.5941846599517984`*^9, 
+   3.594184687923107*^9}, {3.5941847870337934`*^9, 3.5941847925342965`*^9}, {
+   3.59418482727176*^9, 3.594184865103383*^9}, {3.5941848997161293`*^9, 
+   3.5941849333679333`*^9}, {3.5941849681994896`*^9, 
+   3.5941851174090147`*^9}, {3.5941855392165284`*^9, 3.594185549951914*^9}, 
+   3.5942032479441977`*^9, {3.5943740701573114`*^9, 3.5943740927412796`*^9}, {
+   3.594385695622839*^9, 3.5943857052712345`*^9}, {3.5944655063029757`*^9, 
+   3.594465524679933*^9}, {3.5945035332853217`*^9, 3.594503577196072*^9}},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell["\<\
+\:4efb\:4f55\:5468\:671f\:6027\:7684\:6270\:52a8\:6216\:6ce2\:52a8\:ff0c\:90fd\
+\:53ef\:4ee5\:5206\:89e3\:4e3a\:5355\:4e00\:9891\:7387\:7684\:7b80\:8c10\:632f\
+\:52a8\:6216\:7b80\:8c10\:6ce2\:7684\:53e0\:52a0\:3002\:56e0\:6b64\:53ea\:9700\
+\:7814\:7a76\:5355\:4e00\:9891\:7387\:7b80\:8c10\:632f\:52a8\:4e0e\:7b80\:8c10\
+\:6ce2\:7684\:95ee\:9898\:3002
+\:4e3a\:8ba1\:7b97\:65b9\:4fbf\:ff0c\:5355\:4e00\:9891\:7387\:ff08\:5355\:8272\
+\:ff09\:5e73\:9762\:6ce2\:53ef\:7528\:590d\:6570\:8868\:793a\:4e3a\:ff1a\
+\>", "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10009.},
+ CellChangeTimes->{{3.594185583876878*^9, 3.5941857288668203`*^9}, 
+   3.5942032479441977`*^9, {3.5943740701573114`*^9, 3.5943740927412796`*^9}},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{
+   OverscriptBox["E", "\[RightVector]"], "[", 
+   RowBox[{
+    OverscriptBox["r", "\[RightVector]"], ",", "t"}], "]"}], "=", 
+  RowBox[{
+   SubscriptBox[
+    OverscriptBox["E", "\[RightVector]"], "0"], 
+   SuperscriptBox["\[ExponentialE]", 
+    RowBox[{"\[ImaginaryI]", 
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{
+        OverscriptBox["k", "\[RightVector]"], "\[CenterDot]", 
+        OverscriptBox["r", "\[RightVector]"]}], "-", 
+       RowBox[{"\[Omega]", " ", "t"}]}], 
+      ")"}]}]]}]}]], "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10009.},
+ CellChangeTimes->{{3.5941858813124876`*^9, 3.5941859196128902`*^9}, 
+   3.5941859618044057`*^9, 3.5941882358702164`*^9, 3.5942032479441977`*^9, {
+   3.5943740701573114`*^9, 3.594374092742282*^9}}],
+
+Cell["\<\
+\:5b9e\:9645\:7684\:7269\:7406\:91cf\:4e3a\:5b9e\:6570\:ff0c\:6240\:4ee5\:7ed3\
+\:679c\:5e94\:53d6\:5176\:5b9e\:90e8\:3002\:5373\:ff0c\:4e0a\:5f0f\:5b9e\:9645\
+\:4ee3\:8868\:5e73\:9762\:6ce2\:ff1a\
+\>", "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10009.},
+ CellChangeTimes->{{3.594185985978892*^9, 3.5941860435004363`*^9}, {
+   3.594186088162053*^9, 3.594186101788334*^9}, 3.5942032479441977`*^9, {
+   3.5943740701573114`*^9, 3.594374092742282*^9}},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{
+   OverscriptBox["E", "\[RightVector]"], "[", 
+   RowBox[{
+    OverscriptBox["r", "\[RightVector]"], ",", "t"}], "]"}], "=", 
+  RowBox[{
+   SubscriptBox[
+    OverscriptBox["E", "\[RightVector]"], "0"], 
+   RowBox[{"Cos", "[", 
+    RowBox[{
+     RowBox[{
+      OverscriptBox["k", "\[RightVector]"], "\[CenterDot]", 
+      OverscriptBox["r", "\[RightVector]"]}], "-", 
+     RowBox[{"\[Omega]", " ", "t"}]}], "]"}]}]}]], "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10009.},
+ CellChangeTimes->{{3.5941861093358955`*^9, 3.5941861394171267`*^9}, 
+   3.594188233979353*^9, 3.5942032479441977`*^9, {3.594374070158311*^9, 
+   3.594374092742282*^9}}],
+
+Cell[TextData[{
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    RowBox[{
+     StyleBox["k",
+      FontSlant->"Plain"], "=", 
+     FractionBox[
+      RowBox[{"2", "\[Pi]"}], "\[Lambda]"]}],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ "\:4e3a\:6ce2\:6570\:ff0c\:6ce2\:957f",
+ StyleBox["\[Lambda]",
+  FontFamily->"Times New Roman"],
+ "\:8868\:793a\:6ce2\:5728\:4e00\:4e2a\:5468\:671f\:5185\:632f\:52a8\:72b6\
+\:6001\:4f20\:64ad\:7684\:8ddd\:79bb\:3002\n",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"(", 
+    RowBox[{
+     RowBox[{
+      OverscriptBox["k", "\[RightVector]"], "\[CenterDot]", 
+      OverscriptBox["r", "\[RightVector]"]}], "-", 
+     RowBox[{"\[Omega]", " ", "t"}]}], ")"}], TraditionalForm]],
+  FontFamily->"Times New Roman"],
+ "\:4e3a\:76f8\:4f4d\:3002"
+}], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10009.},
+ CellChangeTimes->{{3.5941862702495337`*^9, 3.5941864055047207`*^9}, {
+   3.594186442039855*^9, 3.5941864835282903`*^9}, {3.594188239714419*^9, 
+   3.594188239714419*^9}, 3.5942032479441977`*^9, {3.594374070158311*^9, 
+   3.594374092742282*^9}},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell["\<\
+\:76f8\:901f\:5ea6\:548c\:7fa4\:901f\:5ea6
+\:76f8\:901f\:5ea6\:4e3a\:76f8\:4f4d\:6052\:5e38\:70b9\:8fd0\:52a8\:7684\:901f\
+\:5ea6\:ff0c\:4e5f\:5c31\:662f\:632f\:52a8\:72b6\:6001\:7684\:4f20\:64ad\:901f\
+\:5ea6\:3002\:8bbe\:6ce2\:6cbfx\:8f74\:65b9\:5411\:4f20\:64ad\:ff0c\:6052\
+\:5e38\:76f8\:4f4d\:7684\:5750\:6807\:65f6\:95f4\:5173\:7cfb\:4e3a\:ff1a\
+\>", "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10009.},
+ CellChangeTimes->{{3.5941879611713667`*^9, 3.594187966109404*^9}, {
+   3.5941880031130686`*^9, 3.594188094707801*^9}, {3.5941881519165225`*^9, 
+   3.5941881716526966`*^9}, 3.5942032479441977`*^9, {3.594374070158311*^9, 
+   3.594374092742282*^9}},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell[BoxData[
+ RowBox[{"\[Phi]", "=", 
+  RowBox[{
+   RowBox[{
+    RowBox[{
+     OverscriptBox["k", "\[RightVector]"], "\[CenterDot]", 
+     OverscriptBox["r", "\[RightVector]"]}], "-", 
+    RowBox[{"\[Omega]", " ", "t"}]}], "=", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"k", " ", "x"}], "-", 
+     RowBox[{"\[Omega]", " ", "t"}]}], "=", "C"}]}]}]], "DisplayFormula",
+ CellGroupingRules->{GroupTogetherGrouping, 10009.},
+ CellChangeTimes->{{3.594188189748197*^9, 3.594188224040228*^9}, {
+   3.594188271920896*^9, 3.594188273968028*^9}, 3.5942032479441977`*^9, {
+   3.594374070158311*^9, 3.594374092742282*^9}}],
+
+Cell["\<\
+\:8fd9\:5173\:7cfb\:5b9e\:9645\:4e0a\:786e\:5b9a\:4e86\:6052\:5e38\:76f8\:4f4d\
+\:7684\:5750\:6807\:503c\:968f\:65f6\:95f4\:7684\:53d8\:5316\:ff0c\:4ece\:800c\
+\:53ef\:6c42\:51fa\:76f8\:901f\:5ea6\:ff1a\
+\>", "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10009.},
+ CellChangeTimes->{{3.5941882963763175`*^9, 3.5941883218160563`*^9}, {
+   3.5941883585694375`*^9, 3.5941884421007433`*^9}, 3.5942032479441977`*^9, {
+   3.594374070158311*^9, 3.594374092742282*^9}, {3.594385899387158*^9, 
+   3.5943859400721807`*^9}},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell[BoxData[
+ RowBox[{
+  SubscriptBox["v", "p"], "=", 
+  RowBox[{
+   SubscriptBox[
+    RowBox[{"(", 
+     FractionBox[
+      RowBox[{"\[DifferentialD]", "x"}], 
+      RowBox[{"\[DifferentialD]", "t"}]], ")"}], 
+    RowBox[{"\[Phi]", "=", "C"}]], "=", 
+   FractionBox["\[Omega]", "k"]}]}]], "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10009.},
+ CellChangeTimes->{{3.59418845486755*^9, 3.594188497497114*^9}, 
+   3.5942032479441977`*^9, {3.594374070158311*^9, 3.5943740927432823`*^9}}],
+
+Cell["\<\
+\:5b9e\:9645\:7684\:6ce2\:4e0d\:53ef\:80fd\:662f\:5355\:8272\:7684\:ff0c\:800c\
+\:662f\:4ee5\:67d0\:4e00\:9891\:7387\:ff08\:6216\:6ce2\:77e2\:ff09\:4e3a\:4e2d\
+\:5fc3\:ff0c\:5728\:5176\:9644\:8fd1\:5c0f\:7684\:8303\:56f4\:5185\:5404\:4e2a\
+\:4e0d\:540c\:9891\:7387\:ff08\:6216\:6ce2\:77e2\:ff09\:7684\:6ce2\:6309\:4e0d\
+\:540c\:632f\:5e45\:53e0\:52a0\:6784\:6210\:7684\:ff0c\:8fd9\:6837\:5408\:6210\
+\:7684\:6ce2\:4e3a\:6ce2\:7fa4\:ff0c\:5408\:6210\:6ce2\:7684\:5305\:7edc\:7ebf\
+\:4e3a\:6ce2\:5305\:3002\:6ce2\:5305\:7684\:573a\:53ea\:5c40\:9650\:5728\:7a7a\
+\:95f4\:4e2d\:5f88\:5c0f\:7684\:8303\:56f4\:3002\:6ce2\:5305\:7684\:6574\:4f53\
+\:8fd0\:52a8\:901f\:5ea6\:4e3a\:7fa4\:901f\:5ea6\:3002\:6ce2\:5305\:5b9e\:9645\
+\:4e0a\:662f\:4e00\:79cd\:632f\:5e45\:8c03\:5236\:7684\:6ce2\:3002
+\:6839\:636e\:72ed\:4e49\:76f8\:5bf9\:8bba\:ff0c\:7fa4\:901f\:5ea6\:4e0d\:80fd\
+\:8d85\:8fc7\:5149\:901f\:3002
+\:4e0d\:540c\:6ce2\:77e2\:3001\:6cbfx\:65b9\:5411\:4f20\:64ad\:7684\:5404\
+\:5e73\:9762\:6ce2\:ff0c\:53e0\:52a0\:6784\:6210\:7684\:6ce2\:5305\:53ef\:8868\
+\:793a\:4e3a\:ff1a\
+\>", "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10009.},
+ CellChangeTimes->{{3.59418864359793*^9, 3.5941886500048285`*^9}, {
+   3.5941887579682875`*^9, 3.5941887582688446`*^9}, {3.5941887971512384`*^9, 
+   3.59418884621903*^9}, {3.5941891770183325`*^9, 3.5941894099562097`*^9}, {
+   3.594189458820148*^9, 3.594189549618679*^9}, 3.5942032479441977`*^9, {
+   3.594374070158311*^9, 3.5943740927432823`*^9}},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"\[Psi]", "[", 
+   RowBox[{"x", ",", "t"}], "]"}], "=", 
+  RowBox[{
+   FractionBox["1", 
+    SqrtBox[
+     RowBox[{"2", "\[Pi]"}]]], 
+   RowBox[{
+    SubsuperscriptBox["\[Integral]", 
+     RowBox[{"-", "\[Infinity]"}], "\[Infinity]"], 
+    RowBox[{
+     RowBox[{"a", "[", "k", "]"}], 
+     SuperscriptBox["\[ExponentialE]", 
+      RowBox[{"\[ImaginaryI]", 
+       RowBox[{"(", 
+        RowBox[{
+         RowBox[{"k", " ", "x"}], "-", 
+         RowBox[{"\[Omega]", " ", "t"}]}], ")"}]}]], 
+     RowBox[{"\[DifferentialD]", "k"}]}]}]}]}]], "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10009.},
+ CellChangeTimes->{{3.594189595717023*^9, 3.594189676669859*^9}, 
+   3.5942032479441977`*^9, {3.594374070158311*^9, 3.5943740927432823`*^9}}],
+
+Cell[TextData[{
+ "\:5f0f\:4e2d\:ff0c",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"\[Omega]", "=", 
+    RowBox[{"\[Omega]", "(", "k", ")"}]}], TraditionalForm]],
+  FontFamily->"Times New Roman"],
+ ",\:4e0d\:540c\:6ce2\:77e2\:7684\:6ce2\:ff0c\:5176\:632f\:5e45\:4e3a\:ff1a"
+}], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10009.},
+ CellChangeTimes->{{3.5941897067822537`*^9, 3.594189756583976*^9}, 
+   3.5942032479441977`*^9, {3.594374070158311*^9, 3.5943740927432823`*^9}},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"a", "[", "k", "]"}], "=", 
+  RowBox[{
+   FractionBox["1", 
+    SqrtBox[
+     RowBox[{"2", "\[Pi]"}]]], 
+   RowBox[{
+    SubsuperscriptBox["\[Integral]", 
+     RowBox[{"-", "\[Infinity]"}], "\[Infinity]"], 
+    RowBox[{
+     RowBox[{"\[Psi]", "[", 
+      RowBox[{"x", ",", "0"}], "]"}], 
+     SuperscriptBox["\[ExponentialE]", 
+      RowBox[{
+       RowBox[{"-", "\[ImaginaryI]k"}], " ", "x"}]], 
+     RowBox[{"\[DifferentialD]", "x"}]}]}]}]}]], "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10009.},
+ CellChangeTimes->{{3.59418976735052*^9, 3.5941898370453644`*^9}, 
+   3.5942032479441977`*^9, {3.594374070158311*^9, 3.5943740927432823`*^9}}],
+
+Cell[TextData[{
+ "\:5047\:5b9ak\:7684\:53d8\:5316\:8303\:56f4",
+ Cell[BoxData[
+  FormBox[
+   StyleBox["\[CapitalDelta]k",
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ "\:5f88\:5c0f\:ff0c\:4e14",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    RowBox[{
+     StyleBox["\[Omega]",
+      FontSlant->"Plain"], "(", 
+     StyleBox["k",
+      FontSlant->"Plain"], ")"}],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ "\:968fk\:53d8\:5316\:5f88\:6162\:ff0c\:5219",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    RowBox[{
+     StyleBox["\[Omega]",
+      FontSlant->"Plain"], "(", 
+     StyleBox["k",
+      FontSlant->"Plain"], ")"}],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ "\:53ef\:5728",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    RowBox[{
+     StyleBox["k",
+      FontSlant->"Plain"], "=", 
+     SubscriptBox["k", "0"]}],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ "\:70b9\:5c55\:5f00\:ff0c"
+}], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10009.},
+ CellChangeTimes->{{3.5941899921854963`*^9, 3.594190089726231*^9}, 
+   3.5942032479441977`*^9, {3.594374070158311*^9, 3.5943740927432823`*^9}},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"\[Omega]", "[", "k", "]"}], "=", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"\[Omega]", "[", 
+     SubscriptBox["k", "0"], "]"}], "+", 
+    RowBox[{
+     SubscriptBox[
+      RowBox[{"(", 
+       FractionBox[
+        RowBox[{"\[DifferentialD]", "\[Omega]"}], 
+        RowBox[{"\[DifferentialD]", "k"}]], ")"}], 
+      RowBox[{"k", "=", 
+       SubscriptBox["k", "0"]}]], 
+     RowBox[{"(", 
+      RowBox[{"k", "-", 
+       SubscriptBox["k", "0"]}], ")"}]}], "+"}], 
+   "..."}]}]], "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10009.},
+ CellChangeTimes->{{3.5941901178702774`*^9, 3.5941902011122084`*^9}, 
+   3.5942032479441977`*^9, {3.5943740701593113`*^9, 3.5943740927432823`*^9}}],
+
+Cell["\<\
+\:5c06\:4e0a\:5f0f\:5e26\:5165\:ff0844\:ff09\:ff0c\:4fdd\:7559\:81f3\:4e00\
+\:7ea7\:5c0f\:91cf\:ff0c\:5f97\:ff1a\
+\>", "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10009.},
+ CellChangeTimes->{{3.5941902259028535`*^9, 3.594190280423661*^9}, 
+   3.5942032479441977`*^9, {3.5943740701593113`*^9, 3.5943740927432823`*^9}},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"\[Psi]", "[", 
+   RowBox[{"x", ",", "t"}], "]"}], "=", 
+  RowBox[{
+   RowBox[{
+    FractionBox["1", 
+     SqrtBox[
+      RowBox[{"2", "\[Pi]"}]]], 
+    RowBox[{
+     SubsuperscriptBox["\[Integral]", 
+      RowBox[{"-", "\[Infinity]"}], "\[Infinity]"], 
+     RowBox[{
+      RowBox[{"a", "[", "k", "]"}], 
+      SuperscriptBox["\[ExponentialE]", 
+       RowBox[{"\[ImaginaryI]", 
+        RowBox[{"(", 
+         RowBox[{
+          RowBox[{"k", " ", "x"}], "-", 
+          RowBox[{
+           SubscriptBox["\[Omega]", "0"], "t"}], "-", 
+          RowBox[{
+           SubscriptBox[
+            RowBox[{"(", 
+             FractionBox[
+              RowBox[{"\[DifferentialD]", "\[Omega]"}], 
+              RowBox[{"\[DifferentialD]", "k"}]], ")"}], 
+            RowBox[{"k", "=", 
+             SubscriptBox["k", "0"]}]], 
+           RowBox[{"(", 
+            RowBox[{"k", "-", 
+             SubscriptBox["k", "0"]}], ")"}], "t"}]}], ")"}]}]], 
+      RowBox[{"\[DifferentialD]", "k"}]}]}]}], "=", 
+   RowBox[{
+    RowBox[{
+     FractionBox["1", 
+      SqrtBox[
+       RowBox[{"2", "\[Pi]"}]]], 
+     SuperscriptBox["\[ExponentialE]", 
+      RowBox[{"\[ImaginaryI]", 
+       RowBox[{"(", 
+        RowBox[{
+         RowBox[{
+          SubscriptBox["k", "0"], 
+          SubscriptBox["v", "g"]}], "-", 
+         SubscriptBox["\[Omega]", "0"]}], ")"}], "t"}]], 
+     RowBox[{
+      SubsuperscriptBox["\[Integral]", 
+       RowBox[{"-", "\[Infinity]"}], "\[Infinity]"], 
+      RowBox[{
+       RowBox[{"a", "[", "k", "]"}], 
+       SuperscriptBox["\[ExponentialE]", 
+        RowBox[{"\[ImaginaryI]k", 
+         RowBox[{"(", " ", 
+          RowBox[{"x", "-", 
+           RowBox[{
+            SubscriptBox["v", "g"], "t"}]}], ")"}]}]], 
+       RowBox[{"\[DifferentialD]", "k"}]}]}]}], "=", 
+    RowBox[{
+     RowBox[{"\[Psi]", "[", 
+      RowBox[{
+       RowBox[{"x", "-", 
+        RowBox[{
+         SubscriptBox["v", "g"], "t"}]}], ",", "0"}], "]"}], 
+     SuperscriptBox["\[ExponentialE]", 
+      RowBox[{"\[ImaginaryI]", 
+       RowBox[{"(", 
+        RowBox[{
+         RowBox[{
+          SubscriptBox["k", "0"], 
+          SubscriptBox["v", "g"]}], "-", 
+         SubscriptBox["\[Omega]", "0"]}], ")"}], 
+       "t"}]]}]}]}]}]], "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10009.},
+ CellChangeTimes->{{3.5941902901276503`*^9, 3.5941907161164737`*^9}, 
+   3.5942032479441977`*^9, {3.5943740701593113`*^9, 3.5943740927432823`*^9}}],
+
+Cell[TextData[{
+ "\:5f0f\:4e2d",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    RowBox[{
+     SubscriptBox["v", "g"], "=", 
+     SubscriptBox[
+      RowBox[{"(", 
+       FractionBox[
+        RowBox[{"\[DifferentialD]", "\[Omega]"}], 
+        RowBox[{"\[DifferentialD]", "k"}]], ")"}], 
+      RowBox[{"k", "=", 
+       SubscriptBox["k", "0"]}]]}],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ ",\:4e0a\:5f0f\:7ed3\:679c\:8868\:660e\:ff0c",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    RowBox[{
+     StyleBox["t",
+      FontSlant->"Plain"], "=", 
+     StyleBox["0",
+      FontSlant->"Plain"]}],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ "\:65f6\:523b\:7684\:6ce2\:5305",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"\[Psi]", "(", 
+    RowBox[{"x", ",", "0"}], ")"}], TraditionalForm]],
+  FontFamily->"Times New Roman"],
+ "\:4ee5\:901f\:5ea6",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    SubscriptBox["v", "g"],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ "\:4e0d\:53d8\:5f62\:5730\:4f20\:64ad\:ff0c",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    SubscriptBox["v", "g"],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ "\:5373\:662f\:7fa4\:901f\:5ea6\:3002"
+}], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10009.},
+ CellChangeTimes->{{3.59419073438395*^9, 3.5941908368396473`*^9}, {
+   3.5941908671395316`*^9, 3.5941909656728587`*^9}, {3.5941909966288776`*^9, 
+   3.5941910445554605`*^9}, {3.59419107533951*^9, 3.5941911641599565`*^9}, {
+   3.5941912322445707`*^9, 3.594191330981304*^9}, {3.5941913628438215`*^9, 
+   3.5941913735168695`*^9}, 3.5942032479441977`*^9, {3.5943740701593113`*^9, 
+   3.594374092744283*^9}},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell[BoxData[
+ RowBox[{
+  SubscriptBox["v", "g"], "=", 
+  RowBox[{
+   SubscriptBox[
+    RowBox[{"(", 
+     FractionBox[
+      RowBox[{"\[DifferentialD]", "\[Omega]"}], 
+      RowBox[{"\[DifferentialD]", "k"}]], ")"}], 
+    RowBox[{"k", "=", 
+     SubscriptBox["k", "0"]}]], "=", 
+   RowBox[{
+    SubscriptBox[
+     RowBox[{"(", 
+      FractionBox[
+       RowBox[{
+        RowBox[{"\[DifferentialD]", 
+         SubscriptBox["v", "p"]}], "k"}], 
+       RowBox[{"\[DifferentialD]", "k"}]], ")"}], 
+     RowBox[{"k", "=", 
+      SubscriptBox["k", "0"]}]], "=", 
+    RowBox[{
+     RowBox[{
+      SubscriptBox["v", "p"], "[", 
+      SubscriptBox["k", "0"], "]"}], "+", 
+     RowBox[{
+      SubscriptBox["k", "0"], 
+      SubscriptBox[
+       RowBox[{"(", 
+        FractionBox[
+         RowBox[{"\[DifferentialD]", 
+          SubscriptBox["v", "p"]}], 
+         RowBox[{"\[DifferentialD]", "k"}]], ")"}], 
+       RowBox[{"k", "=", 
+        SubscriptBox["k", "0"]}]]}]}]}]}]}]], "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10009.},
+ CellChangeTimes->{
+  3.594191514992695*^9, {3.594191545308402*^9, 3.5941916297390556`*^9}, {
+   3.594191660891282*^9, 3.594191673908296*^9}, 3.5942032479441977`*^9, {
+   3.5943740701593113`*^9, 3.594374092744283*^9}}]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["P94", "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10011.},
+ CellChangeTimes->{{3.5941987406815596`*^9, 3.5941987419941187`*^9}, 
+   3.5942032479441977`*^9, 3.5943740701593113`*^9, 3.594374107973377*^9}],
+
+Cell[TextData[{
+ "\:7535\:5b50\:9759\:7535\:632f\:8361\n\:7535\:5b50\:9759\:7535\:632f\:8361\
+\:662f\:4e00\:79cd\:9ad8\:9891\:632f\:8361\:ff0c\:7531\:4e8e\:79bb\:5b50\:8d28\
+\:91cf\:6bd4\:7535\:5b50\:5927\:7684\:591a\:ff0c\:5b83\:5bf9\:9ad8\:9891\:632f\
+\:8361\:51e0\:4e4e\:4e0d\:54cd\:5e94\:ff0c\:6240\:4ee5\:53ef\:4ee5\:628a\:79bb\
+\:5b50\:8fd1\:4f3c\:770b\:6210\:4e00\:79cd\:5747\:5300\:7684\:6b63\:7535\:8377\
+\:80cc\:666f\:ff0c\:628a\:7535\:5b50\:5355\:72ec\:4f5c\:4e3a\:4e00\:79cd\:6d41\
+\:4f53\:ff0c\:7814\:7a76\:7535\:5b50\:6d41\:4f53\:8fd0\:52a8\:3002\n\:5047\
+\:5b9a\:7b49\:79bb\:5b50\:4f53\:6e29\:5ea6\:5f88\:4f4e\:ff0c",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    RowBox[{
+     SubscriptBox["T", "e"], "\[TildeTilde]", 
+     StyleBox["0",
+      FontSlant->"Plain"]}],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ ",\:662f\:51b7\:7b49\:79bb\:5b50\:4f53\:ff0c\:7535\:5b50\:7684\:70ed\:8fd0\
+\:52a8\:53ef\:4ee5\:5ffd\:7565\:ff0c\:5373\:7535\:5b50\:7684\:70ed\:538b\:529b\
+",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    RowBox[{
+     RowBox[{"\[Del]", 
+      SubscriptBox["p", "e"]}], "\[TildeTilde]", 
+     StyleBox["0",
+      FontSlant->"Plain"]}],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ ".\:8bbe\:7535\:5b50\:7535\:8377",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    RowBox[{"-", 
+     StyleBox["e",
+      FontSlant->"Plain"]}],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ ",\:8d28\:91cf",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    SubscriptBox["m", "e"],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ ",\:7c92\:5b50\:6570\:5bc6\:5ea6\:4e3a",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    RowBox[{
+     SubscriptBox["n", "e"], "(", 
+     RowBox[{
+      OverscriptBox["r", "\[RightVector]"], ",", "t"}], ")"}],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ ",\:6d41\:4f53\:8fd0\:52a8\:901f\:5ea6\:4e3a",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    RowBox[{
+     SubscriptBox[
+      OverscriptBox["u", "\[RightVector]"], "e"], "(", 
+     RowBox[{
+      OverscriptBox["r", "\[RightVector]"], ",", "t"}], ")"}],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ ",\:7531\:53cc\:6d41\:4f53\:529b\:5b66\:65b9\:7a0b\:7ec4\:ff0829\:ff09\:ff0c\
+\:7535\:5b50\:6d41\:4f53\:7684\:529b\:5b66\:65b9\:7a0b\:4e3a\:ff1a"
+}], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10011.},
+ CellChangeTimes->{{3.594198852895271*^9, 3.5941988649744625`*^9}, 
+   3.594198934441416*^9, {3.594199098307748*^9, 3.594199211866119*^9}, {
+   3.5941993003684015`*^9, 3.594199587653103*^9}, {3.5941996348833923`*^9, 
+   3.594199667386752*^9}, {3.5941997085781765`*^9, 3.5941997172820787`*^9}, 
+   3.5942032479441977`*^9, 3.5943740701593113`*^9, 3.594374107973377*^9},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{
+   FractionBox[
+    RowBox[{"\[PartialD]", 
+     SubscriptBox["n", "e"]}], 
+    RowBox[{"\[PartialD]", "t"}]], "+", 
+   RowBox[{"\[Del]", 
+    RowBox[{"\[CenterDot]", 
+     RowBox[{"(", 
+      RowBox[{
+       SubscriptBox["n", "e"], 
+       SubscriptBox[
+        OverscriptBox["u", "\[RightVector]"], "e"]}], ")"}]}]}]}], "=", 
+  "0"}]], "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10011.},
+ CellChangeTimes->{{3.5941997318773885`*^9, 3.594199774498122*^9}, 
+   3.5942032479441977`*^9, 3.5943740701593113`*^9, 3.594374107973377*^9}],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{
+   SubscriptBox["m", "e"], 
+   SubscriptBox["n", "e"], 
+   RowBox[{"(", 
+    RowBox[{
+     FractionBox[
+      RowBox[{"\[PartialD]", 
+       SubscriptBox[
+        OverscriptBox["u", "\[RightVector]"], "e"]}], 
+      RowBox[{"\[PartialD]", "t"}]], "+", 
+     RowBox[{
+      RowBox[{"(", 
+       RowBox[{
+        SubscriptBox[
+         OverscriptBox["u", "\[RightVector]"], "e"], "\[CenterDot]", 
+        "\[Del]"}], ")"}], 
+      SubscriptBox[
+       OverscriptBox["u", "\[RightVector]"], "e"]}]}], ")"}]}], "=", 
+  RowBox[{
+   RowBox[{"-", "e"}], " ", 
+   SubscriptBox["n", "e"], 
+   OverscriptBox["E", "\[RightVector]"]}]}]], "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10011.},
+ CellChangeTimes->{{3.5941997883589044`*^9, 3.5941998705542607`*^9}, 
+   3.5942032479441977`*^9, 3.5943740701593113`*^9, 3.594374107973377*^9}],
+
+Cell[TextData[{
+ "\:4e0a\:5f0f\:4e2d\:ff0c\:672a\:5217\:5165\:7535\:5b50\:7684\:70ed\:538b\
+\:5f3a\:9879\:ff0c\:56e0\:51b7\:7b49\:79bb\:5b50\:4f53\:3002\:672a\:5217\:5165\
+\:5916\:78c1\:573a\:4f5c\:7528\:3002\:7535\:5b50\:632f\:8361\:9891\:7387\:6bd4\
+\:7535\:5b50\:79bb\:5b50\:78b0\:649e\:9891\:7387\:9ad8\:5f97\:591a\:ff0c\:6240\
+\:4ee5\:78b0\:649e\:6469\:64e6\:963b\:529b",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    SubscriptBox[
+     OverscriptBox["R", "\[RightVector]"], "ei"],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ "\:4e5f\:5ffd\:7565\:3002\n\:5176\:4e2d\:ff0c\:7535\:573a",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    OverscriptBox["E", "\[RightVector]"],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ "\:662f\:7535\:5b50\:8fd0\:7528\:4ea7\:751f\:7684\:7535\:8377\:5206\:79bb\
+\:5f15\:8d77\:7684\:ff0c\:5b83\:6ee1\:8db3\:65b9\:7a0b\:ff1a"
+}], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10011.},
+ CellChangeTimes->{{3.5941998883840275`*^9, 3.5942000432345977`*^9}, {
+   3.5942000867391825`*^9, 3.594200094740018*^9}, {3.5942003380926948`*^9, 
+   3.5942003719242764`*^9}, 3.5942032479441977`*^9, 3.5943740701593113`*^9, 
+   3.594374107973377*^9},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"\[Del]", 
+   RowBox[{"\[CenterDot]", 
+    OverscriptBox["E", "\[RightVector]"]}]}], "=", 
+  RowBox[{"-", 
+   FractionBox[
+    RowBox[{"e", 
+     RowBox[{"(", 
+      RowBox[{
+       SubscriptBox["n", "e"], "-", 
+       SubscriptBox["n", "0"]}], ")"}]}], 
+    SubscriptBox["\[Epsilon]", "0"]]}]}]], "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10011.},
+ CellChangeTimes->{{3.5942003782217236`*^9, 3.59420041464688*^9}, 
+   3.5942032479441977`*^9, 3.5943740701603127`*^9, 3.5943741079743776`*^9}],
+
+Cell[TextData[{
+ "\:5176\:4e2d",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    SubscriptBox["n", "0"],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ "\:4e3a\:79bb\:5b50\:80cc\:666f\:7684\:5747\:5300\:5bc6\:5ea6\:ff08",
+ StyleBox["Z=1",
+  FontFamily->"Times New Roman"],
+ "\:ff09\:3002\n\:53ea\:8ba8\:8bba\:5c0f\:5e45\:632f\:8361\:ff0c\:4ee4\:ff1a"
+}], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10011.},
+ CellChangeTimes->{{3.5942004248195057`*^9, 3.5942005024752235`*^9}, 
+   3.5942032479441977`*^9, 3.5943740701603127`*^9, 3.5943741079743776`*^9},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell[BoxData[
+ RowBox[{"\[Piecewise]", 
+  TagBox[GridBox[{
+     {
+      RowBox[{
+       SubscriptBox["n", "e"], "=", 
+       RowBox[{
+        SubscriptBox["n", "0"], "+", 
+        RowBox[{
+         SubscriptBox["n", "e1"], "[", 
+         RowBox[{
+          OverscriptBox["r", "\[RightVector]"], ",", "t"}], "]"}]}]}]},
+     {
+      RowBox[{
+       SubscriptBox[
+        OverscriptBox["u", "\[RightVector]"], "e"], "=", 
+       RowBox[{
+        SubscriptBox[
+         OverscriptBox["u", "\[RightVector]"], "e1"], "[", 
+        RowBox[{
+         OverscriptBox["r", "\[RightVector]"], ",", "t"}], "]"}]}]},
+     {
+      RowBox[{
+       OverscriptBox["E", "\[RightVector]"], "=", 
+       RowBox[{
+        SubscriptBox[
+         OverscriptBox["E", "\[RightVector]"], "1"], "[", 
+        RowBox[{
+         OverscriptBox["r", "\[RightVector]"], ",", "t"}], "]"}]}]}
+    },
+    AutoDelete->False,
+    GridBoxAlignment->{"Columns" -> {{Left}}},
+    GridBoxItemSize->{"Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}],
+   "Grid"]}]], "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10011.},
+ CellChangeTimes->{{3.5942005152108326`*^9, 3.594200702191552*^9}, 
+   3.5942032479441977`*^9, 3.5943740701603127`*^9, 3.5943741079743776`*^9}],
+
+Cell["\<\
+\:4e0b\:68070\:8868\:793a\:5e73\:8861\:72b6\:6001\:7684\:91cf\:ff0c1\:8868\
+\:793a\:5fae\:5c0f\:6270\:52a8\:91cf\:3002\:5c06\:ff0852\:ff09\:5e26\:5165\
+\:ff0849\:ff0c50\:ff0c51\:ff09\:4e09\:5f0f\:ff0c\:4fdd\:7559\:81f3\:4e00\:7ea7\
+\:5c0f\:91cf\:ff0c\:5f97\:5230\:ff1a\
+\>", "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10011.},
+ CellChangeTimes->{{3.594200720125308*^9, 3.594200751566182*^9}, {
+   3.5942007901326723`*^9, 3.594200838778458*^9}, 3.5942032479441977`*^9, 
+   3.5943740701603127`*^9, 3.5943741079743776`*^9},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell[BoxData[
+ RowBox[{"\[Piecewise]", 
+  TagBox[GridBox[{
+     {
+      RowBox[{
+       RowBox[{
+        FractionBox[
+         RowBox[{"\[PartialD]", 
+          SubscriptBox["n", "e1"]}], 
+         RowBox[{"\[PartialD]", "t"}]], "+", 
+        RowBox[{
+         SubscriptBox["n", "0"], 
+         RowBox[{"\[Del]", 
+          RowBox[{"\[CenterDot]", 
+           SubscriptBox[
+            OverscriptBox["u", "\[RightVector]"], "e1"]}]}]}]}], "=", "0"}]},
+     {
+      RowBox[{
+       RowBox[{
+        SubscriptBox["m", "e"], 
+        FractionBox[
+         RowBox[{"\[PartialD]", 
+          SubscriptBox[
+           OverscriptBox["u", "\[RightVector]"], "e1"]}], 
+         RowBox[{"\[PartialD]", "t"}]]}], "=", 
+       RowBox[{
+        RowBox[{"-", "e"}], 
+        SubscriptBox[
+         OverscriptBox["E", "\[RightVector]"], "1"]}]}]},
+     {
+      RowBox[{
+       RowBox[{"\[Del]", 
+        RowBox[{"\[CenterDot]", 
+         SubscriptBox[
+          OverscriptBox["E", "\[RightVector]"], "1"]}]}], "=", 
+       RowBox[{"-", 
+        FractionBox[
+         RowBox[{"e", " ", 
+          SubscriptBox["n", "e1"]}], 
+         SubscriptBox["\[Epsilon]", "0"]]}]}]}
+    },
+    AutoDelete->False,
+    GridBoxAlignment->{"Columns" -> {{Left}}},
+    GridBoxItemSize->{"Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}],
+   "Grid"]}]], "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10011.},
+ CellChangeTimes->{{3.5942008592255864`*^9, 3.594200893479143*^9}, {
+   3.5942009396876287`*^9, 3.5942011254217033`*^9}, 3.5942032479441977`*^9, 
+   3.5943740701603127`*^9, 3.5943741079743776`*^9}],
+
+Cell[TextData[{
+ "\:8bbe\:6270\:52a8\:53d1\:751f\:5728",
+ StyleBox["z",
+  FontFamily->"Times New Roman"],
+ "\:8f74\:65b9\:5411\:ff0c\:8fd9\:65f6",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    RowBox[{
+     SubscriptBox[
+      OverscriptBox["u", "\[RightVector]"], "e1"], ",", 
+     SubscriptBox[
+      OverscriptBox["E", "\[RightVector]"], "1"]}],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ "\:4e5f\:6cbfz\:8f74\:65b9\:5411\:3002\:53d6",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    RowBox[{
+     SubscriptBox["n", "e1"], "\:ff0c", 
+     SubscriptBox[
+      OverscriptBox["u", "\[RightVector]"], "e1"], "\:ff0c", 
+     RowBox[{
+      SubscriptBox[
+       OverscriptBox["E", "\[RightVector]"], "1"], "\[Proportional]", 
+      SuperscriptBox["\[ExponentialE]", 
+       RowBox[{"\[ImaginaryI]", "(", 
+        RowBox[{
+         RowBox[{"k", " ", "z"}], "-", 
+         RowBox[{"\[Omega]", " ", "t"}]}], ")"}]]}]}],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ "\:4e3a\:5e73\:9762\:6ce2\:5f62\:5f0f,\:5e26\:5165\:4e0a\:5f0f\:ff0c\:5f97\
+\:ff1a"
+}], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10011.},
+ CellChangeTimes->{{3.594201153596266*^9, 3.5942013047921867`*^9}, {
+   3.5942018273014517`*^9, 3.5942019224825397`*^9}, 3.5942032479441977`*^9, 
+   3.5943740701603127`*^9, 3.5943741079743776`*^9, {3.594468069626689*^9, 
+   3.5944680779557266`*^9}},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell[BoxData[
+ RowBox[{"\[Piecewise]", 
+  TagBox[GridBox[{
+     {
+      RowBox[{
+       RowBox[{
+        RowBox[{
+         RowBox[{"-", "\[ImaginaryI]\[Omega]"}], " ", 
+         SubscriptBox["n", "e1"]}], "+", 
+        RowBox[{
+         SubscriptBox["\[ImaginaryI]n", "0"], "k", " ", 
+         SubscriptBox["u", "e1"]}]}], "=", "0"}]},
+     {
+      RowBox[{
+       RowBox[{
+        RowBox[{"-", 
+         SubscriptBox["\[ImaginaryI]m", "e"]}], "\[Omega]", " ", 
+        SubscriptBox["u", "e1"]}], "=", 
+       RowBox[{
+        RowBox[{"-", "e"}], " ", 
+        SubscriptBox["E", "1"]}]}]},
+     {
+      RowBox[{
+       RowBox[{"\[ImaginaryI]k", " ", 
+        SubscriptBox["E", "1"]}], "=", 
+       RowBox[{
+        RowBox[{"-", "e"}], " ", 
+        RowBox[{
+         SubscriptBox["n", "e1"], "/", 
+         SubscriptBox["\[Epsilon]", "0"]}]}]}]}
+    },
+    AutoDelete->False,
+    GridBoxAlignment->{"Columns" -> {{Left}}},
+    GridBoxItemSize->{"Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}],
+   "Grid"]}]], "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10011.},
+ CellChangeTimes->{{3.5942019294901843`*^9, 3.5942020924182887`*^9}, 
+   3.5942032479598255`*^9, 3.5943740701603127`*^9, 3.5943741079743776`*^9}],
+
+Cell["\:89e3\:5f97\:ff1a", "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10011.},
+ CellChangeTimes->{{3.5942021282936153`*^9, 3.594202156524325*^9}, 
+   3.5942032479598255`*^9, 3.5943740701603127`*^9, 3.5943741079743776`*^9},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{
+   RowBox[{"(", 
+    RowBox[{
+     SuperscriptBox["\[Omega]", "2"], "-", 
+     FractionBox[
+      RowBox[{
+       SubscriptBox["n", "0"], 
+       SuperscriptBox["e", "2"]}], 
+      RowBox[{
+       SubscriptBox["m", "e"], 
+       SubscriptBox["\[Epsilon]", "0"]}]]}], ")"}], 
+   SubscriptBox["u", "e1"]}], "=", "0"}]], "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10011.},
+ CellChangeTimes->{{3.5942021678228164`*^9, 3.594202237599066*^9}, 
+   3.5942032479598255`*^9, 3.5943740701603127`*^9, 3.5943741079743776`*^9}],
+
+Cell[TextData[{
+ Cell[BoxData[
+  StyleBox[
+   SubscriptBox["u", "e1"],
+   FontFamily->"Times New Roman"]],
+  CellChangeTimes->{{3.5942021678228164`*^9, 3.594202237599066*^9}}],
+ "\:975e\:96f6\:89e3\:6761\:4ef6\:4e3a\:ff1a"
+}], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10011.},
+ CellChangeTimes->{{3.5942022611746917`*^9, 3.594202271918812*^9}, 
+   3.5942032479598255`*^9, 3.5943740701603127`*^9, 3.5943741079743776`*^9},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"(", 
+   RowBox[{
+    SuperscriptBox["\[Omega]", "2"], "-", 
+    FractionBox[
+     RowBox[{
+      SubscriptBox["n", "0"], 
+      SuperscriptBox["e", "2"]}], 
+     RowBox[{
+      SubscriptBox["m", "e"], 
+      SubscriptBox["\[Epsilon]", "0"]}]]}], ")"}], "=", 
+  "0"}]], "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10011.},
+ CellChangeTimes->{{3.5942022821395874`*^9, 3.594202283448456*^9}, 
+   3.5942032479598255`*^9, 3.594374070161313*^9, 3.5943741079753785`*^9}],
+
+Cell[TextData[{
+ "\:4e3a\:8272\:6563\:5173\:7cfb\:3002\n\:4e0a\:5f0f\:4e2d\:ff0c",
+ StyleBox["\[Omega]",
+  FontFamily->"Times New Roman"],
+ "\:4e0e",
+ StyleBox["k",
+  FontFamily->"Times New Roman"],
+ "\:65e0\:5173\:ff0c\:7fa4\:901f\:5ea6",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    RowBox[{
+     SubscriptBox["v", "g"], "=", 
+     RowBox[{
+      FractionBox[
+       RowBox[{"\[DifferentialD]", "\[Omega]"}], 
+       RowBox[{"\[DifferentialD]", "k"}]], "=", "0"}]}],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ "\:ff0c\:8868\:660e\:7535\:5b50\:632f\:8361\:4e0d\:80fd\:5728\:7b49\:79bb\
+\:5b50\:4f53\:4e2d\:4f20\:64ad\:ff0c\:53ea\:662f\:4e00\:79cd\:5c40\:90e8\:7684\
+\:9759\:7535\:632f\:8361\:3002\n\:632f\:8361\:9891\:7387"
+}], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10011.},
+ CellChangeTimes->{{3.5942023046377773`*^9, 3.594202446758979*^9}, 
+   3.5942032479598255`*^9, 3.594374070161313*^9, 3.5943741079753785`*^9},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell[BoxData[
+ RowBox[{"\[Omega]", "=", 
+  RowBox[{
+   SubscriptBox["\[Omega]", "pe"], "=", 
+   SqrtBox[
+    FractionBox[
+     RowBox[{
+      SubscriptBox["n", "0"], 
+      SuperscriptBox["e", "2"]}], 
+     RowBox[{
+      SubscriptBox["m", "e"], 
+      SubscriptBox["\[Epsilon]", "0"]}]]]}]}]], "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10011.},
+ CellChangeTimes->{{3.594202455310649*^9, 3.594202471905648*^9}, 
+   3.5942032479598255`*^9, 3.594374070161313*^9, 3.5943741079753785`*^9}],
+
+Cell[TextData[{
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    SubscriptBox["\[Omega]", "pe"],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ "\:4e3a\:7535\:5b50\:632f\:8361\:9891\:7387\:ff0c\:4e5f\:79f0\:7535\:5b50\
+\:7b49\:79bb\:5b50\:4f53\:9891\:7387\:ff0c\:56e0\:4e3a\:5b83\:53ea\:4e0e\:7b49\
+\:79bb\:5b50\:4f53\:81ea\:8eab\:7684\:7279\:5f81\:91cf\:6709\:5173\:ff0c\:6240\
+\:4ee5\:662f\:7b49\:79bb\:5b50\:4f53\:7684\:7279\:5f81\:9891\:7387\:3002\n\
+\:632f\:8361\:5468\:671f"
+}], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10011.},
+ CellChangeTimes->{{3.594202533931794*^9, 3.5942026628516526`*^9}, 
+   3.5942032479598255`*^9, 3.594374070161313*^9, 3.5943741079753785`*^9},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"],
+
+Cell[BoxData[
+ RowBox[{"T", "=", 
+  FractionBox[
+   RowBox[{"2", "\[Pi]"}], 
+   SubscriptBox["\[Omega]", "pe"]]}]], "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10011.},
+ CellChangeTimes->{{3.594202672326934*^9, 3.5942026949179063`*^9}, 
+   3.5942032479598255`*^9, 3.594374070161313*^9, 3.5943741079753785`*^9}],
+
+Cell["\:53ef\:4f5c\:4e3a\:8861\:91cf\:7b49\:79bb\:5b50\:4f53\:51c6\:7535\:4e2d\
+\:6027\:7684\:7279\:5f81\:65f6\:95f4\:3002", "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10011.},
+ CellChangeTimes->{{3.5942027042640996`*^9, 3.594202735294669*^9}, 
+   3.5942032479598255`*^9, 3.594374070161313*^9, 3.5943741079753785`*^9},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["P103", "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10010.},
+ CellChangeTimes->{{3.594203231224032*^9, 3.5942032319896927`*^9}, 
+   3.5942033648315916`*^9}],
+
+Cell["\:79bb\:5b50\:58f0\:6ce2\:3001\:79bb\:5b50\:9759\:7535\:6ce2\:7684\:8272\
+\:6563\:5173\:7cfb\:4e0e\:7535\:5b50\:9759\:7535\:6ce2\:76f8\:6bd4\:8f83", \
+"Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10010.},
+ CellChangeTimes->{{3.594203270055929*^9, 3.5942032771347713`*^9}, {
+  3.5942033162482457`*^9, 3.5942033648315916`*^9}},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["P109", "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10011.},
+ CellChangeTimes->{{3.594203389716199*^9, 3.5942033904351025`*^9}, 
+   3.594206332755932*^9}],
+
+Cell[TextData[{
+ "\:7535\:78c1\:6ce2\:4f20\:64ad\:7684\:622a\:6b62\:73b0\:8c61\:5728\:65e0\
+\:7ebf\:7535\:901a\:4fe1\:4e2d\:7684\:5e94\:7528\n\:4e00\:675f\:9891\:7387\
+\:4e3a",
+ StyleBox["\[Omega]",
+  FontFamily->"Times New Roman"],
+ "\:7684\:7535\:78c1\:6ce2\:ff0c\:5c04\:5411\:5bc6\:5ea6\:5206\:5e03\:4e0d\
+\:5747\:5300\:7684\:7b49\:79bb\:5b50\:4f53\:ff0c\:4e00\:822c\:5728\:8fb9\:7f18\
+\:7535\:5b50\:5bc6\:5ea6\:5c0f\:ff0c",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    SubscriptBox["\[Omega]", "pe"],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ "\:4e5f\:5c31\:5c0f\:ff0c\:6ee1\:8db3",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    RowBox[{
+     StyleBox["\[Omega]",
+      FontSlant->"Plain"], ">", 
+     SubscriptBox["\[Omega]", "pe"]}],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ "\:ff0c\:7535\:78c1\:6ce2\:53ef\:4ee5\:8fdb\:5165\:7b49\:79bb\:5b50\:4f53\
+\:ff0c\:968f\:7740\:5411\:5185\:90e8\:6df1\:5165\:ff0c\:7535\:5b50\:5bc6\:5ea6\
+\:9010\:6e10\:589e\:5927\:ff0c",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    RowBox[{
+     SubscriptBox["\[Omega]", "pe"], "\[Proportional]", 
+     SqrtBox[
+      SubscriptBox["n", "0"]]}],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ "\:4e5f\:968f\:4e4b\:589e\:5927\:ff0c\:5f53\:7535\:78c1\:6ce2\:5230\:8fbe\
+\:67d0\:5904",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    RowBox[{
+     StyleBox["\[Omega]",
+      FontSlant->"Plain"], "=", 
+     SubscriptBox["\[Omega]", "pe"]}],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ "\:65f6\:ff0c\:6ce2\:88ab\:622a\:6b62\:ff0c\:4e0d\:80fd\:7ee7\:7eed\:524d\
+\:8fdb\:ff0c\:5728",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"\[Omega]", "=", 
+    SubscriptBox["\[Omega]", "pe"]}], TraditionalForm]],
+  FontFamily->"Times New Roman"],
+ "\:5904\:53d1\:751f\:53cd\:5c04\:3002\n\:5730\:9762\:4e0a\:8fdc\:8ddd\:79bb\
+\:7684\:77ed\:6ce2\:901a\:4fe1\:ff0c\:5c31\:662f\:5229\:7528\:5730\:7403\:9ad8\
+\:7a7a\:7535\:79bb\:5c42\:5bf9\:65e0\:7ebf\:7535\:6ce2\:7684\:53cd\:5c04\:4f5c\
+\:7528\:6765\:5b9e\:73b0\:7684\:3002\n\:7535\:79bb\:5c42\:7684\:6700\:5927\
+\:622a\:6b62\:9891\:7387",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    RowBox[{
+     SubscriptBox["f", "p"], "\[TildeTilde]", 
+     RowBox[{"10", "MHz"}]}],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ "\n\:5730\:9762\:77ed\:6ce2\:901a\:4fe1\:662f\:5229\:7528\:7535\:79bb\:5c42\
+\:5bf9\:7535\:78c1\:6ce2\:7684\:53cd\:5c04\:6765\:5b9e\:73b0\:7684\:ff0c\:5176\
+\:9891\:7387",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    RowBox[{
+     StyleBox["f",
+      FontSlant->"Plain"], "<", 
+     SubscriptBox["f", "p"]}],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ "\:ff0c\:6700\:9ad8\:53ef\:7528\:7684\:5730\:9762\:901a\:4fe1\:9891\:7387\
+\:662f",
+ StyleBox["30MHz",
+  FontFamily->"Times New Roman"],
+ "\:4ee5\:4e0b\:3002\n\:5730\:7403\:4e0e\:536b\:661f\:95f4\:901a\:4fe1\:662f\
+\:5229\:7528\:8db3\:591f\:9ad8\:9891\:7387\:7684\:7535\:78c1\:6ce2\:ff0c\:4f7f\
+\:5176\:80fd\:7a7f\:900f\:7535\:79bb\:5c42\:800c\:5230\:8fbe\:5916\:5c42\:7a7a\
+\:95f4\:ff0c\:56e0\:6b64",
+ Cell[BoxData[
+  FormBox[
+   StyleBox[
+    RowBox[{
+     StyleBox["f",
+      FontSlant->"Plain"], ">", 
+     SubscriptBox["f", "p"]}],
+    FontFamily->"Times New Roman"], TraditionalForm]]],
+ ",\:536b\:661f\:901a\:4fe1\:9891\:7387\:4e00\:822c\:5e94\:9ad8\:4e8e",
+ StyleBox["30MHz",
+  FontFamily->"Times New Roman"],
+ ".\n\:536b\:661f\:7535\:89c6\:9891\:6bb5\:6ee1\:8db3",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"\[Omega]", ">", 
+    SubscriptBox["\[Omega]", "pe"]}], TraditionalForm]],
+  FontFamily->"Times New Roman"],
+ "\:ff0c\:7535\:89c6\:4fe1\:53f7\:80fd\:591f\:7a7f\:900f\:7535\:79bb\:5c42\
+\:5230\:8fbe\:5916\:5c42\:7a7a\:95f4\:88ab\:536b\:661f\:63a5\:6536\:7136\:540e\
+\:518d\:5411\:5730\:7403\:8f6c\:53d1\:3002"
+}], "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10011.},
+ CellChangeTimes->{{3.5942033984825993`*^9, 3.594203419297203*^9}, 
+   3.594203515306302*^9, {3.594203547793914*^9, 3.594203938979967*^9}, {
+   3.594204043581569*^9, 3.5942040734163465`*^9}, {3.5942059814955144`*^9, 
+   3.594206106027068*^9}, {3.5942061764257317`*^9, 3.594206199744186*^9}, {
+   3.594206240106941*^9, 3.59420626337036*^9}, 3.594206332755932*^9, 
+   3.594420922083954*^9},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["P113", "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10012.},
+ CellChangeTimes->{{3.594206394993183*^9, 3.5942064163543434`*^9}}],
+
+Cell["\:5bfb\:5e38\:6ce2\:548c\:975e\:5bfb\:5e38\:6ce2\:8272\:6563\:5173\:7cfb\
+\:56fe", "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10012.},
+ CellChangeTimes->{{3.594206404287343*^9, 3.594206416355342*^9}},
+ FontFamily->"\[DownQuestion]\[Not]\[CapitalIGrave]\[ARing]"]
+}, Open  ]],
+
+Cell[" ", "Text",
+ Editable->False,
+ Selectable->False,
+ CellFrame->{{0, 0}, {0, 3}},
+ ShowCellBracket->False,
+ CellMargins->{{0, 0}, {1, 1}},
+ CellElementSpacings->{"CellMinHeight"->1},
+ CellFrameMargins->0,
+ CellFrameColor->RGBColor[0, 0, 1],
+ CellSize->{Inherited, 5}],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{Cell[""], 
+   RowBox[{"CreatePalette", "[", 
+    RowBox[{"Grid", "[", 
+     RowBox[{
+      RowBox[{"Partition", "[", 
+       RowBox[{
+        RowBox[{
+         RowBox[{
+          RowBox[{"PasteButton", "[", 
+           RowBox[{
+            RowBox[{"Style", "[", 
+             RowBox[{"#", ",", "12"}], "]"}], ",", 
+            RowBox[{"RawBoxes", "[", "#", "]"}], ",", 
+            RowBox[{"ImageSize", "\[Rule]", "55"}]}], "]"}], "&"}], "/@", 
+         RowBox[{"{", 
+          RowBox[{
+          "\"\<\!\(\*OverscriptBox[\(B\), \(\[RightVector]\)]\)\>\"", ",", 
+           "\"\<\!\(\*OverscriptBox[\(u\), \(\[RightVector]\)]\)\>\"", ",", 
+           "\"\<\[Del]\>\"", ",", "\"\<\[Cross]\>\"", ",", 
+           "\"\<\!\(\*FractionBox[\(\[PartialD]\), \(\[PartialD]t\)]\)\>\"", 
+           ",", "\"\<\[CenterDot]\>\"", ",", 
+           "\"\<\!\(\*FractionBox[\(\[DifferentialD]\), \
+\(\[DifferentialD]t\)]\)\>\"", ",", "\"\<\[Rho]\>\"", ",", "\"\<(\>\"", ",", 
+           "\"\<)\>\"", ",", "\"\<=\>\"", ",", 
+           "\"\<\!\(\*OverscriptBox[\(E\), \(\[RightVector]\)]\)\>\"", ",", 
+           "\"\<[\!\(\*OverscriptBox[\(r\), \(\[RightVector]\)]\),t]\>\"", 
+           ",", "\"\<(\!\(\*OverscriptBox[\(k\), \(\[RightVector]\)]\)\
+\[CenterDot]\!\(\*OverscriptBox[\(r\), \(\[RightVector]\)]\)-\[Omega] t)\>\"",
+            ",", "\"\<\[ImaginaryI]\>\"", ",", "\"\<\[Not]\>\"", ",", 
+           "\"\<\[And]\>\"", ",", "\"\<\[Or]\>\"", ",", "\"\<\[Union]\>\"", 
+           ",", "\"\<\[Intersection]\>\""}], "}"}]}], ",", "5"}], "]"}], ",", 
+      RowBox[{"Spacings", "\[Rule]", 
+       RowBox[{"{", 
+        RowBox[{"0", ",", "0"}], "}"}]}]}], "]"}], "]"}]}], ";"}]], "Input",
+ CellChangeTimes->{{3.5941715033234644`*^9, 3.5941715043521476`*^9}, 
+   3.59418328584713*^9, {3.594185747900177*^9, 3.5941858945481358`*^9}, {
+   3.594185929879511*^9, 3.5941859514595675`*^9}, {3.594186067800437*^9, 
+   3.594186071160196*^9}, 3.5941882543724623`*^9}]
+},
+WindowSize->{1350, 671},
+WindowMargins->{{0, Automatic}, {Automatic, 0}},
+Magnification->2.,
+FrontEndVersion->"9.0 for Microsoft Windows (64-bit) (November 20, 2012)",
+StyleDefinitions->"Default.nb"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[CellGroupData[{
+Cell[579, 22, 136, 2, 60, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10003.}],
+Cell[718, 26, 1471, 20, 192, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10003.}]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[2226, 51, 165, 3, 60, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10000.}],
+Cell[2394, 56, 1182, 16, 158, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10000.}],
+Cell[3579, 74, 465, 7, 56, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10000.}],
+Cell[4047, 83, 712, 9, 90, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10000.}]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[4796, 97, 165, 3, 60, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10001.}],
+Cell[4964, 102, 744, 10, 90, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10001.}],
+Cell[5711, 114, 1786, 23, 226, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10001.}]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[7534, 142, 140, 2, 60, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10002.}],
+Cell[7677, 146, 2395, 40, 303, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10002.}]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[10109, 191, 138, 2, 60, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10004.}],
+Cell[10250, 195, 821, 11, 124, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10004.}],
+Cell[11074, 208, 259, 3, 56, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10004.}],
+Cell[11336, 213, 1425, 18, 260, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10004.}],
+Cell[12764, 233, 1803, 23, 294, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10004.}],
+Cell[14570, 258, 1119, 17, 192, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10004.}],
+Cell[15692, 277, 2081, 33, 330, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10004.}]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[17810, 315, 168, 3, 60, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.}],
+Cell[17981, 320, 333, 5, 56, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.}],
+Cell[18317, 327, 884, 19, 94, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.}],
+Cell[19204, 348, 611, 14, 61, "DisplayFormula",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.}],
+Cell[19818, 364, 845, 13, 90, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.}],
+Cell[20666, 379, 1127, 31, 112, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.}],
+Cell[21796, 412, 651, 17, 73, "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.}],
+Cell[22450, 431, 424, 6, 56, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.}],
+Cell[22877, 439, 750, 19, 59, "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.}],
+Cell[23630, 460, 1061, 32, 65, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.}],
+Cell[24694, 494, 472, 11, 47, "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.}],
+Cell[25169, 507, 688, 16, 61, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.}],
+Cell[25860, 525, 1648, 51, 73, "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.}],
+Cell[27511, 578, 5803, 129, 837, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.}],
+Cell[33317, 709, 939, 26, 71, "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.}],
+Cell[34259, 737, 611, 19, 47, "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.}],
+Cell[34873, 758, 1118, 28, 95, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.}],
+Cell[35994, 788, 905, 26, 54, "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.}],
+Cell[36902, 816, 417, 12, 61, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.}],
+Cell[37322, 830, 895, 25, 55, "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.}],
+Cell[38220, 857, 376, 5, 56, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.}],
+Cell[38599, 864, 662, 20, 81, "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.}],
+Cell[39264, 886, 334, 5, 56, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.}],
+Cell[39601, 893, 844, 25, 84, "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.}],
+Cell[40448, 920, 566, 13, 61, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.}],
+Cell[41017, 935, 1986, 50, 161, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.}],
+Cell[43006, 987, 1684, 34, 168, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.}],
+Cell[44693, 1023, 455, 11, 79, "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.}],
+Cell[45151, 1036, 328, 5, 56, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.}],
+Cell[45482, 1043, 944, 27, 84, "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.}],
+Cell[46429, 1072, 384, 8, 90, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.}],
+Cell[46816, 1082, 718, 18, 85, "DisplayFormula",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.}],
+Cell[47537, 1102, 906, 26, 78, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.}],
+Cell[48446, 1130, 1064, 31, 81, "DisplayFormula",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.}],
+Cell[49513, 1163, 558, 16, 83, "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.}],
+Cell[50074, 1181, 335, 5, 56, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.}],
+Cell[50412, 1188, 725, 21, 84, "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.}],
+Cell[51140, 1211, 409, 7, 52, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.}],
+Cell[51552, 1220, 387, 10, 79, "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.}],
+Cell[51942, 1232, 307, 4, 56, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.}],
+Cell[52252, 1238, 548, 15, 77, "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.}],
+Cell[52803, 1255, 618, 10, 124, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.}],
+Cell[53424, 1267, 978, 30, 77, "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10005.}]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[54439, 1302, 166, 3, 60, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10006.}],
+Cell[54608, 1307, 1960, 39, 205, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10006.}],
+Cell[56571, 1348, 339, 5, 56, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10006.}],
+Cell[56913, 1355, 2087, 61, 147, "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10006.}],
+Cell[59003, 1418, 569, 11, 95, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10006.}],
+Cell[59575, 1431, 784, 18, 71, "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10006.}],
+Cell[60362, 1451, 1265, 33, 105, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10006.}],
+Cell[61630, 1486, 777, 18, 71, "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10006.}],
+Cell[62410, 1506, 665, 16, 95, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10006.}],
+Cell[63078, 1524, 1065, 27, 73, "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10006.}],
+Cell[64146, 1553, 1047, 29, 104, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10006.}],
+Cell[65196, 1584, 1542, 45, 79, "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10006.}],
+Cell[66741, 1631, 1737, 48, 65, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10006.}],
+Cell[68481, 1681, 1222, 34, 73, "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10006.}],
+Cell[69706, 1717, 387, 7, 56, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10006.}],
+Cell[70096, 1726, 752, 20, 73, "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10006.}],
+Cell[70851, 1748, 2555, 63, 201, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10006.}],
+Cell[73409, 1813, 691, 19, 103, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10006.}],
+Cell[74103, 1834, 1131, 24, 71, "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10006.}],
+Cell[75237, 1860, 2539, 74, 108, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10006.}],
+Cell[77779, 1936, 2313, 67, 156, "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10006.}],
+Cell[80095, 2005, 792, 21, 79, "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10006.}],
+Cell[80890, 2028, 3269, 61, 283, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10006.}],
+Cell[84162, 2091, 1048, 27, 71, "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10006.}],
+Cell[85213, 2120, 1662, 42, 100, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10006.}]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[86912, 2167, 185, 3, 60, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10007.}],
+Cell[87100, 2172, 327, 4, 56, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10007.}],
+Cell[87430, 2178, 2954, 80, 153, "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10007.}],
+Cell[90387, 2260, 3542, 112, 326, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10007.}],
+Cell[93932, 2374, 2275, 67, 206, "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10007.}]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[96244, 2446, 168, 3, 60, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.}],
+Cell[96415, 2451, 688, 13, 95, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.}],
+Cell[97106, 2466, 1375, 41, 170, "DisplayFormula",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.}],
+Cell[98484, 2509, 475, 12, 66, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.}],
+Cell[98962, 2523, 654, 19, 75, "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.}],
+Cell[99619, 2544, 285, 4, 56, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.}],
+Cell[99907, 2550, 980, 25, 77, "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.}],
+Cell[100890, 2577, 604, 17, 74, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.}],
+Cell[101497, 2596, 647, 17, 95, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.}],
+Cell[102147, 2615, 666, 18, 77, "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.}],
+Cell[102816, 2635, 875, 15, 124, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.}],
+Cell[103694, 2652, 1098, 23, 134, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.}],
+Cell[104795, 2677, 877, 20, 55, "DisplayFormula",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.}],
+Cell[105675, 2699, 942, 21, 119, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.}],
+Cell[106620, 2722, 2208, 63, 161, "DisplayFormula",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.}],
+Cell[108831, 2787, 583, 9, 90, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.}],
+Cell[109417, 2798, 299, 4, 56, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.}],
+Cell[109719, 2804, 1451, 42, 77, "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.}],
+Cell[111173, 2848, 357, 5, 56, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.}],
+Cell[111533, 2855, 707, 20, 71, "DisplayFormula",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.}],
+Cell[112243, 2877, 639, 18, 65, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.}],
+Cell[112885, 2897, 781, 21, 81, "DisplayFormula",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.}],
+Cell[113669, 2920, 364, 9, 61, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.}],
+Cell[114036, 2931, 610, 17, 83, "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.}],
+Cell[114649, 2950, 1606, 42, 139, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.}],
+Cell[116258, 2994, 632, 17, 78, "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.}],
+Cell[116893, 3013, 1378, 35, 116, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.}],
+Cell[118274, 3050, 1107, 16, 158, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.}],
+Cell[119384, 3068, 1320, 19, 158, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.}],
+Cell[120707, 3089, 503, 8, 90, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.}],
+Cell[121213, 3099, 901, 23, 95, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.}],
+Cell[122117, 3124, 710, 17, 77, "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.}],
+Cell[122830, 3143, 1669, 37, 212, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.}],
+Cell[124502, 3182, 577, 17, 76, "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.}],
+Cell[125082, 3201, 635, 16, 81, "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.}],
+Cell[125720, 3219, 588, 17, 61, "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.}],
+Cell[126311, 3238, 1306, 31, 136, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10008.}]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[127654, 3274, 197, 4, 60, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10009.}],
+Cell[127854, 3280, 2277, 32, 260, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10009.}],
+Cell[130134, 3314, 788, 12, 124, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10009.}],
+Cell[130925, 3328, 812, 21, 55, "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10009.}],
+Cell[131740, 3351, 529, 9, 56, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10009.}],
+Cell[132272, 3362, 701, 18, 54, "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10009.}],
+Cell[132976, 3382, 1143, 31, 118, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10009.}],
+Cell[134122, 3415, 737, 12, 124, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10009.}],
+Cell[134862, 3429, 607, 15, 50, "DisplayFormula",
+ CellGroupingRules->{GroupTogetherGrouping, 10009.}],
+Cell[135472, 3446, 591, 10, 56, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10009.}],
+Cell[136066, 3458, 510, 13, 75, "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10009.}],
+Cell[136579, 3473, 1558, 23, 226, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10009.}],
+Cell[138140, 3498, 792, 22, 83, "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10009.}],
+Cell[138935, 3522, 537, 12, 61, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10009.}],
+Cell[139475, 3536, 701, 19, 83, "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10009.}],
+Cell[140179, 3557, 1201, 40, 61, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10009.}],
+Cell[141383, 3599, 734, 21, 76, "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10009.}],
+Cell[142120, 3622, 397, 7, 56, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10009.}],
+Cell[142520, 3631, 2478, 75, 167, "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10009.}],
+Cell[145001, 3708, 1718, 52, 108, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10009.}],
+Cell[146722, 3762, 1268, 39, 83, "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10009.}]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[148027, 3806, 216, 3, 60, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10011.}],
+Cell[148246, 3811, 2775, 71, 236, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10011.}],
+Cell[151024, 3884, 593, 17, 71, "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10011.}],
+Cell[151620, 3903, 884, 26, 78, "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10011.}],
+Cell[152507, 3931, 1252, 26, 142, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10011.}],
+Cell[153762, 3959, 553, 15, 76, "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10011.}],
+Cell[154318, 3976, 628, 15, 95, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10011.}],
+Cell[154949, 3993, 1250, 36, 119, "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10011.}],
+Cell[156202, 4031, 601, 10, 90, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10011.}],
+Cell[156806, 4043, 1601, 48, 156, "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10011.}],
+Cell[158410, 4093, 1437, 39, 99, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10011.}],
+Cell[159850, 4134, 1239, 37, 109, "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10011.}],
+Cell[161092, 4173, 293, 4, 56, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10011.}],
+Cell[161388, 4179, 575, 16, 81, "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10011.}],
+Cell[161966, 4197, 493, 11, 61, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10011.}],
+Cell[162462, 4210, 524, 15, 81, "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10011.}],
+Cell[162989, 4227, 1005, 25, 174, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10011.}],
+Cell[163997, 4254, 513, 14, 101, "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10011.}],
+Cell[164513, 4270, 753, 15, 132, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10011.}],
+Cell[165269, 4287, 336, 7, 79, "DisplayFormulaNumbered",
+ CellGroupingRules->{GroupTogetherGrouping, 10011.}],
+Cell[165608, 4296, 389, 5, 56, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10011.}]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[166034, 4306, 169, 3, 60, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10010.}],
+Cell[166206, 4311, 400, 6, 56, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10010.}]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[166643, 4322, 167, 3, 60, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10011.}],
+Cell[166813, 4327, 4273, 110, 546, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10011.}]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[171123, 4442, 141, 2, 60, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10012.}],
+Cell[171267, 4446, 277, 4, 56, "Text",
+ CellGroupingRules->{GroupTogetherGrouping, 10012.}]
+}, Open  ]],
+Cell[171559, 4453, 271, 9, 20, "Text"],
+Cell[171833, 4464, 1977, 39, 307, "Input"]
+}
+]
+*)
+
+(* End of internal cache information *)

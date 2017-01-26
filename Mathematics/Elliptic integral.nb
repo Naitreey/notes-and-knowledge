@@ -1,0 +1,805 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 9.0' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       157,          7]
+NotebookDataLength[     23773,        795]
+NotebookOptionsPosition[     21471,        718]
+NotebookOutlinePosition[     21818,        733]
+CellTagsIndexPosition[     21775,        730]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+
+Cell[CellGroupData[{
+Cell["Elliptic integral", "Title",
+ CellChangeTimes->{{3.5977487961073756`*^9, 3.597748809165042*^9}}],
+
+Cell["\<\
+Elliptic integrals originally arose in connection with the problem of giving \
+the arc length of an ellipse. They were first studied by Giulio Fagnano and \
+Leonhard Euler. Modern mathematics defines an \[OpenCurlyDoubleQuote]elliptic \
+integral\[CloseCurlyDoubleQuote] as any function f which can be expressed in \
+the form\
+\>", "Text",
+ CellChangeTimes->{{3.597748833925475*^9, 3.597748836597248*^9}}],
+
+Cell[BoxData[
+ FormBox[
+  RowBox[{
+   RowBox[{"f", "(", "x", ")"}], "=", 
+   RowBox[{
+    SubsuperscriptBox["\[Integral]", "c", "x"], 
+    RowBox[{
+     RowBox[{"R", "(", 
+      RowBox[{"t", ",", 
+       SqrtBox[
+        RowBox[{"P", "(", "t", ")"}]]}], ")"}], 
+     RowBox[{"\[DifferentialD]", "t"}]}]}]}], TraditionalForm]], "Input",
+ CellChangeTimes->{{3.597748857549199*^9, 3.59774889215917*^9}}],
+
+Cell[TextData[{
+ "where ",
+ Cell[BoxData[
+  FormBox["R", TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " is a rational function of its two arguments, ",
+ Cell[BoxData[
+  FormBox["P", TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " is a polynomial of degree 3 or 4 with no repeated roots, and ",
+ Cell[BoxData[
+  FormBox["c", TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " is a constant.\n    In general, integrals in this form cannot be expressed \
+in terms of elementary functions. Exceptions to this general rule are when ",
+ Cell[BoxData[
+  FormBox["P", TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " has repeated roots, or when ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"R", 
+    RowBox[{"(", 
+     RowBox[{"x", ",", "y"}], ")"}]}], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " contains no odd powers of ",
+ Cell[BoxData[
+  FormBox["y", TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ ". However, with the appropriate reduction formula, every elliptic integral \
+can be brought into a form that involves integrals over rational functions \
+and the three Legendre canonical forms (i.e. the elliptic integrals of the \
+first, second and third kind).\n    ",
+ "Historically, elliptic functions were discovered as inverse functions of \
+elliptic integrals."
+}], "Text",
+ CellChangeTimes->{{3.597748916744487*^9, 3.5977489575875945`*^9}, {
+  3.5977490011665163`*^9, 3.597749031567691*^9}, {3.597749306723263*^9, 
+  3.597749306865357*^9}}],
+
+Cell[CellGroupData[{
+
+Cell["Argument notation", "Section",
+ CellChangeTimes->{{3.5977490784881907`*^9, 3.597749082106591*^9}}],
+
+Cell[TextData[{
+ StyleBox["Incomplete elliptic integrals",
+  FontSlant->"Italic"],
+ " are functions of two arguments; ",
+ StyleBox["complete elliptic integrals",
+  FontSlant->"Italic"],
+ " are functions of a single argument. These arguments are expressed in a \
+variety of different but equivalent ways (they give the same elliptic \
+integral). Most texts adhere to a canonical naming scheme, using the \
+following naming conventions.\nFor expressing one argument:"
+}], "Text",
+ CellChangeTimes->{{3.5977491886132765`*^9, 3.5977491978854294`*^9}, {
+  3.597749477028902*^9, 3.5977494902106524`*^9}}],
+
+Cell[CellGroupData[{
+
+Cell[TextData[{
+ "\[Alpha], the ",
+ StyleBox["modular angle",
+  FontSlant->"Italic"],
+ ";"
+}], "Item",
+ CellChangeTimes->{{3.5977493425610485`*^9, 3.5977493531881013`*^9}}],
+
+Cell[TextData[{
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"k", "=", 
+    RowBox[{"sin", "(", "\[Alpha]", ")"}]}], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ ",the ",
+ StyleBox["elliptic modulus",
+  FontSlant->"Italic"],
+ " or ",
+ StyleBox["eccentricity",
+  FontSlant->"Italic"],
+ ";"
+}], "Item",
+ CellChangeTimes->{{3.5977493425610485`*^9, 3.5977493929594955`*^9}}],
+
+Cell[TextData[{
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"m", "=", 
+    RowBox[{
+     SuperscriptBox["k", "2"], "=", 
+     RowBox[{
+      SuperscriptBox["sin", "2"], "(", "\[Alpha]", ")"}]}]}], 
+   TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ ",the ",
+ StyleBox["parameter",
+  FontSlant->"Italic"],
+ "."
+}], "Item",
+ CellChangeTimes->{{3.5977493425610485`*^9, 3.5977494188923187`*^9}}]
+}, Open  ]],
+
+Cell[TextData[{
+ "Each of the above three quantities is completely determined by any of the \
+others (given that they are non-negative). Thus, they can be used \
+interchangeably.\nThe other argument can likewise be expressed as ",
+ Cell[BoxData[
+  FormBox["\[CurlyPhi]", TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ ", the amplitude, or as ",
+ Cell[BoxData[
+  FormBox["x", TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " or ",
+ Cell[BoxData[
+  FormBox["u", TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ ", where ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"x", " ", "=", " ", 
+    RowBox[{
+     RowBox[{"sin", " ", "\[CurlyPhi]"}], " ", "=", " ", 
+     RowBox[{"sn", " ", "u"}]}]}], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " and ",
+ Cell[BoxData[
+  FormBox["sn", TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " is one of the Jacobian elliptic functions.",
+ "Specifying the value of any one of these quantities determines the others. "
+}], "Text",
+ CellChangeTimes->{
+  3.5977494568685236`*^9, {3.597749497342384*^9, 3.5977495340937757`*^9}, {
+   3.597749914175374*^9, 3.5977499445167756`*^9}}]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["\<\
+Incomplete elliptic integral of the first kind\
+\>", "Section",
+ CellChangeTimes->{{3.5977499828522177`*^9, 3.5977499998404956`*^9}}],
+
+Cell[TextData[{
+ "The incomplete elliptic integral of the first kind ",
+ Cell[BoxData[
+  FormBox["F", TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " is defined as"
+}], "Text",
+ CellChangeTimes->{{3.597750009895166*^9, 3.5977500142170367`*^9}}],
+
+Cell[BoxData[
+ FormBox[
+  RowBox[{
+   RowBox[{"F", "(", 
+    RowBox[{"\[CurlyPhi]", ",", "k"}], ")"}], "=", 
+   RowBox[{
+    RowBox[{"F", "(", 
+     RowBox[{"\[CurlyPhi]", "|", 
+      SuperscriptBox["k", "2"]}], ")"}], "=", 
+    RowBox[{
+     RowBox[{"F", "(", 
+      RowBox[{
+       RowBox[{"sin", " ", "\[CurlyPhi]"}], ";", "k"}], ")"}], "=", 
+     RowBox[{
+      SubsuperscriptBox["\[Integral]", "0", "\[CurlyPhi]"], 
+      RowBox[{
+       FractionBox["1", 
+        SqrtBox[
+         RowBox[{"1", "-", 
+          RowBox[{
+           SuperscriptBox["k", "2"], " ", 
+           RowBox[{
+            SuperscriptBox["sin", "2"], "(", "\[Theta]", ")"}]}]}]]], 
+       RowBox[{"\[DifferentialD]", "\[Theta]"}]}]}]}]}]}], 
+  TraditionalForm]], "Input",
+ CellChangeTimes->{{3.5977500276379433`*^9, 3.5977501535036216`*^9}}],
+
+Cell[TextData[{
+ "This is the trigonometric form of the integral; substituting  ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    RowBox[{"t", "=", 
+     RowBox[{"sin", " ", "\[Theta]"}]}], ",", 
+    RowBox[{"x", "=", 
+     RowBox[{"sin", " ", "\[CurlyPhi]"}]}]}], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " , one obtains Jacobi\[CloseCurlyQuote]s form:"
+}], "Text",
+ CellChangeTimes->{{3.597750232470032*^9, 3.597750271626019*^9}}],
+
+Cell[BoxData[
+ FormBox[
+  RowBox[{
+   RowBox[{"F", "(", 
+    RowBox[{"x", ";", "k"}], ")"}], "=", 
+   RowBox[{
+    SubsuperscriptBox["\[Integral]", "0", "x"], 
+    RowBox[{
+     FractionBox["1", 
+      SqrtBox[
+       RowBox[{
+        RowBox[{"(", 
+         RowBox[{"1", "-", 
+          SuperscriptBox["t", "2"]}], ")"}], " ", 
+        RowBox[{"(", 
+         RowBox[{"1", "-", 
+          RowBox[{
+           SuperscriptBox["k", "2"], " ", 
+           SuperscriptBox["t", "2"]}]}], ")"}]}]]], 
+     RowBox[{"\[DifferentialD]", "t"}]}]}]}], TraditionalForm]], "Input",
+ CellChangeTimes->{{3.5977502854081645`*^9, 3.5977503408951035`*^9}}],
+
+Cell["\<\
+Equivalently, in terms of the amplitude and modular angle one has:\
+\>", "Text",
+ CellChangeTimes->{3.597750376704869*^9}],
+
+Cell[BoxData[
+ FormBox[
+  RowBox[{
+   RowBox[{"F", "(", 
+    RowBox[{"\[CurlyPhi]", "\\", "\[Alpha]"}], ")"}], "=", 
+   RowBox[{
+    RowBox[{"F", "(", 
+     RowBox[{"\[CurlyPhi]", ",", 
+      RowBox[{"sin", " ", "\[Alpha]"}]}], ")"}], "=", 
+    RowBox[{
+     SubsuperscriptBox["\[Integral]", "0", "\[CurlyPhi]"], 
+     RowBox[{
+      FractionBox["1", 
+       SqrtBox[
+        RowBox[{"1", "-", 
+         SuperscriptBox[
+          RowBox[{"(", 
+           RowBox[{"sin", " ", "\[Theta]", " ", "sin", " ", "\[Alpha]"}], 
+           ")"}], "2"]}]]], 
+      RowBox[{"\[DifferentialD]", "\[Theta]"}], Cell[""]}]}]}]}], 
+  TraditionalForm]], "Input",
+ CellChangeTimes->{{3.5977503841968403`*^9, 3.597750545529991*^9}, {
+  3.597750579455505*^9, 3.597750674023807*^9}}],
+
+Cell[TextData[{
+ "In this notation, the use of a vertical bar as delimiter indicates that the \
+argument following it is the \[OpenCurlyDoubleQuote]parameter\
+\[CloseCurlyDoubleQuote] (as defined above), while the backslash indicates \
+that it is the modular angle. The use of a semicolon implies that the \
+argument preceding it is the sine of the amplitude:\n",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    RowBox[{"F", "(", 
+     RowBox[{"\[CurlyPhi]", ",", 
+      RowBox[{"sin", " ", "\[Alpha]"}]}], ")"}], "=", 
+    RowBox[{
+     RowBox[{"F", "(", 
+      RowBox[{"\[CurlyPhi]", "|", 
+       RowBox[{
+        SuperscriptBox["sin", "2"], "\[Alpha]"}]}], ")"}], "=", 
+     RowBox[{
+      RowBox[{"F", "(", 
+       RowBox[{"\[CurlyPhi]", "\\", "\[Alpha]"}], ")"}], "=", 
+      RowBox[{"F", "(", 
+       RowBox[{
+        RowBox[{"sin", " ", "\[CurlyPhi]"}], ";", 
+        RowBox[{"sin", " ", "\[Alpha]"}]}], ")"}]}]}]}], TraditionalForm]],
+  FormatType->"TraditionalForm"]
+}], "Text",
+ CellChangeTimes->{
+  3.5977507344469085`*^9, {3.5977507876231985`*^9, 3.5977508798188*^9}}]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["\<\
+Incomplete elliptic integral of the second kind\
+\>", "Section",
+ CellChangeTimes->{{3.5977510527374372`*^9, 3.5977510587714415`*^9}}],
+
+Cell[TextData[{
+ "The incomplete elliptic integral of the second kind ",
+ Cell[BoxData[
+  FormBox["E", TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " in trigonometric form is"
+}], "Text",
+ CellChangeTimes->{{3.5977510698547964`*^9, 3.597751074198681*^9}}],
+
+Cell[BoxData[
+ FormBox[
+  RowBox[{
+   RowBox[{"E", "(", 
+    RowBox[{"\[CurlyPhi]", ",", "k"}], ")"}], "=", 
+   RowBox[{
+    RowBox[{"E", "(", 
+     RowBox[{"\[CurlyPhi]", "|", 
+      SuperscriptBox["k", "2"]}], ")"}], "=", 
+    RowBox[{
+     RowBox[{"E", "(", 
+      RowBox[{
+       RowBox[{"sin", " ", "\[CurlyPhi]"}], ";", "k"}], ")"}], "=", 
+     RowBox[{
+      SubsuperscriptBox["\[Integral]", "0", "\[CurlyPhi]"], 
+      RowBox[{
+       SqrtBox[
+        RowBox[{"1", "-", 
+         RowBox[{
+          SuperscriptBox["k", "2"], " ", 
+          RowBox[{
+           SuperscriptBox["sin", "2"], "(", "\[Theta]", ")"}]}]}]], 
+       RowBox[{"\[DifferentialD]", "\[Theta]"}]}]}]}]}]}], 
+  TraditionalForm]], "Input",
+ CellChangeTimes->{{3.5977511656373653`*^9, 3.5977513088122787`*^9}}],
+
+Cell[TextData[{
+ "Substituting ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"t", "=", 
+    RowBox[{"sin", " ", "\[Theta]"}]}], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " and ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"x", "=", 
+    RowBox[{"sin", " ", "\[CurlyPhi]"}]}], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ ",one obtains Jacobi\[CloseCurlyQuote]s form:"
+}], "Text",
+ CellChangeTimes->{{3.5977513549979305`*^9, 3.597751390302967*^9}}],
+
+Cell[BoxData[
+ FormBox[
+  RowBox[{
+   RowBox[{"E", "(", 
+    RowBox[{"x", ";", "k"}], ")"}], "=", 
+   RowBox[{
+    SubsuperscriptBox["\[Integral]", "0", "x"], 
+    RowBox[{
+     FractionBox[
+      SqrtBox[
+       RowBox[{"1", "-", 
+        RowBox[{
+         SuperscriptBox["k", "2"], " ", 
+         SuperscriptBox["t", "2"]}]}]], 
+      SqrtBox[
+       RowBox[{"1", "-", 
+        SuperscriptBox["t", "2"]}]]], 
+     RowBox[{"\[DifferentialD]", "t"}]}]}]}], TraditionalForm]], "Input",
+ CellChangeTimes->{{3.5977514023529634`*^9, 3.5977514450813236`*^9}}],
+
+Cell["\<\
+Equivalently, in terms of the amplitude and modular angle:\
+\>", "Text",
+ CellChangeTimes->{3.5977514643971434`*^9}],
+
+Cell[BoxData[
+ FormBox[
+  RowBox[{
+   RowBox[{"E", "(", 
+    RowBox[{"\[CurlyPhi]", "\\", "\[Alpha]"}], ")"}], "=", 
+   RowBox[{
+    RowBox[{"E", "(", 
+     RowBox[{"\[CurlyPhi]", ",", 
+      RowBox[{"sin", " ", "\[Alpha]"}]}], ")"}], "=", 
+    RowBox[{
+     SubsuperscriptBox["\[Integral]", "0", "\[CurlyPhi]"], 
+     RowBox[{
+      SqrtBox[
+       RowBox[{"1", "-", 
+        SuperscriptBox[
+         RowBox[{"(", 
+          RowBox[{"sin", " ", "\[Theta]", " ", "sin", " ", "\[Alpha]"}], 
+          ")"}], "2"]}]], 
+      RowBox[{"\[DifferentialD]", "\[Theta]"}]}]}]}]}], 
+  TraditionalForm]], "Input",
+ CellChangeTimes->{
+  3.5977515241007643`*^9, {3.597751569219327*^9, 3.5977516326494255`*^9}}]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["\<\
+Incomplete elliptic integral of the third kind\
+\>", "Section",
+ CellChangeTimes->{3.597751648149714*^9}],
+
+Cell["\<\
+The incomplete elliptic integral of the third kind \[CapitalPi] is\
+\>", "Text",
+ CellChangeTimes->{{3.5977516566333427`*^9, 3.597751662652339*^9}, {
+  3.5977517088680143`*^9, 3.5977517319953585`*^9}}],
+
+Cell[BoxData[
+ FormBox[
+  RowBox[{
+   RowBox[{"\[CapitalPi]", "(", 
+    RowBox[{"n", ";", 
+     RowBox[{"\[CurlyPhi]", "\[Backslash]", "\[Alpha]"}]}], ")"}], "=", 
+   RowBox[{
+    SubsuperscriptBox["\[Integral]", "0", "\[CurlyPhi]"], 
+    RowBox[{
+     FractionBox["1", 
+      RowBox[{"1", "-", 
+       RowBox[{"n", " ", 
+        RowBox[{
+         SuperscriptBox["sin", "2"], "(", "\[Theta]", ")"}]}]}]], 
+     FractionBox["1", 
+      RowBox[{
+       SqrtBox[
+        RowBox[{"1", "-", 
+         SuperscriptBox[
+          RowBox[{"(", 
+           RowBox[{
+            RowBox[{"sin", "(", "\[Alpha]", ")"}], " ", 
+            RowBox[{"sin", "(", "\[Theta]", ")"}]}], ")"}], "2"]}]], " "}]], 
+     RowBox[{"\[DifferentialD]", "\[Theta]"}]}]}]}], 
+  TraditionalForm]], "Input",
+ CellChangeTimes->{{3.5977518613140516`*^9, 3.5977519938046827`*^9}, {
+  3.5977520422998667`*^9, 3.5977520595393085`*^9}}],
+
+Cell[BoxData[
+ FormBox[
+  RowBox[{
+   RowBox[{"\[CapitalPi]", "(", 
+    RowBox[{"n", ";", 
+     RowBox[{"\[CurlyPhi]", "|", "m"}]}], ")"}], "=", 
+   RowBox[{
+    SubsuperscriptBox["\[Integral]", "0", 
+     RowBox[{"sin", "(", "\[CurlyPhi]", ")"}]], 
+    RowBox[{
+     FractionBox["1", 
+      RowBox[{"(", 
+       RowBox[{"1", "-", 
+        RowBox[{"n", " ", 
+         SuperscriptBox["t", "2"]}]}], ")"}]], 
+     FractionBox["1", 
+      RowBox[{
+       SqrtBox[
+        RowBox[{
+         RowBox[{"(", 
+          RowBox[{"1", "-", 
+           RowBox[{"m", " ", 
+            SuperscriptBox["t", "2"]}]}], ")"}], 
+         RowBox[{"(", 
+          RowBox[{"1", "-", 
+           SuperscriptBox["t", "2"]}], ")"}], " "}]], " "}]], 
+     RowBox[{"\[DifferentialD]", "t"}]}]}]}], TraditionalForm]], "Input",
+ CellChangeTimes->{{3.5977520791693387`*^9, 3.5977520979217815`*^9}, {
+  3.5977521492492857`*^9, 3.5977522394601574`*^9}}],
+
+Cell[TextData[{
+ "The number ",
+ Cell[BoxData[
+  FormBox["n", TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " is called the characteristic and can take on any value, independently of \
+the other arguments."
+}], "Text",
+ CellChangeTimes->{{3.5977523145513983`*^9, 3.597752318689144*^9}}]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["\<\
+Complete elliptic integral of the first kind\
+\>", "Section",
+ CellChangeTimes->{3.5977523693107414`*^9}],
+
+Cell[TextData[{
+ "Elliptic Integrals are said to be \[OpenCurlyQuote]complete\
+\[CloseCurlyQuote] when the amplitude ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"\[CurlyPhi]", "=", 
+    RowBox[{"\[Pi]", "/", "2"}]}], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " and therefore ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"x", "=", "1"}], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ ". The complete elliptic integral of the first kind K may thus be defined as"
+}], "Text",
+ CellChangeTimes->{{3.597752392343027*^9, 3.597752404349996*^9}}],
+
+Cell[BoxData[
+ FormBox[
+  RowBox[{
+   RowBox[{"K", "(", "k", ")"}], "=", 
+   RowBox[{
+    RowBox[{
+     SubsuperscriptBox["\[Integral]", "0", 
+      FractionBox["\[Pi]", "2"]], 
+     RowBox[{
+      FractionBox["1", 
+       SqrtBox[
+        RowBox[{"1", "-", 
+         RowBox[{
+          SuperscriptBox["k", "2"], " ", 
+          RowBox[{
+           SuperscriptBox["sin", "2"], "(", "\[Theta]", ")"}]}]}]]], 
+      RowBox[{"\[DifferentialD]", "\[Theta]"}]}]}], "=", 
+    RowBox[{
+     SubsuperscriptBox["\[Integral]", "0", "1"], 
+     RowBox[{
+      FractionBox["1", 
+       SqrtBox[
+        RowBox[{
+         RowBox[{"(", 
+          RowBox[{"1", "-", 
+           SuperscriptBox["t", "2"]}], ")"}], " ", 
+         RowBox[{"(", 
+          RowBox[{"1", "-", 
+           RowBox[{
+            SuperscriptBox["k", "2"], " ", 
+            SuperscriptBox["t", "2"]}]}], ")"}]}]]], 
+      RowBox[{"\[DifferentialD]", "t"}]}]}]}]}], TraditionalForm]], "Input",
+ CellChangeTimes->{{3.597752454072994*^9, 3.597752527327628*^9}}],
+
+Cell["\<\
+or more compactly in terms of the incomplete integral of the first kind as\
+\>", "Text",
+ CellChangeTimes->{3.5977525582771673`*^9}],
+
+Cell[BoxData[
+ FormBox[
+  RowBox[{
+   RowBox[{"K", "(", "k", ")"}], "=", 
+   RowBox[{
+    RowBox[{"F", "(", 
+     RowBox[{
+      FractionBox["\[Pi]", "2"], ",", "k"}], ")"}], "=", 
+    RowBox[{
+     RowBox[{"F", "(", 
+      RowBox[{
+       FractionBox["\[Pi]", "2"], "|", 
+       SuperscriptBox["k", "2"]}], ")"}], "=", 
+     RowBox[{"F", "(", 
+      RowBox[{"1", ";", "k"}], ")"}]}]}]}], TraditionalForm]], "Input",
+ CellChangeTimes->{{3.5977525725496407`*^9, 3.597752613420765*^9}}]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["\<\
+Complete elliptic integral of the second kind \
+\>", "Section",
+ CellChangeTimes->{{3.597752651611889*^9, 3.5977526523343697`*^9}}],
+
+Cell[TextData[{
+ "The complete elliptic integral of the second kind ",
+ Cell[BoxData[
+  FormBox["E", TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " is defined as"
+}], "Text",
+ CellChangeTimes->{{3.597752667301302*^9, 3.597752670931711*^9}}],
+
+Cell[BoxData[
+ FormBox[
+  RowBox[{
+   RowBox[{"E", "(", "k", ")"}], "=", 
+   RowBox[{
+    RowBox[{
+     SubsuperscriptBox["\[Integral]", "0", 
+      FractionBox["\[Pi]", "2"]], 
+     RowBox[{
+      SqrtBox[
+       RowBox[{"1", "-", 
+        RowBox[{
+         SuperscriptBox["k", "2"], " ", 
+         RowBox[{
+          SuperscriptBox["sin", "2"], "(", "\[Theta]", ")"}]}]}]], 
+      RowBox[{"\[DifferentialD]", "\[Theta]"}]}]}], "=", 
+    RowBox[{
+     SubsuperscriptBox["\[Integral]", "0", "1"], 
+     RowBox[{
+      FractionBox[
+       SqrtBox[
+        RowBox[{"1", "-", 
+         RowBox[{
+          SuperscriptBox["k", "2"], " ", 
+          SuperscriptBox["t", "2"]}]}]], 
+       SqrtBox[
+        RowBox[{"1", "-", 
+         SuperscriptBox["t", "2"]}]]], 
+      RowBox[{"\[DifferentialD]", "t"}]}]}]}]}], TraditionalForm]], "Input",
+ CellChangeTimes->{{3.597752679705536*^9, 3.5977527511129255`*^9}}],
+
+Cell[TextData[{
+ "or more compactly in terms of the incomplete integral of the second kind ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"E", "(", 
+    RowBox[{"\[CurlyPhi]", ",", "k"}], ")"}], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " as"
+}], "Text",
+ CellChangeTimes->{{3.59775277705014*^9, 3.5977528172618265`*^9}}],
+
+Cell[BoxData[
+ FormBox[
+  RowBox[{
+   RowBox[{"E", "(", "k", ")"}], "=", 
+   RowBox[{
+    RowBox[{"E", "(", 
+     RowBox[{
+      FractionBox["\[Pi]", "2"], ",", "k"}], ")"}], "=", 
+    RowBox[{"E", "(", 
+     RowBox[{"1", ";", "k"}], ")"}]}]}], TraditionalForm]], "Input",
+ CellChangeTimes->{{3.5977528226779523`*^9, 3.5977528651691523`*^9}}]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["\<\
+Complete elliptic integral of the third kind\
+\>", "Section",
+ CellChangeTimes->{3.59775290951058*^9}],
+
+Cell["\<\
+The complete elliptic integral of the third kind \[CapitalPi] can be defined \
+as\
+\>", "Text",
+ CellChangeTimes->{3.5977529215075426`*^9}],
+
+Cell[BoxData[
+ FormBox[
+  RowBox[{
+   RowBox[{"\[CapitalPi]", "(", 
+    RowBox[{"n", ",", "k"}], ")"}], "=", 
+   RowBox[{
+    SubsuperscriptBox["\[Integral]", "0", 
+     FractionBox["\[Pi]", "2"]], 
+    RowBox[{
+     FractionBox["1", 
+      RowBox[{
+       RowBox[{"(", 
+        RowBox[{"1", "-", 
+         RowBox[{"n", " ", 
+          RowBox[{
+           SuperscriptBox["sin", "2"], "(", "\[Theta]", ")"}]}]}], ")"}], 
+       SqrtBox[
+        RowBox[{"1", "-", 
+         RowBox[{
+          SuperscriptBox["k", "2"], " ", 
+          RowBox[{
+           SuperscriptBox["sin", "2"], "(", "\[Theta]", ")"}]}]}]], " "}]], 
+     RowBox[{"\[DifferentialD]", "\[Theta]"}]}]}]}], 
+  TraditionalForm]], "Input",
+ CellChangeTimes->{{3.5977530218848906`*^9, 3.5977531097972364`*^9}}]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Reference:", "Subsubtitle",
+ CellChangeTimes->{{3.597753148180709*^9, 3.597753150927533*^9}}],
+
+Cell["\<\
+[1]:http://en.wikipedia.org/wiki/Elliptic_integral\
+\>", "Text",
+ CellChangeTimes->{{3.5977531574088354`*^9, 3.5977531602347107`*^9}}]
+}, Open  ]]
+}, Open  ]]
+},
+WindowSize->{824, 544},
+WindowMargins->{{213, Automatic}, {-18, Automatic}},
+FrontEndVersion->"9.0 for Microsoft Windows (64-bit) (November 20, 2012)",
+StyleDefinitions->"Default.nb"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[CellGroupData[{
+Cell[579, 22, 102, 1, 105, "Title"],
+Cell[684, 25, 414, 7, 113, "Text"],
+Cell[1101, 34, 400, 12, 57, "Input"],
+Cell[1504, 48, 1486, 38, 265, "Text"],
+Cell[CellGroupData[{
+Cell[3015, 90, 104, 1, 93, "Section"],
+Cell[3122, 93, 598, 12, 139, "Text"],
+Cell[CellGroupData[{
+Cell[3745, 109, 172, 6, 37, "Item"],
+Cell[3920, 117, 371, 14, 37, "Item"],
+Cell[4294, 133, 390, 15, 37, "Item"]
+}, Open  ]],
+Cell[4699, 151, 1136, 32, 138, "Text"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[5872, 188, 143, 3, 131, "Section"],
+Cell[6018, 193, 252, 7, 39, "Text"],
+Cell[6273, 202, 818, 25, 79, "Input"],
+Cell[7094, 229, 440, 12, 63, "Text"],
+Cell[7537, 243, 636, 20, 79, "Input"],
+Cell[8176, 265, 132, 3, 38, "Text"],
+Cell[8311, 270, 761, 22, 79, "Input"],
+Cell[9075, 294, 1074, 27, 139, "Text"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[10186, 326, 144, 3, 131, "Section"],
+Cell[10333, 331, 264, 7, 39, "Text"],
+Cell[10600, 340, 786, 24, 62, "Input"],
+Cell[11389, 366, 456, 15, 38, "Text"],
+Cell[11848, 383, 554, 18, 93, "Input"],
+Cell[12405, 403, 126, 3, 38, "Text"],
+Cell[12534, 408, 698, 21, 62, "Input"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[13269, 434, 115, 3, 131, "Section"],
+Cell[13387, 439, 211, 4, 38, "Text"],
+Cell[13601, 445, 897, 26, 79, "Input"],
+Cell[14501, 473, 921, 28, 79, "Input"],
+Cell[15425, 503, 294, 8, 64, "Text"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[15756, 516, 115, 3, 131, "Section"],
+Cell[15874, 521, 549, 15, 63, "Text"],
+Cell[16426, 538, 1016, 32, 79, "Input"],
+Cell[17445, 572, 142, 3, 38, "Text"],
+Cell[17590, 577, 484, 15, 60, "Input"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[18111, 597, 141, 3, 131, "Section"],
+Cell[18255, 602, 249, 7, 39, "Text"],
+Cell[18507, 611, 903, 29, 93, "Input"],
+Cell[19413, 642, 326, 9, 38, "Text"],
+Cell[19742, 653, 342, 10, 60, "Input"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[20121, 668, 112, 3, 131, "Section"],
+Cell[20236, 673, 149, 4, 38, "Text"],
+Cell[20388, 679, 772, 24, 82, "Input"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[21197, 708, 99, 1, 32, "Subsubtitle"],
+Cell[21299, 711, 144, 3, 38, "Text"]
+}, Open  ]]
+}, Open  ]]
+}
+]
+*)
+
+(* End of internal cache information *)
+

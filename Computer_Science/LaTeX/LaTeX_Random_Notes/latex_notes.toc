@@ -1,0 +1,200 @@
+\contentsline {part}{I\hspace {1em}General Concepts}{6}{part.1}
+\contentsline {paragraph}{Macro}{7}{section*.1}
+\contentsline {part}{II\hspace {1em}Basic Elements}{8}{part.2}
+\contentsline {chapter}{\numberline {1}换行、换页、断字}{9}{chapter.2.1}
+\contentsline {chapter}{\numberline {2}对齐与间距}{11}{chapter.2.2}
+\contentsline {section}{\numberline {2.1}段内对齐}{11}{section.2.2.1}
+\contentsline {section}{\numberline {2.2}段首缩进与段间距}{11}{section.2.2.2}
+\contentsline {section}{\numberline {2.3}行间距}{11}{section.2.2.3}
+\contentsline {chapter}{\numberline {3}Footnotes}{12}{chapter.2.3}
+\contentsline {chapter}{\numberline {4}Margin notes}{13}{chapter.2.4}
+\contentsline {chapter}{\numberline {5}Hyperlinks and Cross-references}{14}{chapter.2.5}
+\contentsline {section}{\numberline {5.1}\textsf {hyperref} Package}{14}{section.2.5.1}
+\contentsline {subsection}{\numberline {5.1.1}Commands}{14}{subsection.2.5.1.1}
+\contentsline {subsection}{\numberline {5.1.2}Other forms of links}{14}{subsection.2.5.1.2}
+\contentsline {subsubsection}{E-mail link}{14}{section*.2}
+\contentsline {subsubsection}{Local file link}{15}{section*.3}
+\contentsline {subsubsection}{Link anywhere in the document}{15}{section*.4}
+\contentsline {section}{\numberline {5.2}Cross-reference}{15}{section.2.5.2}
+\contentsline {subsection}{\numberline {5.2.1}Commands}{15}{subsection.2.5.2.1}
+\contentsline {subsection}{\numberline {5.2.2}Precautions}{15}{subsection.2.5.2.2}
+\contentsline {chapter}{\numberline {6}Lists}{16}{chapter.2.6}
+\contentsline {chapter}{\numberline {7}Special Characters}{17}{chapter.2.7}
+\contentsline {part}{III\hspace {1em}Document Structure}{21}{part.3}
+\contentsline {chapter}{\numberline {1}长文档}{23}{chapter.3.1}
+\contentsline {chapter}{\numberline {2}Bibliography}{24}{chapter.3.2}
+\contentsline {chapter}{\numberline {3}Index}{25}{chapter.3.3}
+\contentsline {part}{IV\hspace {1em}Layouts}{27}{part.4}
+\contentsline {chapter}{\numberline {1}Page Dimensions}{28}{chapter.4.1}
+\contentsline {section}{\numberline {1.1}L\kern -.28em\raise .3ex\hbox {\textsc {a}}\kern -.15emT\kern -.1667em\lower .5ex\hbox {E}\kern -.125emX\spacefactor \@m {} Native Dimensions}{29}{section.4.1.1}
+\contentsline {section}{\numberline {1.2}\textsf {geometry} package}{31}{section.4.1.2}
+\contentsline {subsection}{\numberline {1.2.1}Commands}{32}{subsection.4.1.2.1}
+\contentsline {subsection}{\numberline {1.2.2}Rules of options}{32}{subsection.4.1.2.2}
+\contentsline {subsection}{\numberline {1.2.3}Type of options}{32}{subsection.4.1.2.3}
+\contentsline {subsubsection}{Boolean:}{32}{section*.16}
+\contentsline {subsubsection}{Single-valued:}{32}{section*.17}
+\contentsline {subsubsection}{Double-valued:}{32}{section*.18}
+\contentsline {subsubsection}{Triple-valued:}{33}{section*.19}
+\contentsline {subsection}{\numberline {1.2.4}Option Details}{33}{subsection.4.1.2.4}
+\contentsline {subsubsection}{Options for paper}{33}{section*.20}
+\contentsline {paragraph}{$\dag $\texttt {paper}}{33}{section*.21}
+\contentsline {paragraph}{$\dag $\texttt {a[0-6]paper, b[0-6]paper, c[0-6]paper, b[0-6]j,ansi[a,b,c,d,e]paper,\\ letterpaper, executivepaper, legalpaper}}{33}{section*.22}
+\contentsline {paragraph}{$\dag $\texttt {screen}}{33}{section*.23}
+\contentsline {paragraph}{$\dag $\texttt {paerwidth}}{33}{section*.24}
+\contentsline {paragraph}{$\dag $\texttt {paperheight}}{33}{section*.25}
+\contentsline {paragraph}{$\dag $\texttt {papersize}}{33}{section*.26}
+\contentsline {paragraph}{$\dag $\texttt {landscape}}{33}{section*.27}
+\contentsline {paragraph}{$\dag $\texttt {portrait}}{33}{section*.28}
+\contentsline {subsubsection}{Options for total body}{34}{section*.29}
+\contentsline {subsubsection}{Options for partition}{35}{section*.30}
+\contentsline {subsubsection}{Options for margin}{35}{section*.31}
+\contentsline {subsubsection}{Options for Native L\kern -.28em\raise .3ex\hbox {\textsc {a}}\kern -.15emT\kern -.1667em\lower .5ex\hbox {E}\kern -.125emX\spacefactor \@m {} Dimensions}{36}{section*.32}
+\contentsline {subsubsection}{Options for Drivers}{36}{section*.33}
+\contentsline {subsection}{\numberline {1.2.5}Processing}{36}{subsection.4.1.2.5}
+\contentsline {subsubsection}{Order of loading}{36}{section*.34}
+\contentsline {subsubsection}{Order of options}{37}{section*.35}
+\contentsline {subsubsection}{Priority}{37}{section*.36}
+\contentsline {subsubsection}{Defaults}{37}{section*.37}
+\contentsline {chapter}{\numberline {2}Page Styles}{38}{chapter.4.2}
+\contentsline {section}{\numberline {2.1}Using \textsf {fancyhdr} package}{38}{section.4.2.1}
+\contentsline {part}{V\hspace {1em}Fonts}{40}{part.5}
+\contentsline {chapter}{\numberline {1}基本概念}{41}{chapter.5.1}
+\contentsline {section}{\numberline {1.1}Glyph, Typeface, Font}{41}{section.5.1.1}
+\contentsline {section}{\numberline {1.2}字体的格式}{41}{section.5.1.2}
+\contentsline {subsection}{\numberline {1.2.1}常见轮廓字体技术}{42}{subsection.5.1.2.1}
+\contentsline {chapter}{\numberline {2}常见字体}{43}{chapter.5.2}
+\contentsline {chapter}{\numberline {3}中文字号}{46}{chapter.5.3}
+\contentsline {part}{VI\hspace {1em}Graphics}{47}{part.6}
+\contentsline {chapter}{\numberline {1}图形格式}{48}{chapter.6.1}
+\contentsline {chapter}{\numberline {2}Importing Graphics}{49}{chapter.6.2}
+\contentsline {section}{\numberline {2.1}插入命令}{49}{section.6.2.1}
+\contentsline {section}{\numberline {2.2}Driver 们的口味}{49}{section.6.2.2}
+\contentsline {subsection}{\numberline {2.2.1}dvips}{49}{subsection.6.2.2.1}
+\contentsline {subsection}{\numberline {2.2.2}pdflatex}{49}{subsection.6.2.2.2}
+\contentsline {subsection}{\numberline {2.2.3}dvipdfm(x)}{49}{subsection.6.2.2.3}
+\contentsline {subsection}{\numberline {2.2.4}xdvipdfmx}{49}{subsection.6.2.2.4}
+\contentsline {chapter}{\numberline {3}TikZ \&{} PGF}{50}{chapter.6.3}
+\contentsline {chapter}{\numberline {4}\textlogo {META}\discretionary {-}{}{}\textlogo {POST}\spacefactor \@m }{51}{chapter.6.4}
+\contentsline {chapter}{\numberline {5}Asymptote}{52}{chapter.6.5}
+\contentsline {part}{VII\hspace {1em}Tables}{53}{part.7}
+\contentsline {chapter}{\numberline {1}Professional Scientific Tables}{55}{chapter.7.1}
+\contentsline {section}{\numberline {1.1}The layout of formal tables}{55}{section.7.1.1}
+\contentsline {subsection}{\numberline {1.1.1}Rule commands}{55}{subsection.7.1.1.1}
+\contentsline {part}{VIII\hspace {1em}Mathematics}{57}{part.8}
+\contentsline {chapter}{\numberline {1}常用命令}{59}{chapter.8.1}
+\contentsline {section}{\numberline {1.1}Math spacing}{59}{section.8.1.1}
+\contentsline {subsection}{\numberline {1.1.1}Spacing around ${}+{}$ or ${}-{}$ sign}{59}{subsection.8.1.1.1}
+\contentsline {section}{\numberline {1.2}Math Fonts}{59}{section.8.1.2}
+\contentsline {section}{\numberline {1.3}Math accents}{60}{section.8.1.3}
+\contentsline {section}{\numberline {1.4}Greek Letters}{60}{section.8.1.4}
+\contentsline {chapter}{\numberline {2}\textsf {amsmath} package notes}{62}{chapter.8.2}
+\contentsline {section}{\numberline {2.1}\texttt {multline}}{63}{section.8.2.1}
+\contentsline {section}{\numberline {2.2}\texttt {split}}{63}{section.8.2.2}
+\contentsline {section}{\numberline {2.3}\texttt {gather}}{64}{section.8.2.3}
+\contentsline {section}{\numberline {2.4}\texttt {align}}{64}{section.8.2.4}
+\contentsline {section}{\numberline {2.5}\texttt {alignat}}{64}{section.8.2.5}
+\contentsline {section}{\numberline {2.6}alignment building blocks}{64}{section.8.2.6}
+\contentsline {subsection}{\numberline {2.6.1}\texttt {cases}}{64}{subsection.8.2.6.1}
+\contentsline {section}{\numberline {2.7}Adjusting tag placement}{65}{section.8.2.7}
+\contentsline {section}{\numberline {2.8}Vertical spacing and page breaks in multiline displays}{65}{section.8.2.8}
+\contentsline {section}{\numberline {2.9}Interrupting a display}{65}{section.8.2.9}
+\contentsline {section}{\numberline {2.10}Equation numbering}{66}{section.8.2.10}
+\contentsline {subsection}{\numberline {2.10.1}Numbering within section}{66}{subsection.8.2.10.1}
+\contentsline {subsection}{\numberline {2.10.2}Equation reference}{66}{subsection.8.2.10.2}
+\contentsline {subsection}{\numberline {2.10.3}\texttt {subequations}}{66}{subsection.8.2.10.3}
+\contentsline {section}{\numberline {2.11}Matrices}{66}{section.8.2.11}
+\contentsline {section}{\numberline {2.12}Dots}{67}{section.8.2.12}
+\contentsline {section}{\numberline {2.13}Nonbreaking dash}{67}{section.8.2.13}
+\contentsline {section}{\numberline {2.14}Roots}{67}{section.8.2.14}
+\contentsline {section}{\numberline {2.15}Boxed formulae}{68}{section.8.2.15}
+\contentsline {section}{\numberline {2.16}Over and under arrows}{68}{section.8.2.16}
+\contentsline {section}{\numberline {2.17}Extensible arrows}{68}{section.8.2.17}
+\contentsline {section}{\numberline {2.18}Affixing symbols to other symbols}{68}{section.8.2.18}
+\contentsline {section}{\numberline {2.19}Fractions}{68}{section.8.2.19}
+\contentsline {section}{\numberline {2.20}Binomial expressions}{68}{section.8.2.20}
+\contentsline {section}{\numberline {2.21}The \texttt {\textbackslash genfrac} command}{69}{section.8.2.21}
+\contentsline {section}{\numberline {2.22}Continued fractions}{69}{section.8.2.22}
+\contentsline {section}{\numberline {2.23}Changing the size of delimiters}{70}{section.8.2.23}
+\contentsline {section}{\numberline {2.24}Vertical bars}{70}{section.8.2.24}
+\contentsline {section}{\numberline {2.25}Defining new operator names}{71}{section.8.2.25}
+\contentsline {section}{\numberline {2.26}Mod commands}{71}{section.8.2.26}
+\contentsline {section}{\numberline {2.27}The \texttt {\textbackslash text} command}{71}{section.8.2.27}
+\contentsline {section}{\numberline {2.28}Multiline subscripts and superscripts}{71}{section.8.2.28}
+\contentsline {section}{\numberline {2.29}Setting a symbol aside an operator}{72}{section.8.2.29}
+\contentsline {section}{\numberline {2.30}Placement of subscripts and limits}{73}{section.8.2.30}
+\contentsline {section}{\numberline {2.31}Multiple integrals}{73}{section.8.2.31}
+\contentsline {section}{\numberline {2.32}Math fonts}{73}{section.8.2.32}
+\contentsline {section}{\numberline {2.33}Bold math symbols}{73}{section.8.2.33}
+\contentsline {section}{\numberline {2.34}Italic Greek letters}{74}{section.8.2.34}
+\contentsline {chapter}{\numberline {3}\textsf {cool} package}{75}{chapter.8.3}
+\contentsline {section}{\numberline {3.1}Calculus}{75}{section.8.3.1}
+\contentsline {subsection}{\numberline {3.1.1}Derivates}{75}{subsection.8.3.1.1}
+\contentsline {subsubsection}{Style options}{75}{section*.51}
+\contentsline {subsubsection}{Macro}{75}{section*.52}
+\contentsline {subsection}{\numberline {3.1.2}Partial derivatives}{76}{subsection.8.3.1.2}
+\contentsline {subsubsection}{Style options}{76}{section*.53}
+\contentsline {subsubsection}{Macro}{76}{section*.54}
+\contentsline {subsection}{\numberline {3.1.3}Integrals}{76}{subsection.8.3.1.3}
+\contentsline {subsubsection}{Style options}{76}{section*.55}
+\contentsline {subsubsection}{Macro}{76}{section*.56}
+\contentsline {section}{\numberline {3.2}Sums and Products}{76}{section.8.3.2}
+\contentsline {section}{\numberline {3.3}Identity Matrix}{77}{section.8.3.3}
+\contentsline {subsection}{\numberline {3.3.1}Style Options}{77}{subsection.8.3.3.1}
+\contentsline {subsection}{\numberline {3.3.2}Macro}{77}{subsection.8.3.3.2}
+\contentsline {section}{\numberline {3.4}Constants}{77}{section.8.3.4}
+\contentsline {part}{IX\hspace {1em}Physics}{78}{part.9}
+\contentsline {chapter}{\numberline {1}\textsf {siunitx} package notes}{79}{chapter.9.1}
+\contentsline {section}{\numberline {1.1}Numbers}{79}{section.9.1.1}
+\contentsline {section}{\numberline {1.2}Units}{80}{section.9.1.2}
+\contentsline {section}{\numberline {1.3}Unit commands}{80}{section.9.1.3}
+\contentsline {section}{\numberline {1.4}Creating new commands}{82}{section.9.1.4}
+\contentsline {part}{X\hspace {1em}Colors}{83}{part.10}
+\contentsline {part}{XI\hspace {1em}Typesetting Mechanics}{85}{part.11}
+\contentsline {chapter}{\numberline {1}Errors and Warnings}{86}{chapter.11.1}
+\contentsline {section}{\numberline {1.1}Error messages}{86}{section.11.1.1}
+\contentsline {section}{\numberline {1.2}Warnings}{86}{section.11.1.2}
+\contentsline {subsection}{\numberline {1.2.1}\texttt {Underfull \textbackslash hbox}}{86}{subsection.11.1.2.1}
+\contentsline {subsection}{\numberline {1.2.2}\texttt {Overfull \textbackslash hbox}}{86}{subsection.11.1.2.2}
+\contentsline {chapter}{\numberline {2}Lengths}{87}{chapter.11.2}
+\contentsline {section}{\numberline {2.1}Units}{87}{section.11.2.1}
+\contentsline {section}{\numberline {2.2}Length manipulation}{87}{section.11.2.2}
+\contentsline {section}{\numberline {2.3}L\kern -.28em\raise .3ex\hbox {\textsc {a}}\kern -.15emT\kern -.1667em\lower .5ex\hbox {E}\kern -.125emX\spacefactor \@m {} default lengths}{88}{section.11.2.3}
+\contentsline {section}{\numberline {2.4}Rubber lengths}{89}{section.11.2.4}
+\contentsline {chapter}{\numberline {3}Spacings}{90}{chapter.11.3}
+\contentsline {chapter}{\numberline {4}Counters}{91}{chapter.11.4}
+\contentsline {section}{\numberline {4.1}Counter manipulation}{91}{section.11.4.1}
+\contentsline {section}{\numberline {4.2}Counter access}{91}{section.11.4.2}
+\contentsline {section}{\numberline {4.3}Counter styles}{92}{section.11.4.3}
+\contentsline {section}{\numberline {4.4}L\kern -.28em\raise .3ex\hbox {\textsc {a}}\kern -.15emT\kern -.1667em\lower .5ex\hbox {E}\kern -.125emX\spacefactor \@m {} default counters}{92}{section.11.4.4}
+\contentsline {chapter}{\numberline {5}Boxes}{93}{chapter.11.5}
+\contentsline {section}{\numberline {5.1}\texttt {\textbackslash mbox} and \texttt {\textbackslash fbox}}{93}{section.11.5.1}
+\contentsline {section}{\numberline {5.2}\texttt {\textbackslash makebox} and \texttt {\textbackslash framebox}}{93}{section.11.5.2}
+\contentsline {section}{\numberline {5.3}\texttt {\textbackslash raisebox}}{93}{section.11.5.3}
+\contentsline {section}{\numberline {5.4}\texttt {\textbackslash parbox} and \texttt {minipage}}{94}{section.11.5.4}
+\contentsline {part}{XII\hspace {1em}Letters}{95}{part.12}
+\contentsline {part}{XIII\hspace {1em}Presentations}{97}{part.13}
+\contentsline {part}{XIV\hspace {1em}Exams and Exercises}{99}{part.14}
+\contentsline {part}{XV\hspace {1em}Curriculum Vit\ae }{101}{part.15}
+\contentsline {part}{XVI\hspace {1em}Miscellaneous}{103}{part.16}
+\contentsline {chapter}{\numberline {1}Importing PDF Pages}{104}{chapter.16.1}
+\contentsline {section}{\numberline {1.1}\textsf {pdfpages} package notes}{104}{section.16.1.1}
+\contentsline {paragraph}{pages}{104}{section*.66}
+\contentsline {chapter}{\numberline {2}lshort temp notes}{106}{chapter.16.2}
+\contentsline {chapter}{\numberline {3}Really random notes}{125}{chapter.16.3}
+\contentsline {part}{XVII\hspace {1em}Relevant Terms and History}{128}{part.17}
+\contentsline {chapter}{\numberline {1}数字排版}{129}{chapter.17.1}
+\contentsline {section}{\numberline {1.1}RIP}{129}{section.17.1.1}
+\contentsline {section}{\numberline {1.2}PDL}{129}{section.17.1.2}
+\contentsline {section}{\numberline {1.3}PS}{129}{section.17.1.3}
+\contentsline {subsection}{\numberline {1.3.1}PDF}{130}{subsection.17.1.3.1}
+\contentsline {section}{\numberline {1.4}Markup language}{130}{section.17.1.4}
+\contentsline {subsection}{\numberline {1.4.1}troff}{130}{subsection.17.1.4.1}
+\contentsline {subsection}{\numberline {1.4.2}SGML}{130}{subsection.17.1.4.2}
+\contentsline {subsection}{\numberline {1.4.3}T\kern -.1667em\lower .5ex\hbox {E}\kern -.125emX\spacefactor \@m {}}{130}{subsection.17.1.4.3}
+\contentsline {section}{\numberline {1.5}小结}{131}{section.17.1.5}
+\contentsline {chapter}{\numberline {2}图形}{132}{chapter.17.2}
+\contentsline {section}{\numberline {2.1}色彩深度}{132}{section.17.2.1}
+\contentsline {section}{\numberline {2.2}色彩模型}{132}{section.17.2.2}
+\contentsline {subsection}{\numberline {2.2.1}RGB}{132}{subsection.17.2.2.1}
+\contentsline {subsection}{\numberline {2.2.2}CMYK}{132}{subsection.17.2.2.2}
+\contentsline {chapter}{\numberline {3}纸张}{133}{chapter.17.3}

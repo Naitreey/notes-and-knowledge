@@ -1,0 +1,130 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 9.0' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       157,          7]
+NotebookDataLength[      3734,        121]
+NotebookOptionsPosition[      3269,        100]
+NotebookOutlinePosition[      3615,        115]
+CellTagsIndexPosition[      3572,        112]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+
+Cell[CellGroupData[{
+Cell["Outer product", "Title",
+ CellChangeTimes->{{3.6004870100345106`*^9, 3.600487030967399*^9}}],
+
+Cell["\<\
+In linear algebra, the outer product typically refers to the tensor product \
+of two vectors,i.e. outer product = tensor product of two vectors.The name \
+contrasts with the inner product, which takes as input a pair of vectors and \
+produces a scalar.
+Some authors use the expression \[OpenCurlyDoubleQuote]outer product of \
+tensors\[CloseCurlyDoubleQuote] as a synonym of \[OpenCurlyDoubleQuote]tensor \
+product\[CloseCurlyDoubleQuote].\
+\>", "Text",
+ CellChangeTimes->{
+  3.6004870584628615`*^9, {3.6004870888900566`*^9, 3.6004871320867243`*^9}, 
+   3.60048721837099*^9, {3.6004872565208836`*^9, 3.6004872569251537`*^9}}],
+
+Cell[CellGroupData[{
+
+Cell["Definition", "Section",
+ CellChangeTimes->{{3.600487333852208*^9, 3.6004873355443316`*^9}}],
+
+Cell[TextData[{
+ "The outer product ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"u", "\[CircleTimes]", "v"}], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " is equivalent to a matrix multiplication ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"u", " ", 
+    SuperscriptBox["v", "T"]}], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ ", provided that u is represented as a m \[Times] 1 column vector and v as a \
+n \[Times] 1 column vector (which makes ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["v", "T"], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " a row vector).\nFor complex vectors, it is customary to use the conjugate \
+transpose of v (denoted ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["v", "\[Dagger]"], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ ").\n",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    RowBox[{"u", "\[CircleTimes]", "v"}], "=", 
+    RowBox[{"u", " ", 
+     SuperscriptBox["v", "\[Dagger]"]}]}], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ "\nIn contrast with inner product:\n",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    RowBox[{"\[LeftAngleBracket]", 
+     RowBox[{"u", ",", "v"}], "\[RightAngleBracket]"}], "=", 
+    RowBox[{
+     SuperscriptBox["u", "\[Dagger]"], "v"}]}], TraditionalForm]],
+  FormatType->"TraditionalForm"]
+}], "Text",
+ CellChangeTimes->{{3.6004873470879917`*^9, 3.6004874485787497`*^9}, {
+   3.600487593988824*^9, 3.600487594322047*^9}, {3.600487633904315*^9, 
+   3.600487672867175*^9}, 3.600487741762898*^9, {3.600487792630322*^9, 
+   3.6004879139178147`*^9}}]
+}, Open  ]],
+
+Cell[TextData[{
+ "Ref:",
+ ButtonBox["en.wikipedia.org/wiki/Outer_product",
+  BaseStyle->"Hyperlink",
+  ButtonData->{"en.wikipedia.org/wiki/Outer_product", None}]
+}], "Subsubtitle",
+ CellChangeTimes->{{3.6004882134185295`*^9, 3.600488227241705*^9}}]
+}, Open  ]]
+},
+WindowSize->{707, 544},
+WindowMargins->{{317, Automatic}, {20, Automatic}},
+FrontEndVersion->"9.0 for Microsoft Windows (64-bit) (November 20, 2012)",
+StyleDefinitions->"Default.nb"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[CellGroupData[{
+Cell[579, 22, 98, 1, 105, "Title"],
+Cell[680, 25, 635, 11, 162, "Text"],
+Cell[CellGroupData[{
+Cell[1340, 40, 97, 1, 93, "Section"],
+Cell[1440, 43, 1550, 45, 204, "Text"]
+}, Open  ]],
+Cell[3005, 91, 248, 6, 32, "Subsubtitle"]
+}, Open  ]]
+}
+]
+*)
+
+(* End of internal cache information *)

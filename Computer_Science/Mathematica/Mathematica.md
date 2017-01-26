@@ -1,0 +1,857 @@
+# Mathematica
+
+- Images
+	- Color Processing
+		- Colors
+			- color models
+				- RGBColor
+				- Hue
+				- CMYKColor
+				- GrayLevel
+			- Derived Colors
+				- Lighter,Darker
+				- Blend
+				- ColorNegate
+			- Color Schemes
+				- ColorData
+				- collections of schemes
+					- "Gradients"
+					- "Indexed"
+					- "Named"
+					- "Physical"
+			- Named Colors
+				- Red,Green,Blue
+				- Black,Gray,White
+				- Cyan,Magenta,Yellow
+				- Brown,Orange,Pink,Purple
+				- their Light variants
+				- Transparent
+- Core language
+	- The Syntax of language
+		- types of tokens
+			- symbols
+			- strings
+			- numbers
+			- operators
+			- input to be ignored
+		- operators
+			- types of operators
+				- prefix
+				- infix
+				- postfix
+				- matchfix
+				- compound
+				- overfix
+			- precedence & grouping
+	- Expressions
+		- Expression Structure
+			- elements
+				- Sequence
+			- head
+				- atomic heads
+					- Symbols
+						- Symbol
+					- Numbers
+						- Integer,Rational,Real,Complex
+					- Strings
+						- String
+					- AtomQ
+		- Dimension of expressions
+			- Length
+			- Dimensions
+		- Structural Operations on Expressions
+			- Head-related operations
+				- Through
+		- Parts of Expressions
+			- position index
+				- head
+					- 0
+				- elements
+					- 1,2,...
+				- Span
+			- take parts
+				- Part
+				- First,Last
+				- Most,Rest
+				- Take,Drop
+				- Extract
+				- Level
+		- Testing expressions
+			- Equality & Inequality
+				- weak equality
+					- Equal
+					- Unequal
+				- structural equality
+					- SameQ
+					- UnsameQ
+				- inequality
+					- Less,Greater
+					- LessEqual,GreaterEqual
+			- Logical Combinations
+				- And
+				- Or
+			- Numerical Properties
+				- NumericQ
+				- Positive
+			- TrueQ
+		- Evaluation Control
+			- Global Evaluation Control Variables
+				- $IterationLimit
+				- $RecursionLimit
+	- Variables & Functions
+		- Assignments
+			- Information about Assignments
+				- Information
+				- DownValues
+				- UpValues
+		- Function Attributes
+			- attribute manipulation
+				- Attributes
+				- SetAttributes
+				- ClearAttributes
+			- attributes
+				- Function Properties
+					- Listable
+					- Flat
+					- Orderless
+					- OneIdentity
+				- Function Argument Evaluation
+					- HoldFirst
+					- HoldRest
+					- HoldAll
+					- HoldAllComplete
+					- SequenceHold
+				- Numeric Properties
+					- NumericFunction
+					- Constant
+				- Protection
+					- Protected
+					- ReadProtected
+	- List Manipulation
+		- Constructing Lists
+			- Range
+			- Table
+			- Array
+			- Tuples
+			- SparseArray
+			- ConstantArray
+		- Elements of Lists
+			- Select
+			- Pick
+			- DeleteDuplicates
+		- Rearranging Lists
+			- Sort,SortBy
+			- Ordering
+		- Restructuring Lists
+			- Flatten
+			- Transpose
+			- Riffle
+			- Partition
+			- Split,SplitBy
+			- PadRight,PadLeft
+		- Applying functions to lists
+			- generalized inner, outer
+				- Inner
+				- Outer
+			- map
+				- Map
+				- MapAt
+				- MapAll
+				- MapThread
+				- MapIndexed
+				- Scan
+			- fold
+				- FoldList
+				- Fold
+		- Math & Counting Operations
+			- Math Operations
+				- Total
+			- Counting
+				- Count
+				- Tally
+	- Rules & Patterns
+		- Patterns
+			- Basic Pattern Objects
+				- Blank
+				- BlankSequence
+				- BlankNullSequence
+			- Named Patterns
+				- Pattern
+			- Composite Patterns
+				- Alternatives
+				- Repeated
+				- RepeatedNull
+				- Except
+				- Longest,Shortest
+			- Restrictions on Patterns
+				- PatternTest
+		- Rules
+			- Representing Rules
+				- Rule
+				- RuleDelayed
+			- Applying Rules
+				- from outside in
+					- ReplaceAll
+					- ReplaceRepeated
+				- from inside out (for multi-level)
+					- Replace
+				- ReplaceList
+		- Pattern Matching Functions
+			- Cases
+			- Position
+			- Count
+	- Programming
+		- Procedural programming
+			- CompoundExpression
+			- Looping Constructs
+				- Do
+				- While
+				- For
+			- Conditionals
+				- If
+				- Which
+				- Switch
+			- Scoping Constructs
+				- Name Scoping
+					- Module
+					- With
+					- Constructs with Automatic Name Scoping
+						- Function
+						- Rule, RuleDelayed
+						- Set, SetDelayed
+				- Value Scoping
+					- Block
+					- Constructs with Automatic Value Scoping
+						- Table
+						- Do
+						- Sum
+						- 
+		- Functional programming
+			- Pure Function
+				- Function
+				- Slot
+				- SlotSequence
+			- Functional Iteration
+			- Function Composition
+				- Composition
+		- Namespace Management
+			- Symbol Handling
+				- Remove
+				- Unique
+			- Scoping Constructs
+			- Contexts
+				- Global Variables
+					- $Context
+					- $ContextPath
+					- $Packages
+				- Context
+	- String Manipulation
+		- String(" ")
+		- String Patterns
+			- StringExpression
+			- Metacharacters
+				- 
+				- 
+		- String Operations
+			- Structural Operations
+				- StringLength
+				- StringJoin
+				- StringReverse
+			- Operations by Position
+				- StringTake,StringDrop
+				- StringReplacePart
+			- Operations by Pattern
+				- StringPosition
+				- StringCases
+				- StringCount
+				- StringReplace
+				- StringMatchQ
+		- Control String
+			- StringForm
+		- Characters
+			- Normal characters
+			- Escaped characters
+				- 
+			- Special characters
+				- \n,\t
+			- Character Operations
+				- Characters
+				- Tests
+					- DigitQ
+					- LetterQ
+					- UpperCaseQ,LowerCaseQ
+				- ToUpperCase,ToLowerCase
+			- Character Code
+				- CharacterRange
+				- ToCharacterCode
+				- FromCharacterCode
+				- Internal character codes
+					- \0,\nnn,\.nn,\:nnnn
+				- Raw character encodings
+					- $CharacterEncoding
+					- $CharacterEncodings
+					- $SystemCharacterEncoding
+	- Tuning & Debugging
+		- Execution Tracing
+			- Options for Tracing
+		- Messages
+			- create and check messages
+				- MessageName
+				- Messages
+			- switch output of messages
+				- On,Off
+				- Quiet
+			- generate message
+				- $MessagePrePrint
+				- Message
+			- messages generated
+				- $MessageList
+				- MessageList
+	- Forms of Input and Output
+		- Forms
+			- 
+				- FullForm
+				- InputForm
+				- OutputForm
+				- StandardForm
+				- TraditionalForm
+			- conversion for external program
+				- TeXForm,MathMLForm,CForm,FortranForm
+			- for overview
+				- Short,Shallow
+			- define special output format for expression
+				- Format
+			- conversion between operator forms
+				- Prefix,Infix,Postfix
+				- PrecedenceForm
+		- Textual Format
+			- One-dimensional String
+			- Two-dimensional Boxes
+				- display it
+					- DisplayForm
+			- Conversion
+				- from expression to textual formats
+					- to string
+						- ToString
+					- to boxes
+						- ToBoxes
+				- from textual formats to expression
+					- ToExpression
+	- Option Management
+		- Checking & Setting Up Options
+			- Options
+			- AbsoluteOptions
+			- SetOptions
+	- Package Development
+- Symbolic & Numeric Evaluation
+	- Mathematical Functions
+		- Integer Functions
+			- Combinatorial Functions
+				- Factorial
+		- Arithmetic Functions
+			- Plus
+			- Minus
+			- Subtract
+			- Times
+			- Divide
+			- Power
+			- Sqrt
+		- Numerical Functions
+			- Round
+			- Sign
+			- UnitStep
+			- SquareWave
+		- Random Number
+			- RandomInteger
+			- RandomReal
+	- Numerical Evaluation & Precision
+		- Display of Numbers
+			- ScientificForm,EngineeringForm,AccountingForm
+			- NumberForm
+			- BaseForm
+		- Precision & Accuracy Control
+			- N
+			- Precision
+				- Precision
+				- SetPrecision
+			- Accuracy
+			- Machine Numbers
+				- MachinePrecision
+				- $MachinePrecision
+				- MachineNumberQ
+	- Formula Manipulation
+		- Extracting Parts of Formulas
+			- Coefficient
+		- Assumptions & Domains
+			- make assumptions
+				- Assuming
+				- $Assumptions
+			- formal logic
+				- Element
+				- ForAll
+				- Exists
+			- Domains
+				- Integers
+				- Rationals
+				- Reals
+				- Complexes
+				- Booleans
+				- Primes
+				- Algebraics
+	- Calculus
+		- Vector Analysis
+			- Vector Calculus
+				- Grad
+				- Div
+				- Curl
+				- Laplacian
+			- Coordinate Systems
+				- CoordinateTransform
+				- TransformedField
+				- CoordinateChartData
+				- CoordinateTransformData
+			- Visualization
+		- Integral Transforms
+			- FourierSeries
+- Higher Mathematical Computations
+	- Number Theory
+		- Number Representations
+			- Continued Fractions
+			- Rational Approximations
+				- Rationalize
+		- Additive Number Theory
+			- Integer Partitions
+				- IntegerPartitions
+- Data Manipulation
+	- Files
+		- Mathematica Expressions in Files
+			- Get
+- External Interfaces & Connections
+	- Calling External Programs
+	- File Operations
+		- Reading & Writing Files
+			- Mathematica Expression Files
+				- Get
+- User Interface Construction
+	- Dynamic Interactivity Language 
+		- Low-Level Functions
+			- CurrentValue
+- Sound
+	- Symbolic Sound Language
+		- sound object
+			- Sound
+		- Sound Primitives
+			- SampledSoundFunction
+			- SampledSoundList
+			- SoundNote
+		- emit sound
+			- EmitSound
+	- Sound Options
+		- SampleRate
+		- SampleDepth
+		- PlayRange
+		- SoundVolume
+		- DisplayFunction
+		- $DisplayFunction
+	- Function & Data Sonification
+		- Play
+		- ListPlay
+- Documents & Presentation
+	- Mathematical Typesetting
+		- Table & Layout
+			- TableForm,MatrixForm
+		- Symbolic Notational Forms
+	- Special Characters
+		- Wolfram Language Syntax
+			- Pure Function
+				- \[Function]
+	- Notebook Generation
+		- Incremental Document Generation
+			- CellPrint
+			- Print
+	- Notebook Programming
+		- Notebook Structure
+			- notebook
+				- Notebook
+				- NotebookObject
+			- build & fetch notebook
+				- NotebookPut
+				- NotebookGet
+			- cell
+				- Cell
+				- CellObject
+				- textual cell
+					- TextData
+				- typesetting cell
+					- BoxData
+				- output form cell
+					- OutputFormData
+				- show expression cell
+					- RawData
+				- cell group cell
+					- CellGroupData
+				- style definition cell
+					- StyleData
+			- box
+		- Choose Notebook
+			- choose by its status
+				- SelectedNotebook
+				- EvaluationNotebook
+				- InputNotebook
+				- ButtonNotebook
+				- ParentNotebook
+			- set selection
+				- SetSelectedNotebook
+		- Notebook operations
+			- list notebooks
+				- Notebooks
+			- open notebook
+				- NotebookOpen
+			- save notebook
+				- NotebookSave
+			- close notebook
+				- NotebookClose
+			- print notebook
+				- NotebookPrint
+			- create notebook
+				- CreateWindow
+				- CreateDocument
+				- CreatePalette
+				- CreateDialog
+		- Content Selection
+			- find selection
+				- NotebookFind
+				- NotebookLocate
+			- move selection
+				- SelectionMove
+			- represent selection
+				- NotebookSelection
+		- Content Operations
+			- write
+				- NotebookWrite
+				- NotebookApply
+			- read
+				- NotebookRead
+			- delete
+				- NotebookDelete
+			- copy
+				- SelectionCreateCell
+			- evaluate
+				- SelectionEvaluate
+				- SelectionEvaluateCreateCell
+		- Global Front End Operations
+			- front end session
+				- $FrontEnd
+			- Front End Tokens
+				- FrontEndToken
+				- FrontEndTokenExecute
+			- execute directly by front end
+				- FrontEndExecute
+				- FrontEnd` equivalences
+	- Notebook Formatting & Styling
+		- Cell Styling Options
+			- Frame & Background
+				- Background
+				- CellFrame
+				- CellFrameMargins
+				- CellFrameColor
+				- CellFrameLabels
+				- CellFrameLabelMargins
+			- Magnification
+				- Magnification
+			- Margin & Baseline
+				- CellMargins
+				- CellBaseline
+			- Cell Brackets
+				- ShowGroupOpener
+				- ShowCellBracket
+				- CellOpen
+			- Cell Labels
+				- CellLabel
+				- ShowCellLabel
+				- ShowCellAutoDelete
+			- Cell Tags
+				- CellTags
+				- ShowCellTags
+			- Dingbat
+				- CellDingbat
+			- Cell Properties
+				- Editable
+				- Copyable
+				- Deletable
+				- Selectable
+				- Evaluatable
+				- Deployed
+			- Evaluation
+				- Evaluator
+				- CellAutoOverwrite
+				- GeneratedCell
+				- InitializationCell
+			- Pagebreak
+				- PageBreakAbove
+				- PageBreakWithin
+				- PageBreakBelow
+				- GroupPageBreakWithin
+		- Editability Options
+- System Operation & Setup
+	- Mathematica Sessions
+		- Mathematica Session Information
+		- Mathematica Session History
+			- In,Out
+			- InString
+			- $HistoryLength
+			- $Line
+		- Session Customization
+			- Modify input and output
+				- $PreRead
+				- $Pre
+				- $Post
+				- $PrePrint
+				- $SyntaxHandler
+- Geometry
+	- Geometric Transformation
+		- Geometric Object Transformations 
+			- Rotate
+			- Translate
+			- Scale
+- Visualization & Graphics
+	- Symbolic Graphics Language
+		- graphic objects
+			- Graphics
+			- Graphics3D
+		- Graphics Primitives
+			- 0D Point
+				- Point
+			- 1D Lines
+				- Line
+				- infinite lines
+					- HalfLine
+					- InfiniteLine
+				- splined curves
+					- BezierCurve
+					- BSplineCurve
+				- join arbitrary curves
+					- JoinedCurve
+			- 2D, 3D, generalized multi-dimensional objects
+				- infinite planes
+					- HalfPlane
+					- InfinitePlane
+				- Polygons
+					- Polygon
+					- Triangles
+						- Triangle
+						- SSSTriangle,SASTriangle,ASATriangle,AASTriangle
+					- Rectangle & Parallelogram
+						- Rectangle
+						- Parallelogram
+				- Circle & Ellipse
+					- Circle
+					- Disk
+				- fill arbitrary curves
+					- FilledCurve
+				- Polyhedrons
+					- Tetrahedron
+					- Cuboid
+					- Parallelepiped
+					- Hexahedron
+					- Prism
+					- Pyramid
+					- Simplex
+				- Curved-Surface Objects
+					- spherical
+						- Sphere
+						- Circumsphere
+						- Ball
+						- Ellipsoid
+					- cylindrical
+						- Cylinder
+						- Cone
+						- Tube
+					- splined surface
+						- BSplineSurface
+			- graphics with shared vertices
+				- GraphicsComplex
+			- Arrow
+				- Arrow
+			- Raster
+				- Raster
+				- Raster3D
+			- Text
+				- Text
+			- Inset graphics 
+				- Inset
+		- Graphics Directives
+			- Point
+				- PointSize
+				- AbsolutePointSize
+			- Line
+				- Thickness
+				- AbsoluteThickness
+				- Dashing
+				- AbsoluteDashing
+				- CapForm
+				- JoinForm
+			- Color
+				- GrayLevel
+				- RGBColor
+				- Hue
+				- CMYKColor
+				- named colors
+			- Arrow
+				- ArrowHeads
+			- Edges & Surfaces
+				- EdgeForm
+				- FaceForm
+				- texture
+					- Texture
+				- opacity
+					- Opacity
+			- Lighting Properties of Surface
+				- diffuse reflection
+					- intrinsic color
+						- normal colors
+					- white with albedo
+						- GrayLevel
+				- mirror reflection
+					- Specularity
+				- self glowing
+					- Glow
+				- external lightings
+					- Lighting
+			- compound directive
+				- Directive
+		- Types of Coordinates
+			- Absolute coordinates
+			- Scaled
+			- ImageScaled
+		- Combing Graphics
+			- Show
+		- FullGraphics
+			- FullGraphics
+	- Graphics Options
+		- Plotting Options
+			- Main Styling Elements
+				- PlotStyle
+			- Filling
+				- Filling
+				- FillingStyle
+			- Legends
+				- PlotLegends
+				- ChartLegends
+			- Mesh Display
+				- Mesh
+				- MeshStyle
+			- Plotting Region
+				- PlotRange
+				- RegionFunction
+			- Coloring
+				- ColorFunction
+			- Sampling & Adaptivity
+				- PlotPoints
+				- MaxRecursion
+		- Graphics Shape & Size
+			- AspectRatio
+			- BoxRatios
+			- SphericalRegion
+		- Annotation & Appearance
+			- Axes
+				- Axes
+				- AxesStyle
+				- AxesOrigin
+				- AxesLabel
+				- AxesEdge
+			- Ticks
+				- Ticks
+				- TicksStyle
+			- Frames
+				- Frame
+				- FrameStyle
+				- FrameLabel
+				- RotateLabel
+				- FrameTicks
+				- FrameTicksStyle
+			- Grid Lines
+				- GridLines
+				- GridLinesStyle
+				- FaceGrids
+			- Labels
+				- PlotLabel
+				- LabelStyle
+			- text format
+				- FormatType
+			- background
+				- Background
+		- 3D Options
+			- Box
+				- Boxed
+				- BoxStyle
+				- BoxRatios
+			- Viewing
+				- ViewVector
+				- ViewPoint
+				- ViewCenter
+				- ViewAngle
+				- ViewVertical
+				- drag,ctrl+drag,shift+drag
+			- Simulated Lighting
+				- Lighting
+		- Combing & Modifying Graphics
+			- Prolog
+			- Epilog
+		- preprocessing
+			- DisplayFunction
+			- $DisplayFunction
+	- Function & Data Visualization
+		- simple plot
+			- Plot,Plot3D
+			- discrete
+				- ListPlot,ListPlot3D
+				- ListLinePlot
+				- ListPointPlot3D
+		- log plot
+			- LogPlot
+			- LogLinearPlot
+			- LogLogPlot
+			- discrete
+				- ListLogPlot
+				- ListLogLinearPlot
+				- ListLogLogPlot
+		- parametric
+			- ParametricPlot,ParametricPlot3D
+			- PolarPlot
+			- RevolutionPlot3D
+			- SphericalPlot3D
+			- discrete
+				- ListPolarPlot
+		- contour
+			- ContourPlot,ContourPlot3D
+			- discrete
+				- ListContourPlot,ListContourPlot3D
+		- density
+			- DensityPlot
+			- discrete
+				- ListDensityPlot
+		- vector
+			- VectorPlot,VectorPlot3D
+			- VectorDensityPlot
+			- discrete
+				- ListVectorPlot,ListVectorPlot3D
+				- ListVectorDensityPlot
+		- stream
+			- StreamPlot
+			- StreamDensityPlot
+			- LineIntegralConvolutionPlot
+			- discrete
+				- ListStreamPlot
+				- ListStreamDensityPlot
+				- ListLineIntegralConvolutionPlot
+		- region
+			- NumberLinePlot
+			- RegionPlot,RegionPlot3D
+		- reconstruct
+			- ListCurvePathPlot
+			- ListSurfacePlot3D
+		- array
+			- ArrayPlot
+			- ReliefPlot
+			- MatrixPlot

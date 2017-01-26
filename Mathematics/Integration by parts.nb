@@ -1,0 +1,571 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 9.0' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       157,          7]
+NotebookDataLength[     19600,        562]
+NotebookOptionsPosition[     18329,        520]
+NotebookOutlinePosition[     18675,        535]
+CellTagsIndexPosition[     18632,        532]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+
+Cell[CellGroupData[{
+Cell["Integration by parts", "Title",
+ CellChangeTimes->{{3.5975516964606304`*^9, 3.5975517028228526`*^9}, 
+   3.59755353757381*^9}],
+
+Cell[CellGroupData[{
+
+Cell[TextData[{
+ "Tabular ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["method", 
+    RowBox[{"[", "2", "]"}]], TraditionalForm]]]
+}], "Section",
+ CellChangeTimes->{{3.597677964745885*^9, 3.5976779680951047`*^9}, {
+  3.597678035401444*^9, 3.597678050910737*^9}}],
+
+Cell[TextData[{
+ "There is another way to do integration by parts, made popular in the 1983 \
+movie ",
+ StyleBox["Stand and Deliver",
+  FontSlant->"Italic"],
+ ". It is called the tabular method for integration by parts. It greatly \
+reduces the amount of time and work required to solve some integrals. Often \
+times it is not discussed because it only works when a polynomial function is \
+chosen to be the ",
+ Cell[BoxData[
+  FormBox["u", TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " in the formula ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    RowBox[{"\[Integral]", 
+     RowBox[{"u", 
+      RowBox[{"\[DifferentialD]", "v"}]}]}], "=", 
+    RowBox[{
+     RowBox[{"u", " ", "v"}], "-", 
+     RowBox[{"\[Integral]", 
+      RowBox[{"v", 
+       RowBox[{"\[DifferentialD]", "u"}]}]}]}]}], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ ".\n     This technique is best illustrated with an example. Let us consider \
+a function that would be incredibly difficult to do with our usual technique \
+for integration by parts: "
+}], "Text",
+ CellChangeTimes->{
+  3.597745483982909*^9, {3.597745588293138*^9, 3.597745590125355*^9}, {
+   3.597745623007331*^9, 3.5977456877252827`*^9}, {3.5977457517247562`*^9, 
+   3.597745758009926*^9}, {3.597745805289283*^9, 3.597745854786132*^9}}],
+
+Cell[BoxData[
+ FormBox[
+  RowBox[{"\[Integral]", 
+   RowBox[{
+    RowBox[{
+     SuperscriptBox["x", "5"], " ", 
+     RowBox[{"sin", "(", "x", ")"}]}], 
+    RowBox[{"\[DifferentialD]", "x"}]}]}], TraditionalForm]], "DisplayFormula",
+ CellChangeTimes->{{3.5977458648057814`*^9, 3.5977458917226458`*^9}}],
+
+Cell[TextData[{
+ "     We begin by making two columns. On the left column, we write the \
+polynomial. Below it, we write each derivative until we reach zero. (That is \
+why this one works for a polynomial function. No other function will \
+eventually reach zero.)\n     Now, on the right column, we write the ",
+ Cell[BoxData[
+  FormBox[
+   FractionBox[
+    RowBox[{"\[DifferentialD]", "v"}], 
+    RowBox[{"\[DifferentialD]", "x"}]], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ ",the part of expression which is about to go behind \[DifferentialD] \
+symbol,in this case ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"Sin", "(", "x", ")"}], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ ".",
+ "Then below it we list each anti-derivative. We continue until we are lined \
+up with the zero in the first column. For this example, our table would like \
+the following:"
+}], "Text",
+ CellChangeTimes->{{3.5977459321844993`*^9, 3.5977459381714754`*^9}, {
+  3.597745969823558*^9, 3.5977459789546146`*^9}, {3.597746044417061*^9, 
+  3.5977460479183846`*^9}, {3.59774610869372*^9, 3.5977462671847367`*^9}, {
+  3.5977465399003887`*^9, 3.5977465408199997`*^9}}],
+
+Cell[BoxData[
+ FormBox[
+  RowBox[{"(", "\[NoBreak]", GridBox[{
+     {
+      SuperscriptBox["x", "5"], 
+      RowBox[{"sin", "(", "x", ")"}]},
+     {
+      RowBox[{"5", " ", 
+       SuperscriptBox["x", "4"]}], 
+      RowBox[{"-", 
+       RowBox[{"cos", "(", "x", ")"}]}]},
+     {
+      RowBox[{"20", " ", 
+       SuperscriptBox["x", "3"]}], 
+      RowBox[{"-", 
+       RowBox[{"sin", "(", "x", ")"}]}]},
+     {
+      RowBox[{"60", " ", 
+       SuperscriptBox["x", "2"]}], 
+      RowBox[{"cos", "(", "x", ")"}]},
+     {
+      RowBox[{"120", " ", "x"}], 
+      RowBox[{"sin", "(", "x", ")"}]},
+     {"120", 
+      RowBox[{"-", 
+       RowBox[{"cos", "(", "x", ")"}]}]},
+     {"0", 
+      RowBox[{"-", 
+       RowBox[{"sin", "(", "x", ")"}]}]}
+    },
+    GridBoxAlignment->{
+     "Columns" -> {{Center}}, "ColumnsIndexed" -> {}, "Rows" -> {{Baseline}}, 
+      "RowsIndexed" -> {}},
+    GridBoxSpacings->{"Columns" -> {
+        Offset[0.27999999999999997`], {
+         Offset[0.7]}, 
+        Offset[0.27999999999999997`]}, "ColumnsIndexed" -> {}, "Rows" -> {
+        Offset[0.2], {
+         Offset[0.4]}, 
+        Offset[0.2]}, "RowsIndexed" -> {}}], "\[NoBreak]", ")"}], 
+  TraditionalForm]], "DisplayFormula",
+ CellChangeTimes->{{3.597746354188608*^9, 3.59774635770494*^9}, {
+  3.5977463947815485`*^9, 3.597746478755278*^9}, {3.597746795053743*^9, 
+  3.597746800735515*^9}}],
+
+Cell["\<\
+     Now, we go through and draw arrows diagonally down and to the right, \
+starting at the top left.
+     And off to the left of the columns, we alternate writing a positive or \
+negative sign, starting with a positive sign. We continue in this manner \
+until we are level with the zero in the first column. Doing this, we get a \
+table that looks the like the next one.\
+\>", "Text",
+ CellChangeTimes->{{3.5977465235275235`*^9, 3.5977465491295156`*^9}, {
+  3.597746741344098*^9, 3.597746742838088*^9}}],
+
+Cell[BoxData[
+ GraphicsBox[{
+   StyleBox[InsetBox[
+     RowBox[{"(", "\[NoBreak]", GridBox[{
+        {"+", 
+         SuperscriptBox["x", "5"], 
+         RowBox[{"sin", "(", "x", ")"}]},
+        {"-", 
+         RowBox[{"5", " ", 
+          SuperscriptBox["x", "4"]}], 
+         RowBox[{"-", 
+          RowBox[{"cos", "(", "x", ")"}]}]},
+        {"+", 
+         RowBox[{"20", " ", 
+          SuperscriptBox["x", "3"]}], 
+         RowBox[{"-", 
+          RowBox[{"sin", "(", "x", ")"}]}]},
+        {"-", 
+         RowBox[{"60", " ", 
+          SuperscriptBox["x", "2"]}], 
+         RowBox[{"cos", "(", "x", ")"}]},
+        {"+", 
+         RowBox[{"120", " ", "x"}], 
+         RowBox[{"sin", "(", "x", ")"}]},
+        {"-", "120", 
+         RowBox[{"-", 
+          RowBox[{"cos", "(", "x", ")"}]}]},
+        {"+", "0", 
+         RowBox[{"-", 
+          RowBox[{"sin", "(", "x", ")"}]}]}
+       },
+       GridBoxAlignment->{
+        "Columns" -> {{Center}}, "ColumnsIndexed" -> {}, 
+         "Rows" -> {{Baseline}}, "RowsIndexed" -> {}},
+       GridBoxSpacings->{"Columns" -> {
+           Offset[0.27999999999999997`], {
+            Offset[0.7]}, 
+           Offset[0.27999999999999997`]}, "ColumnsIndexed" -> {}, "Rows" -> {
+           Offset[0.2], {
+            Offset[0.4]}, 
+           Offset[0.2]}, "RowsIndexed" -> {}}], "\[NoBreak]", ")"}], 
+     Scaled[{0.30772530517101226`, 0.47584817031713}], 
+     Center, {0.9221108150235524, 0.9601078507446434}, {{1., 0.}, {0., 1.}}],
+    FontSize->16], 
+   {Arrowheads[0.018535316234148114`], StrokeForm[RGBColor[1, 0, 0]], 
+    EdgeForm[{RGBColor[0., 0., 0.], Opacity[1.], AbsoluteThickness[1]}], 
+    EdgeForm[None], 
+    ArrowBox[{{0.39135903746239653`, 0.5685899188770427}, {
+     0.45173639595296267`, 0.49311822076383516`}}]}, 
+   {Arrowheads[0.018535316234148114`], StrokeForm[RGBColor[1, 0, 0]], 
+    EdgeForm[{RGBColor[0., 0., 0.], Opacity[1.], AbsoluteThickness[1]}], 
+    EdgeForm[None], 
+    ArrowBox[{{0.38675599307264175`, 0.7105550998085886}, {
+     0.44713335156320777`, 0.635083401695381}}]}, 
+   {Arrowheads[0.018535316234148114`], StrokeForm[RGBColor[1, 0, 0]], 
+    EdgeForm[{RGBColor[0., 0., 0.], Opacity[1.], AbsoluteThickness[1]}], 
+    EdgeForm[None], 
+    ArrowBox[{{0.3649592247186589, 0.8664114483638696}, {0.4253365832092249, 
+     0.7909397502506621}}]}, 
+   {Arrowheads[0.018535316234148114`], StrokeForm[RGBColor[1, 0, 0]], 
+    EdgeForm[{RGBColor[0., 0., 0.], Opacity[1.], AbsoluteThickness[1]}], 
+    EdgeForm[None], 
+    ArrowBox[{{0.3968554809573083, 0.4272263239449494}, {0.45723283944787435`,
+      0.351754625831742}}]}, 
+   {Arrowheads[0.018535316234148114`], StrokeForm[RGBColor[1, 0, 0]], 
+    EdgeForm[{RGBColor[0., 0., 0.], Opacity[1.], AbsoluteThickness[1]}], 
+    EdgeForm[None], 
+    ArrowBox[{{0.4014828543596521, 0.28208914410719754`}, {0.4618602128502181,
+      0.20661744599399007`}}]}, 
+   {Arrowheads[0.018535316234148114`], StrokeForm[RGBColor[1, 0, 0]], 
+    EdgeForm[{RGBColor[0., 0., 0.], Opacity[1.], AbsoluteThickness[1]}], 
+    EdgeForm[None], 
+    ArrowBox[{{0.3879456614691738, 0.15098897092334984`}, {
+     0.44832301995973983`, 0.07551727281014238}}]}},
+  ContentSelectable->True,
+  ImagePadding->{{0., 0.}, {0., 0.}},
+  ImageSize->{230.4, 165.60000000000463`},
+  PlotRange->{{0., 1.3333333333333335`}, {0., 1.}},
+  PlotRangePadding->Automatic]], "Input",
+ CellChangeTimes->{{3.597746848064926*^9, 3.5977468926296206`*^9}, {
+  3.5977469352198873`*^9, 3.597746936940027*^9}, {3.597746974827174*^9, 
+  3.597747029166238*^9}, {3.597747089450639*^9, 3.5977470909236155`*^9}, {
+  3.5977471457269883`*^9, 3.597747401655645*^9}, {3.59774744895006*^9, 
+  3.5977474675754185`*^9}, {3.5977475026296864`*^9, 3.5977475031990614`*^9}}],
+
+Cell["\<\
+    Now, we just follow the arrows. Along each arrow, we multiple terms. Then \
+we add or subtract terms depending on the sign on the far left.
+    After multiplying all of the diagonals together (while being mindful of \
+the signs), we get the following:\
+\>", "Text",
+ CellChangeTimes->{{3.5977474145702405`*^9, 3.5977474196295986`*^9}, {
+  3.5977476168772907`*^9, 3.5977476205387197`*^9}}],
+
+Cell[BoxData[
+ FormBox[
+  RowBox[{
+   RowBox[{
+    RowBox[{"-", 
+     SuperscriptBox["x", "5"]}], " ", 
+    RowBox[{"cos", "(", "x", ")"}]}], "+", 
+   RowBox[{"5", " ", 
+    SuperscriptBox["x", "4"], " ", 
+    RowBox[{"sin", "(", "x", ")"}]}], "+", 
+   RowBox[{"20", " ", 
+    SuperscriptBox["x", "3"], " ", 
+    RowBox[{"cos", "(", "x", ")"}]}], "-", 
+   RowBox[{"60", " ", 
+    SuperscriptBox["x", "2"], " ", 
+    RowBox[{"sin", "(", "x", ")"}]}], "-", 
+   RowBox[{"120", " ", "x", " ", 
+    RowBox[{"cos", "(", "x", ")"}]}], "+", 
+   RowBox[{"120", " ", 
+    RowBox[{"sin", "(", "x", ")"}]}], "+", "C"}], TraditionalForm]], "Input",
+ CellChangeTimes->{{3.5977477160180893`*^9, 3.5977477829059663`*^9}, {
+  3.5977478332783976`*^9, 3.5977478455825634`*^9}, {3.597747986368635*^9, 
+  3.59774799572084*^9}, {3.597748046273394*^9, 3.5977480909980755`*^9}, {
+  3.5977481507948875`*^9, 3.597748282749464*^9}}],
+
+Cell[TextData[{
+ "    And remember, this technique only works if a polynomial function is \
+going to be selected as ",
+ Cell[BoxData[
+  FormBox["u", TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ ". Just because an integral contains a polynomial does not mean that the \
+tabular method can be applied."
+}], "Text",
+ CellChangeTimes->{{3.5977483176266036`*^9, 3.5977483257590036`*^9}}]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[TextData[{
+ "Higher ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["dimensions", 
+    RowBox[{"[", "1", "]"}]], TraditionalForm]],
+  FormatType->"TraditionalForm"]
+}], "Section",
+ CellChangeTimes->{{3.597551727368555*^9, 3.5975517314462605`*^9}, {
+  3.597678064714898*^9, 3.5976780672465763`*^9}}],
+
+Cell[TextData[{
+ "suppose \[CapitalOmega] is an open bounded subset of ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["\[DoubleStruckCapitalR]", "n"], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " with a piecewise smooth boundary \[CapitalGamma]. If ",
+ Cell[BoxData[
+  FormBox["u", TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " and ",
+ Cell[BoxData[
+  FormBox["v", TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " are two continuously differentiable functions on the closure of \
+\[CapitalOmega], then the formula for integration by parts is"
+}], "Text",
+ CellChangeTimes->{{3.5975517616623135`*^9, 3.5975517747800198`*^9}, 
+   3.597551812532075*^9, {3.5975518467858086`*^9, 3.597551885701636*^9}}],
+
+Cell[BoxData[
+ FormBox[
+  RowBox[{
+   RowBox[{
+    SubscriptBox["\[Integral]", "\[CapitalOmega]"], 
+    RowBox[{
+     FractionBox[
+      RowBox[{"\[PartialD]", "u"}], 
+      RowBox[{"\[PartialD]", 
+       SubscriptBox["x", "i"]}]], "v", 
+     RowBox[{"\[DifferentialD]", "\[CapitalOmega]"}]}]}], "=", 
+   RowBox[{
+    RowBox[{
+     SubscriptBox["\[Integral]", "\[CapitalGamma]"], 
+     RowBox[{"u", " ", "v", " ", 
+      SubscriptBox["\[Nu]", "i"], 
+      RowBox[{"\[DifferentialD]", "\[CapitalGamma]"}]}]}], "-", 
+    RowBox[{
+     SubscriptBox["\[Integral]", "\[CapitalOmega]"], 
+     RowBox[{"u", 
+      FractionBox[
+       RowBox[{"\[PartialD]", "v"}], 
+       RowBox[{"\[PartialD]", 
+        SubscriptBox["x", "i"]}]], 
+      RowBox[{"\[DifferentialD]", "\[CapitalOmega]"}]}]}]}]}], 
+  TraditionalForm]], "DisplayFormula",
+ CellChangeTimes->{{3.5975520636775956`*^9, 3.5975522834786043`*^9}, {
+   3.5975523266122327`*^9, 3.5975523282273054`*^9}, 3.5975539163006754`*^9, {
+   3.5975543299049835`*^9, 3.597554333071086*^9}}],
+
+Cell[TextData[{
+ "where ",
+ Cell[BoxData[
+  FormBox[
+   OverscriptBox["\[Nu]", "^"], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " is the outward unit surface normal to \[CapitalGamma],",
+ Cell[BoxData[
+  FormBox[
+   SubscriptBox["\[Nu]", "i"], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " is its ",
+ Cell[BoxData[
+  FormBox["i", TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ "-th component.\n\nBy replacing ",
+ Cell[BoxData[
+  FormBox["v", TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " in the above formula with ",
+ Cell[BoxData[
+  FormBox[
+   SubscriptBox["v", "i"], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " and asumming over ",
+ Cell[BoxData[
+  FormBox["i", TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " gives the vector formula"
+}], "Text",
+ CellChangeTimes->{{3.5975523113160796`*^9, 3.597552476998039*^9}, {
+   3.5975525164222035`*^9, 3.597552561873367*^9}, 3.5975528998944607`*^9, {
+   3.5975543437251563`*^9, 3.5975543442635126`*^9}}],
+
+Cell[BoxData[
+ FormBox[
+  RowBox[{
+   RowBox[{
+    SubscriptBox["\[Integral]", "\[CapitalOmega]"], 
+    RowBox[{
+     RowBox[{
+      RowBox[{"\[Del]", "u"}], "\[CenterDot]", 
+      OverscriptBox["v", "\[RightVector]"]}], 
+     RowBox[{"\[DifferentialD]", "\[CapitalOmega]"}]}]}], "=", 
+   RowBox[{
+    RowBox[{
+     SubscriptBox["\[Integral]", "\[CapitalGamma]"], 
+     RowBox[{
+      RowBox[{"u", "(", 
+       RowBox[{
+        OverscriptBox["v", "\[RightVector]"], "\[CenterDot]", 
+        OverscriptBox["\[Nu]", "^"]}], ")"}], 
+      RowBox[{"\[DifferentialD]", "\[CapitalGamma]"}]}]}], "-", 
+    RowBox[{
+     SubscriptBox["\[Integral]", "\[CapitalOmega]"], 
+     RowBox[{"u", 
+      RowBox[{"\[Del]", 
+       RowBox[{"\[CenterDot]", 
+        OverscriptBox["v", "\[RightVector]"]}]}], 
+      RowBox[{"\[DifferentialD]", "\[CapitalOmega]"}]}]}]}]}], 
+  TraditionalForm]], "DisplayFormula",
+ CellChangeTimes->{{3.5975525896688147`*^9, 3.59755265655202*^9}, {
+   3.5975526931292925`*^9, 3.597552790997245*^9}, 3.597553961682795*^9}],
+
+Cell[TextData[{
+ "Setting ",
+ Cell[BoxData[
+  FormBox["u", TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " equal to the constant function 1 in the above formula gives the divergence \
+theorem"
+}], "Text",
+ CellChangeTimes->{{3.597552860710456*^9, 3.597552896476193*^9}}],
+
+Cell[BoxData[
+ FormBox[
+  RowBox[{
+   RowBox[{
+    SubscriptBox["\[Integral]", "\[CapitalGamma]"], 
+    RowBox[{
+     RowBox[{"v", "\[CenterDot]", 
+      OverscriptBox["\[Nu]", "^"]}], 
+     RowBox[{"\[DifferentialD]", "\[CapitalGamma]"}]}]}], "=", 
+   RowBox[{
+    SubscriptBox["\[Integral]", "\[CapitalOmega]"], 
+    RowBox[{
+     RowBox[{"\[Del]", 
+      RowBox[{"\[CenterDot]", 
+       OverscriptBox["v", "\[RightVector]"]}]}], 
+     RowBox[{"\[DifferentialD]", "\[CapitalOmega]"}]}]}]}], 
+  TraditionalForm]], "DisplayFormula",
+ CellChangeTimes->{{3.597552924460766*^9, 3.5975529531247897`*^9}}],
+
+Cell[TextData[{
+ "For ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    OverscriptBox["v", "\[RightVector]"], "=", 
+    RowBox[{"\[Del]", "v"}]}], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ ",one gets the first Green\[CloseCurlyQuote]s identity"
+}], "Text",
+ CellChangeTimes->{{3.5975529992703104`*^9, 3.597553036851283*^9}, {
+  3.5975531119040637`*^9, 3.597553121253267*^9}}],
+
+Cell[BoxData[
+ FormBox[
+  RowBox[{
+   RowBox[{
+    SubscriptBox["\[Integral]", "\[CapitalOmega]"], 
+    RowBox[{
+     RowBox[{
+      RowBox[{"\[Del]", "u"}], "\[CenterDot]", 
+      RowBox[{"\[Del]", "v"}]}], 
+     RowBox[{"\[DifferentialD]", "\[CapitalOmega]"}]}]}], "=", 
+   RowBox[{
+    RowBox[{
+     SubscriptBox["\[Integral]", "\[CapitalGamma]"], 
+     RowBox[{"u", 
+      RowBox[{
+       RowBox[{"\[Del]", "v"}], "\[CenterDot]", 
+       OverscriptBox["\[Nu]", "^"]}], 
+      RowBox[{"\[DifferentialD]", "\[CapitalGamma]"}]}]}], "-", 
+    RowBox[{
+     SubscriptBox["\[Integral]", "\[CapitalOmega]"], 
+     RowBox[{"u", 
+      RowBox[{
+       SuperscriptBox["\[Del]", "2"], "v"}], 
+      RowBox[{"\[DifferentialD]", "\[CapitalOmega]"}]}]}]}]}], 
+  TraditionalForm]], "DisplayFormula",
+ CellChangeTimes->{{3.597553057770135*^9, 3.5975531057269654`*^9}}]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Reference:", "Subsubtitle",
+ CellChangeTimes->{{3.5976353482112794`*^9, 3.5976353521258774`*^9}}],
+
+Cell[TextData[{
+ ButtonBox["[1].http://en.wikipedia.org/wiki/Integration_by_parts # \
+Higher_dimensions\n[2].",
+  BaseStyle->"Hyperlink",
+  ButtonData->{
+    URL["http://en.wikipedia.org/wiki/Integration_by_parts#Higher_dimensions"]\
+, None},
+  ButtonNote->
+   "http://en.wikipedia.org/wiki/Integration_by_parts#Higher_dimensions"],
+ ButtonBox["http://math.ucsd.edu/~wgarner/math20b/int_by_parts.htm",
+  BaseStyle->"Hyperlink",
+  ButtonData->{
+    URL["http://math.ucsd.edu/~wgarner/math20b/int_by_parts.htm"], None},
+  ButtonNote->"http://math.ucsd.edu/~wgarner/math20b/int_by_parts.htm"]
+}], "Text",
+ CellChangeTimes->{
+  3.597635373101799*^9, {3.59763541768641*^9, 3.5976354176884117`*^9}, {
+   3.5976779427572913`*^9, 3.597677950602496*^9}, {3.597678083591427*^9, 
+   3.5976780905890703`*^9}}]
+}, Open  ]]
+}, Open  ]]
+},
+WindowSize->{834, 596},
+WindowMargins->{{Automatic, 210}, {Automatic, 29}},
+FrontEndVersion->"9.0 for Microsoft Windows (64-bit) (November 20, 2012)",
+StyleDefinitions->"Default.nb"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[CellGroupData[{
+Cell[579, 22, 132, 2, 105, "Title"],
+Cell[CellGroupData[{
+Cell[736, 28, 264, 8, 93, "Section"],
+Cell[1003, 38, 1291, 32, 194, "Text"],
+Cell[2297, 72, 301, 8, 52, "DisplayFormula"],
+Cell[2601, 82, 1160, 25, 194, "Text"],
+Cell[3764, 109, 1371, 43, 189, "DisplayFormula"],
+Cell[5138, 154, 514, 9, 137, "Text"],
+Cell[5655, 165, 3729, 83, 225, "Input"],
+Cell[9387, 250, 402, 7, 113, "Text"],
+Cell[9792, 259, 905, 23, 39, InheritFromParent],
+Cell[10700, 284, 391, 9, 89, "Text"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[11128, 298, 302, 9, 93, "Section"],
+Cell[11433, 309, 726, 18, 90, "Text"],
+Cell[12162, 329, 1027, 28, 56, "DisplayFormula"],
+Cell[13192, 359, 1006, 32, 115, "Text"],
+Cell[14201, 393, 1032, 28, 54, "DisplayFormula"],
+Cell[15236, 423, 278, 8, 64, "Text"],
+Cell[15517, 433, 600, 17, 54, "DisplayFormula"],
+Cell[16120, 452, 382, 11, 38, "Text"],
+Cell[16505, 465, 856, 25, 54, "DisplayFormula"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[17398, 495, 103, 1, 32, "Subsubtitle"],
+Cell[17504, 498, 797, 18, 63, "Text"]
+}, Open  ]]
+}, Open  ]]
+}
+]
+*)
+
+(* End of internal cache information *)

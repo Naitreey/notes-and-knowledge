@@ -1,0 +1,174 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 9.0' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       157,          7]
+NotebookDataLength[      5585,        164]
+NotebookOptionsPosition[      5119,        143]
+NotebookOutlinePosition[      5465,        158]
+CellTagsIndexPosition[      5422,        155]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+
+Cell[CellGroupData[{
+Cell[TextData[StyleBox["Ordinary differential equation",
+ FontFamily->"Georgia"]], "Title",
+ CellChangeTimes->{{3.592277435574775*^9, 3.592277531469295*^9}}],
+
+Cell["\<\
+http://en.wikipedia.org/wiki/Ordinary_differential_equation\
+\>", "Subsubtitle",
+ CellChangeTimes->{3.5922775524491916`*^9}],
+
+Cell[TextData[{
+ "an ordinary differential equation or ODE is an equation containing a \
+function of one independent variable and its derivatives.\nLinear \
+differential equations, which have solutions that can be added and multiplied \
+by coefficients, are well-defined and understood, and exact closed-form \
+solutions are obtained.\nODEs that lack additive solutions are nonlinear, and \
+solving them is far more intricate, as one can rarely represent them by \
+elementary functions in closed form: Instead, exact and analytic solutions of \
+ODEs are in series or integral form.\n\nGeneral definition of an ODE:\nLet F \
+be a given function of x,y,and derivatives of y.Then an equation of the form\n\
+",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    RowBox[{"F", " ", 
+     RowBox[{"(", 
+      RowBox[{"x", ",", " ", "y", ",", " ", 
+       RowBox[{"y", "'"}], ",", " ", "...", ",", " ", 
+       RowBox[{"y", "^", 
+        RowBox[{"(", 
+         RowBox[{"n", " ", "-", " ", "1"}], ")"}]}]}], ")"}]}], "=", 
+    SuperscriptBox["y", 
+     RowBox[{"(", "n", ")"}]]}], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ "\nis called an explicit ordinary differential equation of order n.\n\nMore \
+generally, an implicit ordinary differential equation of order n takes the \
+form:\n",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"F", 
+    RowBox[{"(", 
+     RowBox[{"x", ",", "y", ",", 
+      RowBox[{"y", "'"}], ",", 
+      RowBox[{"y", "''"}], ",", "...", ",", 
+      SuperscriptBox["y", 
+       RowBox[{"(", "n", ")"}]]}]}]}], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ ") = 0\n\nA differential equation is said to be linear if F can be written \
+as a linear combination of the derivatives of y:\n",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"F", 
+    RowBox[{"(", 
+     RowBox[{"x", ",", "y", ",", 
+      RowBox[{"y", "'"}], ",", 
+      RowBox[{"y", "''"}], ",", "...", ",", 
+      SuperscriptBox["y", 
+       RowBox[{"(", "n", ")"}]]}]}]}], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ ") =",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{" ", 
+    RowBox[{
+     UnderoverscriptBox["\[Sum]", 
+      RowBox[{"i", "=", "0"}], "n"], 
+     RowBox[{
+      RowBox[{
+       SubscriptBox["a", "i"], "(", "x", ")"}], 
+      SuperscriptBox["y", 
+       RowBox[{"(", "i", ")"}]]}]}]}], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ " + r(x) = 0\nNon-linear equations cannot be written in this form.\nNote \
+that the equation above suffice superposition ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    RowBox[{"principle", ":", " ", 
+     RowBox[{"f", "(", 
+      RowBox[{
+       SubscriptBox["\[Alpha]y", "1"], "+", 
+       SubscriptBox["\[Beta]y", "2"]}], ")"}]}], "=", 
+    RowBox[{"\[Alpha]f", "(", 
+     RowBox[{
+      SubscriptBox["y", "1"], "+", 
+      SubscriptBox["y", "2"]}], ")"}]}], TraditionalForm]],
+  FormatType->"TraditionalForm"],
+ ",so that it is linear.\nFurther classification:\n",
+ "1.Homogeneous: If r(x) = 0.",
+ "\n2.",
+ StyleBox["Nonhomogeneous (or inhomogeneous): If ", "ItemNumbered"],
+ StyleBox["r(x) \[NotEqual] 0.", "InlineFormula"]
+}], "Text",
+ CellChangeTimes->{
+  3.592277583625843*^9, {3.5922776819388475`*^9, 3.5922776825452504`*^9}, {
+   3.592277770182312*^9, 3.592277773618577*^9}, 3.592278276209592*^9, {
+   3.59227830753434*^9, 3.5922785355131435`*^9}, {3.592278789751211*^9, 
+   3.5922788121340685`*^9}, {3.5922789369510794`*^9, 
+   3.5922789972190027`*^9}, {3.592280270922677*^9, 3.592280299738765*^9}, {
+   3.592280339296468*^9, 3.5922803976411457`*^9}, {3.592280440196303*^9, 
+   3.592280440603572*^9}, {3.5922804722225156`*^9, 3.5922805055459747`*^9}, {
+   3.5922805397416306`*^9, 3.592280629021763*^9}, {3.5922806716970625`*^9, 
+   3.5922807864169674`*^9}, {3.592280898124352*^9, 3.5922810786148767`*^9}, {
+   3.592281121042981*^9, 3.5922811357076955`*^9}, {3.5922815260414705`*^9, 
+   3.5922815768020945`*^9}, {3.592281699885754*^9, 3.5922817123960342`*^9}}],
+
+Cell[CellGroupData[{
+
+Cell["Theories of ODEs", "Subtitle",
+ CellChangeTimes->{3.592281304125327*^9}],
+
+Cell["\<\
+Singular solutions
+Reduction to quadratures
+Fuchsian theory
+Lie\[CloseCurlyQuote]s theory
+Sturm\[Dash]Liouville theory\
+\>", "Text",
+ CellChangeTimes->{{3.5922813760329585`*^9, 3.5922814066864104`*^9}}]
+}, Open  ]]
+}, Open  ]]
+},
+WindowSize->{707, 504},
+WindowMargins->{{305, Automatic}, {Automatic, 56}},
+FrontEndVersion->"9.0 for Microsoft Windows (64-bit) (November 20, 2012)",
+StyleDefinitions->"Default.nb"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[CellGroupData[{
+Cell[579, 22, 157, 2, 91, "Title"],
+Cell[739, 26, 134, 3, 26, "Subsubtitle"],
+Cell[876, 31, 3897, 94, 498, "Text"],
+Cell[CellGroupData[{
+Cell[4798, 129, 78, 1, 46, "Subtitle"],
+Cell[4879, 132, 212, 7, 106, "Text"]
+}, Open  ]]
+}, Open  ]]
+}
+]
+*)
+
+(* End of internal cache information *)
+

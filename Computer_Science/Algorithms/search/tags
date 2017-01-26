@@ -1,0 +1,11 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+SIZE	search_demo.c	4;"	d	file:
+binary_search	binary_search.c	/^int binary_search(int * arr, int n, int target) {$/;"	f
+main	search_demo.c	/^int main(int argc, char *argv[]) {$/;"	f
+real_binary_search	binary_search.c	/^static int real_binary_search(int * arr, int start, int end, int target) {$/;"	f	file:
+search	search.c	/^int search(int * arr, int n, int target, char * method) {$/;"	f

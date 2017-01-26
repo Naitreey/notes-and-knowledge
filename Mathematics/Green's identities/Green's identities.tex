@@ -1,0 +1,79 @@
+\RequirePackage[l2tabu, orthodox]{nag}
+\documentclass[a4paper]{article}
+\usepackage[a4paper]{geometry}
+\usepackage[colorlinks=false, pdfborder={0 0 0}]{hyperref}
+\usepackage{amsmath,esint,bm,siunitx,cleveref}
+\title{Green's Identities}
+\author{Naitree Zhu}
+\date{Last modified: \today}
+\begin{document}
+\maketitle
+In mathematics, Green's identities\footnote{More information:\url{http://en.wikipedia.org/wiki/Green's_identities}} are a set of three identities in vector calculus. They are named after the mathematician George Green, who discovered Green's theorem.
+\part{Green's first identity}
+This identity is derived from the divergence theorem applied to the vector field $\boldsymbol{F}=\psi\nabla\varphi$: Let $\varphi$ and $\psi$ be scalar functions defined on some region \textit{U} in $R^{3}$, and suppose that $\varphi$ is twice continuously differentiable, and $\psi$ is once continuously differentiable. Then
+\begin{equation}
+\int_U\left(\psi\nabla^{2}\varphi+\nabla\varphi\cdot\nabla\psi\right)\mathrm{d}V=\oint_{\partial U} \psi\nabla\varphi\cdot\mathrm{d}\boldsymbol{S}
+\end{equation}
+
+This theorem is essentially the higher dimensional equivalent of integration by parts:
+\begin{equation}
+\int_\Omega\nabla u\cdot\boldsymbol{v}\mathrm{d}\Omega=\int_\Gamma u\left(\boldsymbol{v}\cdot\hat{\nu}\right)\mathrm{d}\Gamma-\int_\Omega u\nabla\cdot\boldsymbol{v}\mathrm{d}\Omega
+\end{equation}
+with $\psi$ and $\nabla\varphi$ replacing u and v.
+\section*{Proof}
+Note that Green's first identity above is a special case of the more general identity derived from the divergence theorem by substituting $\psi\bm{F}$ for $\bm{F}$:
+\begin{equation}
+\int_U\left(\psi\nabla\cdot\bm{F}+\bm{F}\cdot\nabla\psi\right)\mathrm{d}V=\oint_{\partial U}\psi\bm{F}\cdot\mathrm{d}\bm{S}
+\end{equation} 
+\part{Green's second identity}
+If $\varphi$ and $\psi$ are both twice continuously differentiable on \textit{U} in $R^{3}$, and $\epsilon$ is once continuously differentiable, we can choose $\bm{F}=\psi\epsilon\nabla\varphi-\varphi\epsilon\nabla\psi$ and obtain:
+\begin{equation}
+\int_U \left[\psi\nabla\cdot\left(\epsilon\nabla\varphi\right)-\varphi\nabla\cdot\left(\epsilon\nabla\psi\right)\right]\mathrm{d}V=\oint_{\partial U} \epsilon\left(\psi\frac{\partial\varphi}{\partial n}-\varphi\frac{\partial\psi}{\partial n}\right)\mathrm{d}S
+\end{equation}
+For the special case of $\epsilon=1$ all across \textit{U} in $R_{3}$ then:
+\begin{equation}
+\int_U \left(\psi\nabla^{2}\varphi-\varphi\nabla^{2}\psi\right)\mathrm{d}V=\oint_{\partial U}\left(\psi\frac{\partial \varphi}{\partial n}-\varphi\frac{\partial\psi}{\partial n}\right)\mathrm{d}S
+\end{equation}
+$\frac{\partial \varphi}{\partial n}$ is the directional derivative of $\varphi$ in the direction of the outward pointing normal $\hat{n}$ to the surface element $\mathrm{d}\bm{S}$, i.e.
+\begin{equation}
+\frac{\partial \varphi}{\partial n}=\nabla\varphi\cdot\hat{n}
+\end{equation}
+\section*{Proof}
+By substituting $\epsilon\nabla\varphi$ for $\nabla\varphi$ in Green's first identity eq.~(1), we can get 
+\begin{equation}
+\int_U \left[\psi\nabla\cdot\left(\epsilon\nabla\varphi\right)+\epsilon\nabla\varphi\cdot\nabla\psi\right]\mathrm{d}V=\oint_{\partial U} \epsilon\psi\frac{\partial\varphi}{\partial n}\mathrm{d}S
+\end{equation}
+Swap $\psi$ and $\varphi$ in the equation above, then
+\begin{equation}
+\int_U \left[\varphi\nabla\cdot\left(\epsilon\nabla\psi\right)+\epsilon\nabla\psi\cdot\nabla\varphi\right]\mathrm{d}V=\oint_{\partial U} \epsilon\varphi\frac{\partial\psi}{\partial n}\mathrm{d}S
+\end{equation}
+Finally, $(7)-(8)$ and it will lead to Green's second identity eq.~(4). 
+\part{Green's third identity}
+Green's third identity derives from the second identity by choosing $\varphi=G$, where \textit{G} is a Green's function of the Laplace operator. This means that:
+\begin{equation}
+\nabla^{2}G(\bm{x},\bm{\eta})=\delta(\bm{x}-\bm{\eta})
+\end{equation}
+For example in $R^{3}$, a solution has the form:
+\begin{equation}
+G(\bm{x},\bm{\eta})=\frac{-1}{4\pi\lVert \bm{x}-\bm{\eta} \rVert}
+\end{equation}
+Apply it into eq.~(5), and it leads to Green's third identity.
+
+Green's third identity states that if $\psi$ is a function that is twice continuously differentiable on \textit{U}, then
+\begin{equation}
+\int_U \left[G\left(\bm{x},\bm{\eta}\right)\nabla^{2}\psi\left(\bm{x}\right)\right]\mathrm{d}V-\psi\left(\bm{\eta}\right)=\oint_{\partial U}\left[G\left(\bm{x},\bm{\eta}\right)\frac{\partial \psi\left(\bm{x}\right)}{\partial n}-\psi\left(\bm{x}\right)\frac{\partial G\left(\bm{x},\bm{\eta}\right)}{\partial n}\right]\mathrm{d}S
+\end{equation}
+A simplification arises if $\psi$ is itself a harmonic function, i.e. a solution to the Laplace equation. So the identity above simplifies to:
+\begin{equation}
+\psi\left(\eta\right)=\oint_{\partial U}\left[\psi\left(\bm{x}\right)\frac{\partial G\left(\bm{x},\bm{\eta}\right)}{\partial n}-G\left(\bm{x},\bm{\eta}\right)\frac{\partial \psi\left(\bm{\eta}\right)}{\partial n}\right]\mathrm{d}S
+\end{equation}
+The second term in the integral above can be eliminated if we choose \textit{G} to be the Green's function that vanishes on the boundary of region \textit{U} (Dirichlet boundary condition):
+\begin{equation}
+\psi\left(\eta\right)=\oint_{\partial U}\psi\left(\bm{x}\right)\frac{\partial G\left(\bm{x},\bm{\eta}\right)}{\partial n}\mathrm{d}S
+\end{equation}
+This form is used to construct solutions to Dirichlet boundary condition problems. To find solutions for Neumann boundary condition problems, the Green's function with vanishing normal gradient on the boundary is used instead.
+
+It can be further verified that the above identity also applies when $\psi$ is a solution to the Helmholtz equation or wave equation and \textit{G} is the appropriate Green's function. In such a context, this identity is the mathematical expression of the Huygens Principle.
+\part{Green's vector identity}
+See Wikipedia. A little complicated and I don't see a need in the near future to know it.
+\end{document}

@@ -1,0 +1,108 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 10.0' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       158,          7]
+NotebookDataLength[      3172,         99]
+NotebookOptionsPosition[      2849,         84]
+NotebookOutlinePosition[      3189,         99]
+CellTagsIndexPosition[      3146,         96]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"game", "[", 
+   RowBox[{"n_", ",", "c_"}], "]"}], ":=", 
+  RowBox[{"Module", "[", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"color", "=", 
+       RowBox[{"RandomColor", "[", "c", "]"}]}], ",", "\[IndentingNewLine]", 
+      RowBox[{"edges", "=", 
+       RowBox[{
+        RowBox[{
+         RowBox[{"{", 
+          RowBox[{
+           RowBox[{"#", "-", "0.5"}], ",", 
+           RowBox[{"#", "+", "0.5"}]}], "}"}], "&"}], "/@", 
+        RowBox[{"Tuples", "[", 
+         RowBox[{
+          RowBox[{"Range", "[", "n", "]"}], ",", "2"}], "]"}]}]}]}], "}"}], 
+    ",", 
+    RowBox[{"Graphics", "[", 
+     RowBox[{
+      RowBox[{"Riffle", "[", 
+       RowBox[{
+        RowBox[{"RandomChoice", "[", 
+         RowBox[{"color", ",", 
+          RowBox[{"n", "^", "2"}]}], "]"}], ",", 
+        RowBox[{
+         RowBox[{
+          RowBox[{"Button", "[", 
+           RowBox[{
+            RowBox[{"Rectangle", "[", "##", "]"}], ",", 
+            RowBox[{"NotebookDelete", "[", 
+             RowBox[{"EvaluationBox", "[", "]"}], "]"}]}], "]"}], "&"}], "@@@",
+          "edges"}]}], "]"}], ",", 
+      RowBox[{"PlotRange", "\[Rule]", 
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{"{", 
+          RowBox[{"0.5", ",", 
+           RowBox[{"n", "+", "0.5"}]}], "}"}], ",", 
+         RowBox[{"{", 
+          RowBox[{"0.5", ",", 
+           RowBox[{"n", "+", "0.5"}]}], "}"}]}], "}"}]}]}], "]"}]}], 
+   "]"}]}]], "Input",
+ CellChangeTimes->{{3.6259837086085033`*^9, 3.6259837221199923`*^9}, {
+  3.625983753773086*^9, 3.625983785888085*^9}, {3.625983843507917*^9, 
+  3.625983924258113*^9}, {3.625983981367736*^9, 3.625984029977339*^9}, {
+  3.6259840662899113`*^9, 3.625984109106509*^9}, {3.62598414052949*^9, 
+  3.625984144512096*^9}, {3.625984406249379*^9, 3.625984420985464*^9}, {
+  3.6259844727749023`*^9, 3.6259844728787603`*^9}, {3.625984503223956*^9, 
+  3.625984668843997*^9}, {3.6259847237386303`*^9, 3.6259847676558743`*^9}, {
+  3.625985055831893*^9, 3.625985096728671*^9}}],
+
+Cell[BoxData[
+ RowBox[{"game", "[", 
+  RowBox[{"10", ",", "10"}], "]"}]], "Input",
+ CellChangeTimes->{{3.625984941918789*^9, 3.6259849497836447`*^9}}],
+
+Cell[BoxData[
+ GraphicsBox[{}]], "Input",
+ CellChangeTimes->{{3.6259849601705513`*^9, 3.6259850476513233`*^9}}]
+},
+WindowSize->{900, 716},
+WindowMargins->{{Automatic, 176}, {Automatic, -10}},
+FrontEndVersion->"10.0 for Linux x86 (64-bit) (September 9, 2014)",
+StyleDefinitions->"Default.nb"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[558, 20, 2020, 53, 139, "Input"],
+Cell[2581, 75, 150, 3, 38, "Input"],
+Cell[2734, 80, 111, 2, 467, InheritFromParent]
+}
+]
+*)
+
+(* End of internal cache information *)

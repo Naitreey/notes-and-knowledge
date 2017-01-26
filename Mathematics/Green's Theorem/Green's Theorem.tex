@@ -1,0 +1,37 @@
+\documentclass[a4paper]{article}
+\usepackage[colorlinks]{hyperref}
+\usepackage{amsmath,esint}
+\title{Green's Theorem}
+\author{Naitree Zhu}
+\date{Last modified: \today}
+\begin{document}
+\maketitle
+In mathematics, Green's theorem\footnote{For more information:\url{http://en.wikipedia.org/wiki/Green\%27s_Theorem}} gives the relationship between a line integral around a simple closed curve $\partial\Sigma$ and a double integral over the plane region $\Sigma$ bounded by $\partial\Sigma$. It is named after George Green and is the two-dimensional special case of the more general Stokes' theorem.
+\part{Theorem}
+Let $\partial\Sigma$ be a positively oriented, piecewise smooth, simple closed curve in a plane, and let $\Sigma$ be the region bounded by $\partial\Sigma$. If P and Q are functions of (\textit{x, y}) defined on an open region containing $\Sigma$ and have continuous partial derivatives there, then
+\begin{equation}
+\iint_\Sigma \left(\frac{\partial Q}{\partial x}-\frac{\partial P}{\partial y}\right)\mathrm{d}x
+\mathrm{d}y=\oint_{\partial\Sigma} \left\lbrace P\mathrm{d}x+Q\mathrm{d}y\right\rbrace
+\end{equation}
+where the path of integration along $\partial\Sigma$ is counterclockwise.
+\part{Relationship to the Stokes theorem}
+Green's theorem is a special case of the Kelvin–-Stokes theorem, when applied to a region in the \textit{xy}-plane.
+\part{Relationship to the divergence theorem}
+Considering only two-dimensional vector fields, Green's theorem is equivalent to the two-dimensional version of the divergence theorem
+\begin{equation}
+\iint_\Sigma\left(\nabla\cdot\boldsymbol{F}\right)\mathrm{d}S=\oint_{\partial\Sigma}\boldsymbol{F}\cdot\hat{n}\mathrm{d}l
+\end{equation}
+\textbf{F} is the two-dimensional vector field, and $\hat{n}$ is the outward-pointing unit normal vector on the boundary.
+\section*{Proof}
+Let $\boldsymbol{F}=(Q,-P)$. If angle of $\hat{n}$ to the x-axis is $\theta$,then outward-pointing unit normal vector $\hat{n}=(cos\theta-sin\theta)$, and $\mathrm{d}\boldsymbol{l}=(-sin\theta,cos\theta)\mathrm{d}l$, apply them to eq.~(2), we can easily deduce to eq.~(1) from eq.~(2).
+\part{Area Calculation}
+Green's theorem can be used to compute area by line integral,which can be achieved simply by choosing P and Q satisfying $\frac{\partial Q}{\partial x}-\frac{\partial P}{\partial y}=1$.
+Thus, area of $\Sigma$ can be calculated by line integral which is 
+\begin{equation}
+A=\oint_{\partial\Sigma} \left\lbrace P\mathrm{d}x+Q\mathrm{d}y\right\rbrace
+\end{equation}
+Possible formulas for calculating the area of $\Sigma$ include:
+\[
+A=\oint_{\partial\Sigma} x\mathrm{d}y=-\oint_{\partial\Sigma} y\mathrm{d}x=\frac{1}{2}\oint_{\partial\Sigma}\left(-y\mathrm{d}x+x\mathrm{d}y\right)
+\]
+\end{document}

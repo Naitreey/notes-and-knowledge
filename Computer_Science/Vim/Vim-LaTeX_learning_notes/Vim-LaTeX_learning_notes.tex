@@ -1,0 +1,636 @@
+\RequirePackage[l2tabu, orthodox]{nag}
+\documentclass{article}
+
+\usepackage[a4paper]{geometry}
+%文献宏包 \usepackage[style=numeric,backend=biber]{biblatex}
+
+
+%中文宏包
+%\usepackage[UTF8,winfonts,fancyhdr,hyperref,fntef]{ctex}
+\usepackage{xeCJK}
+
+\usepackage[pdfborder={0 0 0},colorlinks=false]{hyperref}
+\usepackage{graphicx,amsmath,amssymb,bm,mathtools,subcaption,caption,cleveref}
+\usepackage{examplep}
+
+
+\newcommand{\command}[1]{\PVerb{#1}}
+\newcommand{\syntax}[1]{\PVerb{#1}}
+\newcommand{\envir}[1]{\PVerb{#1}}
+
+%文献源 \addbibresource{•}
+
+%设置字体
+%\setmainfont[Ligatures=TeX]{Helvetica}
+%\setsansfont{}
+\setCJKmainfont[BoldFont={SimHei},ItalicFont={楷体}]{SimSun}%Hiragino Sans GB W3/W6
+%\setCJKsansfont{}
+\setCJKmonofont{幼圆}
+
+%代码宏包
+\usepackage{listings}
+\lstset{columns=flexible,basicstyle=\normalfont\ttfamily,morecomment=[s]{<}{>},commentstyle=\rmfamily\itshape}
+
+%\lstset{language=Mathematica,frame=single,texcl=true,mathescape=true}
+
+\title{Vim--\LaTeX{} Learning Notes}
+\author{Naitree Zhu}
+\date{\today}
+
+\begin{document}
+\maketitle
+%目录 \tableofcontents
+\part{安装和基础设置}
+\begin{enumerate}
+\item 将所有文件解压后放入\verb`\vimfiles` 目录.
+\item 对\verb`.vimrc` 和其他文件初步设置, 见: \hspace{15pt}\url{http://vim-latex.sourceforge.net/documentation/latex-suite/recommended-settings.html}.
+\item install help files:
+\begin{verbatim}
+helptags ~/.vim/doc (for *nix)
+helptags ~/vimfiles/doc (for Windows)
+\end{verbatim}
+\verb`~` 代表目录.
+\item \verb`.vimrc` 一些设置:
+\begin{enumerate}
+\item set CJK encoding:
+\begin{verbatim}
+set encoding=utf-8
+set termencoding=utf-8
+set fileencodings=utf-8,ucs-bom,gb18030,gbk,gb2312,cp936
+\end{verbatim}
+\item set color scheme: \verb`colo darkblue` 
+\item set case-insensitive search: \verb`set ignorecase`
+\item set line number counting: \verb`set number`
+\end{enumerate}
+\end{enumerate}
+以上设置的参考地址: \hspace{80pt}\url{http://vim-latex.sourceforge.net/index.php?subject=down load&title=Download}
+
+此外, Latex--Suite reference 可以从 Vim 内查看: \verb`:help latex-suite.txt`
+\part{Template}
+Tex-Suite 菜单里有模板, 可以把自己的模板放到那个文件夹里.
+
+A template file can utilize placeholders for initializing the cursor position when the template is read in and subsequent movements.
+Template files can contain dynamic elements such as the time of creation of the file, by using Vim expressions.
+
+Custom plates should be placed in \verb|$VIM/ftplugin/latex-suite/templates|.
+
+The templates are also accessible by Ex-command: \lstinline|:TTemplate <template-name>|.
+If the command is called without argument, then a list of available templates will be displayed for choice.
+
+\part{Keyboard Shortcuts and Autocompletion}
+Key mappings used by \LaTeX{}-Suite are not standard mappings in the sense that only the last character is mapped, such that you can press these combinations as slowly as you wish (and correct them).
+
+The bracking \syntax{<++>} is used as placeholder to mark off locations where the relevant editing has to be done.
+\section{\texttt{IMAP() function}}
+For maps which are triggered for a given filetype, the \syntax{IMAP{}} command should be put in the filetype plugin script for that file.
+For example, for \TeX{}-specific mappings, the \syntax{IMAP()} calls should go in \verb|$VIM/ftplugin/tex.vim|.
+For globally visible maps, you need to use the following commands in either your \verb|~/.vimrc| or a file in your \verb|$VIM/plugin| directory. 
+\begin{lstlisting}[frame=single]
+augroup MyIMAPs
+    au!
+    au VimEnter * call IMAP('<command>','<maps>','')
+augroup END
+\end{lstlisting}
+
+\section{Override \LaTeX{}-Suite macros}
+To \emph{override} macros created by \LaTeX{}-Suite rather than create new macros, you should place the \syntax{IMAP()} calls in a script which gets sourced after the files in \LaTeX{}-Suite. A good method is to place a file-type plugin file in the \verb|~/.vim/after/ftplugin/| directory. (Create the \verb|after| directory and all the subfolders if necessary.) It is important to ensure the name of the file that you created conforming to the standards to get sourced on a \syntax{FileType} event.
+
+\subsection{\texttt{IMAP()} syntax}
+\begin{lstlisting}[frame=single]
+call IMAP(<lhs>,<rhs>,<ft> [,<phs>,<phe>])
+\end{lstlisting}
+
+The usages of its arguments are listed as followings.
+\begin{description}
+  \item[\textit{lhs}] When using \syntax{IMAP} function, only the last character of the \lstinline|<lhs>| is actually mapped, although the effect is that the whole word is mapped. If two mappings end in a common \lstinline|<lhs>|, the longer mapping is used. For example, two mappings: \syntax{BarFoo} and \syntax{Foo}.
+  \item[\textit{rhs}] This is the expansion obtained when typing \lstinline|<lhs>|. If \lstinline|<rhs>| contains special characters in Insert mode, the \lstinline|<rhs>| should be enclosed in a pair of doulbe quote marks \verb|" "| to become a string. Commands and special characters in this string should therefore escaped by prefixing \verb|\| character. (If \lstinline|<rhs>| is enclosed normally in single quote marks \verb|' '|, the escaping is not needed.)
+  \item[\textit{ft}] The filetype for which the map is active. If empty, the map is applied for all filetypes. A filetype specific map will always take precedence.
+  \item[\textit{phs,phe}] These arguments are used to specify which pair of characters should be used as placeholders in \lstinline|<rhs>|.
+\end{description}
+
+For example,
+\begin{lstlisting}[breaklines=true,deletecomment={[s]{<}{>}}]
+call IMAP('*EEQ',"\\begin{equation*}\<CR><++>\<CR>\\end{equation*}<++>",'tex')
+\end{lstlisting}
+
+\section{Insert Package}
+输入 package name 后在 Inset mode 下按 F5 可以 autocomplete. 在 insert mode 下 Ctrl+j 光标跳至下一个 placeholder.
+\section{Insert Environment} 
+\subsection{Method 1: General method}
+输入 environment 名字后 Insert mode 按 <F5> autocomplete, 也可以在 Normal or Insert mode 先按 <F5> 后选择或输入所需的 environment.
+
+\subsection{Method 2: Us \texttt{IMAP} function to map letter sequences}
+\label{sec:IMAPmapEnvironment}
+The default letter sequences created by \texttt{IMAP} function to insert environment conform the following rules:
+\begin{enumerate}
+  \item All environment mappings begin with \verb|E|;
+  \item If the name of environment can be split into 2 words, the initials of these words are used as the next 2 letters;
+  \item If the name cannot be split into 2, the first 2 letters of environment name are used;
+  \item If there are two environments whose names have idential first 2 letters, then the first and last letters of these environments are used.
+\end{enumerate}
+
+\section{Enclose text in environment}
+\subsection{Method 1: \texttt{<F5>}}
+Visually select a portion of text and press \syntax{<F5>}. This will prompt you with a list of environments and you can also enter other environments not listed.
+\subsection{Method 2: Comma + 2 letters}
+Visually select a portion of text and press a sequence of characters starting with comma (\verb|,|), following with the same combinations of letters used in \texttt{IMAP} environment mappings (\cref{sec:IMAPmapEnvironment}).
+\section{Change environment}
+\syntax{<S-F5>} in normal mode detects which environment the cursor is presently located in and prompts you to replace it with a new one.
+
+\section{Insert commands}
+Pressing \syntax{<F7>} when the cursor is on white-space will prompt a list of commands for your choice. You can also enter other command.
+Pressing \syntax{<F7>} while the cursor is touching a word will insert a command formed from the word touching the cursor. For certain commands, \LaTeX{}-Suite will expand them to a special form.
+
+Custom expansions of commands can also be defined.
+
+\section{Enclose text in a command}
+Visually select a portion of text and press \syntax{<F7>}.
+\section{Change command}
+In insert mode, place the cursor in the argument of a command and press \syntax{<S-F7>}.
+
+\section{Greek Letter Mappings}
+Lower case: \syntax{`a} to \syntax{`z} expand to \command{\alpha} through \command{\zeta}.
+
+Upper case: \cref{tab:uppercaseMap}.
+\begin{table}[htbp]
+  \centering
+  \begin{tabular}{ll}
+    \syntax{`D}&\command{\Delta}\\
+    \syntax{`F}&\command{\Phi}\\
+    \syntax{`G}&\command{\Gamma}\\
+    \syntax{`Q}&\command{\Theta}\\
+    \syntax{`L}&\command{\Lambda}\\
+    \syntax{`X}&\command{\Xi}\\
+    \syntax{`Y}&\command{\Psi}\\
+    \syntax{`S}&\command{\Sigma}\\
+    \syntax{`U}&\command{\Upsilon}\\
+    \syntax{`W}&\command{\Omega}
+  \end{tabular}
+  \caption{Uppercase letter mappings.}
+  \label{tab:uppercaseMap}
+\end{table}
+
+\section{Miscellaneous Insert mode key mappings}
+Insert mode miscellaneous key mappings are listed in \cref{tab:miscellaneous}.
+\begin{table}
+  \centering
+  \begin{tabular}{ll}
+    \syntax{`^}&\command{\hat{<++>}<++>}\\
+    \syntax{`_}&\command{\bar{<++>}<++>}\\
+    \syntax{`6}&\command{\partial}\\
+    \syntax{`8}&\command{\infty}\\
+    \syntax{`/}&\command{\frac{<++>}{<++>}<++>}\\
+    \syntax{`=}&\command{\equiv}\\
+    \syntax{`\ }&\command{\setminus}\\
+    \syntax{`&}&\command{\wedge}\\
+    \syntax{`<}&\command{\le}\\
+    \syntax{`>}&\command{\ge}\\
+    \syntax{`~}&\command{\tilde{<++>}<++>}\\
+    \syntax{`2}&\command{\sqrt{<++>}<++>}\\
+    \syntax{`I}&\command{\int_{<++>}^{<++>}<++>}
+  \end{tabular}
+  \caption{Miscellaneous Insert mode key mappings.}
+  \label{tab:miscellaneous}
+\end{table}
+
+\section{Visual mode brackets mappings}
+Visual mode brackets mappings are listed in \cref{tab:visualBrackets}.
+\begin{table}[htbp]
+  \centering
+  \begin{tabular}{ll}
+      \syntax{`(}&enclose visual selection in \command{\left(  \right)}\\
+      \syntax{`[}&enclose visual selection in \command{\left[  \right]}\\
+      \verb|`{|&enclose visual selection in \command{\left\{  \right\}}\\
+      \verb|`$|&enclose visual selection in \command{$ $}
+  \end{tabular}
+  \label{tab:visualBrackets}
+  \caption{Visual mode brackets mappings.}
+\end{table}
+
+\section{Smart key mappings}
+\begin{description}
+  \item[Smart quotes.] Pressing \verb|"| will insert \verb|``| or \verb|''| depending on making an guess about whether an open or closing quote mark is intended.
+  \item[Smart Dots.] Pressing \verb|...| results in \command{\ldots} outside math mode and \command{\cdots} in math mode.
+\end{description}
+
+\section{Miscellaneous \texttt{Alt} key mappings}
+To use \texttt{Alt} key to construct key mappings,
+\begin{lstlisting}
+set winaltkeys=no
+\end{lstlisting}
+must be set in your \verb|$VIM/ftplugin/tex.vim| file.
+
+\subsection{\texttt{<Alt-i>}}
+\syntax{<Alt-i>} maps to an \command{\item} command at the cursor location.
+The style of the \command{\item} command is dependent on the enclosing environment.
+
+\begin{center}
+  \begin{tabular}[c]{ll}
+  \envir{itemize}&\command{\item}\\
+  \envir{enumerate}&\command{\item}\\
+  \envir{description}&\command{\item[<+label+>] <++>}\\
+  \envir{theindex}&\command{\item}
+  \end{tabular}
+\end{center}
+
+The \syntax{<Alt-i>} will insert nothing if used outside proper environment.
+
+\section{Autocompletion}
+在 \verb|.vimrc| 中添加一些定义:
+\begin{verbatim}
+let g:Tex_Com_verb = "\\verb|<++>|<++>"
+let g:Tex_Com_frac = "\\frac{<++>}{<++>}<++>" 
+let g:Tex_Com_newcommand = "\\newcommand{<++>}[<++>]{<++>}<++>"
+let g:Tex_Com_renewcommand = "\\renewcommand{<++>}{<++>}<++>"
+let g:Tex_Com_sin = "\text{sin}\,<++>"
+let g:Tex_Com_cos = "\text{cos}\,<++>"
+let g:Tex_Com_ln = "\text{ln}\,<++>"
+let g:Tex_Com_d = "\mathrm{d}^[<++>]<++>"
+\end{verbatim}
+
+Alt Key Macros:
+
+Firstly, disable \verb|<Alt>| to focus to the menu in Vim: Add \verb|set winaltkeys=no| in the file \verb|$VIM/ftplugin/tex.vim|. 
+
+Then use \verb|Alt-l| in Insert mode to expands to one of the following depending on the character just before the cursor location.
+\begin{tabular}[h]{lr}
+  \hline
+  \verb|(| & \verb|\left( <++> \right)| \\
+  \hline
+  \verb|[| & 同上 \\
+  \hline
+  \verb`|` & 同上 \\
+  \hline 
+  \verb|{| & 同上 \\
+  \hline
+  \verb|<| & \verb|\langle <++> \rangle| \\
+  \hline
+  \verb|q| & \verb|\lefteqn{<++>}<++>| \\
+  \hline
+\end{tabular}
+\section{Folding}
+在 normal mode 下 \verb|\rf| 可以折叠全文除了光标处以外的所有结构. 想要展开某个结构, 光标放在该行按 za. 在一个展开的部分按 \verb|za| 可以折叠该结构.
+\subsection*{Folding Settings}
+在 \verb|.vimrc| 中添加以下赋值语句让 vimlatex 不折叠 \verb|paragraph| 和 \verb|item| (默认时有这两项):
+\begin{verbatim}
+let Tex_FoldedSections = 'part,chapter,section,%%fakesection,
+subsection,subsubsection'
+let Tex_FoldedMisc = 'preamble,<<<'
+\end{verbatim}
+添加以下赋值语句防止折叠不该折叠的环境:
+\begin{verbatim}
+let Tex_FoldedEnvironments = 'comment,equation,align,gather,figure,
+table,thebibliography,keywords,abstract,titlepage'
+\end{verbatim}
+\section{Insert Reference}
+光标在 \verb`\ref{}` 中间时, 在 insert mode 下按 F9, 出现所有 Label 列表窗口. 将光标置于所需 label 行头然后回车, 就输入了 label.
+
+为了使这个正常工作, 需要设定:
+\begin{enumerate}
+\item 安装 \verb`grep` 程序.
+\item 将 grep 添加为系统的 environment variables 列表中系统变量 PATH 变量值之一. PATH 的值包含所有需要 PATH 声明的程序目录地址, 两程序之间要用 ``;'' 隔开. 环境变量需要重启生效.
+\item 保证 \verb`.vimrc` 中有这个设定: \verb`set grepprg=grep\ -nH\ $*`
+\item 安装 python 2.7版本, 不要安装比较高的那个3.x版本. 注意 Vim 与 python 需要相同的 32/64-bit 版本. 
+\end{enumerate}
+\part{Compile}
+\verb`\ll` 将编译, 不过编译前可能需要先保存. 默认的是 LaTeX, 生成 dvi.
+\subsection*{compile xelatex}
+\begin{enumerate}
+\item 更改默认输出格式. \verb`.vimrc` 中添加: \verb`let g:Tex_DefaultTargetFormat = "pdf"`. 这样输入\verb`\ll` 和 \verb`\lv` 将输出 pdf 和打开 pdf. 注意在 mac 中默认就是 pdf, 不需要这个设置.
+\item 设置 pdf 编译器:\hfill\\
+  \verb`let g:Tex_CompileRule_pdf 'xelatex -interaction=nonstopmode $*'`
+\end{enumerate}
+\subsection*{设置xelatex 与 pdflatex 转换}
+在 \verb`.vimrc` 中设置:
+\begin{verbatim}
+"switch set pdflatex
+function SetpdfLaTeX()
+	let g:Tex_CompileRule_pdf = 'pdflatex -interaction=nonstopmode -file
+-line-error-style $*'
+endfunction
+map <Leader>lp :<C-U>call SetpdfLaTeX()<CR>
+"switch set xelatex
+function SetXeLaTeX()
+	let g:Tex_CompileRule_pdf = 'xelatex -interaction=nonstopmode -file
+-line-error-style $*'
+endfunction
+map <Leader>lx :<C-U>call SetXeLaTeX()<CR>
+\end{verbatim}
+然后在默认 xelatex 下, \verb`\lp` 切换至 pdflatex, \verb`\lx` 切换回 xelatex, 再用\verb`\ll` 来编译.
+\subsection*{IgnoredWarnings}
+禁止忽略警告: \verb`let g:Tex_IgnoreLevel 0`
+\part{Debug}
+出现错误后, 跳出两个窗口, 一个是 Error list, 另一个是 log. 光标在 Error list 中的某个 error 上回车, 就跳到了 error 所在处. (这个回车反跳的功能有问题.)
+\part{View PDF}
+按照\verb`.vimrc` 中默认输出格式设定, normal mode 下 \verb`\lv` 打开 dvi/pdf viewer.
+\subsection*{view pdf}
+\begin{enumerate}
+\item 下载 SumatraPDF. 在系统环境变量 PATH 下添加程序目录.
+\item 在 \verb`.vimrc` 中设置 pdf viewer:\verb`let g:Tex_ViewRule_pdf = "SumatraPDF"`
+\end{enumerate}
+\subsection*{forward search \& inverse search with SumatraPDF}
+在 Vim 中 normal mode 下 \verb`\ls` 可以 forward search. forward \& inverse search 需要 pdf viewer 的支持.
+Windows 下利用 SumatraPDF 可以进行 forward search \& inverse search. 
+inverse search 比较容易实现, 只需要在 \verb`.vimrc` 中对各 engine 和 pdf viewer 进行设置即可.
+pdf viewer 设置:
+\begin{verbatim}
+let g:Tex_ViewRule_pdf = 'SumatraPDF -reuse-instance -inverse-search "g
+vim -c \":RemoteOpen +\%l \%f\""'
+\end{verbatim}
+
+在所有 engine 的设置中添加两个选项: \verb`-synctex=1 -src-specials`.
+
+forward search 在 Windows 下如果不懂得原理的话, 难以实现. 因为网上现成的方案已经十分过时. 在新版本下已经行不通. 根据我的搜索结果, 我目前理解的原理框架是这样的:\hfill\\
+由于vim-latex 下的 compiler.vim 默认只提供了实现 dvi 格式的 forward searching function, 需要对这部分改写, 以满足与相关程序连接的功能. 流程我估计是, 在 Vim 下输入 \verb`\ls` 后编译器会读入光标的位置等相关信息, 
+在forward searching function 中运算后再输入至一个外部程序, 该程序可以设法调用 \verb`dde.exe` 来输出一个同步信息给 pdf viewer, 从而把 Vim 中的光标值转化为 pdf 中的位置.
+
+下面就是那个已经过时的方法. 这也侧面地再次印证了一件事情: 远离 Windows! 在 MacOS X 下这一切设置都没有这么地曲折.
+\begin{enumerate}
+  \item 下载 ``Python for Windows'' extension: \hspace{15pt}\url{http://sourceforge.net/projects/pywin32/files/pywin32/}, 注意匹配 python 版本.
+  \item 下载配置方法和文件. 见\hspace{15pt}\url{http://william.famille-blum.org/blog/static.php?page=static081010-000413} 最下部 Vim 部分.
+\item 复制 fwdsumatra.py 和 fwdsumatra.diff 至 ftplugin/latex-suite folder.
+\item 下载 Cygwin installer.  打开后搜索 pack, 安装相关的所有 package. 打开 terminal, cd + ~Vim/vimfiles/ftplugin/latex-suite, 将操作目录移动到该文件目录. 在 terminal 中写:\verb`patch -p0 -c -b compiler.vim fwdsumatra.diff`.
+\item 在 \verb`.vimrc` 中修改 xelatex 和 pdflatex 的值为:
+  \begin{verbatim}
+  let g:Tex_CompileRule_pdf = 'pdflatex --synctex=-1 -src-specials -
+  interaction=nonstopmode $*' 
+  \end{verbatim}
+  修改 pdf viewer 的值为:
+  \begin{verbatim}
+  let g:Tex_ViewRule_pdf = 'SumatraPDF -inverse-search "gvim -c \":R
+  emoteOpen +\%l \%f\""'
+  \end{verbatim}
+\item 下载 dde.exe 置于 ftplugin/latex-suite folder.
+\end{enumerate}
+在 CTeX 论坛上找到了一个运用系统批处理文件绕过 python 来实现正向搜索的帖子, 是在上面这个过时的方法基础上作出一些改动, 将 forward search function 的输入转向批处理. 我不懂原理, 不做分析. 
+值得注意的是, 这个方法在 patch 时是借用已过时的函数来做的, 因此 compiler.vim 不能使用 2013年版本, 需使用稍老的 2010 年版本, 方可 patch 成功. 该笔记所在目录有这个压缩包. 但为了长远考虑, 具体实现方法为:
+
+写 \verb|sumatrapdfview.diff| 文件:
+{\tiny
+\begin{verbatim}
+--- compiler.vim	2009-03-12 00:11:26 +0800
++++ compiler-liangzi.vim	2009-04-21 01:17:03 +0800
+@@ -322,6 +322,11 @@
+ "           gvim --servername LATEX --remote-silent +%l "%f"
+ "      For inverse search, if you are reading this, then just pressing \ls
+ "      will work.
++"
++" Use DDE to communicate with SumatraPDF, hence calling a Python
++" file with the DDE gestion. Use same s:path as used for
++" calling outline.py in texviewer.vim
++let s:path = expand('<sfile>:p:h')
+ function! Tex_ForwardSearchLaTeX()
+ 	if &ft != 'tex'
+ 		echo "calling Tex_ForwardSeachLaTeX from a non-tex file"
+@@ -344,10 +349,23 @@
+ 	
+ 	" inverse search tips taken from Dimitri Antoniou's tip and Benji Fisher's
+ 	" tips on vim.sf.net (vim.sf.net tip #225)
+-	if (has('win32') && (viewer == "yap" || viewer == "YAP" || viewer == "Yap"))
++	if (has('win32') && (viewer == "yap" || viewer == "YAP" || viewer == "Yap" || viewer =~? "^sumatrapdf"))
++
++		if (viewer == "yap" || viewer == "YAP" || viewer == "Yap")
+ 
+-		let execString = 'silent! !start '. viewer.' -s '.line('.').expand('%').' '.mainfnameRoot
++			let execString = 'silent! !start '. viewer.' -s '.line('.').expand('%').' '.mainfnameRoot
+ 
++		elseif viewer =~? "^sumatrapdf"
++			
++			" SumatraPDF requires the .tex file path to be given relatively to
++			" the main file path, hence the substitute
++			"let relativeFile=substitute(expand("%:p"), Tex_GetMainFileName(':p:h').'/', '','')
++			"let execString = 'silent! !'.s:path.'/fwdsumatra.py "'.mainfnameFull.'.'.s:target.'" "'.relativeFile.'" '. line('.')
++                         let relativeFile=substitute(expand("%:p"), "\\/", '\',"g")
++                         let pdfname=substitute(mainfnameFull.'.'.s:target, "\\/", '\',"g")
++			let execString = 'silent! !start "'.s:path.'/sumatrapdfview.bat" "'.pdfname.'" "'.relativeFile.'" '. line('.')
++
++		endif
+ 
+ 	elseif (has('macunix') && (viewer == "Skim" || viewer == "PDFView" || viewer == "TeXniscope"))
+ 		" We're on a Mac using a traditional Mac viewer
+
+\end{verbatim}
+}
+写 \verb|sumatrapdfview.bat| 文件:
+{\tiny
+\begin{verbatim}
+@echo off
+set EDTROOT=%~dp0
+set file=%~1
+set line=%~3
+set src=%~2
+set _d=%TEXROOT%\tools\sumatrapdf
+set _r=%TEXROOT%
+	IF   [%1]==[]   GOTO   usage
+	IF   [%2]==[]   GOTO   usage
+	IF   [%3]==[]   GOTO   usage
+start /max "" SumatraPDF -reuse-instance -inverse-search "gvim.bat -c \":RemoteOpen +%%l %%f\""
+ping 127.0.0.1 -n 1 1>nul
+"%EDTROOT%dde.exe" SUMATRA SUMATRA control "[ForwardSearch("%file%","%src%",%line%,0,0,1)]"
+exit /B 0
+
+:usage
+echo Usage: %0 pdffile line_no srcfile ==) Forward search pdf file with Sumatrapdf
+echo Note: Only Sumatrapdf supports pdf forward search!
+exit /B 0
+\end{verbatim}
+}
+将以上两文件连同 \verb|dde.exe| 三文件一起放入 /ftplugin/latex-suite/ 目录.
+在 Cygwin 中用 \verb|patch -p0 compiler.vim sumatrapdfview.diff| 命令将 diff 文件 patch 给 compiler.vim , 至此设置完毕. 
+这样就可以在 SumatraPDF 中双击 inverse search 回 tex 源文件, 在 tex 源文件中 \verb|\ls| forward search 至 pdf 中对应位置. 还需要注意一点, 为了两文件能找到对方, 它们所在的目录不能含有空格, 更不能含有 CJK 字符.
+\part{biber}
+为了使用 biber, 需要 arara.
+下载 arara 程序, 在 \url{https://github.com/cereda/arara} 页面上把整个包下载下来. 安装 installer, 让程序自动把目录加入 PATH. 
+
+arara 作为 IDE 与 TeX Distribution 中各种程序的中介, 通过 Vim 将指令发送给 arara, arara 去指挥操作流程并从 TeX 程序反馈运行结果信息和完整报告.
+Vim 只需和 arara 沟通, 故在 \verb|.vimrc| 中设置 arara 作为指令接收对象, 在 \verb|.tex| 源文件中添加对 arara 的操作指令.具体如下:
+\begin{enumerate}
+  \item 在 \verb|.vimrc| 中添加一条切换至 arara 控制的函数, 设置使用 \verb|\la| 来执行这个函数. 
+    \begin{verbatim}
+"switch to arara control
+function SetAraraControl()
+	let g:Tex_CompileRule_pdf = 'arara -l -v $*'
+endfunction
+map <Leader>la :<C-U>call SetAraraControl()<CR>
+    \end{verbatim}
+    其中, \verb|-l| 让 arara 生成所有命令的运行结果报告, \verb|-v| 使 arara 不使用 silent mode, 从而可以返回后续程序生成的信息(和要求)给 terminal(这里则是IDE).
+  \item 在 \verb|.tex| 源文件中添加 arara directive.
+    \begin{verbatim}
+% arara: xelatex: {action: nonstopmode,synctex: yes}
+% arara: biber
+% arara: xelatex: {action: nonstopmode,synctex: yes}
+% arara: xelatex: {action: nonstopmode,synctex: yes}
+    \end{verbatim}
+    根据 TeX 生成 pdf 的流程, 需要按照这样的顺序运行 4 遍: 第一遍生成 pdf, 第二遍生成文献相关部分, 第三遍结合第二遍结果重新生成 pdf 从而加入交叉引用和文献相关内容, 第四遍重新生成 pdf 检查一切.
+    再结合 arara 的语法要求, 得到这 4 条 directive. 其中, \verb|action| 值为 \verb|nonstopmode|, 使 xelatex 连续编译遇到错误尽量忽略, 最后显示所有的错误和警告; \verb|synctex| 值为真(\verb|yes|), 使得 xelatex 生成可以进行 forward \& inverse search 的必要文件(注意这时不再需要 Vim-LaTeX 要求的 \verb|-src-specials| 选项). 
+\end{enumerate}
+由于现在运行了 4 遍, 带有 \verb|--verbose| flag 的 arara 将返回 4 遍下来所有的警告、错误等信息给 terminal, 对于 Vim 而言则显示在 quickfix list 窗口. 只要将各遍产生的信息分清楚别弄混就好, 这样所有信息都看得到还便于查错. 
+TeX engine 会生成一个最终运行结果的 \verb|filename.log| (之前的都被覆盖了), 同时 arara 会生成一个 \verb|arara.log|, 包含运行过程中的从 engine 中反馈出来的所有信息.
+\part{Tricks}
+\paragraph{double quotes}
+vim-latex 默认将双引号 \verb|"| 映射为 \verb|``''|, 要输入双引号的话可以用 Vim 的自带纯字符输入命令 <Ctrl-v> 再输入 \verb|"|. (注意在 Windows 下, 要用 <Ctrl-q> 代替 <Ctrl-v>.)
+
+\part{\texttt{vimrc} 文件}
+这里列出 \verb|.vimrc| 里的所有设置:
+{\tiny
+\begin{verbatim}
+set nocompatible
+source $VIMRUNTIME/vimrc_example.vim
+source $VIMRUNTIME/mswin.vim
+behave mswin
+
+set diffexpr=MyDiff()
+function MyDiff()
+  let opt = '-a --binary '
+  if &diffopt =~ 'icase' | let opt = opt . '-i ' | endif
+  if &diffopt =~ 'iwhite' | let opt = opt . '-b ' | endif
+  let arg1 = v:fname_in
+  if arg1 =~ ' ' | let arg1 = '"' . arg1 . '"' | endif
+  let arg2 = v:fname_new
+  if arg2 =~ ' ' | let arg2 = '"' . arg2 . '"' | endif
+  let arg3 = v:fname_out
+  if arg3 =~ ' ' | let arg3 = '"' . arg3 . '"' | endif
+  let eq = ''
+  if $VIMRUNTIME =~ ' '
+    if &sh =~ '\<cmd'
+      let cmd = '""' . $VIMRUNTIME . '\diff"'
+      let eq = '"'
+    else
+      let cmd = substitute($VIMRUNTIME, ' ', '" ', '') . '\diff"'
+    endif
+  else
+    let cmd = $VIMRUNTIME . '\diff'
+  endif
+  silent execute '!' . cmd . ' ' . opt . arg1 . ' ' . arg2 . ' > ' . arg3 . eq
+endfunction
+
+"Vim-LaTeX settings
+filetype plugin on
+set shellslash
+set grepprg=grep\ -nH\ $*
+filetype indent on
+let g:tex_flavor='latex'
+
+"set compile engine and parameters delivered to engine
+let g:Tex_CompileRule_dvi = 'latex --interaction=nonstopmode $*'
+let g:Tex_CompileRule_pdf = 'xelatex --interaction=nonstopmode -synctex=1 -src-specials $*'
+
+"switch to pdflatex
+function SetpdfLaTeX()
+	let g:Tex_CompileRule_pdf = 'pdflatex --interaction=nonstopmode -synctex=1 -src-specials $*'
+endfunction
+noremap <Leader>lp :<C-U>call SetpdfLaTeX()<CR>
+
+"switch to xelatex
+function SetXeLaTeX()
+	let g:Tex_CompileRule_pdf = 'xelatex --interaction=nonstopmode -synctex=1 -src-specials $*'
+endfunction
+noremap <Leader>lx :<C-U>call SetXeLaTeX()<CR>
+
+"switch to arara control
+function SetAraraControl()
+	let g:Tex_CompileRule_pdf = 'arara -l -v $*'
+endfunction
+noremap <Leader>la :<C-U>call SetAraraControl()<CR>
+
+"set default output format as PDF
+let g:Tex_DefaultTargetFormat = 'pdf'
+
+"set PDF viewer
+let g:Tex_ViewRule_pdf = 'SumatraPDF -reuse-instance -inverse-search "gvim -c \":RemoteOpen +\%l \%f\""'
+
+"(re)new vim-latex command shortcuts
+let g:Tex_Com_verb = "\\verb|<++>|<++>"
+let g:Tex_Com_frac = "\\frac{<++>}{<++>}<++>"
+let g:Tex_Com_tfrac = "\\tfrac{<++>}{<++>}<++>"
+let g:Tex_Com_dfrac = "\\dfrac{<++>}{<++>}<++>"
+let g:Tex_Com_newcommand = "\\newcommand{<++>}[<++>]{<++>}<++>"
+let g:Tex_Com_renewcommand = "\\renewcommand{<++>}[<++>]{<++>}<++>"
+let g:Tex_Com_tbf = "\\textbf{<++>}<++>"
+let g:Tex_Com_ttt = "\\texttt{<++>}<++>"
+let g:Tex_Com_tsf = "\\textsf{<++>}<++>"
+let g:Tex_Com_tit = "\\textit{<++>}<++>"
+let g:Tex_Com_tex = "\\TeX{}<++>"
+let g:Tex_Com_pdftex = "pdf\\TeX{}<++>"
+let g:Tex_Com_latex = "\\LaTeX{}<++>"
+let g:Tex_Com_latexe = "\\LaTeXe{}<++>"
+let g:Tex_Com_pdflatex = "pdf\\LaTeX{}<++>"
+let g:Tex_Com_xetex = "\\XeTeX{}<++>"
+let g:Tex_Com_xelatex = "\\XeLaTeX{}<++>"
+let g:Tex_Com_luatex = "Lua\TeX{}<++>"
+let g:Tex_Com_amslatex = "\\AmS-\\LaTeX{}<++>"
+let g:Tex_Com_metapost = "\\METAPOST{}<++>"
+let g:Tex_Com_metafont = "\\METAFONT{}<++>"
+let g:Tex_Com_mbb = "\\mathbb{<++>}<++>"
+let g:Tex_Com_binom = "\\binom{<++>}{<++>}<++>"
+let g:Tex_Com_stx = "\\syntax{<++>}<++>"
+
+"show all warnings
+let g:Tex_IgnoreLevel = 0
+
+"set folded sections
+let Tex_FoldedSections = 'part,chapter,section,%%fakesection,subsection,subsubsection'
+
+"set folded misc
+let Tex_FoldedMisc = 'preamble,<<<'
+
+"set foled environments
+let Tex_FoldedEnvironments = 'comment,equation,align,gather,figure,table,thebibliography,keywords,abstract,titlepage'
+
+"set CJK character encoding
+set encoding=utf-8
+set termencoding=utf-8
+set fileencodings=utf-8,ucs-bom,gb18030,gbk,gb2312,cp936
+
+"pathogen plugin
+execute pathogen#infect()
+
+"solarized colorscheme
+syntax enable
+set background=dark
+colorscheme solarized
+
+
+"set case-insensitive search
+set ignorecase
+
+"set line number count
+set number
+
+"set GUI font
+if has('gui_running')
+  set guifont=Meslo_LG_L:h11:b:cANSI
+endif
+
+"hide gui menu bar "set guioptions=egmLt
+set guioptions=egt
+
+"set wildmenu to show matches, so that <C-d> is not generally needed.
+set wildmenu
+
+"remap <Y> to the more logical <y$>
+map Y y$
+
+"mathematica syntax hightlighting in solarized colorscheme
+let g:mma_highlight_option = "solarized"
+"Smart Conceal for Mathematica
+let g:mma_candy = 1
+
+"stop Voom remapping <Ctrl-i>
+let g:voom_tab_key = ""
+
+"set initial window size
+if has("gui_running")
+	set lines=30 columns=120
+endif
+
+"keep 200 lines of command-line history
+set history=200
+
+"remap <C-p> & <C-n> as <Up> and <Down>. To autocomplete command-line, use
+"<Tab> and <S-Tab>
+cnoremap <C-p> <Up>
+cnoremap <C-n> <Down>
+\end{verbatim}
+}
+\end{document}

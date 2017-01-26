@@ -1,0 +1,57 @@
+\documentclass[a4paper]{article}
+\usepackage{amsmath}
+\usepackage[colorlinks]{hyperref}
+\usepackage{CJKutf8}
+\title{Stokes' Theorem}
+\author{Naitree Zhu}
+\date{Last modified: \today}
+\begin{document}
+\maketitle
+In differential geometry, Stokes' theorem (also called the generalized Stokes' theorem) is a statement about the integration of differential forms on manifolds, which both simplifies and generalizes several theorems from vector calculus. 
+ Stokes' theorem says that the integral of a differential form $\omega$ over the boundary of some orientable manifold $\Omega$ is equal to the integral of its exterior derivative $\mathrm{d}\omega$ over the whole of $\Omega$, i.e.
+\begin{equation}
+\int_{\partial\Omega} \omega=\int_\Omega \mathrm{d}\omega
+\end{equation}
+
+This modern form\footnote{For more deep informations about the \emph{generalized} stokes' theorem:\url{http://en.wikipedia.org/wiki/Stokes'_theorem}} of Stokes' theorem is a vast generalization of a classical result first discovered by Lord Kelvin, who communicated it to George Stokes in a letter dated July 2, 1850. Stokes set the theorem as a question on the 1854 Smith's Prize exam, which led to the result bearing his name. 
+This classical Kelvin--Stokes theorem relates the surface integral of the curl of a vector field $\boldsymbol{F}$ over a surface $\Sigma$ in Euclidean three-space to the line integral of the vector field over its boundary $\partial\Sigma$:
+\begin{equation}
+\iint_S \nabla\times \boldsymbol{F}\cdot \mathrm{d}\boldsymbol{S}=\oint_{\partial S}\boldsymbol{F}\cdot\mathrm{d}\boldsymbol{l}
+\end{equation}
+
+This classical statement, as well as the classical Divergence theorem, fundamental theorem of calculus, and Green's Theorem are simply special cases of the general formulation stated above.
+\part{Special cases}
+The general form of the Stokes theorem using differential forms is more powerful and easier to use than the special cases. The traditional versions can be formulated using Cartesian coordinates without the machinery of differential geometry, and thus are more accessible. Further, they are older and their names are more familiar as a result.
+ The traditional forms are often considered more convenient by practicing scientists and engineers but the non-naturalness of the traditional formulation becomes apparent when using other coordinate systems, even familiar ones like spherical or cylindrical coordinates. There is potential for confusion in the way names are applied, and the use of dual formulations.
+\section{Kelvin-Stokes theorem}
+This is a (dualized) 1+1 dimensional case, for a 1-form (dualized because it is a statement about vector fields). This special case is often just referred to as the Stokes' theorem in many introductory university vector calculus courses and as used in physics and engineering. It is also sometimes known as the curl theorem.
+
+The classical Kelvin–-Stokes theorem:
+\begin{equation}
+\iint_S \nabla\times \boldsymbol{F}\cdot \mathrm{d}\boldsymbol{S}=\oint_{\partial S}\boldsymbol{F}\cdot\mathrm{d}\boldsymbol{l}
+\end{equation}
+
+which relates the surface integral of the curl of a vector field over a surface $\Sigma$ in Euclidean three-space to the line integral of the vector field over its boundary, is a special case of the general Stokes theorem (with n = 2) once we identify a vector field with a 1-form using the metric on Euclidean three-space. 
+The curve of the line integral, $\partial\Sigma$, must have positive orientation, meaning that $d\boldsymbol{l}$ points counterclockwise when the surface normal, $d\boldsymbol{S}$, points toward the viewer, following the right-hand rule.
+
+One consequence of the formula is that the field lines of a vector field with zero curl cannot be closed contours.
+\begin{CJK}{UTF8}{gbsn}
+在式(3)中， 考虑场区内的任一曲面，由于场的旋度为0， 左边为0， 则右面说明在场区内场矢量沿任何一条闭合曲线的积分为0. 这就说明了该矢量场的场线是绝不闭合的，因为在任一场线上矢量场的方向沿着该场线，沿闭合场线的积分非0.
+\end{CJK}
+
+In Cartesian coordinates,the formula can be rewritten as:
+\begin{equation}
+\begin{split}
+\iint_\Sigma \left\lbrace\left(\frac{\partial R}{\partial y}-\frac{\partial Q}{\partial z}\right) dydz + \left(\frac{\partial P}{\partial z}-\frac{\partial R}{\partial x}\right) dzdx + \left(\frac{\partial Q}{\partial x}-\frac{\partial P}{\partial y}\right) dxdy\right\rbrace\\
+= \oint_{\partial\Sigma} \left\lbrace P dx + Q dy + R dz\right\rbrace
+\end{split}
+\end{equation}
+\section{2-dimensional: Green's theorem}
+Green's theorem is immediately recognizable as the third integrand of both sides in the integral in terms of P, Q, and R cited above.
+\section{Divergence theorem}
+Likewise, the Divergence theorem 
+\begin{equation}
+\int_V \nabla\cdot\boldsymbol{F} \mathrm{d}V=\oint_{\partial V} \boldsymbol{F}\cdot \mathrm{d}\boldsymbol{S}
+\end{equation}
+is a special case if we identify a vector field with the n-1 form obtained by contracting the vector field with the Euclidean volume form.
+\end{document}

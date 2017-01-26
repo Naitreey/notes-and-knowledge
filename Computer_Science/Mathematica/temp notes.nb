@@ -1,0 +1,1165 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 9.0' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       157,          7]
+NotebookDataLength[     41031,       1156]
+NotebookOptionsPosition[     36766,       1039]
+NotebookOutlinePosition[     37416,       1061]
+CellTagsIndexPosition[     37373,       1058]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell[TextData[{
+ StyleBox["Dynamic[expr]:\n",
+  FontSize->12],
+ "an object that displays as the dynamically updated current value of ",
+ Cell[BoxData[
+  StyleBox["expr", "TI"]], "InlineFormula"],
+ ".\n\:6bcf\:6b21\:76f8\:5173\:7684\:91cf\:53d8\:5316\:65f6, Dynamic \:5c31\
+\:4f1a\:5c06 expr \
+\:91cd\:65b0\:8ba1\:7b97\:5e76\:5c55\:793a\:5f53\:524d\:7ed3\:679c.",
+ StyleBox["\n\
+Dynamic[expr]\:8f93\:51fa\:7684\:7ed3\:679c\:4f1a\:968fexpr\:7684\:5f53\:524d\
+\:503c\:52a8\:6001\:5730\:53d8\:5316. \:4f46\:662fDynamic object\:672c\:8eab\
+\:7684\:5386\:53f2\:4f4d\:7f6e(In,Out\:503c)\:4e0d\:53d8.\:4e5f\:5c31\:8bf4\
+\:8fd9\:4e2a\:52a8\:6001\:7684\:5bf9\:8c61\:672c\:8eab\:5c5e\:4e8e\:8fc7\:53bb\
+,\:4f46\:5b83\:8868\:793a\:7684\:503c\:59cb\:7ec8\:662f\:5f53\:524d\:7684\
+\:503c.\:6240\:4ee5\:624d\:8bf4\:8fd9\:4e2aobject\:662fDynamic\:7684.\n\
+Dynamic[ ] \:4e2d\:53ef\:4ee5\:5305\:542b\:4efb\:610f\:79cd\:7c7b\:7684\:8868\
+\:8fbe\:5f0f. \:8fd9\:4f3c\:4e4e\:5f88\:663e\:7136, \:4f46\:6b63\:662f\:8fd9\
+\:6837\:624d\:4fdd\:8bc1\:4e86\:65e0\:8bba\:76f8\:5173\:7684\:53d8\:91cf\:5982\
+\:4f55\:53d8\:5316Dynamic[ ]\:7684\:8f93\:51fa\:90fd\:5bf9\:5e94\:5730\:53d8\
+\:5316\:7740.\n\:4ece\:6548\:679c\:4e0a\:6765\:770b, \:57fa\:7840\:7248\:672c\
+\:7684 Dynamic[ ] \
+\:5c31\:662f\:5728\:4efb\:610f\:7684\:666e\:901a\:8f93\:5165\:5916\:9762\:5957\
+\:4e0a\:4e00\:4e2a dynamic \:6027\:8d28.",
+  FontSize->12]
+}], "Text",
+ CellChangeTimes->{{3.6047141468498745`*^9, 3.6047143682104177`*^9}, {
+   3.6047144136745515`*^9, 3.604714518248903*^9}, {3.6047182528155465`*^9, 
+   3.60471830729714*^9}, {3.604718350098448*^9, 3.6047186001007643`*^9}, {
+   3.604718697102419*^9, 3.6047187060878057`*^9}, {3.6047187743606634`*^9, 
+   3.6047188155839167`*^9}, {3.604721085501947*^9, 3.6047212268170967`*^9}, 
+   3.6048443464008093`*^9}],
+
+Cell[" ", "Text",
+ Editable->False,
+ Selectable->False,
+ CellFrame->{{0, 0}, {0, 0.5}},
+ ShowCellBracket->False,
+ CellMargins->{{0, 0}, {1, 1}},
+ CellElementSpacings->{"CellMinHeight"->1},
+ CellFrameMargins->0,
+ CellFrameColor->RGBColor[0, 0, 1],
+ CellSize->{Inherited, 3},
+ CellChangeTimes->{3.6048443464008093`*^9}],
+
+Cell[BoxData[
+ RowBox[{"DynamicModule", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"x", ",", "y", ",", "..."}], "}"}], ",", "expr"}], "]"}]], "Input",
+ CellChangeTimes->{{3.604727071147152*^9, 3.6047271062752113`*^9}, 
+   3.6048443464008093`*^9}],
+
+Cell["\<\
+Dynamic \:63d0\:4f9b\:52a8\:6001\:66f4\:65b0\:529f\:80fd, \:4f46\:4e0e\:5176\
+\:4ed6\:8868\:8fbe\:5f0f\:4e00\:6837\:662f\:5168\:5c40\:7684. DynamicModule \
+\:63d0\:4f9b\:52a8\:6001\:6a21\:5757\:652f\:6301, \:5141\:8bb8\:4e00\:4e9b\
+\:53d8\:91cf\:5c40\:57df\:5316\:9650\:5236\:5728\:6a21\:5757\:5185, \:540c\
+\:65f6\:4e0d\:5f71\:54cd\:5176\:4ed6\:8868\:8fbe\:5f0f\:548c\:5168\:5c40\:901a\
+\:4fe1. 
+DynamicModule \:5bf9\:5e94\:4e8e\:9759\:6001\:7684 Module. 
+\:6ce8\:610fDynamicModule \:4e0d\:63d0\:4f9b\:52a8\:6001\:529f\:80fd\:672c\
+\:8eab, \:53ea\:662f\:4e3a\:5176\:5185\:90e8\:7684Dynamic object \:63d0\:4f9b\
+\:652f\:6301.
+\:867d\:7136Dynamic object \:5728 Module \:91cc\:4e5f\:80fd\:8fd0\:884c, \
+\:4f46\:662f\:4e0d\:5e94\:8be5\:8fd9\:6837\:505a. \:5927\:81f4\:662f\:56e0\
+\:4e3aModule \:548c DynamicModule \:539f\:7406\:4e0d\:540c, \
+\:524d\:8005\:5728\:5185\:6838\:4e2d\:5b58\:50a8, \:540e\:8005\:5728 FrontEnd \
+\:4e2d\:5b58\:50a8(\:56e0\:4e3a\:8981\:505a\:52a8\:6001\:663e\:793a). \:5177\
+\:4f53\:89e3\:91ca\:89c1 virtual book \:4e2d Introduction to Dynamic \:4ee5\
+\:53ca Advanced Dynamic Functionality \:5185\:5bb9. \
+\>", "Text",
+ CellChangeTimes->{{3.6047271176044254`*^9, 3.6047272309504013`*^9}, {
+   3.6047274515883904`*^9, 3.604727476981305*^9}, {3.604727587608741*^9, 
+   3.6047275952813196`*^9}, {3.604727721285141*^9, 3.604727798449642*^9}, {
+   3.6047286613035827`*^9, 3.6047287699230857`*^9}, {3.6047289512761154`*^9, 
+   3.6047289894437823`*^9}, {3.6047311170583143`*^9, 
+   3.6047312707055216`*^9}, {3.6048378010609694`*^9, 3.604838086972144*^9}, 
+   3.604844346411817*^9}],
+
+Cell[BoxData[
+ RowBox[{"DynamicModule", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"x", "=", 
+      SubscriptBox["x", "0"]}], ",", 
+     RowBox[{"y", "=", 
+      SubscriptBox["y", "0"]}], ",", "..."}], "}"}], ",", "expr"}], 
+  "]"}]], "Input",
+ CellChangeTimes->{{3.604727323037159*^9, 3.604727361017392*^9}, 
+   3.604844346411817*^9}],
+
+Cell["\:58f0\:660e\:5c40\:57df\:53d8\:91cf\:540c\:65f6\:8d4b\:521d\:503c.", \
+"Text",
+ CellChangeTimes->{{3.6047273904888115`*^9, 3.6047274128971834`*^9}, 
+   3.604844346412818*^9}],
+
+Cell[" ", "Text",
+ Editable->False,
+ Selectable->False,
+ CellFrame->{{0, 0}, {0, 0.5}},
+ ShowCellBracket->False,
+ CellMargins->{{0, 0}, {1, 1}},
+ CellElementSpacings->{"CellMinHeight"->1},
+ CellFrameMargins->0,
+ CellFrameColor->RGBColor[0, 0, 1],
+ CellSize->{Inherited, 3},
+ CellChangeTimes->{3.604844346412818*^9}],
+
+Cell[BoxData[
+ RowBox[{"Slider", "[", "x", "]"}]], "Input",
+ CellChangeTimes->{{3.604719289465217*^9, 3.604719291215434*^9}, 
+   3.604844346412818*^9}],
+
+Cell["a slider with setting x in 0~1", "Text",
+ CellChangeTimes->{{3.6047189347279797`*^9, 3.6047189363219185`*^9}, {
+   3.604719182650752*^9, 3.604719285777236*^9}, 3.604844346412818*^9}],
+
+Cell[BoxData[
+ RowBox[{"Slider", "[", 
+  RowBox[{"x", ",", 
+   RowBox[{"{", 
+    RowBox[{
+     SubscriptBox["x", "min"], ",", 
+     SubscriptBox["x", "max"], ",", 
+     RowBox[{"d", " ", "x"}]}], "}"}]}], "]"}]], "Input",
+ CellChangeTimes->{{3.60471929460631*^9, 3.60471931254561*^9}, 
+   3.604844346413819*^9}],
+
+Cell["a slider with setting x from xmin to xmax in steps dx", "Text",
+ CellChangeTimes->{{3.604719353768154*^9, 3.604719392450811*^9}, 
+   3.604844346413819*^9}],
+
+Cell[BoxData[
+ RowBox[{"Slider", "[", 
+  RowBox[{"Dynamic", "[", "x", "]"}], "]"}]], "Input",
+ CellChangeTimes->{{3.604719823773964*^9, 3.604719829009038*^9}, 
+   3.604844346413819*^9}],
+
+Cell["\<\
+\:5bf9\:4e8e\:4e0a\:9762\:8fd9\:4e2a Slider \:800c\:8a00, x \
+\:7684\:503c\:548cSlider \:4e0a\:6ed1\:5757\:7684\:4f4d\:7f6e\:662f\:59cb\
+\:7ec8\:4e00\:81f4\:7684. \:4e5f\:5c31\:662f\:8bf4: \:5f53 x \:503c\:5728\
+\:5176\:4ed6\:5730\:65b9\:6539\:53d8\:65f6, Dynamic[x] \:503c\:6539\:53d8, \
+\:6ed1\:5757\:7684\:4f4d\:7f6e\:4ece\:800c\:53d8; \:5f53 Slider \:4e0a\:6ed1\
+\:5757\:7684\:4f4d\:7f6e\:6539\:53d8\:65f6, Slider \:4f1a\:53cd\:9988\:4e00\
+\:4e2a\:503c\:7ed9 Dynamic[x], \:4ece\:800c x \:503c\:4e5f\:8ddf\:7740\:53d8\
+\:5316. \
+\>", "Text",
+ CellChangeTimes->{{3.604719820304793*^9, 3.604719871826501*^9}, {
+   3.6047199362309365`*^9, 3.6047199503101826`*^9}, {3.6047199860951557`*^9, 
+   3.6047201396022873`*^9}, 3.6047202553165855`*^9, {3.6047213960294485`*^9, 
+   3.6047214394396753`*^9}, {3.6047215269636445`*^9, 3.604721531589181*^9}, {
+   3.6047215702724323`*^9, 3.6047216438425293`*^9}, 3.6048443464188223`*^9}],
+
+Cell[TextData[{
+ "\:52a8\:6001\:94fe\:63a5\:9ed8\:8ba4\:662f\:53cc\:5411\:7684. Sliders \
+connected to a variable move together because they both *reflect* and \
+*control* the value of the same variable(\:540c\:4e00\:4e2a\:5730\:5740\:5355\
+\:5143). When you drag a slider thumb, the system constructs and evaluates \
+expressions of the form ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["expr", "TI"], "=", 
+   StyleBox["new", "TI"]}]], "InlineFormula"],
+ ", where ",
+ Cell[BoxData[
+  StyleBox["expr", "TI"]], "InlineFormula"],
+ " is the expression given in the first argument to Dynamic and ",
+ Cell[BoxData[
+  StyleBox["new", "TI"]], "InlineFormula"],
+ " is the proposed new value determined by where you have dragged the slider \
+thumb. If the assignment can be done, the new value is accepted. If the \
+assignment fails, the slider will not move."
+}], "Text",
+ CellChangeTimes->{{3.6047296750486794`*^9, 3.6047297453597198`*^9}, {
+   3.604729794598072*^9, 3.6047297955513377`*^9}, {3.6047298745038204`*^9, 
+   3.6047298785511227`*^9}, 3.604844346420823*^9}],
+
+Cell["Example:", "Text",
+ CellChangeTimes->{{3.6047299407287498`*^9, 3.6047299431976833`*^9}, 
+   3.604844346420823*^9}],
+
+Cell[BoxData[
+ RowBox[{"DynamicModule", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"x", "=", "0"}], "}"}], ",", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"Slider", "[", 
+      RowBox[{"Dynamic", "[", "x", "]"}], "]"}], ",", 
+     RowBox[{"Slider", "[", 
+      RowBox[{"Dynamic", "[", 
+       RowBox[{"1", "-", "x"}], "]"}], "]"}]}], "}"}]}], "]"}]], "Input",
+ CellChangeTimes->{{3.6047299273212547`*^9, 3.604729950120116*^9}, 
+   3.604844346421824*^9}],
+
+Cell[TextData[{
+ "These two sliders move in opposite directions when you move the first one. \
+However, trying to move the second slider gives an error because you cannot \
+assign a new value to the expression ",
+ Cell[BoxData[
+  RowBox[{"1", "-", "x"}]], "InlineFormula"],
+ ".\n\:4e0b\:9762\:8fd9\:4e2a\:5f62\:5f0f",
+ "\:89e3\:51b3\:4e86\:8fd9\:4e2a\:95ee\:9898. "
+}], "Text",
+ CellChangeTimes->{
+  3.604729984283464*^9, {3.6047328066875763`*^9, 3.6047328266581817`*^9}, {
+   3.6047329551941195`*^9, 3.604732965664035*^9}, 3.604844346422825*^9}],
+
+Cell[BoxData[
+ RowBox[{"Slider", "[", 
+  RowBox[{"Dynamic", "[", 
+   RowBox[{"expr", ",", "f"}], "]"}], "]"}]], "Input",
+ CellChangeTimes->{{3.6047328482072473`*^9, 3.604732853192157*^9}, {
+   3.6047338962146378`*^9, 3.604733928436948*^9}, 3.604844346422825*^9}],
+
+Cell[TextData[{
+ "continually evaluates ",
+ Cell[BoxData[
+  StyleBox[
+   RowBox[{"f", "[", "val", "]"}], "TI"]], "InlineFormula"],
+ " during interactive changing or editing of ",
+ Cell[BoxData[
+  StyleBox["val", "TI"]], "InlineFormula"],
+ ". \:8fd9\:4e2a val \:7531 \:9f20\:6807\:5728 Slider bar \:4e0a\:7684\:70b9\
+\:51fb\:6765\:53cd\:9988."
+}], "Text",
+ CellChangeTimes->{{3.6047328599428463`*^9, 3.6047328899302125`*^9}, {
+   3.6047329430993147`*^9, 3.604733010731234*^9}, {3.604733908106639*^9, 
+   3.604733947423506*^9}, {3.604734052191639*^9, 3.6047340678337584`*^9}, 
+   3.6048443464248257`*^9}],
+
+Cell[" ", "Text",
+ Editable->False,
+ Selectable->False,
+ CellFrame->{{0, 0}, {0, 0.5}},
+ ShowCellBracket->False,
+ CellMargins->{{0, 0}, {1, 1}},
+ CellElementSpacings->{"CellMinHeight"->1},
+ CellFrameMargins->0,
+ CellFrameColor->RGBColor[0, 0, 1],
+ CellSize->{Inherited, 3},
+ CellChangeTimes->{3.6048443464378347`*^9}],
+
+Cell["\<\
+Dynamic and control constructs such as Slider carry with them the behavior of \
+dynamically displaying or changing in real time the current value of the \
+expression or variable they are linked to, wherever they occur, even in \
+expressions.\
+\>", "Text",
+ CellChangeTimes->{{3.604720688507584*^9, 3.6047207345134068`*^9}, {
+   3.6047207697046127`*^9, 3.6047208795360537`*^9}, 3.6048443464378347`*^9}],
+
+Cell[" ", "Text",
+ Editable->False,
+ Selectable->False,
+ CellFrame->{{0, 0}, {0, 0.5}},
+ ShowCellBracket->False,
+ CellMargins->{{0, 0}, {1, 1}},
+ CellElementSpacings->{"CellMinHeight"->1},
+ CellFrameMargins->0,
+ CellFrameColor->RGBColor[0, 0, 1],
+ CellSize->{Inherited, 3},
+ CellChangeTimes->{3.6048443464378347`*^9}],
+
+Cell[BoxData[
+ RowBox[{"Row", "[", 
+  RowBox[{"{", 
+   RowBox[{
+    SubscriptBox["expr", "1"], ",", 
+    SubscriptBox["expr", "2"], ",", "..."}], "}"}], "]"}]], "Input",
+ CellChangeTimes->{
+  3.60472202466164*^9, {3.604725015126459*^9, 3.604725063146428*^9}, 
+   3.6048443464378347`*^9}],
+
+Cell[TextData[{
+ "an object that formats the ",
+ Cell[BoxData[
+  FormBox[
+   SubscriptBox["expr", "i"], TraditionalForm]]],
+ " as if they appeared as successive elements arranged in a row, with no \
+extra space in between."
+}], "Text",
+ CellChangeTimes->{{3.604722018598754*^9, 3.604722021895814*^9}, {
+   3.6047250681623917`*^9, 3.6047251449039803`*^9}, 3.604844346438835*^9}],
+
+Cell[" ", "Text",
+ Editable->False,
+ Selectable->False,
+ CellFrame->{{0, 0}, {0, 0.5}},
+ ShowCellBracket->False,
+ CellMargins->{{0, 0}, {1, 1}},
+ CellElementSpacings->{"CellMinHeight"->1},
+ CellFrameMargins->0,
+ CellFrameColor->RGBColor[0, 0, 1],
+ CellSize->{Inherited, 3},
+ CellChangeTimes->{3.604844346438835*^9}],
+
+Cell[BoxData[
+ RowBox[{"Column", "[", 
+  RowBox[{"{", 
+   RowBox[{
+    SubscriptBox["expr", "1"], ",", 
+    SubscriptBox["expr", "2"], ",", "..."}], "}"}], "]"}]], "Input",
+ CellChangeTimes->{{3.6047254065529237`*^9, 3.604725417867455*^9}, 
+   3.604844346438835*^9}],
+
+Cell[TextData[{
+ "an object that formats with the ",
+ Cell[BoxData[
+  FormBox[
+   SubscriptBox["expr", "i"], TraditionalForm]]],
+ " arranged in a column, with ",
+ Cell[BoxData[
+  FormBox[
+   SubscriptBox["expr", "1"], TraditionalForm]]],
+ " above ",
+ Cell[BoxData[
+  FormBox[
+   SubscriptBox["expr", "2"], TraditionalForm]]],
+ ", etc."
+}], "Text",
+ CellChangeTimes->{{3.6047254246336265`*^9, 3.6047254854825196`*^9}, 
+   3.604844346438835*^9}],
+
+Cell[" ", "Text",
+ Editable->False,
+ Selectable->False,
+ CellFrame->{{0, 0}, {0, 0.5}},
+ ShowCellBracket->False,
+ CellMargins->{{0, 0}, {1, 1}},
+ CellElementSpacings->{"CellMinHeight"->1},
+ CellFrameMargins->0,
+ CellFrameColor->RGBColor[0, 0, 1],
+ CellSize->{Inherited, 3},
+ CellChangeTimes->{3.604844346439836*^9}],
+
+Cell[BoxData[
+ RowBox[{"Panel", "[", "expr", "]"}]], "Input",
+ CellChangeTimes->{{3.604725668071*^9, 3.6047256749935484`*^9}, 
+   3.604844346439836*^9}],
+
+Cell["displays a panel containing expr.", "Text",
+ CellChangeTimes->{{3.604725684603757*^9, 3.6047256977612743`*^9}, 
+   3.604844346439836*^9}],
+
+Cell[" ", "Text",
+ Editable->False,
+ Selectable->False,
+ CellFrame->{{0, 0}, {0, 0.5}},
+ ShowCellBracket->False,
+ CellMargins->{{0, 0}, {1, 1}},
+ CellElementSpacings->{"CellMinHeight"->1},
+ CellFrameMargins->0,
+ CellFrameColor->RGBColor[0, 0, 1],
+ CellSize->{Inherited, 3},
+ CellChangeTimes->{3.604844346439836*^9}],
+
+Cell["\<\
+Manipulate in fact produces a combination of Dynamic, controls(e.g. Slider), \
+and formatting constructs(e.g. Panel, Column, Row, ...), not fundamentally \
+different from what you can do using these lower-level functions.\
+\>", "Text",
+ CellChangeTimes->{{3.6047267954087954`*^9, 3.604726980904334*^9}, 
+   3.604844346439836*^9}],
+
+Cell[" ", "Text",
+ Editable->False,
+ Selectable->False,
+ CellFrame->{{0, 0}, {0, 0.5}},
+ ShowCellBracket->False,
+ CellMargins->{{0, 0}, {1, 1}},
+ CellElementSpacings->{"CellMinHeight"->1},
+ CellFrameMargins->0,
+ CellFrameColor->RGBColor[0, 0, 1],
+ CellSize->{Inherited, 3},
+ CellChangeTimes->{3.604844346439836*^9}],
+
+Cell[BoxData[
+ RowBox[{"Round", "[", "x", "]"}]], "Input",
+ CellChangeTimes->{{3.604731640614217*^9, 3.6047316430832043`*^9}, {
+   3.6047917791111155`*^9, 3.6047917813055716`*^9}, 3.604844346439836*^9}],
+
+Cell["give the integer closest to x.", "Text",
+ CellChangeTimes->{{3.604791745124591*^9, 3.604791776944682*^9}, 
+   3.604844346439836*^9}],
+
+Cell[" ", "Text",
+ Editable->False,
+ Selectable->False,
+ CellFrame->{{0, 0}, {0, 0.5}},
+ ShowCellBracket->False,
+ CellMargins->{{0, 0}, {1, 1}},
+ CellElementSpacings->{"CellMinHeight"->1},
+ CellFrameMargins->0,
+ CellFrameColor->RGBColor[0, 0, 1],
+ CellSize->{Inherited, 3},
+ CellChangeTimes->{3.604844346440836*^9}],
+
+Cell[BoxData[
+ RowBox[{"Rationalize", "[", "x", "]"}]], "Input",
+ CellChangeTimes->{{3.6047317130352507`*^9, 3.6047317220673137`*^9}, {
+   3.604791784800888*^9, 3.604791788427293*^9}, 3.604844346440836*^9}],
+
+Cell["\<\
+converts an approximate number x to a nearby rational with small denominator.\
+\>", "Text",
+ CellChangeTimes->{{3.6047918479087152`*^9, 3.604791876871913*^9}, 
+   3.6048443464498444`*^9}],
+
+Cell[" ", "Text",
+ Editable->False,
+ Selectable->False,
+ CellFrame->{{0, 0}, {0, 0.5}},
+ ShowCellBracket->False,
+ CellMargins->{{0, 0}, {1, 1}},
+ CellElementSpacings->{"CellMinHeight"->1},
+ CellFrameMargins->0,
+ CellFrameColor->RGBColor[0, 0, 1],
+ CellSize->{Inherited, 3},
+ CellChangeTimes->{3.6048443464498444`*^9}],
+
+Cell[BoxData[
+ RowBox[{"LinearSolve", "[", 
+  RowBox[{"A", ",", "b"}], "]"}]], "Input",
+ CellChangeTimes->{{3.6047481305320835`*^9, 3.604748132610649*^9}, {
+   3.6047918864102354`*^9, 3.6047919061233034`*^9}, 3.6048443464498444`*^9}],
+
+Cell["finds an x that solves the matrix equation m.x==b.", "Text",
+ CellChangeTimes->{{3.604791914788045*^9, 3.604791947642304*^9}, 
+   3.6048443464498444`*^9}],
+
+Cell[BoxData[
+ RowBox[{"LinearSolve", "[", "m", "]"}]], "Input",
+ CellChangeTimes->{{3.60479195267364*^9, 3.6047919650838656`*^9}, 
+   3.6048443464498444`*^9}],
+
+Cell["\<\
+generates a LinearSolveFunction[dimensions,data] which is a function Head \
+that can be applied to different b.
+LinearSolveFunction[...] works similar to Function[...].
+Thus, LinearSolve[m,b] is equivalent to LinearSolve[m][b].\
+\>", "Text",
+ CellChangeTimes->{{3.6047919705634975`*^9, 3.60479216564143*^9}, {
+   3.6047922265758185`*^9, 3.6047922953033557`*^9}, {3.604792361319107*^9, 
+   3.6047923959860854`*^9}, 3.604844346450842*^9}],
+
+Cell[" ", "Text",
+ Editable->False,
+ Selectable->False,
+ CellFrame->{{0, 0}, {0, 0.5}},
+ ShowCellBracket->False,
+ CellMargins->{{0, 0}, {1, 1}},
+ CellElementSpacings->{"CellMinHeight"->1},
+ CellFrameMargins->0,
+ CellFrameColor->RGBColor[0, 0, 1],
+ CellSize->{Inherited, 3},
+ CellChangeTimes->{3.604844346450842*^9}],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"Flatten", "[", "expr", "]"}], " "}]], "Input",
+ CellChangeTimes->{{3.6047495422702208`*^9, 3.6047495752262487`*^9}, {
+   3.604792990991027*^9, 3.604792991156136*^9}, 3.604844346462853*^9}],
+
+Cell["\<\
+\:8bc6\:522b expr \:4e2d\:4ece level 1 \:5f00\:59cb, \:5411\:4e0b\:8fde\:7eed\
+\:5730\:5177\:6709\:4e0e expr \:76f8\:540c head \:7684 subexpression. \:5c06\
+\:6240\:8bc6\:522b\:5230\:7684\:6240\:6709 head \:62b9\:53bb, \:5c06\:6700\
+\:91cc\:5c42\:7684 args \:63d0\:5347\:81f3 \:7b2c1\:5c42.   \
+\>", "Text",
+ CellChangeTimes->{
+  3.6047495802580957`*^9, {3.6047930488005357`*^9, 3.6047931799664736`*^9}, {
+   3.604793211656884*^9, 3.6047933071782*^9}, {3.6047933476089964`*^9, 
+   3.6047933951034765`*^9}, 3.6048443464648523`*^9}],
+
+Cell[BoxData[
+ RowBox[{"Flatten", "[", 
+  RowBox[{"expr", ",", "1"}], "]"}]], "Input",
+ CellChangeTimes->{{3.604793000638421*^9, 3.604793009593545*^9}, 
+   3.6048443464658527`*^9}],
+
+Cell["\:53ea\:5bf9 expr \
+\:7684\:7b2c\:4e00\:5c42\:8fdb\:884c\:8bc6\:522b\:548c\:62b9\:9664.", "Text",
+ CellChangeTimes->{{3.6047934354892454`*^9, 3.6047934974923425`*^9}, 
+   3.604844346474859*^9}],
+
+Cell[BoxData[
+ RowBox[{"Flatten", "[", 
+  RowBox[{"expr", ",", "n"}], "]"}]], "Input",
+ CellChangeTimes->{{3.604793014914072*^9, 3.6047930198573484`*^9}, 
+   3.604844346481866*^9}],
+
+Cell["\:5bf9 expr \:7684\:4ece 1-n \:5c42\:8fdb\:884c\:8bc6\:522b\:548c\:62b9\
+\:9664.", "Text",
+ CellChangeTimes->{{3.604793503763499*^9, 3.604793527332121*^9}, 
+   3.6048443464828644`*^9}],
+
+Cell[" ", "Text",
+ Editable->False,
+ Selectable->False,
+ CellFrame->{{0, 0}, {0, 0.5}},
+ ShowCellBracket->False,
+ CellMargins->{{0, 0}, {1, 1}},
+ CellElementSpacings->{"CellMinHeight"->1},
+ CellFrameMargins->0,
+ CellFrameColor->RGBColor[0, 0, 1],
+ CellSize->{Inherited, 3},
+ CellChangeTimes->{3.6048443464828644`*^9}],
+
+Cell[BoxData[
+ RowBox[{"Switch", "[", 
+  RowBox[{"expr", ",", 
+   SubscriptBox["form", "1"], ",", 
+   SubscriptBox["value", "1"], ",", 
+   SubscriptBox["form", "2"], ",", 
+   SubscriptBox["value", "2"], ",", "..."}], "]"}]], "Input",
+ CellChangeTimes->{{3.6047972740895653`*^9, 3.604797301186062*^9}, 
+   3.6048443464828644`*^9}],
+
+Cell[TextData[{
+ "evaluates expr, compares the result with ",
+ Cell[BoxData[
+  FormBox[
+   SubscriptBox["form", "1"], TraditionalForm]]],
+ ", ",
+ Cell[BoxData[
+  FormBox[
+   SubscriptBox["form", "2"], TraditionalForm]]],
+ ",... in turn. Find the first match and evaluates  ",
+ Cell[BoxData[
+  FormBox[
+   SubscriptBox["value", "i"], TraditionalForm]]],
+ " corresponding to ",
+ Cell[BoxData[
+  FormBox[
+   SubscriptBox["form", "i"], TraditionalForm]]],
+ "."
+}], "Text",
+ CellChangeTimes->{{3.60474985785515*^9, 3.6047498594177914`*^9}, {
+   3.6047939402278104`*^9, 3.6047939521216917`*^9}, 3.6047971513811693`*^9, {
+   3.604797306577035*^9, 3.6047974720521455`*^9}, 3.6048443464838653`*^9}],
+
+Cell[" ", "Text",
+ Editable->False,
+ Selectable->False,
+ CellFrame->{{0, 0}, {0, 0.5}},
+ ShowCellBracket->False,
+ CellMargins->{{0, 0}, {1, 1}},
+ CellElementSpacings->{"CellMinHeight"->1},
+ CellFrameMargins->0,
+ CellFrameColor->RGBColor[0, 0, 1],
+ CellSize->{Inherited, 3},
+ CellChangeTimes->{3.6048443464838653`*^9}],
+
+Cell[" ", "Text",
+ Editable->False,
+ Selectable->False,
+ CellFrame->{{0, 0}, {0, 0.5}},
+ ShowCellBracket->False,
+ CellMargins->{{0, 0}, {1, 1}},
+ CellElementSpacings->{"CellMinHeight"->1},
+ CellFrameMargins->0,
+ CellFrameColor->RGBColor[0, 0, 1],
+ CellSize->{Inherited, 3},
+ CellChangeTimes->{3.6048443464838653`*^9}],
+
+Cell["\[OpenCurlyDoubleQuote]:=\[CloseCurlyDoubleQuote] \:4e0e \
+\[OpenCurlyDoubleQuote]=\[CloseCurlyDoubleQuote] \:7684\:533a\:522b (p311)", \
+"Text",
+ CellChangeTimes->{{3.604793900828424*^9, 3.604793917587802*^9}, {
+   3.6047947153375635`*^9, 3.6047947185436873`*^9}, {3.604795418872693*^9, 
+   3.604795455030659*^9}, 3.604844346484866*^9}],
+
+Cell["\<\
+\:5bf9\:4e8e :=, \:5b9a\:4e49\:65f6\:4e0d\:8ba1\:7b97 ,\:6bcf\:6b21\:9047\
+\:5230 lhs \:90fd\:4f1a\:91cd\:65b0\:8ba1\:7b97 rhs. \:5bf9\:4e8e = , \:5219\
+\:662f\:5728\:5b9a\:4e49\:65f6\:4e00\:6b21\:6027\:8ba1\:7b97, \:4e4b\:540e\
+\:53ea\:66ff\:6362\:800c\:4e0d\:8ba1\:7b97.
+\:9700\:8981\:5bf9\:8fd9\:4e24\:8005\:4f5c\:51fa\:533a\:522b\:662f\:56e0\:4e3a:
+\:5f88\:591a\:8fd0\:7b97\:4e0d\:662f\:7b80\:5355\:5730\:5728\:4e00\:822c\:6027\
+\:7684\:7ed3\:8bba\:4e2d\:505a\:53d8\:91cf\:66ff\:6362\:6765\:5f97\:5230\:5177\
+\:4f53\:7ed3\:679c, \:6216\:8005\:662f\:6839\:672c\:65e0\:6cd5\:76f4\:63a5\
+\:5f97\:5230\:4e00\:822c\:6027\:7684\:8ba1\:7b97\:7ed3\:679c. \:56e0\:6b64\
+\:4e0d\:80fd\:5728\:5b9a\:4e49\:65f6\:5c31\:8ba1\:7b97\:53f3\:7aef rhs, \
+\:5fc5\:987b\:7b49\:9047\:5230\:5177\:4f53\:503c\:65f6\:518d\:8ba1\:7b97.
+\:6240\:4ee5, \:5982\:679c\:4e00\:4e2a\:5b9a\:4e49\:5177\:6709\:8fd9\:6837\
+\:7684\:6027\:8d28, \:5219\:9700\:8981\:7528 \[CloseCurlyDoubleQuote]:\
+\[CloseCurlyDoubleQuote] \:6765\:63a8\:8fdf\:8ba1\:7b97; \:5982\:679c\:4e00\
+\:4e2a\:5b9a\:4e49\:53ea\:662f\:7b80\:5355\:5730\:5bf9\:901a\:7528\:7ed3\:679c\
+\:505a\:66ff\:6362, \:5219\:7528 \[CloseCurlyDoubleQuote]=\
+\[CloseCurlyDoubleQuote] \:5373\:53ef.
+\:5728\:4e00\:4e2a\:8868\:8fbe\:5f0f\:4e2d\:53ef\:4ee5\:6709\:591a\:4e2a\:66ff\
+\:6362, \:81ea\:7136\:4e5f\:53ef\:80fd\:51fa\:73b0\:4e0a\:8ff0\:60c5\:51b5, \
+\:6240\:4ee5\:5bf9\:5e94\:5730\:6709 \[OpenCurlyDoubleQuote]->\
+\[CloseCurlyDoubleQuote] \:4e0e \[OpenCurlyDoubleQuote]:->\
+\[CloseCurlyDoubleQuote] \:7684\:533a\:5206.\
+\>", "Text",
+ CellChangeTimes->{
+  3.6047954415317135`*^9, {3.6047981376348886`*^9, 3.604798260966914*^9}, {
+   3.60479832116014*^9, 3.6047983849162836`*^9}, {3.6048422638011203`*^9, 
+   3.604842264261422*^9}, {3.6048426127883434`*^9, 3.6048426154931355`*^9}, 
+   3.604844346497873*^9}],
+
+Cell[" ", "Text",
+ Editable->False,
+ Selectable->False,
+ CellFrame->{{0, 0}, {0, 0.5}},
+ ShowCellBracket->False,
+ CellMargins->{{0, 0}, {1, 1}},
+ CellElementSpacings->{"CellMinHeight"->1},
+ CellFrameMargins->0,
+ CellFrameColor->RGBColor[0, 0, 1],
+ CellSize->{Inherited, 3},
+ CellChangeTimes->{3.6048443464988737`*^9}],
+
+Cell[BoxData[{"ListPlot3D", "\[IndentingNewLine]", "ListContourPlot"}], \
+"Input",
+ CellChangeTimes->{{3.604798648832158*^9, 3.604798669834095*^9}, 
+   3.6048443464988737`*^9}],
+
+Cell[" ", "Text",
+ Editable->False,
+ Selectable->False,
+ CellFrame->{{0, 0}, {0, 0.5}},
+ ShowCellBracket->False,
+ CellMargins->{{0, 0}, {1, 1}},
+ CellElementSpacings->{"CellMinHeight"->1},
+ CellFrameMargins->0,
+ CellFrameColor->RGBColor[0, 0, 1],
+ CellSize->{Inherited, 3},
+ CellChangeTimes->{3.6048443464988737`*^9}],
+
+Cell[BoxData["Manipulate"], "Input",
+ CellChangeTimes->{{3.60479891316132*^9, 3.6047989147239122`*^9}, 
+   3.6048443464988737`*^9}],
+
+Cell[TextData[{
+ Cell[BoxData[
+  RowBox[{"{", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{
+      StyleBox["u", "TI"], ",", 
+      StyleBox["\[Ellipsis]", "TR"]}], "}"}], ",", 
+    StyleBox["\[Ellipsis]", "TR"], ",", 
+    StyleBox["opts", "TI"]}], "}"}]], "2ColumnTableMod",
+  GridBoxOptions->{
+  GridBoxBackground->{
+   "Columns" -> {{None}}, "ColumnsIndexed" -> {}, 
+    "Rows" -> {
+     None, None, None, None, None, None, None, None, None, None, None, None, 
+      None, None, None, {None}}, "RowsIndexed" -> {}},
+  GridBoxDividers->{
+   "Rows" -> {{
+      True, True, True, True, True, True, True, True, True, True, True, True, 
+       True, True, True, True, True}}}}],
+ " \ncontrol with particular options. \:4f8b\:5982:\n{{a,8,Style[\
+\[OpenCurlyDoubleQuote]a\[CloseCurlyDoubleQuote],Italic]},2,10,0.01,\
+Appearance\[Rule] \[OpenCurlyDoubleQuote]Labeled\[CloseCurlyDoubleQuote]}"
+}], "Text",
+ CellChangeTimes->{
+  3.604798917989912*^9, {3.604798964720471*^9, 3.6047989907709494`*^9}, {
+   3.604799055199292*^9, 3.6047990841446176`*^9}, 3.604844346499875*^9}],
+
+Cell[TextData[{
+ Cell[BoxData[
+  RowBox[{"{", 
+   RowBox[{
+    StyleBox["u", "TI"], ",", 
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{
+       SubscriptBox[
+        StyleBox["u", "TI"], 
+        StyleBox["1", "TR"]], "->", 
+       SubscriptBox[
+        StyleBox["lbl", "TI"], 
+        StyleBox["1", "TR"]]}], ",", 
+      RowBox[{
+       SubscriptBox[
+        StyleBox["u", "TI"], 
+        StyleBox["2", "TR"]], "->", 
+       SubscriptBox[
+        StyleBox["lbl", "TI"], 
+        StyleBox["2", "TR"]]}], ",", 
+      StyleBox["\[Ellipsis]", "TR"]}], "}"}]}], "}"}]], "2ColumnTableMod",
+  GridBoxOptions->{
+  GridBoxBackground->{
+   "Columns" -> {{None}}, "ColumnsIndexed" -> {}, 
+    "Rows" -> {
+     None, None, None, None, None, None, None, None, None, None, None, None, 
+      None, None, None, {None}}, "RowsIndexed" -> {}},
+  GridBoxDividers->{
+   "Rows" -> {{
+      True, True, True, True, True, True, True, True, True, True, True, True, 
+       True, True, True, True, True}}}}],
+ "\nsetter bar or popup menu with labels for elements. \:4f8b\:5982:\n",
+ "{{ctrl,1,\[CloseCurlyDoubleQuote]\[CloseCurlyDoubleQuote]},{1\[Rule] \
+\[OpenCurlyDoubleQuote]3D plot\[CloseCurlyDoubleQuote],2\[Rule] \
+\[OpenCurlyDoubleQuote]contour plot\[CloseCurlyDoubleQuote]}}"
+}], "Text",
+ CellChangeTimes->{{3.604799085847934*^9, 3.6047991225388703`*^9}, 
+   3.6048443465008755`*^9}],
+
+Cell[" ", "Text",
+ Editable->False,
+ Selectable->False,
+ CellFrame->{{0, 0}, {0, 0.5}},
+ ShowCellBracket->False,
+ CellMargins->{{0, 0}, {1, 1}},
+ CellElementSpacings->{"CellMinHeight"->1},
+ CellFrameMargins->0,
+ CellFrameColor->RGBColor[0, 0, 1],
+ CellSize->{Inherited, 3},
+ CellChangeTimes->{3.604844346501876*^9}],
+
+Cell[TextData[{
+ "TrackedSymbols\nan option to Refresh, Manipulate and related functions that \
+specifies which symbols should trigger updates when their values are changed.\
+\n",
+ "When a list of symbols is given, the typical usage is ",
+ Cell[BoxData[
+  RowBox[{"TrackedSymbols", ":>", 
+   RowBox[{"{", 
+    RowBox[{
+     StyleBox["x", "TI"], ",", 
+     StyleBox["y", "TI"], ",", 
+     StyleBox["z", "TI"], ",", 
+     StyleBox["\[Ellipsis]", "TR"]}], "}"}]}]], "InlineFormula"],
+ "."
+}], "Text",
+ CellChangeTimes->{{3.604799142595108*^9, 3.6047991476269712`*^9}, {
+   3.604799210429821*^9, 3.6047992432298093`*^9}, {3.6047992893747177`*^9, 
+   3.6047992895778675`*^9}, 3.604844346501876*^9}],
+
+Cell[TextData[{
+ "Initialization\nan option for Dynamic, DynamicModule, Manipulate and \
+related constructs that specifies an expression to be evaluated when the \
+construct is first displayed.\nThe typical usage is \n",
+ Cell[BoxData[
+  RowBox[{"Initialization", ":>", 
+   StyleBox["expr", "TI"]}]], "InlineFormula"]
+}], "Text",
+ CellChangeTimes->{{3.6048025231032915`*^9, 3.6048025263624516`*^9}, 
+   3.604802556446392*^9, {3.6048026330001326`*^9, 3.6048027224488535`*^9}, 
+   3.6048443465028768`*^9}],
+
+Cell["\<\
+\:5bf9\:4e8e TrackedSymbol \:548c Initialization, \:8981\:7528 \
+\[OpenCurlyDoubleQuote]:>\[CloseCurlyDoubleQuote] \:7684\:539f\:56e0:
+\:8fd9\:4e24\:4e2a\:9009\:9879\:76ee\:7684\:662f\:4fdd\:8bc1\:52a8\:6001\:5355\
+\:5143\:6bcf\:6b21\:663e\:793a\:65f6\:90fd\:6709\:4e00\:4e2a\:56fa\:5b9a\:7684\
+\:521d\:59cb\:72b6\:6001, \:56e0\:6b64\:5b83\:4eec\:7684\:503c\:5e94\:8be5\
+\:63a8\:8fdf\:5230\:52a8\:6001\:7ed3\:6784\:663e\:793a\:7684\:65f6\:5019\:6267\
+\:884c, \:5e76\:4e14\:4e00\:65e6\:8fd9\:4e2a\:52a8\:6001\:7ed3\:6784\:91cd\
+\:65b0\:663e\:793a\:5c31\:8981\:6267\:884c(\:6bd4\:5982\:663e\:793a\:8f93\
+\:51fa\:65f6, \:6253\:5f00notebook\:65f6, copy&paste\:81f3\:65b0\:4f4d\:7f6e\
+\:540e). \:4e3a\:4e86\:63a8\:8fdf\:8d4b\:503c, \:9700\:8981 \
+\[OpenCurlyDoubleQuote]:>\[CloseCurlyDoubleQuote] .
+\:8bbe\:60f3\:91c7\:7528 \[CloseCurlyDoubleQuote]->\[CloseCurlyDoubleQuote] , \
+\:5219\:8d4b\:503c\:66ff\:6362\:4f1a\:5728\:8f93\:5165\:81f3 kernel \:540e\
+\:5c31\:6267\:884c, \:4ee5\:540e\:4e0d\:518d\:6539\:53d8, \:8fd9\:5c31\:8fbe\
+\:4e0d\:5230\:6bcf\:6b21\:521d\:59cb\:5316\:7684\:76ee\:7684.\
+\>", "Text",
+ CellChangeTimes->{{3.6048027590260983`*^9, 3.6048028319104047`*^9}, {
+   3.6048029042112703`*^9, 3.6048030130534143`*^9}, {3.604803051303336*^9, 
+   3.6048033591507106`*^9}, {3.6048033940998755`*^9, 
+   3.6048034071084967`*^9}, {3.6048034431505156`*^9, 
+   3.6048035192789745`*^9}, {3.6048035752370644`*^9, 3.604803588475627*^9}, {
+   3.6048036445598335`*^9, 3.604803699447215*^9}, {3.6048037587525225`*^9, 
+   3.60480394782427*^9}, 3.6048443465128827`*^9}],
+
+Cell[" ", "Text",
+ Editable->False,
+ Selectable->False,
+ CellFrame->{{0, 0}, {0, 3}},
+ ShowCellBracket->False,
+ CellMargins->{{0, 0}, {1, 1}},
+ CellElementSpacings->{"CellMinHeight"->1},
+ CellFrameMargins->0,
+ CellFrameColor->RGBColor[0, 0, 1],
+ CellSize->{Inherited, 5}],
+
+Cell[BoxData[
+ RowBox[{"Clear", "[", "\"\<Global`*\>\"", "]"}]], "Input"],
+
+Cell["\<\
+This command clears all the definitions made during the current Mathematica \
+session.\
+\>", "Text",
+ CellChangeTimes->{{3.605568891561767*^9, 3.605568895523399*^9}}],
+
+Cell[" ", "Text",
+ Editable->False,
+ Selectable->False,
+ CellFrame->{{0, 0}, {0, 0.5}},
+ ShowCellBracket->False,
+ CellMargins->{{0, 0}, {1, 1}},
+ CellElementSpacings->{"CellMinHeight"->1},
+ CellFrameMargins->0,
+ CellFrameColor->RGBColor[0, 0, 1],
+ CellSize->{Inherited, 3}],
+
+Cell[BoxData[
+ RowBox[{"Quiet", "[", "expr", "]"}]], "Input",
+ CellChangeTimes->{{3.6059253476775985`*^9, 3.605925372023667*^9}}],
+
+Cell["\<\
+evaluates expr quietly, without actually outputting any messages generated.\
+\>", "Text",
+ CellChangeTimes->{{3.605925379305572*^9, 3.605925419137595*^9}}],
+
+Cell[" ", "Text",
+ Editable->False,
+ Selectable->False,
+ CellFrame->{{0, 0}, {0, 0.5}},
+ ShowCellBracket->False,
+ CellMargins->{{0, 0}, {1, 1}},
+ CellElementSpacings->{"CellMinHeight"->1},
+ CellFrameMargins->0,
+ CellFrameColor->RGBColor[0, 0, 1],
+ CellSize->{Inherited, 3}],
+
+Cell[BoxData[
+ RowBox[{"Transpose", "[", "list", "]"}]], "Input",
+ CellChangeTimes->{{3.6067022137106705`*^9, 3.606702219508116*^9}, {
+  3.6067032208141975`*^9, 3.606703221267327*^9}}],
+
+Cell[" ", "Text",
+ Editable->False,
+ Selectable->False,
+ CellFrame->{{0, 0}, {0, 0.5}},
+ ShowCellBracket->False,
+ CellMargins->{{0, 0}, {1, 1}},
+ CellElementSpacings->{"CellMinHeight"->1},
+ CellFrameMargins->0,
+ CellFrameColor->RGBColor[0, 0, 1],
+ CellSize->{Inherited, 3}],
+
+Cell["\:5c06 {a,b,c} \:4e0e {d,e,f} \:5408\:5e76\:4e3a {{a,d},{b,e},{c,f}} \
+\:7684\:65b9\:6cd5:", "Text",
+ CellChangeTimes->{{3.606731948982115*^9, 3.6067320421224537`*^9}, {
+  3.60673207465103*^9, 3.6067320783084536`*^9}}],
+
+Cell["\:65b9\:6cd51:", "Text",
+ CellChangeTimes->{{3.6067320902343645`*^9, 3.6067320915272217`*^9}}],
+
+Cell[BoxData[
+ RowBox[{"Transpose", "[", 
+  RowBox[{"{", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{"a", ",", "b", ",", "c"}], "}"}], ",", 
+    RowBox[{"{", 
+     RowBox[{"d", ",", "e", ",", "f"}], "}"}]}], "}"}], "]"}]], "Input",
+ CellChangeTimes->{{3.606732053853236*^9, 3.606732066675741*^9}}],
+
+Cell["\:65b9\:6cd52:", "Text",
+ CellChangeTimes->{{3.606732095999187*^9, 3.6067320969017878`*^9}}],
+
+Cell[BoxData[
+ RowBox[{"Partition", "[", 
+  RowBox[{
+   RowBox[{"Riffle", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{"a", ",", "b", ",", "c"}], "}"}], ",", 
+     RowBox[{"{", 
+      RowBox[{"d", ",", "e", ",", "f"}], "}"}]}], "]"}], ",", "2"}], 
+  "]"}]], "Input",
+ CellChangeTimes->{{3.6067321062880116`*^9, 3.60673213002876*^9}}],
+
+Cell["\:65b9\:6cd53:", "Text",
+ CellChangeTimes->{{3.606732095999187*^9, 3.6067320969017878`*^9}, {
+  3.606735107707894*^9, 3.6067351081291733`*^9}}],
+
+Cell[BoxData[
+ RowBox[{"Thread", "[", 
+  RowBox[{"{", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{"a", ",", "b", ",", "c"}], "}"}], ",", 
+    RowBox[{"{", 
+     RowBox[{"d", ",", "e", ",", "f"}], "}"}]}], "}"}], "]"}]], "Input",
+ CellChangeTimes->{{3.606735111847641*^9, 3.6067351299656563`*^9}}],
+
+Cell[" ", "Text",
+ Editable->False,
+ Selectable->False,
+ CellFrame->{{0, 0}, {0, 3}},
+ ShowCellBracket->False,
+ CellMargins->{{0, 0}, {1, 1}},
+ CellElementSpacings->{"CellMinHeight"->1},
+ CellFrameMargins->0,
+ CellFrameColor->RGBColor[0, 0, 1],
+ CellSize->{Inherited, 5}],
+
+Cell[BoxData["Do"], "Input",
+ CellChangeTimes->{{3.6075693213414187`*^9, 3.607569321578577*^9}}],
+
+Cell[" ", "Text",
+ Editable->False,
+ Selectable->False,
+ CellFrame->{{0, 0}, {0, 0.5}},
+ ShowCellBracket->False,
+ CellMargins->{{0, 0}, {1, 1}},
+ CellElementSpacings->{"CellMinHeight"->1},
+ CellFrameMargins->0,
+ CellFrameColor->RGBColor[0, 0, 1],
+ CellSize->{Inherited, 3}],
+
+Cell[BoxData["While"], "Input",
+ CellChangeTimes->{{3.607569335996134*^9, 3.6075693365675116`*^9}}],
+
+Cell[" ", "Text",
+ Editable->False,
+ Selectable->False,
+ CellFrame->{{0, 0}, {0, 0.5}},
+ ShowCellBracket->False,
+ CellMargins->{{0, 0}, {1, 1}},
+ CellElementSpacings->{"CellMinHeight"->1},
+ CellFrameMargins->0,
+ CellFrameColor->RGBColor[0, 0, 1],
+ CellSize->{Inherited, 3}],
+
+Cell["\<\
+\:907f\:514d\:4f7f\:7528 For loop:
+\:7528 Do \:6765\:4ee3\:66ff\:53ea\:662f\:9700\:8981\:8fd0\:884c\:4e00\:5b9a\
+\:6b21\:6570\:7684\:6216\:53ea\:9700\:8981\:4ece m \:8fd0\:884c\:81f3 n \
+\:7684 For loop. Do loop \:6bd4 For loop \:9ad8\:6548, \:5e76\:4e14\:8bed\
+\:6cd5\:66f4\:6e05\:6670.
+\:7528 While \:6765\:4ee3\:66ff\:9700\:8981\:8fdb\:884c\:5224\:65ad\:7684 For \
+loop.\
+\>", "Text",
+ CellChangeTimes->{{3.6075702989524546`*^9, 3.607570388161581*^9}, {
+  3.607570612956497*^9, 3.607570731030761*^9}, {3.6075717024007125`*^9, 
+  3.607571724448328*^9}, {3.6075718232067876`*^9, 3.607571979789706*^9}}],
+
+Cell[" ", "Text",
+ Editable->False,
+ Selectable->False,
+ CellFrame->{{0, 0}, {0, 0.5}},
+ ShowCellBracket->False,
+ CellMargins->{{0, 0}, {1, 1}},
+ CellElementSpacings->{"CellMinHeight"->1},
+ CellFrameMargins->0,
+ CellFrameColor->RGBColor[0, 0, 1],
+ CellSize->{Inherited, 3}],
+
+Cell[BoxData["SparseArray"], "Input",
+ CellChangeTimes->{{3.6084280186484523`*^9, 3.608428018649452*^9}}],
+
+Cell[" ", "Text",
+ Editable->False,
+ Selectable->False,
+ CellFrame->{{0, 0}, {0, 0.5}},
+ ShowCellBracket->False,
+ CellMargins->{{0, 0}, {1, 1}},
+ CellElementSpacings->{"CellMinHeight"->1},
+ CellFrameMargins->0,
+ CellFrameColor->RGBColor[0, 0, 1],
+ CellSize->{Inherited, 3}],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"Export", "[", 
+   RowBox[{"\"\<file.mc\>\"", ",", 
+    RowBox[{"Compress", "[", "data", "]"}], ",", "\"\<String\>\""}], "]"}], 
+  ";"}]], "Input",
+ CellChangeTimes->{{3.608463850958314*^9, 3.608463868010602*^9}}],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"Uncompress", "@", 
+   RowBox[{"Import", "[", 
+    RowBox[{"\"\<file.mc\>\"", ",", "\"\<String\>\""}], "]"}]}], 
+  ";"}]], "Input",
+ CellChangeTimes->{{3.608463874092631*^9, 3.608463877024569*^9}}],
+
+Cell[" ", "Text",
+ Editable->False,
+ Selectable->False,
+ CellFrame->{{0, 0}, {0, 0.5}},
+ ShowCellBracket->False,
+ CellMargins->{{0, 0}, {1, 1}},
+ CellElementSpacings->{"CellMinHeight"->1},
+ CellFrameMargins->0,
+ CellFrameColor->RGBColor[0, 0, 1],
+ CellSize->{Inherited, 3}],
+
+Cell[BoxData["Polygon"], "Input",
+ CellChangeTimes->{{3.609468397546896*^9, 3.6094683988947887`*^9}}],
+
+Cell[" ", "Text",
+ Editable->False,
+ Selectable->False,
+ CellFrame->{{0, 0}, {0, 3}},
+ ShowCellBracket->False,
+ CellMargins->{{0, 0}, {1, 1}},
+ CellElementSpacings->{"CellMinHeight"->1},
+ CellFrameMargins->0,
+ CellFrameColor->RGBColor[0, 0, 1],
+ CellSize->{Inherited, 5}],
+
+Cell[" ", "Text",
+ Editable->False,
+ Selectable->False,
+ CellFrame->{{0, 0}, {0, 0.5}},
+ ShowCellBracket->False,
+ CellMargins->{{0, 0}, {1, 1}},
+ CellElementSpacings->{"CellMinHeight"->1},
+ CellFrameMargins->0,
+ CellFrameColor->RGBColor[0, 0, 1],
+ CellSize->{Inherited, 3}]
+},
+WindowSize->{929, 541},
+WindowMargins->{{187, Automatic}, {Automatic, 14}},
+FrontEndVersion->"10.0 for Microsoft Windows (64-bit) (September 9, 2014)",
+StyleDefinitions->Notebook[{
+   Cell[
+    StyleData[StyleDefinitions -> "Default.nb"]], 
+   Cell[
+    StyleData["Text"], FontFamily -> "Microsoft YaHei UI", FontSize -> 12]}, 
+  Visible -> False, FrontEndVersion -> 
+  "10.0 for Microsoft Windows (64-bit) (September 9, 2014)", StyleDefinitions -> 
+  "PrivateStylesheetFormatting.nb"]
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[557, 20, 1807, 31, 204, "Text"],
+Cell[2367, 53, 317, 10, 7, "Text"],
+Cell[2687, 65, 249, 6, 36, "Input"],
+Cell[2939, 73, 1606, 25, 180, "Text"],
+Cell[4548, 100, 352, 11, 36, "Input"],
+Cell[4903, 113, 181, 3, 37, "Text"],
+Cell[5087, 118, 315, 10, 7, "Text"],
+Cell[5405, 130, 151, 3, 36, "Input"],
+Cell[5559, 135, 188, 2, 37, "Text"],
+Cell[5750, 139, 311, 9, 36, "Input"],
+Cell[6064, 150, 161, 2, 37, "Text"],
+Cell[6228, 154, 185, 4, 36, "Input"],
+Cell[6416, 160, 932, 14, 61, "Text"],
+Cell[7351, 176, 1057, 22, 133, "Text"],
+Cell[8411, 200, 120, 2, 37, "Text"],
+Cell[8534, 204, 457, 13, 36, "Input"],
+Cell[8994, 219, 546, 11, 86, "Text"],
+Cell[9543, 232, 262, 5, 36, "Input"],
+Cell[9808, 239, 602, 14, 61, "Text"],
+Cell[10413, 255, 317, 10, 7, "Text"],
+Cell[10733, 267, 411, 7, 85, "Text"],
+Cell[11147, 276, 317, 10, 7, "Text"],
+Cell[11467, 288, 287, 8, 36, "Input"],
+Cell[11757, 298, 377, 9, 63, "Text"],
+Cell[12137, 309, 315, 10, 7, "Text"],
+Cell[12455, 321, 266, 7, 36, "Input"],
+Cell[12724, 330, 443, 16, 39, "Text"],
+Cell[13170, 348, 315, 10, 7, "Text"],
+Cell[13488, 360, 152, 3, 36, "Input"],
+Cell[13643, 365, 143, 2, 37, "Text"],
+Cell[13789, 369, 315, 10, 7, "Text"],
+Cell[14107, 381, 339, 6, 61, "Text"],
+Cell[14449, 389, 315, 10, 7, "Text"],
+Cell[14767, 401, 202, 3, 36, "Input"],
+Cell[14972, 406, 138, 2, 37, "Text"],
+Cell[15113, 410, 315, 10, 7, "Text"],
+Cell[15431, 422, 206, 3, 36, "Input"],
+Cell[15640, 427, 197, 4, 37, "Text"],
+Cell[15840, 433, 317, 10, 7, "Text"],
+Cell[16160, 445, 233, 4, 36, "Input"],
+Cell[16396, 451, 160, 2, 37, "Text"],
+Cell[16559, 455, 159, 3, 36, "Input"],
+Cell[16721, 460, 446, 8, 85, "Text"],
+Cell[17170, 470, 315, 10, 7, "Text"],
+Cell[17488, 482, 223, 4, 36, "Input"],
+Cell[17714, 488, 540, 9, 61, "Text"],
+Cell[18257, 499, 180, 4, 36, "Input"],
+Cell[18440, 505, 199, 3, 37, "Text"],
+Cell[18642, 510, 180, 4, 36, "Input"],
+Cell[18825, 516, 190, 3, 37, "Text"],
+Cell[19018, 521, 317, 10, 7, "Text"],
+Cell[19338, 533, 329, 8, 36, "Input"],
+Cell[19670, 543, 689, 21, 61, "Text"],
+Cell[20362, 566, 317, 10, 7, "Text"],
+Cell[20682, 578, 317, 10, 7, "Text"],
+Cell[21002, 590, 343, 5, 37, "Text"],
+Cell[21348, 597, 1841, 28, 156, "Text"],
+Cell[23192, 627, 317, 10, 7, "Text"],
+Cell[23512, 639, 176, 3, 60, "Input"],
+Cell[23691, 644, 317, 10, 7, "Text"],
+Cell[24011, 656, 131, 2, 36, "Input"],
+Cell[24145, 660, 1065, 26, 85, "Text"],
+Cell[25213, 688, 1368, 38, 82, "Text"],
+Cell[26584, 728, 315, 10, 7, "Text"],
+Cell[26902, 740, 693, 17, 109, "Text"],
+Cell[27598, 759, 503, 10, 126, "Text"],
+Cell[28104, 771, 1572, 23, 132, "Text"],
+Cell[29679, 796, 271, 9, 13, "Text"],
+Cell[29953, 807, 73, 1, 36, "Input"],
+Cell[30029, 810, 176, 4, 37, "Text"],
+Cell[30208, 816, 273, 9, 7, "Text"],
+Cell[30484, 827, 129, 2, 36, "Input"],
+Cell[30616, 831, 165, 3, 37, "Text"],
+Cell[30784, 836, 273, 9, 7, "Text"],
+Cell[31060, 847, 184, 3, 36, "Input"],
+Cell[31247, 852, 273, 9, 7, "Text"],
+Cell[31523, 863, 224, 3, 37, "Text"],
+Cell[31750, 868, 100, 1, 37, "Text"],
+Cell[31853, 871, 297, 8, 36, "Input"],
+Cell[32153, 881, 98, 1, 37, "Text"],
+Cell[32254, 884, 340, 10, 36, "Input"],
+Cell[32597, 896, 149, 2, 37, "Text"],
+Cell[32749, 900, 296, 8, 36, "Input"],
+Cell[33048, 910, 271, 9, 13, "Text"],
+Cell[33322, 921, 96, 1, 36, "Input"],
+Cell[33421, 924, 273, 9, 7, "Text"],
+Cell[33697, 935, 99, 1, 36, "Input"],
+Cell[33799, 938, 273, 9, 7, "Text"],
+Cell[34075, 949, 613, 11, 85, "Text"],
+Cell[34691, 962, 273, 9, 7, "Text"],
+Cell[34967, 973, 105, 1, 36, "Input"],
+Cell[35075, 976, 273, 9, 7, "Text"],
+Cell[35351, 987, 247, 6, 36, "Input"],
+Cell[35601, 995, 231, 6, 36, "Input"],
+Cell[35835, 1003, 273, 9, 7, "Text"],
+Cell[36111, 1014, 101, 1, 36, "Input"],
+Cell[36215, 1017, 271, 9, 12, "Text"],
+Cell[36489, 1028, 273, 9, 6, "Text"]
+}
+]
+*)
+
+(* End of internal cache information *)

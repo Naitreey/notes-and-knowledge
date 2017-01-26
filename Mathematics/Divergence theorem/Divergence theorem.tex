@@ -1,0 +1,97 @@
+\documentclass[a4paper]{article}
+\usepackage[colorlinks]{hyperref}
+\usepackage{amsmath,esint,bm}
+\title{Divergence Theorem}
+\author{Naitree Zhu}
+\date{Last modified: \today}
+\begin{document}
+\maketitle
+In vector calculus, the Divergence theorem\footnote{For more information:\url{http://en.wikipedia.org/wiki/Divergence_theorem}}, also known as Gauss's theorem or Ostrogradsky's theorem,is a result that relates the flow (that is, flux) of a vector field through a surface to the behavior of the vector field inside the surface.
+
+More precisely, the divergence theorem states that the outward flux of a vector field through a closed surface is equal to the volume integral of the divergence over the region inside the surface. Intuitively, it states that \emph{the sum of all sources minus the sum of all sinks gives the net flow out of a region.}
+
+In physics and engineering, the divergence theorem is usually applied in three dimensions. However, it generalizes to any number of dimensions. In one dimension, it is equivalent to the fundamental theorem of calculus. In two dimensions, it is equivalent to Green's theorem.
+
+The theorem is a special case of the more general Stokes' theorem.
+
+\part{Mathematical statement}
+Suppose \textit{V} is a subset of $R^{n}$ (in the case of n = 3, \textit{V} represents a volume in 3D space) which is compact and has a piecewise smooth boundary \textit{S}. If $\boldsymbol{F}$ is a continuously differentiable vector field defined on a neighborhood of \textit{V}, then we have:
+\begin{equation}
+\iiint_V \nabla\cdot\boldsymbol{F}\mathrm{d}V = \oiint_S \boldsymbol{F}\cdot\mathrm{d}\boldsymbol{S}
+\end{equation}
+The closed manifold $\partial V$ is quite generally the boundary of \textit{V} oriented by outward-pointing normals.
+\section*{Corollaries}
+By applying the divergence theorem in various contexts, other useful identities can be derived:
+\begin{itemize}
+\item Applying the divergence theorem to the product of a scalar function \textit{g} and a vector field $\boldsymbol{F}$, the result is
+\begin{equation}
+\iiint_V \left[\boldsymbol{F}\cdot\left(\nabla g\right) + g\left(\nabla\cdot\boldsymbol{F}\right)\right]\mathrm{d}V=\oiint_S g\boldsymbol{F}\cdot\mathrm{d}\boldsymbol{S}
+\end{equation}
+A special case of this is $\mathbf{F}=\nabla f$, in which case the theorem is the basis for Green's identities.
+\item Applying the divergence theorem to the product of a scalar function, \textit{f}, and a non-zero constant vector, the following theorem can be proven(Proof is \hyperlink{proof1}{here}):
+\begin{equation}
+\iiint_V \nabla f \mathrm{d}V=\oiint_S f\mathrm{d}\boldsymbol{S}
+\end{equation}
+\item Similarly, applying the divergence theorem to the cross-product of a vector field $\mathbf{F}$ and a non-zero constant vector, the following theorem can be proven(Proof is \hyperlink{proof2}{here}):
+\begin{equation}
+\iiint_V \nabla\times\boldsymbol{F}\mathrm{d}V=\oiint_S \mathrm{d}\boldsymbol{S}\times\boldsymbol{F}
+\end{equation}
+\end{itemize}
+\part{Generalizations}
+\section{Multiple dimensions}
+One can use the \emph{general} Stokes' Theorem to equate the n-dimensional volume integral of the divergence of a vector field \textbf{F} over a region \textit{U} to the (n-1)-dimensional surface integral of \textbf{F} over the boundary of \textit{U}:
+\begin{equation}
+\int_U \nabla\cdot\boldsymbol{F}\mathrm{d}V_{n}=\oint_{\partial U} \boldsymbol{F}\cdot\hat{n}\mathrm{d}S_{n-1}
+\end{equation}
+This equation is also known as the Divergence theorem.
+
+When n = 2, this is equivalent to Green's theorem.
+
+When n = 1, it reduces to the Fundamental theorem of calculus.
+\part{History}
+The theorem was first discovered by Lagrange in 1762, then later independently rediscovered by Gauss in 1813, by Ostrogradsky, who also gave the first proof of the general theorem, in 1826, by Green in 1828, etc. Subsequently, variations on the divergence theorem are correctly called Ostrogradsky's theorem, but also commonly Gauss's theorem, or Green's theorem.
+\part{2-dimensional version}
+\begin{equation}
+\iint_S \nabla\cdot\bm{F}\mathrm{d}S=\oint_L \bm{F}\cdot\hat{n}\mathrm{d}l
+\end{equation}
+where $\hat{n}$ is the outward-pointing unit normal vector, and the direction of line integral observes right-hand rule.
+
+By expansion in Cartesian coordinates, it's easily seen that Green theorem is essentially an identical formula with a different form.
+\part{Proofs}
+\section{Proof to eq.~(3)}
+\[
+\iiint_V \nabla f \mathrm{d}V=\oiint_S f\mathrm{d}\boldsymbol{S}
+\]
+\hypertarget{proof1}{Proof}:
+
+If the vector field $\mathbf{F}=f\mathbf{C}$, where $\mathbf{C}$ is an arbitrary nonzero constant vector, then 
+\[
+\nabla\cdot\boldsymbol{F}=\boldsymbol{C}\cdot\nabla f
+\]
+Apply divergence theorem
+\begin{align*}
+\int_V \nabla\cdot\boldsymbol{F}\mathrm{d}V
+&=\boldsymbol{C}\cdot\oint_S f\mathrm{d}\boldsymbol{S}\\
+&=\boldsymbol{C}\cdot\int_V \nabla f\mathrm{d}V
+\end{align*}
+Since \textbf{C} is nonzero and arbitrary, it cannot always be perpendicular to $\oint_S f\mathrm{d}\boldsymbol{S}$ and $\int_V \nabla f\mathrm{d}V$. So it's only logical that
+\[
+\iiint_V \nabla f \mathrm{d}V=\oiint_S f\mathrm{d}\boldsymbol{S}
+\]
+\section{Proof to eq.~(4)}
+\hypertarget{proof2}{Proof}:
+By setting $\mathbf{G}=\mathbf{C}\times\mathbf{F}$, where \textbf{C} is arbitrary nonzero vector, eq.~(4) can be proved, similar to the proof above.
+
+Using:
+\[
+\nabla\cdot\left(\boldsymbol{a}\times\boldsymbol{b}\right)=\boldsymbol{b}\cdot\left(\nabla\times\boldsymbol{a}\right)-\boldsymbol{a}\cdot\left(\nabla\times\boldsymbol{b}\right)
+\]
+then,
+\begin{align*}
+\int_V \boldsymbol{G}\cdot\mathrm{d}V&=-\boldsymbol{C}\cdot\int_V \nabla\times\boldsymbol{F}\mathrm{d}V\\&=\int_S \left(\boldsymbol{C}\times\boldsymbol{F}\right)\cdot\mathrm{d}\boldsymbol{S}\\&=\boldsymbol{C}\cdot\int_S \boldsymbol{F}\times\mathrm{d}\boldsymbol{S}
+\end{align*}
+With the similar logic applied with \textbf{C} in the proof above, we get
+\[
+\iiint_V \nabla\times\boldsymbol{F}\mathrm{d}V=\oiint_S \mathrm{d}\boldsymbol{S}\times\boldsymbol{F}
+\]
+\end{document}
