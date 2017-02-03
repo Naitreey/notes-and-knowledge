@@ -68,3 +68,22 @@ design patterns and refactoring (至少对于传统语言) 是通用的, 因为�
 
 - You should always write your code as if comments didn't exist. This forces you to write your code in the simplest, plainest, most self-documenting way you can humanly come up with.
 when you can't possibly imagine any conceivable way your code could be changed to become more straightforward and obvious -- then, and only then, should you feel compelled to add a comment explaining what your code does.
+
+- 命令行参数的处理和 stdout/stderr.
+  当用户指定参数 `--version`, `--help` 等, 不是 error condition, 因此输出应该在 stdout.
+  只有出现参数错误时, 显示的 错误信息和 usage 信息才去 stderr.
+  `--help` 时输出至 stdout 的 usage 信息可以是相对详细的, 错误时输出至 stderr 的 usage
+  信息可以是相对简略的.
+
+- 日志该从哪里输出的问题, 不同类型的程序应有不同的处理方法.
+
+  对于 daemon: 比较完善的做法是, 日志单独开一个 stream 输出至一个文件
+  (rolling periodically). 日志不占用 stdout, stderr. 这两个标准流用于
+  输出需要在 terminal 中输出的信息. 例如, stderr 仅输出那些完全意外的
+  信息, 即不是写在程序里的日志, 而是 uncaught exception, segfault, 等.
+  这类不可控, 也不该控制的绝对错误. stdout 则平时可以空闲, 也可以输出
+  比如 `--help`, `--version` 等信息.
+
+  对于 one-off program: 一般不具有日志, 但开启 verbose/debug mode 后,
+  相关信息也相当于日志, 应输出至 stderr. 特殊比如 make, 则单开 stream
+  写日志.
