@@ -23,3 +23,7 @@
 
 - All headers (and indeed any source files) should include what they need.
   They should not rely on their users including things.
+
+- Always follow the clearest and most sensible coding style that you know of.
+  有很多开源项目的代码不那么清晰 (e.g., util-linux), 但也有很多项目的代码
+  是 clear and sensible 的. You want to be the latter not the former.
