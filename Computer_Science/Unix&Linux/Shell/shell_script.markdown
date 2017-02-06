@@ -87,6 +87,7 @@
       可以使用 && 或 || 这种 operator 构成 command list.
       如 `true && do_something`, `false || do_something`,
       `[[ ... ]] && something` 这比 if 条件语句高效.
+      对于简单的 if else 逻辑, 也可以使用 `condition && ... || ...`.
     - 对于复杂的条件分支处理, 考虑到可读性最好使用 if/else 的方式.
     - 对于简单的 true/false flag, 可以直接将 true/false 命令赋值之. 再所需的地方执行命令.
       也可以通过赋任意字符串表示 true, 不赋值或不定义表示 false. 通过 [[ $var ]] 来检查.
@@ -109,6 +110,8 @@
         return $ret
     }
     ```
+* declare 中不该包含可能出错的赋值操作. 若赋值部分执行了可能出错的命令, declare 的返回值
+  会掩盖这些错误. 这种情况下, 将 declare 声明与赋值操作分开写.
 
 # mock shell script
 - 我见过的 shell script 大部分都很 messy.
