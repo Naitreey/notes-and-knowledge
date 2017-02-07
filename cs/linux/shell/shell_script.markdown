@@ -20,7 +20,7 @@
 * 你要达成什么目的就应采用什么形式: 如果一个功能适合看作是函数, 各个参数适合看作是变量, 就应使用函数的形式 `func(x,y,z)`; 若适合看作是命令, 各个参数适合看作是设置项, 就应使用命令的形式 `foo -p1 bla -p2 bla ...`.
 * For both consistency and functionality, always use `declare` to declare a variable. 注意一点, declare 是一个(built-in) 命令, 它有自己的返回值, 因此获取不到 $() 的返回值.
 * 属于统一类型的多个变量可以用 `associative array` 来统一表示. 这么做的好处一个是变量统一分类, 有实际意义的是便于循环时统一代码. 若达不到这第二个好处, 就不一定要倾向于 associative array.
-* deal carefully with rm, mv, cp. 不是因为它们危险, 而是因为如果它们默认处于 interactive mode, 那么如果不添加 `-f`, 它们会 fail fucking silently.
+* deal carefully with rm, mv, cp. 不是因为它们危险, 而是因为如果处于 interactive mode, 那么如果不添加 `-f`, 它们会 fail fucking silently.
 * 如果需要给多个独立的变量同时赋值, 可以用 `read` 给多个变量, 结合 while 后:
     ```
     while read a b c d; then
@@ -54,25 +54,8 @@
     - 使用 `shopt -s extdebug` 来增加 debug 强度 (相当于, `set -ET`), 并配合 trap on DEBUG,
       RETURN, ERR 检测每层命令的执行情况
     - 使用 `set -u` 来检查变量拼写错误等情况
-    - 使用 `caller` builtin 实现类似 python traceback 的 stack trace 效果
-        raise() {
-            declare strerr=$1
-            declare -a frame_infos
-            declare -i frame=0
-            declare frame_info
-            while frame_info=$(caller $frame); do
-                frame_infos[frame++]=$frame_info
-            done
-            ((frame=${#frame_infos[@]}-1))
-            declare info
-            echo "Traceback (most recent call last):"
-            while [[ $frame -ge 0 ]]; do
-                info=(${frame_infos[frame--]})
-                printf '  File "%s", line %s, in %s\n' "${info[2]}" "${info[0]}" "${info[1]}"
-            done
-            echo "Exception: $strerr"
-            exit 1
-        }
+    - 使用 `caller` builtin 实现类似 python traceback 的 stack trace 效果.
+      See [](bash-utils/raise.sh)
     - `PS4='${BASH_SOURCE[0]}@${LINENO}(${FUNCNAME[0]}): '`
 * profile shell script:
     - `PS4='+ $(date "+%s.%N") ${BASH_SOURCE}@${LINENO}: '`
@@ -133,4 +116,3 @@
 	- `local`
 	- `readonly`
 	- not at all
-
