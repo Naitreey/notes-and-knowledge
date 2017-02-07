@@ -1,6 +1,0 @@
-a standard.
-A wide variety of devices, such as printers and routers, and message receivers across many platforms use the syslog standard. This permits the consolidation of logging data from different types of systems in a central repository.
-# facility
-# severity
-# utitlity
-- `logger`

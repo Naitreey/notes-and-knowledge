@@ -7,6 +7,13 @@
   手动使用. 只有和某种 event loop 配合使用, 实现单线程的 asynchronous concurrency
   时, 才有价值.
 
+- 被 ``types.coroutine`` decorated 的 generator 是 coroutine,
+  使用 ``async def`` 定义的函数也是 coroutine.
+  具有 ``__await__`` method 的 object 是 awaitable object.
+  coroutines and awaitable objects 可以放在 ``await`` 后面.
+
+- 放在 ``yield from`` 后面的需要是 iterable.
+
 - scheduler 的设置方式, 应该是在每次执行后, re-schedule self, 这样具有最大程度的
   调度灵活性, 也比较自然. 例如, 使用 `sched`:
 
@@ -25,10 +32,3 @@
             loop.call_later(1, display_date, end_time, loop)
         else:
             loop.stop()
-
-- 被 ``types.coroutine`` decorated 的 generator 是 coroutine,
-  使用 ``async def`` 定义的函数也是 coroutine.
-  具有 ``__await__`` method 的 object 是 awaitable object.
-  coroutines and awaitable objects 可以放在 ``await`` 后面.
-
-- 放在 ``yield from`` 后面的需要是 iterable.

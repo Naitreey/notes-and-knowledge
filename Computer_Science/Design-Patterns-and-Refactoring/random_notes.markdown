@@ -87,3 +87,9 @@ when you can't possibly imagine any conceivable way your code could be changed t
   对于 one-off program: 一般不具有日志, 但开启 verbose/debug mode 后,
   相关信息也相当于日志, 应输出至 stderr. 特殊比如 make, 则单开 stream
   写日志.
+
+- 对于编程这门艺术, 算法之外, 另一个很重要的能力是分析问题和理解问题的能力, 对问题理解清晰、合理分解 (有哪些步骤, 哪些方面, 哪些模块, 哪些抽象层次) 是写出逻辑流畅、模块化清晰易理解的程序的前提.
+
+- how to organize source tree?
+  不同类型的项目有不同的组织和命名方式、规则. 但总体来讲, when in doubt,
+  想想 linux, 尤其是 FHS 是如何对文件目录进行分类和命名的.
