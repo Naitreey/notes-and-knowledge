@@ -93,3 +93,6 @@ when you can't possibly imagine any conceivable way your code could be changed t
 - how to organize source tree?
   不同类型的项目有不同的组织和命名方式、规则. 但总体来讲, when in doubt,
   想想 linux, 尤其是 FHS 是如何对文件目录进行分类和命名的.
+
+- 命令行语法说明规则
+  使用 (), 即 `(a | b | c)` 的格式来表达必须从多项中选择一个.
