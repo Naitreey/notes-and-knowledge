@@ -32,3 +32,12 @@
             loop.call_later(1, display_date, end_time, loop)
         else:
             loop.stop()
+
+- ``StopIteration`` 只应该 raised by ``next()`` 和 ``__next__()``.
+  对于 generator, generate 行为结束时, 应该直接返回 (``return``), 这样
+  generator 的 ``__next__`` method 自动 raise 一个 StopIteration, 且
+  它的 ``value`` attribute 是 generator function 的返回值.
+  进一步, 对于 ``yield from`` 以及 ``await``, 这个 ``value`` 很自然地
+  成为了整个表达式的值.
+
+- 同理, ``StopAsyncIteration`` 只应该 raised by ``__anext__()``.
