@@ -27,3 +27,10 @@
 - Always follow the clearest and most sensible coding style that you know of.
   有很多开源项目的代码不那么清晰 (e.g., util-linux), 但也有很多项目的代码
   是 clear and sensible 的. You want to be the latter not the former.
+
+- 在 syscall 层面上只有一个 read(2), 它只能读指定数目的 bytes. 对于一般情况
+  下的 blocking mode, read 不到时就 block (kernel 把它放到了 wait queue 中),
+  若 kernel 返回给它之后仍读不到 (file seek past EOF, 或 pipe write fd closed 等),
+  则认为 EOF 了, 返回 0.
+  在 stdio 层面, read(2) 的结果存在 stdio buffer 里. fgets 以及 python readline
+  等都是在这个 buffer 里进行读一行或读 N bytes 的操作. 否则岂不是要做很多的 syscall.
