@@ -30,7 +30,10 @@
 
 - 在 syscall 层面上只有一个 read(2), 它只能读指定数目的 bytes. 对于一般情况
   下的 blocking mode, read 不到时就 block (kernel 把它放到了 wait queue 中),
-  若 kernel 返回给它之后仍读不到 (file seek past EOF, 或 pipe write fd closed 等),
-  则认为 EOF 了, 返回 0.
+  若 kernel 发现 EOF 了 (file seek past EOF, 或 pipe write fd closed 等),
+  则调度返回给 read, 然而 read 发现读不到东西, 就返回 0, 表示 EOF.
+  In other words, 对于 read(2), 在遇到 EOF 之前, 执行 read(2) 可能产生两种
+  情况: 1) 读到东西, 返回读到的数目; 2) blocking, 直到读到东西. 对于 non-blocking
+  mode, 第二种情况为报错 EAGAIN. 然而注意, 这些情况都可以与 EOF 区分开.
   在 stdio 层面, read(2) 的结果存在 stdio buffer 里. fgets 以及 python readline
   等都是在这个 buffer 里进行读一行或读 N bytes 的操作. 否则岂不是要做很多的 syscall.
