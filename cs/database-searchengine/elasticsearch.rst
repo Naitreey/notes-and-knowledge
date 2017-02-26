@@ -11,6 +11,8 @@
 
 - 一些包含 list of objects 的数据需要使用的是 nested datatype. 若对 inner object 里
   key-value 的关联性没有要求, 就没必要使用 nested datatype.
+  Nested documents are hidden; we can’t access them directly. To update, add,
+  or remove a nested object, we have to reindex the whole document.
 
 - 不同格式、功能的数据放在不同的 index 里, 多 type 谨慎使用. 使用多个 type 时考虑
   `_default_`. 某些数据 index 也许可以使用多个 type, 但需要具体看, 因为 type 更多
@@ -46,3 +48,22 @@
 - 使用 HEAD 检查 doc 是否存在
 
 - 使用 `op_type` param 或 `_create` endpoint 来限定操作为新建.
+
+- 若对一个 doc 的不同部分的更新比较罕见, 或者每次需要更新的部分实际上占比较大,
+  则简单地存在一个 index 中即可. 必要时结合 nested fieldtype.
+  nested 的特点是 root doc 和 nested doc 关系紧密, 因此优点是在 search 时很快,
+  但缺点相应地是对 nested field 的任何改动都要 reindex 整个 doc. 所以, 对于 doc
+  的一些部分需要频繁增删改时, 这些部分不适合用 nested. (search time 高效, index
+  time 低效.)
+  为了避免少量修改时 reindex 整个 doc, 可以将其拆成不同的 child doc, 构成 parent
+  child 关系.
+- 对于 nosql, 往往不能单纯地把一个 document 拆成不同的部分然后 *独立地* 放置在不同的
+  index 中. 这将导致搜索难以进行. 因为 nosql 中没有 join query, 对于一个搜索, 需要在
+  不同的 indices 中执行同一个搜索, 但是又该怎么综合来自不同 index 的结果呢?
+  对于 elasticsearch 或 nosql in general, doc 之间希望是独立的, 也就是说一个 doc
+  包含所有相关的信息. 这样才能高效地搜索. 但是在 search time 和 index time 的效率之间
+  权衡, 需要考虑 parent-child 这种拆分关系.
+- nested 适用于以下条件: 1) 子数据需要保证映射信息完整; 2) 子数据在 doc 中所占比重
+  比较小, 即是少量的数据; 3) 这些少量的 array 型数据只要写入就几乎不变, 即更新十分
+  罕见.
+- 不符合以上条件的 doc 拆分, 则应该使用 parent-child 方式.

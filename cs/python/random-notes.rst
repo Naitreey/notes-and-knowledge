@@ -49,3 +49,8 @@
   成为了整个表达式的值.
 
 - 同理, ``StopAsyncIteration`` 只应该 raised by ``__anext__()``.
+
+- 对于 pipe, write 端 close fd 时, read 端读时触发 EOF. 此时 read() == "".
+
+- 命令行上 oneline 的动态输出可以用 sys.stdout.write("...\r")
+  多行的动态输出的话就得用 curses 之类的
