@@ -96,3 +96,24 @@ when you can't possibly imagine any conceivable way your code could be changed t
 
 - 命令行语法说明规则
   使用 (), 即 `(a | b | c)` 的格式来表达必须从多项中选择一个.
+
+- 两个看上去类似的 class A B (功能类似, 作用类似, etc.), 何时该 B 继承 A? 何时该
+  B wrap A?
+  解决这个问题, 既有一些通用的逻辑, 又需要具体问题具体分析.
+  1. 如果 B 不要暴露 A 的所有 public method, 则 B wrap A.
+  2. 如果 B extends A, 或者对 A 的一部分 API 进行修改, 则 B subclass A.
+  3. 面对具体问题, 最终才能决定到底是 subclass/wrap. 例如, 虽然 B 看上去是
+     比较自然的 extends A, 但又要求 B 的一些功能可以独立与 A, 比如 python
+     中 io.RawIOBase, io.BufferedIOBase, 则不能是 extends, 而是 wrap.
+
+- 当需要对一个结果进行 if else 形式的分支处理时, 如果每个可能情况严格地处理都需要
+  进行条件判断, 则严格地进行条件判断. else 分支只用于进行默认情况下的处理, 若逻辑
+  上根本没有默认情况, 则应该添加 else 报错处理, 而不是忽略 else 分支.
+  ```
+  if condition1
+      operation1
+  else if condition2
+      operation2
+  else
+      raise/set error
+  ```

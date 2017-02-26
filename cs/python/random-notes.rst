@@ -7,10 +7,18 @@
   手动使用. 只有和某种 event loop 配合使用, 实现单线程的 asynchronous concurrency
   时, 才有价值.
 
-- 被 ``types.coroutine`` decorated 的 generator 是 coroutine,
-  使用 ``async def`` 定义的函数也是 coroutine.
-  具有 ``__await__`` method 的 object 是 awaitable object.
-  coroutines and awaitable objects 可以放在 ``await`` 后面.
+- In CPython, generator-based coroutines (generators decorated with
+  ``types.coroutine()`` or ``asyncio.coroutine()``) are awaitables,
+  even though they do not have an ``__await__()`` method. Using
+  ``isinstance(gencoro, Coroutine)`` for them will return ``False``.
+  Use ``inspect.isawaitable()`` to detect them.
+  Coroutine objects and instances of the Coroutine ABC are all instances
+  of this ABC.
+  即, 被 ``types.coroutine``/``asycio.coroutine`` decorated 的 generator
+  是 coroutine (没有 ``__await__``), 使用 ``async def`` 定义的函数也是
+  coroutine (有 ``__await__``).
+  具有 ``__await__`` method 的 object 是 awaitable object. 所有 coroutine
+  都是 awaitable object.
 
 - 放在 ``yield from`` 后面的需要是 iterable.
 
