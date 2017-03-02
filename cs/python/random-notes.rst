@@ -54,3 +54,59 @@
 
 - 命令行上 oneline 的动态输出可以用 sys.stdout.write("...\r")
   多行的动态输出的话就得用 curses 之类的
+
+- 小心 python 中的 cyclic import problem. 需要明确, python 中对 import statement
+  的执行逻辑 (排除 importlib 等复杂 paths, hooks 之类的问题) 很简单:
+
+    'import' and 'from xxx import yyy' are executable statements.
+    They execute when the running program reaches that line.
+
+    If a module is not in sys.modules, then an import creates the
+    new module entry in sys.modules and then executes the code in
+    the module. It does not return control to the calling module
+    until the execution has completed.
+
+    If a module does exist in sys.modules then an import simply
+    returns that module whether or not it has completed executing.
+    That is the reason why cyclic imports may return modules which
+    appear to be partly empty.
+
+    Finally, the executing script runs in a module named __main__,
+    importing the script under its own name will create a new module
+    unrelated to __main__.
+
+  因此, 对于以下两个文件
+
+    .. code:: python
+    # abcc.py
+    from deff import xxx
+    def yyy():
+        pass
+    # deff.py
+    from abcc import yyy
+    def xxx():
+        pass
+
+  会出现错误, 例如从 abcc 开始, import deff, 执行 deff, 又 import abcc, 而
+  此时 abcc 的 namespace 里还没有定义 yyy.
+
+  一个治标不治本的方法是遇到这个问题时, 不要使用全局 import, 在使用处使用
+  local import, 例如在函数里 import.
+  然而事实上, 从代码逻辑角度看, 这种问题根本不该出现. 一个合理的代码模块提供
+  的功能, 使用 global import 与 local import 不该有任何使用上的区别. 没有
+  任何正经的 python module 存在这个问题. 公共逻辑应该放在一个单独的模块中,
+  然后各个执行者都从这个模块中 import 公共的功能.
+
+- debugging methods:
+  - read traceback
+  - print, dump, etc.
+  - logging
+  - pdb
+  - code.interact, jump to interactive interpreter at the exact point you want
+  - python -i, 简单的 post-mortem debugging
+  - python -v[v], 检查 import 是否符合预期 (sys.path 是否正确, pyc 是否正确等)
+
+- testing methods:
+  - python -W default, 所有 warnings 都显示, 即开启默认不显示的那些警告
+  - doctest
+  - unittest
