@@ -1,0 +1,1 @@
+- ghc 编译时使用 ``-Wall`` 开启所有警告, 包含默认关闭的警告, 例如 non-exhaustive pattern.

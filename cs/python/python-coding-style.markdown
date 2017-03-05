@@ -98,6 +98,15 @@ ASCII/UTF-8
 - 不要轻易连等赋值. 提醒自己这将导致两个 identifier 指向同一个对象哦... 问问自己你真的想要这样么?
 - Python 的 duck typing 思想与物理学思想一致, 即我们认识事物的方式是根据事物表现出来的行为, 而不是事物的所谓 "本质". 这样的本质并不存在, 因其不可观测.
 - when possible, public methods should avoid "get_xxx()" 这种指明动作的 naming style. 而是应该直接使用 obj.xxx 或者 obj.xxx(). 但很多时候如果需要输入参数, 指明动作更自然一些.
-- python format strings 的格式比 C style 的可能性更多
 - 如果只需要一个 logging level, 默认使用的应该是 INFO, 因为在 DEBUG level, 一些库可能输出
   很多没用的 debug 信息.
+- module 中绝不该出现在 import 时会给出输出的 "裸代码". 也就是说它不该做奇怪的事情, 应该
+  keep silent.
+- python 中有 4 种 string formatting 方式:
+  %-formatting, str.format(), formatted string literal 以及 string.Template.
+  其中, 最后一种根本不该使用;
+  第一种最常见最简单, 但不如第二种方便;
+  第二种明显优点有 2 个, 1) 灵活方便, 功能丰富; 2) 实际上使用 `__format__` protocol,
+  即可以自定义 format 逻辑, 实现多态性的封装 (duck typing), e.g., datetime;
+  第三种克服了第二种的 verbosity 问题, 并且增加灵活性可以执行 python 表达式.
+  所以, 对于 py3.6+, 应该用第三种, 之前的最好用第二种.
