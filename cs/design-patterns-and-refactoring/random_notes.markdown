@@ -117,3 +117,9 @@ when you can't possibly imagine any conceivable way your code could be changed t
   else
       raise/set error
   ```
+
+- 写数据库等的 client driver 时, 应该使用 lazy connection, 即不在创建 connection
+  object 时就进行实质的连接, 而在第一次操作之前进行连接, 并且在断开连接后自动
+  重新连接. 提供连接检查机制, 即可选地在创建 connection object 时就创建连接.
+  提供在真实操作前连接以及断开重连的机制, 目的在于对服务端重启或意外断开连接等
+  情况进行冗余.
