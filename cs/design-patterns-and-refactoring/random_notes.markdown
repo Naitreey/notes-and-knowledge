@@ -126,3 +126,7 @@ when you can't possibly imagine any conceivable way your code could be changed t
   重新连接. 提供连接检查机制, 即可选地在创建 connection object 时就创建连接.
   提供在真实操作前连接以及断开重连的机制, 目的在于对服务端重启或意外断开连接等
   情况进行冗余.
+
+- 修改文件的内容不该直接修改原文件, 应该写入 tempfile, 然后 mv. 这样的好处是若出错,
+  原文件不会损坏. 使用 mv 的原因是, 操作 atomic, 对于 userspace 而言, 文件只存在新旧两状态.
+  同理, 若要进行文件替换, 应使用 mv.
