@@ -35,8 +35,6 @@ design patterns and refactoring (至少对于传统语言) 是通用的, 因为�
 
 - 使用专有结构来 formalize 一定的数据定义, 例如结构体, 类等. 并将对这些结构的操作 (例如, 检查, 转换形式等) 封装在它的类中 (或模块中).
 
-- 在哪里产生 log 就在哪里创造 Logger, 因为 Logger 包含位置信息, 没必要也不该传来传去.
-
 - 能一般化的函数就尽量一般化, 一般化以后分出去成为一个模块.
 
 - 类 (静态类除外) 的构造是围绕于数据的, 当我们发现有这么一些数据和另一个对数据的操作时, 将一定数据和对数据的操作封装起来可能抽象程度更高更自然, 这时才需要构建类. 反之, 如果只是一个无状态的操作, 一个 procedure, 封装成一个类(并且进行尴尬的实例化)就显得没那么必要, 这时只需要将相关的操作归类到一个模块(文件) 中即可达到归纳和抽象的作用.
@@ -57,14 +55,32 @@ design patterns and refactoring (至少对于传统语言) 是通用的, 因为�
 
 - About logging.
 
-  如果你能访问 production system, 并且能够实时 debug, 那就只在开发时记日志, 这些日志
-  只是便于开发; 放到生产系统之后, 则关掉 (绝大部分) 日志, 或者根本不记日志, 只依赖
-  exception handling 和 core dump 之类的.
+  * 对于长期运行的进程, 该怎么记日志?
 
-  如果不能访问, 就只能多记录一些日志.
+    如果你能访问 production system, 并且能够实时 debug, 那就只在开发时记日志, 这些日志
+    只是便于开发; 放到生产系统之后, 则关掉 (绝大部分) 日志, 或者根本不记日志, 只依赖
+    exception handling 和 core dump 之类的.
 
-  无论哪种情况, 都需要仔细考虑任意一处日志是否必要, 只在绝对必要的地方写日志.
-  Resist the tendency to log everything.
+    如果不能访问, 就只能多记录一些日志.
+
+    无论哪种情况, 都需要仔细考虑任意一处日志是否必要, 只在绝对必要的地方写日志.
+    Resist the tendency to log everything.
+
+  * 日志该向哪里输出?
+
+    对于 long-running program: 比较完善的做法是, 日志单独开一个 stream
+    输出至一个文件或一个目录 (rolling periodically). 日志不占用 stdout, stderr.
+    这两个标准流用于输出需要在 terminal 中输出的信息. 例如, stderr 仅输
+    出那些完全意外的信息, 即不是写在程序里的日志, 而是 uncaught exception,
+    segfault, 等. 这类不可控, 也不该控制的绝对错误. stdout 则平时可以空闲,
+    也可以输出比如 `--help`, `--version` 等信息. 当程序长期运行时, stdout
+    与 stderr 可以一起转至一个文件, 阅读起来方便.
+
+    对于 one-off program: 一般不具有日志, 但开启 verbose/debug mode 后,
+    相关信息也相当于日志, 应输出至 stderr (是否开启 verbose/debug, 可通过
+    handler 是否添加等方式实现). 特殊比如 make, 则单开 stream 写日志.
+
+  * 在哪里产生 log 就在哪里创造 Logger, 因为 Logger 包含位置信息, 没必要也不该传来传去.
 
 - You should always write your code as if comments didn't exist. This forces you to write your code in the simplest, plainest, most self-documenting way you can humanly come up with.
 when you can't possibly imagine any conceivable way your code could be changed to become more straightforward and obvious -- then, and only then, should you feel compelled to add a comment explaining what your code does.
@@ -74,19 +90,6 @@ when you can't possibly imagine any conceivable way your code could be changed t
   只有出现参数错误时, 显示的 错误信息和 usage 信息才去 stderr.
   `--help` 时输出至 stdout 的 usage 信息可以是相对详细的, 错误时输出至 stderr 的 usage
   信息可以是相对简略的.
-
-- 日志该从哪里输出的问题, 不同类型的程序应有不同的处理方法.
-
-  对于 daemon: 比较完善的做法是, 日志单独开一个 stream 输出至一个文件
-  (rolling periodically). 日志不占用 stdout, stderr. 这两个标准流用于
-  输出需要在 terminal 中输出的信息. 例如, stderr 仅输出那些完全意外的
-  信息, 即不是写在程序里的日志, 而是 uncaught exception, segfault, 等.
-  这类不可控, 也不该控制的绝对错误. stdout 则平时可以空闲, 也可以输出
-  比如 `--help`, `--version` 等信息.
-
-  对于 one-off program: 一般不具有日志, 但开启 verbose/debug mode 后,
-  相关信息也相当于日志, 应输出至 stderr. 特殊比如 make, 则单开 stream
-  写日志.
 
 - 对于编程这门艺术, 算法之外, 另一个很重要的能力是分析问题和理解问题的能力, 对问题理解清晰、合理分解 (有哪些步骤, 哪些方面, 哪些模块, 哪些抽象层次) 是写出逻辑流畅、模块化清晰易理解的程序的前提.
 
