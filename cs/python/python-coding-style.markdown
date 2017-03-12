@@ -72,7 +72,6 @@ ASCII/UTF-8
 - Modules should have short, all-lowercase names. Underscores can be used in the module name if it improves readability. Python packages should also have short, all-lowercase names, although the use of underscores is discouraged.
 - When an extension module written in C or C++ has an accompanying Python module that provides a higher level (e.g. more object oriented) interface, the C/C++ module has a leading underscore (e.g. `_socket` ).
 - Class names should normally use the CamelCase convention.
-- You should use the suffix "Error" on your exception names (if the exception actually is an error).
 - Function, method and instance variable names should be lowercase, with words separated by underscores as necessary to improve readability.
 -  Always use self for the first argument to instance methods. Always use cls for the first argument to class methods.
 - Constants are usually defined on a module level and written in all capital letters with underscores separating words.
@@ -127,3 +126,6 @@ ASCII/UTF-8
     时消除状态.
 
   * 需要对实例进行额外的修改, 且这些修改在逻辑上不是该类的一部分.
+
+- 何时该创建各种 exception class 并在出错时 raise 出来, 何时该只返回操作的 true/false
+  结果?
