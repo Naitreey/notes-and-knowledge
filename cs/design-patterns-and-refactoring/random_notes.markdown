@@ -72,7 +72,9 @@ design patterns and refactoring (至少对于传统语言) 是通用的, 因为�
     输出至一个文件或一个目录 (rolling periodically). 日志不占用 stdout, stderr.
     这两个标准流用于输出需要在 terminal 中输出的信息. 例如, stderr 仅输
     出那些完全意外的信息, 即不是写在程序里的日志, 而是 uncaught exception,
-    segfault, 等. 这类不可控, 也不该控制的绝对错误. stdout 则平时可以空闲,
+    segfault 等不可控, 也不该控制的绝对错误. 对于具有 exception 机制的语言,
+    应该在最外层包含一个 catch-all-and-reraise 语句, 这样 uncaught exception
+    也输出在日志中, 方便理解发生错误的 context. stdout 则平时可以空闲,
     也可以输出比如 `--help`, `--version` 等信息. 当程序长期运行时, stdout
     与 stderr 可以一起转至一个文件, 阅读起来方便.
 
