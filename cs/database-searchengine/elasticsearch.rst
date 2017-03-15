@@ -67,3 +67,13 @@
   比较小, 即是少量的数据; 3) 这些少量的 array 型数据只要写入就几乎不变, 即更新十分
   罕见.
 - 不符合以上条件的 doc 拆分, 则应该使用 parent-child 方式.
+
+- 一个 string term (keyword) 最长为 32766, 因此默认情况下字符串大于这个长度会报错
+  `max_bytes_length_exceeded_exception`.
+  解决办法: 对该 field 设置 `ingore_above`.
+
+- 若输入的 document 某个 field 的值可能与预期的类型不符, 可以使用 `ignore_malformed`
+  忽略对类型不符的值进行 index, 或者使用 `coerce` 强行进行类型转换.
+
+- 一些列设置 `include_in_all` 来避免全文检索, 设置 `index:true|false` 限制是否
+  index 该 field.
