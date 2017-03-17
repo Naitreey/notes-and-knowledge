@@ -110,3 +110,9 @@
   - python -W default, 所有 warnings 都显示, 即开启默认不显示的那些警告
   - doctest
   - unittest
+
+- python 中每个线程本质上成为 cpython interpreter 的线程.
+  默认情况下, 最后一个 "普通线程" 退出后解释器退出, 即程序终结.
+  `threading.Thread` class 的 `daemon` attribute 实际意思是将一个线程标记为
+  所谓 "后台线程", daemon thread 不是 "普通线程", 不在程序是否退出的考虑范围内.
+  因此, 相应线程可能受到影响, 比如资源未释放等.
