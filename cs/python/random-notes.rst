@@ -110,3 +110,10 @@
   - python -W default, 所有 warnings 都显示, 即开启默认不显示的那些警告
   - doctest
   - unittest
+
+- Creating pipelines with subprocess
+  It is possible to create process pipelines using ``subprocess.Popen``,
+  by just using ``stdout=subprocess.PIPE`` and ``stdin=otherproc.stdout``.
+  开启第二个子进程后, 需要在父进程中关闭前一个子进程的 `stdout`. 这样
+  pipe 的两端才分别只有一个 fd 连接着, 保证了 SIGPIPE 的生成.
+  Ref: http://www.enricozini.org/blog/2009/debian/python-pipes/
