@@ -117,3 +117,9 @@
   开启第二个子进程后, 需要在父进程中关闭前一个子进程的 `stdout`. 这样
   pipe 的两端才分别只有一个 fd 连接着, 保证了 SIGPIPE 的生成.
   Ref: http://www.enricozini.org/blog/2009/debian/python-pipes/
+
+- python 中每个线程本质上成为 cpython interpreter 的线程.
+  默认情况下, 最后一个 "普通线程" 退出后解释器退出, 即程序终结.
+  `threading.Thread` class 的 `daemon` attribute 实际意思是将一个线程标记为
+  所谓 "后台线程", daemon thread 不是 "普通线程", 不在程序是否退出的考虑范围内.
+  因此, 相应线程可能受到影响, 比如资源未释放等.
