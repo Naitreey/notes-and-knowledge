@@ -56,3 +56,9 @@
 
   NOTE: 一般而言, 对于 stdout/stderr 没必要设置为 unbuffered, 一般情况下 line buffering
   is fine, 需要立即输出时只需 fflush.
+
+- 由于 vararg function 在 prototype 和 definition 时不规定函数的参数个数, 函数本身
+  需要有某种办法知道传递到 stack 上的 (应该) 有几个参数, 以及这些参数的类型是什么,
+  然后在函数体中使用 `stdarg.h` 获取 stack 上连续存放的值.
+  因此, 在设计 variadic function 时, 一些规定了需要一个 format (e.g., `printf` etc.),
+  一些规定了特定的 param list 的结束标志 (e.g., `execl` 的 ``(char *) NULL`` etc.).
