@@ -143,3 +143,7 @@
     sys.stdout = open(sys.stdout.fileno(), mode="w", encoding="utf-8", buffering=1024)
     sys.stderr = open(sys.stderr.fileno(), mode="w", encoding="utf-8", buffering=1024)
 
+- 线程的目的不仅仅是为了 *同时的* 并行计算, 而是为了构建多个独立的运算单元.
+  将这些运算单元分配到不同的 CPU 核上才具有 "同时并行" (parallel computing) 的意义.
+  python 虽然有 GIL, 但这影响的是单 python 进程进行 parallel computing 的能力,
+  并没有影响多线程所带来的其他可能性.
