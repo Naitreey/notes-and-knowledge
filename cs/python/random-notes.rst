@@ -123,3 +123,23 @@
   `threading.Thread` class 的 `daemon` attribute 实际意思是将一个线程标记为
   所谓 "后台线程", daemon thread 不是 "普通线程", 不在程序是否退出的考虑范围内.
   因此, 相应线程可能受到影响, 比如资源未释放等.
+
+- Set and Change buffering mode
+
+  python3 不允许 text stream 的 buffering mode 为 unbuffering.
+  也就是说, 只能是 line buffering (``buffering=1``) 或 block buffering
+  (``buffering=<size>``). (也许因为 text 是 unicode, 因此没有真正的
+  unbuffered text IO?) 对于 interactive file (a.k.a. terminal device),
+  默认为 line buffering, 对于 regular file, 默认是 block buffering.
+  若要对 text stream 模拟 unbuffering mode, 只能在写入时强行 flush.
+  例如, ``print(..., flush=True)``, ``TextIOWrapper.flush``.
+
+  对于 binary stream, unbuffer, line buffer, block buffer 都可以.
+
+  若要修改 stdout/err stream (text stream) 的 buffering mode, 可以 ``open``
+  来 reopen underlying file descriptor in other buffering mode:
+
+    .. code:: python
+    sys.stdout = open(sys.stdout.fileno(), mode="w", encoding="utf-8", buffering=1024)
+    sys.stderr = open(sys.stderr.fileno(), mode="w", encoding="utf-8", buffering=1024)
+

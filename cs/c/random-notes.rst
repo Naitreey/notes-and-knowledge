@@ -5,7 +5,7 @@
 
 - header file 中应该有 guard.
 
-  .. code:: c
+  .. code:: cpp
   #ifndef HEADER_H
   # define HEADER_H
   ...
@@ -28,6 +28,12 @@
   有很多开源项目的代码不那么清晰 (e.g., util-linux), 但也有很多项目的代码
   是 clear and sensible 的. You want to be the latter not the former.
 
+- kernel space buffer (Linux buffer cache): 总是存在, 在用 read(2), write(2)
+  syscall 时, 隐性地在内核中从这种缓存中读写数据.
+  userspace buffer: 使用 C stdio 时, 隐性地使用了这种 buffer, 以减少 syscall
+  的次数. 对 python 而言, io module 的 BufferedIOBase 自己有实现一个 userspace
+  buffer.
+
 - 在 syscall 层面上只有一个 read(2), 它只能读指定数目的 bytes. 对于一般情况
   下的 blocking mode, read 不到时就 block (kernel 把它放到了 wait queue 中),
   若 kernel 发现 EOF 了 (file seek past EOF, 或 pipe write fd closed 等),
@@ -37,3 +43,16 @@
   mode, 第二种情况为报错 EAGAIN. 然而注意, 这些情况都可以与 EOF 区分开.
   在 stdio 层面, read(2) 的结果存在 stdio buffer 里. fgets 以及 python readline
   等都是在这个 buffer 里进行读一行或读 N bytes 的操作. 否则岂不是要做很多的 syscall.
+
+- `O_RDWR` 中, 读写操作共用一个 file offset position.
+
+- 可以使用 `setvbuf` 设置 stdio stream 的 buffer 情况. 该函数要求在 `open` 后和首次
+  操作之前使用, 因此若要重设 stdin/out/err 的 buffer 类型, 应该先将底层的 file
+  descriptor 重新包一次 stdio `FILE *`.
+
+    .. code:: cpp
+    stdout = fdopen(fileno(stdout), "w");
+    setvbuf(stdout, NULL, _IOFBF, SIZE);
+
+  NOTE: 一般而言, 对于 stdout/stderr 没必要设置为 unbuffered, 一般情况下 line buffering
+  is fine, 需要立即输出时只需 fflush.
