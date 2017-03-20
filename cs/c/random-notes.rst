@@ -62,3 +62,26 @@
   然后在函数体中使用 `stdarg.h` 获取 stack 上连续存放的值.
   因此, 在设计 variadic function 时, 一些规定了需要一个 format (e.g., `printf` etc.),
   一些规定了特定的 param list 的结束标志 (e.g., `execl` 的 ``(char *) NULL`` etc.).
+
+- create shared library:
+
+    .. code:: sh
+    # compile PIC object file
+    gcc -c -o foo.o -fPIC foo.c
+    # link PIC object files into shared library
+    gcc -o libfoobar.so -shared -fPIC foo.o bar.o
+
+- create shared library and also executable by itself:
+
+    .. code:: sh
+    # compile PIC object file as above
+    gcc -c -o foo.o -fPIC foo.c
+    # link PIC object files into shared library (-fPIC), telling the linker
+    # that this is a position independent executable (-pie), and make its
+    # symbol table exportable (-Wl,-E) such that it can be linked against.
+    gcc -o libfoobar.so -fPIC -pie -Wl,-E foo.o bar.o
+
+  Position-independent executables (PIE) are executable binaries made entirely
+  from position-independent code.
+
+  ref: http://unix.stackexchange.com/questions/223385/why-and-how-are-some-shared-libraries-runnable-as-though-they-are-executables
