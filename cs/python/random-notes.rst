@@ -147,3 +147,8 @@
   将这些运算单元分配到不同的 CPU 核上才具有 "同时并行" (parallel computing) 的意义.
   python 虽然有 GIL, 但这影响的是单 python 进程进行 parallel computing 的能力,
   并没有影响多线程所带来的其他可能性.
+
+- 通过 `Thread` object constructor 的 `args`, `kwargs` 参数传递的只应该是 `target`
+  API 所需的量. 并不是说线程间共享的量都需要从这里传递进线程.
+  在设计时, 不要忘了模块化, 设计一个线程的逻辑时, 只该考虑这个线程的事务, 不该考虑其他
+  线程如何调用这个线程.
