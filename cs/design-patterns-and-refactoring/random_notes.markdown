@@ -1,6 +1,10 @@
-The absolutely meaningful reason to write clear code is to make the life of other developers easier, to make their life more efficient.
+The absolutely meaningful reason to write clear code is to make the life of other
+developers easier, to make their life more efficient.
 
-design patterns and refactoring (至少对于传统语言) 是通用的, 因为它们都是同一种思想的发展和延续, 也就是使逻辑不断清晰化, 简洁化, 条理化. 对于不同的传统语言, 有些已经在语言层面提供了特性, 从而使一些 design pattern 变得简单实现且直接了当; 而另一些则需要手动将这些思想进行实现. 但是本质上, 思路是相似的, 目的是相同的.
+design patterns and refactoring (至少对于传统语言) 是通用的, 因为它们都是同一种思想的
+发展和延续, 也就是使逻辑不断清晰化, 简洁化, 条理化. 对于不同的传统语言, 有些已经在语言
+层面提供了特性, 从而使一些 design pattern 变得简单实现且直接了当; 而另一些则需要手动将
+这些思想进行实现. 但是本质上, 思路是相似的, 目的是相同的.
 
 -----
 写之前:
@@ -33,14 +37,32 @@ design patterns and refactoring (至少对于传统语言) 是通用的, 因为�
 
 - 能一般化的函数就尽量一般化, 一般化以后分出去成为一个模块.
 
-- 类 (静态类除外) 的构造是围绕于数据的, 当我们发现有这么一些数据和另一个对数据的操作时, 将一定数据和对数据的操作封装起来可能抽象程度更高更自然, 这时才需要构建类. 反之, 如果只是一个无状态的操作, 一个 procedure, 封装成一个类(并且进行尴尬的实例化)就显得没那么必要, 这时只需要将相关的操作归类到一个模块(文件) 中即可达到归纳和抽象的作用.
+- 类 (静态类除外) 的构造是围绕于数据的, 当我们发现有这么一些数据和另一个对数据的操作时,
+  将一定数据和对数据的操作封装起来可能抽象程度更高更自然, 这时才需要构建类. 反之, 如果
+  只是一个无状态的操作, 一个 procedure, 封装成一个类(并且进行尴尬的实例化)就显得没那么
+  必要, 这时只需要将相关的操作归类到一个模块 (文件) 中即可达到归纳和抽象的作用.
 
-- 若一个值需要复杂的过程才能算出, 并且这个运算过程没有 side effect, 则可以把运算结果缓存下来, 以后直接取结果, 而不再执行复杂的运算. Python 本身支持这种方式, 可以通过 non-data descriptor 实现.
-- 在完成代码后, 需要高效率时, 可进行整体 profile 以及每部分代码的 profile. 对每个部分进行 profilie, 可以得出哪个部分代码对效率影响大 (从而需要多加考虑), 哪个部分对效率影响小 (从而可以更加灵活地处理).
+- 若一个值需要复杂的过程才能算出, 并且这个运算过程没有 side effect, 则可以把运算结果
+  缓存下来, 以后直接取结果, 而不再执行复杂的运算. Python 本身支持这种方式, 可以通过
+  non-data descriptor 实现.
+
+- 在完成代码后, 需要高效率时, 可进行整体 profile 以及每部分代码的 profile. 对每个部分
+  进行 profilie, 可以得出哪个部分代码对效率影响大 (从而需要多加考虑), 哪个部分对效率
+  影响小 (从而可以更加灵活地处理).
+
 - profiling 时, 注意 unit test, 以保证结果不变.
-- 在代码中布置全局函数时, (在解释器/编译器允许的前提下,) 顺序应该由抽象至具体. 即由整体操作至具体操作. 因为认知的顺序就是先了解要做什么, 再了解该怎么做. 否则会出现只见树木不见森林的混乱情况. 一般的语言在编译或解释函数时, 都不直接执行函数体, 因此可以做到由抽象至具体的函数布局. 然而 shell script 却不是这样, 因此无法做到.
-- 每个函数的功能应该尽量纯粹, 警惕流水线式的、意大利面条式的代码. 比如, 取什么东西的函数就应该返回这个东西, 而不是在这个函数中插入不相关的逻辑. 尽量先把抽象的逻辑摆在一起, 并且先摆出来, 细节再步步深入.
-- 警惕代码之间的依赖关系: 若两个功能部分在逻辑上不包含依赖关系, 在代码实现上也不该包含依赖关系. 尤其是, 两个逻辑上独立的部分, 一部分代码的执行异常不该导致其他部分代码的异常.
+
+- 在代码中布置全局函数时, (在解释器/编译器允许的前提下,) 顺序应该由抽象至具体.
+  即由整体操作至具体操作. 因为认知的顺序就是先了解要做什么, 再了解该怎么做. 否则
+  会出现只见树木不见森林的混乱情况. 一般的语言在编译或解释函数时, 都不直接执行函数体,
+  因此可以做到由抽象至具体的函数布局. 然而 shell script 却不是这样, 因此无法做到.
+
+- 每个函数的功能应该尽量纯粹, 警惕流水线式的、意大利面条式的代码. 比如, 取什么东西的
+  函数就应该返回这个东西, 而不是在这个函数中插入不相关的逻辑. 尽量先把抽象的逻辑摆在
+  一起, 并且先摆出来, 细节再步步深入.
+
+- 警惕代码之间的依赖关系: 若两个功能部分在逻辑上不包含依赖关系, 在代码实现上也不该包
+  含依赖关系. 尤其是, 两个逻辑上独立的部分, 一部分代码的执行异常不该导致其他部分代码的异常.
 
 - 软件工程师最难得的一个良好思维模式就是能够做到:
   具体问题具体分析, 不被既往的经验所固化.
@@ -80,8 +102,12 @@ design patterns and refactoring (至少对于传统语言) 是通用的, 因为�
 
   * 在哪里产生 log 就在哪里创造 Logger, 因为 Logger 包含位置信息, 没必要也不该传来传去.
 
-- You should always write your code as if comments didn't exist. This forces you to write your code in the simplest, plainest, most self-documenting way you can humanly come up with.
-when you can't possibly imagine any conceivable way your code could be changed to become more straightforward and obvious -- then, and only then, should you feel compelled to add a comment explaining what your code does.
+- You should always write your code as if comments didn't exist. This forces you to
+  write your code in the simplest, plainest, most self-documenting way you can humanly
+  come up with.
+  when you can't possibly imagine any conceivable way your code could be changed to
+  become more straightforward and obvious -- then, and only then, should you feel
+  compelled to add a comment explaining what your code does.
 
 - 命令行参数的处理和 stdout/stderr.
   当用户指定参数 `--version`, `--help` 等, 不是 error condition, 因此输出应该在 stdout.
@@ -96,7 +122,7 @@ when you can't possibly imagine any conceivable way your code could be changed t
   想想 linux, 尤其是 FHS 是如何对文件目录进行分类和命名的.
 
 - 命令行语法说明规则
-  使用 (), 即 `(a | b | c)` 的格式来表达必须从多项中选择一个.
+  使用 () 或 {}, 即 `(a|b|c)` 或 `{a|b|c}` 的格式来表达必须从多项中选择一个.
 
 - 两个看上去类似的 class A B (功能类似, 作用类似, etc.), 何时该 B 继承 A? 何时该
   B wrap A?
