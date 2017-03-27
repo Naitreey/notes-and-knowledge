@@ -152,3 +152,39 @@
   API 所需的量. 并不是说线程间共享的量都需要从这里传递进线程.
   在设计时, 不要忘了模块化, 设计一个线程的逻辑时, 只该考虑这个线程的事务, 不该考虑其他
   线程如何调用这个线程.
+
+- 如何 redirect stdin/out/err:
+  1. 直接给 `sys.stdin|stdout|stderr` 赋值一个新的 file-like object.
+  2. 使用 python3 的 `contextlib.redirect_stdin|stdout|stderr`.
+  3. 注意以上方法都只是在 python 层面上转移了 stream, cpython 解释器的 fd 0,1,2
+     根本没受影响. 根本的办法是调用 `os.dup2()` 直接将想要的目的文件 fd 复制到
+     0,1,2 fd 上面. 例如:
+
+       .. code:: python
+       class _RedirectStream:
+           """
+           Redirect standard stream `_stream` at OS level, rather at python level.
+
+           This differs with `contextlib._RedirectStream`.
+           """
+
+           _stream = None
+
+           def __init__(self, target_stream):
+               self._target_stream = target_stream
+               self.new_fd = target_stream.fileno()
+               self.old_fd = None
+               self.copied = None
+
+           def __enter__(self):
+               stream = getattr(sys, self._stream)
+               stream.flush() # flush buffer that dup2 knows nothing about
+               self.old_fd = stream.fileno()
+               self.copied = os.dup(self.old_fd)
+               os.dup2(self.new_fd, self.old_fd)
+               return self._target_stream
+
+           def __exit__(self, exctype, excinst, exctb):
+               self._target_stream.flush()
+               os.dup2(self.copied, self.old_fd)
+               os.close(self.copied)
