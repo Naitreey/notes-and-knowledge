@@ -91,10 +91,10 @@ design patterns and refactoring (至少对于传统语言) 是通用的, 因为�
     这两个标准流用于输出需要在 terminal 中输出的信息. 例如, stderr 仅输
     出那些完全意外的信息, 即不是写在程序里的日志, 而是 uncaught exception,
     segfault 等不可控, 也不该控制的绝对错误. 对于具有 exception 机制的语言,
-    应该在最外层包含一个 catch-all-and-reraise 语句, 这样 uncaught exception
-    也输出在日志中, 方便理解发生错误的 context. stdout 则平时可以空闲,
-    也可以输出比如 `--help`, `--version` 等信息. 当程序长期运行时, stdout
-    与 stderr 可以一起转至一个文件, 阅读起来方便.
+    应该在最外层包含一个 "catch all, log error and reraise/print-to-stderr" 语句,
+    这样 uncaught exception 在输出至 stderr 的同时也输出在日志中, 方便理解发生错误
+    的 context. stdout 则平时可以空闲, 也可以输出比如 `--help`, `--version` 等信息.
+    当程序长期运行时, stdout 与 stderr 可以一起转至一个文件, 阅读起来方便.
 
     对于 one-off program: 一般不具有日志, 但开启 verbose/debug mode 后,
     相关信息也相当于日志, 应输出至 stderr (是否开启 verbose/debug, 可通过
