@@ -184,3 +184,10 @@ design patterns and refactoring (至少对于传统语言) 是通用的, 因为�
     stdin should redirect to `/dev/null`. 这样无论谁从 stdin 读东西都会马上读到 EOF.
     stdout/err 根据程序设计, 可以 redirect 至一个输出信息的文件, 或者 `/dev/null`.
     对于转至 `/dev/null`, 则要求程序设计中有专门输出日志的逻辑实现.
+  * daemon 不需要 one-off 程序那样的完整的执行流 (从 main 开始, 最后回到 main,
+    并返回恰当的 exit status 至父进程). 这是因为:
+    - daemon 需要长期运行, 执行 loop;
+    - daemon 需要对 signal 作出反馈. 这基本上会包含对 SIGTERM 处理后 exit() 这种逻辑.
+    由于对 signal 处理时, 是在当前的 stack 上叠加 signal handler stack, 因此如果
+    SIGTERM handler 最后是 return 而不是 exit, 就会回到循环中. 所以 exit() 只能在
+    stop() 中做, 不能在 main() 中做.
