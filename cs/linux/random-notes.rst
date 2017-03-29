@@ -40,8 +40,8 @@
       .. code:: sh
       mv bigdir bigdir.old
       mkdir bigdir
-      mkdir -p /tmp/empty
       rm -rf bigdir.old &
+      #mkdir -p /tmp/empty
       #rsync -rd --delete /tmp/empty/ bigdir.old/ &
       #rmdir bigdir.old
 
