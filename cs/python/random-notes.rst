@@ -198,3 +198,7 @@
 
 - 不该在 iterate list 或 map 的时候修改该对象的长度, 例如删除 element or key-val pair.
   对于 dict, 在 py3 中这是 `RuntimeError: dictionary changed size during iteration`.
+
+- `io.StringIO` constructor 的 `initial_value` 是用于设置 buffer 的初始值以便于
+  接下来修改的. 相当于一个文件以 "r+" mode 打开. fd 指向 buffer 起始位置. `write()`
+  会覆盖掉 `initial_value` 的部分.
