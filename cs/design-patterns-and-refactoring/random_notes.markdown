@@ -191,3 +191,31 @@ design patterns and refactoring (至少对于传统语言) 是通用的, 因为�
     由于对 signal 处理时, 是在当前的 stack 上叠加 signal handler stack, 因此如果
     SIGTERM handler 最后是 return 而不是 exit, 就会回到循环中. 所以 exit() 只能在
     stop() 中做, 不能在 main() 中做.
+
+- **Beware of pitfall of empty string**
+  任一字符串里都有 N 个空字符串. 这是写代码时必须被考虑到并处理的问题, 否则就是一个
+  very illusive hidden nasty bug and it will kick you back so hardly.
+  在 python 中,
+
+  ```python
+  "" in "..."
+  ```
+
+  总是返回 True, 可以这样解决
+
+  ```python
+  substr and substr in string
+  ```
+
+  在 cmdline 中, 对于一个非空文件 test,
+
+  ```sh
+  grep '' test
+  ```
+
+  总是成功并输出全文件内容 (注意对于没有任何内容的文件, i.e. length == 0), `grep ''`
+  是失败的. 比较合理的解决办法是
+
+  ```sh
+  [ -n "$pattern" ] && grep "$pattern" file
+  ```
