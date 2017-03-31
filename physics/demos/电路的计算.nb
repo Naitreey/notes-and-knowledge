@@ -1,0 +1,232 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 8.0' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       157,          7]
+NotebookDataLength[      7064,        222]
+NotebookOptionsPosition[      6702,        204]
+NotebookOutlinePosition[      7090,        221]
+CellTagsIndexPosition[      7047,        218]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+
+Cell[CellGroupData[{
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"eqs", "=", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"Vb", "\[Equal]", 
+      RowBox[{"i2", " ", "R2"}]}], ",", 
+     RowBox[{"Vc", "\[Equal]", 
+      RowBox[{"i4", " ", "R4"}]}], ",", 
+     RowBox[{
+      RowBox[{"Vb", "-", "Vc"}], "\[Equal]", 
+      RowBox[{"ig", " ", "Rg"}]}], ",", 
+     RowBox[{
+      RowBox[{"V", "-", "Vb"}], "\[Equal]", 
+      RowBox[{"i1", " ", "R1"}]}], ",", 
+     RowBox[{
+      RowBox[{"V", "-", "Vc"}], "\[Equal]", 
+      RowBox[{"i3", " ", "R3"}]}], ",", 
+     RowBox[{"i1", "\[Equal]", 
+      RowBox[{"i2", "+", "ig"}]}], ",", 
+     RowBox[{"i4", "\[Equal]", 
+      RowBox[{"i3", "+", "ig"}]}]}], "}"}]}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"vars", "=", 
+   RowBox[{"{", 
+    RowBox[{
+    "i1", ",", "i2", ",", "i3", ",", "i4", ",", "ig", ",", "Vb", ",", "Vc"}], 
+    "}"}]}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"Solve", "[", 
+   RowBox[{"eqs", ",", "vars"}], "]"}], "//", "FullSimplify"}]}], "Input",
+ CellChangeTimes->{{3.5549401788190556`*^9, 3.554940302247472*^9}}],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"{", 
+   RowBox[{
+    RowBox[{"i1", "\[Rule]", 
+     FractionBox[
+      RowBox[{
+       RowBox[{"(", 
+        RowBox[{
+         RowBox[{"R3", " ", 
+          RowBox[{"(", 
+           RowBox[{"R2", "+", "R4"}], ")"}]}], "+", 
+         RowBox[{
+          RowBox[{"(", 
+           RowBox[{"R3", "+", "R4"}], ")"}], " ", "Rg"}]}], ")"}], " ", "V"}], 
+      RowBox[{
+       RowBox[{"R1", " ", "R2", " ", "R3"}], "+", 
+       RowBox[{"R1", " ", "R2", " ", "R4"}], "+", 
+       RowBox[{"R1", " ", "R3", " ", "R4"}], "+", 
+       RowBox[{"R2", " ", "R3", " ", "R4"}], "+", 
+       RowBox[{
+        RowBox[{"(", 
+         RowBox[{"R1", "+", "R2"}], ")"}], " ", 
+        RowBox[{"(", 
+         RowBox[{"R3", "+", "R4"}], ")"}], " ", "Rg"}]}]]}], ",", 
+    RowBox[{"i2", "\[Rule]", 
+     FractionBox[
+      RowBox[{
+       RowBox[{"(", 
+        RowBox[{
+         RowBox[{
+          RowBox[{"(", 
+           RowBox[{"R1", "+", "R3"}], ")"}], " ", "R4"}], "+", 
+         RowBox[{
+          RowBox[{"(", 
+           RowBox[{"R3", "+", "R4"}], ")"}], " ", "Rg"}]}], ")"}], " ", "V"}], 
+      RowBox[{
+       RowBox[{"R1", " ", "R2", " ", "R3"}], "+", 
+       RowBox[{"R1", " ", "R2", " ", "R4"}], "+", 
+       RowBox[{"R1", " ", "R3", " ", "R4"}], "+", 
+       RowBox[{"R2", " ", "R3", " ", "R4"}], "+", 
+       RowBox[{
+        RowBox[{"(", 
+         RowBox[{"R1", "+", "R2"}], ")"}], " ", 
+        RowBox[{"(", 
+         RowBox[{"R3", "+", "R4"}], ")"}], " ", "Rg"}]}]]}], ",", 
+    RowBox[{"i3", "\[Rule]", 
+     FractionBox[
+      RowBox[{
+       RowBox[{"(", 
+        RowBox[{
+         RowBox[{"R2", " ", "Rg"}], "+", 
+         RowBox[{"R1", " ", 
+          RowBox[{"(", 
+           RowBox[{"R2", "+", "R4", "+", "Rg"}], ")"}]}]}], ")"}], " ", "V"}], 
+      RowBox[{
+       RowBox[{"R1", " ", "R2", " ", "R3"}], "+", 
+       RowBox[{"R1", " ", "R2", " ", "R4"}], "+", 
+       RowBox[{"R1", " ", "R3", " ", "R4"}], "+", 
+       RowBox[{"R2", " ", "R3", " ", "R4"}], "+", 
+       RowBox[{
+        RowBox[{"(", 
+         RowBox[{"R1", "+", "R2"}], ")"}], " ", 
+        RowBox[{"(", 
+         RowBox[{"R3", "+", "R4"}], ")"}], " ", "Rg"}]}]]}], ",", 
+    RowBox[{"i4", "\[Rule]", 
+     FractionBox[
+      RowBox[{
+       RowBox[{"(", 
+        RowBox[{
+         RowBox[{"R1", " ", 
+          RowBox[{"(", 
+           RowBox[{"R2", "+", "Rg"}], ")"}]}], "+", 
+         RowBox[{"R2", " ", 
+          RowBox[{"(", 
+           RowBox[{"R3", "+", "Rg"}], ")"}]}]}], ")"}], " ", "V"}], 
+      RowBox[{
+       RowBox[{"R1", " ", "R2", " ", "R3"}], "+", 
+       RowBox[{"R1", " ", "R2", " ", "R4"}], "+", 
+       RowBox[{"R1", " ", "R3", " ", "R4"}], "+", 
+       RowBox[{"R2", " ", "R3", " ", "R4"}], "+", 
+       RowBox[{
+        RowBox[{"(", 
+         RowBox[{"R1", "+", "R2"}], ")"}], " ", 
+        RowBox[{"(", 
+         RowBox[{"R3", "+", "R4"}], ")"}], " ", "Rg"}]}]]}], ",", 
+    RowBox[{"ig", "\[Rule]", 
+     FractionBox[
+      RowBox[{
+       RowBox[{"(", 
+        RowBox[{
+         RowBox[{"R2", " ", "R3"}], "-", 
+         RowBox[{"R1", " ", "R4"}]}], ")"}], " ", "V"}], 
+      RowBox[{
+       RowBox[{"R1", " ", "R2", " ", "R3"}], "+", 
+       RowBox[{"R1", " ", "R2", " ", "R4"}], "+", 
+       RowBox[{"R1", " ", "R3", " ", "R4"}], "+", 
+       RowBox[{"R2", " ", "R3", " ", "R4"}], "+", 
+       RowBox[{
+        RowBox[{"(", 
+         RowBox[{"R1", "+", "R2"}], ")"}], " ", 
+        RowBox[{"(", 
+         RowBox[{"R3", "+", "R4"}], ")"}], " ", "Rg"}]}]]}], ",", 
+    RowBox[{"Vb", "\[Rule]", 
+     FractionBox[
+      RowBox[{"R2", " ", 
+       RowBox[{"(", 
+        RowBox[{
+         RowBox[{
+          RowBox[{"(", 
+           RowBox[{"R1", "+", "R3"}], ")"}], " ", "R4"}], "+", 
+         RowBox[{
+          RowBox[{"(", 
+           RowBox[{"R3", "+", "R4"}], ")"}], " ", "Rg"}]}], ")"}], " ", "V"}], 
+      RowBox[{
+       RowBox[{"R1", " ", "R2", " ", "R3"}], "+", 
+       RowBox[{"R1", " ", "R2", " ", "R4"}], "+", 
+       RowBox[{"R1", " ", "R3", " ", "R4"}], "+", 
+       RowBox[{"R2", " ", "R3", " ", "R4"}], "+", 
+       RowBox[{
+        RowBox[{"(", 
+         RowBox[{"R1", "+", "R2"}], ")"}], " ", 
+        RowBox[{"(", 
+         RowBox[{"R3", "+", "R4"}], ")"}], " ", "Rg"}]}]]}], ",", 
+    RowBox[{"Vc", "\[Rule]", 
+     FractionBox[
+      RowBox[{"R4", " ", 
+       RowBox[{"(", 
+        RowBox[{
+         RowBox[{"R1", " ", 
+          RowBox[{"(", 
+           RowBox[{"R2", "+", "Rg"}], ")"}]}], "+", 
+         RowBox[{"R2", " ", 
+          RowBox[{"(", 
+           RowBox[{"R3", "+", "Rg"}], ")"}]}]}], ")"}], " ", "V"}], 
+      RowBox[{
+       RowBox[{"R1", " ", "R2", " ", "R3"}], "+", 
+       RowBox[{"R1", " ", "R2", " ", "R4"}], "+", 
+       RowBox[{"R1", " ", "R3", " ", "R4"}], "+", 
+       RowBox[{"R2", " ", "R3", " ", "R4"}], "+", 
+       RowBox[{
+        RowBox[{"(", 
+         RowBox[{"R1", "+", "R2"}], ")"}], " ", 
+        RowBox[{"(", 
+         RowBox[{"R3", "+", "R4"}], ")"}], " ", "Rg"}]}]]}]}], "}"}], 
+  "}"}]], "Output",
+ CellChangeTimes->{3.5549403042130756`*^9}]
+}, Open  ]]
+},
+WindowSize->{1350, 673},
+WindowMargins->{{0, Automatic}, {Automatic, 0}},
+Magnification->2.000000238418579,
+FrontEndVersion->"8.0 for Microsoft Windows (64-bit) (2011\:5e743\:670815\
+\:65e5)",
+StyleDefinitions->"Default.nb"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[CellGroupData[{
+Cell[579, 22, 1071, 31, 160, "Input"],
+Cell[1653, 55, 5033, 146, 474, "Output"]
+}, Open  ]]
+}
+]
+*)
+
+(* End of internal cache information *)
+
