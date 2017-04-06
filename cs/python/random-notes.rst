@@ -202,3 +202,9 @@
 - `io.StringIO` constructor 的 `initial_value` 是用于设置 buffer 的初始值以便于
   接下来修改的. 相当于一个文件以 "r+" mode 打开. fd 指向 buffer 起始位置. `write()`
   会覆盖掉 `initial_value` 的部分.
+
+- 对于明确只能使用一次的 context manager, 可以利用 `contextlib.contextmanager`
+  使用 generator 来生成. 在 generator function 中只写一个 ``yield``, 这样只能
+  yield 一次, 所以同一个 generator 不能在不同 ``with`` statement 中重用.
+  但是其实这也不一定. 写一个完整的类并实现 context manager protocol 很多时候
+  是更好的选择.
