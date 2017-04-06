@@ -219,3 +219,27 @@ design patterns and refactoring (至少对于传统语言) 是通用的, 因为�
   ```sh
   [ -n "$pattern" ] && grep "$pattern" file
   ```
+
+- 一个操作是否满足 thread safety 的关键是看它是否修改 global state.
+
+- 一个操作是否满足 reentrancy 的关键是看它能否 survive 递归调用.
+
+- Cascading configuration override: 从低优先至高优先, 一级一级覆盖.
+
+  * /usr/{lib|share}/package, 由 vendor 管理的默认配置.
+  * /etc/package, 全局配置.
+  * 根据程序功能性质的需要, 可能还需要在 (/usr/share|/etc)/package.d 目录下
+    设置一系列独立配置文件, 并按照 lexicographical 顺序应用和覆盖.
+  * $HOME/.package 或 $HOME/.config/package, 用户全局配置.
+  * /dir/package.conf, 本地配置.
+  * 在每个配置文件中, 可以分别设置 global 性质的配置和 section 的配置. 后者覆盖前者.
+  * environ 值覆盖配置文件中的值.
+  * 命令行参数覆盖 environ 里的值.
+
+  参考的例子有 pip, udev, systemd, sysctl, git 等的配置设计.
+
+- Design versioning scheme
+  可以参考 [python setuptools 的版本识别逻辑][setuptools], 来设计 versioning scheme.
+
+
+[setuptools]: https://setuptools.readthedocs.io/en/latest/setuptools.html#specifying-your-project-s-version
