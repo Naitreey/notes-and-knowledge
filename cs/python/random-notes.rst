@@ -222,3 +222,9 @@
     使用场景, 而是任何的含义附加以及操纵. 简单的可以是 `classmethod` 等基本的含义
     微调, 复杂的可以是将一定的操作 attach 至某个更大的完整的框架, 例如 `Flask.route`,
     `unittest.skipIf`.
+
+- 对于明确只能使用一次的 context manager, 可以利用 `contextlib.contextmanager`
+  使用 generator 来生成. 在 generator function 中只写一个 ``yield``, 这样只能
+  yield 一次, 所以同一个 generator 不能在不同 ``with`` statement 中重用.
+  但是其实这也不一定. 写一个完整的类并实现 context manager protocol 很多时候
+  是更好的选择.
