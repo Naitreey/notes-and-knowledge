@@ -222,3 +222,12 @@
     使用场景, 而是任何的含义附加以及操纵. 简单的可以是 `classmethod` 等基本的含义
     微调, 复杂的可以是将一定的操作 attach 至某个更大的完整的框架, 例如 `Flask.route`,
     `unittest.skipIf`.
+
+- 关于编译. 直接在命令行上指定的 python module (一般是可执行脚本) 的编译结果不会被
+  cache 到文件系统中.
+  编译的 pyc 文件是 platform-independent.
+  对于 non-source distribution, 编译后的 pyc 必须位于源文件的目录, 且必须不能有源文件
+  存在.
+  `-O` 去掉 ``assert``, `-OO` 进一步去掉 docstring. 因此一般不该也不需要优化编译.
+  编译只会加载更快, 不会影响运行速度.
+  ref: https://docs.python.org/3/tutorial/modules.html#compiled-python-files
