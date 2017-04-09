@@ -208,3 +208,9 @@
   yield 一次, 所以同一个 generator 不能在不同 ``with`` statement 中重用.
   但是其实这也不一定. 写一个完整的类并实现 context manager protocol 很多时候
   是更好的选择.
+
+- python3.4+ 中, module ``__file__`` attribute 总是该 module 的绝对路径, 唯一的
+  例外是作为 `__main__` module 执行的命令行脚本. ``__main__.__file__`` 的值与
+  命令行上的脚本路径一致, 因此可能是相对或绝对. 这有助于对脚本 invocation 方式
+  的判断.
+  ref: https://docs.python.org/3.4/whatsnew/3.4.html#other-language-changes
