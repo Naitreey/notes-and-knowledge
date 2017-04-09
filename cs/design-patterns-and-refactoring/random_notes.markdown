@@ -226,6 +226,7 @@ design patterns and refactoring (至少对于传统语言) 是通用的, 因为�
 
 - Cascading configuration override: 从低优先至高优先, 一级一级覆盖.
 
+  * 代码里写死的配置值, 作为 last resort、fallback value, 由开发者固定.
   * /usr/{lib|share}/package, 由 vendor 管理的默认配置.
   * /etc/package, 全局配置.
   * 根据程序功能性质的需要, 可能还需要在 (/usr/share|/etc)/package.d 目录下
