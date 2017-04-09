@@ -245,3 +245,12 @@
   (而非不能) 访问.
 
   ``self.identifier`` 是共有成员. 谁都可以访问.
+
+- 关于编译. 直接在命令行上指定的 python module (一般是可执行脚本) 的编译结果不会被
+  cache 到文件系统中.
+  编译的 pyc 文件是 platform-independent.
+  对于 non-source distribution, 编译后的 pyc 必须位于源文件的目录, 且必须不能有源文件
+  存在.
+  `-O` 去掉 ``assert``, `-OO` 进一步去掉 docstring. 因此一般不该也不需要优化编译.
+  编译只会加载更快, 不会影响运行速度.
+  ref: https://docs.python.org/3/tutorial/modules.html#compiled-python-files
