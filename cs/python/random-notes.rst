@@ -234,3 +234,14 @@
   命令行上的脚本路径一致, 因此可能是相对或绝对. 这有助于对脚本 invocation 方式
   的判断.
   ref: https://docs.python.org/3.4/whatsnew/3.4.html#other-language-changes
+
+- python class member vs java class member
+
+  ``self.__identifier`` 类似于 Java 的 private member. 这种成员只要是在 class 或
+  instance 的 namespace 中定义, 就会被 name mangling. 而且 prefix 的 class name
+  取决于 lexical scope 的类名. 因此实现了子类无法访问的 private member.
+
+  ``self._identifier`` 意在作为类似 protected member. Subclass 可以访问, 外界不该
+  (而非不能) 访问.
+
+  ``self.identifier`` 是共有成员. 谁都可以访问.
