@@ -223,6 +223,29 @@
     微调, 复杂的可以是将一定的操作 attach 至某个更大的完整的框架, 例如 `Flask.route`,
     `unittest.skipIf`.
 
+- 对于明确只能使用一次的 context manager, 可以利用 `contextlib.contextmanager`
+  使用 generator 来生成. 在 generator function 中只写一个 ``yield``, 这样只能
+  yield 一次, 所以同一个 generator 不能在不同 ``with`` statement 中重用.
+  但是其实这也不一定. 写一个完整的类并实现 context manager protocol 很多时候
+  是更好的选择.
+
+- python3.4+ 中, module ``__file__`` attribute 总是该 module 的绝对路径, 唯一的
+  例外是作为 `__main__` module 执行的命令行脚本. ``__main__.__file__`` 的值与
+  命令行上的脚本路径一致, 因此可能是相对或绝对. 这有助于对脚本 invocation 方式
+  的判断.
+  ref: https://docs.python.org/3.4/whatsnew/3.4.html#other-language-changes
+
+- python class member vs java class member
+
+  ``self.__identifier`` 类似于 Java 的 private member. 这种成员只要是在 class 或
+  instance 的 namespace 中定义, 就会被 name mangling. 而且 prefix 的 class name
+  取决于 lexical scope 的类名. 因此实现了子类无法访问的 private member.
+
+  ``self._identifier`` 意在作为类似 protected member. Subclass 可以访问, 外界不该
+  (而非不能) 访问.
+
+  ``self.identifier`` 是共有成员. 谁都可以访问.
+
 - 关于编译. 直接在命令行上指定的 python module (一般是可执行脚本) 的编译结果不会被
   cache 到文件系统中.
   编译的 pyc 文件是 platform-independent.

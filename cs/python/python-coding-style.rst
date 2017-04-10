@@ -1,26 +1,53 @@
-#indentation
-- 4-space per indentation level
-Continuation lines should align wrapped elements vertically using Python's implicit line joining inside parentheses, brackets and braces.
-do not mix tab with spaces in indentation
+indentation
+-----------
+- 4-space per indentation level.
+- Continuation lines should align wrapped elements vertically using Python's
+  implicit line joining inside parentheses, brackets and braces.
+  对于 list, dict, 等 compound literal 数据, 若第一个元素在 statement 同一行,
+  以下的所有 element 需对齐缩进; 若第一个元素在第二行, elements 的 indentation
+  应比第一行深一个等级. 对于结尾的 matching parenthesis, bracket, brace 的位置,
+  若第一个元素在首行, 则它应该在末尾元素同行; 否则应该在下一行. 对于后一情况,
+  可以与第一行对齐, 也可与各元素对齐.
 
-#line length
+  .. code:: python
+
+    d = {"a": 1,
+         "b": 2}
+
+    l = [
+        1, 2, 3,
+        4, 5, 6
+    ]
+
+    d = (
+        1, 2, 3,
+        4, 5, 6
+        )
+
+- Do not mix tab with spaces in indentation.
+
+line length
+-----------
 - no more than 79 chars per line, 或者 80--100 是容忍下限
 - for big block of text (docstring/comment), no more than 72 chars per line
 The preferred way of wrapping long lines is by using Python's implied line continuation inside parentheses, brackets and braces. Long lines can be broken over multiple lines by wrapping expressions in parentheses. These should be used in preference to using a backslash for line continuation.
 Backslashes may still be appropriate at times.
 The preferred place to break around a binary operator is after the operator, not before it.
 
-#blank lines
+blank lines
+-----------
 - Surround top-level function and class definitions with two blank lines.
 - Method definitions inside a class are surrounded by a single blank line.
 - Use blank lines in functions, sparingly, to indicate logical sections.
 
-#source file encoding
+source file encoding
+--------------------
 ASCII/UTF-8
 - Files using ASCII (in Python 2) or UTF-8 (in Python 3) should not have an encoding declaration.
 - All identifiers in the Python standard library MUST use ASCII-only identifiers, and SHOULD use English words wherever feasible.
 
-#import
+import
+------
 - Imports are always put at the top of the file, just after any module comments and docstrings, and before module globals and constants.
 -  Imports should be grouped in the following order:
     1. standard library imports
@@ -30,11 +57,13 @@ ASCII/UTF-8
 - However, explicit relative imports are an acceptable alternative to absolute imports, especially when dealing with complex package layouts where using absolute imports would be unnecessarily verbose.
 - Wildcard imports ( from <module> import * ) should be avoided, as they make it unclear which names are present in the namespace, confusing both readers and many automated tools.
 
-#quoting strings
+quoting strings
+---------------
 -  When a string contains single or double quote characters, however, use the other one to avoid backslashes in the string. It improves readability.
 - For triple-quoted strings, always use double quote characters.
 
-#whitespace in expressions and statements
+whitespace in expressions and statements
+----------------------------------------
 - Avoid extraneous whitespace in the following situations:
     Immediately inside parentheses, brackets or braces.
     Immediately before a comma, semicolon, or colon.
@@ -47,12 +76,14 @@ ASCII/UTF-8
 - Compound statements (multiple statements on the same line) are generally discouraged.
 - While sometimes it's okay to put an if/for/while with a small body on the same line, never do this for multi-clause statements.
 
-#comments
+comments
+--------
 - Always make a priority of keeping the comments up-to-date when the code changes.
 - Block comments generally apply to some (or all) code that follows them, and are indented to the same level as that code. Each line of a block comment starts with a # and a single space.
 - An inline comment is a comment on the same line as a statement.
 
-#docstrings
+docstrings
+----------
 - A docstring is a string literal that occurs as the first statement in a module, function, class, or method definition.
 - Write docstrings for all public modules, functions, classes, and methods. Docstrings are not necessary for non-public methods, but you should have a comment that describes what the method does. This comment should appear after the def line.
 -  A package may be documented in the module docstring of the __init__.py file in the package directory.
@@ -63,7 +94,8 @@ ASCII/UTF-8
 - The entire docstring is indented the same as the quotes at its first line.
 - The docstring of a script (a stand-alone program) should be usable as its "usage" message, printed when the script is invoked with incorrect or missing arguments (or perhaps with a "-h" option, for "help").
 
-#naming conventions
+naming conventions
+------------------
 - Names that are visible to the user as public parts of the API should follow conventions that reflect usage rather than implementation.
 - `_single_leading_underscore` : weak "internal use" indicator. E.g. from M import * does not import objects whose name starts with an underscore.
 - `single_trailing_underscore_` : used by convention to avoid conflicts with Python keyword.
