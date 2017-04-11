@@ -274,3 +274,6 @@
   等问题, 使用 ``open`` 的 `newline` 参数.
 
 - 不能 ``bytes("string")``, 必须指定 `encoding`.
+
+- `zip` object is iterator, i.e. it has ``__next__`` method.
+  所以 `zip` object 不能重复使用.
