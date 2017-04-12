@@ -254,3 +254,26 @@
   `-O` 去掉 ``assert``, `-OO` 进一步去掉 docstring. 因此一般不该也不需要优化编译.
   编译只会加载更快, 不会影响运行速度.
   ref: https://docs.python.org/3/tutorial/modules.html#compiled-python-files
+
+- py3 中, bytes 的 printf-style string formatting 支持 `b` 和 `a` conversion
+  specifiers. `b` 生成对象的 bytes object 表达形式 (``__bytes__`` 或 buffer
+  protocol); `a` 生成对象的 ascii 表达形式, 即将所有非 ascii 字符转义为
+  escape sequence, 严格地讲是 ``repr(obj).encode("ascii", "backslashreplace")``.
+  bytes 的 `b` 和 `a` 对应于 str 的 `s` 和 `r`. 对于 str, 也有 `a` 这种 ascii
+  表达形式.
+
+- py3 中, exception object 包含一切 exception 相关信息::
+
+    exc_type    type(e)
+    exc_value   e
+    traceback   e.__traceback__
+
+- py3 中没有 basestring, 因为 string 就是 string, bytes 就是 bytes, 是两码事.
+
+- 不要随便使用 binary IO mode, 只有需要时才使用. 如果担心 line ending 的转换
+  等问题, 使用 ``open`` 的 `newline` 参数.
+
+- 不能 ``bytes("string")``, 必须指定 `encoding`.
+
+- `zip` object is iterator, i.e. it has ``__next__`` method.
+  所以 `zip` object 不能重复使用.
