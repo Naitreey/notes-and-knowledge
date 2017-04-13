@@ -277,3 +277,6 @@
 
 - `zip` object is iterator, i.e. it has ``__next__`` method.
   所以 `zip` object 不能重复使用.
+
+- py3 中 `int` type 自带与 bytes 相关的方法:
+  `int.from_bytes`, `int.to_bytes`, `int.bit_length`.
