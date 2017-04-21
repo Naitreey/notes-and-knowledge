@@ -50,6 +50,16 @@ messy. 如果非要引入相关修改, 首选 rebase.
   * 由于 submodule 使用起来的各种不便利, 要高效的使用 submodule 必须将所有常用
     操作脚本化.
 
+  * Oh my god, 实际上在包含 submodule 的 repo 里, commit & merge 还有一个反常的
+    操作, 那就是如果手动进入 submodule repo 中 fetch & merge 至最新, 然后在
+    parent 中 submodule 的路径显示为 modified. 正常情况下应该 add & commit 这个
+    modified path, 然后再 fetch remote & merge. 但是对于 submodule, 需要在 modified
+    时就 fetch & merge, 这样 modified 会消失, 因记录的 commit 值已经更新到最新,
+    与 submodule repo 中 checkout 的值一致. 如果按照正常的 add & commit & fetch & merge,
+    反而会造成 git log 中出现两个十分类似的修改 (在本地分支和被合并的 remote
+    tracking 分支).
+    这对 submodule 操作脚本化也造成了进一步的麻烦和特殊处理.
+
   ref: https://www.atlassian.com/blog/git/alternatives-to-git-submodule-git-subtree
 
 - Which to use `git submodule` or `git subtree`
