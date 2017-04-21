@@ -56,6 +56,15 @@ import
 - Absolute imports are recommended, as they are usually more readable and tend to be better behaved (or at least give better error messages) if the import system is incorrectly configured.
 - However, explicit relative imports are an acceptable alternative to absolute imports, especially when dealing with complex package layouts where using absolute imports would be unnecessarily verbose.
 - Wildcard imports ( from <module> import * ) should be avoided, as they make it unclear which names are present in the namespace, confusing both readers and many automated tools.
+- import 时如果一行放不下, 应使用 ``()`` 进行 implicit line continuation, 并且符合以下格式:
+
+    .. code:: python
+
+    from somemodule import (
+        name1,
+        name2,
+        name3,
+    )
 
 quoting strings
 ---------------
