@@ -280,3 +280,17 @@
 
 - py3 中 `int` type 自带与 bytes 相关的方法:
   `int.from_bytes`, `int.to_bytes`, `int.bit_length`.
+
+- python 的 executable script 一般设计为把代码的主要实现部分放在一个 package/module
+  中, 将极其少量的调用部分, 即 entrypoint 放在单独的可执行脚本中. 并且该 entrypoint
+  具有明确的返回值, 如下所示:
+
+    .. code:: python
+
+    import sys
+    from somemodule import main # main is the typical entrypoint name
+    # ...
+    # preparations
+    # ...
+    sys.exit(main(...))
+
