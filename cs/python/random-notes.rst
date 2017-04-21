@@ -294,3 +294,20 @@
     # ...
     sys.exit(main(...))
 
+- ``install_requires`` of `setup.py` vs `requirements.txt`:
+
+  * ``install_requires`` 是从 package 发布的角度来规定 dependency 的.
+    因此, 它规定的依赖应该是这个 package 的直接依赖, 并且它对 deps 的版本限定是
+    必要性的限制, 即不满足这些限制这个 package 就无法正常工作. 这也意味着, 不该
+    限制 deps 的来源, 只该相对抽象地说明所需的包和至少需要满足的版本.
+
+  * `requirements.txt` 是从部署和运行的角度来规定要安装的包和所需安装的版本的.
+    也就是说, `requirements.txt` 描述的是 "如果你想要干某件事情, 你需要首先
+    用 `pip` 保证当前环境满足 `requirements`". 比如, 某个软件包含一系列 python
+    写的 tests, 那么要运行这些测试, 当前环境需满足 `test_requirements.txt` 里
+    指定的条件. 注意我们不是要发布这些测试代码, 因此没有 `setup.py`. 再比如,
+    生产部署时当然需要所有包的版本是固定的经过测试的, 所以应该将开发或测试环境
+    中的所有 packages 用 `pip freeze` 生成一个严格的包含所有 packages 的列表,
+    以在生产机器上对这个完整的 python 运行环境进行 repeatable installation.
+
+  Ref: https://packaging.python.org/requirements/
