@@ -158,3 +158,4 @@
 - comparison
     2. dict comparision is undefined, but consistently behaved.
     3. dict comparision raises TypeError
+- 很多 py23 的区别可以在 `2to3` 这个工具中找到.
