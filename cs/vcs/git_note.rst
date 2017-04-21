@@ -40,9 +40,15 @@ messy. 如果非要引入相关修改, 首选 rebase.
     之下, git subtree 由于只是一个目录, 就是在 superproject 中进行的操作, 没有
     增加复杂度.
 
+  * 递归存在的 submodules (e.g., C 是 B 的子项目, B 是 A 的子项目) 极其难以忍受.
+    在最内层的修改需要在每个外层进行十分机械的 add + commit 操作, 根本无法忍受.
+
   * git subtree 将 dependency 的代码十分透明地合并成为 superproject 自身的代码,
     这要求 developer 十分清楚某个 subtree 实际上属于其他 repo. 否则, git subtree
     带来的代码重复可能导致 code inconsistency.
+
+  * 由于 submodule 使用起来的各种不便利, 要高效的使用 submodule 必须将所有常用
+    操作脚本化.
 
   ref: https://www.atlassian.com/blog/git/alternatives-to-git-submodule-git-subtree
 
