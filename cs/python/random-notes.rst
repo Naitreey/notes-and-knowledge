@@ -281,6 +281,10 @@
 - py3 中 `int` type 自带与 bytes 相关的方法:
   `int.from_bytes`, `int.to_bytes`, `int.bit_length`.
 
+- 对于 py2 py3 兼容的代码, 不能用 py3 特有的 syntax, 否则在解释器第一步 lexical analysis
+  时就会报出 `SyntaxError`. 所以必须用 py2 py3 兼容的语法来写. 然后在 runtime 对不同版本
+  的 python 进行不同的调用和处理.
+
 - python 的 executable script 一般设计为把代码的主要实现部分放在一个 package/module
   中, 将极其少量的调用部分, 即 entrypoint 放在单独的可执行脚本中. 并且该 entrypoint
   具有明确的返回值, 如下所示:
