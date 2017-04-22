@@ -40,9 +40,25 @@ messy. 如果非要引入相关修改, 首选 rebase.
     之下, git subtree 由于只是一个目录, 就是在 superproject 中进行的操作, 没有
     增加复杂度.
 
+  * 递归存在的 submodules (e.g., C 是 B 的子项目, B 是 A 的子项目) 极其难以忍受.
+    在最内层的修改需要在每个外层进行十分机械的 add + commit 操作, 根本无法忍受.
+
   * git subtree 将 dependency 的代码十分透明地合并成为 superproject 自身的代码,
     这要求 developer 十分清楚某个 subtree 实际上属于其他 repo. 否则, git subtree
     带来的代码重复可能导致 code inconsistency.
+
+  * 由于 submodule 使用起来的各种不便利, 要高效的使用 submodule 必须将所有常用
+    操作脚本化.
+
+  * Oh my god, 实际上在包含 submodule 的 repo 里, commit & merge 还有一个反常的
+    操作, 那就是如果手动进入 submodule repo 中 fetch & merge 至最新, 然后在
+    parent 中 submodule 的路径显示为 modified. 正常情况下应该 add & commit 这个
+    modified path, 然后再 fetch remote & merge. 但是对于 submodule, 需要在 modified
+    时就 fetch & merge, 这样 modified 会消失, 因记录的 commit 值已经更新到最新,
+    与 submodule repo 中 checkout 的值一致. 如果按照正常的 add & commit & fetch & merge,
+    反而会造成 git log 中出现两个十分类似的修改 (在本地分支和被合并的 remote
+    tracking 分支).
+    这对 submodule 操作脚本化也造成了进一步的麻烦和特殊处理.
 
   ref: https://www.atlassian.com/blog/git/alternatives-to-git-submodule-git-subtree
 
