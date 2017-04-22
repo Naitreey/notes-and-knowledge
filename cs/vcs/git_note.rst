@@ -71,3 +71,16 @@ messy. 如果非要引入相关修改, 首选 rebase.
 
   * 我不知道 submodule subtree 哪个更好. 但目前看来, submodule 能干的 subtree 都能干,
     而且流程更简单无痛. 所以我更愿意用 subtree.
+
+- show tracking branch
+
+  * ``git branch -vv``
+    注意 `-v` 会输出分支与 remote tracking branch 的关系但不会输出那个分支的名字,
+    `-vv` 才会输出那个分支的名字.
+    这里的 remote tracking branch 指的是 `branch.<name>.remote` 和 `branch.<name>.merge`
+    分别配置的 remote repo 和 remote branch. 它影响的包含 `git fetch`, `git push`,
+    `git pull`, `git rebase` 所需要的 repo + refspec.
+
+  * ``git remote show <repo>``
+    这会输出对于每个 `repo` 的所有 tracked branches. 这里的 tracked branches 的
+    作用范围局限于在相应命令中指定 repo 但没有指定分支时.
