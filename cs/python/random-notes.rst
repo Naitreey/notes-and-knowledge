@@ -246,6 +246,8 @@
 
   ``self.identifier`` 是共有成员. 谁都可以访问.
 
+  在 python class 的定义中应该遵守这个规则, 非共有成员一律以 ``_`` 起始.
+
 - 关于编译. 直接在命令行上指定的 python module (一般是可执行脚本) 的编译结果不会被
   cache 到文件系统中.
   编译的 pyc 文件是 platform-independent.
