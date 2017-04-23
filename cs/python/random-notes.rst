@@ -317,3 +317,30 @@
     以在生产机器上对这个完整的 python 运行环境进行 repeatable installation.
 
   Ref: https://packaging.python.org/requirements/
+
+- 正则表达式字符串应该使用 raw string. 这样才能保证出现在字符串中的任何 literal 字符,
+  经过解释器处理之后得到的值仍然是其原始的 literal 的内容.
+  这是因为 ``\`` backslash 在 string syntax 和 regex syntax 都是转义作用. 所以对于一个
+  正则的 escape sequence, 在代码中输入时必须 escape 两次. 为避免这种 clumzy, 需要使用
+  raw string.
+
+- 正则的 ``$`` 会匹配
+
+  * end of string 这个空字符串位置
+
+  * just before the newline at the end of string 这个空字符串位置, 因此 ``abc\n`` 有
+    两个可能的匹配位置.
+
+  在 multiline mode, ``^`` ``$`` 还会对以 ``\n`` 分隔的每行进行匹配.
+
+- python 正则的 character class 只支持 single char escape sequence, 不支持 ``[:name:]``
+  形式的 POSIX name.
+
+- 设置了 ``re.VERBOSE`` flag 的 pattern 里, 所有的 whitespace chars, 无论所在的位置和
+  层级, 都会被忽略掉, 除了两种情况:
+
+  * 位于 character class 中的 whitespace chars, e.g., ``[ \t\n]``.
+
+  * 使用 ``\`` 进行转义的 whitespace chars.
+
+  此外, 在 char class 以外且没有被转义的 ``#`` 代表 comment 的开始.
