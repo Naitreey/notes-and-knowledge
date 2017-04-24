@@ -344,3 +344,26 @@
   * 使用 ``\`` 进行转义的 whitespace chars.
 
   此外, 在 char class 以外且没有被转义的 ``#`` 代表 comment 的开始.
+
+- `types.SimpleNamespace` 可以用于集成一组任意的 key-value, 功能上与一个 dict
+  并无本质区别, 只是在 access key-value 时稍方便一点. 实际上, 可以用 `SimpleNamespace`
+  来方便地实现可以同时以 attribute 和 key 两种方式访问的 mapping:
+
+    .. code:: python
+
+    class DictNamespace(SimpleNamespace):
+        def __getitem__(self, k):
+            return self.__dict__[k]
+        def __setitem__(self, k, v):
+            self.__dict__[k] = v
+        def __delitem__(self, k):
+            del self.__dict__[k]
+
+- ``__getattr__`` vs ``__getattribute__``
+
+  * 获取一个 attribute 时, 如果在 object 自身以及在它的类的 MRO chain 上都
+    找不到这个 attribute 时, 就会 call 它的 ``__getattr__``. 这可用于动态的
+    attribute access. ``pymongo`` 是很好的例子.
+
+  * 如果实现了 ``__getattribute__``, 则所有 attribute access 的操作都会走这个
+    method.
