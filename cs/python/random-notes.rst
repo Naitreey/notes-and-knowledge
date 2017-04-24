@@ -344,3 +344,15 @@
   * 使用 ``\`` 进行转义的 whitespace chars.
 
   此外, 在 char class 以外且没有被转义的 ``#`` 代表 comment 的开始.
+
+- Indentation is rejected as inconsistent if a source file mixes tabs and spaces
+  in a way that makes the meaning dependent on the worth of a tab in spaces;
+  a `TabError` is raised in that case.
+
+    .. code:: python
+    if __name__ == '__main__':
+        print("b")
+    	print("a")
+
+  以上代码会导致 `TabError`, 因为 第二行 print 前面是 tab char, 对它的大小的解释依赖于
+  第一行.
