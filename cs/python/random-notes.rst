@@ -380,3 +380,14 @@
 
   以上代码会导致 `TabError`, 因为 第二行 print 前面是 tab char, 对它的大小的解释依赖于
   第一行.
+
+- ``types.DynamicClassAttribute`` 是个 descriptor, 它在很大程度上的使用与 `property`
+  类似, 而它的目的是如果对这个 attribute 的访问是基于 class, 则转至 ``__getattr__``,
+  从而达到对结果自定义的目的. ``enum.Enum`` 是个例子. `Enum` 需要使用
+  ``DynamicClassAttribute`` 的原因是:
+
+  - `Enum` object 需要支持 ``.name`` ``.value`` 两个属性.
+
+  - `Enum` 的成员可能命名为 ``name`` ``value`` 等, 这要求 ``Enum.name`` 是 instance,
+    ``Enum.name.name`` 是 instance 的名字. 所以需要对 ``.name`` attribute 的访问进行
+    控制.
