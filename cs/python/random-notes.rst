@@ -391,3 +391,8 @@
   - `Enum` 的成员可能命名为 ``name`` ``value`` 等, 这要求 ``Enum.name`` 是 instance,
     ``Enum.name.name`` 是 instance 的名字. 所以需要对 ``.name`` attribute 的访问进行
     控制.
+
+- locale settings, 准确地讲是 ``LC_CTYPE`` 会影响 python 中读写文件系统时使用的
+  encoding, 即 `sys.getfilesystemencodign()`. 所以为了保证 UTF-8 的 filesystem encoding,
+  恰当的 locale 环境变量必须被设置. 否则的话, 默认的 C locale 会导致 filesystem encoding
+  变成 ascii. 在读取普遍编码为 utf-8 的 linux 文件系统时会报错.
