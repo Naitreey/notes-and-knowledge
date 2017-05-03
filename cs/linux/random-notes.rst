@@ -38,6 +38,7 @@
   * 方案 1
 
       .. code:: sh
+
       mv bigdir bigdir.old
       mkdir bigdir
       rm -rf bigdir.old &
@@ -53,3 +54,13 @@
     rebalancing, 因此更高效. (我不理解这是啥意思?)
 
   * 方案 2: 把该文件系统中所有其他文件挪走, reformat 这个文件系统, 再把文件挪回来.
+
+- 文件类型以及权限的信息保存在一起, 是一个 ``mode_t`` 大小的量, 可由 ``stat(2)``
+  syscall 取得. 其中, 访问权限为最低 12 位, 即 4 组 base8 值 (mask ``0o1111``).
+  文件类型是随后的 4 位 (mask ``0o170000``).
+  权限部分最高 3 位分别对应 setuid, setgid, sticky-bit.
+
+- Linux 中, symlink 的 permission 根本没用, stat 显示的是 ``0777``. ``chmod(2)``
+  遇到 symlink 会 dereference 从而实际作用在它指向的文件上面, 根本不会去修改
+  link 本身的权限. 对于 ``chmod(1)``, 若 recursively (``-R``) 修改权限, 遇到
+  symlink 会直接跳过.
