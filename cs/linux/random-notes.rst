@@ -64,3 +64,9 @@
   遇到 symlink 会 dereference 从而实际作用在它指向的文件上面, 根本不会去修改
   link 本身的权限. 对于 ``chmod(1)``, 若 recursively (``-R``) 修改权限, 遇到
   symlink 会直接跳过.
+
+- ``stat(1)`` 中的 ``Device: xxxh/xxxxxd`` 实际上是 device id 的 hex 和 decimal
+  两种表现形式. Device id 的类型为 ``dev_t``, 最低两个 bytes 分别是 major 和 minor
+  device number. major 为设备类型, 对应为 ``/proc/devices`` 里的数值, minor 为
+  该类型设备的实例编号. device id 和 major/minor 之间的转换可通过 ``makedev(2)``,
+  ``major(2)``, ``minor(2)``.

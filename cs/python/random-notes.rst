@@ -396,3 +396,5 @@
   encoding, 即 `sys.getfilesystemencodign()`. 所以为了保证 UTF-8 的 filesystem encoding,
   恰当的 locale 环境变量必须被设置. 否则的话, 默认的 C locale 会导致 filesystem encoding
   变成 ascii. 在读取普遍编码为 utf-8 的 linux 文件系统时会报错.
+
+- `os` module 里有大量的 syscall wrapper.
