@@ -84,3 +84,9 @@ messy. 如果非要引入相关修改, 首选 rebase.
   * ``git remote show <repo>``
     这会输出对于每个 `repo` 的所有 tracked branches. 这里的 tracked branches 的
     作用范围局限于在相应命令中指定 repo 但没有指定分支时.
+
+- 在一个 master 多个 topic branch 的开发模型中, master branch 需要是 semi-stable 的,
+  也就是说, 每个功能分支在合并进入 master 之前, 即提交 merge request 时, 必须通过
+  测试 (手动或自动测试), 保证合并进入 master 的代码是经过了测试的. 这样才能在任何人
+  开发新功能时, 可以基于最新的 master 这个总是测过的基本稳定的分支. 保证自己的在开发
+  的功能基本不受其他功能研发状态的影响.
