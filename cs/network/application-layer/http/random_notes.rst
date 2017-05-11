@@ -29,7 +29,7 @@
   否则接受方不能保证接受到了完整的 body.
   到底选择哪个不取决于 body 的大小, 而取决于 body 的长度能否预先知道.
   也就是说, 取决于 body 的生成方式是否是随着传输而流式生成的.
-  
+
   `Transfer-Encoding: chunked` 适用于在传输 body 时并不能预先知道 body 的长度,
   从而不能设置 `Content-Length`, 需要 end of transfer indicator. 典型的情况是
   body 是在内存中流式生成并传输的, 而不是单纯的静态文件或已经生成好的固定大小
@@ -69,3 +69,6 @@
     在 TCP 层保证了两端的 socket 连接之间数据传输是有接受反馈的. 如果接受端的
     kernel buffer 满了, 自然会告知发送端暂停发送. 此时发送端的 ``send(2)`` 会
     blocking 直至所有数据发送完成.
+
+- 在 URI 的 userinfo field ``username[:password]`` 中, 已经不该指定 ``:password``
+  部分. 这种明文的密码指定方式已经 deprecated by RFC3986.
