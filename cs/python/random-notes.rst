@@ -393,7 +393,7 @@
     控制.
 
 - locale settings, 准确地讲是 ``LC_CTYPE`` 会影响 python 中读写文件系统时使用的
-  encoding, 即 `sys.getfilesystemencodign()`. 所以为了保证 UTF-8 的 filesystem encoding,
+  encoding, 即 `sys.getfilesystemencoding()`. 所以为了保证 UTF-8 的 filesystem encoding,
   恰当的 locale 环境变量必须被设置. 否则的话, 默认的 C locale 会导致 filesystem encoding
   变成 ascii. 在读取普遍编码为 utf-8 的 linux 文件系统时会报错.
 
@@ -401,3 +401,28 @@
 
 - ``logging`` module 中, 对于 ``propagate == True`` 的 logger, ``LogRecord`` 在向上层
   传递时, 不会考虑父级 logger 的 level 和 filters, 而是直接传递个父级的各个 handlers.
+
+- argparse 的局限性:
+  无法指定 ``--foo`` ``--bar`` 必须同时存在或同时不存在.
+
+- 关于 python3 中 filesystem encoding 的处理相关问题.
+
+  * 默认情况下, 所有的文件系统上的文件路径都会使用固定的 encoding 来 decode/encode.
+    这样, 在 python 中出现的路径默认都是解码后的 str 类型量, 而不是原始的 bytes.
+    这个固定的 encoding 可以通过 ``getfilesystemencoding`` 来获取, 通过 ``LC_CTYPE``
+    来设置或影响. 在 encode/decode 过程中的错误处理, 则是依据 ``getfilesystemencodeerrors``
+    来获取.
+
+    这个 encode/decode 的结果, 可以通过 ``os.fsencode`` ``os.fsdecode`` 来模拟.
+
+  * `os`, `os.path` 中的很多函数支持输入 str 或 bytes 两种类型参数, 输入前者时结果中
+    自动对文件名进行默认的 encode/decode 处理; 输入后者时则返回 bytes 不做处理.
+
+  * ``sys.argv`` 的值已经用 ``os.fsdecode`` 解成了 str. 若要访问原始的 bytes 参数值,
+    应对参数值 ``os.encode``.
+
+  * 环境变量的访问, 提供了 ``os.environ`` 和 ``os.environb``, 分别是解码和未解码的版本.
+
+  * 在 unix-like 系统中, 这种自动的编码解码使用的 error handler 是 ``'surrogateescape'``.
+    使用这个 error handler, 解码时无法识别的 bytes 会转换成一个 unicode 字符集中的占位
+    字符, 从而保留了全部原始信息, 保证了再次编码时能够恢复原始的 bytes.
