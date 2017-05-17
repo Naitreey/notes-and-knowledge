@@ -426,3 +426,8 @@
   * 在 unix-like 系统中, 这种自动的编码解码使用的 error handler 是 ``'surrogateescape'``.
     使用这个 error handler, 解码时无法识别的 bytes 会转换成一个 unicode 字符集中的占位
     字符, 从而保留了全部原始信息, 保证了再次编码时能够恢复原始的 bytes.
+
+- 注意 json format 不支持 binary data 这种类型. 所有的 binary data 都必须使用某种数字
+  进制编码成字符串, 才能用 json format 来传递.
+
+  由于 json 数据要求是纯文本, 因此 ``json.dumps`` 的结果一定是 `str` 而不会是 `bytes`.
