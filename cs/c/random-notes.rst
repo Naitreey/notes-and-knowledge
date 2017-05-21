@@ -85,3 +85,74 @@
   from position-independent code.
 
   ref: http://unix.stackexchange.com/questions/223385/why-and-how-are-some-shared-libraries-runnable-as-though-they-are-executables
+
+- data structure alignment
+
+  * alignment/padding 的意义在于:
+
+    对于 primitive data type 类型的数据 (长度小于等于 bus width/word size),
+    可以通过一次操作完成读写; 对于 compound data type 类型的数据 (struct,
+    array, 等长度大于 bus width 的数据) 可以通过 ``sizeof (type) / wordsize + 1``
+    次操作完成读写.
+
+  * 一个 struct 类型的 alignment 由它最大元素的 alignment 要求所决定, 并且
+    在结构体内部, 进行必要的 padding. struct 整体的 alignment 要求, 配合
+    struct 内部各元素之间的 padding, 最终的效果就是让所有元素的内存地址都
+    位于符合该元素 alignment 要求的地方.
+
+    例如,
+
+      .. code:: cpp
+      struct mixeddata {
+        char d1;
+        short d2;
+        int d3;
+        char d4;
+      };
+
+    整个 ``struct mixeddata`` 结构体需要位于与 4-byte 对齐的地址上 (由 ``int``
+    元素决定), 这是让结构体内部的 padding 能够正确发挥作用的基础; `d1` 后面
+    pad 1 byte, 才能保证 `d2` 是 2-byte aligned; `d2` 后面 pad 2 bytes, 才能
+    保证 `d3` 是 4-byte aligned; `d4` 后面 pad 3 bytes, 以保证结构体是 4-byte
+    aligned.
+
+    struct 的 alignment 要求, 对 struct 类型的大小 (``sizeof``) 有直接影响.
+
+- notes on bit fields
+
+  * bit fields 本质上是出现在结构体中的一系列特殊的元素. In other words,
+    一个结构体中可以只有 bit fields, 也可以和其他普通的元素参杂在一起.
+    而对于整个结构体而言, 仍然是结构体. 例如, 它的 alignment 仍然取决于
+    最大 alignment 的元素 (对于 bit field, 则是它的 allocation unit, 即
+    它的类型).
+
+  * bit fields 的 allocation unit 只能是 4 个类型: unsigned int, signed int,
+    int, bool. 这里的 int 不是 signed int, 而是 int with implementation-defined
+    signedness.
+
+  * bit fields 的类型和它占用的 bit length, 决定了它能存储的值的范围.
+
+  * 对于 bool 类型, 它的 allocation unit 不是 1 bit, 而是 1 byte.
+
+  * 对于 ``type : 0;`` 导致下一个 bit field 的起始地址在下一个 ``type``
+    allocation unit 的地址边界处. 例如,
+
+      .. code:: cpp
+      struct x {
+        int a : 1;
+        bool : 0;
+        int b : 1;
+      };
+
+    导致 b 从第 2 个 byte 位置开始.
+
+      .. code:: cpp
+      struct x {
+        int a : 1;
+        int : 0;
+        int b : 1;
+      };
+
+    导致 b 从第 5 个 byte 位置开始. (假设 int allocation unit 的大小为 4 bytes).
+
+  * bit fields 的地址无法获取, 因为 field 的起始位置不一定在 memory byte boundary 上.
