@@ -247,8 +247,8 @@ design patterns and refactoring (至少对于传统语言) 是通用的, 因为�
   如果写的是一套完整的程序, 可以通过判断主文件所在位置或通过 environ variable 来确定
   项目根目录.
 
-- 如今对数据库、队列等 client/server 结构的程序模型中, client library 部分的设计往往满足以下
-  特点:
+- 如今对数据库、队列等 client/server 结构的程序模型中, client library 部分的设计往往
+  满足以下特点:
   在 client object 实例化时不立即向服务端发起连接, 即 laziness, 只等到真正向服务器发起
   操作请求时, 即不得不连接时, 才会发起连接.
   这样做的好处有多个, 我能想到的有:
@@ -258,5 +258,22 @@ design patterns and refactoring (至少对于传统语言) 是通用的, 因为�
   * client 的地位发生改变, 不再是一个 client 只对应于一个 server.
     当 client 可以选择多个 server, 预先连接就变得不合适, 除非开一个线程在后台创建
     connection pool.
+
+- about software bug
+
+  > Most coders think debugging software is about fixing a mistake, but that's bullshit.
+  > Debugging's actually all about finding the bug, about understanding why the bug
+  > was there to begin with, about knowing that its existence was no accident. It came
+  > to you to deliver a message, like an unconscious bubble floating to the surface,
+  > popping with a revelation you've secretly known all along.
+
+  > A bug is never just a mistake. It represents something bigger. An error of thinking.
+  > That makes you who you are.
+
+  > The bug forces the software to adapt, evolve into something new because of it.
+  > Work around it or work through it. No matter what, it changes. It becomes something
+  > new. The next version. The inevitable upgrade.
+
+  *Quote by Elliot from Mr. Robot*
 
 [setuptools]: https://setuptools.readthedocs.io/en/latest/setuptools.html#specifying-your-project-s-version
