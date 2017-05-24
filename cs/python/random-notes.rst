@@ -438,3 +438,23 @@
   进制编码成字符串, 才能用 json format 来传递.
 
   由于 json 数据要求是纯文本, 因此 ``json.dumps`` 的结果一定是 `str` 而不会是 `bytes`.
+
+- ``__str__`` 默认 call ``__repr__``, 反之却不行. 即严格的 ``__repr__`` 可以代替
+  informal 的 ``__str__``, 但反之不能用 ``__str__`` 代替 ``__repr__``.
+
+- ``__debug__`` 是 builtin constant. cpython 解释器默认情况下设置 ``__debug__ == True``,
+  此时 assert statement 会执行; 使用 ``-O`` 命令行参数后为 ``False``, assert statement
+  被忽略.
+
+- 启动时, `site` module 会给 __main__ module 增加 ``quit()``, ``exit()``, ``copyright``,
+  ``license``, ``credits`` 这几个 callable 对象. 它们本意是用在 interactive session 中,
+  平时的程序中不该使用它们.
+
+- ``NotImplemented`` vs ``NotImplementedError``
+
+  * ``NotImplemented`` 用在 rich comparison method 中. 当某个 rich comparison method
+    返回该值时, 表示该操作 (在这个具体情况下) 未被实现.
+
+  * ``NotImplementedError`` 用在 method definition 中, 就是一个 exception,
+    表示该方法没有被实现或尚未完成. 例如是一个 abstract method, 或者是开发中的
+    method.
