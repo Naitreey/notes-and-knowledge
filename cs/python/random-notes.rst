@@ -197,8 +197,15 @@
   Ref: https://docs.python.org/3/whatsnew/3.6.html#pep-520-preserving-class-attribute-definition-order
   但是我还是更愿意用 `OrderedDict`.
 
-- 不该在 iterate list 或 map 的时候修改该对象的长度, 例如删除 element or key-val pair.
-  对于 dict, 在 py3 中这是 `RuntimeError: dictionary changed size during iteration`.
+- 关于 list 和 dict 等 `Sequence` 和 `Mapping` iteration 的一些 pitfalls.
+
+  * 不该在 iterate list 或 map 的时候修改该对象的长度, 例如删除 element or key-val pair.
+    对于 dict, 在 py3 中这是 `RuntimeError: dictionary changed size during iteration`.
+
+  * ``dict.keys|.values|.items`` 这些 methods 返回的 view object 与原 dict 是同步的.
+    因此, 若在 iterate 这些 view object 时要对原来字典的 key, value 等进行修改,
+    需要在必须的时候先生成一个 list, 即 ``list(dict.keys())``, 再遍历这个 list.
+    否则, 遍历时, 可能会漏掉一些项或重复一些项.
 
 - `io.StringIO` constructor 的 `initial_value` 是用于设置 buffer 的初始值以便于
   接下来修改的. 相当于一个文件以 "r+" mode 打开. fd 指向 buffer 起始位置. `write()`
