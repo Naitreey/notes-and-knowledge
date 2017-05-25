@@ -77,3 +77,12 @@
 
 - 一些列设置 `include_in_all` 来避免全文检索, 设置 `index:true|false` 限制是否
   index 该 field.
+
+- debug painless script
+
+  在正常需要写脚本的操作 (例如 scripted update, scripted query, script field
+  等操作) 的脚本中, 添加 ``Debug.explain(expr)``, 会把 ``expr``
+  的值、类型等信息返回到 response 中, 类似于 ``print()`` 操作.
+
+- 对于 painless 脚本, json 的 list 成为了 java.util.ArrayList, json 的 object
+  成为了 java.util.HashMap 或 java.util.LinkedHashMap.
