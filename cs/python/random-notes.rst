@@ -458,3 +458,15 @@
   * ``NotImplementedError`` 用在 method definition 中, 就是一个 exception,
     表示该方法没有被实现或尚未完成. 例如是一个 abstract method, 或者是开发中的
     method.
+
+- ``urlparse`` vs ``urlsplit`` of `urllib.parse`
+
+  URL 的一般化结构::
+
+    scheme://netloc/path1;params[/path2;params...]?query#fragment
+
+  注意根据 RFC 2396 ``params`` 是属于每个 path segment 的. ``urlparse`` 会把最后一个
+  path segment 的参数和路径本身分隔开来, 这是不合规范的. ``urlsplit`` 不会这样做.
+  所以 ``SplitResult`` 比 ``ParseResult`` 少一个 ``params`` attribute.
+
+  一般情况下, 应该用 ``urlsplit``.
