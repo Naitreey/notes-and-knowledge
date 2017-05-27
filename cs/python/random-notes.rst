@@ -470,3 +470,8 @@
   所以 ``SplitResult`` 比 ``ParseResult`` 少一个 ``params`` attribute.
 
   一般情况下, 应该用 ``urlsplit``.
+
+- buffer protocol 的意义在于避免复制内存, 使得代码高效很多, 甚至接近 C/C++ 代码效率.
+  ``bytes``, ``bytearray``, ``array.array`` 都实现了 buffer protocol. 配合
+  ``memoryview`` 和 file-like object 的 ``.readinto`` 和 socket object 的 ``.recv_into``
+  等 methods, 达到避免复制的目的.
