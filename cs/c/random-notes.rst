@@ -156,3 +156,97 @@
     导致 b 从第 5 个 byte 位置开始. (假设 int allocation unit 的大小为 4 bytes).
 
   * bit fields 的地址无法获取, 因为 field 的起始位置不一定在 memory byte boundary 上.
+
+- endianness issues
+
+  * 数组要求每个元素的内存地址是连续递增的, 因此数组整体上不存在 endianness
+    问题. 但各个元素可以有 endianness 问题.
+
+  * 结构体要求各个成员 (对于 bit fields 是成员的 allocation unit) 的内存地址
+    以结构体的定义顺序递, 因此结构体整体上不存在 endianness 问题. 但各个成员
+    可以有 endianness 问题.
+
+  * 基本上可以认为, 只有 primitive datatype 才有 endianness issue.
+
+- struct
+
+  * 结构体中不能出现 incomplete type 或 function type. (但可以是 pointer to them).
+
+  * A pointer to a struct can be cast to a pointer to its first member (or,
+    if the member is a bit field, to its allocation unit). And vice versa.
+
+  * 当结构体有不止一个有名字的成员时, 最后一个成员可以是 flexible array member.
+    定义时不写数组大小 ``specifier array[];`` 这样定义的结构体中, ``array`` 成员
+    是 "虚拟的". ``sizeof (struct s)`` 不计算最后这个成员 (反正也不知道是多大).
+    如果直接用 ``struct s obj`` 来实例化的话, 不会给 ``array`` 分配空间.
+    要让 ``array`` 真的成为任意大小的数组, 需要用 ``malloc`` 等函数动态分配足够的
+    额外内存空间. 因此, ``array`` 实际上是定义了一个特别的指针, 指向 ``struct s``
+    后面的第一个元素.
+
+    Since C99.
+
+- A pointer type to an incomplete type is a complete type:
+
+    .. code:: cpp
+    struct s *p;
+
+  虽然 ``struct s`` 是啥不知道; 但知道 ``p`` 的类型是 ``struct s*``. 因为这已经足够
+  确定 ``p`` 这个量的大小了. 只有代码中涉及 dereference ``p`` 时, 编译器才要求知道
+  ``struct s`` 的定义.
+
+- struct, union, enum 等定义都是 compiler construct, 编译完就没了, 它们在运行时不存在,
+  所以没有 scope 概念, 不受 scope 对变量作用域的限制等.
+
+- scope, linkage, storage duration
+
+  * Scope
+
+    - block scope
+
+    - file scope
+
+    - function scope
+
+      ``goto`` labels
+
+    - function prototype scope
+
+      variables in function prototype
+
+  * Linkage
+
+    - external linkage
+
+    - internal linkage
+
+    - no linkage
+
+  * Storage duration
+
+    - automatic storage duration
+
+    - thread storage duration
+
+    - allocated storage duration
+
+    - static storage duration
+
+- storage class: 共 9 种
+
+  * automatic
+
+  * register
+
+  * static with external linkage
+
+  * static with internal linkage
+
+  * static with no linkage
+
+  * thread with external linkage
+
+  * thread with internal linkage
+
+  * thread with no linkage
+
+  * allocated
