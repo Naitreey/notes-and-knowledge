@@ -475,3 +475,34 @@
   ``bytes``, ``bytearray``, ``array.array`` 都实现了 buffer protocol. 配合
   ``memoryview`` 和 file-like object 的 ``.readinto`` 和 socket object 的 ``.recv_into``
   等 methods, 达到避免复制的目的.
+
+- ``__slots__``
+
+  * ``__slots__`` 使得实例中没有 ``__dict__`` 和 ``__weakref__``.
+
+  * 某个类和它所有的父类都定义了 ``__slots__``, 这个类的实例才没有 ``__dict__``.
+    ``__slots__`` 的作用局限在定义类中. 不同类中定义的 slots 取并集得到了当前类
+    实例化后的 attributes.
+
+  * slots 中的 attributes 实际上以 data descriptor 方式在类中定义, 定义为
+    ``member_descriptor`` descriptor object.
+
+  * 使用 slots 的好处是
+
+    - faster attribute access
+
+    - potential memory savings
+
+- descriptor protocol
+
+  descriptor 的效果是一个对象以不同的方式去访问它, 得到的是不同的结果.
+  descriptor object ``x`` 出现在某个 owner class ``A`` 的定义中, 成为这个类的
+  attribute. 当获取这个 attribute 时 (``a.x``, ``A.x``, ``super().x``, or whatever)
+  python 发现这个 attribute 实际上是 descriptor, 不会直接返回这个 descriptor,
+  而是进一步执行 descriptor 的 ``__get__``, ``__set__`` 或 ``__delete__`` method
+  来完成操作.
+
+  python 中很多东西实际上都是某种 descriptor class 的实例. 例如, 所有函数都是
+  non-data descriptor, 它们在单独使用和通过类访问是表现为函数自身, 通过实例访问时表现为
+  bound method. ``property`` object 都是 data descriptor, 是 ``property`` descriptor
+  class 的实例.
