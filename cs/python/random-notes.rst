@@ -506,3 +506,17 @@
   non-data descriptor, 它们在单独使用和通过类访问是表现为函数自身, 通过实例访问时表现为
   bound method. ``property`` object 都是 data descriptor, 是 ``property`` descriptor
   class 的实例.
+
+- C 的 struct 对应到 python 中和 namedtuple 比较像.
+
+  namedtuple 为了和 field 区分, 它自己的 methods 和 attributes 都是以 ``_`` 起始的,
+  让人误以为 API 只有 tuple 的 ``.index`` 和 ``.count``. 实际上它还有 ``_make``,
+  ``_asdict``, ``_replace``, ``_source``, ``_fields``.
+
+- ``key=`` parameter in various comparison-related functions
+
+  ``sorted``, ``list.sort``, ``max``, ``min`` 等函数中的 ``key`` keyword parameter
+  的逻辑是输入要排序的元素, 然后对每个元素的输出值进行比较, 根据这个比较结果进行排序.
+  注意它不要求 key function 输出的是数值, 而只需要是可以比较大小的 object 即可.
+
+  ``functools.cmp_to_key`` 通过实现 rich comparison methods 很好地利用了这一点.
