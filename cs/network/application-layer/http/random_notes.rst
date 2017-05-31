@@ -72,3 +72,17 @@
 
 - 在 URI 的 userinfo field ``username[:password]`` 中, 已经不该指定 ``:password``
   部分. 这种明文的密码指定方式已经 deprecated by RFC3986.
+
+- 使用 http proxy 时, 是在向 proxy server 做 http request, 然后等待 proxy server
+  返回 http response. 原始访问的完整 uri 放在了 request line 中 (没有使用代理
+  时这里只含 path 部分和后面的 query string 等.)
+
+  不使用代理时, 向 google 服务器发请求::
+
+    GET /a/b/c HTTP/1.1
+    Host: www.google.com
+
+  变成向代理服务器发请求::
+
+    GET http://www.google.com/a/b/c HTTP/1.1
+    Host: www.google.com
