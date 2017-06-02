@@ -506,3 +506,6 @@
   non-data descriptor, 它们在单独使用和通过类访问是表现为函数自身, 通过实例访问时表现为
   bound method. ``property`` object 都是 data descriptor, 是 ``property`` descriptor
   class 的实例.
+
+- ``\b`` backspace char 只是把光标向左移动 1 格, 并不删除涉及的字符;
+  ``\r`` carriage return 只是把光标移至当前行首, 并不删除本行内容.
