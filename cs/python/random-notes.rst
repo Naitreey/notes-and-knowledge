@@ -510,7 +510,7 @@
 - ``\b`` backspace char 只是把光标向左移动 1 格, 并不删除涉及的字符;
   ``\r`` carriage return 只是把光标移至当前行首, 并不删除本行内容.
 
-- C 的 struct 对应到 python 中和 namedtuple 比较像.
+- C 的 struct 对应到 python 中和 struct sequence 或 namedtuple 比较像.
 
   namedtuple 为了和 field 区分, 它自己的 methods 和 attributes 都是以 ``_`` 起始的,
   让人误以为 API 只有 tuple 的 ``.index`` 和 ``.count``. 实际上它还有 ``_make``,
@@ -523,3 +523,66 @@
   注意它不要求 key function 输出的是数值, 而只需要是可以比较大小的 object 即可.
 
   ``functools.cmp_to_key`` 通过实现 rich comparison methods 很好地利用了这一点.
+
+- User-defined class 默认有 ``__hash__`` method. 这个默认的 hash method 保证它实例
+  的 hash value 与该实例的 identity 一致. 即所有实例的 hash 不同, 通过 hash 值可以
+  判断是否是同一个对象.
+
+- interesting stuffs in `sys` module
+
+  * ``sys.base_prefix``, ``sys.base_exec_prefix``,
+    ``sys.prefix``, ``sys.exec_prefix``: 前两个和后两个在 virtual environment 中不同.
+
+  * ``sys.byteorder``
+
+  * ``sys.builtin_module_names``: modules built in cpython interpreter
+
+  * ``sys._current_frames()``: 包含所有线程号和各自的 top stack frame
+
+  * ``sys.displayhook()``, ``sys.excepthook()``,
+    ``sys.__displayhook__``, ``sys.__excepthook__``:
+    用于输出运算结果 (interactive) 和输出 traceback. ipython 解释器给前两个 hooks
+    赋了自己的值.
+
+  * ``sys.exc_info()``: 当前正在处理的 exception 信息. py3 中一般情况下没有理由直接
+    访问这个量.
+
+  * ``sys.executable``: absolute pathname of python interpreter
+
+  * ``sys.exit()``: exit by raise ``SystemExit``.
+
+  * ``sys.getdefaultencoding()``: default encoding used for ``bytes <--> str``
+    decoding/encoding.
+
+  * ``sys.getfilesystemencoding()``, ``sys.getfilesystemencodeerrors``:
+    文件系统中文件名的 bytes 和 str 转换时, 使用的 encoding 和 error handler.
+    即 ``os.fsencode``, ``os.fsdecode`` 使用.
+
+  * ``sys.getrefcount()``
+
+  * ``sys.getswitchinterval()``, ``sys.setswitchinterval()``:
+    thread switch interval in secs
+
+  * ``sys._getframe()``
+
+  * ``sys.__interactivehook__``: called during startup in interactive mode. 默认
+    这个 hook 用于加载 readline.
+
+  * ``sys.maxsize``, ``sys.maxunicode``: max hardware integer, max unicode point
+
+  * ``sys.modules``: loaded modules
+
+  * ``sys.path``: module search pathes
+
+  * ``sys.platform``
+
+  * ``sys.ps1``, ``sys.ps2``
+
+  * ``sys.stdin``, ``sys.stdout``, ``sys.stderr``,
+    ``sys.__stdin__``, ``sys.__stdout__``, ``sys.__stderr__``:
+    When interactive, standard streams are line-buffered.
+    Otherwise, they are block-buffered like regular text files.
+    To write or read binary data from/to the standard streams,
+    use the underlying binary ``buffer`` object.
+
+  * ``sys.version_info``
