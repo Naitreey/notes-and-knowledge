@@ -44,3 +44,7 @@
 
     cable 两端都不是 standard-A 的情况出现在 USB On-The-GO 中, 也就是说两个便携设备之间
     直连的情况.
+
+- Clock generator 生成基础的时钟频率, 应用于 FSB/QPI 上. 其他所有 bus 的工频都是
+  基于这个频率衍生出来的, 比如 CPU, DRAM, PCIe, 等. 其中, CPU 的工作频率是
+  clock frequency * cpu multiplier.
