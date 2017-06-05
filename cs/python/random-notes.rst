@@ -426,13 +426,18 @@
     自动对文件名进行默认的 encode/decode 处理; 输入后者时则返回 bytes 不做处理.
 
   * ``sys.argv`` 的值已经用 ``os.fsdecode`` 解成了 str. 若要访问原始的 bytes 参数值,
-    应对参数值 ``os.encode``.
+    应对参数值 ``os.fsencode``.
 
   * 环境变量的访问, 提供了 ``os.environ`` 和 ``os.environb``, 分别是解码和未解码的版本.
 
   * 在 unix-like 系统中, 这种自动的编码解码使用的 error handler 是 ``'surrogateescape'``.
     使用这个 error handler, 解码时无法识别的 bytes 会转换成一个 unicode 字符集中的占位
     字符, 从而保留了全部原始信息, 保证了再次编码时能够恢复原始的 bytes.
+
+  * 在 native unix-like 文件系统中, 一般情况下使用 str 类型量作为 pathname 是最合适的.
+    str 与 bytes 对一个 pathname 的表达通过 ``os.fsencode`` ``os.fsdecode`` 来转换.
+    如果一个程序需要处理任意编码的二进制文件名 (比如使用了不同的字符编码集), 则应该
+    在程序中使用 bytes objects 来代表 pathname.
 
 - 注意 json format 不支持 binary data 这种类型. 所有的 binary data 都必须使用某种数字
   进制编码成字符串, 才能用 json format 来传递.
