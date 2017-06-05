@@ -586,3 +586,12 @@
     use the underlying binary ``buffer`` object.
 
   * ``sys.version_info``
+
+- binascii, base64, hashlib
+
+  * binascii 包含 binary data 和各种基于 ASCII 的 printable 表达形式或编码形式,
+    以及一些底层相关函数, crc 函数也在这里.
+
+  * base64 包含更丰富的统一的 binary data 和各种进制转换.
+
+  * hashlib 包含各种 hash 以及相关函数.
