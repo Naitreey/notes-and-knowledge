@@ -48,3 +48,11 @@
 - Clock generator 生成基础的时钟频率, 应用于 FSB/QPI 上. 其他所有 bus 的工频都是
   基于这个频率衍生出来的, 比如 CPU, DRAM, PCIe, 等. 其中, CPU 的工作频率是
   clock frequency * cpu multiplier.
+
+- Double data rate (DDR) 可以将传输频率提高为 FSB/QPI 上时钟频率的两倍.
+  (QDR -- quad 则能变成 4 倍.) 注意 DDR 不仅仅要内存 DIMM 条支持, 还需要
+  总线去生成 DDR 的传输频率, 即需要 CPU 和内存之间的 memory controller bus 支持.
+
+- CPU 和 RAM 的速度差异中很重要的一部分原因是 CPU 时钟频率和 memory controller bus 的
+  时钟频率的差异. 也就是说, 因为这个总线的传输频率相对 CPU 的频率慢很多, 所以需要在
+  CPU 里面设置缓存 (L1,2,3 cache), 以保证所需数据的实时获取.
