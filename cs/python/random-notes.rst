@@ -600,3 +600,11 @@
   * base64 包含更丰富的统一的 binary data 和各种进制转换.
 
   * hashlib 包含各种 hash 以及相关函数.
+
+- interesting stuffs in `os.path` module
+
+  * 一系列基于 ``stat(2)`` 的函数, 例如 ``exists()``, ``getatime()``, ``ismount()``,
+    ``samefile()``, etc.
+
+  * 一系列 path manipulation functions, 比较容易被忽略的有 ``split()``, ``splitext()``,
+    ``commonpath()``, ``commonprefix()``, ``expanduser()``, etc.
