@@ -71,6 +71,17 @@
   该类型设备的实例编号. device id 和 major/minor 之间的转换可通过 ``makedev(2)``,
   ``major(2)``, ``minor(2)``.
 
+- ``stat(1)`` 中与文件相关的 3 个时间:
+
+  * access time (``st_atime``): 创建文件以及访问文件内容时会更新,
+    例如读取大于 0 bytes 的数据. 注意如果文件已经存在, 写数据时不会更新.
+
+  * modified time (``st_mtime``): 创建文件以及修改文件内容时会更新, 例如
+    写入大于 0 bytes 的数据. 注意文件的 metadata 方面的修改 (而不是内容的修改)
+    不会导致 mtime 的改变.
+
+  * change time (``st_ctime``): 修改文件的 metadata 时会更新.
+
 - cron 和 anacron 的关系.
 
   cron 负责 ``crontab``, ``cron.d`` 里的项, ``cron.d`` 里一般会有 ``0hourly``,
