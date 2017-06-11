@@ -104,3 +104,33 @@
   和总线的设备往往都显示为 ``sd?``. 注意, 这些协议本身都是不同的, 不一定有兼容性.
   只是在 kernel 中这些 HBA 的驱动和 generic disk driver 这层通信时, 经常使用的是
   scsi 协议. 并不是说这些协议和总线与 SCSI 一定有什么从属关系.
+
+- Shared MIME-info database 位于 ``/usr/share/mime``. ``mimetype(1)`` 命令依据这个目录
+  判断文件的 MIME type. ``file(1)`` 没有使用这个 mime 数据库, 而是使用自己的
+  ``magic(5)`` 格式的数据库来识别文件, 并输出这里面定义的 mime type.
+
+  在判断 mime type 方面, 貌似 ``mimetype(1)`` 比 ``file(1)`` 要准确一些.
+
+- ``xdg-open(1)`` 和 ``mimeopen(1)`` 的区别是:
+
+  ``xdg-open`` 是直接和当前使用的桌面系统耦合的,
+  本质上只是不同桌面系统的 open 命令的一个统一封装, 也就是说它到底调用什么程序取决于
+  在 DE 中是怎么配置的, 而不一定与 mimetype 和 desktop application 的关联性有关.
+  与 ``xdg-open`` 相关的配置命令是 ``xdg-mime``, 它相当于是在命令上对不同 DE 的应用和
+  mimetype 的关联性的统一封装. ``xdg-mime`` 在查询和设置默认应用时也是直接访问 DE.
+
+  ``mimeopen`` 是另一套手动的关联关系, 它不取决于当前的 DE. 而是直接读取一些确定的配置文件
+  中的映射关系, 例如 ``~/.local/share/applications/defaults.list``.
+
+- some useful options of ``file(1)`` command.
+
+  ``-i|--mime``, ``-l|--list``, ``-p|--preserve-date``, ``-s|--special-files``
+
+- bash job control 中, current job (``+``) 和 previous job (``-``) 的 job spec 是
+  ``%+`` (或 ``%``), ``%-``. 编号为 n 的 job 可写为 ``%n`` (或直接是 ``n``).
+
+  而且实际上这些 ``%`` 开头的 job spec 可以直接在命令行上执行, 等价于 ``fg ...``,
+  而 ``%.. &`` 则等价于 ``bg ...``.
+
+  从这个角度看, ``%`` 可以认为是 job control 的标志符, 相应于 ``!`` 是 command history
+  substitution 的标志符.
