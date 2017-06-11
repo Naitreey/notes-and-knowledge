@@ -86,3 +86,8 @@
 
     GET http://www.google.com/a/b/c HTTP/1.1
     Host: www.google.com
+
+- charset 参数.
+
+  对于 MIME type 为 text/* 的文件, 在传输时 ``Content-Type`` 应该添加
+  ``charset=<encoding>`` 参数, 来规定编码字符集.
