@@ -45,7 +45,14 @@
     cable 两端都不是 standard-A 的情况出现在 USB On-The-GO 中, 也就是说两个便携设备之间
     直连的情况.
 
-- Clock generator 生成基础的时钟频率, 应用于 FSB/QPI 上. 其他所有 bus 的工频都是
+- 整个主板上的各个组件需要的时钟频率都是从一处生成然后再转换成各种总线所需的
+  频率的. 原始的时钟频率可能有两个来源:
+
+  * 对于过去的设备, 基础时钟频率由 clock generator 生成, 再应用于 FSB 上.
+
+  * 对于现在的设备, 基础时钟频率由 PCH 生成, 再通过各种与之连接的总线转换和传递出去.
+
+  其他所有 bus 的工频都是
   基于这个频率衍生出来的, 比如 CPU, DRAM, PCIe, 等. 其中, CPU 的工作频率是
   clock frequency * cpu multiplier.
 
@@ -56,3 +63,12 @@
 - CPU 和 RAM 的速度差异中很重要的一部分原因是 CPU 时钟频率和 memory controller bus 的
   时钟频率的差异. 也就是说, 因为这个总线的传输频率相对 CPU 的频率慢很多, 所以需要在
   CPU 里面设置缓存 (L1,2,3 cache), 以保证所需数据的实时获取.
+
+- 现在的 CPU 已经整合了 northbridge 的部分功能 (整合后成为了 CPU 的 uncore),
+  包括 memory controller, 一部分 PCIe lanes 等. 北桥的其他功能和南桥的全部功能
+  整合为 PCH, 仍称为 chipset. 这样, CPU 和 PCH 之间通过 QPI 通信.
+
+  QPI 大致可认为是一种与 CPU 紧密相关的 bus, 在 CPU uncore 中有 QPI controller.
+
+- QPI 不仅代替 FSB 在 CPU 和 chipset (PCH) 之间通信, 而且在 CPU 之间通信,
+  以及 CPU 内部的 core 和 uncore 之间通信也使用 QPI.
