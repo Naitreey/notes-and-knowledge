@@ -608,3 +608,51 @@
 
   * 一系列 path manipulation functions, 比较容易被忽略的有 ``split()``, ``splitext()``,
     ``commonpath()``, ``commonprefix()``, ``expanduser()``, etc.
+
+- haskell 中的 ``fold*`` 和 ``scan*`` 对应于 python 中的 ``functools.reduce`` 和
+  ``itertools.accumulate``.
+
+- python 中, 各种 protocol 实际上是各种 interface 的规定. 满足这些协议 (interface)
+  就可以按照相应的方式去使用. 这是 duck typing 的一种体现.
+
+  已知的 protocols 有:
+
+  * sequence protocol
+
+  * iterator protocol
+
+  * mapping protocol
+
+  * context manager protocol
+
+  * descriptor protocol
+
+  * buffer protocol
+
+- ``range`` 实际上是一种 builtin immutable sequence type. 因此支持常见的 sequence
+  interface. 严格地讲, 就是 ``collections.abc.Sequence`` ABC 所定义的 interface.
+  它是 iterable, 但不是 iterator.
+
+- python 的一些函数和 haskell 类似函数的对应关系.
+
+  * builtin::
+
+      filter(pred, iterable)                 filter pred iterable
+      range(stop)                            [0..(stop-1)]
+      range(start, stop[, step])             [start,(start+step)..(stop-1)]
+
+  * itertools::
+
+      count(start[, step])                   [start,(start+step),..]
+      cycle(p)                               cycle p
+      repeat(elem[, n])                      take n $ repeat elem
+      accumulate(p[, func])                  scanl1 func p
+      takewhile(pred, iterable)              takeWhile pred iterable
+      dropwhile(pred, iterable)              dropWhile pred iterable
+
+  * functools::
+
+      reduce(func, iterable[, initial])      foldl func initial iterable
+
+- ``itertools.chain`` 用于将 iterable 连在一起, ``collections.ChainMap``
+  用于将 mapping 连在一起.
