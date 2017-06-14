@@ -656,3 +656,14 @@
 
 - ``itertools.chain`` 用于将 iterable 连在一起, ``collections.ChainMap``
   用于将 mapping 连在一起.
+
+- `struct` module
+
+  * 对于一个 structure format ``fmt``, padding 只有在结构体成员之间自动添加, 而没有
+    识别结构体末尾的 padding. 如需在 ``fmt`` 中指定结构体末尾的 padding, 可以用两种
+    方式: 使用 ``x`` 来明确添加指定个数的 padding; 使用 ``0[t]`` 来隐性地添加 padding,
+    其中 ``[t]`` 为 structure 的 alignment requirement (即结构体中各元素的最大 alignment
+    需求).
+
+  * 默认的模式是 ``@``, 即 byteorder, size of primitive types, alignment 都采用
+    native value. 此外还有 ``=``, ``<``, ``>``.
