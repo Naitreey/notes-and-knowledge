@@ -96,6 +96,88 @@
 * declare 中不该包含可能出错的赋值操作. 若赋值部分执行了可能出错的命令, declare 的返回值
   会掩盖这些错误. 这种情况下, 将 declare 声明与赋值操作分开写.
 
+# Notes
+
+## shell 初始化文件的执行
+
+* bash 初始化文件的执行.
+
+  - login shell:
+
+    * interactive:
+
+      - /etc/profile
+      - ~/.bash_profile | ~/.bash_login | ~/.profile
+
+      logout 时, 执行 ~/.bash_logout
+
+    * non-interactive:
+
+      - /etc/profile
+      - ~/.bash_profile | ~/.bash_login | ~/.profile
+      - BASH_ENV
+
+      logout 时, 执行 ~/.bash_logout
+
+  - nonlogin shell:
+
+    * interactive:
+
+      - ~/.bashrc
+
+    * non-interactive:
+
+      - BASH_ENV
+
+* sh 初始化文件的执行.
+
+  - login shell:
+
+    * interactive:
+
+      - /etc/profile
+      - ~/.profile
+      - ENV
+
+    * non-interactive:
+
+      - /etc/profile
+      - ~/.profile
+
+  - nonlogin shell:
+
+    * interactive:
+
+      - ENV
+
+    * non-interactive: nothing.
+
+* 各初始化文件的执行流程:
+
+  - /etc/profile -> /etc/profile.d/*.sh
+
+  - ~/.bash_profile -> ~/.bashrc
+
+  - ~/.bashrc -> -> /etc/bashrc -> /etc/profile.d/*.sh (nonlogin shell)
+
+  以下文件不存在: ~/.bash_login, ~/.bash_logout, ~/.profile
+
+* 总结:
+
+  - 对于 bash
+
+    * interactive shell (无论 login 或 nonlogin) 的初始化结果是基本相同的,
+      他们都执行了 /etc/profile.d/*.sh, ~/.bashrc, /etc/bashrc .
+
+    * non-interactive shell 对于 login 和 nonlogin 初始化结果不同. 前者与
+      interactive shell 相同, 后者基本不执行初始化.
+
+  - 对于 sh
+
+    * login shell 会执行 /etc/profile 全局初始化.
+
+    * 对于 nonlogin shell 基本不会执行初始化.
+
 # mock shell script
 - 我见过的 shell script 大部分都很 messy.
 - 函数返回值问题.
