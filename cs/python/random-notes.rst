@@ -98,18 +98,38 @@
   然后各个执行者都从这个模块中 import 公共的功能.
 
 - debugging methods:
-  - read traceback
-  - print, dump, etc.
-  - logging
-  - pdb
-  - code.interact, jump to interactive interpreter at the exact point you want
-  - python -i, 简单的 post-mortem debugging
-  - python -v[v], 检查 import 是否符合预期 (sys.path 是否正确, pyc 是否正确等)
+
+  * read traceback
+
+  * print, dump, etc.
+
+  * logging
+
+  * pdb
+
+  * code.interact, jump to interactive interpreter at the exact point you want
+
+  * python -i, 简单的 post-mortem debugging
+
+  * python -v[v], 检查 import 是否符合预期 (sys.path 是否正确, pyc 是否正确等)
 
 - testing methods:
-  - python -W default, 所有 warnings 都显示, 即开启默认不显示的那些警告
-  - doctest
-  - unittest
+
+  * python -W default, 所有 warnings 都显示, 即开启默认不显示的那些警告
+
+  * doctest
+
+  * unittest
+
+- pdb 的四种主要用法:
+
+  * debug 整个脚本: ``python -m pdb program.py``
+
+  * debug 一段代码: ``import pdb; pdb.run("<code-snippet>")``
+
+  * 从某个点插入 debug 模式: ``import pdb; pdb.set_trace()``
+
+  * debug 已死的程序 (post-mortem): ``import pdb; pdb.pm()``
 
 - Creating pipelines with subprocess
   It is possible to create process pipelines using ``subprocess.Popen``,
