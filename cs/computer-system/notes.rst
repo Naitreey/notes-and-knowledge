@@ -66,9 +66,33 @@
 
 - 现在的 CPU 已经整合了 northbridge 的部分功能 (整合后成为了 CPU 的 uncore),
   包括 memory controller, 一部分 PCIe lanes 等. 北桥的其他功能和南桥的全部功能
-  整合为 PCH, 仍称为 chipset. 这样, CPU 和 PCH 之间通过 QPI 通信.
+  整合为 PCH, 仍称为 chipset. 原来的北桥和南桥之间的通信, 即现在的 CPU uncore
+  和 PCH 之间的通信, 通过 DMI 进行.
 
-  QPI 大致可认为是一种与 CPU 紧密相关的 bus, 在 CPU uncore 中有 QPI controller.
+  QPI 大致可认为是一种与 CPU 内部和 CPU 之间的 bus, 在 CPU uncore 中有 QPI controller.
+  QPI 代替 FSB 在 CPU core 和 uncore (即之前的部分北桥) 之间通信, 并且在 CPU 之间通信
+  也使用 QPI.
 
-- QPI 不仅代替 FSB 在 CPU 和 chipset (PCH) 之间通信, 而且在 CPU 之间通信,
-  以及 CPU 内部的 core 和 uncore 之间通信也使用 QPI.
+- 注意 DMI 3.0 每条 lane 速度与 PCI-e v3 相近, 基本上 1GB/s, 但 DMI 3.0 只有 4 条 lanes.
+  所以 throughput 最大只有 4GB/s.
+
+- CPU 中有 MMU, 也有 IOMMU. 一些设备有自己的 IOMMU, 例如显卡的 GART.
+
+- MMU 在做 virtual memory address -> physical memory address 的转换时, 若发现
+  要转换的虚拟内存地址在 page table 中, 但没有对应的物理内存地址, 则向 CPU core
+  发送 valid page fault 信号. CPU 将控制权移交 kernel, kernel 看到 valid page fault
+  则将对应的物理内存 swap 回 RAM 中.
+  若发现要转换的虚拟内存地址根本不在 page table 中, 则 signal invalid page fault.
+  kernel 对应地进行处理, 将请求进程 segfault 掉 (并 coredump) 或者是 bus error.
+
+- 对于 x86-64 CPU, MMU 一般支持 4KB 的 page table entry (PTE), 并且支持 1GB 的 huge page.
+
+- DMA 指的是这样的内存和设备之间的数据传输: CPU 只负责发起传输, 而不干涉、监控
+  传输过程, 整个传输过程由设备和内存两者之间协商进行, CPU 去做别的事情, 传输完成后
+  CPU 收到设备的中断. 因此, DMA 可以发生在 peripheral 和 ram 之间, 可以发生在 ram
+  内部的不同区域, 甚至可以发生在 cpu cache 和 ram 之间.
+
+  DMA 分为 first-party DMA 和 third-party DMA. 后者是通过一个专用的 DMA controller
+  (peripheral processor) 模块协调设备之间的 DMA 数据传输; 前者是通过 bus mastering
+  机制, 由需要传输数据的设备要求控制 bus, 然后发起并进行 DMA 传输. 在 PCI-e 的现代
+  系统中, 都是 first-party DMA, 即 bus mastering 机制.
