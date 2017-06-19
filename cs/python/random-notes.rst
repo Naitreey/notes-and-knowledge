@@ -212,10 +212,11 @@
 
 - python3.6+ class 的 `__dict__` 中 key 的顺序符合 method 定义的顺序,
   函数的 `**kwargs` dict 中 key 的顺序符合 keyword args 的传递顺序.
-  实际上 `dict` 类型实现了 key-order 符合 key 的 creation order.
+  实际上 `dict` 类型实现了 key-order 符合 key 的 creation order. 在 dict 的 ``repr``
+  输出中, key 按照 collating sequence order 来排序, 但实际的 key 的顺序仍然是
+  creation order, 这可以用 ``dict.keys()`` 看出. 但是我还是更愿意用 `OrderedDict`.
   Ref: https://mail.python.org/pipermail/python-dev/2016-September/146327.html
   Ref: https://docs.python.org/3/whatsnew/3.6.html#pep-520-preserving-class-attribute-definition-order
-  但是我还是更愿意用 `OrderedDict`.
 
 - 关于 list 和 dict 等 `Sequence` 和 `Mapping` iteration 的一些 pitfalls.
 
