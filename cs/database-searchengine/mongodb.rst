@@ -9,7 +9,7 @@
 - mongo shell 中的 dict 能保证 key 的顺序和输入顺序一致, 但 python3.6 以下的 dict
   不能保证. 若想要在指定查询条件时保证 doc fields 的顺序, 可以使用 ``OrderedDict``.
   若想要让 client 返回的 doc 中 key 的顺序也保证, 需要指定:
-  
+
   .. code:: python
 
     MongoClient(document_class=OrderedDict)
@@ -49,3 +49,39 @@
   * 一个查询不能同时使用 2 种 special index, 例如 geospatial 和 text.
 
   * 2dsphere index 只能包含图形类数据.
+
+- build index
+
+  * 对于 foreground index building, 在一个 collection 中创建 index 将导致它所在的
+    整个数据库在此期间 block 所有操作. 这包括正在进行的 ``create_index``, 用其他
+    client 执行的 ``find``, 等. 此外, 在 mongo instance 层, 任何需要获取对所有数据库
+    的 read lock or write lock 的操作都会 block.
+
+  * 如果在 build index 过程中仍需要访问数据库, 可以使用 background index building.
+    注意正在创建 index 的 client 仍然处于 blocking 状态 (表示正在创建 index); 而其他
+    client 可以进行各种操作. 注意, partially-built index 不会被使用, 此时的查询等
+    操作如果必须的话将遍历整个数据库.
+
+  * background 比 foreground index building 慢一些, 如果 index 比内存大, 将非常慢.
+
+  * 由于潜在的 blocking 和性能问题, 无论是 foreground or background 索引构建操作,
+    都应该在维护期间进行, 而不是在运行期间随时需要随时创建 (这说明数据库结构设计有问题),
+    并且使用单独的维护代码创建索引. 业务应用程序应当在启动时检查所需索引是否存在,
+    若不存在则报错退出.
+
+  * 默认情况下, 若在构建索引过程中 mongod 死掉了, 重启后将立即开始重建索引 (删除未完成的
+    索引, 重新构建). 所以, 如果之前是 background index building, 现在将变成 foreground.
+    ``storage.indexBuildRetry`` 控制 mongod 是否自动恢复索引构建.
+
+  * 在奇葩的 tokumx 2.0 版本中, ensure_index 不能随便执行, 在大数据量下会卡得很厉害, 即使
+    相应 index 明明已经存在. (不知在正常的 3.4 版本中有没有这个问题.)
+
+- query
+
+  * 在奇葩的 tokumx 2.0 版本中, 大数据量时 ``find`` 后 sort 会卡得很厉害, 也许这实际上
+    应归咎于数据结构 index 设计有问题.
+
+- insert
+
+  * 在奇葩的 tokumx 2.0 版本中, 插入新 doc 的操作与 ensure_index, find, sort 等有冲突,
+    进行这些操作时不能写入.
