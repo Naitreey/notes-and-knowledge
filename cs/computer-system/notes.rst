@@ -58,9 +58,9 @@
 
 - Double data rate (DDR) 可以将传输频率提高为 FSB/QPI 上时钟频率的两倍.
   (QDR -- quad 则能变成 4 倍.) 注意 DDR 不仅仅要内存 DIMM 条支持, 还需要
-  总线去生成 DDR 的传输频率, 即需要 CPU 和内存之间的 memory controller bus 支持.
+  总线去生成 DDR 的传输频率, 即需要 CPU 和内存之间的 memory bus 支持.
 
-- CPU 和 RAM 的速度差异中很重要的一部分原因是 CPU 时钟频率和 memory controller bus 的
+- CPU 和 RAM 的速度差异中很重要的一部分原因是 CPU 时钟频率和 memory bus 的
   时钟频率的差异. 也就是说, 因为这个总线的传输频率相对 CPU 的频率慢很多, 所以需要在
   CPU 里面设置缓存 (L1,2,3 cache), 以保证所需数据的实时获取.
 
@@ -96,3 +96,12 @@
   (peripheral processor) 模块协调设备之间的 DMA 数据传输; 前者是通过 bus mastering
   机制, 由需要传输数据的设备要求控制 bus, 然后发起并进行 DMA 传输. 在 PCI-e 的现代
   系统中, 都是 first-party DMA, 即 bus mastering 机制.
+
+  对于 PCI-e bus 系统, PCH 上的 PCI-e bus controller 是 bus arbitrator.
+  设备向它发起 mastering request. 获得许可后, 设备的 DMA 操作指令经由 PCI-e bus
+  至 PCH, 经由 DMI 至 CPU uncore (memory controller), 经由 DDR4 memory bus 至
+  DIMM RAM 设备.
+
+- Modern memory buses are designed to connect directly to DRAM chips. 这大致意味着
+  memory bus 本身的速度上限相对于 DIMM 本身的速度可能是一个高阶量, 可以不去考虑.
+  只考虑内存条本身的数据传输速度即可.
