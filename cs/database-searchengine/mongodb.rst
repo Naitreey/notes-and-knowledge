@@ -134,7 +134,7 @@
 
   * stages of query operation:
     IXSCAN, COLLSCAN, FETCH, PROJECTION, LIMIT, SORT_KEY_GENERATOR, SORT,
-    AND_SORTED, AND_HASH, OR, EOF...
+    AND_SORTED, AND_HASH, OR, SUBPLAN, EOF...
 
   * debug query 时为了看清执行流程等细节应使用 ``explain()``, 并将 verbosity 设为
     ``executionStats`` 或者 ``allPlansExecution``.
@@ -143,3 +143,17 @@
 
   * 在奇葩的 tokumx 2.0 版本中, 插入新 doc 的操作与 ensure_index, find, sort 等有冲突,
     进行这些操作时不能写入.
+
+- operators
+
+  * ``$or``: 当 ``$or`` 里面的所有 clause 的执行都有相应的 index 可以使用时, 整个 $or clause
+    才会使用 index. 否则将对整个 collection 进行遍历. 注意不能将 $or clause 中的共同部分
+    简化出来::
+
+      db.data.find({a:1, $or: [{b:2}, {c:3}]})
+      db.data.find({$or: [{a:1, b:2}, {a:1, c:3}]})
+
+    两者不相等. 若有 a/b 和 a/c 的两个 index, 第一个查询不会使用索引, 第二个会使用.
+
+    当 $or 使用了索引时, ``explain()`` 中有 OR stage, 其中的 inputStages 包含每个
+    子查询条件执行的步骤.
