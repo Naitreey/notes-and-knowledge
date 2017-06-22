@@ -126,5 +126,69 @@ Components
 
 TODOs
 ======
+- 更新主板固件, 主板优化软件等, 到官网上去寻找需要更新的、下载的东西等.
+
+- 当使用 M.2 SATA 模式设备时, M.2_1 插槽与 SATA_1 共享带宽,
+  调整 bios 设置以使用 SATA 设备.
+
+- 当使用 M.2 PCI-e 模式设备时, M.2_2 插槽与 SATA_56 共享带宽,
+  调整 bios 设置以使用 SATA 设备.
+
+- 根据主板的音频功能, 是否有音频方面的考虑?
+
+- 5 x 音频 IO 接口, 支持 8 声道?
+
+- ARUA sync?
+
+- 华硕 Q-Design? 处理器、内存、显卡、启动设备指示灯
+
+- 明确各个风扇插座:
+
+  * 1 x 4pin CPU_FAN (4pin PWM)
+
+  * 1 x 4pin CPU_OPT
+
+  * 1 x 4pin AIO_PUMP
+
+  * 1 x 4pin H_AMP
+
+  * 2 x 4pin 机箱风扇 (4pin PWM)
+
+  * 1 x 5pin EXT_FAN
+
+- RGB 接口?
+
+- 前面板音源插座 AAFP?
+
+- TPM 插座?
+
+- COM 接口?
+
+- 系统面板插座 (Q-Connector)?
+
+- MemOK 按钮?
+
+- 电源开启开关?
+
+- CPU 超压跳线?
+
+- clear CMOS 按钮?
+
+- UEFI AMI BIOS? PnP? WfM? SM BIOS? ACPI? asus EZ Flash? asus crashfree?
+  F11 EZ Tuning? F6 QFan control? F3 may favorites? Last modified log?
+  F12 PrintScreen? asus DRAM SPD?
+
+- 主板驱动, 防毒软件, EZ Update, 华硕应用
+
+- 主板电源连接:
+
+  * 24pin EATXPWR
+
+  * 8pin EATX12V
+
+- HDD LED, POWER SW, RESET SW, POWER LED+, POWER LED-?
+
+- 主板注册? DIY 组装手册?
+
 - read all online/offline specs and manuals, check and record everything noticable,
   e.g., motherboard specs.
