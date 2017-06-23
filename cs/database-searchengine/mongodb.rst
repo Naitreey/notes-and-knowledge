@@ -2,10 +2,6 @@
   支持 document level 的 concurrent read write, 后者支持 concurrent read
   in one collection, 但是在 collection level 对 write 有锁.
 
-- ``_id`` field 一定是 unique 的, 这是内秉的, ``_id_`` 不是通过 ``create_index``
-  创建的 (所以也不能 ``drop_index``), ``unique`` 不是这个 index 的额外条件. 所以,
-  在 ``index_information`` 的输出中, ``_id_`` index 没有 ``"unique": True`` 选项.
-
 - mongo shell 中的 dict 能保证 key 的顺序和输入顺序一致, 但 python3.6 以下的 dict
   不能保证. 若想要在指定查询条件时保证 doc fields 的顺序, 可以使用 ``OrderedDict``.
   若想要让 client 返回的 doc 中 key 的顺序也保证, 需要指定:
@@ -49,13 +45,33 @@
   * 一个 collection 最多能有 64 个 index.
 
   * fully qualified index names (``<db>.<collection>.<index-name>``) 的长度必须
-    小于 128 chars.
+    小于 128 chars. 因此如果 index specs 中涉及的列比较复杂, 最好自定义 index name.
 
   * 一个 compound index 包含的列数必须小于 32.
 
   * 一个查询不能同时使用 2 种 special index, 例如 geospatial 和 text.
 
   * 2dsphere index 只能包含图形类数据.
+
+- unique index
+
+  ``_id`` field 一定是 unique 的, 这是内秉的, ``_id_`` 不是通过 ``create_index``
+  创建的 (所以也不能 ``drop_index``), ``unique`` 不是这个 index 的额外条件. 所以,
+  在 ``index_information`` 的输出中, ``_id_`` index 没有 ``"unique": True`` 选项.
+
+  MongoDB cannot create a unique index on the specified index field(s) if
+  the collection already contains data that would violate the unique constraint
+  for the index.
+
+  注意: "unique" index 的 unique 之意是能够通过 index 的 fields 的值的组合 *唯一地*
+  确定一个 document (一行数据). 因此, 如果一个 index 包含 array field 或 array 中的
+  doc 的 field, unique index 并不要求对于某个 doc 这个 array 中列的值唯一, 而是要求
+  对于不同的 doc 中这个 array 中列值唯一. 因为, 因为如果一个 doc 中 array 值重复,
+  它们都指向的是这个 doc, 并没有违反唯一性, 而且实际上在 multikey index 中, 这些
+  重复的值只会 index 一遍.
+
+  由于不存在的列值被认为是 null, 若有两个以上的 doc 中不存在该列, 将无法创建
+  unique index. 此时, 可以通过构建 unique partial index 来过滤掉那些不合适的 docs.
 
 - build index
 
@@ -82,6 +98,8 @@
   * 默认情况下, 若在构建索引过程中 mongod 死掉了, 重启后将立即开始重建索引 (删除未完成的
     索引, 重新构建). 所以, 如果之前是 background index building, 现在将变成 foreground.
     ``storage.indexBuildRetry`` 控制 mongod 是否自动恢复索引构建.
+
+  * 如果一个 doc 不包含要 index 的 field, 等价于这个列的值为 null.
 
   * 在奇葩的 tokumx 2.0 版本中, ensure_index 不能随便执行, 在大数据量下会卡得很厉害, 即使
     相应 index 明明已经存在. (不知在正常的 3.4 版本中有没有这个问题.)
@@ -146,9 +164,9 @@
 
 - operators
 
-  * ``$or``: 当 ``$or`` 里面的所有 clause 的执行都有相应的 index 可以使用时, 整个 $or clause
-    才会使用 index. 否则将对整个 collection 进行遍历. 注意不能将 $or clause 中的共同部分
-    简化出来::
+  * ``$or``: 当 ``$or`` 里面的所有 clause 的执行都有相应的 index 可以使用时,
+    整个 $or clause 才会使用 index. 否则将对整个 collection 进行遍历. 注意不
+    能将 $or clause 中的共同部分简化出来::
 
       db.data.find({a:1, $or: [{b:2}, {c:3}]})
       db.data.find({$or: [{a:1, b:2}, {a:1, c:3}]})
