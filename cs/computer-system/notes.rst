@@ -64,6 +64,10 @@
   时钟频率的差异. 也就是说, 因为这个总线的传输频率相对 CPU 的频率慢很多, 所以需要在
   CPU 里面设置缓存 (L1,2,3 cache), 以保证所需数据的实时获取.
 
+- 主板 (上面的 memory bus) 支持的内存频率以及 CPU memory controller 支持的内存频率
+  (即 uncore 访问内存的频率) 限制了对内存的频率选择. 如果内存的频率比 CPU 支持的
+  频率高, 内存也只会 downclock 至 memory controller speed.
+
 - 现在的 CPU 已经整合了 northbridge 的部分功能 (整合后成为了 CPU 的 uncore),
   包括 memory controller, 一部分 PCIe lanes 等. 北桥的其他功能和南桥的全部功能
   整合为 PCH, 仍称为 chipset. 原来的北桥和南桥之间的通信, 即现在的 CPU uncore
