@@ -168,11 +168,27 @@ TODOs
 
   * 8pin EATX12V
 
-- 双通道插相同颜色的 (A2 B2)
+- 对于双通道内存, 应该插在两个不同的通道上. 这对应于应该插在相同的颜色上.
+
+- 这种中塔型的机箱只能装 120 的风扇, 140 的上面装不下, 前面不能完全利用.
 
 - 如何接额外两个 usb3.0?
 
 - consider thunderbolt
+
+- 如果显示器比较多, 可以 3 个在独立显卡上, 3 个在 CPU 集成显卡上.
+
+- 处理所有设备时常触摸机箱, 保证与机箱电势相等, 防止产生静电.
+
+- samsung ssd 需要去官网下载软件, magician 等.
+
+- 2个nvme ssd 看看是不是需要驱动
+
+- 水冷需要安装软件, corsair link
+
+- 检查风扇方向
+
+- 设置电源键行为
 
 - read all online/offline specs and manuals, check and record everything noticable,
   e.g., motherboard specs.
