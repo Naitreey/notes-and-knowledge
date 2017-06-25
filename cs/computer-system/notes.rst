@@ -109,3 +109,81 @@
 - Modern memory buses are designed to connect directly to DRAM chips. 这大致意味着
   memory bus 本身的速度上限相对于 DIMM 本身的速度可能是一个高阶量, 可以不去考虑.
   只考虑内存条本身的数据传输速度即可.
+
+- 主板的 BIOS 软件存在 flash memory 上 (NOR or NAND), 由于是 flash memory, 可以重写
+  以升级 BIOS.
+
+  主板的设置保存在 CMOS 存储上. CMOS 是 volatile 的, 需要通电以维持数据. 它的电力
+  由主板上的电池提供. 所以把主板电池扣下来或者采用特定的 CMOS 短路机制可以重置
+  主板设置.
+
+- 主板上的电池用于维持 CMOS 数据以及维持 Real Time Clock (RTC).
+
+- Bootup sequence
+
+  #. 电源接通.
+
+  #. 主板进行 Power On Self-Test (POST), 检查 CPU, DRAM, 显卡, 硬盘的连接状态.
+
+  #. CPU 初始化, 获取和它连接着的 bus 等信息, 找到主板的 EEPROM/flash memory 的地址.
+
+  #. CPU 访问 flash memory 把 BIOS 程序读取到内存中.
+
+  #. CPU 执行 BIOS 程序.
+
+  #. BIOS 进行详细的硬件检查, 包括内存检测, GPU 检测等.
+
+  #. BIOS 启动 GPU.
+
+  #. BIOS 检查 USB, 硬盘, 键盘等 peripherals.
+
+  #. BIOS 点亮屏幕, 输出 BIOS 信息和系统自检信息等.
+
+  #. BIOS 读取系统时间, 读取 CMOS 存储的配置.
+
+  #. BIOS 根据 CMOS 保存的启动顺序选择从哪个存储设备启动, 并从该设备读取
+     bootloader 程序至内存.
+
+  #. BIOS 将 CPU 控制权移交 bootloader, 自己退出.
+
+  #. bootloader 使用 BIOS 访问存储设备, 读取自己的配置.
+
+  #. bootloader 根据某个配置, 使用 BIOS 访问存储设备和文件系统, 找到并将 kernel
+     和 initramfs 读入内存.
+
+  #. bootloader 执行 kernel 并添加指定的命令行参数, 将 CPU 控制权移交 kernel.
+
+- flash memory 有两种: NOR flash 和 NAND flash.
+
+  flash memory 中每个存储单元 (cell) 使用的是 floating-gate MOSFET.
+  NOR flash 和 NAND flash 的导电逻辑 (什么输入对应什么输出) 分别类似于数电中的
+  NOR gate 和 NAND gate, 故得名.
+
+  NOR flash 的读写是 byte-level 的 random-access, 擦除是以 block 为单位.
+  主要应用在嵌入式方面, 用来做 firmware 等 ROM (例如 motherboard BIOS)
+  和 XIP memory 之类.
+
+  NAND flash 的读写是 page-level 的 random-access, 擦除是以 block 为单位.
+  它的设计目的就是代替传统机械硬盘, 大大提升读写速度. 因此它模拟 block device
+  的交互逻辑. 由于去掉了 NOR flash 中 cell 的一些结构 (相当于从并联改成串联),
+  可以把密度做高, 容量做大. 主要用于做大容量存储, 替代机械硬盘, 例如 SSD.
+
+  flash memory 的一些限制:
+
+  * 数据清除 (erasure) 必须以 block 为单位 (注意 erasure 不是 rewrite);
+
+  * memory blocks 只支持固定数量的 program-erase (P/E, 写入-清除) 周期;
+
+  * 对一个 cell 进行大量 read 操作会导致周围的 cell 的状态改变, 从而导致数据错误;
+
+  由于这些麻烦的存在, flash memory 需要以下特殊处理:
+
+  * 使用处理了这些问题的 flash memory 专用 filesystem; 或者添加用于处理这些问题的硬件
+    flash controller, 从而在软件层面可以使用任意文件系统 (因在物理层有 controller 在
+    处理这些麻烦).
+
+  * 一个 flash memory 的真实大小比它的可用大小要大得到, 为了处理这些麻烦, 它需要大量
+    的额外空间来记录额外的信息和数据.
+
+- flash memory 技术里也用到了量子力学, floating-gate MOSFET 中通过势井和量子隧穿效应
+  控制电子.
