@@ -8,6 +8,9 @@
   该卡上可以连接别的信号输入或输出 (例如显卡); 或者是直接集成在主板上, 只留出一个
   外部设备的插口 (例如 SATA).
 
+- SATA 协议是支持 hotplug 的, 如果 SATA controller 实现了相应的功能, 就能 hotplug.
+  注意要在拔下之前先 unmount filesystem.
+
 - 一般情况下 SAS 接口和总线协议等可以兼容 SATA, 但反之不行.
 
 - M.2 是 form factor standard. 它定义的是 expansion card 的外观尺寸和接口类型等
