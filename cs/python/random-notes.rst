@@ -688,3 +688,21 @@
 
   * 默认的模式是 ``@``, 即 byteorder, size of primitive types, alignment 都采用
     native value. 此外还有 ``=``, ``<``, ``>``.
+
+- lambda 表达式中的变量是局域化在 Lambda 函数定义表达式中的:
+
+    .. code:: python
+      >>> [lambda x: x+1 for x in range(10)]
+      [<function __main__.<listcomp>.<lambda>>,
+      <function __main__.<listcomp>.<lambda>>,
+      <function __main__.<listcomp>.<lambda>>,
+      <function __main__.<listcomp>.<lambda>>,
+      <function __main__.<listcomp>.<lambda>>,
+      <function __main__.<listcomp>.<lambda>>,
+      <function __main__.<listcomp>.<lambda>>,
+      <function __main__.<listcomp>.<lambda>>,
+      <function __main__.<listcomp>.<lambda>>,
+      <function __main__.<listcomp>.<lambda>>]
+
+  ``lambda :`` operator 的优先级是所有算符中最低的. 注意 ``lambda`` 和 ``:`` 是一体的,
+  整个部分要作为一个整体.
