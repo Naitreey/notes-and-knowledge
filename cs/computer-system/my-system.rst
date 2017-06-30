@@ -124,71 +124,27 @@ Components
 
   Price: 200
 
-TODOs
-======
-- 更新主板固件, 主板优化软件等, 到官网上去寻找需要更新的、下载的东西等.
-
+Notes
+=====
 - 当使用 M.2 SATA 模式设备时, M.2_1 插槽与 SATA_1 共享带宽,
   调整 bios 设置以使用 SATA 设备.
 
 - 当使用 M.2 PCI-e 模式设备时, M.2_2 插槽与 SATA_56 共享带宽,
   调整 bios 设置以使用 SATA 设备.
 
-- 根据主板的音频功能, 是否有音频方面的考虑?
-  5 x 音频 IO 接口, 支持 8 声道?
-  如何使用前面板音源插座 AAFP?
-
-- 华硕 Q-Design? 处理器、内存、显卡、启动设备指示灯
-
-- 明确各个风扇插座:
-
-  * 1 x 4pin CPU_FAN (4pin PWM)
-
-  * 1 x 4pin CPU_OPT (水冷可能需要)
-
-  * 1 x 4pin AIO_PUMP
-
-  * 1 x 4pin H_AMP (高电流风扇)
-
-  * 2 x 4pin 机箱风扇 (4pin PWM)
-
-  * 1 x 5pin EXT_FAN
-
-- 如何使用系统面板插座 (PANEL)?
-
-- UEFI AMI BIOS? PnP? WfM? SM BIOS? ACPI? asus EZ Flash? asus crashfree?
-  F11 EZ Tuning? F6 QFan control? F3 may favorites? Last modified log?
-  F12 PrintScreen? asus DRAM SPD?
-
-- 主板驱动, 防毒软件, EZ Update, 华硕应用
-
-- 主板电源连接:
-
-  * 24pin EATXPWR
-
-  * 8pin EATX12V
-
 - 对于双通道内存, 应该插在两个不同的通道上. 这对应于应该插在相同的颜色上.
 
 - 这种中塔型的机箱只能装 120 的风扇, 140 的上面装不下, 前面不能完全利用.
-
-- 如何接额外两个 usb3.0?
-
-- consider thunderbolt
 
 - 如果显示器比较多, 可以 3 个在独立显卡上, 3 个在 CPU 集成显卡上.
 
 - 处理所有设备时常触摸机箱, 保证与机箱电势相等, 防止产生静电.
 
-- samsung ssd 需要去官网下载软件, magician 等.
+todos
+=====
+- UEFI AMI BIOS? PnP? WfM? SM BIOS? ACPI?
+  F12 PrintScreen? asus DRAM SPD?
+
+- consider thunderbolt
 
 - 2个nvme ssd 看看是不是需要驱动
-
-- 水冷需要安装软件, corsair link
-
-- 检查风扇方向
-
-- 设置电源键行为
-
-- read all online/offline specs and manuals, check and record everything noticable,
-  e.g., motherboard specs.
