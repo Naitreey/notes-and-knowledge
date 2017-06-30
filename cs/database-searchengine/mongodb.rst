@@ -175,3 +175,9 @@
 
     当 $or 使用了索引时, ``explain()`` 中有 OR stage, 其中的 inputStages 包含每个
     子查询条件执行的步骤.
+
+- mongodb 里的 Date 类型是 BSON 的 UTC datetime, 也就是说保存的是 UTC 时区的时间,
+  实际上是 int64 的 milliseconds since Unix Epoch.
+  
+  在使用 pymongo driver 时, 应该使用 ``datetime.utcnow`` 来获取这样的 datetime object,
+  或者使用包含时区信息的 local datetime object.
