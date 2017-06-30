@@ -159,3 +159,37 @@
     2. dict comparision is undefined, but consistently behaved.
     3. dict comparision raises TypeError
 - 很多 py23 的区别可以在 `2to3` 这个工具中找到.
+
+- diff py2py3
+
+  * str, bytes, encoding
+
+  * old style class
+
+  * absolute import
+
+  * dict.keys|values|items, iteration
+
+  * dict key order
+
+  * map, range, zip
+
+  * pyc, __pycache__
+
+  * io module
+
+  * __traceback__, __context__, __cause__
+
+  * async, await
+
+  * formatted string
+
+- py2py3 compatible
+
+  * __future__
+
+  * open, range, str, map
+
+  * 根据不同 module 结构 import
+
+  * 不能用 py3-only syntax
