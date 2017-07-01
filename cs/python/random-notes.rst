@@ -706,3 +706,12 @@
 
   ``lambda :`` operator 的优先级是所有算符中最低的. 注意 ``lambda`` 和 ``:`` 是一体的,
   整个部分要作为一个整体.
+
+- 默认的 ``sys.stdout`` file-like object 使用的 error handler 是 strict,
+  而 ``sys.stderr`` 使用的是 backslashreplace (从而向 stderr 输出的错误信息
+  本身不会再次触发一个 ``UnicodeEncodeError``, 让原本的 traceback 等错误信息
+  更加 messy). 若我们向 stdout 输出的信息可能包含无法编码的 binary data, 可以
+  替换一个使用 backslashreplace handler 的对象:
+
+    .. code:: python
+      sys.stdout = open(sys.stdout.fileno(), mode="w", errors="backslashreplace")
