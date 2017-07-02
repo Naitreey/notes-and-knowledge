@@ -102,6 +102,28 @@ design patterns and refactoring (至少对于传统语言) 是通用的, 因为�
 
   * 在哪里产生 log 就在哪里创造 Logger, 因为 Logger 包含位置信息, 没必要也不该传来传去.
 
+- 多个进程或线程向同一个文件输出信息, 如果不谨慎处理, 很可能造成不同来源的输出相互
+  覆盖, 残破不全. 所以最简单的办法是每一个来源 (进程或线程) 的输出先单独输出至一个
+  文件, 后续如有合并的需要, 则根据 timestamp 等标志来将这些文件结合在一起.
+
+  如果多个进程或线程一定要向同一个文件输出信息, 为了保证信息不相互覆盖, 有以下办法:
+
+  * 使用访问控制, 如 file lock 或 mutex, 保证同一时间内只有一个进程或线程对该文件
+    进行了写操作. 在此基础上, 仍需考虑不同的 file description 的 offset 是相互
+    独立的, 否则仍然可能覆盖.
+
+  * 所有进程或线程都使用 `O_APPEND`, 从而保证了写操作是 atomic appending, 不会相互
+    覆盖. 为了保证信息不相互交错, 还应该使用 line-buffered 或 unbuffered. 这是唯一
+    靠谱的方法.
+
+  另一种更好的办法是, 让一个单独的进程或线程作为 receiver 去写文件, 所有其他信息源
+  通过 socket 或者 queue 等方式向这个 receiver 发送要写的信息. 从而保证了时序性且
+  不重叠.
+
+  refs:
+  https://stackoverflow.com/questions/7842511/safe-to-have-multiple-processes-writing-to-the-same-file-at-the-same-time-cent
+  https://stackoverflow.com/questions/12942915/understanding-concurrent-file-writes-from-multiple-processes
+
 - You should always write your code as if comments didn't exist. This forces you to
   write your code in the simplest, plainest, most self-documenting way you can humanly
   come up with.
