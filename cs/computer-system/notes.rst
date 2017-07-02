@@ -126,11 +126,12 @@
 
   #. 电源接通.
 
-  #. 主板进行 Power On Self-Test (POST), 检查 CPU, DRAM, 显卡, 硬盘的连接状态.
+  #. 主板进行 Power On Self-Test (POST), 检查 CPU, DRAM, 显卡, 硬盘的连接状态,
+     对这些硬件进行基本的配置.
 
-  #. CPU 初始化, 获取和它连接着的 bus 等信息, 找到主板的 EEPROM/flash memory 的地址.
+  #. CPU 获取和它连接着的 bus 等信息, 找到主板的 EEPROM/flash memory 的地址.
 
-  #. CPU 访问 flash memory 把 BIOS 程序读取到内存中.
+  #. CPU 访问 flash memory 把 BIOS 程序读取到内存中. 此后, 只使用内存中的 BIOS 程序.
 
   #. CPU 执行 BIOS 程序.
 
@@ -147,7 +148,8 @@
   #. BIOS 根据 CMOS 保存的启动顺序选择从哪个存储设备启动, 并从该设备读取
      bootloader 程序至内存.
 
-  #. BIOS 将 CPU 控制权移交 bootloader, 自己退出.
+  #. BIOS 将 CPU 控制权移交 bootloader. 自己仍在内存中, 成为 runtime service,
+     供 bootloader 和 OS 使用.
 
   #. bootloader 使用 BIOS 访问存储设备, 读取自己的配置.
 
@@ -155,6 +157,16 @@
      和 initramfs 读入内存.
 
   #. bootloader 执行 kernel 并添加指定的命令行参数, 将 CPU 控制权移交 kernel.
+
+- firmware 是主板的软件, UEFI/BIOS 是这个软件提供的面向操作系统的 interface.
+
+- firmware 和 OS 各需要一套 driver, 以访问硬件. 显然 firmware 这套驱动要基础很多,
+  只包含很基础的功能.
+
+- 如今几乎所有的 PC/server 等类型的计算机的主板都使用的是遵循 UEFI 标准的固件.
+  Linux/Windows/macOS 等都是 UEFI-aware 的, 意思是它们的 bootloader 能够在 bootup
+  过程中调用 UEFI boot service 去访问硬件 (在 OS kernel 加载之前), 并且在 OS kernel
+  运行过程中, 可以调用 UEFI runtime service 去进行某些硬件操作 (比如 RTC, fans, ACPI).
 
 - flash memory 有两种: NOR flash 和 NAND flash.
 
@@ -190,3 +202,36 @@
 
 - flash memory 技术里也用到了量子力学, floating-gate MOSFET 中通过势井和量子隧穿效应
   控制电子.
+
+- DIMM 的各种参数和信息保存在了 DIMM 上的一个 EEPROM 中, 是标准的 SPD 信息形式.
+  主板在 Power On Self-Test 过程中, 会通过 SMBus 读取 DIMM 的 SPD 配置信息,
+  对 CPU uncore memory controller 进行配置.
+
+- 主板风扇接口们 (一般 4pin 支持 PWM, 3pin 则不支持.)
+
+  * CPU_FAN
+
+    CPU 风扇接口, 若主板检测到 CPU 风扇没有正常工作, 会报警并终止系统运行.
+
+  * CPU_OPT
+
+    与 CPU_FAN 一样直接受到 CPU 温度的影响, 可能用于有些散热器提供了两个风扇的情况.
+
+  * CHA_FAN
+   
+    机箱风扇接口.
+
+  * AIO_PUMP
+
+    专门给 All-in-One liquid cooler 使用的. 平时使用的水冷散热器就是 AIO liquid cooler,
+    因为它把水冷所需的所有零件 (radiator, pump, tube, fans, water) 等都方便地弄在一起了.
+    如果系统中需要第二套水冷, 比如给显卡水冷, 则可以插在 AIO_PUMP.
+
+  * H_AMP_FAN
+   
+    高电流风扇接口, 支持高于普通电流需求的风扇, 或者用 splitter 接上两个
+    普通电流风扇.
+
+  * EXT_FAN
+
+    扩展风扇接口, 可以额外接数个风扇.

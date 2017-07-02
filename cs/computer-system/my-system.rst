@@ -147,4 +147,6 @@ todos
 
 - consider thunderbolt
 
-- 2个nvme ssd 看看是不是需要驱动
+- samsung ssd 看看是不是需要驱动
+
+- ssd 速度测试
