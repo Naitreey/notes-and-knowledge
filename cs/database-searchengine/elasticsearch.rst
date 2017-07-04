@@ -18,6 +18,9 @@
   `_default_`. 某些数据 index 也许可以使用多个 type, 但需要具体看, 因为 type 更多
   的是数据之间的子分类标识符. 不是完完全全不同的数据结构.
 
+- Lucene's inverted index 在对一个列进行分词和索引的方式以及对 array 进行展平和索引
+  的方式与 mongodb 对 array 进行 multikey index 的方式有些类似, 但意义和用法不同.
+
 - Lucene's inverted index 并不会因为需要搜索新 document 而需要重建. 而是把新 documents
   写入新的 Lucene index segment. 搜索等操作时对所有的 segment 进行遍历.
 
@@ -86,3 +89,75 @@
 
 - 对于 painless 脚本, json 的 list 成为了 java.util.ArrayList, json 的 object
   成为了 java.util.HashMap 或 java.util.LinkedHashMap.
+
+- compound query 之 bool query, 如果 must/must_not/should/filter 中包含多个
+  leaf query clause, 则这些 leaf query 需要以 list 方式出现. 例如::
+
+    {
+        "from": 0,
+        "size": 8,
+        "sort": [
+            {
+                "lastquery": {
+                    "order": "desc"
+                }
+            }
+        ],
+        "query": {
+            "bool": {
+                "filter": [
+                    {
+                        "range": {
+                            "lastquery": {
+                                "gte": 1498811078088
+                            }
+                        }
+                    },
+                    {
+                        "range": {
+                            "lastquery": {
+                                "lte": 1499053691932
+                            }
+                        }
+                    },
+                    {
+                        "prefix": {
+                            "md5": "19"
+                        }
+                    }
+                ]
+            }
+        }
+    }
+
+- 每个 term query 中只能限制一个列的值::
+
+    {
+        "query": {
+            "term": {"a": 1}
+        }
+    }
+
+  不能是::
+
+    {
+        "query": {
+            "term": {
+                "a": 1,
+                "b": 2
+            }
+        }
+    }
+
+  这种情况需要用 compound bool query::
+
+    {
+        "query": {
+            "bool": {
+                "filter": [
+                    {"term": {"a": 1}},
+                    {"term": {"b": 2}}
+                ]
+            }
+        }
+    }
