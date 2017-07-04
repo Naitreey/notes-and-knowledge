@@ -18,6 +18,10 @@
   `_default_`. 某些数据 index 也许可以使用多个 type, 但需要具体看, 因为 type 更多
   的是数据之间的子分类标识符. 不是完完全全不同的数据结构.
 
+  使用 ``_default_`` 时仍要注意, 它只在新增 type 时起效, 对已有的 type 没有影响.
+  所以如果后续修改 ``_default_`` 的 mapping 或设置, 已有的 type 的 schema 不会跟着
+  改变.
+
 - Lucene's inverted index 在对一个列进行分词和索引的方式以及对 array 进行展平和索引
   的方式与 mongodb 对 array 进行 multikey index 的方式有些类似, 但意义和用法不同.
 
