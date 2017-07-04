@@ -183,3 +183,7 @@
     在 mappings 中的 document level 或者所需的 object level 中设置::
 
       dynamic: false|"strict"
+
+- 设置 ``dynamic: false|"strict"`` 后将在它影响的范围内关闭 dynamic mapping 相关功能,
+  这包括 ``_default_`` mapping, dynamic field detection, dynamic template 等具体功能
+  不再起效或者会报错.
