@@ -264,6 +264,9 @@ design patterns and refactoring (至少对于传统语言) 是通用的, 因为�
 - Design versioning scheme
   可以参考 [python setuptools 的版本识别逻辑][setuptools], 来设计 versioning scheme.
 
+  [setuptools]: https://setuptools.readthedocs.io/en/latest/setuptools.html#specifying-your-project-s-version
+
+
 - 无论使用哪种程序部署逻辑, 一定要设置机制以保证整个程序不依赖于放置在某个绝对的文件
   系统位置. 例如, 如果写的是 python module, 只需保证能够安装到 site-packages 下即可;
   如果写的是一套完整的程序, 可以通过判断主文件所在位置或通过 environ variable 来确定
@@ -298,4 +301,5 @@ design patterns and refactoring (至少对于传统语言) 是通用的, 因为�
 
   *Quote by Elliot from Mr. Robot*
 
-[setuptools]: https://setuptools.readthedocs.io/en/latest/setuptools.html#specifying-your-project-s-version
+- 关于 weekyear & week of year 方面的计算, 应该使用 ISO 8601 standard, 这样对于不同语言
+  都可以做到一致. 例如, Python 中 datetime 和 Java 中的 GregorianCalendar 都支持 ISO 8601.
