@@ -161,3 +161,25 @@
             }
         }
     }
+
+- 在各个层级上禁止 elasticsearch 进行自动创建:
+
+  * 禁止 node 自动创建 index:
+
+    在 node level 的配置 ``elasticsearch.yaml`` 中::
+
+      action.auto_create_index: false
+
+  * 禁止 index 自动创建 type:
+
+    在 index level 的配置中添加::
+
+      index.mapper.dynamic: false
+
+    或者添加 index template, 让新创建的 index 自动应用以上配置.
+
+  * 禁止 mappings 自动创建 field:
+
+    在 mappings 中的 document level 或者所需的 object level 中设置::
+
+      dynamic: false|"strict"
