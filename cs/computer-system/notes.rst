@@ -159,6 +159,10 @@
   #. bootloader 执行 kernel 并添加指定的命令行参数, 将 CPU 控制权移交 kernel.
 
 - firmware 是主板的软件, UEFI/BIOS 是这个软件提供的面向操作系统的 interface.
+  主板的 firmware 主要提供两种服务, boot service 和 runtime service.
+  在启动时, 它主要提供硬件检查和配置以及加载 OS bootloader 的服务;
+  在运行时, boot loader 使用 BIOS/UEFI firmware 来访问存储设备等, OS 使用 firmware
+  来进行某些硬件控制.
 
 - firmware 和 OS 各需要一套 driver, 以访问硬件. 显然 firmware 这套驱动要基础很多,
   只包含很基础的功能.
