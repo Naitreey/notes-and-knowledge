@@ -715,3 +715,47 @@
 
     .. code:: python
       sys.stdout = open(sys.stdout.fileno(), mode="w", errors="backslashreplace")
+
+- metalcass
+
+  * 如何确定 the metaclass of a class:
+
+    The appropriate metaclass for a class definition is determined as follows:
+
+    - if no bases and no explicit metaclass are given, then type() is used
+
+    - if an explicit metaclass is given and it is not an instance of type(),
+      then it is used directly as the metaclass
+
+    - if an instance of type() is given as the explicit metaclass, or bases
+      are defined, then the most derived metaclass is used
+
+    The most derived metaclass is selected from the explicitly specified metaclass
+    (if any) and the metaclasses (i.e. type(cls)) of all specified base classes.
+    **The most derived metaclass is one which is a subtype of all of these candidate
+    metaclasses. If none of the candidate metaclasses meets that criterion, then
+    the class definition will fail with TypeError.**
+
+    例如, 以下代码会失败:
+
+      .. code:: python
+
+      class MetaA(type): pass
+      class MetaB(type): pass
+
+      class A(metaclass=MetaA): pass
+      class B(metaclass=MetaB): pass
+
+      class C(A, B): pass # TypeError!!!!!
+
+    创建并使用 MetaA 和 MetaB 的共同子类 MetaC 则可以解决这个问题:
+
+      .. code:: python
+
+      class MetaC(MetaA, MetaB): pass
+
+      class C(A, B, metaclass=MetaC): pass
+
+  * 在 python3 中, class definition line 上面除了可以添加 ``metaclass=`` 这个 kwarg,
+    还可以添加别的任意 kwargs, 只要 ``metaclass.__prepare__`` 以及 ``metaclass()``
+    等操作支持即可.
