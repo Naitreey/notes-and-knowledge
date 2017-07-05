@@ -759,3 +759,10 @@
   * 在 python3 中, class definition line 上面除了可以添加 ``metaclass=`` 这个 kwarg,
     还可以添加别的任意 kwargs, 只要 ``metaclass.__prepare__`` 以及 ``metaclass()``
     等操作支持即可.
+
+- time, datetime
+
+  * time.timezone 给出的 offset 是 localtime 和 utc-time 之差的相反数.
+
+  * 对于 datetime.strptime classmethod, ``format`` 中包含 ``%z`` 时, 将生成一个
+    timezone-aware 的 datetime object.
