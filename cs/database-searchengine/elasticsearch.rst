@@ -191,3 +191,9 @@
 - 设置 ``dynamic: false|"strict"`` 后将在它影响的范围内关闭 dynamic mapping 相关功能,
   这包括 ``_default_`` mapping, dynamic field detection, dynamic template 等具体功能
   不再起效或者会报错.
+
+- ``_search`` endpoint 可以包含多步操作: query, from, size, aggs.
+
+  注意聚合是搜索的一部分操作. 我们可以既查询又聚合 (从而限制被聚合的数据集).
+  如果只要聚合的结果, 而不要查询的 结果, 应该设置 ``size: 0``, 这样可以加快
+  整个操作的速度.
