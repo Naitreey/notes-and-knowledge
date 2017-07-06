@@ -181,3 +181,6 @@
   
   在使用 pymongo driver 时, 应该使用 ``datetime.utcnow`` 来获取这样的 datetime object,
   或者使用包含时区信息的 local datetime object.
+
+- ``.count()`` 可以在逻辑上可以认为是最简单的聚合, 即没有 query specs, 没有 grouping
+  (整个表为一组), 只有 count 操作.

@@ -197,3 +197,13 @@
   注意聚合是搜索的一部分操作. 我们可以既查询又聚合 (从而限制被聚合的数据集).
   如果只要聚合的结果, 而不要查询的 结果, 应该设置 ``size: 0``, 这样可以加快
   整个操作的速度.
+
+- aggregation
+
+  * 整个被 search 的部分 (一个 index, 一个 doc type, 等等) 组成一个 root bucket.
+
+  * bucket aggs 的基本功能是分组并给出该组的 count. 从 metric 的角度, 它能给出 count
+    这个基本的 metric 操作.
+
+  * aggs 可以逐层嵌套, 各种细分 bucket (bucket aggs), 在任何的 bucket 层中, 可以计算
+    某些 metric (metric aggs).
