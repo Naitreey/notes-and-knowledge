@@ -40,6 +40,7 @@
 
 - 除非需要根据相关性分数排序, 否则搜索时使用 filter 更高效.
   只有搜索时按照相关性排序时 `_score` 才有意义, 其他时候 `_score` 没有意义.
+  **Use a filter wherever you can.**
 
 - 字符串需要 full text search 的 field 才用 text, 其他用 keyword.
 
@@ -200,10 +201,20 @@
 
 - aggregation
 
-  * 整个被 search 的部分 (一个 index, 一个 doc type, 等等) 组成一个 root bucket.
+  * query clause 匹配的整个数据集组成一个 root bucket, 也就是最外层的 ``aggs`` key
+    外面那层 (包含 query, from ,size, etc.) 是一个 root bucket.
 
   * bucket aggs 的基本功能是分组并给出该组的 count. 从 metric 的角度, 它能给出 count
     这个基本的 metric 操作.
 
   * aggs 可以逐层嵌套, 各种细分 bucket (bucket aggs), 在任何的 bucket 层中, 可以计算
-    某些 metric (metric aggs).
+    各种 metrics (metric aggs).
+
+  * 每层 bucket 的构建方式: 以自定义的 key 做为 bucket 名字, 在其中设置 bucket aggs
+    的分组方式, 或者重置该层 bucket 为 global bucket (``global: {}``).
+
+  * 构建离散值的 buckets 使用 terms aggregation;
+    构建数值范围的 buckets 使用 histogram aggregation;
+    构建日期范围的 buckets 使用 date_histogram aggregation.
+
+  * 在 histogram 中, 使用 ``extended_bounds`` 来扩展返回的 buckets 至想要的范围.
