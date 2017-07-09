@@ -81,6 +81,10 @@
   QPI 代替 FSB 在 CPU core 和 uncore (即之前的部分北桥) 之间通信, 并且在 CPU 之间通信
   也使用 QPI.
 
+- CPU uncore 或 system agent 中包含 memory controller, DMA controller,
+  integrated GPU (iGPU), PCI-e controller, L3 cache, QPI controller,
+  thunderbolt controller, 等.
+
 - 注意 DMI 3.0 每条 lane 速度与 PCI-e v3 相近, 基本上 1GB/s, 但 DMI 3.0 只有 4 条 lanes.
   所以 throughput 最大只有 4GB/s.
 
