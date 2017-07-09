@@ -214,7 +214,7 @@
   NOR gate 和 NAND gate, 故得名.
 
   NOR flash 的读写是 byte-level 的 random-access, 擦除是以 block 为单位.
-  主要应用在嵌入式方面, 用来做 firmware 等 ROM (例如 motherboard BIOS)
+  主要应用在嵌入式方面, 用来做 firmware 等 ROM (例如 motherboard BIOS/UEFI firmware)
   和 XIP memory 之类.
 
   NAND flash 的读写是 page-level 的 random-access, 擦除是以 block 为单位.
@@ -257,7 +257,7 @@
     与 CPU_FAN 一样直接受到 CPU 温度的影响, 可能用于有些散热器提供了两个风扇的情况.
 
   * CHA_FAN
-   
+
     机箱风扇接口.
 
   * AIO_PUMP
