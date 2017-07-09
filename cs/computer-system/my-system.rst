@@ -142,11 +142,11 @@ Notes
 
 todos
 =====
-- UEFI AMI BIOS? PnP? WfM? SM BIOS? ACPI?
-  F12 PrintScreen? asus DRAM SPD?
-
 - consider thunderbolt
 
 - samsung ssd 看看是不是需要驱动
 
 - ssd 速度测试
+
+- 下次一定要考虑静音问题, 包含机箱静音, 风扇静音 (PWM), 减少风扇数目等问题.
+  考虑 be quiet 的静音设备.
