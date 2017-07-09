@@ -55,9 +55,10 @@
 
   * 对于现在的设备, 基础时钟频率由 PCH 生成, 再通过各种与之连接的总线转换和传递出去.
 
-  其他所有 bus 的工频都是
-  基于这个频率衍生出来的, 比如 CPU, DRAM, PCIe, 等. 其中, CPU 的工作频率是
-  clock frequency * cpu multiplier.
+  其他所有 bus 的工频都是基于这个频率衍生出来的, 比如 CPU, DRAM, PCIe, 等.
+  其中, CPU core, L3 cache, DRAM 等的基础频率是名为 base clock frequency 的频率.
+  这些组件及相关 bus 在收到 BCLK frequency 之后再转换成所需的更高的频率. 例如,
+  CPU 的频率是 BCLK frequency * cpu multiplier.
 
 - Double data rate (DDR) 可以将传输频率提高为 FSB/QPI 上时钟频率的两倍.
   (QDR -- quad 则能变成 4 倍.) 注意 DDR 不仅仅要内存 DIMM 条支持, 还需要
