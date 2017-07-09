@@ -267,10 +267,35 @@
     如果系统中需要第二套水冷, 比如给显卡水冷, 则可以插在 AIO_PUMP.
 
   * H_AMP_FAN
-   
+
     高电流风扇接口, 支持高于普通电流需求的风扇, 或者用 splitter 接上两个
     普通电流风扇.
 
   * EXT_FAN
 
     扩展风扇接口, 可以额外接数个风扇.
+
+  PWM fans 通过 PWM signal (Pulse-Width Modulation) 来控制风扇转速, PWM signal
+  通过第四个 pin 来传输.
+
+- Desktop Management Interface (DMI) 貌似是一个与 SMBIOS 相关但包含的范围更广的概念.
+  总之, 系统中的硬件信息可以统一地标准化地从 DMI/SMBIOS table 中读取.
+  它包含从 BIOS firmware 中读取的 SMBIOS 标准化数据. OS kernel 一般实现了
+  DMI table 的收集和构建.
+
+- NUMA 在有多个 CPU socket 的 server 中才有意义, 对单个 socket 的 desktop PC 没有意义.
+  因为它涉及对 memory locality 的优化.
+
+- multi-channel memory architecture 需要 CPU 和主板共同支持.
+
+  要利用多个 "通道" 的好处需要将内存插在不同的通道中. 每个通道是一个完整的 64bit 数据
+  流. 每个通道的末端可能插不止一根 DIMM 内存条, 但同一时刻只能访问它们中的一根, 所以
+  一个通道上增加内存条数目只增加内存总量不提高内存访问 throughput.
+
+  多个通道存在两种模式: unganged 和 ganged.
+
+  * ganged mode 下, 多个通道合成一个通道, 这样带宽就是 64*N bit, 可以每次读写 64*N bit.
+    但是实际上更多时候这样宽不能被很好利用, 实际效果不一定好.
+
+  * unganged mode 下, 多个通道独立工作, 独立读写, 这有助于提高 concurrent processing
+    的效率. 默认多通道内存架构工作在这个模式下.
