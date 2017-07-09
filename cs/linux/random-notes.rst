@@ -134,3 +134,7 @@
 
   从这个角度看, ``%`` 可以认为是 job control 的标志符, 相应于 ``!`` 是 command history
   substitution 的标志符.
+
+- SMBIOS/DMI 信息由 kernel 提供给 userspace 使用. 这些信息保存在 sysfs 里:
+  ``/sys/firmware/dmi/tables/smbios_entry_point``
+  ``/sys/firmware/dmi/tables/DMI``
