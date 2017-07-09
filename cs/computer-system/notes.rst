@@ -127,31 +127,41 @@
 
 - 主板上的电池用于维持 CMOS 数据以及维持 Real Time Clock (RTC).
 
+- reset button 如何工作的:
+
+  按了 reset button 之后, 主板给所有设备发送 reset signal.
+  由于 CPU 被 reset, 所以从固定的 reset vector 地址处开始执行. 对于 cold
+  boot, northbridge (uncore) 把这个地址请求转发到 firmware flash memory 上;
+  对于 soft boot, BIOS 已经在内存中了, 所以该地址请求直接转发到内存中的对应
+  地址上. 总之, CPU 从 reset vector 处开始执行, 即开始执行 BIOS, 从而开始了
+  boot sequence. BIOS 在 soft boot 时, 会跳过 POST 过程.
+
 - Bootup sequence
 
-  #. 电源接通.
+  #. PSU 接通, 主板 chipset 等待 PSU 稳定下来, 期间给 CPU 发送 reset signal,
+     防止 CPU 过早启动. chipset 收到 PSU 发送的 Power Good signal 之后, 停止
+     抑制 CPU 运行.
 
-  #. 主板进行 Power On Self-Test (POST), 检查 CPU, DRAM, 显卡, 硬盘的连接状态,
-     对这些硬件进行基本的配置.
+  #. CPU 从主板 firmware (EEPROM/flash memory) 上的固定地址位置开始执行,
+     即 UEFI/BIOS 开始接管启动流程.
 
-  #. CPU 获取和它连接着的 bus 等信息, 找到主板的 EEPROM/flash memory 的地址.
+  #. BIOS 进行 Power On Self-Test (POST), 检查 CPU, 中断控制器、DMA controllers
+     以及 chipset 的其他设备, DRAM, 显卡, 硬盘等等. 并对这些硬件进行基本的配置.
+     如今 POST 已经不会仔细检查 RAM 了, 否则会太慢, 只进行很基本的检查以及读取
+     SPD info 来配置 CPU memory controller.
 
-  #. CPU 访问 flash memory 把 BIOS 程序读取到内存中. 此后, 只使用内存中的 BIOS 程序.
+  #. BIOS 把自己加载到内存中. 此后, BIOS 程序只在内存中运行.
 
-  #. CPU 执行 BIOS 程序.
+  #. BIOS 启动显卡, 点亮屏幕, 输出 POST 以及其他检测信息.
 
-  #. BIOS 进行详细的硬件检查, 包括内存检测, GPU 检测等.
-
-  #. BIOS 启动 GPU.
-
-  #. BIOS 检查 USB, 硬盘, 键盘等 peripherals.
-
-  #. BIOS 点亮屏幕, 输出 BIOS 信息和系统自检信息等.
+  #. BIOS 检查 USB, 硬盘, 键盘等 peripherals, 并输出相应信息.
 
   #. BIOS 读取系统时间, 读取 CMOS 存储的配置.
 
   #. BIOS 根据 CMOS 保存的启动顺序选择从哪个存储设备启动, 并从该设备读取
-     bootloader 程序至内存.
+     bootloader 程序至内存. 若该存储设备是硬盘, 对于 BIOS-MBR, BIOS 读取
+     MBR 来加载 bootloader; 对于 UEFI-GPT, UEFI 读取 EFI System Partition (ESP)
+     来加载所需 bootloader.
 
   #. BIOS 将 CPU 控制权移交 bootloader. 自己仍在内存中, 成为 runtime service,
      供 bootloader 和 OS 使用.
@@ -175,7 +185,27 @@
 - 如今几乎所有的 PC/server 等类型的计算机的主板都使用的是遵循 UEFI 标准的固件.
   Linux/Windows/macOS 等都是 UEFI-aware 的, 意思是它们的 bootloader 能够在 bootup
   过程中调用 UEFI boot service 去访问硬件 (在 OS kernel 加载之前), 并且在 OS kernel
-  运行过程中, 可以调用 UEFI runtime service 去进行某些硬件操作 (比如 RTC, fans, ACPI).
+  运行过程中, 可以调用 UEFI runtime service 去进行某些硬件操作 (比如 RTC, fans, ACPI,
+  suspend-to-RAM).
+
+  OS kernel 通过自己的 driver 直接访问绝大部分硬件, 原因是:
+
+  * kernel driver 可以灵活地使用设备的全部功能和发挥其性能;
+
+  * 通过 UEFI/BIOS 转发会低效一些;
+
+  * BIOS 运行在 real mode, 在 kernel 和 BIOS 之间切换需要切换 CPU 的模式 3 遍, 更低效.
+
+  但仍有少量硬件操作需要依赖 UEFI/BIOS, 比如机箱风扇控制, RTC 的读写, ACPI 电源管理,
+  suspend-to-RAM 等.
+
+- BIOS 运行时 CPU 处于 16-bit real mode, 读取 MBR、加载 bootloader 和 bootloader
+  的初始执行, 都是在 16-bit real mode 下.
+  bootloader (e.g., GRUB) 的任务之一就是切换 CPU 到 protected mode.
+
+  对于 UEFI 系统, UEFI 开始执行后很快就切换到 protected mode. 而 ESP 分区上的所有
+  EFI applications 都是在 protected mode 中执行的. 注意到这些 ``.efi`` 应用都是
+  PE32 executable, 使用的虚拟内存.
 
 - flash memory 有两种: NOR flash 和 NAND flash.
 
