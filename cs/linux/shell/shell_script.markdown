@@ -96,9 +96,18 @@
 * declare 中不该包含可能出错的赋值操作. 若赋值部分执行了可能出错的命令, declare 的返回值
   会掩盖这些错误. 这种情况下, 将 declare 声明与赋值操作分开写.
 
+* 在任意命令中使用 bash 的 background jobspec: `jobs -x COMMAND [args]`
+
+* fork 执行一个子进程, 并希望它能 detach from current session: `(cmd &)`
+
+* 在一组 pipeline 的构建过程中, 如果只是想要快速地将左边命令的 stdout 和 stderr
+  一起传入 pipe, 可以使用 `|&`. 但要记住本质上 `command |&` 是 `command 2>&1 |` 的简写.
+  正因为它是 `command 2>&1 |` 的 shortcut, 而且 redirection operator 的执行顺序是从左至右,
+  因此隐含的 `2>&1` 操作会 override 一切 command 中对 fd 2 的 redirection.
+
 # Notes
 
-## shell 初始化文件的执行
+## shell 初始化文件的执行流程
 
 * bash 初始化文件的执行.
 
