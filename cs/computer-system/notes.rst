@@ -123,7 +123,7 @@
 
   主板的设置保存在 CMOS 存储上. CMOS 是 volatile 的, 需要通电以维持数据. 它的电力
   由主板上的电池提供. 所以把主板电池扣下来或者采用特定的 CMOS 短路机制可以重置
-  主板设置.
+  主板设置. (重置 CMOS 应该能够重置主板密码吧?)
 
 - 主板上的电池用于维持 CMOS 数据以及维持 Real Time Clock (RTC).
 
@@ -206,6 +206,30 @@
   对于 UEFI 系统, UEFI 开始执行后很快就切换到 protected mode. 而 ESP 分区上的所有
   EFI applications 都是在 protected mode 中执行的. 注意到这些 ``.efi`` 应用都是
   PE32 executable, 使用的虚拟内存.
+
+- UEFI 的设计要求易于扩展, 功能丰富、灵活. 这些自然要求 UEFI firmware 是运行在
+  protected mode 或 long mode 中的, 并且具有模块化的设计 (EFI applications).
+
+  UEFI 相对于 BIOS firmware 的一些优点:
+
+  * 支持 GPT, 向后兼容 MBR.
+
+  * 模块化设计 (EFI application).
+
+  * 运行于 protected/long mode, 而不是 real mode. 能够实现复杂的 EFI application,
+    从而可以构建灵活的 pre-OS environment.
+
+- UEFI-GPT 组合在分区时要有 ESP 分区, 放置 EFI application, 包含 bootloaders 等.
+
+- 几种 firmware 和硬盘分区的组合:
+
+  * BIOS-MBR
+
+  * BIOS-GPT
+
+  * UEFI-MBR
+
+  * UEFI-GPT
 
 - flash memory 有两种: NOR flash 和 NAND flash.
 
