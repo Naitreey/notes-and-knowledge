@@ -218,3 +218,16 @@
     构建日期范围的 buckets 使用 date_histogram aggregation.
 
   * 在 histogram 中, 使用 ``extended_bounds`` 来扩展返回的 buckets 至想要的范围.
+
+  * nested aggregation 会把 ``path`` 路径下的 nested subdocs 从 parent doc 中拆出来,
+    成为一个个的单独的 doc, 这些 docs 构成该层的唯一一个 bucket.
+
+    此后往往需要对这些 sub docs 进行进一步筛选, 此时可使用 filter aggregation 进行
+    过滤.
+
+    注意在 ``query`` 部分去进行 nested query 来筛选时, 选出的是带有符合条件的 nested
+    doc 的 parent doc. 因此在传入 ``aggs`` 部分时是一组完整的 docs, 而不是 subdocs.
+    需要使用 nested aggs 把 subdocs 拆出来.
+
+  * date_histogram 时, 横轴时间划分和输出默认使用 UTC 时区, 若要在不同时区进行计算和
+    输出, 需要设置相应的 ``time_zone`` 参数.
