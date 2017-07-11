@@ -766,3 +766,19 @@
 
   * 对于 datetime.strptime classmethod, ``format`` 中包含 ``%z`` 时, 将生成一个
     timezone-aware 的 datetime object.
+
+- membership test ``x in y`` 如何进行判断.
+
+  * For container types such as list, tuple, set, frozenset, dict, or collections.deque,
+    the expression ``x in y`` is equivalent to ``any(x is e or x == e for e in y)``.
+    也就是说, 对于 builtin container types, 一个对象 ``is`` 或者 ``==`` container
+    中的某个元素, 则认为这个对象在 container 中.
+
+  * For the string and bytes types, ``x in y`` is True if and only if
+    x is a substring of y.
+
+  * 对于 user-defined class, 若实现了 ``__contains__`` 则使用这个 special methods
+    来进行判断.
+
+  * 对于 user-defined class, 若没有实现 ``__contains__``, 但实现了 ``__iter__``
+    则通过 iterate 生成的 iterator 来找相等的元素.
