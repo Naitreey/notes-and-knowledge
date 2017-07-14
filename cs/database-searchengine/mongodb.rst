@@ -179,8 +179,13 @@
 - mongodb 里的 Date 类型是 BSON 的 UTC datetime, 也就是说保存的是 UTC 时区的时间,
   实际上是 int64 的 milliseconds since Unix Epoch.
   
-  在使用 pymongo driver 时, 应该使用 ``datetime.utcnow`` 来获取这样的 datetime object,
-  或者使用包含时区信息的 local datetime object.
+  在使用 pymongo driver 时, 应该使用 ``datetime.utcnow`` 来获取这样的 datetime object;
+  或者使用包含时区信息的 local datetime object, 后者在存储时会被 pymongo driver 自动
+  转换为 UTC 时间.
+
+  从数据库中获取 Date object 时, 默认得到的是 UTC 时间, naive datetime object.
+  在 ``CodecOptions`` 选项中设置 ``tz_aware=True`` 以及 ``tzinfo`` 为所需时区,
+  则得到 timezone-aware datetime object.
 
 - ``.count()`` 可以在逻辑上可以认为是最简单的聚合, 即没有 query specs, 没有 grouping
   (整个表为一组), 只有 count 操作.
