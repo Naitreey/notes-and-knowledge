@@ -185,10 +185,10 @@
 - 如今几乎所有的 PC/server 等类型的计算机的主板都使用的是遵循 UEFI 标准的固件.
   Linux/Windows/macOS 等都是 UEFI-aware 的, 意思是它们的 bootloader 能够在 bootup
   过程中调用 UEFI boot service 去访问硬件 (在 OS kernel 加载之前), 并且在 OS kernel
-  运行过程中, 可以调用 UEFI runtime service 去进行某些硬件操作 (比如 RTC, fans, ACPI,
-  suspend-to-RAM).
+  运行过程中, 可以调用 UEFI runtime service 去进行某些硬件操作 (比如 RTC, fans,
+  suspend-to-RAM, 等).
 
-  OS kernel 通过自己的 driver 直接访问绝大部分硬件, 原因是:
+  OS kernel 尽量通过自己的 driver 直接访问几乎所有硬件, 原因是:
 
   * kernel driver 可以灵活地使用设备的全部功能和发挥其性能;
 
@@ -196,8 +196,9 @@
 
   * BIOS 运行在 real mode, 在 kernel 和 BIOS 之间切换需要切换 CPU 的模式 3 遍, 更低效.
 
-  但仍有少量硬件操作需要依赖 UEFI/BIOS, 比如机箱风扇控制, RTC 的读写, ACPI 电源管理,
-  suspend-to-RAM 等.
+  但仍有极少量硬件操作需要依赖 UEFI/BIOS, 比如 suspend-to-RAM.
+  基本上在 OS 常态运行期间, kernel 已经不再需要 BIOS/UEFI 提供的 runtime service,
+  从而不需要控制权转换或 CPU 模式转换, 而是自己直接访问硬件.
 
 - BIOS 运行时 CPU 处于 16-bit real mode, 读取 MBR、加载 bootloader 和 bootloader
   的初始执行, 都是在 16-bit real mode 下.
@@ -267,8 +268,26 @@
   控制电子.
 
 - DIMM 的各种参数和信息保存在了 DIMM 上的一个 EEPROM 中, 是标准的 SPD 信息形式.
-  主板在 Power On Self-Test 过程中, 会通过 SMBus 读取 DIMM 的 SPD 配置信息,
+  主板在 Power On Self-Test 过程中, 会通过 SMBus/I2C 读取 DIMM 的 SPD 配置信息,
   对 CPU uncore memory controller 进行配置.
+
+- SMBus 很大程度上是 I2C bus 的一个更严格定义的子集. 在实际 implementation 中,
+  两种总线经常配置成兼容的, 在同一个 bus 上运行. 在 Linux 下 SMBus 及 I2C 设备
+  统一归类为 i2c 设备. 加载 i2c-dev kernel module 后, 显示为 ``/dev/i2c-*``.
+
+  在一般的主板上, SMBus 和 I2C bus 设备都存在, 而且. 哪些是哪些用 ``i2cdetect -l``
+  来检查. 一般可以发现, 绝大部分都是 I2C 设备, 只有个别是 SMBus 设备.
+
+  在计算机系统中, I2C (以及 SMBus) 一般用于:
+  与 DIMM 交互, 访问 SPD data;
+  管理 PCIe 设备 (SMBus);
+  访问 CMOS;
+  控制显示器的显示设置;
+  控制扬声器音量;
+  获取 sensor;
+  读 RTC;
+  开启、关闭一些设备的电源供应;
+  等等.
 
 - 主板风扇接口们 (一般 4pin 支持 PWM, 3pin 则不支持.)
 
