@@ -782,3 +782,23 @@
 
   * 对于 user-defined class, 若没有实现 ``__contains__``, 但实现了 ``__iter__``
     则通过 iterate 生成的 iterator 来找相等的元素.
+
+- 一些 special methods:
+
+  * ``object.__dict__`` 对象自身定义的所有 attrs.
+
+  * ``instance.__class__`` 实例的类.
+
+  * ``definition.__name__`` 对象的名字.
+
+  * ``definition.__qualname__`` qualified name.
+
+  * ``class.__bases__`` 一个类的基类们.
+
+  * ``class.mro()`` 一个类 MRO 顺序. 该方法在 class instantiation 时调用, 结果存储
+    在 ``class.__mro__`` 中.
+
+  * ``class.__mro__`` 同上, 只记算一次.
+
+  * ``class.__subclasses__()`` 一个类的所有直接子类. 使用 weakref 来保存这些子类的
+    列表.
