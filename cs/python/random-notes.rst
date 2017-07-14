@@ -802,3 +802,5 @@
 
   * ``class.__subclasses__()`` 一个类的所有直接子类. 使用 weakref 来保存这些子类的
     列表.
+
+- 如何创建 read-only class attribute?
