@@ -138,3 +138,6 @@
 - SMBIOS/DMI 信息由 kernel 提供给 userspace 使用. 这些信息保存在 sysfs 里:
   ``/sys/firmware/dmi/tables/smbios_entry_point``
   ``/sys/firmware/dmi/tables/DMI``
+
+- ext4 本身支持最大 1EiB 的分区, 但是比较旧的 (1.43 之前, 2016 之前) ``mke2fs`` 默认不开启
+  ``64bit`` 选项, 而是 32bit, 所以最大分区只有 16TiB.
