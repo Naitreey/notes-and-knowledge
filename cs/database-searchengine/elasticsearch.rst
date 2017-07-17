@@ -76,16 +76,6 @@
   罕见.
 - 不符合以上条件的 doc 拆分, 则应该使用 parent-child 方式.
 
-- 一个 string term (keyword) 最长为 32766, 因此默认情况下字符串大于这个长度会报错
-  `max_bytes_length_exceeded_exception`.
-  解决办法: 对该 field 设置 `ingore_above`.
-
-- 若输入的 document 某个 field 的值可能与预期的类型不符, 可以使用 `ignore_malformed`
-  忽略对类型不符的值进行 index, 或者使用 `coerce` 强行进行类型转换.
-
-- 一些列设置 `include_in_all` 来避免全文检索, 设置 `index:true|false` 限制是否
-  index 该 field.
-
 - debug painless script
 
   在正常需要写脚本的操作 (例如 scripted update, scripted query, script field
@@ -199,6 +189,10 @@
   如果只要聚合的结果, 而不要查询的 结果, 应该设置 ``size: 0``, 这样可以加快
   整个操作的速度.
 
+- 搜索时, 对一个列的 query text 也是被索引时相同或类似的 analyzer 处理后才去
+  inverted index 中查询匹配的. 具体如何选择 analyzer 有一个明确的从局域至全局的
+  fallback 机制.
+
 - aggregation
 
   * query clause 匹配的整个数据集组成一个 root bucket, 也就是最外层的 ``aggs`` key
@@ -231,3 +225,22 @@
 
   * date_histogram 时, 横轴时间划分和输出默认使用 UTC 时区, 若要在不同时区进行计算和
     输出, 需要设置相应的 ``time_zone`` 参数.
+
+- mapping parameter settings
+
+  * 一个 string term (keyword) 最长为 32766, 因此默认情况下字符串大于这个长度会报错
+    `max_bytes_length_exceeded_exception`.
+    解决办法: 对该 field 设置 `ingore_above`.
+
+  * 若输入的 document 某个 field 的值可能与预期的类型不符, 可以使用 `ignore_malformed`
+    忽略对类型不符的值进行 index, 或者使用 `coerce` 强行进行类型转换. ``coerce`` 默认
+    是开启的, 注意 ``coerce`` 只转换 index 中的值, 并不修改 source 中的原始形式. 例如,
+    ``"5"`` 在 index 中转换为了 5, 但 ``_source`` 中仍然是字符串.
+
+  * 一些列设置 `include_in_all` 来避免全文检索, 设置 `index:true|false` 限制是否
+    index 该 field.
+
+  * ``copy_to`` 用于构建自定义的 ``_all`` 类型 field.
+
+- inverted index 与 doc values 是两种数据结构, 前者对搜索操作很高效, 后者对聚合、排序
+  等操作很高效.
