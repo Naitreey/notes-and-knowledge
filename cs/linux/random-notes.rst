@@ -141,3 +141,22 @@
 
 - ext4 本身支持最大 1EiB 的分区, 但是比较旧的 (1.43 之前, 2016 之前) ``mke2fs`` 默认不开启
   ``64bit`` 选项, 而是 32bit, 所以最大分区只有 16TiB.
+
+- Arch Linux features:
+
+  * Without unnecessary additions or modifications. 软件尽量与 upstream 一致, 只做
+    绝对最小量的必须的 distro-specific 的更改.
+
+  * Rolling release of latest stable version of softwares.
+
+  * Pragmatic. Non-free softwares are available as well as free softwares.
+
+  * Fill the needs of those who contribute to it, rather than appealing more people.
+    Arch targets competent users who enjoy its do-it-yourself nature, and who further
+    exploit it to shape the system to fit their unique needs. AUR, PKGBUILD, Arch
+    Build System 等为方便地安装其他软件提供了基础.
+
+- Arch 只支持 x86-64 架构.
+
+- Arch 里 ``/bin``, ``/sbin``, ``/usr/bin``, ``/usr/sbin`` 都是 ``/usr/bin``,
+  ``/lib``, ``/lib64``, ``/usr/lib`` 都是 ``/usr/lib``.
