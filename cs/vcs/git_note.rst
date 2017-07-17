@@ -10,8 +10,8 @@
 
 - 创建新的本地 repo 后的第一件事就是修改 local 的 user.name 和 user.email !!!
 
-- 不要轻易把 master/devel 等主线 branch merge 到 topic branch 里. 这会使 history tree 非常
-messy. 如果非要引入相关修改, 首选 rebase.
+- 不要轻易把 master/devel 等主线 branch merge 到 topic branch 里.
+  这会使 history tree 非常 messy. 如果非要引入相关修改, 首选 rebase.
 
 - topic branch 应尽量短小, 以减少其他人的 topic branch 不包含自己的修改,
   却 merge 进入了其他 branch 所造成的信息缺失. 因此, 若一个 topic branch
@@ -90,3 +90,23 @@ messy. 如果非要引入相关修改, 首选 rebase.
   测试 (手动或自动测试), 保证合并进入 master 的代码是经过了测试的. 这样才能在任何人
   开发新功能时, 可以基于最新的 master 这个总是测过的基本稳定的分支. 保证自己的在开发
   的功能基本不受其他功能研发状态的影响.
+
+- 两种分支和仓库方式:
+  
+  * 一个 main repo, 每个人都在这个 repo 下工作, 提交到 topic branch 中, 合并回
+    master branch.
+
+  * 一个 main repo, 每个人 fork 自己的 repo, 提交到自己 repo 的 topic branch 中,
+    合并回 main repo 的 master branch.
+
+  前者要求团队成员都自觉, 都遵守分支规则, 不随意创建分支, 不随意提交至 remote.
+  好处是成员之间的代码方便相互查看. 后者更自由, 每个人可以在自己的仓库中想干嘛干嘛,
+  最后合并至 main repo 的才是有效的.
+
+  使用哪种方式取决于成员是否遵守统一的规范, 开发流程和代码质量的管理是否严格.
+
+- 是否一定要通过 PR 来接受新代码?
+
+  这取决于成员的代码能力和自觉性. 理想情况下, 确实很简单的修改不需要 PR, 可直接
+  merge 进入 master, 这样可减轻 manager 的 review 工作. 但是在成员代码质量不能
+  完全信任的情况下, 需要强制 PR.
