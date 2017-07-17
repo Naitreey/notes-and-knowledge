@@ -72,18 +72,25 @@
   (即 uncore 访问内存的频率) 限制了对内存的频率选择. 如果内存的频率比 CPU 支持的
   频率高, 内存也只会 downclock 至 memory controller speed.
 
-- 现在的 CPU 已经整合了 northbridge 的部分功能 (整合后成为了 CPU 的 uncore),
-  包括 memory controller, 一部分 PCIe lanes 等. 北桥的其他功能和南桥的全部功能
+- 现在的 CPU 已经整合了 northbridge/southbridge 的部分功能 (整合后成为了 CPU 的
+  uncore), 包括 memory controller, graphics PCIe lanes 等. 北桥和南桥的其他功能
   整合为 PCH, 仍称为 chipset. 原来的北桥和南桥之间的通信, 即现在的 CPU uncore
-  和 PCH 之间的通信, 通过 DMI 进行.
+  和 PCH 之间的通信, 通过 DMI/FDI 进行.
 
-  QPI 大致可认为是一种与 CPU 内部和 CPU 之间的 bus, 在 CPU uncore 中有 QPI controller.
+- QPI 大致可认为是一种与 CPU 内部和 CPU 之间的 bus, 在 CPU uncore 中有 QPI controller.
   QPI 代替 FSB 在 CPU core 和 uncore (即之前的部分北桥) 之间通信, 并且在 CPU 之间通信
   也使用 QPI.
 
 - CPU uncore 或 system agent 中包含 memory controller, DMA controller,
   integrated GPU (iGPU), PCI-e controller, L3 cache, QPI controller,
   thunderbolt controller, 等.
+
+- CPU 的 Graphics PCI-e lanes 连接到主板上的 PCI-e slots 上, 一般是与 2 至 3 个 x16
+  的 PCI-e 插槽像连. 构成 SLI 或 CrossFire 配置. 每个插槽的有效 lane 数目取决于插槽的
+  使用方式以及 CPU 支持的最大 PCI-e lanes 数目.
+
+- PCH 的功能包含对 non-graphics PCI-e lanes 的控制, 基础时钟频率的生成和转换,
+  peripheral devices 与 CPU, memory 等相互访问时的中继 (FDI, DMI) 等.
 
 - 注意 DMI 3.0 每条 lane 速度与 PCI-e v3 相近, 基本上 1GB/s, 但 DMI 3.0 只有 4 条 lanes.
   所以 throughput 最大只有 4GB/s.
@@ -117,6 +124,10 @@
 - Modern memory buses are designed to connect directly to DRAM chips. 这大致意味着
   memory bus 本身的速度上限相对于 DIMM 本身的速度可能是一个高阶量, 可以不去考虑.
   只考虑内存条本身的数据传输速度即可.
+
+- 如何访问 DRAM 中存储的一个 bit: 向 DIMM 上一个确定的 memory chip 发送请求,
+  给出要访问的 memory bank array 的编号, 给出这个 array 上要访问的 word line (行)
+  和 bit line (列) 编号.
 
 - 主板的 BIOS 软件存在 flash memory 上 (NOR or NAND), 由于是 flash memory, 可以重写
   以升级 BIOS.
@@ -176,7 +187,7 @@
 - firmware 是主板的软件, UEFI/BIOS 是这个软件提供的面向操作系统的 interface.
   主板的 firmware 主要提供两种服务, boot service 和 runtime service.
   在启动时, 它主要提供硬件检查和配置以及加载 OS bootloader 的服务;
-  在运行时, boot loader 使用 BIOS/UEFI firmware 来访问存储设备等, OS 使用 firmware
+  在运行时, bootloader 使用 BIOS/UEFI firmware 来访问存储设备等, OS 使用 firmware
   来进行某些硬件控制.
 
 - firmware 和 OS 各需要一套 driver, 以访问硬件. 显然 firmware 这套驱动要基础很多,
@@ -208,6 +219,8 @@
   EFI applications 都是在 protected mode 中执行的. 注意到这些 ``.efi`` 应用都是
   PE32 executable, 使用的虚拟内存.
 
+  因此, BIOS 系统中的 grub 与 UEFI 系统中的 grub 应该是不同的.
+
 - UEFI 的设计要求易于扩展, 功能丰富、灵活. 这些自然要求 UEFI firmware 是运行在
   protected mode 或 long mode 中的, 并且具有模块化的设计 (EFI applications).
 
@@ -220,17 +233,99 @@
   * 运行于 protected/long mode, 而不是 real mode. 能够实现复杂的 EFI application,
     从而可以构建灵活的 pre-OS environment.
 
-- UEFI-GPT 组合在分区时要有 ESP 分区, 放置 EFI application, 包含 bootloaders 等.
+- 由于 x86 CPU 启动时运行在 real mode, 要求 BIOS 软件在这个模式下运行, 而且 BIOS 由于
+  历史原因, 一直只在 real mode 中运行, 因此很不灵活, 且直接依赖于 x86 CPU real mode.
+  与之对应, UEFI 在启动后迅速切换 CPU 至自己所需的 mode, 比如 protected mode, long mode.
+  因此 UEFI 是 CPU-independent 的架构.
 
-- 几种 firmware 和硬盘分区的组合:
+- x86-64 架构的 intel CPU 支持运行在 long mode, 即访问 64-bit 内存地址.
+  在 linux 下, 支持 x86-64 指令集的 CPU 具有 ``lm`` flag (即 long mode).
+
+- x86-64 的一些重要好处:
+
+  * It is faster under most circumstances
+    
+  * inherently more secure due to the nature of Address space layout randomization (ASLR)
+    in combination with Position-independent code (PIC) and the NX Bit which is not
+    available in the stock i686 kernel due to disabled PAE.
+    
+  * If your computer has more than 4GB of RAM, only a 64-bit OS will be able to fully
+    utilize it.
+
+- UEFI-MBR 或 UEFI-GPT 组合在分区时要有 ESP 分区, 放置 EFI application,
+  包含 bootloaders (比如 grub), UEFI shell 等. ESP 分区的文件系统是 UEFI 规定的 FAT fs,
+  这样 UEFI 才有能力去访问.
+
+  注意 UEFI 不是说一定要和 GPT 分区方式配合.
+
+- 几种 bootup 组合方式:
 
   * BIOS-MBR
 
+    BIOS (或者 UEFI 在 CSM 模式下) 读取 MBR 分区表 LBA0, 执行 bootstrap code,
+    后者加载 bootloader.
+
   * BIOS-GPT
+
+    GPT 的 LBA0 是 protective MBR, 可以设置在安装 bootloader 时, 与 MBR 相同, 将
+    bootstrap code 写入 protective MBR. 这样 BIOS 可以和平时一样, 不去管分区表,
+    直接读 LBA0 来加载 bootloader. 由于 BIOS 不认识 GPT 分区表, 此后 bootloader
+    需靠自己访问硬盘.
 
   * UEFI-MBR
 
+    UEFI 从 MBR 中找到 ESP 分区, 访问 ESP 分区加载 bootloader.
+
   * UEFI-GPT
+
+    UEFI 从 GPT 中找到 ESP 分区 (根据 GPT 规定的 partition type GUID),
+    访问 ESP 分区加载 bootloader.
+
+- UEFI boot manager 存储有多个 entry, 每条是一个 boot config, 对应加载一个 ESP 中的
+  application. 这与 BIOS 不同, 对于 BIOS 系统, 启动顺序列表中只有不同的设备, 选定
+  设备后如何启动是预设的机制.
+
+- grub 的 EFI application 是 ``grubx64.efi``. 若开启了 secure boot, 需执行 ``shim.efi``,
+  后者通过 UEFI 认证后再加载 ``grubx64.efi``.
+
+- 在 protective MBR 中写入了 bootstrap code 的 GPT 分区表可以在 BIOS-based system 中
+  使用, 只要 bootloader 和 OS 本身都支持 GPT, 即它们本身可以直接识别和访问 GPT 分区表.
+  例如 grub2 在 protective MBR 区域 (first LBA) 中写入 MBR 分区表所需的 Bootstrap code,
+  这样在 BIOS 系统中也可以加载 grub bootloader.
+
+- MBR 的大小总是 512 bytes; GPT 中各项的长度以 LBA 为单位, 总大小并不固定.
+
+- LBA (Logical Block Addressing) 地址的单位与 HDD 的 logical block sector 大小一致, 即
+  对于 512n/512e LBA 单位为 512B, 对于 4Kn LBA 单位为 4096B.
+
+- 新的 HDD 的 sector size 都是 4KiB (Advanced Format), 这样比 512 bytes 的 sector size
+  存储效率更高. 选择 4KiB 的原因是 virtual memory page size 一般是 4KiB.
+
+  为了向后兼容, 4K HDD 有两种, 512e 和 4Kn. 前者兼容 legacy OS, 这些 OS 对 HDD 的读写以
+  512 bytes 为单位; 后者只能用在较新的 OS 中, 这些 OS 的 IO 操作全部都是 4K-aligned,
+  无论 logical sector size 是 512B 或 4KB.
+
+- physical sector size vs logical sector size
+
+  前者是 HDD 的实际上在存储时的 sector 大小, 后者是 HDD 能接受的最小 sector 大小.
+
+  对于不同种类的 HDD, logical/physical sector size 分别是:
+
+  512n: 512B/512B
+  512e: 512B/4096B
+  4Kn:  4096B/4096B
+
+  512e 的固件对非 4K 对齐的写操作有一个 read-modify-write 的过程, 因此才能支持最小
+  512B 的操作单元, 然而代价是性能降低.
+
+  legacy OS 只能使用 512n 和 512e 的 HDD, 因为它们的读写以 512B 为单位.
+  legacy OS 使用 512e 时有性能损耗.
+  modern OS 三种都可以使用, 因为它们的读写是 4K-aligned.
+  modern OS 使用 512e 时, partition boundary 需要是 4K 对齐的, 才能避免性能损耗.
+
+  BIOS 显然读硬盘时以 512B 为单位, 因此不能访问 4Kn, 不能读 4Kn 上的 protective MBR,
+  不能加载 bootloader, 但对于 512e 没问题.
+  UEFI 可以直接使用 4Kn.
 
 - flash memory 有两种: NOR flash 和 NAND flash.
 
@@ -342,3 +437,14 @@
 
   * unganged mode 下, 多个通道独立工作, 独立读写, 这有助于提高 concurrent processing
     的效率. 默认多通道内存架构工作在这个模式下.
+
+- intel x86 架构要求向后兼容, 因此所有 x86 架构的 CPU 刚启动时都处于 16-bit real mode,
+  只能访问 2**20 即 1MiB 内存. real mode 是 8086 和 80186 的运行模式.
+
+- Wake-on-LAN 要求处于 power-off 状态的机器的网卡并没有完全断电, 而是处于低功耗的监听模式,
+  能够接收 link-layer frame, 解析并识别 magic packet 里面的 MAC 地址与自己的一致, 然后
+  通过某种方式向主板发送 wakeup 信号.
+
+  跨网段发送 WOL packet, 可以使用 unicast IP 地址, 而不是 subnet broadcast (255.255.255.255),
+  这样 unicast 送到目的机器的 NIC. 但由于 ARP 表的过期时间, 到达目的网段后无法网关无法转换
+  成目的机器 MAC 地址, 从而失败. 所以, 在目的网段, 需要一些其他配置, 来配合 WOL.
