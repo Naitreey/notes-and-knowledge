@@ -156,6 +156,9 @@
 
   * debug query 时为了看清执行流程等细节应使用 ``explain()``, 并将 verbosity 设为
     ``executionStats`` 或者 ``allPlansExecution``.
+    explain 有两种用法, ``cursor.explain(...)`` 以及 ``db.collection.explain(...).<op>``.
+    前者只支持对 ``find()`` 等返回 cursor object 的操作进行解释, 后者则支持更多种操作,
+    因 ``<op>`` 可以是 aggregate, count, distinct, find, group, remove, update, etc.
 
 - insert
 
