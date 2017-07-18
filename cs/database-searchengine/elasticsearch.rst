@@ -242,5 +242,31 @@
 
   * ``copy_to`` 用于构建自定义的 ``_all`` 类型 field.
 
+  * ``date`` datatype 可以设置并且应该设置比较确定的 ``format`` 格式, ES 中日期格式采用
+    Joda DateTimeFormat.
+
+  * multi-fields ``fields`` mapping parameter 可以将一个 field 值以不同方式去解析,
+    生成不同的 index, doc values 等. 适用于不同的场景.
+
+  * If you don’t need scoring on a specific field, you should disable ``norms`` on
+    that field. In particular, this is the case for fields that are used solely for
+    filtering or aggregations. Because although useful for scoring, norms also require
+    quite a lot of disk (typically in the order of one byte per document per field in
+    your index, even for documents that don’t have this specific field).
+
+  * ``properties`` 实际上也属于 mapping parameter.
+
+  * ``store`` 设置可以将该 field 单独存储, 不用从 ``_source`` 中取得. 如果 doc 很大,
+    而只需要取得某些项时, 可以这样优化读取效率.
+
 - inverted index 与 doc values 是两种数据结构, 前者对搜索操作很高效, 后者对聚合、排序
   等操作很高效.
+
+  text 类型的列不支持 doc values, 因此默认情况下不能对 text field 进行聚合、排序.
+  这是因为 text 类型列的有效值是多个经过处理的 tokens, 对它们进行聚合、排序等操作
+  大部分时候没有意义. 若一定要对 text field 进行这些操作, 要设置 ``fielddata: true``.
+
+  Fielddata can consume a lot of heap space, especially when loading high cardinality
+  text fields. Once fielddata has been loaded into the heap, it remains there for the
+  lifetime of the segment. Also, loading fielddata is an expensive process which can
+  cause users to experience latency hits. 
