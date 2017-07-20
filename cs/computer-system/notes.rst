@@ -421,6 +421,46 @@
   它包含从 BIOS firmware 中读取的 SMBIOS 标准化数据. OS kernel 一般实现了
   DMI table 的收集和构建.
 
+- ACPI
+
+  ACPI 的主要目的是, 在 OS 运行时, 将硬件配置、电源管理、硬件状态监控等琐碎的底层
+  硬件操作从 BIOS/UEFI firmware 转移至 OS. 这样, OS 在运行时, 无需调用 firmware
+  runtime service, 可直接进行这些管理配置操作. 优点是更灵活, 更高效.
+
+  为什么要将这些配置和管理驱动以 bytecode 形式存在 firmware 中, 而不是放在一般
+  与操作系统一起的硬件驱动中? 原因是, 考虑到这些硬件配置和管理等操作实际上都是
+  与具体主板密切相关的, 或者说这些操作该如何进行是直接由主板的硬件实现来决定的,
+  所以由主板自己来提供一种不依赖于操作系统的管理方式 (即 bytecode), 才会比较统一.
+
+  主板 firmware 中保存有 ACPI tables, 表中包含 ACPI Machine Language bytecode 程序.
+  OS kernel 实现了 AML bytecode 的解释器. OS 运行时, 从 firmware 里读取 ACPI tables
+  至内存, 执行所需的 AML bytecode 来对相应硬件进行管理.
+
+  注意, 在 OS 运行时, ACPI 接管对全部设备的配置和电源管理, 任何需要对设备进行这些
+  操作的上层驱动都需要调用 ACPI 来进行.
+
+  ACPICA 是 OS 部分的 ACPI specs 的 reference implementation, Linux 使用的就是这个.
+
+  ACPI power states (G: global state, S: sleep state)
+
+  * G0, S0: working: computer is running, CPU executes instructions.
+
+  * G1: sleeping
+
+    - S1: power on suspend: power to CPU and RAM is maintained,
+      CPU stops executing instructions. Other devices may be off.
+
+    - S2: CPU off, RAM powered. 大致上可看作 S1, S3 的中间态, 类似于 S3, 没有实际实现.
+
+    - S3: suspend to RAM (sleep): CPU off, RAM powered.
+
+    - S4: suspend to disk (hiberation): RAM saved to disk, system powered down.
+
+  * G2, S5: soft off: system powered down, no state saved. PSU 开启,
+    保持主板或至少电源按钮通电, 从而可以返回 S0.
+
+  * G3: mechanical off: PSU 关闭, 主板断电, 此时可以拆机.
+
 - NUMA 在有多个 CPU socket 的 server 中才有意义, 对单个 socket 的 desktop PC 没有意义.
   因为它涉及对 memory locality 的优化.
 
@@ -445,6 +485,7 @@
   能够接收 link-layer frame, 解析并识别 magic packet 里面的 MAC 地址与自己的一致, 然后
   通过某种方式向主板发送 wakeup 信号.
 
-  跨网段发送 WOL packet, 可以使用 unicast IP 地址, 而不是 subnet broadcast (255.255.255.255),
-  这样 unicast 送到目的机器的 NIC. 但由于 ARP 表的过期时间, 到达目的网段后无法网关无法转换
-  成目的机器 MAC 地址, 从而失败. 所以, 在目的网段, 需要一些其他配置, 来配合 WOL.
+  跨网段发送 WOL packet, 可以使用 unicast IP 地址, 而不是 subnet broadcast
+  (255.255.255.255), 这样 unicast 送到目的机器的 NIC. 但由于 ARP 表的过期时间,
+  到达目的网段后无法网关无法转换成目的机器 MAC 地址, 从而失败. 所以, 在目的网段,
+  需要一些其他配置, 来配合 WOL.
