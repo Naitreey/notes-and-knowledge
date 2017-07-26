@@ -95,7 +95,7 @@
 - 注意 DMI 3.0 每条 lane 速度与 PCI-e v3 相近, 基本上 1GB/s, 但 DMI 3.0 只有 4 条 lanes.
   所以 throughput 最大只有 4GB/s.
 
-- CPU 中有 MMU, 也有 IOMMU. 一些设备有自己的 IOMMU, 例如显卡的 GART.
+- intel 虚拟化相关技术 (包含 VT-x, VT-d, 等) 的 cpu flag 是 ``vmx``.
 
 - MMU 在做 virtual memory address -> physical memory address 的转换时, 若发现
   要转换的虚拟内存地址在 page table 中, 但没有对应的物理内存地址, 则向 CPU core
@@ -105,6 +105,15 @@
   kernel 对应地进行处理, 将请求进程 segfault 掉 (并 coredump) 或者是 bus error.
 
 - 对于 x86-64 CPU, MMU 一般支持 4KB 的 page table entry (PTE), 并且支持 1GB 的 huge page.
+
+- CPU 中有 MMU, 也有 IOMMU. intel 称 IOMMU 为 VT-d 技术.
+
+  peripheral device 在通过 DMA 机制访问内存时需要使用 IOMMU. 也就是说, CPU 首先
+  把需要访问的 DMA 地址和读写长度传递给设备, 告诉设备可以开始传输了, 然后自己就
+  不管了; 设备 DMA 访问内存需要通过 IOMMU 进行, IOMMU 将 DMA 地址转换成物理地址,
+  再进行读写.
+
+  在 linux 中, IOMMU 被识别为 ``dmar<N>`` (DMA remapping) interrupt device.
 
 - DMA 指的是这样的内存和设备之间的数据传输: CPU 只负责发起传输, 而不干涉、监控
   传输过程, 整个传输过程由设备和内存两者之间协商进行, CPU 去做别的事情, 传输完成后
@@ -120,6 +129,42 @@
   设备向它发起 mastering request. 获得许可后, 设备的 DMA 操作指令经由 PCI-e bus
   至 PCH, 经由 DMI 至 CPU uncore (memory controller), 经由 DDR4 memory bus 至
   DIMM RAM 设备.
+
+- memory-mapped IO vs port-mapped IO
+
+  port-mapped IO 是出现得比较早的, 因为在早期, 访问内存和设备 IO 这两件事比较适合
+  分开处理, 那时 cpu 的地址寄存器比较小, 只够存物理内存地址的长度, 不能再多出来
+  几个 bits 构成包含设备地址的 extended address space.
+
+  对于基于 port-mapped IO 的系统, 有 memory address space 和 IO address space
+  两种. 前者就是 RAM 访问, 后者是 peripheral device 访问. 在 IO address space
+  中, 一个设备使用的地址范围中, 第一个地址被称为 IO port 或 IO base address.
+  由于 CPU 对内存和设备的读写是不同的, 对设备进行 IO 需要使用 (不同于内存的)
+  专门设计的指令. 因此使用 port-mapped IO 的 CPU, 需要实现更复杂的逻辑,
+  带来了更多的麻烦.
+
+  对于基于 memory-mapped IO 的系统, 只有 memory address space, 但其中的一部分是
+  分配给 RAM, 其他部分按需分配给各个 peripheral device. 由于 CPU 对内存和设备
+  的读写使用通用的指令, 这样的 CPU 逻辑相对简单一些, 更易于编程, 运行更快.
+
+  PMIO 实现方式: IO address space, CPU IO 指令, CPU IO pin, IO bus.
+  MMIO 实现方式: memory address space, CPU 内存指令, address code decoder.
+
+  peripheral device 进行 IO 的流程:
+  1. driver 通过 MMIO/PMIO 方式向设备的寄存器写入 DMA 相关信息
+     (要读写的 DMA 地址和读写长度等);
+  2. driver 启动设备 DMA;
+  3. 设备通过 IOMMU 进行 DMA, 完成 IO 过程;
+  4. 设备向 CPU 发送 interrupt, 告知 IO 已经完成;
+  5. kernel 的 interrupt handler 中, driver 进行清理工作, 包括清理 DMA mapping,
+     清理数据 buffer, etc.
+
+  x86 架构的系统, 两种 IO 都有使用. 且应该主要是在使用 MMIO.
+  在 linux 中, MMIO 映射可以通过 ``/proc/iomem`` 找到, 尤其是对于 PCIe 设备,
+  还可以通过 ``lspci -vvv`` 看到; PMIO 映射可以通过 ``/proc/ioports`` 找到.
+
+  在 OS 中, usersapce 应用一般不能直接访问映射的内存地址或 IO 地址. 这些只有
+  device driver 能直接访问.
 
 - Modern memory buses are designed to connect directly to DRAM chips. 这大致意味着
   memory bus 本身的速度上限相对于 DIMM 本身的速度可能是一个高阶量, 可以不去考虑.
@@ -244,11 +289,11 @@
 - x86-64 的一些重要好处:
 
   * It is faster under most circumstances
-    
+
   * inherently more secure due to the nature of Address space layout randomization (ASLR)
     in combination with Position-independent code (PIC) and the NX Bit which is not
     available in the stock i686 kernel due to disabled PAE.
-    
+
   * If your computer has more than 4GB of RAM, only a 64-bit OS will be able to fully
     utilize it.
 
