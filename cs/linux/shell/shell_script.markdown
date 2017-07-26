@@ -105,6 +105,12 @@
   正因为它是 `command 2>&1 |` 的 shortcut, 而且 redirection operator 的执行顺序是从左至右,
   因此隐含的 `2>&1` 操作会 override 一切 command 中对 fd 2 的 redirection.
 
+* directory 和 file 的本质是相同的, 在 shell 中的表达方式也是相同的, 都是通过
+  相同规则的文件命名规则来指定. 而恰恰因为这样, 在命令行上指定一个目录, 而不是
+  指定一个同名的 regular file 时, 应该在目录名后面加一个 `/` 符号. 这样不仅仅
+  对于脚本读者更清晰, 而且有助于及时发现程序逻辑错误, 增强鲁棒性. 例如
+  `mv a b` vs `mv a b/`.
+
 # Notes
 
 ## shell 初始化文件的执行流程
