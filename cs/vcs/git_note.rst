@@ -43,6 +43,13 @@
   * 递归存在的 submodules (e.g., C 是 B 的子项目, B 是 A 的子项目) 极其难以忍受.
     在最内层的修改需要在每个外层进行十分机械的 add + commit 操作, 根本无法忍受.
 
+  * ``git mv`` (2.13+) 一个 nested submodule 会出问题, 这是 ``git mv`` 的 bug.
+    最外层 submodule 的 ``.git`` 文件指向的 gitdir 路径会正确地修改, 但嵌套的
+    submodules 的 gitdir 路径并不会相应修改. 导致子仓库找不到自己的 database.
+
+    解决办法是, ``git mv`` 后, 把有问题的子仓库的 ``.git`` 文件删掉, 然后
+    ``git submodule update``, 重新添加 ``.git`` 文件.
+
   * git subtree 将 dependency 的代码十分透明地合并成为 superproject 自身的代码,
     这要求 developer 十分清楚某个 subtree 实际上属于其他 repo. 否则, git subtree
     带来的代码重复可能导致 code inconsistency.
