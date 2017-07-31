@@ -160,3 +160,35 @@
 
 - Arch 里 ``/bin``, ``/sbin``, ``/usr/bin``, ``/usr/sbin`` 都是 ``/usr/bin``,
   ``/lib``, ``/lib64``, ``/usr/lib`` 都是 ``/usr/lib``.
+
+- process virtual memory address space layout (从高位内存地址至低位内存地址)
+
+  * kernel space
+
+  * argv, environ
+
+  * stack (userspace), grows downwards
+
+    - top of stack (CPU stack pointer register -- SP)
+
+  * unallocated memory
+
+  * memory-mapped file, shared memory, etc.
+
+  * unallocated memory
+
+    - program break
+
+  * heap, grows upwards
+
+    - end
+
+  * uninitialized data
+
+    - edata
+
+  * initialized data
+
+    - etext
+
+  * text (program code, CPU instruction pointer register -- IP)
