@@ -26,12 +26,12 @@
 
 - USB
 
-  * 标准: 1.0, 2.0, 3.0, 3.1.
+  * 标准: 1.0, 1.1, 2.0, 3.0, 3.1.
 
-  * 速度: Low Speed (1.0), Full Speed (1.0), High Speed (2.0), Super Speed (3.0),
+  * 速度: Low Speed (1.0), Full Speed (1.1), High Speed (2.0), Super Speed (3.0),
           Super Speed+ (3.1).
 
-  * 接口类型:
+  * 插头类型:
 
     - plug: type-A, type-B, type-C.
 
@@ -47,6 +47,22 @@
 
     cable 两端都不是 standard-A 的情况出现在 USB On-The-GO 中, 也就是说两个便携设备之间
     直连的情况.
+
+  * Host controller interface (HCI): HCI 是 usb 控制端硬件实现的控制接口, 它在
+    即主板或 usb 扩展卡上实现, 用于控制 usb 硬件设备. 在操作系统中实现了 HCI 的驱动,
+    即 Host Controller Driver (HCD). HCI 有以下几代:
+
+    - Open Host Controller Interface (OHCI) 和 Universal Host Controller Interface (UHCI).
+      For USB 1.0 low speed & USB 1.1 full speed (两者都支持这两种速度).
+      Linux driver 是 ohci_hcd 和 uhci_hcd.
+
+    - Enhanced Host Controller Interface (EHCI). For USB 2.0, high speed.
+      Linux driver 是 ehci_hcd.
+
+    - eXtensible Host Controller Interface (XHCI). 替代 OHCI/UHCI/EHCI,
+      支持所有过去的 USB 标准, 新的 USB 3.0 SuperSpeed 和 3.1 SuperSpeed+,
+      以及未来的标准.
+      Linux driver 是 xhci_hcd.
 
 - 整个主板上的各个组件需要的时钟频率都是从一处生成然后再转换成各种总线所需的
   频率的. 原始的时钟频率可能有两个来源:
