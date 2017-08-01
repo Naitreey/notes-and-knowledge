@@ -302,6 +302,9 @@
 - x86-64 架构的 intel CPU 支持运行在 long mode, 即访问 64-bit 内存地址.
   在 linux 下, 支持 x86-64 指令集的 CPU 具有 ``lm`` flag (即 long mode).
 
+- x86-64 架构支持 page table entry 包含 No-eXecute (NX) bit, 以区分可执行和不可执行的
+  内存区域. NX bit 的 CPU flag 是 ``nx``.
+
 - x86-64 的一些重要好处:
 
   * It is faster under most circumstances
