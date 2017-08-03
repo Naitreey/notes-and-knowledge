@@ -331,3 +331,8 @@ design patterns and refactoring (至少对于传统语言) 是通用的, 因为�
 - 业务逻辑与底层数据库具体操作之间需要封装一个 middleware, 它提供业务逻辑与数据库交互
   的 API, 封装具体的数据库交互实现, 目的是做到业务逻辑中不暴露底层数据库操作, 从而
   将对数据库实现方面的修改限制在 middleware 模块中.
+
+- loose coupling: 降低耦合, 概念清晰化, 实现模块化, 功能界限明确化. 这是任何设计要
+  遵循的基本思想.
+
+- Code without tests is broken by design.
