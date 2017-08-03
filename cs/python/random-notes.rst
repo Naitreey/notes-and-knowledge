@@ -803,4 +803,16 @@
   * ``class.__subclasses__()`` 一个类的所有直接子类. 使用 weakref 来保存这些子类的
     列表.
 
+- 把整个 web 项目 (包含各种模板和静态文件) 做成一个 python package 用 setuptools
+  打包成 pip 可安装的形式安装至 site-packages 目录下没有任何问题. 例如这是 django
+  项目的推荐做法, ``django.contrib.*`` 等 subpackages 就是这么做的.
+
 - 如何创建 read-only class attribute?
+
+- django extension packages can be found on https://djangopackages.org/
+  and downloaded from PyPI.
+
+- 当一个系统中需要多个 python 版本, 不同项目需要不同版本时, 或者仅仅是不想使用
+  系统自带的 python 时, 使用 pyenv.
+  当不同项目需要同一个 python 版本, 但各自的依赖有冲突时, 或者仅仅是因为不想
+  将 package 安装至全局范围内时, 使用 venv.
