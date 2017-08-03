@@ -336,3 +336,12 @@ design patterns and refactoring (至少对于传统语言) 是通用的, 因为�
   遵循的基本思想.
 
 - Code without tests is broken by design.
+
+- test case 应该尽可能的多, 从而覆盖更多的场景、可能的情况.
+  也就是说, 我们不介意 test case 的数量太多, 但需要仍需关心每个 test case 的实现质量.
+
+- A separate test class for each model or view
+
+- A separate test method for each set of conditions you want to test
+
+- test method names that describe their function
