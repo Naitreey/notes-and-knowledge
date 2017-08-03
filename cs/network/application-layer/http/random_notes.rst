@@ -91,3 +91,9 @@
 
   对于 MIME type 为 text/* 的文件, 在传输时 ``Content-Type`` 应该添加
   ``charset=<encoding>`` 参数, 来规定编码字符集.
+
+- static files: 图片, js, css 之类的文件本身一般是不变的, 所以称为静态文件.
+  而 html 很可能是动态生成的 (根据静态的 html 模板).
+
+- always use relative paths to link your static files between each other.
+  这样修改时只需修改一处绝对 url, 而所有其他 url 自动生成.
