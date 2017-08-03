@@ -17,10 +17,20 @@
 
 - app
 
-  django 提供了很多方便的功能使得 project 在 app 尺度的模块化成为可能, 例如
+  In essence, a Django application is just a Python package that is specifically
+  intended for use in a Django project.
+
+  django 提供了很多方便的功能使得 project 在 app 尺度的模块化十分容易, 例如
   模块化的 URLconf, ``include()``. 每个 app 可以独立存在, 又可以在整个项目中
   plug-and-play (PnP). 与 app 模块化配合的是 RESTful url 的模块化, 并要求
   url 层级清晰. 每个 app 的 URLconf 自成体系, 有 index, 有 object, 有 method.
+
+  理想情况下, app 应该可以独立发布成 python package. 然后在任何 django 项目
+  中按照标准 django 方式 (import 等) 即可使用, 成为新项目的一个 app.
+
+  It’s often useful to prepend ``django-`` to your module name when creating
+  a package to distribute. This helps others looking for Django apps identify
+  your app as Django specific.
 
 - URLconf
 
@@ -33,8 +43,6 @@
   相关设置来返回恰当的结果. 直接使用 datetime module 还需要去手动读取配置.
 
 - model
-
-  * model 里各个 field 的名字和类型直接影响它们在 admin.site 的显示和交互方式.
 
   * model 是一个数据对象类型, 它是数据库表的抽象. 或者从另一个角度来看, 由于 model
     的存在, 要求数据库表应该按照 object-oriented 的方式进行设计. 而一个 entry 就是
@@ -69,3 +77,21 @@
   * model 层的 test 的测试点是测试 model 的正确性、合理性;
     view 层的 test (配合 urlconf) 测试的是操作是否符合预期.
     因此前者手动操作数据库, 而后者模仿 useragent 用 client.
+
+  * 每个 test method 执行结束后数据库状态都会被重置.
+
+- static file
+
+  * static file namespace 与 template namespace 机制类似.
+
+  * static file 的 url 是自动生成的, 以 static file namespace 为 url root.
+
+- admin
+
+  * model 里各个 field 的名字和类型直接影响它们在 admin.site 的显示和交互方式.
+
+  * 每个 model 在 admin site 中的显示方式可通过 ``admin.ModelAdmin`` 自定义.
+
+- 全局性质的 (属于整个 project 而不属于某个 app 的) templates 和 static files 应该放在
+  ``$BASE_DIR/{templates,static}``.
+
