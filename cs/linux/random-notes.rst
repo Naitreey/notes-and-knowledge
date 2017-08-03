@@ -194,3 +194,12 @@
   * text (program code, CPU instruction pointer register -- IP)
 
   考虑到 ASLR 的存在, stack, mmap file, heap, text 四个区域的起始地址存在随机化.
+
+- Weird Ubuntu
+
+  * udisks2 is patched by Ubuntu to use ``/media``, rather than default ``/run/media``.
+
+  * sh is symlink to dash, rather than bash.
+
+  * /bin, /sbin, /lib 等目录不是向 /usr 目录下同名目录的 symlink, 所以仍然存在
+    / 和 /usr 目录程序的无意义区分.
