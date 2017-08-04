@@ -97,3 +97,6 @@
 
 - always use relative paths to link your static files between each other.
   这样修改时只需修改一处绝对 url, 而所有其他 url 自动生成.
+
+- http 中, 由于 url 是由 web server 去解析的. url 中的 ``/`` 分隔的 segments
+  仅仅是逻辑上的分隔, 没必要对应实际的文件路径.
