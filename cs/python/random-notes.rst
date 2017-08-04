@@ -251,6 +251,8 @@
     微调, 复杂的可以是将一定的操作 attach 至某个更大的完整的框架, 例如 `Flask.route`,
     `unittest.skipIf`.
 
+- class decorator 的一个很好的应用: ``django.utils.python_2_unicode_compatible``
+
 - 对于明确只能使用一次的 context manager, 可以利用 `contextlib.contextmanager`
   使用 generator 来生成. 在 generator function 中只写一个 ``yield``, 这样只能
   yield 一次, 所以同一个 generator 不能在不同 ``with`` statement 中重用.
