@@ -72,6 +72,12 @@
     这样可以降低 template 和 URLconf 之间的耦合. 在重构 url 结构时, 不需要修改模板
     文件.
 
+  * 模板的搜索顺序:
+
+    - ``DIRS`` in ``settings.py``.
+
+    - 若 ``APP_DIRS == True``, 每个 app 目录下的 ``templates/`` 目录.
+
 - test
 
   * model 层的 test 的测试点是测试 model 的正确性、合理性;
