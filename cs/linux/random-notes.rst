@@ -203,3 +203,50 @@
 
   * /bin, /sbin, /lib 等目录不是向 /usr 目录下同名目录的 symlink, 所以仍然存在
     / 和 /usr 目录程序的无意义区分.
+
+- kernel 默认给出的设备名称是十分 generic 的. 它根据设备的类型以及发现顺序进行
+  编号, 生成如 ``eth<N>``, ``sd<X><N>`` 等设备类型 + 编号的名字. 这样命名的问题
+  是系统中看到的设备逻辑名称与其物理身份无法直接对应起来. 只能通过 sysfs 来研究
+  对应的设备到底是哪个. systemd-udev 使用了一种全新的设备命名规则, 称为 predictable
+  name, 使用设备的类型和物理身份等信息来构建逻辑名称. 它遵循的逻辑为:
+
+  * network interface::
+
+      en - Ethernet
+      sl - serial line IP (slip)
+      wl - wlan
+      ww - wwan
+
+      o<index>[n<phys_port_name>|d<dev_port>]
+         - on-board device index number
+           (主板继承, 而不是通过 PCIe bus)
+      s<slot>[f<function>][n<phys_port_name>|d<dev_port>]
+         - hotplug slot index number
+           (插槽位置, 以及一个设备可能提供多个功能 multi-function device)
+      x<MAC>
+         - mac address
+      [P<domain>]p<bus>s<slot>[f<function>][n<phys_port_name>|d<dev_port>]
+         - PCI geographical location
+           (PCIe 总线地址, 总线上的插槽地址, 以及一个设备可能有多个功能.
+            只有 PCI domain 不是 0 时才有 domain 部分.)
+      [P<domain>]p<bus>s<slot>[f<function>][u<port>][..][c<config>][i<interface>]
+         - USB port number
+           (USB bus 一般是 PCIe bus 的下游, 通过 USB host controller 来衔接.
+            所以首先包含 PCIe 地址. USB 可能存在多级 hub, 所以是 uXuX.. 的形式.)
+
+    例子:
+
+    USB built-in 3G modem::
+
+      /sys/devices/pci0000:00/0000:00:1d.0/usb2/2-1/2-1.4/2-1.4:1.6/net/wwp0s29u1u4i6
+      ID_NET_NAME_MAC=wwx028037ec0200
+      ID_NET_NAME_PATH=wwp0s29u1u4i6
+
+    PCI Ethernet multi-function card with 2 ports::
+
+      /sys/devices/pci0000:00/0000:00:1c.0/0000:02:00.0/net/enp2s0f0
+      ID_NET_NAME_MAC=enx78e7d1ea46da
+      ID_NET_NAME_PATH=enp2s0f0
+      /sys/devices/pci0000:00/0000:00:1c.0/0000:02:00.1/net/enp2s0f1
+      ID_NET_NAME_MAC=enx78e7d1ea46dc
+      ID_NET_NAME_PATH=enp2s0f1
