@@ -545,6 +545,14 @@
 - intel x86 架构要求向后兼容, 因此所有 x86 架构的 CPU 刚启动时都处于 16-bit real mode,
   只能访问 2**20 即 1MiB 内存. real mode 是 8086 和 80186 的运行模式.
 
+- CISC and RISC design
+
+  * CISC 和 RISC 的区别在于指令集中是否包含 complex instruction, 这种指令即进行运算
+    (arithmetics) 又进行内存的读写 (memory load/store). 而不在于谁的指令数量、种类多.
+
+  * 典型的 CISC 是 x86 架构; 典型的 RISC 是 ARM 架构. 前者主导 PC 和 server 市场;
+    后者主导移动端和嵌入式 (IoT) 市场. 比较典型的 RISC PC/server 是 SPARC 架构.
+
 - Wake-on-LAN 要求处于 power-off 状态的机器的网卡并没有完全断电, 而是处于低功耗的监听模式,
   能够接收 link-layer frame, 解析并识别 magic packet 里面的 MAC 地址与自己的一致, 然后
   通过某种方式向主板发送 wakeup 信号.
