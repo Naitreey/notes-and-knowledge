@@ -125,7 +125,11 @@
     3. 不存在 builtin file type, file object 由 io 等类构造得到, 只存在 open() 函数.
 
 - builtin exception hierarchy:
-    不同的 builtin exception hierarchy. 3 的更丰富
+  不同的 builtin exception hierarchy. 3 的更合理.
+
+  * IOError 和 OSError 合并为 OSError, 并且在其下增加了很多具体的错误类型,
+    例如 FileNotFoundError, ConnectionError 及其子类等,
+    以代替在 py2 中必须要检查 errno 来判断系统错误类型的麻烦.
 
 - source code character set:
     2. 使用 7-bit ASCII character set, 源文件默认为 ASCII 编码, 并向 ASCII 字符集映射. 因此不允许 ASCII 以外的字符码出现 (以 binary data 形式出现的除外. 若源文件使用 ASCII 编码的 compatible superset, 应该声明源文件的编码. 此时仍然向 ASCII 字符集映射, 但允许 string literals & comments 中出现 ASCII 以外字符码的字符. 这些字符将保留为编码的原二进制形式, 从而能够以 ASCII 字符所表示.
@@ -183,6 +187,8 @@
   * async, await
 
   * formatted string
+
+  * pathlib 是更加一般化更加易用的路径处理工具, 以替代绝大部分 os.path 操作
 
 - string and bytes representation of object
 

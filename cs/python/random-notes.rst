@@ -818,3 +818,7 @@
   系统自带的 python 时, 使用 pyenv.
   当不同项目需要同一个 python 版本, 但各自的依赖有冲突时, 或者仅仅是因为不想
   将 package 安装至全局范围内时, 使用 venv.
+
+- pathlib
+
+  * ``Path.resolve`` 有 ``strict`` 参数, 用于一步检查 resolve 的路径是否存在.
