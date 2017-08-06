@@ -299,23 +299,6 @@
   与之对应, UEFI 在启动后迅速切换 CPU 至自己所需的 mode, 比如 protected mode, long mode.
   因此 UEFI 是 CPU-independent 的架构.
 
-- x86-64 架构的 intel CPU 支持运行在 long mode, 即访问 64-bit 内存地址.
-  在 linux 下, 支持 x86-64 指令集的 CPU 具有 ``lm`` flag (即 long mode).
-
-- x86-64 架构支持 page table entry 包含 No-eXecute (NX) bit, 以区分可执行和不可执行的
-  内存区域. NX bit 的 CPU flag 是 ``nx``.
-
-- x86-64 的一些重要好处:
-
-  * It is faster under most circumstances
-
-  * inherently more secure due to the nature of Address space layout randomization (ASLR)
-    in combination with Position-independent code (PIC) and the NX Bit which is not
-    available in the stock i686 kernel due to disabled PAE.
-
-  * If your computer has more than 4GB of RAM, only a 64-bit OS will be able to fully
-    utilize it.
-
 - UEFI-MBR 或 UEFI-GPT 组合在分区时要有 ESP 分区, 放置 EFI application,
   包含 bootloaders (比如 grub), UEFI shell 等. ESP 分区的文件系统是 UEFI 规定的 FAT fs,
   这样 UEFI 才有能力去访问.
@@ -542,8 +525,17 @@
   * unganged mode 下, 多个通道独立工作, 独立读写, 这有助于提高 concurrent processing
     的效率. 默认多通道内存架构工作在这个模式下.
 
-- intel x86 架构要求向后兼容, 因此所有 x86 架构的 CPU 刚启动时都处于 16-bit real mode,
-  只能访问 2**20 即 1MiB 内存. real mode 是 8086 和 80186 的运行模式.
+- Wake-on-LAN 要求处于 power-off 状态的机器的网卡并没有完全断电, 而是处于低功耗的监听模式,
+  能够接收 link-layer frame, 解析并识别 magic packet 里面的 MAC 地址与自己的一致, 然后
+  通过某种方式向主板发送 wakeup 信号.
+
+  跨网段发送 WOL packet, 可以使用 unicast IP 地址, 而不是 subnet broadcast
+  (255.255.255.255), 这样 unicast 送到目的机器的 NIC. 但由于 ARP 表的过期时间,
+  到达目的网段后无法网关无法转换成目的机器 MAC 地址, 从而失败. 所以, 在目的网段,
+  需要一些其他配置, 来配合 WOL.
+
+processor
+---------
 
 - CISC and RISC design
 
@@ -553,11 +545,29 @@
   * 典型的 CISC 是 x86 架构; 典型的 RISC 是 ARM 架构. 前者主导 PC 和 server 市场;
     后者主导移动端和嵌入式 (IoT) 市场. 比较典型的 RISC PC/server 是 SPARC 架构.
 
-- Wake-on-LAN 要求处于 power-off 状态的机器的网卡并没有完全断电, 而是处于低功耗的监听模式,
-  能够接收 link-layer frame, 解析并识别 magic packet 里面的 MAC 地址与自己的一致, 然后
-  通过某种方式向主板发送 wakeup 信号.
+- x86 architecture
 
-  跨网段发送 WOL packet, 可以使用 unicast IP 地址, 而不是 subnet broadcast
-  (255.255.255.255), 这样 unicast 送到目的机器的 NIC. 但由于 ARP 表的过期时间,
-  到达目的网段后无法网关无法转换成目的机器 MAC 地址, 从而失败. 所以, 在目的网段,
-  需要一些其他配置, 来配合 WOL.
+  * The term "x86" came into being because the names of several successors to
+    Intel's 8086 processor end in "86", including the 80186, 80286, 80386 and
+    80486 processors.
+
+  * intel x86 架构要求完全向后兼容至 8086, 因此所有 x86 架构的 CPU 刚启动时都处于
+    16-bit real mode, 只能访问 2**20 即 1MiB 内存. Real mode 是 8086 和 80186 的运行模式.
+
+- x86 架构且支持 64bit extension 的 intel CPU 支持运行在 long mode, 即访问 64-bit
+  内存地址. 在 linux 下, 支持 x86-64 指令集的 CPU 具有 ``lm`` flag (即 long mode).
+
+- x86-64 架构支持 page table entry 包含 No-eXecute (NX) bit, 以区分可执行和不可执行的
+  内存区域. NX bit 的 CPU flag 是 ``nx``.
+
+- x86-64 的一些重要好处:
+
+  * It is faster under most circumstances
+
+  * inherently more secure due to the nature of Address space layout randomization (ASLR)
+    in combination with Position-independent code (PIC) and the NX Bit which is not
+    available in the stock i686 kernel due to disabled PAE.
+
+  * If your computer has more than 4GB of RAM, only a 64-bit OS will be able to fully
+    utilize it.
+
