@@ -92,6 +92,12 @@
 
   * static file 的 url 是自动生成的, 以 static file namespace 为 url root.
 
+  * 在源代码层面上, app 的静态文件和它的代码在一起, 模块化更好;
+    在开发时, 使用 builtin server 即可 serve 各个 app 下的静态文件.
+
+  * 在项目部署时, 执行 ``collectstatic`` 将静态文件集合在一起, 使用 nginx
+    来高效地 serve 静态文件.
+
 - admin
 
   * model 里各个 field 的名字和类型直接影响它们在 admin.site 的显示和交互方式.
