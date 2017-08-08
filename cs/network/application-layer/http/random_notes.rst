@@ -100,3 +100,13 @@
 
 - http 中, 由于 url 是由 web server 去解析的. url 中的 ``/`` 分隔的 segments
   仅仅是逻辑上的分隔, 没必要对应实际的文件路径.
+
+- `Host` header
+
+  * A `Host` header field must be sent in all HTTP/1.1 request messages.
+    A 400 (Bad Request) status code will be sent to any HTTP/1.1 request
+    message that lacks a Host header field or contains more than one.
+
+  * `Host` header can contain port number or not.
+
+  * `Host` header can be used for virtual hosting.
