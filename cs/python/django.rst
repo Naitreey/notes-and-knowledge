@@ -78,14 +78,6 @@
 
     - 若 ``APP_DIRS == True``, 每个 app 目录下的 ``templates/`` 目录.
 
-- test
-
-  * model 层的 test 的测试点是测试 model 的正确性、合理性;
-    view 层的 test (配合 urlconf) 测试的是操作是否符合预期.
-    因此前者手动操作数据库, 而后者模仿 useragent 用 client.
-
-  * 每个 test method 执行结束后数据库状态都会被重置.
-
 - static file
 
   * static file namespace 与 template namespace 机制类似.
@@ -98,12 +90,26 @@
   * 在项目部署时, 执行 ``collectstatic`` 将静态文件集合在一起, 使用 nginx
     来高效地 serve 静态文件.
 
+- test
+
+  * model 层的 test 的测试点是测试 model 的正确性、合理性;
+    view 层的 test (配合 urlconf) 测试的是操作是否符合预期.
+    因此前者手动操作数据库, 而后者模仿 useragent 用 client.
+
+  * 每个 test method 执行结束后数据库状态都会被重置.
+
+- 全局性质的 (属于整个 project 而不属于某个 app 的) templates 和 static files 应该放在
+  ``$BASE_DIR/{templates,static}``.
+
 - admin
 
   * model 里各个 field 的名字和类型直接影响它们在 admin.site 的显示和交互方式.
 
   * 每个 model 在 admin site 中的显示方式可通过 ``admin.ModelAdmin`` 自定义.
 
-- 全局性质的 (属于整个 project 而不属于某个 app 的) templates 和 static files 应该放在
-  ``$BASE_DIR/{templates,static}``.
+- settings
 
+  * NEVER deploy a site into production with ``DEBUG`` turned on.
+
+  * In debug mode, ``ALLOWED_HOSTS == []`` 时, 只允许一些本地 ``HOST`` header,
+    localhost, 127.0.0.1, ::1.
