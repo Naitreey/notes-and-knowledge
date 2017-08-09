@@ -822,3 +822,12 @@
 - pathlib
 
   * ``Path.resolve`` 有 ``strict`` 参数, 用于一步检查 resolve 的路径是否存在.
+
+- string literal concatenation 操作具有最高优先级, 高于 subscription, slicing,
+  call, attribute reference 等操作. 例如
+
+  .. code:: python
+
+    >>> ("{} sef"
+    ... "sefe".format(111))
+    '111 sefsefe'
