@@ -113,3 +113,5 @@
 
   * In debug mode, ``ALLOWED_HOSTS == []`` 时, 只允许一些本地 ``HOST`` header,
     localhost, 127.0.0.1, ::1.
+
+  * ``UST_TZ`` determines whether datetime objects are naive.
