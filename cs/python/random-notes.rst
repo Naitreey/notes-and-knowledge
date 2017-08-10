@@ -810,11 +810,6 @@
 - django extension packages can be found on https://djangopackages.org/
   and downloaded from PyPI.
 
-- 当一个系统中需要多个 python 版本, 不同项目需要不同版本时, 或者仅仅是不想使用
-  系统自带的 python 时, 使用 pyenv.
-  当不同项目需要同一个 python 版本, 但各自的依赖有冲突时, 或者仅仅是因为不想
-  将 package 安装至全局范围内时, 使用 venv.
-
 - pathlib
 
   * ``Path.resolve`` 有 ``strict`` 参数, 用于一步检查 resolve 的路径是否存在.
@@ -827,3 +822,21 @@
     >>> ("{} sef"
     ... "sefe".format(111))
     '111 sefsefe'
+
+- 当一个系统中需要多个 python 版本, 不同项目需要不同版本时, 或者仅仅是不想使用
+  系统自带的 python 时, 使用 pyenv.
+  当不同项目需要同一个 python 版本, 但各自的依赖有冲突时, 或者仅仅是因为不想
+  将 package 安装至全局范围内时, 使用 venv.
+
+- choose dnf/apt/pacman vs pip for python module installations
+
+  * 在一个多用途的系统中, 例如 PC, 多服务共用的 server, 等场景中, 系统层的
+    python 解释器被各个程序共用, 因此应该使用系统的 package manager 去安装
+    python modules. 这样才能保证各个 package 的版本依赖关系得到满足, 即某个
+    module 的版本是经过和其他 package 的兼容性测试的.
+
+  * 对于某个用户、某个项目或某个程序自己使用的 python, 则使用 pip 安装.
+    此时构建 virtualenv 或 pyenv, 将 modules 安装在局限的范围内, 与全局独立.
+
+  * 对于为某个服务单独运行的容器, 可以使用 pip 安装系统层的 modules. 因整个
+    容器为它服务, 不太需要考虑跟别的兼容.
