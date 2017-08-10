@@ -32,6 +32,18 @@
   a package to distribute. This helps others looking for Django apps identify
   your app as Django specific.
 
+- project
+
+  由于 django 设计的 project 代码 import 逻辑 -- 即 project 目录需要在 ``sys.path``
+  中, 导致 django project 不适合整个打包为 python package 然后用 pip 安装至
+  site-packages 目录. 因为这样的效果是在 ``sys.path`` 中包含 site-packages 的子目录.
+  结果就是 import 时可能存在覆盖问题.
+
+  整个 django project 适合打包成 rpm/deb, 放在 ``/usr/lib`` 下.
+
+  然而, 一个 django project 中的每个 app, 都应该可以打包成 python package 用 pip
+  安装.
+
 - URLconf
 
   * URLconf 中的 url pattern 在载入时就都编译好了, 所以是高效的.
@@ -87,8 +99,8 @@
   * 在源代码层面上, app 的静态文件和它的代码在一起, 模块化更好;
     在开发时, 使用 builtin server 即可 serve 各个 app 下的静态文件.
 
-  * 在项目部署时, 执行 ``collectstatic`` 将静态文件集合在一起, 使用 nginx
-    来高效地 serve 静态文件.
+  * 在项目部署时, 执行 ``collectstatic`` 将静态文件集合在一起放在 ``STATIC_ROOT``,
+    使用 nginx 来高效地 serve 静态文件.
 
 - test
 
