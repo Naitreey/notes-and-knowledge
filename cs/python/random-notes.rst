@@ -432,8 +432,20 @@
 - ``logging`` module 中, 对于 ``propagate == True`` 的 logger, ``LogRecord`` 在向上层
   传递时, 不会考虑父级 logger 的 level 和 filters, 而是直接传递个父级的各个 handlers.
 
-- argparse 的局限性:
-  无法指定 ``--foo`` ``--bar`` 必须同时存在或同时不存在.
+- argparse
+
+  * 局限性:
+
+    无法指定 ``--foo`` ``--bar`` 必须同时存在或同时不存在.
+
+  * 用 ``nargs='?'`` 指定 optional positional argument.
+
+  * ``store_const|store_true|store_false`` action 意味着这个 cmdline option 是 flag,
+    不能再设置 ``nargs``, 即不跟参数.
+
+  * ``store`` action 可以设置 ``nargs``, 且 ``nargs='?'|'*'`` 时
+    ``const``, ``default`` 有用处.
+    
 
 - 关于 python3 中 filesystem encoding 的处理相关问题.
 
