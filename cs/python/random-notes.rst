@@ -852,3 +852,5 @@
 
   * 对于为某个服务单独运行的容器, 可以使用 pip 安装系统层的 modules. 因整个
     容器为它服务, 不太需要考虑跟别的兼容.
+
+- 一个 package 中的 private module/subpackage 命名应该以 ``_`` 起始.

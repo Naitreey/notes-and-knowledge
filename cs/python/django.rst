@@ -34,15 +34,18 @@
 
 - project
 
-  由于 django 设计的 project 代码 import 逻辑 -- 即 project 目录需要在 ``sys.path``
-  中, 导致 django project 不适合整个打包为 python package 然后用 pip 安装至
-  site-packages 目录. 因为这样的效果是在 ``sys.path`` 中包含 site-packages 的子目录.
-  结果就是 import 时可能存在覆盖问题.
+  * 由于 django 设计的 project 代码 import 逻辑 -- 即 project 目录需要在 ``sys.path``
+    中, 导致 django project 不适合整个打包为 python package 然后用 pip 安装至
+    site-packages 目录. 因为这样的效果是在 ``sys.path`` 中包含 site-packages 的子目录.
+    结果就是 import 时可能存在覆盖问题.
 
-  整个 django project 适合打包成 rpm/deb, 放在 ``/usr/lib`` 下.
+    整个 django project 适合打包成 rpm/deb, 放在 ``/usr/lib`` 下.
 
-  然而, 一个 django project 中的每个 app, 都应该可以打包成 python package 用 pip
-  安装.
+    然而, 一个 django project 中的每个 app, 都应该可以打包成 python package 用 pip
+    安装.
+
+  * project 目录可以作为一个全局 app 来使用. 全局的模板, 全局的静态文件, 全局的 url,
+    全局的管理命令等, 都可以放在这个全局 app 中.
 
 - URLconf
 
@@ -111,7 +114,7 @@
   * 每个 test method 执行结束后数据库状态都会被重置.
 
 - 全局性质的 (属于整个 project 而不属于某个 app 的) templates 和 static files 应该放在
-  ``$BASE_DIR/{templates,static}``.
+  ``$BASE_DIR/<project-name>/{templates,static}``.
 
 - admin
 

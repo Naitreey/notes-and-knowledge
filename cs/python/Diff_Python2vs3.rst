@@ -216,8 +216,9 @@
             klass.__unicode__ = klass.__str__
             klass.__str__ = lambda self: self.__unicode__().encode('utf-8')
         return klass
-        
 
+- py2 中 type 和 types.ClassType 分别对应 new/old style class 的类型.
+        
 - py2py3 compatible
 
   * __future__
@@ -227,3 +228,7 @@
   * 根据不同 module 结构 import
 
   * 不能用 py3-only syntax
+
+  * 设置一个 ``six`` or ``compat`` module 来实现所有能统一实现的 py2py3 兼容性逻辑.
+
+  * ``django.utils.six`` 提供了非常多有价值的 py2py3 兼容性处理方案.
