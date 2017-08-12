@@ -445,7 +445,6 @@
 
   * ``store`` action 可以设置 ``nargs``, 且 ``nargs='?'|'*'`` 时
     ``const``, ``default`` 有用处.
-    
 
 - 关于 python3 中 filesystem encoding 的处理相关问题.
 
@@ -464,6 +463,9 @@
     应对参数值 ``os.fsencode``.
 
   * 环境变量的访问, 提供了 ``os.environ`` 和 ``os.environb``, 分别是解码和未解码的版本.
+    对这个 dict 直接写入或删除会自动调用 ``putenv()``, ``unsetenv()`` 来修改 python
+    解释器进程的环境变量. 从而在 python 层和系统层一致. 但反之, 使用 ``os.putenv``
+    ``os.unsetenv`` 并不会将修改同步至 ``os.environ``, 只会修改本进程的环境变量.
 
   * 在 unix-like 系统中, 这种自动的编码解码使用的 error handler 是 ``'surrogateescape'``.
     使用这个 error handler, 解码时无法识别的 bytes 会转换成一个 unicode 字符集中的占位
@@ -643,6 +645,13 @@
 
   * 一系列 path manipulation functions, 比较容易被忽略的有 ``split()``, ``splitext()``,
     ``commonpath()``, ``commonprefix()``, ``expanduser()``, etc.
+
+  * ``expanduser()`` 选择的 home directory 首先根据 environ ``HOME``; 若不存在, 则根据
+    real UID 去 passwd 文件里 home directory (根据 pwd module). 注意是 real UID, 因为
+    real UID 的概念就是进程的 owner.
+
+  * ``exists`` & ``lexists`` 都是检查路径是否存在, 但前者会认为 broken symlink 属于
+    路径不存在, 所以还是要根据自己的需求进行选择.
 
 - haskell 中的 ``fold*`` 和 ``scan*`` 对应于 python 中的 ``functools.reduce`` 和
   ``itertools.accumulate``.
