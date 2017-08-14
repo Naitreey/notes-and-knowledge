@@ -863,3 +863,23 @@
     容器为它服务, 不太需要考虑跟别的兼容.
 
 - 一个 package 中的 private module/subpackage 命名应该以 ``_`` 起始.
+
+- shutil
+
+  * ``copy()`` 和 ``copy2`` 的区别是, 后者保留所有 metadata, 包含权限, atime,
+    ctime, mtime 等; 前者只保留权限信息.
+
+- zipfile
+
+  * "a" mode of ``ZipFile`` object:
+
+    If mode is 'a' and file refers to an existing ZIP file, then additional
+    files are added to it. If file does not refer to a ZIP file, then a new
+    ZIP archive is appended to the file. If mode is 'a' and the file does not
+    exist at all, it is created.
+
+    在没有 ``zipapp`` 的 py2 中, 可以用这个技巧生成 pyz executable.
+
+- 何时在 with 后面跟多个 context manager? 只有当 with 下面的 block 需要同时
+  访问这些 manager 提供的资源时, 才应该这样使用. 凡是资源的获取和释放有先后
+  顺序, 不是必须同时进行的, 都不应这样使用. 而是多个 with 嵌套.
