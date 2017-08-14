@@ -17,20 +17,23 @@
 
 - app
 
-  In essence, a Django application is just a Python package that is specifically
-  intended for use in a Django project.
+  * In essence, a Django application is just a Python package that is specifically
+    intended for use in a Django project.
 
-  django 提供了很多方便的功能使得 project 在 app 尺度的模块化十分容易, 例如
-  模块化的 URLconf, ``include()``. 每个 app 可以独立存在, 又可以在整个项目中
-  plug-and-play (PnP). 与 app 模块化配合的是 RESTful url 的模块化, 并要求
-  url 层级清晰. 每个 app 的 URLconf 自成体系, 有 index, 有 object, 有 method.
+  * django 提供了很多方便的功能使得 project 在 app 尺度的模块化十分容易, 例如
+    模块化的 URLconf, ``include()``. 每个 app 可以独立存在, 又可以在整个项目中
+    plug-and-play (PnP). 与 app 模块化配合的是 RESTful url 的模块化, 并要求
+    url 层级清晰. 每个 app 的 URLconf 自成体系, 有 index, 有 object, 有 method.
 
-  理想情况下, app 应该可以独立发布成 python package. 然后在任何 django 项目
-  中按照标准 django 方式 (import 等) 即可使用, 成为新项目的一个 app.
+  * 理想情况下, app 应该可以独立发布成 python package. 然后在任何 django 项目
+    中按照标准 django 方式 (import 等) 即可使用, 成为新项目的一个 app.
 
-  It’s often useful to prepend ``django-`` to your module name when creating
-  a package to distribute. This helps others looking for Django apps identify
-  your app as Django specific.
+  * It’s often useful to prepend ``django-`` to your module name when creating
+    a package to distribute. This helps others looking for Django apps identify
+    your app as Django specific.
+
+  * 若需要在代码中获取当前安装的 django apps, 应该使用 ``django.apps.apps``
+    application registry, 而不是直接访问 ``settings.INSTALLED_APPS``.
 
 - project
 
