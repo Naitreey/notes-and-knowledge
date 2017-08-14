@@ -1,3 +1,12 @@
+general
+-------
+- PEP8 or other style guide is important, but the most important is being
+  consistent with sensible code around you.
+
+- style guide 并不是一定总是适用的, 也就是说不要教条化, 而要根据具体情况
+  构建出一套最符合实际情况的规则. (虽然很多时候, 如果能从一开始就基本上
+  按照官方的来, 效果一定不会糟糕. 所以官方的风格规范实际上已经足够.)
+
 indentation
 -----------
 - 4-space per indentation level.
