@@ -7,53 +7,119 @@ general
   构建出一套最符合实际情况的规则. (虽然很多时候, 如果能从一开始就基本上
   按照官方的来, 效果一定不会糟糕. 所以官方的风格规范实际上已经足够.)
 
-indentation
------------
+indentation and line continuation
+---------------------------------
 - 4-space per indentation level.
-- Continuation lines should align wrapped elements vertically using Python's
-  implicit line joining inside parentheses, brackets and braces.
-  对于 list, dict, 等 compound literal 数据, 若第一个元素在 statement 同一行,
-  以下的所有 element 需对齐缩进; 若第一个元素在第二行, elements 的 indentation
-  应比第一行深一个等级. 对于结尾的 matching parenthesis, bracket, brace 的位置,
-  若第一个元素在首行, 则它应该在末尾元素同行; 否则应该在下一行. 对于后一情况,
-  可以与第一行对齐, 也可与各元素对齐.
+
+- Always use space for indentation, avoid hard tab character.
+
+- 关于 implicit line continuation 的两种缩进处理方式:
+
+  1. 每行元素与 opening parenthesis/bracket/brace 等对齐. 例如
+
+     .. code:: python
+
+       abc = function_something(a, b, c,
+                                d, e, f)
+
+  2. hanging indent 风格, 类似 javascript 中的风格. 此时, opening delimiter 是
+     首行的最后一个字符, 此后的元素按照标准缩进对齐, 最后 closing delimiter 单独
+     位于最后一行, 与首行的第一个字符对齐. 例如
+
+     .. code:: python
+
+       abc = function_something(
+           a, b,
+           c, d,
+           e, f,
+       )
+
+  对于 simple statement, hanging indent 更常用一些. 然而如果是在 compound statement
+  中的头部, 即开启一个 code block 的位置, hanging indent 可能不太合适. 例如
 
   .. code:: python
 
-    d = {"a": 1,
-         "b": 2}
+    def func(
+        var1, var2, var3
+    ):
+        pass
 
-    l = [
-        1, 2, 3,
-        4, 5, 6
-    ]
+  这样就很怪. 这时就比较适合第一种对齐方式:
 
-    d = (
-        1, 2, 3,
-        4, 5, 6
-        )
+  .. code:: python
 
-- Do not mix tab with spaces in indentation.
+    def func(var1, var2,
+             var3):
+        pass
+
+- 若在 compound statement 的头部, line continuation 之后在缩进时导致与 code block
+  的缩进量相同, 可以增加缩进量. 例如
+
+  .. code:: python
+
+    if (a > b and
+        c < d):
+        x = 1
+
+    # better choice
+
+    if (a > b and
+            c < d):
+        x = 1
+
+- 对于必须使用 backslash line continuation 的情况, 例如 multiple-with statement,
+  应在各个元素处的起始处对齐.
+
+  .. code:: python
+
+    with NamedTemporaryFile() as temp,
+         open(file, "w") as f:
+        pass
+
+- Do not mix tab with spaces in indentation. Actually, do not ever use tab
+  in indentation.
+
+- 在 line continuation 时, 若涉及 binary operator, 算符应该位于下一行的行首,
+  并逐行对齐. 原因是, 在数学公式的 typesetting 中我们已经发现, 这样有清晰的
+  显示效果.
+
+  (Although formulas within a paragraph always break after binary operations
+  and relations, displayed formulas always break before binary operations.
+  -- Donald Knuth, The TeXBook)
+
+  .. code:: python
+
+    income = (gross_wages
+           + taxable_interest
+           + (dividends - qualified_dividends)
+           - ira_deduction
+           - student_loan_interest)
+
+  若现有的代码习惯了在 operator 后面去换行, 则继续这个风格也可.
 
 line length
 -----------
-- no more than 79 chars per line, 或者 80--100 是容忍下限
-- for big block of text (docstring/comment), no more than 72 chars per line
-The preferred way of wrapping long lines is by using Python's implied line continuation inside parentheses, brackets and braces. Long lines can be broken over multiple lines by wrapping expressions in parentheses. These should be used in preference to using a backslash for line continuation.
-Backslashes may still be appropriate at times.
-The preferred place to break around a binary operator is after the operator, not before it.
+- 代码部分每行最佳状态是 79 字符以内. 根据实际情况某些行允许多 2-3 个字符.
+  但这样的行一定是极少数的.
+
+- 文字描述部分, 例如注释或 docstring 最多 72 字符.
+
+- 行太长时, 最好是使用 implicit line continuation 方式去 wrap line.
+  但仍有一些必须使用 backslash line continuation 的地方, 例如 multi-with statement.
 
 blank lines
 -----------
 - Surround top-level function and class definitions with two blank lines.
+
 - Method definitions inside a class are surrounded by a single blank line.
+
 - Use blank lines in functions, sparingly, to indicate logical sections.
 
 source file encoding
 --------------------
-ASCII/UTF-8
-- Files using ASCII (in Python 2) or UTF-8 (in Python 3) should not have an encoding declaration.
-- All identifiers in the Python standard library MUST use ASCII-only identifiers, and SHOULD use English words wherever feasible.
+- 源代码使用 utf8 编码, 对于 py2, 必须在源代码中声明字符集.
+
+- 使用 unix LF line terminator, 不要出现 windows CRLF.
 
 import
 ------
@@ -114,7 +180,13 @@ docstrings
 
 naming conventions
 ------------------
+- 所有的 identifier 必须使用 ASCII 字符集之内的字符.
+  (注意 py3 中支持 unicode identifier.)
+
+- identifier 的命名应是能体现其含义的英文单词组合或恰当的缩写形式.
+
 - Names that are visible to the user as public parts of the API should follow conventions that reflect usage rather than implementation.
+
 - `_single_leading_underscore` : weak "internal use" indicator. E.g. from M import * does not import objects whose name starts with an underscore.
 - `single_trailing_underscore_` : used by convention to avoid conflicts with Python keyword.
 - `__double_leading_underscore` : when naming a class attribute, invokes name mangling.
@@ -165,7 +237,7 @@ naming conventions
 
   factory function 相对于类的 constructor, 其根本特点是可以对返回实例的逻辑进行自定义,
   而 constructor 简单地每次调用生成一个新实例. 例如, 使用 factory function 可以做到:
-  
+
   * 条件性生成新实例, 例如依据 identifier 存储实例, match 时只返回原来生成的实例.
 
     何时需要考虑条件性生成新实例呢? 当实例应该具有某种全局存在性质, 而不是某个
