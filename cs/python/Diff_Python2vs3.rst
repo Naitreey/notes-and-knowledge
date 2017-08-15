@@ -93,8 +93,8 @@
     3. available
 
 - indentation:
-    2. allow tab, space mix indentation
-    3. disallow tab, space mix indentation
+    2. allow tab/space mix indentation
+    3. disallow tab/space mix indentation
 
 - catch exception:
     2. except <exception>, <ref> 或者 new syntax: except <exception> as <ref>
