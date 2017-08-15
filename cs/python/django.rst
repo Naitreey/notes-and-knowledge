@@ -133,3 +133,13 @@
     localhost, 127.0.0.1, ::1.
 
   * ``UST_TZ`` determines whether datetime objects are naive.
+
+- django-admin
+
+  * ``./manage.py shell`` 会在启动解释器后设置一些项目相关项; 若想不用这个命令行
+    但初始化同样的项目配置, 可以这样:
+
+      .. code:: python
+
+        os.environ['DJANGO_SETTINGS_MODULE'] = "<project>.settings"
+        import django; django.setup()

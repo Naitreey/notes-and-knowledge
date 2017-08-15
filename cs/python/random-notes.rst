@@ -446,6 +446,13 @@
   * ``store`` action 可以设置 ``nargs``, 且 ``nargs='?'|'*'`` 时
     ``const``, ``default`` 有用处.
 
+  * 若要在 help text 中显示 default value, 应该在 help text 中使用 ``%(default)s``
+    format specifier. 不要使用 ``ArgumentDefaultsHelpFormatter``, 因为它会在
+    所有参数后面都加上 ``(default: ...)`` 这种. 即使是不存在默认值的 required option.
+
+  * help text 支持 format specifier. available specifiers include ``%(prog)s`` and
+    most keyword arguments to ``add_argument()``.
+
 - 关于 python3 中 filesystem encoding 的处理相关问题.
 
   * 默认情况下, 所有的文件系统上的文件路径都会使用固定的 encoding 来 decode/encode.
@@ -883,3 +890,10 @@
 - 何时在 with 后面跟多个 context manager? 只有当 with 下面的 block 需要同时
   访问这些 manager 提供的资源时, 才应该这样使用. 凡是资源的获取和释放有先后
   顺序, 不是必须同时进行的, 都不应这样使用. 而是多个 with 嵌套.
+
+- DB-API
+
+  如果 ``cursor.execute()`` 中的 sql 语句需要填入在 SQL 语句里不属于常量值
+  的部分, 则不能放在 ``args`` 参数里. 这个参数只包含值的填充. 理由可能是
+  本来需要防着用户进行 sql injection 的只有值, 本来不会允许用户去修改别的
+  东西, 比如动态创建数据库.
