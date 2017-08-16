@@ -876,6 +876,8 @@
   * ``copy()`` 和 ``copy2`` 的区别是, 后者保留所有 metadata, 包含权限, atime,
     ctime, mtime 等; 前者只保留权限信息.
 
+  * ``shutil.chown`` 比 ``os.chown`` 方便, 后者只接受 uid/gid.
+
 - zipfile
 
   * "a" mode of ``ZipFile`` object:
