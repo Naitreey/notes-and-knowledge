@@ -195,7 +195,7 @@
 
   考虑到 ASLR 的存在, stack, mmap file, heap, text 四个区域的起始地址存在随机化.
 
-- Weird Ubuntu
+- Weird Debian/Ubuntu
 
   * udisks2 is patched by Ubuntu to use ``/media``, rather than default ``/run/media``.
 
@@ -203,6 +203,8 @@
 
   * /bin, /sbin, /lib 等目录不是向 /usr 目录下同名目录的 symlink, 所以仍然存在
     / 和 /usr 目录程序的无意义区分.
+
+  * debian 给 pip 打了 patch, 不能删除用 apt 安装的 python module.
 
 - kernel 默认给出的设备名称是十分 generic 的. 它根据设备的类型以及发现顺序进行
   编号, 生成如 ``eth<N>``, ``sd<X><N>`` 等设备类型 + 编号的名字. 这样命名的问题
