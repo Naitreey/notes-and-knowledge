@@ -206,6 +206,13 @@
 
   * debian 给 pip 打了 patch, 不能删除用 apt 安装的 python module.
 
+  * debian 为了保证 system python 以及 modules 的版本是 package manager 里确定的,
+    给 python interpreter 打 patch, 让所有全局 modules 安装到所谓 ``dist-packages``.
+    这号称是为了避免和编译的 python 的 ``site-packages`` 冲突. 虽然我没看出来
+    怎么会有人把手编的 python 的库放到 ``/usr/lib`` 中.
+
+    如果在 virtual env 中, 则会安装到 ``site-packages`` 中.
+
 - kernel 默认给出的设备名称是十分 generic 的. 它根据设备的类型以及发现顺序进行
   编号, 生成如 ``eth<N>``, ``sd<X><N>`` 等设备类型 + 编号的名字. 这样命名的问题
   是系统中看到的设备逻辑名称与其物理身份无法直接对应起来. 只能通过 sysfs 来研究
