@@ -123,36 +123,60 @@ source file encoding
 
 import
 ------
-- Imports are always put at the top of the file, just after any module comments and docstrings, and before module globals and constants.
--  Imports should be grouped in the following order:
-    1. standard library imports
-    2. related third party imports
-    3. local application/library specific imports
-- Absolute imports are recommended, as they are usually more readable and tend to be better behaved (or at least give better error messages) if the import system is incorrectly configured.
-- However, explicit relative imports are an acceptable alternative to absolute imports, especially when dealing with complex package layouts where using absolute imports would be unnecessarily verbose.
-- Wildcard imports ( from <module> import * ) should be avoided, as they make it unclear which names are present in the namespace, confusing both readers and many automated tools.
-- import 时如果一行放不下, 应使用 ``()`` 进行 implicit line continuation, 并且符合以下格式:
+- 全局范围的 import 要尽量放在 module 的起始部分, 在 comment/docstring 以及
+  ``__future__`` import 之后.
+
+- 不要在一个 import statement 中载入多个模块.
+
+- import 语句的分组顺序:
+
+  1. standard library
+
+  2. related third party library
+
+  3. 本地应用或者库模块的 imports
+
+- 一个 package 内部模块之间的 import 应该使用 explicit relative imports,
+  除此之外都使用 absolute imports. 禁止使用 implicit relative imports.
+
+- 恰当地使用 wildcard import. 当一个 module 提供了大量的 utility 并且我们
+  很可能大量使用时, 可以使用; 当我们需要子模块提供的资源 republish 到
+  package 的 namespace 中时, 可以使用 (注意子模块此时应定义 ``__all__``).
+
+- ``__all__``, ``__version__``, ``__author__`` 等 metadata 应尽量靠上, 尽量
+  位于所有 import 之前.
+
+- import 时如果一行放不下, 应使用 ``()`` 进行 implicit line continuation,
+  并且符合以下格式:
 
     .. code:: python
 
     from somemodule import (
-        name1,
-        name2,
-        name3,
+        name1, name2,
+        name3, ...
     )
 
-quoting strings
+strings literal
 ---------------
--  When a string contains single or double quote characters, however, use the other one to avoid backslashes in the string. It improves readability.
-- For triple-quoted strings, always use double quote characters.
+- For triple-quoted string, always use double quote character.
+  即 ``"""abcdef"""``, 而不要用 ``'''abdef'''``.
+
+- 在可行时, ``[]`` 里的 key 使用 single quote char, value 使用 double quote char.
+  dict literal 全部使用 double quote char, 与 json 对应.
 
 whitespace in expressions and statements
 ----------------------------------------
-- Avoid extraneous whitespace in the following situations:
-    Immediately inside parentheses, brackets or braces.
-    Immediately before a comma, semicolon, or colon.
-    Immediately before the open parenthesis that starts the argument list of a function call.
-    Immediately before the open parenthesis that starts an indexing or slicing.
+- Opening parenthesis/bracket/brace 之后以及相应的 closing delimiter 之前,
+  不要出现空格. 例如, 不要这样: ``spam( ham[ { 2, 3 } ] )``
+
+- 作为分隔符时 ``,`` ``;`` ``:`` 的前面不要出现空格.
+
+- ``:`` 作为 slice operator 时是一个 binary operator, 因此要求两侧有对称的
+  空格量. when a slice parameter is omitted, the space is omitted. 例如:
+  ``ham[: f(x) : g(x)]``, ``ham[:: g(x)]``
+
+- 不要在 function call 的 opening parenthesis 前面加空格.
+
 - Always surround these binary operators with a single space on either side: assignment ( = ), augmented assignment ( += , -= etc.), comparisons ( == , < , > , != , <> , <= , >= , in , not in , is , is not ), Booleans ( and , or , not ).
 - If operators with different priorities are used, consider adding whitespace around the operators with the lowest priority(ies).
 - Don't use spaces around the = sign when used to indicate a keyword argument or a default parameter value.
