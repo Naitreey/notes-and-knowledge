@@ -143,3 +143,20 @@
 
         os.environ['DJANGO_SETTINGS_MODULE'] = "<project>.settings"
         import django; django.setup()
+
+- migration
+
+  * You should think of migrations as a version control system for your
+    database schema. ``makemigrations`` is responsible for packaging up
+    your model changes into individual migration files - analogous to
+    commits - and ``migrate`` is responsible for applying those to your
+    database.
+
+    Make changes to your models - say, add a field and remove a model -
+    and then run ``makemigrations``. Your models will be scanned and
+    compared to the versions currently contained in your migration files,
+    and then a new set of migrations will be written out.
+
+    Once the migration is applied correctly to test database, commit the
+    migration and the models change to your version control system as a
+    single commit.
