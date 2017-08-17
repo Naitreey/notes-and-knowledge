@@ -259,3 +259,19 @@
       /sys/devices/pci0000:00/0000:00:1c.0/0000:02:00.1/net/enp2s0f1
       ID_NET_NAME_MAC=enx78e7d1ea46dc
       ID_NET_NAME_PATH=enp2s0f1
+
+- Why GNOME switched to dconf, which is binary configuration rather than
+  plain text file?
+
+  For performance reasons. The start up sequence becomes a bottleneck
+  pretty quickly if you don't have a mmap()'able cache, and keeping
+  cache + text in sync is a major headache.
+
+  The problem is not when one program does it. if we only had one program,
+  of couse we'd be using a text storage. The issues arise when there are many
+  programs, many of which may start concurrently. then reading those files, if
+  they are not kept contiguous on disk, becomes an issue on spinning rust hardware.
+
+  Watching a single file for changes is better than watching multiple files.
+
+  ref: https://www.reddit.com/r/linux/comments/2q2wv6/plain_text_configuration_of_gnome/
