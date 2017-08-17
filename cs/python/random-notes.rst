@@ -899,3 +899,22 @@
   部分, 则不能放在 ``args`` 参数里. 这个参数只包含值的填充. 这么涉及的理由
   可能是需要防着用户进行 sql injection 的只有值, 根本不该去允许用户去修改别的
   东西, 比如动态创建数据库.
+
+- Zen of Python --- ``this`` module --- ROT13 algorithm
+
+- extended indexing syntax, slice object
+
+  * extended indexing syntax 的形式是 ``[a:b:c]``. 本质上转换为 ``[slice(a, b, c)]``.
+
+  * slice object 代表一系列 index 的值. start, stop, step 三项的默认值都是 ``None``.
+    ``slice(3) == slice(None, 3, None)``.
+
+  * 由于 extended indexing 本质转换为 slice object, 所以 a, b, c 可以任意省去,
+    以 None 代替. 整个 slice object 传递给 ``[]`` index 算符左侧的对象的
+    ``__getitem__`` method. 这个方法解析 slice object 的 start/stop/step,
+    按规则输出所需的值.
+
+  * 对于 list, 它的 ``__getitem__`` 则定义 a 默认是 0, b 默认是 len(list), c 默认是 1.
+
+  * slice object 本身不限制 start/stop/step 值的类型. 只是作用在的对象去限制.
+    例如 ``[1 : 2, 3] -> [slice(1, (2, 3), None)]``.
