@@ -177,30 +177,104 @@ whitespace in expressions and statements
 
 - 不要在 function call 的 opening parenthesis 前面加空格.
 
-- Always surround these binary operators with a single space on either side: assignment ( = ), augmented assignment ( += , -= etc.), comparisons ( == , < , > , != , <> , <= , >= , in , not in , is , is not ), Booleans ( and , or , not ).
-- If operators with different priorities are used, consider adding whitespace around the operators with the lowest priority(ies).
-- Don't use spaces around the = sign when used to indicate a keyword argument or a default parameter value.
-- Do use spaces around the = sign of an annotated function definition. Additionally, use a single space after the : , as well as a single space on either side of the -> sign representing an annotated return value.
-- Compound statements (multiple statements on the same line) are generally discouraged.
-- While sometimes it's okay to put an if/for/while with a small body on the same line, never do this for multi-clause statements.
+- Avoid trailing whitespace anywhere.
+
+- 常见的 binary operator 两侧要有一个空格::
+
+    =, +=, -=, /=, ==, <, >, !=, <=, >=, in, not in, is, is not, and, or, not
+
+- 当等号用在 function 定义或调用的参数中, 即表示 keyword arg 或默认值时,
+  不要在两侧加空格, key, value 要紧跟着.
+
+- function/variable annotation 中, ``:`` 与 dict 中类似, 后面加空格, 前面
+  不加空格, ``->`` 两侧要有空格.
+
+  .. code:: python
+
+    def func(x: int) -> str:
+        return str(x)
+
+    a: int
+
+- 当 function/variable annotation 后需要设置默认值或者需要赋值时, ``=`` 两侧
+  需要空格.
+
+  .. code:: python
+
+    def func(x: int = 0) -> str:
+        return str(x)
+
+    a: int = 1
+
+- 尽量不要在一行中用 ``;`` 连写多个 simple statement.
+
+- 对 one-liner compound statement, 不要把那一行 body 跟 header 部分放在同一行.
+
+trailing commas
+---------------
+- 当构建 one-tuple ``e,`` 时, 为了清晰并通用, 应该加上括号 ``(e,)``.
+
+- 在 parentheses/brackets/braces 中, 往往允许末尾加上一个 trailing comma.
+  当这些元素分多行写时, 才加上这个 trailing comma. 这是为了在 diff 时
+  没有因增加 ``,`` 导致的多余的行修改.
+
+  .. code:: python
+
+    a = [
+        1, 2, 3,
+        4, 5, 6,
+    ]
 
 comments
 --------
-- Always make a priority of keeping the comments up-to-date when the code changes.
-- Block comments generally apply to some (or all) code that follows them, and are indented to the same level as that code. Each line of a block comment starts with a # and a single space.
+- 尽量 write code that explains itself, 而不是写一堆难以理解的代码然后靠边上的
+  注释去解释.
+
+- 代码修改时, 注释和相应的文档也要一起修改. Comments that contradict the code
+  are worse than no comments.
+
+- 注释的首字母要大写, 符合英文句子规则.
+
+- 一段代码相应的注释要有相同的 indentation level.
+
+- Paragraphs inside a block comment are separated by a line containing a single #.
+
 - An inline comment is a comment on the same line as a statement.
+  Inline comments should be separated by at least two spaces from the statement.
+  They should start with a # and a single space.
+
+- 对 function/class 等进行解释的 comment 应该放在 ``def`` ``class`` 等行的下面.
+  有 docstring 的话, 放在它下面.
 
 docstrings
 ----------
-- A docstring is a string literal that occurs as the first statement in a module, function, class, or method definition.
-- Write docstrings for all public modules, functions, classes, and methods. Docstrings are not necessary for non-public methods, but you should have a comment that describes what the method does. This comment should appear after the def line.
--  A package may be documented in the module docstring of the __init__.py file in the package directory.
-- For consistency, always use """triple double quotes""" around docstrings. Use r"""raw triple double quotes""" if you use any backslashes in your docstrings. For Unicode docstrings, use u"""Unicode triple-quoted strings""" .
-- One-liners are for really obvious cases. Triple quotes are used even though the string fits on one line. This makes it easy to later expand it.
-- There's no blank line either before or after the docstring.
-- Multi-line docstrings consist of a summary line just like a one-line docstring, followed by a blank line, followed by a more elaborate description. It's important that the first line fits in one line and is separated from the rest of the docstring by a blank line.
+- A docstring is a string literal that occurs as the first statement
+  in a module, function, class, or method definition.
+
+- 所有公有模块, 公有函数, 公有类, 公有方法都要有 docstring.
+
+- 对于 multiline docstring, closing triple quote 单独放一行.
+
+- 对 one liner docstring, triple quote 放在同一行.
+
+- One-liners are for really obvious cases. Triple quotes are used even though
+  the string fits on one line. This makes it easy to later expand it.
+
+-  A package may be documented in the module docstring of the __init__.py
+  file in the package directory.
+
+- For consistency, always use ``"""triple double quotes"""`` around docstrings.
+  Use ``r"""raw triple double quotes"""`` if you use any backslashes in your
+  docstrings.
+
+- docstring 前后都不要加空行.
+
+- Multi-line docstrings consist of a summary line just like a one-line docstring,
+  followed by a blank line, followed by a more elaborate description. It's
+  important that the first line fits in one line and is separated from the rest
+  of the docstring by a blank line.
+
 - The entire docstring is indented the same as the quotes at its first line.
-- The docstring of a script (a stand-alone program) should be usable as its "usage" message, printed when the script is invoked with incorrect or missing arguments (or perhaps with a "-h" option, for "help").
 
 naming conventions
 ------------------
@@ -209,12 +283,23 @@ naming conventions
 
 - identifier 的命名应是能体现其含义的英文单词组合或恰当的缩写形式.
 
-- Names that are visible to the user as public parts of the API should follow conventions that reflect usage rather than implementation.
+- Names that are visible to the user as public parts of the API should
+  reflect usage rather than implementation.
 
-- `_single_leading_underscore` : weak "internal use" indicator. E.g. from M import * does not import objects whose name starts with an underscore.
-- `single_trailing_underscore_` : used by convention to avoid conflicts with Python keyword.
-- `__double_leading_underscore` : when naming a class attribute, invokes name mangling.
-- `__double_leading_and_trailing_underscore__` : "magic" objects or attributes that live in user-controlled namespaces.
+- class name 使用 CamelCase 时, 注意当名字中包含缩写时, 需要将所有缩写大写,
+  而不是只大写缩写的首字母, e.g., 是 ``HTTPConnection``, 不是 ``HttpConnection``.
+
+- 表示内部使用的量用 ``_name`` 命名. 如果这个量在 module level 定义,
+  ``from module import *`` 不会 import 这个量. 如果这个量定义为 class
+  成员, 则这个量会被子类继承, 相当于 Java 中的 protected member.
+
+- 表示类的私有成员的量用 ``__name`` 命名. 这样的量不能在子类中直接访问 (name mangling).
+
+- 避免与 keyword 冲突时, 用 ``keyword_``.
+
+- 不要自创 ``__name__``, 这些是 python 定义的 magic objects/methods, 每一项都有特殊
+  用途, 不要混淆这个命名空间.
+
 - Modules should have short, all-lowercase names. Underscores can be used in the module name if it improves readability. Python packages should also have short, all-lowercase names, although the use of underscores is discouraged.
 - When an extension module written in C or C++ has an accompanying Python module that provides a higher level (e.g. more object oriented) interface, the C/C++ module has a leading underscore (e.g. `_socket` ).
 - Class names should normally use the CamelCase convention.
