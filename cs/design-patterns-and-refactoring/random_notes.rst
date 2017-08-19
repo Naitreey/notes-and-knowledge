@@ -1,10 +1,13 @@
-The absolutely meaningful reason to write clear code is to make the life of other
-developers easier, to make their life more efficient.
+- The absolutely meaningful reason to write clear code is to make the life of other
+  developers easier, to make their life more efficient.
 
-design patterns and refactoring (至少对于传统语言) 是通用的, 因为它们都是同一种思想的
-发展和延续, 也就是使逻辑不断清晰化, 简洁化, 条理化. 对于不同的传统语言, 有些已经在语言
-层面提供了特性, 从而使一些 design pattern 变得简单实现且直接了当; 而另一些则需要手动将
-这些思想进行实现. 但是本质上, 思路是相似的, 目的是相同的.
+- design patterns and refactoring (至少对于传统语言) 是通用的, 因为它们都是同一种思想的
+  发展和延续, 也就是使逻辑不断清晰化, 简洁化, 条理化. 对于不同的传统语言, 有些已经在语言
+  层面提供了特性, 从而使一些 design pattern 变得简单实现且直接了当; 而另一些则需要手动将
+  这些思想进行实现. 但是本质上, 思路是相似的, 目的是相同的.
+
+- 写代码这件事, 技术和知识只是基本功, 它更重要的是设计, 是框架, 是 insight + vision.
+  写代码更像是写作, 它是一种技艺, 既技术 + 艺术.
 
 -----
 写之前:
