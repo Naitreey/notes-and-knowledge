@@ -278,7 +278,7 @@ docstrings
 
 naming conventions
 ------------------
-- 所有的 identifier 必须使用 ASCII 字符集之内的字符.
+- 所有的 identifier 应该使用 ASCII 字符集之内的字符.
   (注意 py3 中支持 unicode identifier.)
 
 - identifier 的命名应是能体现其含义的英文单词组合或恰当的缩写形式.
@@ -291,61 +291,151 @@ naming conventions
 
 - 表示内部使用的量用 ``_name`` 命名. 如果这个量在 module level 定义,
   ``from module import *`` 不会 import 这个量. 如果这个量定义为 class
-  成员, 则这个量会被子类继承, 相当于 Java 中的 protected member.
+  成员, 则不是 public API 的一部分. 这个量会被子类继承, 相当于 Java 中的
+  protected member.
 
 - 表示类的私有成员的量用 ``__name`` 命名. 这样的量不能在子类中直接访问 (name mangling).
+  如果某个类成员确实只应该这个类自己去使用不让子类访问, 请这样命名.
 
 - 避免与 keyword 冲突时, 用 ``keyword_``.
 
 - 不要自创 ``__name__``, 这些是 python 定义的 magic objects/methods, 每一项都有特殊
   用途, 不要混淆这个命名空间.
 
-- Modules should have short, all-lowercase names. Underscores can be used in the module name if it improves readability. Python packages should also have short, all-lowercase names, although the use of underscores is discouraged.
-- When an extension module written in C or C++ has an accompanying Python module that provides a higher level (e.g. more object oriented) interface, the C/C++ module has a leading underscore (e.g. `_socket` ).
-- Class names should normally use the CamelCase convention.
-- Function, method and instance variable names should be lowercase, with words separated by underscores as necessary to improve readability.
--  Always use self for the first argument to instance methods. Always use cls for the first argument to class methods.
-- Constants are usually defined on a module level and written in all capital letters with underscores separating words.
-- Always decide whether a class's methods and instance variables (collectively: "attributes") should be public or non-public. If in doubt, choose non-public; it's easier to make it public later than to make a public attribute non-public.
-- take care to make explicit decisions about which attributes are public, which are part of the subclass API, and which are truly only to be used by your base class.
-- Public attributes should have no leading underscores.
-- If your class is intended to be subclassed, and you have attributes that you do not want subclasses to use, consider naming them with double leading underscores and no trailing underscores. This invokes Python's name mangling algorithm, where the name of the class is mangled into the attribute name. This helps avoid attribute name collisions should subclasses inadvertently contain attributes with the same name.
-- To better support introspection, modules should explicitly declare the names in their public API using the __all__ attribute. Setting __all__ to an empty list indicates that the module has no public API.
-- Comparisons to singletons like None should always be done with is or is not , never the equality operators.
-- Use is not operator rather than not ... is . While both expressions are functionally identical, the former is more readable and preferred.
-- When implementing ordering operations with rich comparisons, it is best to implement all six operations ( __eq__ , __ne__ , __lt__ , __le__ , __gt__ , __ge__ ) rather than relying on other code to only exercise a particular comparison. To minimize the effort involved, the functools.total_ordering() decorator provides a tool to generate missing comparison methods.
-- Always use a def statement instead of an assignment statement that binds a lambda expression directly to an identifier. The use of the assignment statement eliminates the sole benefit a lambda expression can offer over an explicit def statement (i.e. that it can be embedded inside a larger expression, they can be of ad-hoc use).
-- Derive exceptions from Exception rather than BaseException . Direct inheritance from BaseException is reserved for exceptions where catching them is almost always the wrong thing to do.
-- When catching exceptions, mention specific exceptions whenever possible instead of using a bare except: clause.
--  If you want to catch all exceptions that signal program errors, use except Exception: (bare except is equivalent to except BaseException: ).
-- for all try/except clauses, limit the try clause to the absolute minimum amount of code necessary.
-- When a resource is local to a particular section of code, use a with statement to ensure it is cleaned up promptly and reliably after use. A try/finally statement is also acceptable.
-- Be consistent in return statements. Either all return statements in a function should return an expression, or none of them should.
-- Use string methods instead of the string module (whenever possible).
-- Object type comparisons should always use isinstance() instead of comparing types directly. When checking if an object is a string, keep in mind that it might be a unicode string too! In Python 2, str and unicode have a common base class, basestring.
-- function annotation 可能并不一定是好的. python 是 duck type language, 函数的输入和返回值都可以是恰当的任何类型的量, 过早地使用 annotation 可能限制函数的使用范围和可扩展性.
-- finally clause 一定要小心. 这个 statement 里面的东西最好不可能再 raise exception, 否则 解释器将不再处理 try 里面的 exception, 而去处理新的 exception. 这样从 traceback 里就看不出原来的错误了.
-- 不要轻易连等赋值. 提醒自己这将导致两个 identifier 指向同一个对象哦... 问问自己你真的想要这样么?
-- Python 的 duck typing 思想与物理学思想一致, 即我们认识事物的方式是根据事物表现出来的行为, 而不是事物的所谓 "本质". 这样的本质并不存在, 因其不可观测.
-- when possible, public methods should avoid "get_xxx()" 这种指明动作的 naming style. 而是应该直接使用 obj.xxx 或者 obj.xxx(). 但很多时候如果需要输入参数, 指明动作更自然一些.
-- 如果只需要一个 logging level, 默认使用的应该是 INFO, 因为在 DEBUG level, 一些库可能输出
-  很多没用的 debug 信息.
-- module 中绝不该出现在 import 时会给出输出的 "裸代码". 也就是说它不该做奇怪的事情, 应该
-  keep silent.
+- modules 命名使用全小写, 并允许使用 ``_`` 进行分隔.
+
+- 私有模块命名以 ``_`` 起始.
+
+- 一般情况下 Class names 以 CamelCase 方式命名. 若这个类主要是当作一个函数来
+  使用, 而不是看作实例化, 则可以按照函数的方式命名. 例如, ``slice()``,
+  ``range()``, ``bool()`` 等 builtin function/class.
+
+- 若一个 exception class 确实是错误, 应该以 ``Error`` 结尾.
+
+- 全局常量命名全部大写和 ``_``.
+
+- 全局变量、非全局变量和函数使用全小写加 ``_`` 的命名方式.
+
+- instance method 的第一个变量用 ``self`` 命名, class method 的第一个变量用
+  ``cls`` 命名.
+
+- 对于 public attribute, 若有复杂的 set/get 操作需求, 最好使用 property.
+  这保证了 API 简洁.
+
+- module 应该设置 ``__all__`` 来定义自己提供的公有 API. 注意此时非公有的部分仍然
+  应该加上 ``_``.
+
+- An interface is considered internal if any containing namespace (package,
+  module or class) is considered internal.
+
+- Imported names should always be considered an implementation detail, unless
+  it's imported to constitute part of API.
+
+Programming
+-----------
+- Singleton 类型的量之间的比较, 一定要用 ``is`` ``is not``.
+
+- ``if something is not None`` 不等价于 ``if something``.
+
+- 要用 ``something is not another``, 不要用 ``not something is another``.
+
+- 实现 rich comparisons 时, 要实现全部 6 个比较操作, 或者借助
+  ``functools.total_ordering``.
+
+- 如果需要把 lambda 表达式赋值给变量, 那就不该用 lambda, 用 ``def``.
+
+- 所有自定义的 exception 都应是 ``Exception`` 的子类, 而不是 ``BaseException`` 的.
+  Catching subclasses of ``BaseException`` is almost always the wrong thing to do.
+
+- When catching exceptions, mention specific exceptions whenever possible instead
+  of using a bare ``except:`` clause. If you want to catch all exceptions that
+  signal program errors, use ``except Exception:`` (Bare except is equivalent to
+  ``except BaseException:``).
+
+- Design exception hierarchies based on the distinctions that code catching the
+  exceptions is likely to need, rather than the locations where the exceptions
+  are raised. Aim to answer the question "What went wrong?" programmatically,
+  rather than only stating that "A problem occurred".
+
+- For all try/except clauses, limit the try clause to the absolute minimum amount
+  of code necessary. This avoids masking bugs.
+
+- When a resource is local to a particular section of code, use a with statement
+  to ensure it is cleaned up promptly and reliably after use. A try/finally
+  statement is also acceptable.
+
+- Context managers should be invoked through separate functions or methods whenever
+  they do something other than acquire and release resources. For example:
+
+  Yes:
+
+  .. code:: python
+    with conn.begin_transaction():
+        do_stuff_in_transaction(conn)
+  No:
+
+  .. code:: python
+    with conn:
+        do_stuff_in_transaction(conn)
+
+  The latter example doesn't provide any information to indicate that the
+  ``__enter__`` and ``__exit__`` methods are doing something other than closing
+  the connection after a transaction. Being explicit is important in this case.
+
+- 一个函数里可以完全没有 return; 但如果有 return statement, 所有的返回点都要
+  有 return, 且如果没有明确的返回值, 需要 ``return None``.
+
+- 使用 ``isinstance()`` 进行类型判断, 不要使用 ``type(obj) is sometype``.
+
+- function annotation 可能并不一定是好的. python 是 duck type language, 函数的输入
+  和返回值都可以是恰当的任何类型的量, 过早地使用 annotation 可能限制函数的使用范围
+  和可扩展性.
+
+- 在 python2 中, finally clause 一定要小心. 这个 statement 里面的东西最好不可能再
+  raise exception, 否则 解释器将不再处理 try 里面的 exception, 而去处理新的
+  exception. 这样从 traceback 里就看不出原来的错误了.
+
+- 不要轻易连等赋值. 提醒自己这将导致两个 identifier 指向同一个对象哦... 问问自己
+  你真的想要这样么?
+
+- Python2 中, 判断一个对象是否是字符串时, 要用 ``basestring``; python3 中没有这个
+  问题.
+
+- For container types, use the fact that empty containers are false.
+
+- 如果只需要一个 logging level, 默认使用的应该是 INFO, 因为在 DEBUG level,
+  一些库可能输出很多没用的 debug 信息.
+
+- module 中一般不该出现在 import 时会给出输出的 "裸代码". 也就是说它不该做奇怪
+  的事情, 应该 keep silent.
+
 - python 中有 4 种 string formatting 方式:
-  %-formatting, str.format(), formatted string literal 以及 string.Template.
-  其中, 最后一种根本不该使用;
+
+  * %-formatting
+
+  * ``str.format()``
+
+  * formatted string literal
+
+  * ``string.Template``
+
   第一种最常见最简单, 但不如第二种方便;
+
   第二种明显优点有 2 个, 1) 灵活方便, 功能丰富; 2) 实际上使用 `__format__` protocol,
   即可以自定义 format 逻辑, 实现多态性的封装 (duck typing), e.g., datetime;
+
   第三种克服了第二种的 verbosity 问题, 并且增加灵活性可以执行 python 表达式.
   所以, 对于 py3.6+, 应该用第三种, 之前的最好用第二种.
 
-- 什么时候应该规定使用 factory function 来获取类实例, 什么时候不需要这层封装只简单地对类
-  进行实例化就行?
+  第四种仅用在特殊场合, 例如为了填充使用了 shell syntax 的模板, 或者为了与常见的
+  formatting 语法相区别.
 
-  factory function 相对于类的 constructor, 其根本特点是可以对返回实例的逻辑进行自定义,
-  而 constructor 简单地每次调用生成一个新实例. 例如, 使用 factory function 可以做到:
+- 什么时候应该规定使用 factory function 来获取类实例, 什么时候不需要这层封装
+  只简单地对类进行实例化就行?
+
+  factory function 相对于类的 constructor, 其根本特点是可以对返回实例的逻辑进行
+  自定义, 而 constructor 简单地每次调用生成一个新实例. 例如, 使用 factory function
+  可以做到:
 
   * 条件性生成新实例, 例如依据 identifier 存储实例, match 时只返回原来生成的实例.
 
@@ -358,5 +448,11 @@ naming conventions
 
   * 需要对实例进行额外的修改, 且这些修改在逻辑上不是该类的一部分.
 
-- 何时该创建各种 exception class 并在出错时 raise 出来, 何时该只返回操作的 true/false
-  结果?
+- 何时该创建各种 exception class 并在出错时 raise 出来, 何时该只返回操作的
+  true/false 结果?
+
+  如果是错误、异常情况, 则 raise exception;
+  如果是对命题是否成立的条件判断, 则给出 boolean result.
+
+  两者是不同的情况. 然而, 两个情况可能存在相互嵌套. 例如, 通过条件判断是否通过来决定
+  是否 raise exception; 通过是否 raise exception 来决定条件判断是否通过.

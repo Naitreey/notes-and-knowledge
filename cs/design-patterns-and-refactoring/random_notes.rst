@@ -349,3 +349,15 @@ design patterns and refactoring (至少对于传统语言) 是通用的, 因为�
 - 设计 API 时, 如果它们有共同的前提条件, 则应该在模块加载时统一检查. 例如,
   一个类提供的所有公有方法有共同的前提条件, 则应该在对象初始化时进行检查.
   从另一个角度看, 就是说这个类不能在此环境创建对象.
+
+- public and non-public members
+
+  在设计类时, 一定要考虑好哪些 attributes/methods 是公有的, 哪些不是公有的.
+  因为公有的就意味着你需要保证 (在至少一个 major version 内,) 这些公有 API 一直
+  向后兼容.
+
+  如果不知道是不是该公有, 那就先设置为非公有. it's easier to make it public later
+  than to make a public attribute non-public.
+
+  如果一个类可能被继承, 还需要考虑哪些 attributes/methods 是可以被继承的, 哪些
+  只应该被这个类自己去使用, 并进行相应的设置.
