@@ -547,6 +547,15 @@ processor
 
 - x86 architecture
 
+  * Byte-addressing is possible and words are stored in memory with little-endian
+    byte order. Unaligned memory access is allowed for all valid word sizes.
+
+  * 第一代 x86 CPU 是 intel 8086.
+
+  * 当代的 x86 CPU 支持 16bit (real mode), 32bit (protected mode), 64bit (long mode)
+    三类运行模式. 8086 是第一代 16bit, 80386 是第一代 32bit, AMD Opteron 是第一代
+    64bit.
+
   * The term "x86" came into being because the names of several successors to
     Intel's 8086 processor end in "86", including the 80186, 80286, 80386 and
     80486 processors.
@@ -554,20 +563,25 @@ processor
   * intel x86 架构要求完全向后兼容至 8086, 因此所有 x86 架构的 CPU 刚启动时都处于
     16-bit real mode, 只能访问 2**20 即 1MiB 内存. Real mode 是 8086 和 80186 的运行模式.
 
-- x86 架构且支持 64bit extension 的 intel CPU 支持运行在 long mode, 即访问 64-bit
-  内存地址. 在 linux 下, 支持 x86-64 指令集的 CPU 具有 ``lm`` flag (即 long mode).
+  * x86 cpu 支持那么多 extensions (see lscpu output), 其实有很多都是为了向后兼容而保留
+    的. 平时运行时, 那么多并不能全用上.
 
-- x86-64 架构支持 page table entry 包含 No-eXecute (NX) bit, 以区分可执行和不可执行的
-  内存区域. NX bit 的 CPU flag 是 ``nx``.
+- x86 architecture with 64bit extension
 
-- x86-64 的一些重要好处:
+  * x86 with 64bit extension 的 intel CPU 支持运行在 long mode, 即访问 64-bit
+    内存地址. 在 linux 下, 支持 x86-64 指令集的 CPU 具有 ``lm`` flag (即 long mode).
 
-  * It is faster under most circumstances
+  * x86-64 架构支持 page table entry 包含 No-eXecute (NX) bit, 以区分可执行和不可执行的
+    内存区域. NX bit 的 CPU flag 是 ``nx``.
 
-  * inherently more secure due to the nature of Address space layout randomization (ASLR)
-    in combination with Position-independent code (PIC) and the NX Bit which is not
-    available in the stock i686 kernel due to disabled PAE.
+  * x86-64 的一些重要好处:
 
-  * If your computer has more than 4GB of RAM, only a 64-bit OS will be able to fully
-    utilize it.
+    * It is faster under most circumstances
+
+    * inherently more secure due to the nature of Address space layout randomization
+      (ASLR) in combination with Position-independent code (PIC) and the NX Bit which
+      is not available in the stock i686 kernel due to disabled PAE.
+
+    * If your computer has more than 4GB of RAM, only a 64-bit OS will be able to fully
+      utilize it.
 
