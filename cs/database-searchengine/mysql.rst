@@ -1,3 +1,32 @@
+- error logging
+
+  mysqld 根据 ``--log-error`` option 来决定错误日志输出. 若这个选项没有设置,
+  日志写到 stderr. 此时 ``log_error`` system variable 为 ``stderr``.
+
+- 处于安全考虑, ``local_infile`` 默认是 OFF, 需要在 mysql client 和 mysqld
+  同时开启.
+
+mysql client
+------------
+
+- ``\g`` ``\G`` 可以执行语句, 相当于 ``;``. 后者将结果列以竖排的形式输出, 比较方便.
+
+- ctrl-c 和 ``\c`` 都可以终止当前语句.
+
+- mysql client 会给出执行时间, 这个时间是在客户端算出的从发出请求到收到结果的 wall
+  clock time.
+
+- 支持输入 mutiline 的 string 和 identifier. 直接加回车即可.
+
+- mysql client 对不同的 multiline 模式给出不同的 prompt string, 甚至包含 string,
+  identifier 和 block comment 的多行输入模式. ``">``, ``'>``, ``\`>``, ``/*>``.
+
+- 可以在连接时指定要使用的数据库, 或者用 ``USE`` 切换.
+
+- cmdline 参数 ``-p`` 指定密码时不能有空格, 否则会被认为后面的参数是数据库名.
+
+Language driver
+---------------
 - python driver 需要根据应用场景和需求来选择.
 
   目前主要的 python driver 以及各自的特点:
@@ -72,3 +101,28 @@
       (see references above)
 
   根据以上分析, 我会选择 mysqlclient 和 PyMySQL, 在同步和异步的情况下使用.
+
+SQL language
+------------
+- In general, treat all identifiers (database names, table names, column names,
+  etc.) and strings as case sensitive; treat SQL keywords, mysql builtin commands,
+  etc. as case insensitive.
+
+- 注意 ``SELECT`` 后面的部分是 case insensitive 的.
+
+- comment syntax: 三种注释语法
+
+  * ``--``, 后面必须加上一个空格, line comment
+
+  * ``#``, line comment
+
+  * ``/* */``, block comment. 还有特殊作用, ``/*! */`` 用于在 sql 中加入 non-portable
+    的 mysql extension 语句, 这样注释之外的部分仍然是 portable 的语句.
+
+- column header 是 ``SELECT`` 的项, 它可以是表的列名字, 也可能是表达式.
+
+- backtick (``\```) wrap 的是 identifier, 当 identifier 中不包含特殊字符时, 可以省去.
+
+- 可以给用户分配不存在的数据库的权限. 然后这个用户可以创建这个数据库.
+
+- ``DATE`` data type 要求的输入格式是 ``YYYY-MM-DD``.
