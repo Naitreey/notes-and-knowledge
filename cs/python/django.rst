@@ -69,6 +69,9 @@
   * model 定义时 field 以 class attribute 方式去定义, 而实例化后, 每个实例会
     生成同名的 attribute 在自己的 ``__dict__`` 中, 覆盖 class attribute.
 
+  * 由于一个列无法体现多对多的关系, ``ManyToManyField`` 在实现时, 不是构成了一个列,
+    而是一个单独的 table. table 中包含 many-to-many 关系的两种模型数据的行 id.
+
 - view
 
   * view 这个概念没有什么很好的意义. 应该说, 从一定程度上, HTTP 的请求可以看作是
@@ -93,6 +96,19 @@
     relays the request to a matching method if one is defined, or raises
     ``HttpResponseNotAllowed`` if not.
 
+  * view 在 render template 时, 提供的 context 可通过 ``get_context_data()`` method
+    自定义. 
+
+  * ``model`` attribute 定义这个 view 是操作在什么 model 上的.
+    Specifying ``model = SomeModel`` is really just shorthand for saying
+    ``queryset = SomeModel.objects.all()``. ``queryset`` 可以更准确地提取
+    数据集. ``get_queryset()`` method 可以动态获取数据集.
+
+  * ``DetailView`` 可以通过 override ``get_object()`` method 来自定义对象获取过程.
+
+  * Form. The default implementation for ``form_valid()```` simply redirects to
+    the ``success_url``.
+
 - template
 
   * template namespace. 每个 app 下可以有 ``templates/`` 目录, 不同 app 的 templates 目录
@@ -110,6 +126,10 @@
     - ``DIRS`` in ``settings.py``.
 
     - 若 ``APP_DIRS == True``, 每个 app 目录下的 ``templates/`` 目录.
+
+  * template context. 模板在被 render 时, 处在一定的 context 中.
+    默认包含 ``object_list``, 即从数据库取到的对象列表. ``object_list``
+    还有一个更有意义的名字, 由 model class name 转换而成 (``CamelCase -> camel_case``).
 
 - static file
 
