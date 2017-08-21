@@ -126,3 +126,6 @@ SQL language
 - 可以给用户分配不存在的数据库的权限. 然后这个用户可以创建这个数据库.
 
 - ``DATE`` data type 要求的输入格式是 ``YYYY-MM-DD``.
+
+- Comparisons on character type columns are case-insensitive. 并且这直接影响按照 char
+  type 类型排序时是 case-insensitive 的. 用 ``BINARY`` 来避免这种效果.
