@@ -78,6 +78,21 @@
   * 每个 view 都必须返回 HttpResponse instance 或者 raise some exception. 任何其他
     结果 django 都认为是有问题的.
 
+  * class-based views 相对于 function-based views 的一些好处
+
+    - Organization of code related to specific HTTP methods (GET, POST, etc.) can
+      be addressed by separate methods instead of conditional branching.
+
+    - Object oriented techniques such as mixins (multiple inheritance) can be used
+      to factor code into reusable components.
+
+  * Class-based views have an ``as_view()`` class method which returns a function that
+    can be called when a request arrives for a URL matching the associated pattern.
+    The function creates an instance of the class and calls its ``dispatch()`` method.
+    ``dispatch`` looks at the request to determine whether it is a GET, POST, etc, and
+    relays the request to a matching method if one is defined, or raises
+    ``HttpResponseNotAllowed`` if not.
+
 - template
 
   * template namespace. 每个 app 下可以有 ``templates/`` 目录, 不同 app 的 templates 目录
@@ -119,11 +134,15 @@
 - 全局性质的 (属于整个 project 而不属于某个 app 的) templates 和 static files 应该放在
   ``$BASE_DIR/<project-name>/{templates,static}``.
 
-- admin
+- admin site
 
   * model 里各个 field 的名字和类型直接影响它们在 admin.site 的显示和交互方式.
 
   * 每个 model 在 admin site 中的显示方式可通过 ``admin.ModelAdmin`` 自定义.
+
+  * admin site app 是 ``django.contrib.admin``, 它依赖于 ``django.contrib.auth``,
+    ``django.contrib.contenttypes``, ``django.contrib.messages``,
+    ``django.contrib.sessions``.
 
 - settings
 
