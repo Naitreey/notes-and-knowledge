@@ -1,3 +1,8 @@
+Full virtualization
+===================
+
+OS-level virtualization
+=======================
 - Why use container?
 
   * short answer:
@@ -60,3 +65,22 @@
     很多时间和资源重新部署.
 
   * docker 提供了一些便利的容器操作 (commit, diff, etc.), 让开发更方便.
+
+- ``docker stop`` 的效果不受 ``docker run --restart=`` 参数影响. 即使
+  ``--restart=always``, docker stop 也能把容器停下来.
+
+- ``docker pull <name>`` 命令后面的 image name 参数说明了镜像的来源.
+  ``<name>`` 的格式是 ``[[<registry>/]<repository>/]<image>[:<tag>]``.
+  若省略 registry, 默认是 docker.io, 若省略 repository, 默认是 library,
+  若省略 tag, 默认是 latest.
+
+  ``docker pull ubuntu`` 实际是 ``docker pull docker.io/library/ubuntu:latest``.
+
+- docker registry
+
+  * docker hub 实际上是一个 public docker registry.
+
+  * A production-ready registry must be protected by TLS and should ideally use
+    an access-control mechanism.
+
+  * TLS, authentication, Docker Hub cache, Docker Hub mirror(how to do?), notification.
