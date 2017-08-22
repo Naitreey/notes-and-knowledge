@@ -128,4 +128,35 @@ SQL language
 - ``DATE`` data type 要求的输入格式是 ``YYYY-MM-DD``.
 
 - Comparisons on character type columns are case-insensitive. 并且这直接影响按照 char
-  type 类型排序时是 case-insensitive 的. 用 ``BINARY`` 来避免这种效果.
+  type 类型排序时是 case-insensitive 的. 用 ``BINARY`` 来避免这种效果. ``BINARY``
+  还可以转换 regexp 的匹配成为 case-sensitive 的.
+
+- NULL
+
+  * The result of any arithmetic comparison with NULL is also NULL, 判断是否是 NULL
+    只能用 ``IS NULL``, ``IS NOT NULL``.
+
+  * Two NULL values are regarded as equal.
+
+  * When doing an ORDER BY, NULL values are presented first if you do ORDER BY ... ASC
+    and last if you do ORDER BY ... DESC.
+
+- In MySQL, 0 or NULL means false and anything else means true. The default truth
+  value from a boolean operation is 1.
+
+- SQL pattern
+
+  * ``_``: any single character, equivalent to ``?`` in shell.
+
+  * ``%``: any number of any character, equivalent to ``*`` in shell.
+
+- ``LIKE`` 后面的 SQL pattern 必须匹配整个字符串, 才算匹配.
+  ``RLIKE`` ``REGEXP`` 后面的正则 pattern 只需字符串的任何地方匹配即可, 类似 python
+  中的 ``re.search``.
+
+- ``COUNT()`` does not count NULL values. 因此若某个列中有 NULL, ``count(<col>)``
+  不等于 ``count(*)``.
+
+- If you name columns to select in addition to the ``COUNT()`` value, a ``GROUP BY``
+  clause should be present that names those same columns. This can be enforced by
+  the ``ONLY_FULL_GROUP_BY`` SQL mode.
