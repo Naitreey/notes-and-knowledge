@@ -50,7 +50,7 @@
 * debug shell script:
     - 执行脚本之前用 `bash -n` (或 `set -n`) 来检验有无基本 shell 语法错误
     - 使用 `set -x` 来检验每个命令的执行情况
-    - 使用 `set -e` 来避免出错后未即使终止, 使威胁扩大.
+    - 使用 `set -e` 和 `shopt -s inherit_errexit` 来避免出错后未即使终止, 使威胁扩大.
     - 使用 `shopt -s extdebug` 来增加 debug 强度 (相当于, `set -ET`), 并配合 trap on DEBUG,
       RETURN, ERR 检测每层命令的执行情况
     - 使用 `set -u` 来检查变量拼写错误等情况
@@ -112,6 +112,13 @@
   `mv a b` vs `mv a b/`.
 
 # Notes
+
+- PS0: Expanded and displayed by interactive shells after
+       reading a complete command but before executing it.
+  PS1: normal prompt.
+  PS2: line continuation prompt.
+  PS3: prompt for `select`.
+  PS4: prompt for debug output.
 
 ## shell 初始化文件的执行流程
 
