@@ -160,3 +160,11 @@ SQL language
 - If you name columns to select in addition to the ``COUNT()`` value, a ``GROUP BY``
   clause should be present that names those same columns. This can be enforced by
   the ``ONLY_FULL_GROUP_BY`` SQL mode.
+
+- Joining tables
+
+  * When combining (joining) information from multiple tables, you need to specify
+    how records in one table can be matched to records in the other.
+
+  * Sometimes it is useful to join a table to itself, if you want to compare records
+    in a table to other records in that same table.
