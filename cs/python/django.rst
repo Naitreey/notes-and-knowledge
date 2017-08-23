@@ -69,8 +69,27 @@
   * model 定义时 field 以 class attribute 方式去定义, 而实例化后, 每个实例会
     生成同名的 attribute 在自己的 ``__dict__`` 中, 覆盖 class attribute.
 
-  * 由于一个列无法体现多对多的关系, ``ManyToManyField`` 在实现时, 不是构成了一个列,
-    而是一个单独的 table. table 中包含 many-to-many 关系的两种模型数据的行 id.
+  * field options.
+
+    - ``null`` 是规定数据库中 empty value 是否存储为 NULL 值;
+      ``blank`` 是规定 form validation 时是否允许空值.
+      两者的意义是不同的.
+
+    - Given a model instance, the display value for a choices field can be accessed
+      using the ``get_FOO_display()`` method.
+
+    - 如果一个 model 包含多个与同一个其他 model 建立的 ``ManyToManyField``, 需要设置
+      ``related_name`` 以保证反向的查询没有歧义.
+
+  * many-to-many field.
+
+    - 由于一个列无法体现多对多的关系, ``ManyToManyField`` 在实现时, 不是构成了一个列,
+      而是一个单独的 table. table 中包含 many-to-many 关系的两种模型数据的行 id.
+
+    - It doesn’t matter which model has the ``ManyToManyField``, but you should only
+      put it in one of the models – not both. ``ManyToManyField`` 应该放在那个编辑
+      起来更自然的 model 中, 也就是说, 从哪个方向建立多对多映射关系更自然, 就把它
+      放在哪个 model 中.
 
 - view
 
@@ -97,7 +116,7 @@
     ``HttpResponseNotAllowed`` if not.
 
   * view 在 render template 时, 提供的 context 可通过 ``get_context_data()`` method
-    自定义. 
+    自定义.
 
   * ``model`` attribute 定义这个 view 是操作在什么 model 上的.
     Specifying ``model = SomeModel`` is really just shorthand for saying
@@ -135,13 +154,28 @@
 
   * static file namespace 与 template namespace 机制类似.
 
-  * static file 的 url 是自动生成的, 以 static file namespace 为 url root.
+  * 使用 ``static`` template tag 来自动根据 ``STATIC_URL`` 生成 static file 的 url,
+    不要把静态文件的 url 写死在 html 里. 这样, 真正的 url 会根据
+    ``STATICFILES_STORAGE`` 的机制去生成, 这样只需要设置 ``StaticFilesStorage`` 或
+    某个 CDN 的 storage 实现, 就可以轻易切换所有 url 的指向, 真正做到了单一变量没有重复.
 
-  * 在源代码层面上, app 的静态文件和它的代码在一起, 模块化更好;
-    在开发时, 使用 builtin server 即可 serve 各个 app 下的静态文件.
+  * 静态文件的放置:
 
-  * 在项目部署时, 执行 ``collectstatic`` 将静态文件集合在一起放在 ``STATIC_ROOT``,
-    使用 nginx 来高效地 serve 静态文件.
+    - app-specific 的静态文件要放在 ``<app>/static/<app>/<filename>``.
+      这样一个 app 的静态文件和它的代码在一起, 模块化更好.
+
+    - 全局的静态文件可以选择两种放置方法:
+
+      * 放在全局的 ``STATICFILES_DIRS`` 中, 例如 ``$BASE_DIR/static``.
+
+      * 放在项目 app 中.
+
+  * serve static files.
+
+    - 在开发时, 使用 builtin server 即可 serve 各个 app 下的静态文件.
+
+    - 在项目部署时, 执行 ``collectstatic`` 将静态文件集合在一起放在 ``STATIC_ROOT``,
+      使用 nginx 来高效地 serve 静态文件.
 
 - test
 
