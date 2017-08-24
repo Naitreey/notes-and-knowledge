@@ -71,7 +71,7 @@ OS-level virtualization
 
 - ``docker pull <name>`` 命令后面的 image name 参数说明了镜像的来源.
   ``<name>`` 的格式是 ``[[<registry>/]<repository>/]<image>[:<tag>]``.
-  若省略 registry, 默认是 docker.io, 若省略 repository, 默认是 library,
+  若省略 registry, 默认是 docker.io. 若省略 repository, 默认是 library.
   若省略 tag, 默认是 latest.
 
   ``docker pull ubuntu`` 实际是 ``docker pull docker.io/library/ubuntu:latest``.
@@ -84,3 +84,6 @@ OS-level virtualization
     an access-control mechanism.
 
   * TLS, authentication, Docker Hub cache, Docker Hub mirror(how to do?), notification.
+
+- 若要把 image 上传到 private registry, 必须对它打相应的 tag. docker 通过镜像的 tag
+  去分辨该访问什么 registry.
