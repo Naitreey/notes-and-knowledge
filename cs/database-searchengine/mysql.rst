@@ -25,6 +25,9 @@ mysql client
 
 - cmdline 参数 ``-p`` 指定密码时不能有空格, 否则会被认为后面的参数是数据库名.
 
+- In non-interactive mode, read input sql from stdin, print results to stdout.
+  For processing convenience, such output is tab-delimited for each column.
+
 Language driver
 ---------------
 - python driver 需要根据应用场景和需求来选择.
@@ -157,9 +160,14 @@ SQL language
 - ``COUNT()`` does not count NULL values. 因此若某个列中有 NULL, ``count(<col>)``
   不等于 ``count(*)``.
 
-- If you name columns to select in addition to the ``COUNT()`` value, a ``GROUP BY``
-  clause should be present that names those same columns. This can be enforced by
-  the ``ONLY_FULL_GROUP_BY`` SQL mode.
+- group
+  
+  * If you name columns to select in addition to the ``COUNT()`` value, a ``GROUP BY``
+    clause should be present that names those same columns. This can be enforced by
+    the ``ONLY_FULL_GROUP_BY`` SQL mode.
+
+  * ``select`` 时, 原始数据集本身构成一个 group, 所以可以在这个组上直接使用聚合函数,
+    生成一行结果.
 
 - Joining tables
 
