@@ -233,3 +233,6 @@
     Once the migration is applied correctly to test database, commit the
     migration and the models change to your version control system as a
     single commit.
+
+- session
+

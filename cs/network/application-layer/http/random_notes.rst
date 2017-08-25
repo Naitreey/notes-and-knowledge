@@ -110,3 +110,49 @@
   * `Host` header can contain port number or not.
 
   * `Host` header can be used for virtual hosting.
+
+- HTTP is stateless (无状态的), 指的是前一组 http 请求响应的结果不会平白无故地影响
+  后一组请求响应. 若想要后一请求建立在前一请求的结果基础上, 必须在请求中传递某种
+  状态信息, 作为依据.
+
+- HTTP cookie
+
+  * 为什么需要 cookie: 由于 http 本身是 stateless 的, 需要某种方式去标识状态信息,
+    cookie 就是一种标准的在 client-server 之间传递状态信息的机制. 通过 cookie,
+    我们将多个 stateless HTTP request-response 关联在了一起.
+
+  * How cookie works: 一般情况下, Cookie 首先由 server 在 http response 中, 通过
+    ``Set-Cookie`` header 指定内容, 过期时间等, 传递给 user agent. 浏览器将 cookie
+    保存在自己的本地存储中. 当下次访问同一个 url 时, 自动在请求中添加 ``Cookie``
+    header, 将之前设置的 cookie (仅包含 cookie 的值, 不包含 ``Expires`` 等属性)
+    传回去.
+
+    浏览器根据 ``Expires`` 决定何时删除 cookie. 若没有该属性则认为是 session cookie,
+    在关闭浏览器时就删除.
+
+    服务端保留着与 cookie 值相关的一系列数据, 即 cookie 值所代表的状态信息.
+
+  * 登录状态即服务端 session 就是通过 cookie 来做的. 设置 session id 之类
+    的 cookie 以及过期时间, 来进行 session 控制.
+
+  * cookie 术语: session cookie, persistent cookie, secure cookie, HttpOnly Cookie,
+    third-party cookie, supercookie, zombie cookie.
+
+  * ``Set-Cookie`` 可以设置 ``Domain`` 属性, 给其他域名设置 cookie, 这称为
+    third-party cookie. 这经常用于 tracking/advertising.
+
+- Session management: 
+
+  * 注意 session 概念在不同语境下的区别.
+    
+    从 server side 的角度看, 用户从登录至登出是一次 login session. 由于 session
+    信息保存在数据库中或 cache 中, 且过期时间可以很长, 这个 session 完全有可能
+    跨越多次 client side 浏览器的打开关闭过程, 甚至跨越后端服务的起停. 
+
+    从 client side 角度看, 浏览器打开至关闭即是一次 browser session, 这是 client-side
+    session cookie 的时间跨度定义. 也即 session cookie 中的 session 之意.
+
+- CSRF
+ 
+  * 由于 same-origin policy, 浏览器限制 js 脚本只能读取本网站的 cookie. 因此不能
+    访问其他网站的 CSRF token, 从而避免了 CSRF attack.
