@@ -251,7 +251,7 @@ docstrings
 - A docstring is a string literal that occurs as the first statement
   in a module, function, class, or method definition.
 
-- 所有公有模块, 公有函数, 公有类, 公有方法都要有 docstring.
+- 所有公有 package, 公有模块, 公有函数, 公有类, 公有方法都要有 docstring.
 
 - 对于 multiline docstring, closing triple quote 单独放一行.
 
@@ -260,14 +260,19 @@ docstrings
 - One-liners are for really obvious cases. Triple quotes are used even though
   the string fits on one line. This makes it easy to later expand it.
 
--  A package may be documented in the module docstring of the __init__.py
+- A package may be documented in the module docstring of the __init__.py
   file in the package directory.
 
 - For consistency, always use ``"""triple double quotes"""`` around docstrings.
   Use ``r"""raw triple double quotes"""`` if you use any backslashes in your
   docstrings.
 
-- docstring 前后都不要加空行.
+- 各种 docstring 前面都不要加空行; package/module 的 docstring 后面要加一个空行,
+  function/method 的 docstring 后面不要加空行, class 的 docstring 后面要加一个
+  空行.
+  (注意是否加空行的判断标准: 被注释的对象是否由多个逻辑自洽的单元组合而成.
+  例如, 在类中每个方法是一个逻辑单元, 我们在方法之间加空行, 所以类的注释和第一个
+  方法之间也应加空行. 而函数本身是一个逻辑单元, 所以它的注释和代码之间不加空行.)
 
 - Multi-line docstrings consist of a summary line just like a one-line docstring,
   followed by a blank line, followed by a more elaborate description. It's
@@ -275,6 +280,8 @@ docstrings
   of the docstring by a blank line.
 
 - The entire docstring is indented the same as the quotes at its first line.
+
+- Docstring should NOT be a "signature" reiterating the function/method parameters.
 
 naming conventions
 ------------------
