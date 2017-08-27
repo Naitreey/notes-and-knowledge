@@ -66,10 +66,27 @@
     的存在, 要求数据库表应该按照 object-oriented 的方式进行设计. 而一个 entry 就是
     一个 instance. 这是一种比较好的设计思路.
 
+  * primary key:
+   
+    可以用 ``primary_key=True`` 设置某个 field 为 primary key, 否则 django 自动
+    给 model 添加 id field 作为 primary key
+
+    .. code:: python
+      id = models.AutoField(primary_key=True)
+
+   The primary key field is read-only. If you change the value of the primary key
+   on an existing object and then save it, a new object will be created alongside
+   the old one.
+
   * model 定义时 field 以 class attribute 方式去定义, 而实例化后, 每个实例会
     生成同名的 attribute 在自己的 ``__dict__`` 中, 覆盖 class attribute.
 
+  * 对于 class namespace 中的各个属性, 只有 ``django.db.models.Field`` 的实例
+    才会认为是 model field. 其他属性实际上可以随意设置.
+
   * field options.
+
+    - ``null`` 默认是 False, 所以 create table 时有 ``NOT NULL``.
 
     - ``null`` 是规定数据库中 empty value 是否存储为 NULL 值;
       ``blank`` 是规定 form validation 时是否允许空值.
@@ -81,6 +98,12 @@
     - 如果一个 model 包含多个与同一个其他 model 建立的 ``ManyToManyField``, 需要设置
       ``related_name`` 以保证反向的查询没有歧义.
 
+  * many-to-one field.
+
+    - 多对一的映射关系用 ``django.db.models.ForeignKey`` 实现.
+
+    - foreign key field 的名字应该是所指向的 model 的名字的全小写版本.
+
   * many-to-many field.
 
     - 由于一个列无法体现多对多的关系, ``ManyToManyField`` 在实现时, 不是构成了一个列,
@@ -90,6 +113,29 @@
       put it in one of the models – not both. ``ManyToManyField`` 应该放在那个编辑
       起来更自然的 model 中, 也就是说, 从哪个方向建立多对多映射关系更自然, 就把它
       放在哪个 model 中.
+
+    - many-to-many field 的名字应该是一个复数类型的名字, 以表示多个的概念.
+      同样的, ``related_name`` ``related_query_name`` 也应该是表示反向关系的
+      复数.
+
+    - intermediate model. 若多对多的关系不仅仅是一个简单双向的关系, 而需要包含
+      一些其他状态信息, 则需要使用一个中间模型去承载这个多对多关系.
+
+  * one-to-one field.
+
+    - 一对一关系一般用于一个模型作为另一个模型的延伸、扩展、附加属性等.
+      注意这不同于 inheritance. 如果是定义另一个单独的模型 (该模型可以扩展原模型),
+      则该使用继承, 不该使用 one-to-one field.
+
+  * 通过 ``Meta`` inner class 定义来定义 model 的 metadata.
+
+  * Model object managers (like ``.objects``) are only accessible via model classes,
+    not the model instances.
+
+  * 定义 ``__str__`` method 给模型的实例一个有意义的表现形式.
+
+  * 注意 ``Meta.verbose_name`` 和 ``__str__`` 的区别. 前者是模型本身的 verbose name,
+    后者是 model instance 的字符串表现形式.
 
 - view
 
@@ -125,7 +171,7 @@
 
   * ``DetailView`` 可以通过 override ``get_object()`` method 来自定义对象获取过程.
 
-  * Form. The default implementation for ``form_valid()```` simply redirects to
+  * Form. The default implementation for ``form_valid()`` simply redirects to
     the ``success_url``.
 
 - template
@@ -236,3 +282,7 @@
 
 - session
 
+
+- form
+
+  * csrf token
