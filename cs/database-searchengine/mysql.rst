@@ -161,7 +161,7 @@ SQL language
   不等于 ``count(*)``.
 
 - group
-  
+
   * If you name columns to select in addition to the ``COUNT()`` value, a ``GROUP BY``
     clause should be present that names those same columns. This can be enforced by
     the ``ONLY_FULL_GROUP_BY`` SQL mode.
@@ -176,3 +176,15 @@ SQL language
 
   * Sometimes it is useful to join a table to itself, if you want to compare records
     in a table to other records in that same table.
+
+- ``AUTO_INCREMENT`` field
+
+  对于 auto increment field, 插入 0 或 NULL 时写入自增的值. 若设置了
+  ``NO_AUTO_VALUE_ON_ZERO``, 则插入 0 就是插入 0.
+
+  When you insert any other value into an ``AUTO_INCREMENT`` column, the column is
+  set to that value and the sequence is reset so that the next automatically
+  generated value follows sequentially from the largest column value.
+
+  You can retrieve the most recent automatically generated ``AUTO_INCREMENT``
+  value with the ``LAST_INSERT_ID()`` SQL function.
