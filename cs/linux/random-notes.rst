@@ -65,6 +65,13 @@
   link 本身的权限. 对于 ``chmod(1)``, 若 recursively (``-R``) 修改权限, 遇到
   symlink 会直接跳过.
 
+- 在覆盖 symlink target 时, 若 target 是一个 symlink to directory, 需要在 ``ln``
+  命令中添加 ``-n``, 不让 syscall 自动 dereference link target, 否则会当作是在
+  target 目录中创建一个 source 同名的连接.
+
+    .. code:: sh
+      ln -snf <source> <target>
+
 - ``stat(1)`` 中的 ``Device: xxxh/xxxxxd`` 实际上是 device id 的 hex 和 decimal
   两种表现形式. Device id 的类型为 ``dev_t``, 最低两个 bytes 分别是 major 和 minor
   device number. major 为设备类型, 对应为 ``/proc/devices`` 里的数值, minor 为
