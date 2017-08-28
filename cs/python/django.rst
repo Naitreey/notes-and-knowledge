@@ -67,7 +67,7 @@
     一个 instance. 这是一种比较好的设计思路.
 
   * primary key:
-   
+
     可以用 ``primary_key=True`` 设置某个 field 为 primary key, 否则 django 自动
     给 model 添加 id field 作为 primary key
 
@@ -124,8 +124,7 @@
   * one-to-one field.
 
     - 一对一关系一般用于一个模型作为另一个模型的延伸、扩展、附加属性等.
-      注意这不同于 inheritance. 如果是定义另一个单独的模型 (该模型可以扩展原模型),
-      则该使用继承, 不该使用 one-to-one field.
+      ``OneToOneField`` 在 model 继承时用于定义父表和子表通过哪一列来关联.
 
   * 通过 ``Meta`` inner class 定义来定义 model 的 metadata.
 
@@ -136,6 +135,46 @@
 
   * 注意 ``Meta.verbose_name`` 和 ``__str__`` 的区别. 前者是模型本身的 verbose name,
     后者是 model instance 的字符串表现形式.
+
+  * inheritance.
+
+    - 使用 ``Meta.abstract = True`` 定义 ABC model.
+
+    - ABC model 的子类的自己的 ``Meta`` attribue 自动设置 ``abstract = False``.
+      若子类 model 仍需是 ABC, 需要再设置.
+
+    - 仔细想想, 非 ABC model 在继承时, 子类 model 表中只保存那些扩展的信息, 继承的
+      信息都保留在父类表中. 这个设计实际上才是合理的. 因为子类的实例也是父类的实例,
+      我们可以从子类实例中抽出纯父类实例那部分 (例如通过 ``super``). 我们把这种继承
+      和实例化的思路应用在 ORM 上, 就得到了父类 model 的数据集显然是应该包含子类
+      model 的数据集的 (抽出公有部分). 所以子类表只存扩展字段即可, 通过 one-to-one
+      field 与存在父类表中的基础数据对应, 两部分数据构成一个完整的子类实例.
+
+    - proxy model 不修改 model, 而是修改对 model 数据的操作. 因此 model 和它的
+      proxy model 共享所有数据集. The whole point of proxy objects is that code
+      relying on the original Person will use those and your own code can use
+      the extensions you included (that no other code is relying on anyway).
+
+    - multiple inheritance. The main use-case where this is useful is for “mix-in”
+      classes: adding a particular extra field or method to every class that inherits
+      the mix-in.
+
+    - 若 model 继承时不是继承的 ABC model, 而是实体 model, 则子类的 field 不能
+      和父类的 field 重名, 即 field attribute can not be overrided. 这与一般的
+      python 类不同. 这是因为 model instance 实际上是数据库表 entry 的抽象,
+      如果重名, 在获取属性即列值时就存在歧义和令人困惑之处.
+      对于 ABC model 的继承, 可以覆盖列名. 因为 ABC model 并没有实际的表去关联,
+      没有歧义.
+
+  * unmanaged model.
+
+    - If you are mirroring an existing model or database table and don’t want all
+      the original database table columns, use ``Meta.managed=False``. That option
+      is normally useful for modeling database views and tables not under the
+      control of Django.
+
+  * 如果一个 app 中的 model 太多, 可以进一步模块化. 将 models 扩展成一个 subpackage.
+    注意在 models package 的 init 文件中引入所有子模块中定义的 model.
 
 - view
 
