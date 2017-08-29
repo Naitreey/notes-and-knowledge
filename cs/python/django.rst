@@ -180,6 +180,19 @@
   * 如果一个 app 中的 model 太多, 可以进一步模块化. 将 models 扩展成一个 subpackage.
     注意在 models package 的 init 文件中引入所有子模块中定义的 model.
 
+- CRUD
+
+  * 对于 model class 在实例化时, Django doesn’t hit the database until you
+    explicitly call ``save()``.
+
+  * ``INSERT`` 和 ``UPDATE`` 都是用 ``.save()`` 实现.
+
+  * 对实例中 ``ForeignKey`` ``OneToOneField`` 等指向单一 model 实例的 field 赋值时
+    使用相应 model 的 instance 即可.
+    实例中的 ``ManyToManyField`` 实际上是一个 Manager object, 需要用 ``.add()`` 给
+    这个集合中增加关联关系. ``.add()`` 接受一次传入多个对象, 建立多个映射.
+
+
 - view
 
   * view 这个概念没有什么很好的意义. 应该说, 从一定程度上, HTTP 的请求可以看作是
