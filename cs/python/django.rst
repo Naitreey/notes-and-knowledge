@@ -126,6 +126,10 @@
     - 一对一关系一般用于一个模型作为另一个模型的延伸、扩展、附加属性等.
       ``OneToOneField`` 在 model 继承时用于定义父表和子表通过哪一列来关联.
 
+    - one-to-one field 在 mysql 中实现时, 实际上是一个普通的 field (类型与指向
+      的 model 的 primary key 一致), 配合 unique key constraint 以及 foreign key
+      reference constraint.
+
   * 通过 ``Meta`` inner class 定义来定义 model 的 metadata.
 
   * Model object managers (like ``.objects``) are only accessible via model classes,
@@ -319,8 +323,72 @@
     migration and the models change to your version control system as a
     single commit.
 
-- session
+  * 旧版本 django 中生成的 migration files 保证能在新版 django 中使用.
+    也就是说, migration system 是向后兼容的.
 
+  * 所有 string literal 统一使用 unicode string 或 bytestring. 这不仅是一般
+    的 py2py3 统一性要求. 在 django 中, 若要 app 同时兼容 py2py3. 必须这样做.
+    因为, py2 默认 bytestring, 这样应用在数据库中的是 bytes, 同样的代码在 py3
+    下运行时, 由于 django 看见都是 unicode string, 而数据库中是 bytes, 这样
+    要再生成一个 migration 去修改现有数据库结构至支持 unicode string.
+
+  * ``manage.py migrate`` 除了可以 apply migration 之外还可以指定将某个 app 的
+    数据库状态确定在某个 migration 上面, 若当前状态已经新于指定的状态, 则
+    unapply necessary migrations.
+
+  * django 生成的 migrations 需要仔细检查, 对于复杂的数据库修改, 不能保证不出错,
+    必要时需要手动修改甚至手动创建 migrations.
+
+  * ``makemigrations`` 和 ``migrate`` 操作一般不要限制 ``app_label``, 要对所有 apps
+    同时进行. 因为 model 之间经常是相互依赖的. 如果只对某个 model 更新数据库状态
+    可能 break dependency.
+    在特殊情况下, 要限制 migration file 修改在某个 app 中, 此时采用 app label.
+
+  * migration definition.
+
+    - 每个 migration 必须是名为 ``Migration`` 的 class, 且为
+      ``django.db.migrations.Migration`` 的子类. 其中包含 ``dependencies``
+      ``operations`` 等属性.
+
+    - 每个 migration operation 是 ``Operation`` class 的 (子类的) 实例.
+
+  * data migration.
+
+    - data migration 必须手写, 涉及 ``RunPython`` operation.
+
+  * database operation and state operation.
+
+  * How to move model between apps, without losing any data?
+    possibly with foreign key constraints?
+    possibly with many-to-many field constraints?
+    possibly with one-to-one field constraints?
+
+    目前 django 没有提供直接可用的方式去做 model 跨 app 的迁移. 基本解决思路是
+    两种:
+
+    1. 不动数据, 想办法通过修改表结构、重命名等方式将 django 的状态和数据库的结构
+       修改至预期的状态.
+       根据要迁移的 model 的复杂程度, 这种方式实现时的复杂程度各有不同. 若没有
+       foreign key, 则还比较简单. 若有 foreign key 则复杂一些, 若有 many-to-many
+       field, 会非常复杂 (目前我尚未梳理清晰解决办法).
+
+       参考:
+       基本方案: https://stackoverflow.com/a/26472482/1602266
+       要移动的 model 有 foreign key field: https://stackoverflow.com/a/29622570/1602266
+       有 foreign key 指向要移动的 model: https://stackoverflow.com/a/30613732/1602266
+       要移动的 model 有 many-to-many field: 没有现成答案, 我觉得需要首先将
+       many-to-many field 转换成 through model, 然后迁移 through model.
+
+    2. 创建新数据库结构, 迁移数据, 删除旧数据库结构.
+       这种方式相比上述方式简单很多. 非常适合数据量不大的情况 (也许 10K~100K).
+       只需手写 data migration 逻辑, 用 ``RunPython`` 执行即可, 注意要设置正确
+       的 migration 依赖顺序. 按照先创建新的, 迁移, 再删除旧的, 这个顺序创建
+       migration. 第一个和最后一个 migration 都可以通过修改 models 来自动生成.
+
+  * squash migration 成熟后, 将会十分有用. 由于数据库结构之间的关系可能非常复杂,
+    目前感觉还不太敢用.
+
+- session
 
 - form
 
