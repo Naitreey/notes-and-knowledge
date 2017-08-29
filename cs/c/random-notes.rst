@@ -44,6 +44,9 @@
   在 stdio 层面, read(2) 的结果存在 stdio buffer 里. fgets 以及 python readline
   等都是在这个 buffer 里进行读一行或读 N bytes 的操作. 否则岂不是要做很多的 syscall.
 
+- ``rename(2)`` 的两个路径必须保证在同一个文件系统中. 否则无法做到 atomic operation.
+  这样的操作不允许使用 ``rename(2)`` 来完成, 返回 ``EXDEV`` 错误.
+
 - `O_RDWR` 中, 读写操作共用一个 file offset position.
 
 - 可以使用 `setvbuf` 设置 stdio stream 的 buffer 情况. 该函数要求在 `open` 后和首次
