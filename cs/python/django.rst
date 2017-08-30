@@ -253,6 +253,13 @@
       * ``.exclude()`` 中同时指定多个条件时, 是在排除满足其中任一个条件的实例, 即筛选
         所有这些条件都不满足的实例, 这相当于 ``WHERE NOT condition1 AND NOT condition2``.
 
+      * django 提供了一个特殊的 ``pk`` field 名称, 用来代指当前 model 的 pk field,
+        它可以像实际的 pk field 一样去写任何 field lookup 语法.
+
+      * 对于字符串比较的各种 lookuptype, 基本上都转换成了 ``LIKE`` 类语句. 在这些
+        语句语法中, 由 SQL metachar ``%`` 和 ``_`` 概念. 在 django 层, 若输入这两个
+        字符, 将自动在 SQL 层进行转义, 保证 django 的抽象与底层 SQL 实现无关.
+
     - 使用 extended indexing and slicing syntax 来进行 ``LIMIT`` ``OFFSET`` 之类的
       操作. 注意 negative index 是不允许的. 如果是单个的 index, 就返回 QuerySet
       中的单个结果, 如果是 slice, 就返回一个 QuerySet. 一般情况下返回的 QuerySet
@@ -263,6 +270,31 @@
 
     - QuerySets are lazy. 在不得不访问数据库之前, 所有的过滤筛选等操作都是在内存
       中进行的, 而不去执行底层的 SQL 语句.
+
+    - query expressions.
+
+      * ``F()`` expression 在 CRUD 操作中代表一个列的值 (F for Field) 的 symbolic
+        form. django 不会去访问数据库将值取出来, 与 F expression 进行的各种操作的
+        结果是 ``CombinedExpression``, 仍然是保持 symbolic form. 当 ``.save()``
+        ``.filter()`` 等访问数据的操作时, 这些 symoblic expression 转化为 SQL
+        statement, 让数据库去执行所需操作. 全程不在 python 层进行数据的读写. 全部
+        由数据库进行.
+
+        这样的好处: 1. 效率更高, 因为没有读入内存和写回数据库的过程, 而是全部由数据库
+        自身去操作. 只是生成 SQL instruction 让数据库去执行. 2. 由于操作在数据库进程
+        中而不是业务代码的 python 进程中执行, 可以避免 race condition.
+
+        Django supports the use of ``+ - * / % **`` with F() objects, both with
+        constants and with other F() objects. 也就是说 ``F`` 定义了对这些算符的
+        overriding special methods.
+
+        F objects 还支持一些 bit operations: ``.bitand()``, ``.bitor()``,
+        ``.bitrightshift()``, ``.bitleftshift()``.
+
+        注意在保存包含 F object 的 model instance 之后, 需要 ``.refresh_from_db()``,
+        不然的话 instance 的属性仍然是 ``CombinedExpression``, 而不是真实的值.
+        如果对这些实例再次 save, 将再次执行 combinedExpression 对应的数据库过程,
+        从而进行了重复修改.
 
 - view
 
