@@ -84,6 +84,18 @@
   * 对于 class namespace 中的各个属性, 只有 ``django.db.models.Field`` 的实例
     才会认为是 model field. 其他属性实际上可以随意设置.
 
+  * field types.
+
+    - IP address 用 ``GenericIPAddressField``.
+
+    - 实数一般用 ``FloatField``, 精确要求时考虑 ``DecimalField``.
+
+    - 整数有 ``IntegerField``, ``PositiveIntegerField``, ``BigIntegerField``,
+      ``SmallIntegerField``, ``PositiveSmallIntegerField``.
+
+    - ``DateField`` ``DateTimeField`` 可方便地实现创建时间、修改时间. 注意
+      ``auto_now_add``, ``auto_now`` 和 ``default`` 参数是互斥的.
+
   * field options.
 
     - ``null`` 默认是 False, 所以 create table 时有 ``NOT NULL``.
@@ -91,6 +103,7 @@
     - ``null`` 是规定数据库中 empty value 是否存储为 NULL 值;
       ``blank`` 是规定 form validation 时是否允许空值.
       两者的意义是不同的.
+      ``null`` 和 ``blank`` 的默认值都是 ``False``.
 
     - Given a model instance, the display value for a choices field can be accessed
       using the ``get_FOO_display()`` method.
@@ -98,11 +111,22 @@
     - 如果一个 model 包含多个与同一个其他 model 建立的 ``ManyToManyField``, 需要设置
       ``related_name`` 以保证反向的查询没有歧义.
 
+  * 表之间的关系抽象为在一个模型中包含另一个模型的实例作为属性. 这种抽象在逻辑上十分自然.
+    并且在实例中进行 attribute lookup 以及在 QuerySet 中进行 field lookup 筛选时, 自然地
+    支持了多级深入的操作.
+
   * many-to-one field.
 
     - 多对一的映射关系用 ``django.db.models.ForeignKey`` 实现.
 
     - foreign key field 的名字应该是所指向的 model 的名字的全小写版本.
+
+    - django 自动给 foreign key field 添加索引.
+
+    - ``ForeignKey`` field 在数据库中命名为 ``<field>_id``, 除非用 ``db_column``
+      自定义.
+
+    - ``on_delete`` 默认是 ``CASCADE``, 以后将变成 required parameter.
 
   * many-to-many field.
 
@@ -182,6 +206,9 @@
 
 - CRUD
 
+  * ``.save()``, ``.filter()``, slicing, 等等任何的抽象操作, 都是最终要映射为
+    SQL statement 的.
+
   * 对于 model class 在实例化时, Django doesn’t hit the database until you
     explicitly call ``save()``.
 
@@ -192,6 +219,50 @@
     实例中的 ``ManyToManyField`` 实际上是一个 Manager object, 需要用 ``.add()`` 给
     这个集合中增加关联关系. ``.add()`` 接受一次传入多个对象, 建立多个映射.
 
+  * Manager and QuerySet
+
+    - 每个 model 都有一个 ``Manager`` instance, 用于进行 table-level operations.
+      ``Manager`` instance is  accessible only via model class, rather than from
+      model instances, to enforce a separation between “table-level” operations and
+      “record-level” operations.
+
+    - 获取对象的各个方法在 ``Manager`` 和 ``QuerySet`` 中都有, 且可以串联在一起.
+      常用方法: ``.all()``, ``.filter()``, ``.exclude()``, ``.get()`` 等.
+
+    - Field lookups. 各种过滤和获取的方法的参数语法, 对应到 SQL ``WHERE`` clause.
+      Syntax: ``<field>[__<field>...][__<lookuptype>]=value``.
+      若省略 lookuptype, 默认是 ``exact``.
+      常用 lookuptypes: ``exact``, ``iexact``, ``contains``, ``icontains``,
+      ``startswith``, ``endswith``, ``istartswith``, ``iendswith``.
+
+      * 对于 foreign key field, 允许直接指定 ``<field>_id == <pk>`` 来过滤主键值.
+
+      * 对于表达关系的列, 可以深入被指向的模型进行筛选, 这抽象了各种 SQL ``JOIN``.
+
+      * 这种过滤可以反向进行. 实际上这与模型实例的深入的 attribute access 是一致的.
+
+      * ``.filter()`` 中同时指定多个条件时, 是在筛选所有这些条件都满足的实例, 这相当于
+        ``WHERE condition1 AND condition2``.
+
+        当 ``.filter()`` 是对所指向的关系 (即 JOIN 表) 进行查询时, 注意
+        ``.filter(fk_obj__field1..., fk_obj__field2...)`` 以及
+        ``.filter(fk_obj__field1...).filter(fk_obj__field2...)`` 两个的区别.
+        前者是两个条件对 JOIN 表中一行同时满足; 后者是先 JOIN 一次筛出符合
+        条件的, 再 JOIN 一次筛出符合另一个条件的, 相当于 subquery 嵌套.
+
+      * ``.exclude()`` 中同时指定多个条件时, 是在排除满足其中任一个条件的实例, 即筛选
+        所有这些条件都不满足的实例, 这相当于 ``WHERE NOT condition1 AND NOT condition2``.
+
+    - 使用 extended indexing and slicing syntax 来进行 ``LIMIT`` ``OFFSET`` 之类的
+      操作. 注意 negative index 是不允许的. 如果是单个的 index, 就返回 QuerySet
+      中的单个结果, 如果是 slice, 就返回一个 QuerySet. 一般情况下返回的 QuerySet
+      仍然是 lazy 的, 但若 slice syntax 中有步长参数, 则会计算 QuerySet, 访问数据库.
+
+    - 在过滤方法串联中, 每次返回的 ``QuerySet`` 都是相互独立的, 各自可以单独使用,
+      不会相互影响.
+
+    - QuerySets are lazy. 在不得不访问数据库之前, 所有的过滤筛选等操作都是在内存
+      中进行的, 而不去执行底层的 SQL 语句.
 
 - view
 
