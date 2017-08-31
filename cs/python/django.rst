@@ -145,6 +145,10 @@
     - intermediate model. 若多对多的关系不仅仅是一个简单双向的关系, 而需要包含
       一些其他状态信息, 则需要使用一个中间模型去承载这个多对多关系.
 
+    - ``ManyToManyField`` 不是一个列, 而是抽象了一个包含映射关系的表, 只有设置
+      映射和没有映射, ``null=`` 参数对它没有意义. 指定该参数会导致 django
+      system check 警告.
+
   * one-to-one field.
 
     - 一对一关系一般用于一个模型作为另一个模型的延伸、扩展、附加属性等.
@@ -472,6 +476,10 @@
 
         os.environ['DJANGO_SETTINGS_MODULE'] = "<project>.settings"
         import django; django.setup()
+
+  * ``makemigrations --dry-run`` 可用来检查当前记录的数据库结构 (通过
+    migration files 来体现) 是否和 models 里的模型代码保持一致.
+    
 
 - migration
 
