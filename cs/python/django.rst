@@ -226,7 +226,9 @@
       model instances, to enforce a separation between “table-level” operations and
       “record-level” operations.
 
-    - 获取对象的各个方法在 ``Manager`` 和 ``QuerySet`` 中都有, 且可以串联在一起.
+    - 获取对象的各个方法在 ``Manager`` 和 ``QuerySet`` 中都有 (在 QuerySet 中定义,
+      expose to Manager 中), 且可以串联在一起. ``.delete()`` 是唯一的 QuerySet 有
+      但 Manager 的没有的方法.
       常用方法: ``.all()``, ``.filter()``, ``.exclude()``, ``.get()`` 等.
 
     - Field lookups. 各种过滤和获取的方法的参数语法, 对应到 SQL ``WHERE`` clause.
@@ -240,6 +242,10 @@
       * 对于表达关系的列, 可以深入被指向的模型进行筛选, 这抽象了各种 SQL ``JOIN``.
 
       * 这种过滤可以反向进行. 实际上这与模型实例的深入的 attribute access 是一致的.
+
+      * 对于每个查询方法, 传入的所有 positional and keyword arguments (Q objects +
+        field lookup syntax) 代表的条件都会 ``AND`` 在一起.
+        但注意对于 ``.exclude()``, 这种与关系不太好理解.
 
       * ``.filter()`` 中同时指定多个条件时, 是在筛选所有这些条件都满足的实例, 这相当于
         ``WHERE condition1 AND condition2``.
@@ -271,6 +277,24 @@
     - QuerySets are lazy. 在不得不访问数据库之前, 所有的过滤筛选等操作都是在内存
       中进行的, 而不去执行底层的 SQL 语句.
 
+    - QuerySet cache. The first time a QuerySet is evaluated – and, hence,
+      a database query happens – Django saves the query results in the QuerySet’s
+      cache and returns the results that have been explicitly requested. Subsequent
+      evaluations of the QuerySet reuse the cached results.
+
+      当取一个 QuerySet 的部分数据时 (通过 extended indexing syntax, 即转换成
+      ``OFFSET`` ``LIMIT``), 若本身有 cache, 则直接返回结果, 否则只访问数据库
+      进行所需部分数据的查询和返回, 并不进行 cache. 这里的抽象逻辑是, slicing
+      和 indexing 这些操作是在一个完整的 QuerySet 上进行的部分截取. 而 cache
+      是属于 QuerySet 的, 若有则应该包含它代表的所有数据.
+
+      注意 ``bool(queryset)`` 会计算整个 ``queryset``, 从而填入 cache. 然而
+      ``print()`` ``repr()`` 只计算整个 QuerySet 的一个 slice, 因此不会填入
+      cache.
+
+    - 同一个 model 的实例之间进行比较时, 比较的是 primary key. 不同 model 的实例
+      之间总是不相等的. 但是大小关系没有确定结果. (why not TypeError?)
+
     - query expressions.
 
       * ``F()`` expression 在 CRUD 操作中代表一个列的值 (F for Field) 的 symbolic
@@ -295,6 +319,28 @@
         不然的话 instance 的属性仍然是 ``CombinedExpression``, 而不是真实的值.
         如果对这些实例再次 save, 将再次执行 combinedExpression 对应的数据库过程,
         从而进行了重复修改.
+
+      * ``Q()`` expression 用于将查询条件模块化成一个个可任意组合的抽象单元.
+        Q object 可以进行与、或、非操作 (``&`` ``|`` ``~``), 构成表达复杂逻辑
+        的 Q object. 它最终在底层转化成恰当的 SQL 查询语句.
+
+        ``.filter()`` ``.get()`` 等查询方法除了可以接受作为 kwargs 的 field lookup
+        语法, 还支持传入多个作为 positional args 的 Q objects, 这些 Q object
+        代表的条件会 ``AND`` 在一起. 这真是把 python 函数语法运用到极致了啊!!
+        抽象得真好!!!
+
+    - delete.
+
+      * 删除时会返回删除的总对象数目和每个类型删除的对象数目. 这么做的一个
+        重要原因是模型或表之间有设置了级联删除的.所以很可能一个删除操作一下子级联
+        删除了很多不同表中的条目.
+
+      * model instance 和 QuerySet 都有 delete method.
+
+    - update. QuerySet ``.update()`` 中以 kwargs 形式写入要更新的列和值.
+      many-to-many field 无法这样更新.
+
+      这样的更新操作是立即生效的.
 
 - view
 
@@ -501,8 +547,34 @@
        的 migration 依赖顺序. 按照先创建新的, 迁移, 再删除旧的, 这个顺序创建
        migration. 第一个和最后一个 migration 都可以通过修改 models 来自动生成.
 
-  * squash migration 成熟后, 将会十分有用. 由于数据库结构之间的关系可能非常复杂,
-    目前感觉还不太敢用.
+  * squash migration 十分有用. 可以用来将过多的 migration 历史合并成一个等价的
+    初始版本.
+
+    These files are marked to say they replace the previously-squashed migrations,
+    so they can coexist with the old migration files, and Django will intelligently
+    switch between them depending where you are in the history. If you’re still
+    part-way through the set of migrations that you squashed, it will keep using
+    them until it hits the end and then switch to the squashed history, while new
+    installs will just use the new squashed migration and skip all the old ones.
+
+    The recommended process is to squash, keeping the old files, commit and
+    release, wait until all systems are upgraded with the new release, and
+    then remove the old files, commit and do a second release.
+    只有当所有项目的实例都已经更新到 squashed migration 的结束点之后时, 才能
+    删除它替代的那些原始文件.
+
+    最终, 使用 squashed migration file 替代一系列原始文件的方法是:
+
+    - Deleting all the migration files it replaces.
+
+    - Updating all migrations that depend on the deleted migrations to depend
+      on the squashed migration instead.
+
+    - Removing the ``replaces`` attribute in the Migration class of the squashed
+      migration.
+
+    当数据库结构之间的关系非常复杂时, 慎用 squash migration. 最好检查 squash
+    的结果是否符合当前 models 结构.
 
 - session
 
