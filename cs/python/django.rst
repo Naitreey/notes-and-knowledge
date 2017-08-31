@@ -340,7 +340,12 @@
     - update. QuerySet ``.update()`` 中以 kwargs 形式写入要更新的列和值.
       many-to-many field 无法这样更新.
 
-      这样的更新操作是立即生效的.
+      ``.update()`` 更新操作是批量进行、立即生效的. 它不会使用 model 的 ``.save()``
+      method (否则就不是批量执行了), 而是直接生成批量执行的 SQL. 因此各种 model
+      层的封装特性, 例如 custom save, auto_now, pre_save/post_save signal 等
+      都不会生效.
+
+    - related objects.
 
 - view
 
