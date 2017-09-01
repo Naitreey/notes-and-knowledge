@@ -34,8 +34,9 @@ indentation and line continuation
            e, f,
        )
 
-  对于 simple statement, hanging indent 更常用一些. 然而如果是在 compound statement
-  中的头部, 即开启一个 code block 的位置, hanging indent 可能不太合适. 例如
+  对于 simple statement, hanging indent 更常用一些.
+  在 compound statement 中的头部, 即开启一个 code block 的位置, 应该尽量使用第一种
+  对齐方式, 因为 hanging indent 可能显得很怪.
 
   .. code:: python
 
@@ -44,12 +45,25 @@ indentation and line continuation
     ):
         pass
 
-  这样就很怪. 这时就比较适合第一种对齐方式:
-
-  .. code:: python
-
     def func(var1, var2,
              var3):
+        pass
+
+  然而, 如果 compound statement 的头部太长, 第一种对齐方式带来的换行效果不明显,
+  因此应该酌情只 hanging 起始部分, 但结束部分不单独换行对齐.
+
+  .. code:: python
+    for name, mac, model in zip_longest(
+            nic_names, macaddresses, nic_models):
+        pass
+
+  起始本质上这种情况下该在哪里换行哪里对齐还是要看具体的语义, 比如如果是函数定义,
+  就应该使用第一种方式, 因为参数列表应该对齐.
+
+  .. code:: python
+    def this_is_very_long_how_can_it_be_so_long(and_it_has, many_many_very_long,
+                                                parameters_like_this, yeah,
+                                                so_cool):
         pass
 
 - 若在 compound statement 的头部, line continuation 之后在缩进时导致与 code block
