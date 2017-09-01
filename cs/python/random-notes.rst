@@ -923,3 +923,13 @@
 
   * Python 的 duck typing 思想与物理学思想有点像. 即我们认识事物的方式是根据事物
     表现出来的行为, 而不是事物的所谓 "本质". 这样的本质并不存在, 因其不可观测.
+
+- 实数转换整数应该用 ``round()``, 它基本上会达到四舍五入的效果. ``int()`` 的话,
+  若输入是 ``float``, 结果是 truncate to zero 的.
+
+- 矩阵转置.
+
+  .. code:: python
+    orig = [(1,2,3,4), (5,6,7,8)]
+    rotated = list(zip(*orig))
+    orig = list(zip(*rotated))
