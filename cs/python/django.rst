@@ -96,6 +96,8 @@
     - ``DateField`` ``DateTimeField`` 可方便地实现创建时间、修改时间. 注意
       ``auto_now_add``, ``auto_now`` 和 ``default`` 参数是互斥的.
 
+    - 若要允许在 ``BooleanField`` 中存 NULL, 使用 ``NullBooleanField``.
+
   * field options.
 
     - ``null`` 默认是 False, 所以 create table 时有 ``NOT NULL``.
@@ -127,6 +129,9 @@
       自定义.
 
     - ``on_delete`` 默认是 ``CASCADE``, 以后将变成 required parameter.
+      如果对象之间的关系不是必须的, ``on_delete`` 应该设置成别的值, 例如 ``SET_NULL``.
+
+    - 若 ``ForeignKey`` field 支持 ``null=True``, 则对这个属性赋值 None 即可去掉关联.
 
   * many-to-many field.
 
@@ -241,11 +246,17 @@
       常用 lookuptypes: ``exact``, ``iexact``, ``contains``, ``icontains``,
       ``startswith``, ``endswith``, ``istartswith``, ``iendswith``.
 
-      * 对于 foreign key field, 允许直接指定 ``<field>_id == <pk>`` 来过滤主键值.
+      * 对 foreign key field 指定条件, 可以用以下方式进行判断: 1. FK 列 与 FK object
+        实例进行比较; 2. FK 列 与 FK 值进行比较; 3. 使用 ``<FK>_id`` 虚拟的列
+        和 FK 值进行比较.
 
-      * 对于表达关系的列, 可以深入被指向的模型进行筛选, 这抽象了各种 SQL ``JOIN``.
+      * 对于表达关系的列, 可以从多至一的方向深入被指向的模型进行筛选, 这抽象了各种
+        SQL ``JOIN``.
 
-      * 这种过滤可以反向进行. 实际上这与模型实例的深入的 attribute access 是一致的.
+      * 这种过滤可以反向进行, 即从一至多的方向进行筛选. 注意这与属性访问时得到
+        RelatedManager 是两码事. 这里是通过对 related model 的行指定筛选条件, 来
+        筛选 main object. 在 lookup 语法中, 首先指定 related model 的全小写, 然后
+        再指定 field 和条件.
 
       * 对于每个查询方法, 传入的所有 positional and keyword arguments (Q objects +
         field lookup syntax) 代表的条件都会 ``AND`` 在一起.
@@ -295,6 +306,12 @@
       注意 ``bool(queryset)`` 会计算整个 ``queryset``, 从而填入 cache. 然而
       ``print()`` ``repr()`` 只计算整个 QuerySet 的一个 slice, 因此不会填入
       cache.
+
+      若模型包含 ``ForeignKey`` ``OneToOneField`` field 时, QuerySet 在取实例时
+      相当于只将 FK_id 取回来, 而不会自动 JOIN 表查询取到关联的对象数据. 这是
+      为了避免不必要的 overhead. 当用户明确要访问 FK object 这个属性时, 才再次
+      访问数据库将数据填入 cache, 返回真实的关联对象. 之后再访问该属性时不再
+      访问数据库.
 
     - 同一个 model 的实例之间进行比较时, 比较的是 primary key. 不同 model 的实例
       之间总是不相等的. 但是大小关系没有确定结果. (why not TypeError?)
@@ -349,7 +366,16 @@
       层的封装特性, 例如 custom save, auto_now, pre_save/post_save signal 等
       都不会生效.
 
-    - related objects.
+    - related objects. 一对多、多对多关系中, 正向的 manager object (如果有) 是属性名,
+      逆向的 manager object 默认是 ``<lower_model>_set``, 可通过 ``related_name``
+      自定义. 在一对一的关系中, 正反向都是对称直接访问的.
+
+      如果用户在查询某模型时, 已知会访问到关联的 FK 对象, 可使用 ``select_related()``
+      来强制进行 JOIN 操作, 一次把所有 FK 对象数据取回来, 这样更高效. 避免获取各个
+      FK object 时再单独访问数据库.
+
+      ``RelatedManager`` 的一些方法: ``add()``, ``create()``, ``remove()``,
+      ``clear()``, ``set()``. 这些操作都是立即在数据库生效的.
 
 - view
 
