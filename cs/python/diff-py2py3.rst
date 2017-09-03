@@ -218,6 +218,12 @@
         return klass
 
 - py2 中 type 和 types.ClassType 分别对应 new/old style class 的类型.
+
+- py2 中 round 函数只支持 float 且返回 float, py3 中它支持任何实现了 ``__round__``
+  的类型, 且对于 float 返回 int.
+
+- py2 中, 若 class decorator 中要对类实例化或要生成新类, 原类定义中使用 ``super()``
+  时会造成麻烦 (NameError 或无限递归).
         
 - py2py3 compatible
 
