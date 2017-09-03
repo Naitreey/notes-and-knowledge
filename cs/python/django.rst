@@ -168,10 +168,12 @@
   * Model object managers (like ``.objects``) are only accessible via model classes,
     not the model instances.
 
-  * 定义 ``__str__`` method 给模型的实例一个有意义的表现形式.
+  * 定义 ``__str__`` method 给模型的实例一个有意义的 string 形式.
 
   * 注意 ``Meta.verbose_name`` 和 ``__str__`` 的区别. 前者是模型本身的 verbose name,
     后者是 model instance 的字符串表现形式.
+    在 admin site 中, 分类管理的 section 名字用 verbose name, 每个部分中, 对实例
+    进行批量编辑的列表中, 显示实例用的 string 形式.
 
   * inheritance.
 
@@ -254,9 +256,12 @@
         SQL ``JOIN``.
 
       * 这种过滤可以反向进行, 即从一至多的方向进行筛选. 注意这与属性访问时得到
-        RelatedManager 是两码事. 这里是通过对 related model 的行指定筛选条件, 来
-        筛选 main object. 在 lookup 语法中, 首先指定 related model 的全小写, 然后
-        再指定 field 和条件.
+        RelatedManager 虽然语法相通, 但意义不同. 这里是通过对 related model 的行
+        指定筛选条件, 来筛选 main object.
+        若 ForeignKey field 没有设置 ``related_name``, 在反向 lookup 语法时, 指定
+        related model 的全小写作为 reverse lookup 的起点; 若设置了 ``related_name``,
+        则使用该名字作为 reverse lookup 起点. 在此之后再指定 related model 中的
+        field 和条件.
 
       * 对于每个查询方法, 传入的所有 positional and keyword arguments (Q objects +
         field lookup syntax) 代表的条件都会 ``AND`` 在一起.
@@ -476,13 +481,83 @@
 
 - admin site
 
-  * model 里各个 field 的名字和类型直接影响它们在 admin.site 的显示和交互方式.
-
-  * 每个 model 在 admin site 中的显示方式可通过 ``admin.ModelAdmin`` 自定义.
+  * If the builtin admin site doesn't suit your need, just rewrite it yourself.
 
   * admin site app 是 ``django.contrib.admin``, 它依赖于 ``django.contrib.auth``,
     ``django.contrib.contenttypes``, ``django.contrib.messages``,
     ``django.contrib.sessions``.
+
+  * When you put 'django.contrib.admin' in your INSTALLED_APPS setting, Django
+    automatically looks for an admin module in each application and imports it.
+
+  * 整个 project 使用同一个 ``AdminSite`` instance, 它或者是默认的
+    ``django.contrib.admin.sites.site`` instance, 或者是在项目中某全局处实例化的.
+    将这个 instance 的 urls 加入 project's URLconf.
+
+  * 对一个 app 的 admin site 的自定义在 ``admin.py`` 中进行.
+
+  * 用 ``AdminSite.register()`` method 将需要在 admin site 中进行编辑的 models
+    包含在 admin site 中. 可以创建 ``ModelAdmin`` 子类来自定义展示方式. 此时,
+    还可以使用 ``admin.register`` decorator 进行注册.
+
+  * model 里各个 field 的名字和类型直接影响它们在 admin.site 的显示和交互方式.
+
+  * ModelAdmin.
+   
+    - ``actions``.
+     
+      * ``ModelAdmin.actions`` list 控制批量编辑操作. list 元素可以是
+        操作函数/方法的名字字符串或 callable 本身.
+        ``.short_description`` attribute 定义它在 action list 中显示的操作名.
+        设置 ``actions = None`` 可禁用所有批量操作.
+
+      * ``ModelAdmin.get_actions()`` 可以在 per-request 级别上控制允许的
+        action list.
+
+      * ``AdminSite.add_action()`` 给 admin site 的所有对象的 action list
+        添加操作.
+
+      * ``AdminSite.disable_action()`` 禁用全局操作.
+
+    - ``date_hierarchy`` 添加一个按照日期进行条目筛选的组件.
+
+    - ``fields``, ``fieldsets``, ``exclude`` 定义哪些列显示, 哪些不显示.
+
+      对于 ``fields``, 若要多列显示在一行, 将这些列放在一个 tuple 中:
+      ``(('a', 'b'), 'c')``.
+
+      对于 ``fieldsets``, 格式为 a sequence of ``(name, field_options)``.
+      field options 中, ``fields`` key 的值与 ``ModelAdmin.fields`` 一致;
+      ``classes`` key 的值是一系列 css classes; ``description`` 是对 fieldset
+      的描述.
+
+      If neither ``fields`` nor ``fieldsets`` options are present, Django will default
+      to displaying each field that isn’t an ``AutoField`` and has ``editable=True``,
+      in a single fieldset, in the same order as the fields are defined in the model.
+
+    - ManyToManyField 在 admin 界面上默认显示为 ``<select multiple>``, 当选项太多
+      时多选很不方便, ``filter_horizontal`` ``filter_vertical`` 提供了方便的多选
+      交互方式.
+
+    - ``form`` 属性自定义要使用的 ``ModelForm`` 子类. ``get_form()`` method 是最终
+      获取 form class 的 entry point. 所以我们可以直接使用另一个 form 类, 或者在
+      获取 form 时再根据情况进行自定义.
+
+    - ``inline`` 定义一系列 inline 编辑的 models. 它们是 ``InlineModelAdmin`` 的子类.
+
+    - ``list_display`` 定义要在批量编辑列表中显示的列. 它的值可以是 model 的列, 也可以
+      是给出动态值的 callable (可以给 callable 列设置 header). 不设置这个属性时,
+      编辑列表显示一列, 其值为 ``str(instance)``.
+
+      Usually, elements of ``list_display`` that aren’t actual database fields can’t
+      be used in sorting (because Django does all the sorting at the database level).
+
+      The field names in list_display will also appear as CSS classes in the
+      HTML output, in the form of ``column-<field_name>`` on each <th> element.
+      This can be used to set column widths in a CSS file for example.
+
+    - 很多配置项可以设置 AdminSite 级别的全局值, ModelAdmin 级别的 model 局部值,
+      值, callable 列级别的独立值.
 
 - settings
 
