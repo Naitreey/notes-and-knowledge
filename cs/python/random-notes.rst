@@ -251,7 +251,65 @@
     微调, 复杂的可以是将一定的操作 attach 至某个更大的完整的框架, 例如 `Flask.route`,
     `unittest.skipIf`.
 
-- class decorator 的一个很好的应用: ``django.utils.python_2_unicode_compatible``
+- how does argument-less ``super()`` work?
+
+  每个函数都保存一个隐性的不可外部访问的引用量 ``__cls__``, 它是对该函数定义所在的
+  class object 的引用. 函数中的 ``super()`` 等价于 ``super(__cls__, <firstarg>)``,
+  其中 ``<firstarg>`` 是该函数的第一个参数, 一般情况下是 ``self`` 或 ``cls``.
+
+  对于不在 class 内定义的函数, ``__cls__`` 不存在, 因此不能使用无参数 super.
+
+- class decorator 应该应用于对它修饰的 class 的某些方面进行修改, 进行某种外部
+  注册等等并不覆盖 class 本身的行为, 或者创建一个新类对原有的类进行覆盖命名.
+  前两种的很好的应用有 ``django.utils.python_2_unicode_compatible``,
+  ``django.contrib.admin.register``.
+  上述最后一种行为, 在操作逻辑上类似与常见的 function decorator.
+  
+  一些情况下, class decorator 和 ``super()`` 在 python2 中不能配合使用. 例如,
+  decorator 要创建新类覆盖原来的类, 或者 decorator 中要对类进行实例化.
+  出现这些问题是因为 py2 中 ``super`` 第一参数需要写明类的名字, py3 中 super
+  可以无参数, 不存在这个问题.
+
+  .. code:: python
+    def overwrite_class(cls):
+        new_class = type(cls.__name__ + 'Dec', (cls,), {})
+        return new_class
+
+    def instantiate_class(cls):
+        cls()
+        return cls
+
+    class Base(object):
+        def __init__(self):
+            print('Base init')
+
+    # python2
+    @overwrite_class
+    class MyClass(Base):
+        def __init__(self):
+            print('MyClass init')
+            # 此处 MyClass 引用全局的 MyClass, 后者是被覆盖命名的, 其
+            # 父类仍然是这里的 MyClass 定义, 所以造成无限递归.
+            super(MyClass, self).__init__()
+
+    @instantiate_class
+    class MyClass(Base):
+        def __init__(self):
+            print('MyClass init')
+            # 该类在 decorator 中实例化时, MyClass identifier 尚未
+            # bind 至 module 的 global namespace 中, 因此这里会
+            # 报错: NameError: global name 'MyClass' is not defined
+            super(MyClass, self).__init__()
+
+    # python3
+    @overwrite_class
+    class MyClass(Base):
+        def __init__(self):
+            print('MyClass init')
+            # 隐性的 __cls__ 直接引用类对象本身, 不依赖于类是否有全局名称.
+            # 因此不存在问题.
+            super().__init__()
+
 
 - 对于明确只能使用一次的 context manager, 可以利用 `contextlib.contextmanager`
   使用 generator 来生成. 在 generator function 中只写一个 ``yield``, 这样只能
@@ -933,3 +991,8 @@
     orig = [(1,2,3,4), (5,6,7,8)]
     rotated = list(zip(*orig))
     orig = list(zip(*rotated))
+
+- django 是非常方便, 但不要局限于 django magic 本身. 要明白它的原理, 它的局限,
+  web 各部分的工作机制是如何与 django 的抽象相对应的. 这样才知道何时该扩展它,
+  在什么部分可以用更合适的东西取代它等等. 灵活地使用, 而不是局限在它的条条框框
+  之中.
