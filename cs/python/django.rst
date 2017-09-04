@@ -98,6 +98,8 @@
 
     - 若要允许在 ``BooleanField`` 中存 NULL, 使用 ``NullBooleanField``.
 
+    - ``SlugField`` 要配合 ``slugify`` 函数使用, 只应该在创建 instance 时保存该列值.
+
   * field options.
 
     - ``null`` 默认是 False, 所以 create table 时有 ``NOT NULL``.
@@ -107,8 +109,10 @@
       两者的意义是不同的.
       ``null`` 和 ``blank`` 的默认值都是 ``False``.
 
-    - Given a model instance, the display value for a choices field can be accessed
-      using the ``get_FOO_display()`` method.
+    - ``choices`` 设置 field 的可选值. 选项应设置在 model class 中. 设置该选项后,
+      默认的 form 形式会变成 (multiple) select box. Given a model instance, the
+      display value for a choices field can be accessed using the
+      ``get_FOO_display()`` method.
 
     - 如果一个 model 包含多个与同一个其他 model 建立的 ``ManyToManyField``, 需要设置
       ``related_name`` 以保证反向的查询没有歧义.
@@ -441,6 +445,8 @@
     默认包含 ``object_list``, 即从数据库取到的对象列表. ``object_list``
     还有一个更有意义的名字, 由 model class name 转换而成 (``CamelCase -> camel_case``).
 
+  * 将可重用的 template 模块化, 并用 ``include`` tag 加载它.
+
 - static file
 
   * static file namespace 与 template namespace 机制类似.
@@ -503,9 +509,9 @@
   * model 里各个 field 的名字和类型直接影响它们在 admin.site 的显示和交互方式.
 
   * ModelAdmin.
-   
+
     - ``actions``.
-     
+
       * ``ModelAdmin.actions`` list 控制批量编辑操作. list 元素可以是
         操作函数/方法的名字字符串或 callable 本身.
         ``.short_description`` attribute 定义它在 action list 中显示的操作名.
@@ -556,8 +562,28 @@
       HTML output, in the form of ``column-<field_name>`` on each <th> element.
       This can be used to set column widths in a CSS file for example.
 
+    - ``list_display_links`` 设置哪些列可以进入详情.
+
+    - ``list_editable`` 设置在批量编辑页面中可以直接 inline 编辑的列.
+
+    - ``list_filter`` 控制右侧边栏 filter widget, 这里提供了很多修改方式.
+
+    - ``ordering`` 控制 change list 的排序. 默认使用 model 本身的默认排序方式.
+
+    - 存在多个选项的列, 例如 ``choices``, ``ForeignKey`` 可以通过 ``radio_fields``
+      设置为 radio button.
+
+    - ``raw_id_fields`` 是另一种进行 select 的界面.
+
+    - ``readonly_fields`` 应该是 readonly 的啊, 为啥不管用呢?
+
+    - ``search_fields`` 设置一些可以搜索的列 (包含 related field lookup), 此时
+      change list 上面有搜索框.
+
     - 很多配置项可以设置 AdminSite 级别的全局值, ModelAdmin 级别的 model 局部值,
       值, callable 列级别的独立值.
+
+    - 各种操作的页面模板可以通过相应属性设置为自定义的模板.
 
 - settings
 
@@ -580,7 +606,7 @@
 
   * ``makemigrations --dry-run`` 可用来检查当前记录的数据库结构 (通过
     migration files 来体现) 是否和 models 里的模型代码保持一致.
-    
+
 
 - migration
 
@@ -694,4 +720,83 @@
 
 - form
 
-  * csrf token
+  * ``django.forms.Form`` 是 form handling 的核心. A ``Form`` class describes
+    a form and determines how it works and appears.
+
+  * A form’s fields are themselves classes; they manage form data, perform
+    validation and clean form data when a form is submitted.
+
+  * A form field is represented to a user in the browser as an HTML “widget” -
+    a piece of user interface machinery. Each field type has an appropriate
+    default ``Widget`` class.
+
+  * So when we handle a model instance in a view, we typically retrieve it
+    from the database. When we’re dealing with a form we typically instantiate
+    it in the view.
+
+  * When we instantiate a form, we can opt to leave it empty or pre-populate it.
+
+  * 使用同一个 view 和同一个 url 去获取 form 和处理 form data.
+    基本逻辑: GET 和 POST with invalid data 时返回 form 本身, 并且由于已经有数据,
+    可以在 render 时对错误进行相应提示; POST with valid data 时处理数据返回结果.
+
+  * ``Form`` class.
+
+    - ``Model`` 类属性 maps to 数据库列; ``Form`` 类属性 maps to HTML input 元素.
+
+    - 每个 Form field 不仅负责对数据进行验证, 还负责对数据进行 clean, normalizing
+      it to a consistent format.
+
+    - render form.
+
+      * ``str(form)`` 即获得 form instance 对应的 html 代码. 注意 rendered Form
+        instance 不包含 ``<form>`` element wrapper 和 submit button.
+
+      * ``form.non_field_errors`` 是全局错误.
+
+      * 也可以 ``form.as_table`` ``form.as_p`` ``form.as_ul``.
+
+      * render 后, 每个 input field 的 ``id`` attribute 是 ``id_<field-name>``.
+
+      * ``form[<field-name>]`` 是各个 field 对应的 ``BoundField``.
+
+    - form field options.
+
+      * ``label`` 定义 ``<label>`` tag 内容.
+
+      * ``max_length`` 定义 ``<input>`` 最大长度, 并具有验证功能.
+
+      * ``is_valid()`` method 验证 form data 是否合法并清理数据设置 ``cleaned_data``.
+        在背后, 它调用所有 fields 的验证和数据清理逻辑.
+
+    - unbound form: no data. when rendered, being empty or containing only
+      default values.
+      bound form: has data. can tell if data is valid, 若数据非法, 会生成
+      相应的错误信息, 可填入模板, 返回给用户.
+      ``is_bound`` 属性判断是否 bound.
+
+  * ``BoundField`` class.
+
+    - ``str(boundfield)`` 给出它的 input HTML element.
+
+    - attributes & methods.
+    ``.errors`` ``.id_for_label`` ``.label`` ``.label_tag()`` ``.value()``
+    ``.html_name`` ``.help_text`` ``.is_hidden`` ``.field``
+
+    ``.errors`` 的 string 形式是一个 ``<ul class="errorlist">`` element,
+    但在 loop over 它的时候, 每个 error 只生成纯字符串.
+
+  * csrf token. ``{% csrf_token %}`` 即可添加 form 级别的 CSRF token.
+    When submitting a form via POST with CSRF protection enabled you must use
+    the ``csrf_token`` template tag as in the preceding example.
+
+  * ``ModelForm`` class.
+
+    - 指定所使用的 ``Model``, 它会 build a form, along with the appropriate fields
+      and their attributes, from a Model class. 省去手动写 field 的麻烦.
+
+  * 很多对象 render 为 html 形式后会添加标识 id 和样式 class. 方便进行前端自定义.
+
+- When to use javascript/ajax with django? 当我们需要做纯前端交互逻辑和页面渲染时,
+  才需要用 javascript, 当我们只是需要从服务端取数据以完成这些交互逻辑和渲染操作时,
+  才需要使用 ajax, 否则都应该使用 django 的模板去构建.
