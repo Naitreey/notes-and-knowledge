@@ -227,3 +227,18 @@
 
   我们这样区分的原因是, 将 "获取" 操作与 "修改" 操作区分, 从而便于对不同安全性质的操作
   进行不同方式的校验和防护.
+
+- 构建指向某个对象的 url 时, for url to be meaningful, 可以在指定 object id 同时
+  指定 slug. 例如 https://www.stackoverflow.com/questions/id/question-title
+
+- form
+
+  GET and POST are the only HTTP methods to use when dealing with forms.
+
+  submit form 的时候不一定是 POST, 也有 GET 的 form. 到底是 GET or POST
+  取决于 form 提交后是否修改服务系统状态. 例如, 搜索栏就是一个 GET form,
+  配置页面就是一个 POST form. 此外, GET would also be unsuitable for
+  a password form, for large quantities of data, or for binary data,
+  such as an image.
+
+  尽量使用同一个 url 去获取 form 和处理 form data. 无论 GET/POST form.
