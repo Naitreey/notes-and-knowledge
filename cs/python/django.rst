@@ -177,7 +177,11 @@
       映射和没有映射, ``null=`` 参数对它没有意义. 指定该参数会导致 django
       system check 警告.
 
-    - through table. 
+    - through model. 多对多关系实际上是通过一个关系表来实现的. 这个关系表的 model
+      可通过 ``ManyToManyField.through`` attribute 获得, 并可以通过 ``through``
+      option 来指定单独创建的 through model.
+      ``.through`` 属性在 model instance 上与普通的 ForeignKey field 相同, 是一个
+      RelatedManager.
 
   * one-to-one field.
 
