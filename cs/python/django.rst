@@ -100,6 +100,8 @@
 
     - ``SlugField`` 要配合 ``slugify`` 函数使用, 只应该在创建 instance 时保存该列值.
 
+    - ``FilePathField`` 要求值必须是满足路径匹配条件的文件路径.
+
   * field options.
 
     - ``null`` 默认是 False, 所以 create table 时有 ``NOT NULL``.
@@ -116,6 +118,22 @@
 
     - 如果一个 model 包含多个与同一个其他 model 建立的 ``ManyToManyField``, 需要设置
       ``related_name`` 以保证反向的查询没有歧义.
+
+    - ``help_text`` 设置该列值的更详细的帮助信息.
+
+    - ``error_messages`` overrides default validation error messages.
+
+  * validation.
+
+    ``.save()`` 时不会自动调用 ``.full_clean()`` (因 form 验证时会执行它),
+    若 model instance 不是来源于上层 form, 这验证操作必须手动执行. 或者
+    等着数据库下层报错.
+
+    ``Model.full_clean()`` 只能进行数据库层 data integrity 方面的检验, 复杂的检验
+    要靠 ``ModelForm.full_clean()`` 去进行.
+    field 中的很多限制条件, 例如 ``choices``, ``blank``, 以及一些 field type, 例如
+    ``FilePathField`` 等, 本身不能限制存储的值, 因为这些条件不能在数据库中表达.
+    这些条件只有配合 ``ModelForm`` 使用, 才能有用.
 
   * 表之间的关系抽象为在一个模型中包含另一个模型的实例作为属性. 这种抽象在逻辑上十分自然.
     并且在实例中进行 attribute lookup 以及在 QuerySet 中进行 field lookup 筛选时, 自然地
@@ -140,7 +158,8 @@
   * many-to-many field.
 
     - 由于一个列无法体现多对多的关系, ``ManyToManyField`` 在实现时, 不是构成了一个列,
-      而是一个单独的 table. table 中包含 many-to-many 关系的两种模型数据的行 id.
+      而是一个单独的 table. table 的命名根据 ``<app>_<model>_<m2mfield>`` 全小写命名.
+      table 中包含 many-to-many 关系的两种模型数据的行 id.
 
     - It doesn’t matter which model has the ``ManyToManyField``, but you should only
       put it in one of the models – not both. ``ManyToManyField`` 应该放在那个编辑
@@ -157,6 +176,8 @@
     - ``ManyToManyField`` 不是一个列, 而是抽象了一个包含映射关系的表, 只有设置
       映射和没有映射, ``null=`` 参数对它没有意义. 指定该参数会导致 django
       system check 警告.
+
+    - through table. 
 
   * one-to-one field.
 
@@ -562,6 +583,9 @@
       HTML output, in the form of ``column-<field_name>`` on each <th> element.
       This can be used to set column widths in a CSS file for example.
 
+      注意 list_display 不能是 related object 的列, 但能通过 callable 来解决这个问题.
+      此时注意给 callable 附上恰当的 ``short_description`` 和 ``admin_order_field``.
+
     - ``list_display_links`` 设置哪些列可以进入详情.
 
     - ``list_editable`` 设置在批量编辑页面中可以直接 inline 编辑的列.
@@ -747,6 +771,31 @@
     - 每个 Form field 不仅负责对数据进行验证, 还负责对数据进行 clean, normalizing
       it to a consistent format.
 
+    - form field types.
+
+      * ``FilePathField``
+
+      * ``ModelChoiceField`` 的参数是 QuerySet.
+
+      * ``ModelMultipleChoiceField`` 的参数是 QuerySet.
+
+      * ``CharField``
+
+    - form field options.
+
+      * ``label`` 定义 ``<label>`` tag 内容.
+
+      * ``max_length`` 定义 ``<input>`` 最大长度, 并具有验证功能.
+
+      * ``help_text`` 在 render 时放在 field 旁边.
+
+      * ``error_messages`` overrides default field validation errors.
+
+    - form methods.
+
+      * ``is_valid()`` method 验证 form data 是否合法并清理数据设置 ``cleaned_data``.
+        在背后, 它调用所有 fields 的验证和数据清理逻辑.
+
     - render form.
 
       * ``str(form)`` 即获得 form instance 对应的 html 代码. 注意 rendered Form
@@ -759,15 +808,6 @@
       * render 后, 每个 input field 的 ``id`` attribute 是 ``id_<field-name>``.
 
       * ``form[<field-name>]`` 是各个 field 对应的 ``BoundField``.
-
-    - form field options.
-
-      * ``label`` 定义 ``<label>`` tag 内容.
-
-      * ``max_length`` 定义 ``<input>`` 最大长度, 并具有验证功能.
-
-      * ``is_valid()`` method 验证 form data 是否合法并清理数据设置 ``cleaned_data``.
-        在背后, 它调用所有 fields 的验证和数据清理逻辑.
 
     - unbound form: no data. when rendered, being empty or containing only
       default values.
@@ -792,10 +832,62 @@
 
   * ``ModelForm`` class.
 
+    - ``ModelForm`` 是 ``Form`` 的一种, 它根据现成的 model 去生成 form.
+
     - 指定所使用的 ``Model``, 它会 build a form, along with the appropriate fields
       and their attributes, from a Model class. 省去手动写 field 的麻烦.
 
+    - The generated Form class will have a form field for every model field
+      specified, in the order specified in the fields attribute.
+
+    - ``ModelForm.__init__`` 中若加入 ``instance=`` 参数, 则是将 form 与一个
+      现存的 model instance 关联, 例如为了更新它的一些列. 这样, 在 validation
+      时, 可能会修改传入的 model instance. 若验证失败, 传入的 model instance
+      可能处于 inconsistent state, 不适合再次使用.
+
+    - 选择需要包含在 form 中的 model fields.
+      ``ModelForm`` 要求必须定义 ``Meta.fields`` 或 ``Meta.exclude``.
+      
+      It is strongly recommended that you explicitly set all fields that should
+      be edited in the form using the ``fields`` attribute. Failure to do so can
+      easily lead to security problems when a form unexpectedly allows a user to
+      set certain fields, especially when new fields are added to a model.
+
+      ``fields = '__all__'`` 自动包含所有列.
+
+    - model field 和 form field 的对应.
+
+      * ``TextField`` model field 默认的 form field 是 ``CharField``, 并设置 widget
+        为 ``Textarea``.
+
+      * ``ForeignKey`` model field 对应 ``ModelChoiceField``.
+
+      * ``ManyToManyField`` model field 对应 ``ModelMultipleChoiceField``.
+
+    - model option 和 form option 的对应.
+
+      * ``blank=True`` 对应 ``required=False``.
+
+      * ``verbose_name=`` 对应 ``label=``.
+
+      * 若 model field 有 ``choices``, form field ``widget`` 默认是 ``Select``.
+
+    - methods.
+
+      * ``.save()``. ``.save()`` 可以直接保存新的 model instance 或更新现有的
+        instance (若 constructor 有 ``instance`` 参数). 它会进行验证.
+        它调用 ``Model.save()``.
+        ``commit=False`` 时并不将数据存入数据库, 而是只返回 model instance.
+        若 model 存在 ManyToManyField 需要修改或创建, ``commit=False`` 显然
+        不会创建在 form 中选定的那些关联. 这样, 若手动执行 ``Model.save()``
+        来保存实例的话, 之后需要使用 ``ModelForm.save_m2m()`` 单独保存选定
+        的关联关系至数据库.
+
   * 很多对象 render 为 html 形式后会添加标识 id 和样式 class. 方便进行前端自定义.
+
+  * form inheritance. ``Form`` 类继承时, 父类的列在先, 子类的列在后.
+    对于多继承, 列的先后顺序根据各父类的远近关系按由远至近的顺序.
+    这里的远近关系值的是在 MRO 中的顺序的逆序, 在 MRO 中越靠后越远.
 
 - When to use javascript/ajax with django? 当我们需要做纯前端交互逻辑和页面渲染时,
   才需要用 javascript, 当我们只是需要从服务端取数据以完成这些交互逻辑和渲染操作时,
