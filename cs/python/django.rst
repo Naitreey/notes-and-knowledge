@@ -52,10 +52,27 @@
 
 - URLconf
 
-  * URLconf 中的 url pattern 在载入时就都编译好了, 所以是高效的.
+  * 最顶层的 URLconf 由 ``settings.ROOT_URLCONF`` 定义.
+
+  * django import 每个 URLconf 时, 加载 ``urlpatterns`` 变量里的 url 规则.
+
+  * 匹配请求 url 时, 按照 ``urlpatterns`` 里的顺序进行, 执行第一个被匹配的
+    url 的 view callable. urlpatterns are a list of ``url()`` instances.
+
+  * URLconf 可以动态生成, 而不是写死在 ``urls.py`` 里.
+
+  * URLconf 中的 url pattern 在它首次被访问时编译好.
 
   * 每个 app 的 URLconf 中应该包含 ``app_name``, 即它是 url name 的 namespace.
     可避免不同 app 的 url name 相互覆盖.
+
+  * 由于所有 url 的路径部分都以 ``/`` 起始, 所以 django 的 url pattern 把它的
+    匹配省去了, 写成 ``^path/to/resource/`` 而不是 ``^/path/to/resouce/``.
+
+  * url regex pattern 中尽量使用 named capturing group, 增加灵活性.
+
+  * 请求与 url pattern 在匹配时, 忽略 domain name 和 query string 部分, 并
+    不论请求方法. 按照不同请求方法进行不同处理的逻辑在 view callable 中实现.
 
 - 日期时间使用 django.utils.timezone 里的函数, 它们会自动根据 settings.py 里的时间
   相关设置来返回恰当的结果. 直接使用 datetime module 还需要去手动读取配置.
@@ -420,6 +437,20 @@
   * 每个 view 都必须返回 HttpResponse instance 或者 raise some exception. 任何其他
     结果 django 都认为是有问题的.
 
+  * trick: 给 view callable 设置默认参数可以做到让多个 url 指向一个 view callable.
+
+    .. code:: python
+      urlpatterns = [
+          url(r'^blog/$', views.page),
+          url(r'^blog/page(?P<num>[0-9]+)/$', views.page),
+      ]
+      # View
+      def page(request, num="1"):
+          pass
+
+  * error handling view. 对于一个请求, 当 urlpatterns 中没有匹配到时, 或者在处理过程中
+    抛异常时, django 会返回一个 error-handling view.
+
   * class-based views 相对于 function-based views 的一些好处
 
     - Organization of code related to specific HTTP methods (GET, POST, etc.) can
@@ -450,11 +481,33 @@
 
 - template
 
-  * template namespace. 每个 app 下可以有 ``templates/`` 目录, 不同 app 的 templates 目录
-    在一个 namespace 中, 因此会相互覆盖. 所以需要再创建 ``templates/<app>`` 子目录.
+  * django 支持同时配置多个模板 backend engine. 包含 django 自己的模板语言和 jinja2.
+    ``get_template`` 等操作遍历所有后端找到并返回第一个模板.
+
+- django template system & language
+
+  * components:
+    engine, template, template language, context, context processor, loader.
+    体会 django 是如何将用变量填充模板这件事模块化成一个个环节和组件对象的.
+
+  * template namespace. 每个 app 下可以有 ``templates/`` 目录, 不同 app 的 templates
+    目录在一个 namespace 中, 因此会相互覆盖. 所以需要再创建 ``templates/<app>`` 子目录.
+
+  * 为了结构清晰, 应该把不同 app 的模板放在各自目录下的 ``templates/<app>/`` 下面.
 
   * template 中 object 的 ``.`` operator 的查找顺序:
     dict key, object attribute, list index.
+    若 attribute 是一个 callable, it'll be called with no argument.
+    django 不允许 callable 输入变量, 是为了避免对可以执行函数这个功能滥用.
+    数据应该在 view 中计算完成再传入 template 进行渲染, 而不是在 template
+    中才计算.
+
+    This lookup order can cause some unexpected behavior with objects that override
+    dictionary lookup. 例如重定义了 ``__getitem__``, 导致没有 key 时没有 raise
+    KeyError, 从而轮不到 attribute lookup.
+
+    若最终没有找到, fallback 至 template backend 的 ``string_if_invalid`` option 值,
+    默认是空字符串.
 
   * 在 template 中使用 symbolic url, 即使用 url 的名字, 而不写死 url 路径在模板中.
     这样可以降低 template 和 URLconf 之间的耦合. 在重构 url 结构时, 不需要修改模板
@@ -471,6 +524,63 @@
     还有一个更有意义的名字, 由 model class name 转换而成 (``CamelCase -> camel_case``).
 
   * 将可重用的 template 模块化, 并用 ``include`` tag 加载它.
+
+  * ``django.shortcuts.render()`` 调用 ``django.template.loader.render_to_string()``
+    渲染模板成 string 然后加载至 HttpResponse.
+
+  * 模板有三类语法元素, 变量替换 ``{{ var|filter }}``, tag 执行 ``{% tag var1 var2 %}``,
+    注释 ``{# comment #}`` (只能单行, 不允许 newline).
+
+  * filters.
+
+    - ``default``
+
+    - ``length``
+
+    - ``filesizeformat``
+
+    - ``safe``
+
+    - ``escape``
+
+  * tags.
+
+    - ``extends``, 必须是模板中的第一个 tag.
+
+    - ``block``, parent template 中定义的 blocks 越多越好. 这样增加了页面区域的
+      模块化, child template 只需覆盖或扩展需要修改的 blocks.
+      对于扩展而非覆盖整个 block, 可以用 ``block.super`` tag 引用父模板中的同名
+      block 内容.
+
+      使用 ``{% endblock <name> %}`` 增加可读性.
+
+    - ``autoescape``
+
+    - ``load``, 父模板加载的 custom tags/filters 若要在子模板中使用, 需要重新加载.
+
+  * template inheritance.
+
+    Template inheritance allows you to build a base “skeleton” template that
+    contains all the common elements of your site and defines ``block``'s that
+    child templates can override.
+
+    Content within a ``{% block %}`` tag in a parent template is always used as
+    a fallback.
+
+    - common design.
+
+      * ``base.html`` 包含网站基本框架结构、样式风格等.
+
+      * ``base_<section>.html`` 包含各自功能部分的各异的基本框架结构、样式风格.
+
+      * 每个功能部分的具体页面去实现所需功能.
+
+  * escaping. django template 默认 escape output of every variable tag.
+    disable auto escaping: 在变量级别上, 使用 ``safe`` filter; 在 block 级别上,
+    使用 ``autoescape`` tag 来开启或关闭 auto escaping. ``autoescape`` tag
+    的影响包含在 child template 中的同名 block.
+
+    template 中的 string literal 没有被 escape, 而是原样包含在 html 中.
 
 - static file
 
@@ -779,9 +889,9 @@
 
       * ``FilePathField``
 
-      * ``ModelChoiceField`` 的参数是 QuerySet.
+      * ``ModelChoiceField`` 的参数是待选的 QuerySet.
 
-      * ``ModelMultipleChoiceField`` 的参数是 QuerySet.
+      * ``ModelMultipleChoiceField`` 的参数是待选的 QuerySet.
 
       * ``CharField``
 
@@ -851,7 +961,7 @@
 
     - 选择需要包含在 form 中的 model fields.
       ``ModelForm`` 要求必须定义 ``Meta.fields`` 或 ``Meta.exclude``.
-      
+
       It is strongly recommended that you explicitly set all fields that should
       be edited in the form using the ``fields`` attribute. Failure to do so can
       easily lead to security problems when a form unexpectedly allows a user to
