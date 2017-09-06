@@ -242,3 +242,10 @@
   such as an image.
 
   尽量使用同一个 url 去获取 form 和处理 form data. 无论 GET/POST form.
+
+- url.
+
+  A clean, elegant URL scheme is an important detail in a high-quality
+  Web application.
+
+  Cool urls don't change. Try to make your url last as long as possible.
