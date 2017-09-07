@@ -111,6 +111,11 @@ SQL language
   etc.) and strings as case sensitive; treat SQL keywords, mysql builtin commands,
   etc. as case insensitive.
 
+- ``SELECT`` statement
+
+  * mysql 不支持 ``SELECT DISTINCT ON (...)``, 聚合时若要根据某列的 distinct 来
+    选择行, 可以通过 ``COUNT(DISTINCT <colname>)`` 来迂回处理. 这很 hack.
+
 - 注意 ``SELECT`` 后面的部分是 case insensitive 的.
 
 - comment syntax: 三种注释语法
