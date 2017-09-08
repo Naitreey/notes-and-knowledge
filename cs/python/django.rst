@@ -70,9 +70,49 @@
     匹配省去了, 写成 ``^path/to/resource/`` 而不是 ``^/path/to/resouce/``.
 
   * url regex pattern 中尽量使用 named capturing group, 增加灵活性.
+    included url pattern 会收到在父级 url prefix 中匹配的变量值.
+
+    only capture the values the view needs to work with and use non-capturing
+    arguments when the regular expression needs an argument but the view
+    ignores it.
 
   * 请求与 url pattern 在匹配时, 忽略 domain name 和 query string 部分, 并
     不论请求方法. 按照不同请求方法进行不同处理的逻辑在 view callable 中实现.
+
+  * 使用 ``include()`` 加载别的 urlpatterns 至特定 url prefix 下面.
+    可以指定一个 URLconf 的 import path, 或者一个 ``url()`` list.
+
+    Whenever Django encounters ``include()``, it chops off whatever part of
+    the URL matched up to that point and sends the remaining string to the
+    included URLconf for further processing.
+
+  * url reversing.
+
+    Avoid hard-coding URLs.
+
+    为了能够 reverse resolution, 需要对 url pattern 命名. 这样的 URLconf 包含从
+    url 映射至功能以及从功能反向映射至 url 的双向信息.
+
+    对于不同场景下的 url reversing 需求, django 提供了不同的操作:
+    ``url`` tag, ``reverse()`` function, ``Model.get_absolute_url()`` method.
+
+    - ``reverse()``.
+      reverse 函数在反向查找时, 根据命名、参数数目、以及 kwargs 的名字来匹配.
+      如果根据这些规则去匹配后有冲突, ``reverse()`` 选择 urlpatterns 中最后一个
+      符合的 pattern. 这可以用于 override 其他 app 提供的同名 view.
+
+  * url namespace. 两部分: application namespace 和 instance namespace.
+    注意一个 app 可以在一个项目中部署多个 instance.
+
+    namespace can be nested. 在一个本身有 namespace 的 urlpatterns 中 ``include``
+    另一个有 namespace 的 urlpatterns, 就得到了 nested namespace.
+
+    application namespace 可以通过两种方式指定: 如果是 include 另一个 app,
+    在 ``urls.py`` 中指定 ``app_name``; 如果是 include 一段单独的 urlpatterns,
+    在 ``include()`` 中指定 ``(urlpatterns, <app_namespace>)`` 参数.
+
+    application namespace 和 instance namespace 看上去很乱的样子, 什么意思啊??
+    只有当一个项目中部署了同一个 app 的多个实例时, 才需要考虑到 instance namespace.
 
 - 日期时间使用 django.utils.timezone 里的函数, 它们会自动根据 settings.py 里的时间
   相关设置来返回恰当的结果. 直接使用 datetime module 还需要去手动读取配置.
@@ -128,7 +168,8 @@
       两者的意义是不同的.
       ``null`` 和 ``blank`` 的默认值都是 ``False``.
 
-    - ``choices`` 设置 field 的可选值. 选项应设置在 model class 中. 设置该选项后,
+    - ``choices`` 设置 field 的可选值. 每个选项的值的 symbolic enum 形式和整个选项
+      列表应设置在 model class 中. 这是为了方便后续在查询等操作中使用. 设置该选项后,
       默认的 form 形式会变成 (multiple) select box. Given a model instance, the
       display value for a choices field can be accessed using the
       ``get_FOO_display()`` method.
@@ -423,10 +464,43 @@
 
       如果用户在查询某模型时, 已知会访问到关联的 FK 对象, 可使用 ``select_related()``
       来强制进行 JOIN 操作, 一次把所有 FK 对象数据取回来, 这样更高效. 避免获取各个
-      FK object 时再单独访问数据库.
+      FK object 时再单独访问数据库. To avoid the much larger result set that would
+      result from joining across a ‘many’ relationship, ``select_related`` is limited
+      to single-valued relationships - foreign key and one-to-one.
 
       ``RelatedManager`` 的一些方法: ``add()``, ``create()``, ``remove()``,
       ``clear()``, ``set()``. 这些操作都是立即在数据库生效的.
+
+- aggregation.
+
+  * 两种聚合方式: ``QuerySet.aggregate()``, ``QuerySet.annotate``.
+
+  * ``QuerySet.aggregate()``: 给整个 QuerySet 生成各种聚合值.
+
+    - 需要执行的聚合操作通过 positional args 或 keyword args 来指定.
+      返回聚合结果 dict. key 是聚合项, value 是聚合值. key 自动根据
+      field name 和聚合操作名生成; 或者通过 keyword 参数指定.
+
+    - 由于返回一个 dict, 所以 ``.aggregate`` 要作为 QuerySet chain 的最后操作.
+
+  * ``QuerySet.annotate()``: 给 QuerySet 里的每个元素生成聚合值.
+
+    - annotate 语法与 aggregate 相同, 但是每个聚合值是 attach 到各个
+      元素上的, 成为元素的 attribute.
+
+    - 由于结果成为了 attributes, 返回的仍是一个 QuerySet, 因此可以继续
+      operation chain.
+
+    - 使用 annotate 进行多项聚合时必须要谨慎, 很可能结果不对, 并且必要时检查
+      生成的 raw sql statements. 多项聚合结果可能错误的原因是 django 简单
+      地将多项聚合条件涉及的所有表 join 在一起, 然后再算聚合值.
+
+  * aggregation functions.
+
+    - 各聚合函数的参数是列, 并可使用 field lookup syntax 去指定任意 related table
+      field.
+
+    - ``Count()`` 有 ``distinct`` 参数, 对应于 ``COUNT(DISTINCT <colname>)``.
 
 - view
 
@@ -434,8 +508,12 @@
     对整个 app 的不同视角 (view), 但这种说法有些牵强. 总之, views 就是对 url
     请求的 server 端实现.
 
-  * 每个 view 都必须返回 HttpResponse instance 或者 raise some exception. 任何其他
+  * 每个 view 都必须返回 ``HttpResponse`` instance 或者 raise some exception. 任何其他
     结果 django 都认为是有问题的.
+
+  * 常用的非 200 响应有单独定义的 ``HttpResponse`` 子类.
+    ``Http404`` 是一个单独定义的 exception, 为方便使用. django catch 这个异常,
+    返回 ``templates/404.html`` 页面.
 
   * trick: 给 view callable 设置默认参数可以做到让多个 url 指向一个 view callable.
 
@@ -449,7 +527,9 @@
           pass
 
   * error handling view. 对于一个请求, 当 urlpatterns 中没有匹配到时, 或者在处理过程中
-    抛异常时, django 会返回一个 error-handling view.
+    抛异常时, django 会返回一个 error-handling view. 在 URLconf 中可以自定义各个常用
+    error code 对应的 response view. 例如 ``handler400``, ``handler403``,
+    ``handler404``, ``handler500``.
 
   * class-based views 相对于 function-based views 的一些好处
 
