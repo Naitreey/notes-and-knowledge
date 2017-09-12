@@ -97,9 +97,12 @@
     ``url`` tag, ``reverse()`` function, ``Model.get_absolute_url()`` method.
 
     - ``reverse()``.
+
       reverse 函数在反向查找时, 根据命名、参数数目、以及 kwargs 的名字来匹配.
       如果根据这些规则去匹配后有冲突, ``reverse()`` 选择 urlpatterns 中最后一个
       符合的 pattern. 这可以用于 override 其他 app 提供的同名 view.
+
+      reverse 输出的 url 已经是 url-encoded.
 
   * url namespace. 两部分: application namespace 和 instance namespace.
     注意一个 app 可以在一个项目中部署多个 instance.
@@ -252,6 +255,9 @@
 
   * 通过 ``Meta`` inner class 定义来定义 model 的 metadata.
 
+    - ``ordering`` 决定 QuerySet 的默认排序. 语法与 ``QuerySet.order_by`` 相同.
+      若不设置, 则没有固定顺序 (SQL 没有 ORDER BY clause).
+
   * Model object managers (like ``.objects``) are only accessible via model classes,
     not the model instances.
 
@@ -327,7 +333,62 @@
     - 获取对象的各个方法在 ``Manager`` 和 ``QuerySet`` 中都有 (在 QuerySet 中定义,
       expose to Manager 中), 且可以串联在一起. ``.delete()`` 是唯一的 QuerySet 有
       但 Manager 的没有的方法.
-      常用方法: ``.all()``, ``.filter()``, ``.exclude()``, ``.get()`` 等.
+
+      * attributes & methods.
+
+        - ``ordered``, QuerySet 是否有排序.
+
+        - ``.all()``
+
+        - ``.filter()``
+
+        - ``.exclude()``
+
+        - ``.get()``
+
+        - ``.distinct()``, 相当于 ``SELECT DISTINCT`` statement.
+
+        - ``.order_by()``, ``-<field>`` 表示逆序, ``?`` 表示随机, 可使用 field
+          lookup 指定 related model fields. 若指定的 field 是 relation field,
+          使用相关 model 的默认排序, 如果没有默认排序, 使用 pk. 若希望生成的
+          SQL 完全避免排序 (甚至避免 model 默认排序), 使用无参 ``.order_by()``.
+          若要排序的是 reverse FK, many-to-many 类关系, 注意涉及到 JOIN, 原来的
+          一行可能排序后变成多行.
+
+          chained ``.order_by`` 只有最后一个有用.
+
+          在 django 生成的 SQL 中, order_by 指定的 field 会出现在后端执行的
+          ``SELECT`` 语句中. (注意这是 django 的限制, 不是 SQL ``ORDER BY`` 的限制.)
+          但仅用于排序, 不一定会返回在 QuerySet 中. 这导致 ``.distinct()``
+          可能无法正常工作, 因为 fields 中包含额外的列.
+
+        - ``.values()`` 给出的 QuerySet 每个元素为 field-value mapping dict, 方便
+          遍历.
+
+          可通过 positional args 指定要返回的 fields/field lookup.
+
+          通过 kwargs 传递聚合参数给 ``.annotate``. 这可用于对返回的 dict 中增加计算项.
+
+          注意 ``.values()`` 返回的仍是 QuerySet, 可以继续 chain 下去.
+
+          对于 FK field, 返回的 dict 中 key 是 ``<field>_id``.
+
+          对于 many-to-many field 若没有明确在参数中指定, 则不返回, 这是因为需要 JOIN,
+          导致 QuerySet 中的结果重复. 同理, 若明确指定 reverse FK, 也导致结果集重复.
+
+        - ``.values_list()`` 给出的 QuerySet 每个元素为 fields tuple.
+
+          positional args 指定的 fields 可以包含 query expression, 这样在返回的
+          fields tuple 中包含计算项.
+
+        - 多值关系中可能造成结果重复:
+
+          values() and values_list() are both intended as optimizations for a
+          specific use case: retrieving a subset of data without the overhead
+          of creating a model instance. This metaphor falls apart when dealing
+          with many-to-many and other multivalued relations (such as the
+          one-to-many relation of a reverse foreign key) because the “one row,
+          one object” assumption doesn’t hold.
 
     - Field lookups. 各种过滤和获取的方法的参数语法, 对应到 SQL ``WHERE`` clause.
       Syntax: ``<field>[__<field>...][__<lookuptype>]=value``.
@@ -442,6 +503,16 @@
         代表的条件会 ``AND`` 在一起. 这真是把 python 函数语法运用到极致了啊!!
         抽象得真好!!!
 
+      * conditional expressions. ``Case()`` ``When()`` 封装了 ``CASE WHEN`` SQL
+        语句.
+
+        - ``When``. 条件通过 positional Q objects 或者 keyword field lookup syntax
+          指定. 结果通过 ``then=`` 指定, 结果可以是一个 query expression.
+
+        - ``Case``. 接受 positional ``When`` objects 作为 cases, 这些 When objects
+          依次执行, 直到有一个为 True 为止, 返回的结果是相应的 When 的 then.
+          若没有一个 When 为真, 则返回 ``default=`` 值或 None.
+
     - delete.
 
       * 删除时会返回删除的总对象数目和每个类型删除的对象数目. 这么做的一个
@@ -483,7 +554,9 @@
 
     - 由于返回一个 dict, 所以 ``.aggregate`` 要作为 QuerySet chain 的最后操作.
 
-  * ``QuerySet.annotate()``: 给 QuerySet 里的每个元素生成聚合值.
+  * ``QuerySet.annotate()``: 给 QuerySet 里的每个元素生成聚合值. 这不仅仅
+    可用于 ``GROUP BY`` 聚合, 还可用于对每行返回所需的运算结果, 即 annotate
+    的一般含义.
 
     - annotate 语法与 aggregate 相同, 但是每个聚合值是 attach 到各个
       元素上的, 成为元素的 attribute.
@@ -500,7 +573,27 @@
     - 各聚合函数的参数是列, 并可使用 field lookup syntax 去指定任意 related table
       field.
 
+    - QuerySet 为空时, 除了 Count 之外所有 aggregate function 都返回 None,
+      Count 返回 0.
+
+    - 所有 aggregate function 接受一个 positional arg 作为要聚合的对象, 这可以是
+      field lookup syntax 也可以是 query expression.
+
+    - 所有 aggregate function 接受一个 ``output_field`` kwarg, 指定输出列的类型.
+
     - ``Count()`` 有 ``distinct`` 参数, 对应于 ``COUNT(DISTINCT <colname>)``.
+
+    - ``Avg``
+
+    - ``MAX``
+
+    - ``MIN``
+
+    - ``StdDev``
+
+    - ``Variance``
+
+    - ``Sum``
 
 - view
 
@@ -991,6 +1084,10 @@
         在背后, 它调用所有 fields 的验证和数据清理逻辑.
 
     - render form.
+
+      * 考虑到要和各种前端框架的 element 结构层级、样式定义结合, 直接把整个 form
+        或者 field 输出为 html 代码根本不实际, 输出太死板. 绝大部分时候还是需要
+        仔细在 html 代码中定义好结构和样式, 只用模板变量填入必要的值.
 
       * ``str(form)`` 即获得 form instance 对应的 html 代码. 注意 rendered Form
         instance 不包含 ``<form>`` element wrapper 和 submit button.
