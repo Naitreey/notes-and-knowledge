@@ -224,6 +224,8 @@
 
 - py2 中, 若 class decorator 中要对类实例化或要生成新类, 原类定义中使用 ``super()``
   时会造成麻烦 (NameError 或无限递归).
+
+- py3 中删除了 ``unicode`` builtin function.
         
 - py2py3 compatible
 
