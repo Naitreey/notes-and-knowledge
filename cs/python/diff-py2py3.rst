@@ -64,7 +64,8 @@
 
 - urllib & urllib2:
     2. urllib 和 urllib2 提供一些互补的功能, 例如只有 urllib 提供 urlretrieve
-    3. urllib 和 urllib2 合并为 urllib package, 但不同的功能分至不同的模块中 (e.g., urllib.request, urllib.parse, urllib.error)
+    3. urllib 和 urllib2 合并为 urllib package, 但不同的功能分至不同的模块中
+       (e.g., urllib.request, urllib.parse, urllib.error)
 
 - sequence packing/unpacking:
     2. automatic unpacking when appropriate, e.g., a, b, c = 1, 2, 3
@@ -225,7 +226,16 @@
 - py2 中, 若 class decorator 中要对类实例化或要生成新类, 原类定义中使用 ``super()``
   时会造成麻烦 (NameError 或无限递归).
 
+- py2 除了非常新的可能 2.7.6 以上的版本, ``shlex.split`` 无法处理 unicode 命令.
+  至少在 2.7.2 中还有这个问题. 只能在 split 之前先 encode 至 bytes. 这为写向
+  py3 兼容的代码又增加麻烦.
+
+- py3 中 ``urlopen`` 的返回对象得到了优化. 可以用作 context manager.
+
 - py3 中删除了 ``unicode`` builtin function.
+
+- json decode 时报的 exception, 在 py2 中经常是非常一般化的错误, 难以 catch 单独处理;
+  在 py3 中是 ``JSONDecodeError``, 很明确.
         
 - py2py3 compatible
 

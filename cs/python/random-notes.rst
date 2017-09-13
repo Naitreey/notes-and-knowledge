@@ -992,7 +992,12 @@
     rotated = list(zip(*orig))
     orig = list(zip(*rotated))
 
-- django 是非常方便, 但不要局限于 django magic 本身. 要明白它的原理, 它的局限,
+- django 非常方便, 但不要局限于 django magic 本身. 要明白它的原理, 它的局限,
   web 各部分的工作机制是如何与 django 的抽象相对应的. 这样才知道何时该扩展它,
   在什么部分可以用更合适的东西取代它等等. 灵活地使用, 而不是局限在它的条条框框
   之中.
+
+- ``xml.etree.ElementTree`` 中, 目前 Elements with no subelements will test as False.
+  以后会修改这个行为, 但是目前只能通过明确地 ``element is None`` 来判断.
+
+- 获取系统版本信息的方法
