@@ -121,7 +121,7 @@
 
   * unittest
 
-- pdb 的四种主要用法:
+- pdb 的五种主要用法:
 
   * debug 整个脚本: ``python -m pdb program.py``
 
@@ -129,7 +129,12 @@
 
   * 从某个点插入 debug 模式: ``import pdb; pdb.set_trace()``
 
-  * debug 已死的程序 (post-mortem): ``import pdb; pdb.pm()``
+  * 在预期会抛异常的地方加入 try...except compound statement, 在
+    except 里加入 ``import pdb; pdb.post_mortem()``. 这对调试
+    异常很方便.
+
+  * 在 interactive 解释器中 debug 已死的程序 (post-mortem):
+    ``import pdb; pdb.pm()``
 
 - Creating pipelines with subprocess
   It is possible to create process pipelines using ``subprocess.Popen``,
