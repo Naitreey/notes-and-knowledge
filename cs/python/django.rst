@@ -332,7 +332,7 @@
 
     - 获取对象的各个方法在 ``Manager`` 和 ``QuerySet`` 中都有 (在 QuerySet 中定义,
       expose to Manager 中), 且可以串联在一起. ``.delete()`` 是唯一的 QuerySet 有
-      但 Manager 的没有的方法.
+      但 Manager 的没有的方法 (为了避免误删全部).
 
       * attributes & methods.
 

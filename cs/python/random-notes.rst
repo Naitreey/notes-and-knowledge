@@ -121,7 +121,7 @@
 
   * unittest
 
-- pdb 的四种主要用法:
+- pdb 的五种主要用法:
 
   * debug 整个脚本: ``python -m pdb program.py``
 
@@ -129,7 +129,12 @@
 
   * 从某个点插入 debug 模式: ``import pdb; pdb.set_trace()``
 
-  * debug 已死的程序 (post-mortem): ``import pdb; pdb.pm()``
+  * 在预期会抛异常的地方加入 try...except compound statement, 在
+    except 里加入 ``import pdb; pdb.post_mortem()``. 这对调试
+    异常很方便.
+
+  * 在 interactive 解释器中 debug 已死的程序 (post-mortem):
+    ``import pdb; pdb.pm()``
 
 - Creating pipelines with subprocess
   It is possible to create process pipelines using ``subprocess.Popen``,
@@ -997,7 +1002,12 @@
     rotated = list(zip(*orig))
     orig = list(zip(*rotated))
 
-- django 是非常方便, 但不要局限于 django magic 本身. 要明白它的原理, 它的局限,
+- django 非常方便, 但不要局限于 django magic 本身. 要明白它的原理, 它的局限,
   web 各部分的工作机制是如何与 django 的抽象相对应的. 这样才知道何时该扩展它,
   在什么部分可以用更合适的东西取代它等等. 灵活地使用, 而不是局限在它的条条框框
   之中.
+
+- ``xml.etree.ElementTree`` 中, 目前 Elements with no subelements will test as False.
+  以后会修改这个行为, 但是目前只能通过明确地 ``element is None`` 来判断.
+
+- 获取系统版本信息的方法
