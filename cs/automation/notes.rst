@@ -18,8 +18,11 @@ tools comparison
     puppet -- ruby
     chef -- ruby
 
-  * ansible 适合作为 orchestration 类型的任务.
+  * ansible 适合进行 orchestration 类型的任务.
     进行大集群的 state change, 原始的 ansible 可能不合适, 需要 ansible tower.
+    ansible 顺序对每个机器执行操作, 很慢.
+
+  * puppet 适合维持大集群的配置状态.
 
 - agentless and agent-based
 
@@ -32,6 +35,9 @@ tools comparison
 
   * agentless 方式需要借助某种通用方式连接 nodes, 一般是 ssh. 因此需要
     在每个节点上单独开账户, 并保存 ssh 密码.
+
+  * agentless 方式只需维护控制端, 不涉及到对各节点上的 agent 软件升级、配置
+    等问题.
 
   * 面对不同网络环境的问题.
     如果节点分布在不同的私有网络中, 例如分布在多个机房中, 一个外部的 master
