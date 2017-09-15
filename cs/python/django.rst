@@ -755,6 +755,32 @@
 
     template 中的 string literal 没有被 escape, 而是原样包含在 html 中.
 
+- request and response
+
+  * ``HttpRequest``
+
+    - attributes.
+
+      * scheme.
+
+      * body. raw request body as bytes string.
+
+      * path. url full path.
+
+      * method. 如果不用 class-based view, 而是用一般的 view function, 则需要
+        在函数中区别 method 来进行不同的逻辑:
+
+        .. code:: python
+          if request.method == "GET":
+              pass
+          elif request.method == "POST":
+              pass
+
+      * content_type, content_params.
+
+    - HttpRequest object is file-like object, 但是只读的, 支持 file object 相关的
+      读操作.
+
 - static file
 
   * static file namespace 与 template namespace 机制类似.
