@@ -274,7 +274,7 @@
   前两种的很好的应用有 ``django.utils.python_2_unicode_compatible``,
   ``django.contrib.admin.register``.
   上述最后一种行为, 在操作逻辑上类似与常见的 function decorator.
-  
+
   一些情况下, class decorator 和 ``super()`` 在 python2 中不能配合使用. 例如,
   decorator 要创建新类覆盖原来的类, 或者 decorator 中要对类进行实例化.
   出现这些问题是因为 py2 中 ``super`` 第一参数需要写明类的名字, py3 中 super
@@ -1007,7 +1007,36 @@
   在什么部分可以用更合适的东西取代它等等. 灵活地使用, 而不是局限在它的条条框框
   之中.
 
-- ``xml.etree.ElementTree`` 中, 目前 Elements with no subelements will test as False.
-  以后会修改这个行为, 但是目前只能通过明确地 ``element is None`` 来判断.
+- ``xml.etree.ElementTree``
+
+  ElementTree 和 Element 的区别: 前者只是一个 simple wrapper class, 用于处理在
+  tree level 的对 xml 文件的读写 (write/parse 等 methods), 是从 file 到 element
+  中间的过度. 后者则是对 xml element 结构的封装, 用于处理各种 xml 结构类操作.
+  从 tree 至 element, 通过 getroot, 从 element 至 tree 通过 ElementTree constructor.
+
+  Elements with no subelements will test as False. 以后会修改这个行为, 但是目前
+  只能通过明确地 ``element is None`` 来判断.
+
+  从一个 tree 取得的所有 elements 都是仍与这个 tree 相关联的. 所以可以做 in-place
+  modification.
+
+- csv module.
+
+  * reader, writer objects wrap a source or target. reader 所需的 object 要满足
+    iterator protocol 即可, writer 所需的 object 具有 ``.write()`` method 即可.
+    对于 file object, 应该用 ``newline=""``.
+
+  * DictReader, DictWriter 在 reader/writer 基础上, 加入了 field names 概念.
+    DictReader 返回的行从 list 改成 OrderedDict, 从而
+    能够同时表示所在列的名字和位置; DictWriter 的 ``.writerow()`` 只需 dict 即可,
+    因位置在 fieldnames 中有规定.
+
+  * reader/DictReader 的主要使用方式是 ``for row in csvfile``;
+    writer/DictWriter 的主要使用方式是 ``.writeheader()``, ``.writerow()``,
+    ``.writerows()``.
+    ``.writerow()`` 的返回值是 constructor 中 target object 的 ``.write()`` method
+    的返回值.
+
+  * py2 的 csv module 不直接支持 unicode 输入输出. 需要单独做封装处理.
 
 - 获取系统版本信息的方法
