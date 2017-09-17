@@ -761,13 +761,16 @@
 
     - attributes.
 
-      * scheme.
+      * ``scheme``. http or https. 这里 https 指的不是说 django server 直接接受
+        到的请求是 TLS 加密过的 http 流量, 而是说它通过上游服务器 (例如 nginx)
+        设置的特定 header 的值判断出这个请求走的 https 协议. 这个加密的请求在
+        上游服务器解密后以 plain http 的形式传递给 django server.
 
-      * body. raw request body as bytes string.
+      * ``body``. raw request body as bytes string.
 
-      * path. url full path.
+      * ``path``. url full path.
 
-      * method. 如果不用 class-based view, 而是用一般的 view function, 则需要
+      * ``method``. 如果不用 class-based view, 而是用一般的 view function, 则需要
         在函数中区别 method 来进行不同的逻辑:
 
         .. code:: python
@@ -776,10 +779,132 @@
           elif request.method == "POST":
               pass
 
-      * content_type, content_params.
+      * ``encoding``. request body 的 encoding, 即 ``Content-Type`` header 的
+        ``charset`` 参数.
+
+      * ``content_type``, ``content_params``.
+
+      * ``GET``. 以 QueryDict 形式保存所有 query string 参数. 不是只有 GET 请求才有.
+
+      * ``POST``. 以 QueryDict 形式保存的 form data, 即通过设置 Content-Type 为
+        ``application/x-www-form-urlencoded`` 和 ``multipart/form-data`` 时 POST
+        的 body, 但并不包含文件上传部分.
+
+      * ``COOKIES``.
+
+      * ``FILES``. MultiValueDict of ``UploadedFile`` instances.
+
+      * ``META``. 包含所有 request headers 以及基本上当前 server 的全部环境变量.
+        header fields 的名字遵从 WSGI environ 格式要求.
+
+      * ``resolver_match``. 回溯这个请求匹配到的 url, view function, 参数, app 等信息.
+
+      * ``session``. 当前 session. set by ``SessionMiddleware``.
+
+      * ``user``. 当前用户. set by ``AuthenticationMiddleware``.
+
+    - methods.
+
+      * ``.get_host()``, 获取请求的服务端 FQDN/IP, 根据 ``X-Forwarded-Host`` 或者
+        ``HOST`` request header. 这隐含了对 ``ALLOWED_HOSTS`` 的检查和限制.
+
+      * ``.get_port()``.
+
+      * ``.get_full_path()`` 路径包含 query string.
+
+      * ``.build_absolute_uri(...)`` 包含 scheme, FQDN 等部分的完整 URI.
+
+      * ``.is_secure()``, True if https scheme.
+
+      * ``.is_ajax()``, True if ``X-Requested-With: XMLHttpRequest`` present.
+        用于在一些情况下检查跨域 ajax request.
+
+      * file object methods.
 
     - HttpRequest object is file-like object, 但是只读的, 支持 file object 相关的
       读操作.
+
+  * ``QueryDict`` 是 django 对 query string 以及 form data 中存在一个 key 对应
+    多个值的情况的 dict 的封装. 它是 dict 的子类. 常见的 dict 操作只获取某个
+    key 对应的最后一个值. 若要获取整个 list, 使用 list 类方法.
+
+  * ``HttpResponse``
+
+    - constructor 可传入 byte string, 或者 iterator, 作为初始相应 body.
+      无论哪种, 以及之后的 write 操作来 append, 所有相应都全部载入内存
+      再提交至底层. 若要避免这种方式, 例如处理大文件, 使用 ``StreamingHttpResponse``
+      或子类.
+
+    - HttpResponse is file-like object, 注意是 write-only stream, not readable,
+      not seekable.
+
+    - 支持 mapping protocol (dict-like interface), 对 headers 进行操作.
+      header keys are case-insensitive.
+
+    - attributes.
+
+      * ``content``. bytestring of response body.
+
+      * ``charset``. charset of response ``Content-Type``.
+
+      * ``status_code``.
+
+      * ``reason_phrase``. 根据 status_code 给出的 reason, 除非明确设置.
+
+      * ``streaming``, False.
+
+      * ``closed``.
+
+    - methods.
+
+      * ``.set_cookie()``
+
+      * ``.delete_cookie()``, 本质是设置一个 max_age=0, expires 在过去时间的
+        cookie, 传给浏览器从而删除 cookie.
+
+      * ``.getvalue()``
+
+      * mapping protocol methods.
+
+      * file object methods.
+
+  * HttpResponse subclasses.
+
+    - HttpResponseRedirect (302 -- Found)
+
+    - HttpResponsePermanentRedirect (301 -- Moved Permanently)
+
+    - HttpResponseNotModified (304 -- Not Modified)
+
+    - HttpResponseBadRequest (400 -- Bad Request)
+
+    - HttpResponseNotFound (404 -- Not Found)
+
+    - HttpResponseForbidden (403 -- Forbidden)
+
+    - HttpResponseNotAllowed (405 -- Method Not Allowed)
+
+    - HttpResponseGone (410 -- Gone)
+
+    - HttpResponseServerError (500 -- Internal Server Error)
+
+  * ``JsonResponse`` 可以方便地生成 json response. 它使用 ``DjangoJSONEncoder``.
+    若要返回 json array, 必须设置 ``safe=False``.
+
+  * ``StreamingHttpResponse``
+
+    - 用于传输很大的 response body.
+
+    - 需要用 iterator 来初始化, 这个 iterator 最好不加载所有内容至内存.
+
+    - attributes.
+
+      * ``streaming_content``
+
+      * ``streaming``, True.
+
+  * ``FileResponse``
+    FileResponse expects a file open in binary mode.
 
 - static file
 
@@ -1209,3 +1334,10 @@
 - When to use javascript/ajax with django? 当我们需要做纯前端交互逻辑和页面渲染时,
   才需要用 javascript, 当我们只是需要从服务端取数据以完成这些交互逻辑和渲染操作时,
   才需要使用 ajax, 否则都应该使用 django 的模板去构建.
+
+- Export CSV.
+
+  由于 HttpResponse 是 writable file-like object, 可以直接转递给 ``csv.writer``
+  ``csv.DictWriter`` 作为 write target.
+  若要传输很大的 csv 文件, 需要使用 StreamingHttpResponse. 这需要一些技巧.
+  详见 django 文档.
