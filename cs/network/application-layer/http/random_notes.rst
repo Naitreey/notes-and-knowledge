@@ -173,9 +173,9 @@
   这包含各种静态文件 (css, img, script, video) 以及 iframes. 但是 cross-origin 的 ajax
   请求则默认情况下是禁止的 (根据 SOP).
 
-  CORS 对脚本发起的 http request 的规定: request 包含 ``Origin`` header, response
-  包含 ``Access-Control-Allow-Origin: ...``. 只有响应中这个 header 的域名列表包含了
-  ``Origin`` 的值时浏览器才认为请求合法, 把结果返回给脚本.
+  CORS 对脚本发起的 http request 的规定: request 包含 ``Origin`` header (即请求的来源),
+  response 包含 ``Access-Control-Allow-Origin: ...``. 只有响应中这个 header 的域名列表
+  包含了 ``Origin`` 的值时浏览器才认为请求合法, 把结果返回给脚本.
 
   对于非 GET 类型的跨域请求, 还有一个 preflight request. 这个请求通过 ``OPTIONS``
   method 进行, 加上 ``Access-Control-Request-Method`` 和 ``Access-Control-Request-Headers``
@@ -249,3 +249,33 @@
   Web application.
 
   Cool urls don't change. Try to make your url last as long as possible.
+
+- ``Expect`` request header: 指定为了完成请求, 预期服务器要满足的条件.
+
+  目前仅定义了 ``Expect: 100-continue``. 这用于避免白白时间和资源将整个请求
+  传递给了服务端, 结果请求本身不合法. 对于体积比较大的 POST 类请求时, 可首先
+  传递 header 部分, 加上这个 header, 若相应返回 status code 100 (Continue),
+  则继续上传 body 部分, 若返回 417 (Expectation Failed) 则中断.
+
+  这个 header 目前没有主流浏览器实现, 只有 cURL 会在 POST 大文件时这么做.
+  对于 curl, 它发出 header 部分后, 会等待一个 ``expect100-timeout`` 时间,
+  若没等到任何相应, 则继续传 body.
+
+- ``X-Forwarded-Host``, 在包含 reverse proxy (反向代理) 的环境中, 代理服务器
+  (即直接接受客户端请求的服务器, cache, CDN 等) 向真实处理请求的服务器转发时,
+  要加上这个 header, 其值为原始的 ``HOST`` header 值. 从而真实服务端能够判断
+  客户端请求的 host 是什么.
+
+- ``X-Forwarded-For``, 在 proxy 向服务端请求时, 或者 reverse proxy 向真实服务端
+  请求时, 通过这个 header, 来识别原始的请求客户端 IP 地址.
+
+- X-Forwarded-For, X-Forwarded-Host 的值都可能包含多项地址, 因经过了多次代理或
+  转发. 从而第一个是最原始那个.
+
+- ``X-Requested-With``, 现代的 js library 在做 AJAX 请求时, 都会添加这个 header,
+  并设置值为 ``XMLHttpRequest``. 这是为了防止 AJAX 来源的 CSRF attack.
+
+  当服务端本身允许某个 ajax 跨域, 为了区别合法和非法的跨域请求, 要对请求来源进行验证.
+  浏览器发现 ajax 请求包含了这个 header 时, 会添加 CORS 相关 headers 或 preflight
+  请求, 这样服务端就可以验证 ajax 的真伪. 若请求本身不包含这个 header, 服务端可以
+  直接拒绝掉.
