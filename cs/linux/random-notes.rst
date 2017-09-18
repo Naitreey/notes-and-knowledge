@@ -133,6 +133,22 @@
 
   ``-i|--mime``, ``-l|--list``, ``-p|--preserve-date``, ``-s|--special-files``
 
+- ``cat`` command.
+
+  - ``-A``, ``-vET``
+
+  - ``-e``, ``-vE``
+
+  - ``-E``, show ends
+
+  - ``-n``, number all output lines
+
+  - ``-t``, ``-vT``
+
+  - ``-T``, show tabs
+
+  - ``-v``, show nonprinting
+
 - bash job control 中, current job (``+``) 和 previous job (``-``) 的 job spec 是
   ``%+`` (或 ``%``), ``%-``. 编号为 n 的 job 可写为 ``%n`` (或直接是 ``n``).
 
