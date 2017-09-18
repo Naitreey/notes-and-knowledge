@@ -269,7 +269,8 @@ docstrings
 
 - 对于 multiline docstring, closing triple quote 单独放一行.
 
-- 对 one liner docstring, triple quote 放在同一行.
+- 对 one liner docstring, triple quote 可放在同一行也可单独放一行.
+  虽然 pep8 推荐前者, 但是明显后者更统一, 且方便扩展.
 
 - One-liners are for really obvious cases. Triple quotes are used even though
   the string fits on one line. This makes it easy to later expand it.
