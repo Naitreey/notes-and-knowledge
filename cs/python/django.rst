@@ -1,3 +1,7 @@
+- When to use javascript/ajax with django? 当我们需要做纯前端交互逻辑和页面渲染时,
+  才需要用 javascript, 当我们只是需要从服务端取数据以完成这些交互逻辑和渲染操作时,
+  才需要使用 ajax, 否则都应该使用 django 的模板去构建.
+
 - django term: project vs app.
 
   一个 project 就是一个 project, 一个项目. 一个项目可以是一个组相互关联的事物、
@@ -1331,13 +1335,68 @@
     对于多继承, 列的先后顺序根据各父类的远近关系按由远至近的顺序.
     这里的远近关系值的是在 MRO 中的顺序的逆序, 在 MRO 中越靠后越远.
 
-- When to use javascript/ajax with django? 当我们需要做纯前端交互逻辑和页面渲染时,
-  才需要用 javascript, 当我们只是需要从服务端取数据以完成这些交互逻辑和渲染操作时,
-  才需要使用 ajax, 否则都应该使用 django 的模板去构建.
-
 - Export CSV.
 
   由于 HttpResponse 是 writable file-like object, 可以直接转递给 ``csv.writer``
   ``csv.DictWriter`` 作为 write target.
   若要传输很大的 csv 文件, 需要使用 StreamingHttpResponse. 这需要一些技巧.
   详见 django 文档.
+
+- authentication.
+  django auth module: ``django.contrib.auth``.
+
+  * 创建用户. ``User.objects.create_user()`` 创建用户.
+    ``./manage.py createsuperuser`` 或 ``User.objects.create_superuser()``
+    创建超级管理员.
+
+  * 修改密码: 通过 ``./manage.py changepassword`` 和 ``User.set_password()``
+    来修改密码.
+
+  * Authentication
+   
+    ``authenticate()`` function, 若认证成功返回 User object, 否则 None.
+
+  * Permission and Authorization
+
+    - 当 ``django.contrib.auth`` app 存在时, 每个 app 的每个 model 都默认存在
+      add, change, delete 三个权限.
+
+    - 权限检查 ``User.has_perm(<app_label>."add|change|delete"_<model>)``
+
+    - 一个用户或一个组可以有任意个权限 (many-to-many). 组具有的权限用户自动具有.
+
+  * User 和 Group 是 many-to-many 的关系.
+
+  * ``User``
+
+    - fields
+
+      * ``groups``.
+
+      * ``user_permissions``.
+
+    - attributes.
+
+      * ``username``.
+
+      * ``password``. 密码以 hash 形式存放, 符合密码存储的一般准则. 因此不该手动修改
+        该属性值.
+
+      * ``email``.
+
+      * ``first_name``.
+
+      * ``last_name``.
+
+  * Permission
+
+    - 创建 Permission object 需要配合合适的 ``ContentType``.
+
+    - 可以通过 ``Model.Meta.permissions`` 来创建与 model 直接相关的自定义权限.
+
+    - caching. ``ModelBackend`` 会在取到一个用户的权限信息后进行 cache. 若在
+      一个 request-response cycle 中, 需要修改权限并立即进行验证, 最好从数据库
+      重载这个用户. 若不是在一个请求中, 一般没事, 因每次 request object 都会
+      初始化 User object (lazily).
+
+  * Group
