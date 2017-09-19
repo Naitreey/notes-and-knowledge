@@ -1354,7 +1354,20 @@
 
   * Authentication
    
-    ``authenticate()`` function, 若认证成功返回 User object, 否则 None.
+    - ``authenticate()`` function 提供认证检验. 若认证成功返回 User object,
+      否则 None. 注意它只做检验 (返回相符的 User instance), 不改变状态.
+
+    - ``login()`` 在 ``authenticate()`` 的基础上, 改变认证状态, 并将认证相关信息
+      保存在 session 中. 未 login 时, ``request.user`` 是 ``AnonymousUser``,
+      login 后成为 ``User``. 两者的 ``is_authenticated`` attribute 的值分别是
+      False/True, 可用于判断是否登录了.
+      Note that any data set during the anonymous session is retained in the
+      session after a user logs in.
+      When a user logs in, the user’s ID and the backend that was used for
+      authentication are saved in the user’s session. This allows the same
+      authentication backend to fetch the user’s details on a future request
+
+    - ``logout()`` 撤销认证状态和清空 session 信息.
 
   * Permission and Authorization
 

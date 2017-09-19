@@ -236,7 +236,7 @@
 
 - json decode 时报的 exception, 在 py2 中经常是非常一般化的错误, 难以 catch 单独处理;
   在 py3 中是 ``JSONDecodeError``, 很明确.
-        
+
 - py2py3 compatible
 
   * __future__
@@ -250,3 +250,7 @@
   * 设置一个 ``six`` or ``compat`` module 来实现所有能统一实现的 py2py3 兼容性逻辑.
 
   * ``django.utils.six`` 提供了非常多有价值的 py2py3 兼容性处理方案.
+
+  * py2 中 user-defined class 的 ``bool()`` value 以及 truth testing 使用的是
+    ``__nonzero__`` method, py3 中使用 ``__bool__``. 为 py2py3 兼容, 两个都要
+    定义.
