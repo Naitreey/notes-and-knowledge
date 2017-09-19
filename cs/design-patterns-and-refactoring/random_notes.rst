@@ -265,10 +265,11 @@
   参考的例子有 pip, udev, systemd, sysctl, git 等的配置设计.
 
 - Design versioning scheme
-  可以参考 [python setuptools 的版本识别逻辑][setuptools], 来设计 versioning scheme.
 
-  [setuptools]: https://setuptools.readthedocs.io/en/latest/setuptools.html#specifying-your-project-s-version
+  可以参考 python setuptools 的版本识别逻辑, 来设计 versioning scheme.
+  https://setuptools.readthedocs.io/en/latest/setuptools.html#specifying-your-project-s-version
 
+  将 SemVer 与 Continous Delivery 结合, 要求在版本号中包含 commit 信息.
 
 - 无论使用哪种程序部署逻辑, 一定要设置机制以保证整个程序不依赖于放置在某个绝对的文件
   系统位置. 例如, 如果写的是 python module, 只需保证能够安装到 site-packages 下即可;
