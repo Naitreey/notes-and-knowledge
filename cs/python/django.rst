@@ -1367,6 +1367,10 @@
       authentication are saved in the user’s session. This allows the same
       authentication backend to fetch the user’s details on a future request
 
+    - login url 在 ``settings.LOGIN_URL`` 设置, 默认是 ``/acounts/login``.
+      该值应该按照项目中用户模型、view 等的具体情况进行设置. 并且可以设置为
+      url pattern name.
+
     - ``logout()`` 撤销认证状态和清空 session 信息.
 
   * Permission and Authorization
@@ -1377,6 +1381,8 @@
     - 权限检查 ``User.has_perm(<app_label>."add|change|delete"_<model>)``
 
     - 一个用户或一个组可以有任意个权限 (many-to-many). 组具有的权限用户自动具有.
+
+    - 限制操作范围为登录用户: ``login_required``.
 
   * User 和 Group 是 many-to-many 的关系.
 
