@@ -1355,7 +1355,7 @@
   若要传输很大的 csv 文件, 需要使用 StreamingHttpResponse. 这需要一些技巧.
   详见 django 文档.
 
-- authentication. django auth module: ``django.contrib.auth``.
+- authentication and authorization. django auth module: ``django.contrib.auth``.
 
   * 创建用户. ``User.objects.create_user()`` 创建用户.
     ``./manage.py createsuperuser`` 或 ``User.objects.create_superuser()``
@@ -1494,6 +1494,37 @@
         ``perms.<app_label>.<perm>`` 相当于 ``User.has_perm(<app_label>.<perm>)``
         ``perms`` 支持使用 ``in`` operator 检查权限, ``<app_label> in perms``
         或 ``<app_label>.<perm> in perms`` 都可以.
+
+  * auth backend.
+    ``auth`` app 中的各种上层认证和授权操作实际上要转发给底层 backend 去操作.
+    不同类型的 backend 的实现不同, 但符合相同的预定义的 api, 供上层调用.
+
+    - ``AUTHENTICATION_BACKENDS`` 配置 backend list. django 按照 list 顺序进行
+      认证尝试.
+
+    - 在 ``authenticate()`` 时, 依次尝试所有的 backend, 直到:
+      
+      * 第一个认证成功为止;
+
+      * 或某个 raised ``PermissionDenied``;
+
+      * 或遍历结束整个 list.
+
+    - auth backend 会保存在 session (``django_session`` table) 中, 从而对于一个
+      session, 只用已知的 backend. 如果要更改 backends setting 以使用不同的
+      backend 来认证, 需要清空 session.
+
+    - 结合使用外部的 auth backend 时, 仍然需要根据 ``AUTH_USER_MODEL`` 对每个
+      用户创建系统账户. 因为从逻辑上讲, 这些 user objects 才是这个系统 (django)
+      自己的用户. 外部 auth backend 只是提供了一系列用户实体集合. user model
+      才是这个系统所需的 user 所具有的属性和功能的表征. 从实现上讲, 没有 user
+      model 什么也没法弄, 没有用户概念的实体寄托.
+
+    - API.
+
+      * ``.get_user(<pk>)`` return user object.
+
+      * ``.authenticate(...)`` return user object or None.
 
   * User 和 Group 是 many-to-many 的关系.
 
