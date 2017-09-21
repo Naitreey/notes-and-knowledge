@@ -1039,4 +1039,26 @@
 
   * py2 的 csv module 不直接支持 unicode 输入输出. 需要单独做封装处理.
 
+- 对于包含可选参数的 decorator, 应该按照如下方式去设计:
+
+  .. code:: python
+    def decorator(func=None, arg1=None, arg2=None):
+        def actual_decorator():
+            # decorator logic using arg1, arg2
+        if func:
+            return actual_decorator(func)
+        else:
+            return actual_decorator
+
+  这样的 decorator 可以加参数或不加参数两种方式使用.
+
+  .. code:: python
+    @decorator
+    def f():
+        pass
+    @decorator(arg1=1, arg2=2)
+    def g():
+        pass
+
+
 - 获取系统版本信息的方法
