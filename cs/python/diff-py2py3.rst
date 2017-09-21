@@ -237,6 +237,8 @@
 - json decode 时报的 exception, 在 py2 中经常是非常一般化的错误, 难以 catch 单独处理;
   在 py3 中是 ``JSONDecodeError``, 很明确.
 
+- django 2.0 不再支持 python2.
+
 - py2py3 compatible
 
   * __future__

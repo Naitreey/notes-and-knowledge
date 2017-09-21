@@ -1532,3 +1532,16 @@
       初始化 User object (lazily).
 
   * Group
+
+- django release
+
+  * new feature release (A.B, A.B+1) every 8 months.
+    new LTS release (X.2) every 2 years, LTS is supported with security updates
+    for 3 years.
+    each version following an LTS will bump to the A+1 major version number.
+    patch release (A.B.C, A.B.C+1) will be issued as needed.
+
+  * 1.11 LTS is the last version supporting python2.
+
+  * Django 2.0 和 1.11 相比, 不会是特别大的区别, 不会充满 breaking changes,
+    而是连续的演进.
