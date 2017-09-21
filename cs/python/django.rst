@@ -971,6 +971,17 @@
 
   * model 里各个 field 的名字和类型直接影响它们在 admin.site 的显示和交互方式.
 
+  * 在新增用户页面, 必须先创建用户 (通过指定 username/password) 之后才能修改用户
+    的其他信息.
+
+  * 用户必须有对 User model 的 add 和 change 权限, 才能真正有创建用户权限. 这是
+    一个安全机制, 为了防止 permission elevation.
+    If you give a non-superuser the ability to edit users, this is ultimately
+    the same as giving them superuser status because they will be able to
+    elevate permissions of users including themselves!
+
+  * 用户密码只显示 hash 值 (数据库只知道 hash 值). 并提供修改密码的连接.
+
   * ModelAdmin.
 
     - ``actions``.
@@ -1329,6 +1340,8 @@
         来保存实例的话, 之后需要使用 ``ModelForm.save_m2m()`` 单独保存选定
         的关联关系至数据库.
 
+  * 当一个 form 与某个 model 对应时, 使用 ``ModelForm``, 否则使用 ``Form`` 即可.
+
   * 很多对象 render 为 html 形式后会添加标识 id 和样式 class. 方便进行前端自定义.
 
   * form inheritance. ``Form`` 类继承时, 父类的列在先, 子类的列在后.
@@ -1342,8 +1355,7 @@
   若要传输很大的 csv 文件, 需要使用 StreamingHttpResponse. 这需要一些技巧.
   详见 django 文档.
 
-- authentication.
-  django auth module: ``django.contrib.auth``.
+- authentication. django auth module: ``django.contrib.auth``.
 
   * 创建用户. ``User.objects.create_user()`` 创建用户.
     ``./manage.py createsuperuser`` 或 ``User.objects.create_superuser()``
@@ -1353,7 +1365,7 @@
     来修改密码.
 
   * Authentication
-   
+
     - ``authenticate()`` function 提供认证检验. 若认证成功返回 User object,
       否则 None. 注意它只做检验 (返回相符的 User instance), 不改变状态.
 
@@ -1371,7 +1383,89 @@
       该值应该按照项目中用户模型、view 等的具体情况进行设置. 并且可以设置为
       url pattern name.
 
+    - login redirect url ``settings.LOGIN_REDIRECT_URL``, 登录后的默认跳转路径.
+
+    - logout redirect url ``settings.LOGOUT_REDIRECT_URL``, 登出后的默认跳转路径.
+
     - ``logout()`` 撤销认证状态和清空 session 信息.
+
+    - authentication views.
+      auth views 不提供默认的 templates, 需要自己写模板以加载 context variables.
+
+      若不想直接使用默认的 auth.urls 设置, 可单独使用 views 以对参数进行自定义,
+      以及 bind to custom urls.
+
+      * login:
+        ``login()``, ``LoginView``.
+
+      * logout:
+        ``logout()``, ``LogoutView``.
+
+      * logout then redirect to login:
+        ``logout_then_login()``.
+
+      * password change:
+        ``password_change()``, ``PasswordChangeView``.
+
+      * password change done:
+        ``password_change_done()``, ``PasswordChangeDoneView``.
+
+      * password reset:
+        ``password_reset()``, ``PasswordResetView``.
+
+      * password reset done:
+        ``password_reset_done()``, ``PasswordResetDoneView``.
+        密码重置请求已经发出后显示的页面.
+
+      * password reset confirm:
+        ``password_reset_confirm()``, ``PasswordResetConfirmView``.
+        点击邮件中的密码重置链接后显示的密码重置页面.
+
+      * password reset complete:
+        ``password_reset_complete()``, ``PasswordResetCompleteView``.
+        重置密码后提示成功的页面.
+
+    - authentication forms.
+
+      若不想使用 auth views, 可单独使用 auth forms.
+
+      * ``AdminPasswordChangeForm``
+        used in admin site.
+
+      * ``AuthenticationForm``
+
+      * ``PasswordChangeForm``
+
+      * ``PasswordResetForm``
+        ``.save()`` method 并不修改任何状态, 而是调用 ``.send_mail()`` 发送重置邮件.
+
+      * ``SetPasswordForm``
+        form to set new password without entering old password.
+
+      * ``UserChangeForm``
+        used in admin site.
+
+      * ``UserCreationForm``
+
+    - ``django.contrib.auth`` app 提供了一系列 authentication urls.
+      这些 url 是没有 namespace 的. 在使用时可以直接放在 url root path 上,
+      或者 ``include()`` 中设置 namespace.
+
+      * ``login/``
+
+      * ``logout/``
+
+      * ``password_change/``
+
+      * ``password_change/done/``
+
+      * ``password_reset/``
+
+      * ``password_reset/done/``
+
+      * ``reset/<uidb64>/<token>/``
+
+      * ``reset/done/``
 
   * Permission and Authorization
 
@@ -1382,19 +1476,34 @@
 
     - 一个用户或一个组可以有任意个权限 (many-to-many). 组具有的权限用户自动具有.
 
-    - 限制操作范围为登录用户: ``login_required``.
+    - 限制操作范围为登录用户: ``login_required`` decorator 和 ``LoginRequiredMixin``.
+
+    - 用户权限检查: ``permission_required`` decorator 和 ``PermissionRequiredMixin``.
+
+    - 通用的 test 检查: ``user_passes_test`` decorator 和 ``UserPassesTestMixin``.
+
+    - ``AccessMixin`` 是以上几个权限控制的 mixin class 的父类, 它具有最一般化的
+      性质.
+
+    - ``RequestContext`` 为 template context 自动添加一系列用户、权限相关量.
+
+      * ``user``, 当前用户.
+
+      * ``perms``, 当前用户的权限. ``perms.<app_label>`` 相当于
+        ``User.has_model_perms(<app_label>)``.
+        ``perms.<app_label>.<perm>`` 相当于 ``User.has_perm(<app_label>.<perm>)``
+        ``perms`` 支持使用 ``in`` operator 检查权限, ``<app_label> in perms``
+        或 ``<app_label>.<perm> in perms`` 都可以.
 
   * User 和 Group 是 many-to-many 的关系.
 
   * ``User``
 
-    - fields
+    - fields, attributes
 
       * ``groups``.
 
       * ``user_permissions``.
-
-    - attributes.
 
       * ``username``.
 
@@ -1406,6 +1515,10 @@
       * ``first_name``.
 
       * ``last_name``.
+
+    - methods.
+
+      * ``has_module_perms(<app>)``, 判断用户是否在某个 app 中有至少一个权限.
 
   * Permission
 
