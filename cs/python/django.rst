@@ -1503,7 +1503,7 @@
       认证尝试.
 
     - 在 ``authenticate()`` 时, 依次尝试所有的 backend, 直到:
-      
+
       * 第一个认证成功为止;
 
       * 或某个 raised ``PermissionDenied``;
@@ -1520,11 +1520,23 @@
       才是这个系统所需的 user 所具有的属性和功能的表征. 从实现上讲, 没有 user
       model 什么也没法弄, 没有用户概念的实体寄托.
 
+    - ``ModelBackend`` 和 ``RemoteUserBackend`` 不允许 inactive user 认证.
+      ``AllowAllUsersModelBackend`` 和 ``AllowAllUsersRemoteUserBackend``
+      允许 inactive user 认证.
+
     - API.
 
       * ``.get_user(<pk>)`` return user object.
 
       * ``.authenticate(...)`` return user object or None.
+
+      * ``.get_group_permissions()``
+
+      * ``.get_all_permissions()``
+
+      * ``.has_perm(...)``
+
+      * ``.has_module_perms()``
 
   * User 和 Group 是 many-to-many 的关系.
 
@@ -1551,7 +1563,132 @@
 
       * ``has_module_perms(<app>)``, 判断用户是否在某个 app 中有至少一个权限.
 
-  * Permission
+  * ``AnonymousUser`` 虽然不具备很多 ``User`` 的属性和方法, 但是可以检查权限,
+    因为很多时候网站是允许匿名用户的.
+
+  * 扩展或自定义 user model.
+
+    - purely behavioral extension, use proxy model.
+
+    - store additional information (profile-like infos) related to a user,
+      but not auth-related, use new model with ``OneToOneField`` to ``User``.
+      为了在用户创建、删除等操作时两表同步, 需要使用 signal.
+
+    - default User model just does not fit your need, create custom user
+      model as ``AUTH_USER_MODEL`` to override the default.
+
+      即使 User model 已经足够, 也应该使用自定义的 user model, 这样方便之后
+      进行扩展.
+      If you’re starting a new project, it’s **highly recommended** to set up a
+      custom user model, even if the default User model is sufficient for you.
+      This model behaves identically to the default user model, but you’ll be
+      able to customize it in the future if the need arises.
+
+    - Change to custom user model mid-project.
+      **HORRIBLE**.
+
+    - Reusable apps shouldn’t implement a custom user model.
+      If you need to store per user information in your app, use a ForeignKey
+      or OneToOneField to ``settings.AUTH_USER_MODEL``.
+
+    - 由于 ``AUTH_USER_MODEL`` 不一定是 ``django.contrib.auth.models.User``,
+      因此在某个 app 中使用 user model 时, 不能直接 import User 类, 而是要
+      根据具体场景使用 API ``get_user_model()`` 或者 ``settings.AUTH_USER_MODEL``.
+
+    - 用户相关的信息的存储方式. 若这些信息是 app-specific 的, 而不是用户本身
+      的属性或者通用的信息, 则应该存在 app models 中, 添加对 user model 的
+      关联关系即可. 若是属于用户本身, 甚至是用户认证相关的属性, 则应该放在
+      user model 中.
+
+    - django custom user model requirements
+
+      * 对于 django builtin auth backends, user model 必须有某种 unique field
+        可唯一识别用户. 对于 custom backends, 当然随意.
+
+      * Your model must provide a way to address the user in a “short” and
+        “long” form.
+
+    - ``AbstractBaseUser``, ``AbstractUser``:
+      AbstractBaseUser provides the core implementation of a user model,
+      including hashed passwords and tokenized password resets.
+      If you want to rethink some of Django's assumptions about
+      authentication, then AbstractBaseUser gives you the power to do so.
+      If you're just adding things to the existing user (i.e. profile data
+      with extra fields), then use AbstractUser because it's simpler and
+      easier.
+
+    - ``BaseUserManager``, ``UserManager``:
+      自定义的 user model 还需要自定义 user manager.
+
+    - ``AbstractBaseUser``
+
+      * ``USERNAME_FIELD``, the name of field used as identifier, must be unique.
+
+      * ``EMAIL_FIELD``
+
+      * ``REQUIRED_FIELDS``, prompted for when creating superuser.
+
+      * ``is_active``
+
+      * ``get_full_name()``
+
+      * ``get_short_name()``
+
+      * ``get_username()``
+
+      * ``clean()``
+
+      * ``get_email_field_name()``
+
+      * ``normalize_username()``
+
+      * ``is_authenticated``, True for any instance.
+
+      * ``is_anonymous``, False for any instance.
+
+      * ``set_password(...)``
+
+      * ``check_password(...)``
+
+      * ``set_unusable_password()``, 当使用外部认证机制时, 禁用普通密码.
+
+      * ``has_usable_password()``
+
+      * ``get_session_auth_hash()``
+
+    - ``BaseUserManager``
+
+      * ``normalize_email(...)``
+
+      * ``get_by_natural_key(...)``
+
+      * ``make_random_password(...)``
+
+    - ``UserManager``
+
+      * ``create_user(...)``
+
+      * ``create_superuser(...)``
+
+    - 自定义的 user model 还需考虑 builtin auth form, 以及在 admin site 对
+      user model 的额外要求.
+
+    - ``PermissionsMixin`` 为自定义的 user model 提供了对 django group &
+      permission model 的支持.
+
+      - ``is_superuser``
+
+      - ``get_group_permissions(...)``
+
+      - ``get_all_permissions(...)``
+
+      - ``has_perm(...)``
+
+      - ``has_perms(...)``
+
+      - ``has_module_perms(...)``
+
+  * ``Permission``
 
     - 创建 Permission object 需要配合合适的 ``ContentType``.
 
