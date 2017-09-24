@@ -910,6 +910,33 @@
   * ``FileResponse``
     FileResponse expects a file open in binary mode.
 
+  * view shortcut functions.
+
+    - ``django.shortcuts.render()``
+
+    - ``django.shortcuts.redirect()``
+
+      * return ``HttpResponseRedirect``.
+
+      * 输入 model, redirect to ``Model.get_absolute_url()``.
+
+      * 输入 view name (with args, kwargs), redirect to ``reverse()`` url.
+
+      * 输入 absolute/relative url, redirect to that url.
+
+      * ``permanent=True``, return 301 (Moved Permanently) rather than 302 (Found).
+
+    - ``django.shortcuts.get_object_or_404()``
+
+      ``QuerySet.get()`` a single object from a Model/Manager/QuerySet, 满足 args
+      和 kwargs 设置的过滤条件. 语法与 ``Q`` objects + field lookup syntax 相同.
+
+      由于是直接 raise ``Http404``, 所以这只适合在 view 中使用.
+
+    - ``django.shortcuts.get_list_or_404()``
+
+      ``QuerySet.filter()`` a list of objects, 其他同上.
+
 - static file
 
   * static file namespace 与 template namespace 机制类似.
