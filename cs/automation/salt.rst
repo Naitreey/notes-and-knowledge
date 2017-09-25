@@ -38,8 +38,12 @@ Execution
 
   * ``state.apply``
 
-    - ``test`` 参数, 进行 dry-run, 需要进行的状态改变会标黄, 不需要改变的状态
-      维持绿色.
+    - parameters
+
+      * ``test`` 进行 dry-run, 需要进行的状态改变会标黄, 不需要改变的状态
+        维持绿色.
+
+      * ``pillar`` 指定额外的 pillar data, 它覆盖 pillar file 中的同名参数.
 
 State
 -----
@@ -48,9 +52,16 @@ State
 
 - State.
 
+- salt state tree.
+
+  A directory tree of state files located at ``file_roots``.
+
 - State file.
 
   A file with an SLS extension that contains one or more state declarations.
+
+  * ``include:`` 可以引用其他 state file in salt state tree.
+    对于子目录, 使用 ``.`` 作为目录分隔符.
 
 - State declaration.
 
@@ -109,9 +120,20 @@ State
 
 - Pillar file.
 
+  * Pillar 实际上是一系列分配给各 minion 的数据或参数. 它根据 target selection
+    机制 对数据进行分配. 将 salt state 模板化, 对各个 minion 传入自定义的
+    pillar data, 从而达到 salt state reuse 的目的.
+
+  * 与 state file 不同, pillar data 不是对所有 minion 共享的, 只有 matched target
+    minion 才会收到分配给他的 pillar data. 所以可以用这个来存储 secure data.
+
 - Salt YAML requirements.
 
   * 每层缩进必须是 2 spaces.
+
+  * quick vim config: ``# vim:ft=yaml:expandtab:tabstop=2:shiftwidth=2:softtabstop=2``.
+
+  * 使用 ``vim-salt`` plugin.
 
 - Execution order.
 

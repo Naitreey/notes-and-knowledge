@@ -66,6 +66,9 @@ OS-level virtualization
 
   * docker 提供了一些便利的容器操作 (commit, diff, etc.), 让开发更方便.
 
+docker
+------
+
 - ``docker stop`` 的效果不受 ``docker run --restart=`` 参数影响. 即使
   ``--restart=always``, docker stop 也能把容器停下来.
 
@@ -87,3 +90,7 @@ OS-level virtualization
 
 - 若要把 image 上传到 private registry, 必须对它打相应的 tag. docker 通过镜像的 tag
   去分辨该访问什么 registry.
+
+- ``/etc/hostname`` ``/etc/hosts`` ``/etc/resolv.conf`` 三个文件都是由 docker 生成后
+  mount 至 container 文件系统相应位置的. 所以在容器内部的修改不会持久, 需要在命令行
+  ``docker run|create`` 中修改或在 dockerfile 中修改.
