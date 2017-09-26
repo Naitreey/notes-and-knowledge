@@ -120,6 +120,15 @@
   PS3: prompt for `select`.
   PS4: prompt for debug output.
 
+- 在 double quote 内部以及在赋值右端, 不会进行 word splitting. 因此字符串会 verbatim
+  保存下来. 没有任何 $IFS 相关的转换等. 例如多行 (包含 newline) 仍是多行.
+
+- 必须要明确, 在 shell 中, 所有内容本身就是字符串, 不同的 quoting 本质上都是为了附加
+  别的作用的 (而不是表示 XXX 是字符串).
+
+- 在 double quoting 中, 只有 $, `, \, !, 字符有特殊含义. 注意没有 ', 所以 $'\n' 形式的
+  ANSI-C quoting 不能在 double quoting 中使用.
+
 ## shell 初始化文件的执行流程
 
 * bash 初始化文件的执行.
