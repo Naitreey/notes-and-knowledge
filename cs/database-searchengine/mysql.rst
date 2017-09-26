@@ -193,3 +193,6 @@ SQL language
 
   You can retrieve the most recent automatically generated ``AUTO_INCREMENT``
   value with the ``LAST_INSERT_ID()`` SQL function.
+
+- 一个表必须有一个或者一组 unique key 可以唯一识别不同的资源实例, 否则无法完全
+  避免多个 session 同时创建同一个实例时导致的重复 (race condition).
