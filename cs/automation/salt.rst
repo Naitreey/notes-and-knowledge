@@ -31,6 +31,22 @@
   a configuration, and to not make changes otherwise. Salt execution functions
   run each time they are called, which may or may not result in system changes.
 
+- 在 jinja2 模板中可访问的参数:
+
+  * minion configuration values
+
+  * grains
+
+  * salt pillar data
+
+  * salt execution modules
+
+- salt file server
+
+  * builtin file server (``file_roots``)
+
+  * git file server, 可以使用这个直接从 git server 中取文件.
+
 Execution
 ---------
 
@@ -45,6 +61,12 @@ Execution
 
       * ``pillar`` 指定额外的 pillar data, 它覆盖 pillar file 中的同名参数.
 
+  * ``state.show_sls``
+
+  * ``pillar.items``
+
+  * ``event.send``
+
 State
 -----
 
@@ -54,7 +76,13 @@ State
 
 - salt state tree.
 
-  A directory tree of state files located at ``file_roots``.
+  * A directory tree of state files located at ``file_roots``.
+
+  * any other files and folders you place in ``file_roots`` are available
+    to your Salt minions.
+
+  * 在 salt states 中, 使用 ``salt://<path>`` 来引用 ``file_roots`` 下的文件,
+    其中 ``<path>`` 是相对于 ``file_roots`` 的路径.
 
 - State file.
 
@@ -102,6 +130,14 @@ State
 
   * ``module.run``
 
+  * ``file.managed``
+
+  * ``file.append``
+
+  * ``file.recurse``
+
+  * ``module.run`` 用于在 salt state 中执行 execution module.
+
 - Top file.
 
   The Top file is used to apply multiple state files to your Salt minions
@@ -127,6 +163,8 @@ State
   * 与 state file 不同, pillar data 不是对所有 minion 共享的, 只有 matched target
     minion 才会收到分配给他的 pillar data. 所以可以用这个来存储 secure data.
 
+  * 查看 pillar data: ``pillar.items`` execution module.
+
 - Salt YAML requirements.
 
   * 每层缩进必须是 2 spaces.
@@ -137,4 +175,86 @@ State
 
 - Execution order.
 
-  * top to bottom.
+  * By default, each ID in a Salt state file is executed in the order it
+    appears in the file. Additionally, in the Top file, each Salt state file is
+    applied in the order listed.
+
+  * ``state.show_sls`` execution module 查看某个 state file 中状态执行顺序.
+
+- Requisites
+
+  * 用于在 states 之间建立联系. 这可以包含修改默认的 states execution order 或者
+    conditional state apply. 例如某文件修改时, 重启某服务.
+
+Event
+-----
+
+- 所有 salt 内部组件通过 sending/listening events 相互沟通.
+
+- event 有两部分:
+  
+  * event tag.
+
+    All salt events are prefixed with ``salt/``, with additional levels
+    based on the type of event.
+   
+  * event data.
+
+    Each event contains a timestamp ``_stamp``.
+
+- custom events
+
+  * presence events, default off.
+
+  * state events, default off.
+
+  * fire an event when a state completes: ``fire_event: True|<string>``
+
+  * 使用 ``event.send`` 直接发送任意 event.
+
+- salt beacon
+
+  * 用于监控 salt 之外的系统状态, 当预设的状态、条件等满足时, 向 bus 发送
+    该事件. 它应用 event system 实现.
+
+  * 在 minion config 中的 ``beacons`` 部分配置.
+
+Reactor
+-------
+
+- 配置: master config 中的 ``reactor`` section. 只允许一个 reactor section.
+
+- reactor file
+
+  * 跟 state file 一样支持 jinja2.
+
+  * Salt reactor SLS files execute on the Salt master.
+    It is useful to think of them more as entry points into the salt and
+    salt-run commands rather than as entry points into the Salt state system
+    that executes on the Salt minion.
+
+  * reactor file 中可以进行: remote execution, 执行 salt runner 操作, 执行 wheel 操作.
+
+  * remote execution 格式:
+
+    .. code:: yaml
+      <operation_id>:
+        local.<module>.<function>:
+          - tgt: <target>
+          [- expr_form: <type>]
+          - arg: <arg_list>
+
+Runner
+------
+
+- Runners are modules that execute on the Salt master to perform supporting tasks.
+
+- runner modules
+
+  * ``state.event``
+
+Configuration
+-------------
+
+- 不同方面的配置项应放在 ``master.d`` 或 ``minion.d`` 中的单独文件中.
+  而不该直接修改 ``master`` ``minion`` 配置文件.
