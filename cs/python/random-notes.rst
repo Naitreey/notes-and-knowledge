@@ -1060,5 +1060,12 @@
     def g():
         pass
 
+- 一个 decorator 在定义时, 可能只适用于函数; 也可能只适用于 method (即单独考虑到了
+  对 ``self`` 的处理); 若要同时支持函数和 method, 除了简单地传递 ``*args`` (从而
+  无论有无 ``self`` 参数原始 function/method 都能收到预期参数) 之外, 并无很好地
+  通用解决办法. 也就是说, 如果一个 decorator 对 wrap 的函数的参数形式有限制, 则
+  该 decorator 无法直接应用到包含 self 的同类 method 上 (显然参数形式发生了变化).
+  这时, 可以参考 ``django.utils.decorators.method_decorator`` 的实现, 将 decorator
+  转化为预期有 self 参数的新的 decorator.
 
 - 获取系统版本信息的方法

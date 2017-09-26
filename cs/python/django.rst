@@ -628,30 +628,37 @@
     error code 对应的 response view. 例如 ``handler400``, ``handler403``,
     ``handler404``, ``handler500``.
 
-  * class-based views 相对于 function-based views 的一些好处
+  * Class-based views
 
-    - Organization of code related to specific HTTP methods (GET, POST, etc.) can
-      be addressed by separate methods instead of conditional branching.
+    - class-based views 相对于 function-based views 的一些好处
 
-    - Object oriented techniques such as mixins (multiple inheritance) can be used
-      to factor code into reusable components.
+      * Organization of code related to specific HTTP methods (GET, POST, etc.) can
+        be addressed by separate methods instead of conditional branching.
 
-  * Class-based views have an ``as_view()`` class method which returns a function that
-    can be called when a request arrives for a URL matching the associated pattern.
-    The function creates an instance of the class and calls its ``dispatch()`` method.
-    ``dispatch`` looks at the request to determine whether it is a GET, POST, etc, and
-    relays the request to a matching method if one is defined, or raises
-    ``HttpResponseNotAllowed`` if not.
+      * Object oriented techniques such as mixins (multiple inheritance) can be used
+        to factor code into reusable components.
 
-  * view 在 render template 时, 提供的 context 可通过 ``get_context_data()`` method
-    自定义.
+    - Class-based views have an ``as_view()`` class method which returns a function that
+      can be called when a request arrives for a URL matching the associated pattern.
+      The function creates an instance of the class and calls its ``dispatch()`` method.
+      ``dispatch`` looks at the request to determine whether it is a GET, POST, etc, and
+      relays the request to a matching method if one is defined, or raises
+      ``HttpResponseNotAllowed`` if not.
 
-  * ``model`` attribute 定义这个 view 是操作在什么 model 上的.
-    Specifying ``model = SomeModel`` is really just shorthand for saying
-    ``queryset = SomeModel.objects.all()``. ``queryset`` 可以更准确地提取
-    数据集. ``get_queryset()`` method 可以动态获取数据集.
+    - view 在 render template 时, 提供的 context 可通过 ``get_context_data()`` method
+      自定义.
 
-  * ``DetailView`` 可以通过 override ``get_object()`` method 来自定义对象获取过程.
+    - ``model`` attribute 定义这个 view 是操作在什么 model 上的.
+      Specifying ``model = SomeModel`` is really just shorthand for saying
+      ``queryset = SomeModel.objects.all()``. ``queryset`` 可以更准确地提取
+      数据集. ``get_queryset()`` method 可以动态获取数据集.
+
+    - ``DetailView`` 可以通过 override ``get_object()`` method 来自定义对象获取过程.
+
+    - django 中很多 decorator 如 ``login_required`` 都是对所 wrap 的函数参数形式
+      有限制的, 因此不能直接应用到 ``View.dispatch`` method 上 (因为多了一个 self
+      参数). 需要用 ``method_decorator`` 转换一下, 调用 wrapped function 时加上
+      self 参数.
 
   * Form. The default implementation for ``form_valid()`` simply redirects to
     the ``success_url``.
