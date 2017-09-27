@@ -370,3 +370,6 @@
   此时, 只需根据不同的版本号, 选择不同的处理逻辑即可.
   例如 url API 的话, 可以 ``/v1`` ``/v2`` 下面再是具体的功能接口; 配置文件可以
   设置 ``version`` 字段.
+
+- In today’s complex real world environments there isn’t a single best way
+  to do anything.
