@@ -298,3 +298,11 @@
   Watching a single file for changes is better than watching multiple files.
 
   ref: https://www.reddit.com/r/linux/comments/2q2wv6/plain_text_configuration_of_gnome/
+
+- lock a user: ``passwd -l user``.
+  unlock a user: ``passwd user`` simply change its password.
+  remove user password: ``passwd -d user``.
+
+- root account: 应该禁止以 root 身份远程登录, 但不要 lock root account 以至于都不能
+  从本地使用 root 登录 (login, su, sulogin, etc.). 因为在 rescue mode 我们需要
+  root login.

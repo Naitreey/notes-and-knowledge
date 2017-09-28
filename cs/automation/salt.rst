@@ -325,6 +325,19 @@ Salt SSH
 - Salt commands can be executed on remote systems using SSH instead of the Salt agent.
   这适用于以 agent-less 方式使用 salt.
 
+- 要求 remote system 要有 sshd + python.
+
+- 命令行: ``salt-ssh [target] [command] [arguments]``
+  target 必须在 roster file 中定义, 且只能使用 file globs or regex 来匹配.
+
+- roster file: 保存 remote system ssh info.
+  无需在里面保存密码, 首次连接要求输入密码并创建 RSA key.
+
+- salt ssh 使用 execution modules 进行远程操作. 使用 ``state.apply`` 应用 states
+  时, 同样使用 ``file_roots`` 下面的文件.
+
+- salt ssh 开多个进程并行连接远端.
+
 Internals
 ---------
 
