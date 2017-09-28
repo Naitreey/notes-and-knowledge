@@ -677,6 +677,10 @@
   * template namespace. 每个 app 下可以有 ``templates/`` 目录, 不同 app 的 templates
     目录在一个 namespace 中, 因此会相互覆盖. 所以需要再创建 ``templates/<app>`` 子目录.
 
+  * string literal. 模板的 tag 中出现的 string literal 将原样出现在 html 中,
+    注意这些 string literal 是 verbatim 出现在 html 中, python string 的各种
+    ``\`` 转义是不支持的. 或者说, 这些字符串相当于 python raw string.
+
   * 为了结构清晰, 应该把不同 app 的模板放在各自目录下的 ``templates/<app>/`` 下面.
 
   * template 中 object 的 ``.`` operator 的查找顺序:
@@ -764,7 +768,7 @@
     使用 ``autoescape`` tag 来开启或关闭 auto escaping. ``autoescape`` tag
     的影响包含在 child template 中的同名 block.
 
-    template 中的 string literal 没有被 escape, 而是原样包含在 html 中.
+    template 中的 string literal 没有被 html escape, 而是原样包含在 html 中.
 
 - request and response
 
@@ -1095,6 +1099,17 @@
       值, callable 列级别的独立值.
 
     - 各种操作的页面模板可以通过相应属性设置为自定义的模板.
+
+  * InlineModelAdmin
+
+    - TabularInline
+      一个 inline object 的各 field 是作为 column 出现的, 从而每个 inline object
+      在页面上只占一行.
+
+
+    - StackedInline
+      一个 inline object 的各 field 是作为 row 出现的, 从而每个 inline object
+      在页面上占多行, 各 object 之间再添加额外一行 object 描述进行分隔.
 
 - settings
 
