@@ -737,10 +737,33 @@
 
     - ``block``, parent template 中定义的 blocks 越多越好. 这样增加了页面区域的
       模块化, child template 只需覆盖或扩展需要修改的 blocks.
-      对于扩展而非覆盖整个 block, 可以用 ``block.super`` tag 引用父模板中的同名
-      block 内容.
 
-      使用 ``{% endblock <name> %}`` 增加可读性.
+      * 对于扩展而非覆盖整个 block, 可以用 ``block.super`` tag 引用父模板中的同名
+        block 内容.
+
+      * 使用 ``{% endblock <name> %}`` 增加可读性.
+
+      * template blocks 表达的是模板结构的继承关系, 所有的 block 在 compile time
+        resolve 成为模板代码 (类似 cpp 和 c 的关系). 此后再也没有 block tag.
+        在 runtime, 模板代码去 render context, 生成页面.
+        因此, 不能通过某种 runtime 条件判断让 block 出现、消失或重定义.
+
+    - compile-time & runtime tags
+
+      * compile-time: ``extends``, ``block``
+
+可能是因为 block 是静态的模块定义, 只要出现就会
+        覆盖 parent block, 它不是 runtime 操作. if tag 在 runtime 执行, 对于
+
+      * 接上, 若要根据 runtime 条件判断是否重新定义一个 block, 可以用以下方法:
+        .. code:: htmldjango
+          {% block name %}
+            {% if condition %}
+              {# redefinition/extension of parent block... #}
+            {% else %}
+              {{ block.super }}
+            {% endif %}
+          {% endblock %}
 
     - ``autoescape``
 

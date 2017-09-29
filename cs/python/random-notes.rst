@@ -1069,3 +1069,5 @@
   转化为预期有 self 参数的新的 decorator.
 
 - 获取系统版本信息的方法
+
+- str.translate
