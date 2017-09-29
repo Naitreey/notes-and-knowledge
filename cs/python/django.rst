@@ -623,6 +623,23 @@
       def page(request, num="1"):
           pass
 
+  * view decorators for http method restriction
+
+    - ``require_http_methods(...)``
+
+    - ``require_GET``
+
+    - ``require_POST``
+
+    - ``require_safe`` GET or HEAD
+
+  * view decorators for compression
+
+    - ``gzip_page``
+
+  * HEAD handling. downstream webserver should strip body of HEAD response
+    automatically, so that HEAD handling should be exactly like handling GET.
+
   * error handling view. 对于一个请求, 当 urlpatterns 中没有匹配到时, 或者在处理过程中
     抛异常时, django 会返回一个 error-handling view. 在 URLconf 中可以自定义各个常用
     error code 对应的 response view. 例如 ``handler400``, ``handler403``,
