@@ -101,16 +101,6 @@
 - http 中, 由于 url 是由 web server 去解析的. url 中的 ``/`` 分隔的 segments
   仅仅是逻辑上的分隔, 没必要对应实际的文件路径.
 
-- `Host` header
-
-  * A `Host` header field must be sent in all HTTP/1.1 request messages.
-    A 400 (Bad Request) status code will be sent to any HTTP/1.1 request
-    message that lacks a Host header field or contains more than one.
-
-  * `Host` header can contain port number or not.
-
-  * `Host` header can be used for virtual hosting.
-
 - HTTP is stateless (无状态的), 指的是前一组 http 请求响应的结果不会平白无故地影响
   后一组请求响应. 若想要后一请求建立在前一请求的结果基础上, 必须在请求中传递某种
   状态信息, 作为依据.
@@ -250,6 +240,9 @@
 
   Cool urls don't change. Try to make your url last as long as possible.
 
+Headers
+-------
+
 - ``Expect`` request header: 指定为了完成请求, 预期服务器要满足的条件.
 
   目前仅定义了 ``Expect: 100-continue``. 这用于避免白白时间和资源将整个请求
@@ -279,3 +272,25 @@
   浏览器发现 ajax 请求包含了这个 header 时, 会添加 CORS 相关 headers 或 preflight
   请求, 这样服务端就可以验证 ajax 的真伪. 若请求本身不包含这个 header, 服务端可以
   直接拒绝掉.
+
+- `Host` header
+
+  * A `Host` header field must be sent in all HTTP/1.1 request messages.
+    A 400 (Bad Request) status code will be sent to any HTTP/1.1 request
+    message that lacks a Host header field or contains more than one.
+
+  * `Host` header can contain port number or not.
+
+  * `Host` header can be used for virtual hosting.
+
+- ``Vary`` header
+
+  * 与 cache 相关. Vary 的值是一系列 comma separated headers, 这些 headers
+    是出现在 request 中的. cache 在缓存 response 时, 将根据 Host, url path,
+    以及 Vary 中出现的各个 request headers, 来对 response 进行分类缓存.
+    达到的效果是, cache 将根据 request 中的 header 的值选择 cached response
+    版本.
+
+    例如, ``Vary: User-Agent`` 可以避免 mobile browser 收到 desktop 版的页面.
+    因如果 cache 中没有 mobile 的 user agent 对应的页面, cache miss 从而向
+    原始服务端请求.
