@@ -130,63 +130,14 @@
     的存在, 要求数据库表应该按照 object-oriented 的方式进行设计. 而一个 entry 就是
     一个 instance. 这是一种比较好的设计思路.
 
-  * primary key:
-
-    可以用 ``primary_key=True`` 设置某个 field 为 primary key, 否则 django 自动
-    给 model 添加 id field 作为 primary key
-
-    .. code:: python
-      id = models.AutoField(primary_key=True)
-
-   The primary key field is read-only. If you change the value of the primary key
-   on an existing object and then save it, a new object will be created alongside
-   the old one.
-
   * model 定义时 field 以 class attribute 方式去定义, 而实例化后, 每个实例会
     生成同名的 attribute 在自己的 ``__dict__`` 中, 覆盖 class attribute.
 
+  * 当 model class 创建时, 定义在 class namespace 中的各个 ``Field`` 实际上
+    存储在 ``Model._meta.fields`` 中.
+
   * 对于 class namespace 中的各个属性, 只有 ``django.db.models.Field`` 的实例
     才会认为是 model field. 其他属性实际上可以随意设置.
-
-  * field types.
-
-    - IP address 用 ``GenericIPAddressField``.
-
-    - 实数一般用 ``FloatField``, 精确要求时考虑 ``DecimalField``.
-
-    - 整数有 ``IntegerField``, ``PositiveIntegerField``, ``BigIntegerField``,
-      ``SmallIntegerField``, ``PositiveSmallIntegerField``.
-
-    - ``DateField`` ``DateTimeField`` 可方便地实现创建时间、修改时间. 注意
-      ``auto_now_add``, ``auto_now`` 和 ``default`` 参数是互斥的.
-
-    - 若要允许在 ``BooleanField`` 中存 NULL, 使用 ``NullBooleanField``.
-
-    - ``SlugField`` 要配合 ``slugify`` 函数使用, 只应该在创建 instance 时保存该列值.
-
-    - ``FilePathField`` 要求值必须是满足路径匹配条件的文件路径.
-
-  * field options.
-
-    - ``null`` 默认是 False, 所以 create table 时有 ``NOT NULL``.
-
-    - ``null`` 是规定数据库中 empty value 是否存储为 NULL 值;
-      ``blank`` 是规定 form validation 时是否允许空值.
-      两者的意义是不同的.
-      ``null`` 和 ``blank`` 的默认值都是 ``False``.
-
-    - ``choices`` 设置 field 的可选值. 每个选项的值的 symbolic enum 形式和整个选项
-      列表应设置在 model class 中. 这是为了方便后续在查询等操作中使用. 设置该选项后,
-      默认的 form 形式会变成 (multiple) select box. Given a model instance, the
-      display value for a choices field can be accessed using the
-      ``get_FOO_display()`` method.
-
-    - 如果一个 model 包含多个与同一个其他 model 建立的 ``ManyToManyField``, 需要设置
-      ``related_name`` 以保证反向的查询没有歧义.
-
-    - ``help_text`` 设置该列值的更详细的帮助信息.
-
-    - ``error_messages`` overrides default validation error messages.
 
   * validation.
 
@@ -203,59 +154,6 @@
   * 表之间的关系抽象为在一个模型中包含另一个模型的实例作为属性. 这种抽象在逻辑上十分自然.
     并且在实例中进行 attribute lookup 以及在 QuerySet 中进行 field lookup 筛选时, 自然地
     支持了多级深入的操作.
-
-  * many-to-one field.
-
-    - 多对一的映射关系用 ``django.db.models.ForeignKey`` 实现.
-
-    - foreign key field 的名字应该是所指向的 model 的名字的全小写版本.
-
-    - django 自动给 foreign key field 添加索引.
-
-    - ``ForeignKey`` field 在数据库中命名为 ``<field>_id``, 除非用 ``db_column``
-      自定义.
-
-    - ``on_delete`` 默认是 ``CASCADE``, 以后将变成 required parameter.
-      如果对象之间的关系不是必须的, ``on_delete`` 应该设置成别的值, 例如 ``SET_NULL``.
-
-    - 若 ``ForeignKey`` field 支持 ``null=True``, 则对这个属性赋值 None 即可去掉关联.
-
-  * many-to-many field.
-
-    - 由于一个列无法体现多对多的关系, ``ManyToManyField`` 在实现时, 不是构成了一个列,
-      而是一个单独的 table. table 的命名根据 ``<app>_<model>_<m2mfield>`` 全小写命名.
-      table 中包含 many-to-many 关系的两种模型数据的行 id.
-
-    - It doesn’t matter which model has the ``ManyToManyField``, but you should only
-      put it in one of the models – not both. ``ManyToManyField`` 应该放在那个编辑
-      起来更自然的 model 中, 也就是说, 从哪个方向建立多对多映射关系更自然, 就把它
-      放在哪个 model 中.
-
-    - many-to-many field 的名字应该是一个复数类型的名字, 以表示多个的概念.
-      同样的, ``related_name`` ``related_query_name`` 也应该是表示反向关系的
-      复数.
-
-    - intermediate model. 若多对多的关系不仅仅是一个简单双向的关系, 而需要包含
-      一些其他状态信息, 则需要使用一个中间模型去承载这个多对多关系.
-
-    - ``ManyToManyField`` 不是一个列, 而是抽象了一个包含映射关系的表, 只有设置
-      映射和没有映射, ``null=`` 参数对它没有意义. 指定该参数会导致 django
-      system check 警告.
-
-    - through model. 多对多关系实际上是通过一个关系表来实现的. 这个关系表的 model
-      可通过 ``ManyToManyField.through`` attribute 获得, 并可以通过 ``through``
-      option 来指定单独创建的 through model.
-      ``.through`` 属性在 model instance 上与普通的 ForeignKey field 相同, 是一个
-      RelatedManager.
-
-  * one-to-one field.
-
-    - 一对一关系一般用于一个模型作为另一个模型的延伸、扩展、附加属性等.
-      ``OneToOneField`` 在 model 继承时用于定义父表和子表通过哪一列来关联.
-
-    - one-to-one field 在 mysql 中实现时, 实际上是一个普通的 field (类型与指向
-      的 model 的 primary key 一致), 配合 unique key constraint 以及 foreign key
-      reference constraint.
 
   * 通过 ``Meta`` inner class 定义来定义 model 的 metadata.
 
@@ -311,6 +209,144 @@
 
   * 如果一个 app 中的 model 太多, 可以进一步模块化. 将 models 扩展成一个 subpackage.
     注意在 models package 的 init 文件中引入所有子模块中定义的 model.
+
+- model field
+
+  * field constructor options.
+
+    Many of Django’s model fields accept options that they don’t do anything with.
+    This behavior simplifies the field classes, because they don’t need to
+    check for options that aren’t necessary. They just pass all the options
+    to the parent class and then don’t use them later on.
+
+    - primary key:
+
+      可以用 ``primary_key=True`` 设置某个 field 为 primary key, 否则 django 自动
+      给 model 添加 id field 作为 primary key
+
+      .. code:: python
+        id = models.AutoField(primary_key=True)
+
+      The primary key field is read-only. If you change the value of the primary key
+      on an existing object and then save it, a new object will be created alongside
+      the old one.
+
+    - ``null`` 默认是 False, 所以 create table 时有 ``NOT NULL``.
+
+    - ``null`` 是规定数据库中 empty value 是否存储为 NULL 值;
+      ``blank`` 是规定 form validation 时是否允许空值.
+      两者的意义是不同的.
+      ``null`` 和 ``blank`` 的默认值都是 ``False``.
+
+    - ``choices`` 设置 field 的可选值. 每个选项的值的 symbolic enum 形式和整个选项
+      列表应设置在 model class 中. 这是为了方便后续在查询等操作中使用. 设置该选项后,
+      默认的 form 形式会变成 (multiple) select box. Given a model instance, the
+      display value for a choices field can be accessed using the
+      ``get_FOO_display()`` method.
+
+    - 如果一个 model 包含多个与同一个其他 model 建立的 ``ManyToManyField``, 需要设置
+      ``related_name`` 以保证反向的查询没有歧义.
+
+    - ``help_text`` 设置该列值的更详细的帮助信息.
+
+    - ``error_messages`` overrides default validation error messages.
+
+  * ``Field`` methods.
+
+    - Field deconstruction: ``Field.deconstruct()``
+
+    - ``db_type()`` 给出底层数据库对应的实际 field type.
+      若这个方法返回 None, 则生成的 SQL 会直接跳过这个 Field.
+
+    - ``rel_db_type()`` 决定指向这个 Field 的 Field 的数据库类型.
+      这被 ForeignKey, OneToOneField 等使用. 也就是说, 当创建一个 field A reference
+      另一个 field B 时, B 的 ``rel_db_type()`` 决定 A 的数据库类型.
+
+    - ``from_db_value()``
+
+    - ``to_python()``
+
+    - ``get_prep_value()``
+
+    - ``get_db_prep_value()``
+
+
+  * custom field type.
+
+    - You can’t change the base class of a custom field because Django won’t
+      detect the change and make a migration for it. Instead, you must create a
+      new custom field class and update your models to reference it.
+
+  * field types. 所有 field types 都是 ``Field`` 子类.
+
+    - IP address 用 ``GenericIPAddressField``.
+
+    - 实数一般用 ``FloatField``, 精确要求时考虑 ``DecimalField``.
+
+    - 整数有 ``IntegerField``, ``PositiveIntegerField``, ``BigIntegerField``,
+      ``SmallIntegerField``, ``PositiveSmallIntegerField``.
+
+    - ``DateField`` ``DateTimeField`` 可方便地实现创建时间、修改时间. 注意
+      ``auto_now_add``, ``auto_now`` 和 ``default`` 参数是互斥的.
+
+    - 若要允许在 ``BooleanField`` 中存 NULL, 使用 ``NullBooleanField``.
+
+    - ``SlugField`` 要配合 ``slugify`` 函数使用, 只应该在创建 instance 时保存该列值.
+
+    - ``FilePathField`` 要求值必须是满足路径匹配条件的文件路径.
+
+  * many-to-one field.
+
+    - 多对一的映射关系用 ``django.db.models.ForeignKey`` 实现.
+
+    - foreign key field 的名字应该是所指向的 model 的名字的全小写版本.
+
+    - django 自动给 foreign key field 添加索引.
+
+    - ``ForeignKey`` field 在数据库中命名为 ``<field>_id``, 除非用 ``db_column``
+      自定义.
+
+    - ``on_delete`` 默认是 ``CASCADE``, 以后将变成 required parameter.
+      如果对象之间的关系不是必须的, ``on_delete`` 应该设置成别的值, 例如 ``SET_NULL``.
+
+    - 若 ``ForeignKey`` field 支持 ``null=True``, 则对这个属性赋值 None 即可去掉关联.
+
+  * many-to-many field.
+
+    - 由于一个列无法体现多对多的关系, ``ManyToManyField`` 在实现时, 不是构成了一个列,
+      而是一个单独的 table. table 的命名根据 ``<app>_<model>_<m2mfield>`` 全小写命名.
+      table 中包含 many-to-many 关系的两种模型数据的行 id.
+
+    - It doesn’t matter which model has the ``ManyToManyField``, but you should only
+      put it in one of the models – not both. ``ManyToManyField`` 应该放在那个编辑
+      起来更自然的 model 中, 也就是说, 从哪个方向建立多对多映射关系更自然, 就把它
+      放在哪个 model 中.
+
+    - many-to-many field 的名字应该是一个复数类型的名字, 以表示多个的概念.
+      同样的, ``related_name`` ``related_query_name`` 也应该是表示反向关系的
+      复数.
+
+    - intermediate model. 若多对多的关系不仅仅是一个简单双向的关系, 而需要包含
+      一些其他状态信息, 则需要使用一个中间模型去承载这个多对多关系.
+
+    - ``ManyToManyField`` 不是一个列, 而是抽象了一个包含映射关系的表, 只有设置
+      映射和没有映射, ``null=`` 参数对它没有意义. 指定该参数会导致 django
+      system check 警告.
+
+    - through model. 多对多关系实际上是通过一个关系表来实现的. 这个关系表的 model
+      可通过 ``ManyToManyField.through`` attribute 获得, 并可以通过 ``through``
+      option 来指定单独创建的 through model.
+      ``.through`` 属性在 model instance 上与普通的 ForeignKey field 相同, 是一个
+      RelatedManager.
+
+  * one-to-one field.
+
+    - 一对一关系一般用于一个模型作为另一个模型的延伸、扩展、附加属性等.
+      ``OneToOneField`` 在 model 继承时用于定义父表和子表通过哪一列来关联.
+
+    - one-to-one field 在 mysql 中实现时, 实际上是一个普通的 field (类型与指向
+      的 model 的 primary key 一致), 配合 unique key constraint 以及 foreign key
+      reference constraint.
 
 - CRUD
 
@@ -765,13 +801,6 @@
         在 runtime, 模板代码去 render context, 生成页面.
         因此, 不能通过某种 runtime 条件判断让 block 出现、消失或重定义.
 
-    - compile-time & runtime tags
-
-      * compile-time: ``extends``, ``block``
-
-可能是因为 block 是静态的模块定义, 只要出现就会
-        覆盖 parent block, 它不是 runtime 操作. if tag 在 runtime 执行, 对于
-
       * 接上, 若要根据 runtime 条件判断是否重新定义一个 block, 可以用以下方法:
         .. code:: htmldjango
           {% block name %}
@@ -781,6 +810,10 @@
               {{ block.super }}
             {% endif %}
           {% endblock %}
+
+    - compile-time & runtime tags
+
+      * compile-time: ``extends``, ``block``
 
     - ``autoescape``
 
@@ -1130,7 +1163,17 @@
 
     - ``raw_id_fields`` 是另一种进行 select 的界面.
 
-    - ``readonly_fields`` 应该是 readonly 的啊, 为啥不管用呢?
+    - ``readonly_fields`` 只读列. ``get_readonly_fields()`` 动态自定义最终返回
+      的 readonly fields.
+
+      * 设置某属性在新建时是需要输入的, 在修改时是只读的:
+
+        .. code:: python
+          def get_readonly_fields(self, request, obj=None):
+              if obj is None:
+                  return self.readonly_fields
+              else:
+                  return self.readonly_fields + ("some_field",)
 
     - ``search_fields`` 设置一些可以搜索的列 (包含 related field lookup), 此时
       change list 上面有搜索框.
@@ -1412,7 +1455,8 @@
 
     - model option 和 form option 的对应.
 
-      * ``blank=True`` 对应 ``required=False``.
+      * ``blank=True`` 对应 ``required=False``. 由于默认 Field option ``blank=False``,
+        因此默认 ``required=True``.
 
       * ``verbose_name=`` 对应 ``label=``.
 
