@@ -283,7 +283,7 @@ Headers
 
   * `Host` header can be used for virtual hosting.
 
-- ``Vary`` header
+- ``Vary``
 
   * 与 cache 相关. Vary 的值是一系列 comma separated headers, 这些 headers
     是出现在 request 中的. cache 在缓存 response 时, 将根据 Host, url path,
@@ -294,3 +294,28 @@ Headers
     例如, ``Vary: User-Agent`` 可以避免 mobile browser 收到 desktop 版的页面.
     因如果 cache 中没有 mobile 的 user agent 对应的页面, cache miss 从而向
     原始服务端请求.
+
+- ``Cache-Control``
+
+  * request 和 response 都可以设置.
+
+  * directives.
+
+    - ``public``, response only. response may be cached by any cache.
+
+    - ``private``, response only. response is intended for single user and should
+      not be stored by a shared cache. A private cache may store the response.
+
+    - ``no-cache``, request/response. cache must submit the request to origin
+      server for validation before returning the cached copy.
+
+    - ``no-store``, request/response. cache should not store anything about
+      request/response.
+
+    - ``only-if-cached``, request only. client only want the cached response.
+
+    - ``max-age=<seconds>``, request/response. the max time the resource will
+      be considered fresh.
+
+    - ``must-revalidate``, response only. stale resoures must be validated before
+      serving.
