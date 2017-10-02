@@ -671,7 +671,13 @@
 
   * view decorators for compression
 
-    - ``gzip_page``
+    - ``gzip_page`` 将 ``GZipMiddleware`` 的功能选择性地应用在所需的 view 上面.
+
+  * view decorators for caching
+
+    - ``cache_control(...)``
+
+    - ``never_cache``
 
   * HEAD handling. downstream webserver should strip body of HEAD response
     automatically, so that HEAD handling should be exactly like handling GET.
@@ -691,30 +697,307 @@
       * Object oriented techniques such as mixins (multiple inheritance) can be used
         to factor code into reusable components.
 
-    - Class-based views have an ``as_view()`` class method which returns a function that
-      can be called when a request arrives for a URL matching the associated pattern.
-      The function creates an instance of the class and calls its ``dispatch()`` method.
-      ``dispatch`` looks at the request to determine whether it is a GET, POST, etc, and
-      relays the request to a matching method if one is defined, or raises
-      ``HttpResponseNotAllowed`` if not.
+    - ``View``, base view class. 所有 class-based views 都是它的子类.
 
-    - view 在 render template 时, 提供的 context 可通过 ``get_context_data()`` method
-      自定义.
+    - attributes.
 
-    - ``model`` attribute 定义这个 view 是操作在什么 model 上的.
-      Specifying ``model = SomeModel`` is really just shorthand for saying
-      ``queryset = SomeModel.objects.all()``. ``queryset`` 可以更准确地提取
-      数据集. ``get_queryset()`` method 可以动态获取数据集.
+      * 所有传入 constructor 的 kwargs 都会成为 instance attributes.
 
-    - ``DetailView`` 可以通过 override ``get_object()`` method 来自定义对象获取过程.
+      * 除此之外, ``request``, url pattern 匹配的 ``args`` & ``kwargs``
+        都会成为 view instance attributes.
 
-    - django 中很多 decorator 如 ``login_required`` 都是对所 wrap 的函数参数形式
-      有限制的, 因此不能直接应用到 ``View.dispatch`` method 上 (因为多了一个 self
-      参数). 需要用 ``method_decorator`` 转换一下, 调用 wrapped function 时加上
-      self 参数.
+    - methods.
 
-  * Form. The default implementation for ``form_valid()`` simply redirects to
-    the ``success_url``.
+      * ``as_view()`` class method, returns a function that can be called
+        when a request arrives for a URL matching the associated pattern.
+        The function creates an instance of the class and calls its
+        ``dispatch()`` method.
+
+      * ``dispatch()`` looks at the request to determine whether it is a
+        GET, POST, etc, and relays the request to a matching method if
+        one is defined, or raises ``HttpResponseNotAllowed`` if not.
+
+      * 实现与各个 request method 同名的方法来进行相应处理.
+        若 HEAD 没有实现, 则用 GET 的处理代替.
+
+    - generic view classes.
+
+      这些类提供了一些常用操作的通用实现, 以及一些自定义和扩展方式.
+      但注意这些类仅适用于它所设计的情况, 若与需求不匹配, 请直接去
+      subclass ``View``, 手动实现所需操作.
+
+      CRUD & class-based views.
+      C -- CreateView, R -- DetailView, U -- UpdateView, D -- DeleteView.
+
+      * ``RedirectView``
+
+        - subclass ``View``
+
+      * ``TemplateView``
+
+        - subclass ``TemplateResponseMixin``, ``ContextMixin``, ``View``
+
+      * ``ListView``
+
+        - parent classes
+
+          * ``MultipleObjectTemplateResponseMixin``
+
+            - ``TemplateResponseMixin``
+
+          * ``BaseListView``
+
+            - ``MultipleObjectMixin``
+
+              * ``ContextMixin``
+
+            - ``View``
+
+        - 默认使用 ``<app>/<model>_list.html`` 作为模板, ``template_name`` 参数
+          自定义.
+
+        - template context variable: ``object_list``, 以及 ``<model>_list`` 或者
+          自定义的 ``context_object_name``. 两者的内容相同.
+
+      * ``DetailView``
+
+        - parent classes
+
+          * ``SingleObjectTemplateResponseMixin``
+
+            - ``TemplateResponseMixin``
+
+          * ``BaseDetailView``
+
+            - ``SingleObjectMixin``
+
+              * ``ContextMixin``
+
+            - ``View``
+
+      * ``FormView``
+
+        - parent classes
+
+          * ``TemplateResponseMixin``
+
+          * ``BaseFormView``
+
+            - ``FormMixin``
+
+              * ``ContextMixin``
+
+            - ``ProcessFormView``
+
+              * ``View``
+
+        - ``ProcessFormView`` 定义了 POST 之后对于 valid/invalid
+          form data 分别调用 ``form_valid()`` ``form_invalid()``
+          两个 method, 后两者负责返回 HttpResponse instance.
+
+      * ``CreateView``
+
+        - parent classes
+
+          * ``SingleObjectTemplateResponseMixin``
+
+            - ``TemplateResponseMixin``
+
+          * ``BaseCreateView``
+
+            - ``ModelFormMixin``
+
+              * ``FormMixin``
+
+              * ``SingleObjectMixin``
+
+            - ``ProcessFormView``
+
+              * ``View``
+
+        - 默认 ``template_name_suffix`` ``_form``
+
+      * ``UpdateView``
+
+        - parent classes: 类似 CreateView.
+
+        - 默认 ``template_name_suffix`` ``_form``
+
+      * ``DeleteView``
+
+        - parent classes
+
+          * ``SingleObjectTemplateResponseMixin``
+
+            - ``TemplateResponseMixin``
+
+          * ``BaseDeleteView``
+
+            - ``DeletionMixin``
+
+            - ``BaseDetailView``
+
+        - ``DeletionMixin`` 定义 POST 和 DELETE 都会删除这个对象.
+
+    - view mixins.
+
+      * ``TemplateResponseMixin``
+
+        Every built in view which returns a TemplateResponse will call the
+        render_to_response() method that TemplateResponseMixin provides.
+
+        render_to_response() itself calls get_template_names(), which by
+        default will just look up template_name on the class-based view; two
+        other mixins (SingleObjectTemplateResponseMixin and
+        MultipleObjectTemplateResponseMixin) override this to provide more
+        flexible defaults when dealing with actual objects.
+
+        - ``template_name`` 自定义模板名.
+
+        - ``render_to_response()`` 实现最终的 ``HttpResponse`` 实例化和返回.
+
+        - ``get_template_names()`` 生成模板名字 list.
+
+      * ``MultipleObjectMixin``
+
+        It provides both get_queryset() and paginate_queryset().
+        It uses the queryset or model attribute on the view class to get
+        queryset.
+
+        - ``model`` 定义这个 view 是操作在什么 model 上的.
+          Specifying ``model = SomeModel`` is really just shorthand for saying
+          ``queryset = SomeModel.objects.all()``.
+
+        - ``queryset`` 自定义数据集.
+
+        - ``context_object_name``
+
+        - ``get_queryset()`` method 动态自定义获取的数据集.
+
+      * ``MultipleObjectTemplateResponseMixin``
+
+      * ``ContextMixin``
+
+        Every built in view which needs context data, such as for rendering a
+        template (including TemplateResponseMixin above), should call
+        get_context_data() passing any data they want to ensure is in there as
+        keyword arguments. get_context_data() returns a dictionary; in
+        ContextMixin it simply returns its keyword arguments, but it is common
+        to override this to add more members to the dictionary.
+
+        - ``get_context_data()`` 自定义 context.
+
+      * ``SingleObjectMixin``
+
+        provides a get_object() method that figures out the object based on the
+        URL of the request (it looks for pk and slug keyword arguments as
+        declared in the URLConf, and looks the object up either from the model
+        attribute on the view, or the queryset attribute if that’s provided).
+
+        - ``model``
+
+        - ``queryset``
+
+        - ``context_object_name``
+
+        - ``pk_url_kwarg``, url pattern 中使用的 object 正则 group 名字.
+          默认是 ``pk``.
+
+        - ``get_object()`` 获取单个数据. 使用 ``pk_url_kwarg`` 的值从 queryset
+          中选择要获取的 object.
+
+      * ``SingleObjectTemplateResponseMixin``
+
+      * ``FormMixin``
+
+        - ``form_class``
+
+        - ``success_url``
+
+        - ``form_valid()`` POST valid data 时调用.
+
+        - ``form_invalid()`` POST invalid data 时调用.
+
+      * ``ModelFormMixin``
+
+        - ``fields`` 选择生成的 ModelForm 要包含的 fields.
+          该参数或者 ``form_class`` 必选一.
+
+        - ``model``, ``get_object().__class__`` ``queryset.model``
+          三者之一决定这个 view 所使用的 ``ModelForm`` 是什么.
+
+        - 若未提供 ``success_url``, 使用 ``Model.get_absolute_url()``.
+
+        - ``form_valid()`` 调用 ``form.save()`` 保存 model instance.
+
+        - ModelFormMixin 和一些 form 类型的 view 结合, 成为具体的
+          CreateView, UpdateView.
+
+    - 避免过于复杂的 mixins, main class 的多继承. 如果继承太复杂, 需要太多
+      override 和自定义, 不如自己从基本的 generic view 开始继承, 自己实现
+      所需功能.
+
+      另一种办法是, 将一个复杂 view 所需的功能拆成多个简单的 view 的功能,
+      然后写一个 view 进行 routing.
+
+    - 对于比较简单的自定义, 可以不用去 subclass django 提供的 view classes.
+      只需要在 URLconf 中使用 view class 时, 在 ``.as_view()`` 中传入所需
+      的自定义参数. 这些参数等价于在实例化 view class 时传入 constructor
+      的参数.
+
+    - view decorators & class-based views
+
+      view decorators normally decorate view functions, 预期一定的参数
+      形式 (例如 request 作为第一参数). 因此和 class-based view 一起使用时,
+      要么直接 wrap ``.as_view()`` 返回的 view function; 要么通过 ``method_decorator``
+      转换一下 (使 self 参数成为第一参数), 再应用在 view class 上或者 ``dispatch()``
+      之类的 view method 上.
+
+    - AJAX 处理.
+
+      * 简单的分情况处理: 若要处理 ajax 请求, 只需 override 所需使用的
+        class-based view 中最后返回 HttpResponse 的处理部分, 让它最终返回
+        JsonResponse 即可.  若要能根据请求是否是 AJAX 来区分返回页面还是纯数据,
+        可以判断 ``request.is_ajax()``, 即通过 ``X-Request-With: XMLHttpRequest``
+        header 来辨别, 然后选择返回 ``TemplateResponse`` or ``JsonResponse``.
+
+      * 类比 ``TemplateResponseMixin`` 实现 ``JsonResponseMixin``, 方便与其他
+        generic view 结合.
+
+        .. code:: python
+          class JSONResponseMixin:
+              def render_to_json_response(self, context, **response_kwargs):
+                  return JsonResponse(
+                      self.get_serializable_data(context),
+                      **response_kwargs,
+                  )
+
+              def get_serializable_data(self, context):
+                  # serialize context data to json object, list, etc.
+                  return data
+
+        应用时, 按需 override ``render_to_response()`` 调用
+        ``render_to_json_response()``.
+
+- file upload
+
+  * 上传文件都是 ``UploadedFile`` instance.
+
+  * 使用 ``.chunk()`` method 或者 ``.read(<size>)`` 来渐进地读取文件内容,
+    避免大文件占用过多内存.
+
+  * upload handler.
+
+    - 默认 ``MemoryFileUploadHandler`` 和 ``TemporaryFileUploadHandler``.
+      效果是小文件读入内存, 大文件写入硬盘.
+
+  * settings.
+
+    - ``FILE_UPLOAD_MAX_MEMORY_SIZE``
+
+    - ``FILE_UPLOAD_TEMP_DIR``
+
+    - ``MEDIA_ROOT``
 
 - template
 
@@ -1366,6 +1649,8 @@
 
       * ``CharField``
 
+      * ``FileField``, bound 之后的值 ``.value()`` 是 ``UploadedFile`` instance.
+
     - form field options.
 
       * ``label`` 定义 ``<label>`` tag 内容.
@@ -1464,14 +1749,20 @@
 
     - methods.
 
-      * ``.save()``. ``.save()`` 可以直接保存新的 model instance 或更新现有的
+      * ``.save()``
+
+        ``.save()`` 可以直接保存新的 model instance 或更新现有的
         instance (若 constructor 有 ``instance`` 参数). 它会进行验证.
         它调用 ``Model.save()``.
+
         ``commit=False`` 时并不将数据存入数据库, 而是只返回 model instance.
         若 model 存在 ManyToManyField 需要修改或创建, ``commit=False`` 显然
         不会创建在 form 中选定的那些关联. 这样, 若手动执行 ``Model.save()``
         来保存实例的话, 之后需要使用 ``ModelForm.save_m2m()`` 单独保存选定
         的关联关系至数据库.
+
+        若 model 中定义了 ``FileField`` 且 form 中传入了相应文件, ``.save()``
+        会自动将文件保存至 ``upload_to`` 位置.
 
   * 当一个 form 与某个 model 对应时, 使用 ``ModelForm``, 否则使用 ``Form`` 即可.
 
@@ -1833,6 +2124,9 @@
       初始化 User object (lazily).
 
   * Group
+
+- 当选择将 mixin 与 class 的功能结合使用时, 可以有多个 mixin class, 但只能有一个
+  main class. 并且 mixin 先于 main class 出现在 MRO 中才行.
 
 - django release
 
