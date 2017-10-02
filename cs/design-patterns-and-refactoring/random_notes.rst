@@ -373,3 +373,16 @@
 
 - In today’s complex real world environments there isn’t a single best way
   to do anything.
+
+- 在框架中提供各种 hooks, 作为可以任意扩展的衔接点, 是很重要的灵活性设计.
+  参考 django 中, ModelAdmin, View, Form 等的设计. 对于一个参数或操作, 它们
+  往往提供了默认值或默认实现, 以及各种 ``get_XXX`` 方法. 用户除了可以重新
+  赋值、覆盖等静态自定义之外, 还可以通过自定义 ``get_XXX`` 来动态自定义.
+
+- mixin class and code reuse
+
+  Mixins are an excellent way of reusing code across multiple classes, but they
+  come with some cost. The more your code is scattered among mixins, the harder
+  it will be to read a child class and know what exactly it is doing, and the
+  harder it will be to know which methods from which mixins to override if you
+  are subclassing something that has a deep inheritance tree.
