@@ -237,6 +237,10 @@
 - json decode 时报的 exception, 在 py2 中经常是非常一般化的错误, 难以 catch 单独处理;
   在 py3 中是 ``JSONDecodeError``, 很明确.
 
+- python3 去掉了 unbound method 概念. ``class.func`` 得到的就是定义的函数本身;
+  ``instance.func.__func__ is class.func`` 成立. ``class.func`` 不再具有 ``__func__``
+  属性.
+
 - django 2.0 不再支持 python2.
 
 - py2py3 compatible
