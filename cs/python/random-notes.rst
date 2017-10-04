@@ -881,7 +881,7 @@
   * 对于 user-defined class, 若没有实现 ``__contains__``, 但实现了 ``__iter__``
     则通过 iterate 生成的 iterator 来找相等的元素.
 
-- 一些 special methods:
+- 一些 special attributes & methods:
 
   * ``object.__dict__`` 对象自身定义的所有 attrs.
 
@@ -900,6 +900,17 @@
 
   * ``class.__subclasses__()`` 一个类的所有直接子类. 使用 weakref 来保存这些子类的
     列表.
+
+  * ``instance_method.__self__``, instance reference, readonly.
+
+  * ``instance_method.__func__``, underlying function defined in class, readonly.
+
+  * ``instance_method.__doc__``, same as ``__func__.__doc__``, readonly.
+
+  * ``instance_method.__name__``, same as ``__func__.__name__``, unqualified name,
+    readonly.
+
+  * ``instance_method.__module__``, same as ``__func__.__module__``, readonly.
 
 - 如何创建 read-only class attribute?
 
