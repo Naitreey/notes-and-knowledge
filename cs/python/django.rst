@@ -384,7 +384,10 @@
 
         - ``.exclude()``
 
-        - ``.get()``
+        - ``.get()``, 生成的 sql 与 ``.filter()`` 的相同, 也就是说取回的
+          queryset 可能是多行的, 没有在数据库层做 LIMIT 1 之类的限制.
+          而是在 python 中检查返回的是否为一行, 若不是则 raise DoesNotExist
+          或者 MultipleObjectsReturned.
 
         - ``.distinct()``, 相当于 ``SELECT DISTINCT`` statement.
 
@@ -687,6 +690,33 @@
     error code 对应的 response view. 例如 ``handler400``, ``handler403``,
     ``handler404``, ``handler500``.
 
+  * view shortcut functions.
+
+    - ``django.shortcuts.render()``
+
+    - ``django.shortcuts.redirect()``
+
+      * return ``HttpResponseRedirect``.
+
+      * 输入 model, redirect to ``Model.get_absolute_url()``.
+
+      * 输入 view name (with args, kwargs), redirect to ``reverse()`` url.
+
+      * 输入 absolute/relative url, redirect to that url.
+
+      * ``permanent=True``, return 301 (Moved Permanently) rather than 302 (Found).
+
+    - ``django.shortcuts.get_object_or_404()``
+
+      ``QuerySet.get()`` a single object from a Model/Manager/QuerySet, 满足 args
+      和 kwargs 设置的过滤条件. 语法与 ``Q`` objects + field lookup syntax 相同.
+
+      由于是直接 raise ``Http404``, 所以这只适合在 view 中使用.
+
+    - ``django.shortcuts.get_list_or_404()``
+
+      ``QuerySet.filter()`` a list of objects, 其他同上.
+
   * Class-based views
 
     - class-based views 相对于 function-based views 的一些好处
@@ -696,6 +726,9 @@
 
       * Object oriented techniques such as mixins (multiple inheritance) can be used
         to factor code into reusable components.
+
+    - 处理每个 request, View class 都会实例化一个新的 instance. 所以在
+      写 view class 时不要担心状态存留问题.
 
     - ``View``, base view class. 所有 class-based views 都是它的子类.
 
@@ -732,6 +765,10 @@
       * ``RedirectView``
 
         - subclass ``View``
+
+        - ``url`` 或 ``pattern_name`` 必须设置至少其一, 以指定 redirect url.
+          对于 ``pattern_name``, 通过 ``reverse()`` 生成 url.
+          若两个参数都不能正确获得 url, 将返回 HttpResponseGone (410 -- Gone).
 
       * ``TemplateView``
 
@@ -822,6 +859,9 @@
         - parent classes: 类似 CreateView.
 
         - 默认 ``template_name_suffix`` ``_form``
+
+        - 若要展示一个对象的详情, 并在同一个页面对它进行一定程度的修改,
+          实际上可以使用 UpdateView 很方便地实现, 不使用 DetailView.
 
       * ``DeleteView``
 
@@ -949,8 +989,9 @@
 
       view decorators normally decorate view functions, 预期一定的参数
       形式 (例如 request 作为第一参数). 因此和 class-based view 一起使用时,
-      要么直接 wrap ``.as_view()`` 返回的 view function; 要么通过 ``method_decorator``
-      转换一下 (使 self 参数成为第一参数), 再应用在 view class 上或者 ``dispatch()``
+      要么直接 wrap ``.as_view()`` 返回的 view function; 要么通过
+      ``django.utils.decorators.method_decorator`` 转换一下 (使 self
+      参数成为第一参数), 再应用在 view class 上或者 ``dispatch()``
       之类的 view method 上.
 
     - AJAX 处理.
@@ -1277,32 +1318,18 @@
   * ``FileResponse``
     FileResponse expects a file open in binary mode.
 
-  * view shortcut functions.
+  * 无论是 ``HttpResponse`` 或 ``StreamingHttpResponse`` 都是 ``HttpResponseBase``
+    的子类. 在 HttpResponseBase 中实现了一部分 file-like object interface,
+    这是为了让 WSGI server 去使用, 即把 response 当作 file-like object 使用.
 
-    - ``django.shortcuts.render()``
+    这里有一点是非常重要的. WSGI-compliant server 必须在结束本次 request/response
+    cycle 时, 调用 response 的 ``.close()`` method. 相应地, ``HttpResponseBase``
+    的 ``.close()`` 会将传入自身的所有 closable objects 都关闭掉.
 
-    - ``django.shortcuts.redirect()``
-
-      * return ``HttpResponseRedirect``.
-
-      * 输入 model, redirect to ``Model.get_absolute_url()``.
-
-      * 输入 view name (with args, kwargs), redirect to ``reverse()`` url.
-
-      * 输入 absolute/relative url, redirect to that url.
-
-      * ``permanent=True``, return 301 (Moved Permanently) rather than 302 (Found).
-
-    - ``django.shortcuts.get_object_or_404()``
-
-      ``QuerySet.get()`` a single object from a Model/Manager/QuerySet, 满足 args
-      和 kwargs 设置的过滤条件. 语法与 ``Q`` objects + field lookup syntax 相同.
-
-      由于是直接 raise ``Http404``, 所以这只适合在 view 中使用.
-
-    - ``django.shortcuts.get_list_or_404()``
-
-      ``QuerySet.filter()`` a list of objects, 其他同上.
+    这不但对进程重用 fd 避免 reach max opened files limit 很重要.
+    更关键的是, 对于为了 response 而生成的临时文件, 这是最简单的删除方式.
+    搭配 unnamed temporary file, 我们可以在 file closed 的同时, 内核自动
+    释放硬盘资源.
 
 - static file
 
