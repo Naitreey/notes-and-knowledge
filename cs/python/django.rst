@@ -2128,6 +2128,81 @@
 - 当选择将 mixin 与 class 的功能结合使用时, 可以有多个 mixin class, 但只能有一个
   main class. 并且 mixin 先于 main class 出现在 MRO 中才行.
 
+- middleware
+
+  * middleware 是在 request/response cycle 中, server 和 views 之间的一系列
+    中间操作 (hooks). middleware 的作用是 pre-process request 以及 post-process
+    response.
+
+  * 整个 middleware 体系可类比为一层套一层的同心环, 第一个 middleware 在最外层,
+    views 在圆心. 当外部 call 一个 middleware 并传入 request 时, 这个 middleware
+    负责调用它内层的 middleware/view, 后者再重复进行这个调用链, 完成 request
+    从外部一层层经过所有 middleware 以及 view 的过程. 反向地, response 也进行类似
+    的过程.
+
+  * middleware 通过 middleware factory 定义. 调用它时返回一个 middleware
+    callable. 这个 callable 接受 request 参数, 返回相应的 response.
+
+  * middleware factory 可以是一个 function, 也可以是 middleware class.
+    它的参数是 ``get_response()`` callable, 即它内层的 middleware.
+    它给出的 middleware 可以是一个 function, 也可以是一个 callable instance of
+    middleware class.
+
+  * 在进程的生命周期中, 各个 middleware 只生成一次, 对每个 request 重用.
+
+  * ``settings.MIDDLEWARE`` 定义启用的 middlewares. The order in settings.MIDDLEWARE
+    matters because a middleware can depend on other middleware.
+
+  * class-based middleware 专有的 other hooks
+
+    - ``process_view()``, 在 request pass-through 完成, 即经过所有 middleware 到达
+      view 时, 在 call view function 之前, 会依次调用所有 middleware 的
+      ``process_view()`` hook. 这个 hook 返回 None or HttpResponse. 若是 None,
+      则执行下一个 ``process_view()`` 直至 view function; 若是 HttpResponse,
+      则直接进入 response pass-through 流程, 即经过各 middleware 反向向外走.
+
+    - ``process_exception()``, Django calls process_exception() when a view
+      raises an exception. process_exception() should return either None or an
+      HttpResponse object. If it returns an HttpResponse object, the template
+      response and response middleware will be applied. Otherwise, default
+      exception handling kicks in.
+
+    - ``process_template_response()``, called just after the view has finished
+      executing, if the response instance has a render() method. It must return
+      a response object that implements a render method. It could alter the
+      given response by changing response.template_name and response.context_data,
+      or it could create and return a brand-new TemplateResponse or equivalent.
+
+    - Django automatically converts exceptions raised by the view or by
+      middleware into an appropriate HTTP response with an error status code.
+      This conversion takes place before and after each middleware.
+
+  * 在 request/response cycle 中, middleware/view 的执行流程.
+
+    1. request pass-through 阶段, request 正向经过各个 middleware, 若在任何一个
+       middleware 中 return HttpResponse, 则开始反向向外走.
+
+    2. 经过所有 middleware 之后, 进入 view 处理阶段.
+
+       2a. 正向应用所有 middleware 的 ``process_view()``, 它们返回 None 或 HttpResponse.
+           若其中任一个给出 HttpResponse, 直接开始 response pass-through.
+
+       2b. 执行 view function. 若执行过程中 raised exception, 反向执行各个 middleware
+           的 ``process_exception()``. 若 view function 返回的不是 HttpResponse, raise
+           exception.
+
+       2c. 若 HttpResponse 有 ``.render()`` method, 反向执行各个 middleware 的
+           ``process_template_response()``. 它必须返回带有 ``.render()`` 的
+           HttpResponse. 都执行完成后 render response, 若 render 时 raised exception,
+           再次反向执行各个 middleware 的 ``process_exception()``.
+
+    3. response pass-through 阶段, response 反向经过各个 middleware.
+
+    NB: 在任何一个 middleware/view 中 raised exception 会被转换成 HttpResponse
+        再传递回上层 middleware.
+        在 process_exception 处理时, 若任一返回 HttpResponse 则继续下面的步骤;
+        若全部都返回 None, 则 re-raise exception.
+
 - django release
 
   * new feature release (A.B, A.B+1) every 8 months.
