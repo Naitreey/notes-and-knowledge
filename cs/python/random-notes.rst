@@ -912,6 +912,10 @@
 
   * ``instance_method.__module__``, same as ``__func__.__module__``, readonly.
 
+  * ``object.__len__()``, 必须有这个 special method 才能获取长度. 不会 fallback
+    至其他方式, 例如不会使用 ``iterator.__next__``. 因为仅仅为了获取长度而 exhaust
+    iterator 是不合理的.
+
 - 如何创建 read-only class attribute?
 
 - django extension packages can be found on https://djangopackages.org/
