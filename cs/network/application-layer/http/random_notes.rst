@@ -117,8 +117,8 @@
     header, 将之前设置的 cookie (仅包含 cookie 的值, 不包含 ``Expires`` 等属性)
     传回去.
 
-    浏览器根据 ``Expires`` 决定何时删除 cookie. 若没有该属性则认为是 session cookie,
-    在关闭浏览器时就删除.
+    浏览器根据 ``Expires`` 或 ``Max-Age`` 决定何时删除 cookie. 若两个 directives
+    都有, 优先使用 Max-Age. 若两个都没有则认为是 session cookie, 在关闭浏览器时就删除.
 
     服务端保留着与 cookie 值相关的一系列数据, 即 cookie 值所代表的状态信息.
 
