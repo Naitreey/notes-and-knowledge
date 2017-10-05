@@ -386,3 +386,8 @@
   it will be to read a child class and know what exactly it is doing, and the
   harder it will be to know which methods from which mixins to override if you
   are subclassing something that has a deep inheritance tree.
+
+- multiprocessing, concurrency, race condition, conflict
+
+  * 多进程、多线程写入、修改同一资源, 或 unique key 资源时, 若遇到冲突或竞争关系,
+    最基本的解决办法就是使用循环.
