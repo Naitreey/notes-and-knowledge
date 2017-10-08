@@ -1526,6 +1526,8 @@
   * ``makemigrations --dry-run`` 可用来检查当前记录的数据库结构 (通过
     migration files 来体现) 是否和 models 里的模型代码保持一致.
 
+  * ``clearsessions`` 清除过期的 session data. django 不提供自动清理
+    session 的机制. 可以定期执行这个命令手动清除过期的 session.
 
 - migration
 
@@ -1636,6 +1638,103 @@
     的结果是否符合当前 models 结构.
 
 - session
+
+  * Session data is stored on the server side. 在客户端, session 通过 session ID
+    cookie 进行标识. client-server 通信只传递带 session id 的 cookie, 避免敏感信息
+    泄露.
+
+  * session app: ``django.contrib.sessions``
+    middleware: ``django.contrib.sessions.middleware.SessionMiddleware``
+
+  * 默认配置下, session 是写入数据库的 ``django_session`` 表.
+    ``SESSION_ENGINE`` 控制使用的 session backend.
+    session 有多种 backend 选择: cache, cached_db, db, file, signed_cookies.
+
+    若使用 cache 存 session, 根据 django 文档, 此时应该用 memcached 作为
+    cache backend. It'll be faster to use file or database sessions directly
+    instead of sending everything through the file or database cache backends.
+    The local-memory cache backend is NOT multi-process safe.
+
+  * SessionMiddleware 生成 ``request.session`` attribute, 它是一个 dict-like object
+    (mapping protocol), instance of ``backends.base.SessionBase``.
+
+  * ``SessionBase``
+
+    - SessionBase 是各个 session backend (``SESSION_ENGINE``) 中 ``SessionStore``
+      的父类. 每一个 SessionStore instance 就是一个 session data.
+
+    - 各个 session engine 统一使用了 SessionBase 提供的 session data 编码解码方式,
+      即各个 session engine 存储的 session data 格式是统一的.
+
+    - attributes
+
+      * ``session_key``, session data 唯一标识, readonly.
+
+      * ``modified``, session data 是否被修改过. 修改 ``request.session``
+        时, 该属性自动设置 True. 从 view function 返回之后, SessionMiddle
+        会根据该属性值来 ``.save()`` session 以更新或新建 session entry;
+        并在 response 中加入 ``Set-Cookie`` header, 更新/设置 session cookie.
+
+    - methods
+
+      * ``__init__()``, 传入现有 session key, 从 backend 创建 session 实例.
+
+      * mapping protocol methods
+
+      * ``flush()``, delete session data. SessionMiddleware 随后会设置 response
+        去删除客户端的 session id cookie (设置 Set-Cookie header 的过期时间在过去).
+
+      * ``create()``, 在 session engine 中创建保存了当前 session data 的新 session
+        entry. 生成唯一的 session_key.
+
+      * ``save()``, 用当前数据更新现有 session entry 或者生成新 session entry.
+
+      * ``set_expiry()``, 若没有调用该操作, 将使用全局的 expiry policy,
+        涉及 settings.SESSION_COOKIE_AGE.
+
+      * ``get_expiry_age()``
+
+      * ``get_expiry_date()``
+
+      * ``get_expire_at_browser_close()``
+
+      * ``clear_expired()``
+
+      * ``cycle_key()``, 对同一个 session data 赋值新的 session key.
+        login() 调用这个操作, 以解决 session fixation attack.
+
+      * ``set_test_cookie()``, ``test_cookie_worked()``, ``delete_test_cookie()``
+        测试客户端浏览器是否接受 cookie. (测试流程可以封装成 middleware?)
+
+    - 各个 backend 的 SessionStore 要实现以下方法, ``exists()``, ``create()``,
+      ``save()``, ``delete()``, ``load()``, ``clear_expired()``.
+
+  * session dict 中, ``_xx`` 形式的 key 是 django 内部使用的.
+
+  * ``db`` backend
+
+    - ``Session`` model, 代表数据库中的 session entry.
+      Session model 仅对 db backend 有意义.
+
+  * Note that the session cookie is only sent when a session has been created
+    or modified.
+
+  * settings.
+    
+    - ``SESSION_COOKIE_AGE`` 设置全局的 session cookie ``max_age`` 参数值.
+      该值默认为 2 weeks.
+
+    - ``SESSION_ENGINE``, 设置 session backend.
+
+    - ``SESSION_SAVE_EVERY_REQUEST``, 是否每个 request 都更新 session.
+
+    - ``SESSION_EXPIRE_AT_BROWSER_CLOSE``, 设置 session id cookie 是否是
+      (browser-) session cookie, 即只持续当前浏览器 session.
+
+  * 只有用户明确 logout 时, 才会主动从 session store 中删除这条 session entry
+    (通过 ``logout()``). 对于 persistent session store, session 从不自动删除,
+    即使过期. 因此需要定期执行 ``clearsessions`` 命令删除过期 session.
+    对于 cache-based session store, 显然不存在这个问题.
 
 - form
 
@@ -1829,6 +1928,10 @@
       When a user logs in, the user’s ID and the backend that was used for
       authentication are saved in the user’s session. This allows the same
       authentication backend to fetch the user’s details on a future request
+
+    - 除了 ``login()`` 之外, ``AuthenticationMiddleware`` 会根据 request 
+      中的 session id 信息, 匹配相应用户, 设置 ``request.user``. 从而避免
+      跳转至 login 页面和再次 ``login()``.
 
     - login url 在 ``settings.LOGIN_URL`` 设置, 默认是 ``/acounts/login``.
       该值应该按照项目中用户模型、view 等的具体情况进行设置. 并且可以设置为
