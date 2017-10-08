@@ -312,6 +312,7 @@ Returner
 Salt Cloud
 ----------
 
+- 目前不支持 docker 作为 cloud privder.
 
 Configuration
 -------------
