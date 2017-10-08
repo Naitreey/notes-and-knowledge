@@ -128,12 +128,29 @@
   * cookie 术语: session cookie, persistent cookie, secure cookie, HttpOnly Cookie,
     SameSite cookie, third-party cookie, supercookie, zombie cookie.
 
-  * ``Set-Cookie`` 可以设置 ``Domain`` 属性, 给其他域名设置 cookie, 这称为
-    third-party cookie. 这经常用于 tracking/advertising.
-
   * HttpOnly cookie 可以防止 cookie 因 cross-site scripting attack 而泄露.
 
   * SameSite cookie 可以防止 CSRF attack.
+
+  * tracking cookie, third-party cookie. 用于 tracking/advertising. 原理是在不同的
+    站点加入向同一 domain (例如广告提供商) 的请求 (例如获取广告内容). 该 domain
+    在 response 中设置 cookie, 从而标识用户. 在请求中, 包含 origin 信息, 从而
+    广告提供商能够建立该用户对不同网站的访问历史等信息. 该请求可能是静态文件加载,
+    或者是跨站 CORS 脚本请求.
+
+  * ``Set-Cookie`` header
+
+    - directives: ``<cookie-name>=<value>``, ``Expires=``, ``Max-Age=``,
+      ``Domain=``, ``Path=``, ``Secure``, ``HttpOnly``, ``SameSite=``.
+
+    - cookie name 若包含 ``__Secure-`` prefix, 必须搭配 ``Secure`` flag.
+
+    - cookie name 若包含 ``__Host-`` prefix, 必须搭配 ``Secure`` flag, 不能有
+      ``Domain=`` directive (从而只应用在同一个 FQDN 上), 并且必须 ``path=/``.
+
+    - ``Domain=<domain>`` 必须是与当前 subdomain 位于同一个 site 中的 domain name.
+      浏览器会拒绝跨站的 cookie, 这是出于安全考虑. 否则任何一个网站可以随意给别的
+      网站设置 cookie. 若指定了 ``<domain>``, 则它所有的 subdomains 都包含在内.
 
 - Session management:
 
@@ -171,42 +188,6 @@
   method 进行, 加上 ``Access-Control-Request-Method`` 和 ``Access-Control-Request-Headers``
   headers. 只有响应中 ``Access-Control-Allow-Origin`` ``Access-Control-Allow-Methods``
   ``Access-Control-Allow-Headers`` 包含请求中的值时浏览器才允许接下来的真正请求.
-
-- Cross Site Request Forgery
-
-  * CSRF 是恶意页面假冒为用户, 向可信站点的请求行为.
-
-  * CSRF 和 XSS attack 的区别:
-
-    - CSRF 的形式不一定是脚本请求, 或者说往往不是脚本请求, 它往往是通过某种方式
-      伪装一个 GET url, 例如 img, link 等; 或者伪装一个 POST form.
-      XSS 特指的是通过脚本发起的跨域请求.
-
-    - CSRF 一般是伪造向用户信任的站点的请求, 以企图冒充用户实现某种行为;
-      XSS 一般是向 attacker 自己的站点发送请求, 包含从用户端收集到的敏感信息.
-
-  * CSRF attack 的应对方式:
-
-    - 在 form 中加入 CSRF token field, 由于不是 same origin 的请求拿不到该页面上的
-      token, 即使拿到敏感 cookie 也无法让 POST 合法.
-
-    - 对于动态的 ajax 请求, 设置 csrf token header. 跨域请求虽然能带上 csrf token
-      cookie, 但读不到 cookie 的值, 不能设置 csrf token header, 这样的请求会被
-      服务端拒绝.
-
-    - 目前一种新方式是使用 SameSite cookie. 这样不是相同来源的请求根本拿不到敏感
-      cookie, 不再需要额外的 csrf token 的验证. 让浏览器自己去限制, 省去了人工实现
-      csrf token 的麻烦.
-
-  * CSRF 的对抗手段一般只保护状态改变类的操作比如 PUT/POST. 因为默认 GET 仅用于 "获取"
-    类型的操作, 考虑到 CSRF 的各种实现手段, 这样的 GET 不会造成危险.
-
-- 不能用 GET 进行 state change 操作的最致命原因: 默认 GET 是安全操作, 一般没有 CSRF
-  防护.
-
-- 作为客户端用户, 防止 XSS/CSRF attack 的唯一靠谱方式就是不访问不靠谱的网站.
-  剩下的只能依靠 "靠谱" 网站的研发能重视安全性, 使用了 HttpOnly/SameSite cookie,
-  检查输入的 html 和 js 代码, 等防范手段.
 
 - 为什么需要不同的 method, 为什么不能全都用 GET?
 
@@ -319,3 +300,52 @@ Headers
 
     - ``must-revalidate``, response only. stale resoures must be validated before
       serving.
+
+Security
+--------
+- Cross Site Request Forgery
+
+  * CSRF 是恶意页面假冒为用户, 向可信站点的请求行为.
+
+  * CSRF 和 XSS attack 的区别:
+
+    - CSRF 的形式不一定是脚本请求, 或者说往往不是脚本请求, 它往往是通过某种方式
+      伪装一个 GET url, 例如 img, link 等; 或者伪装一个 POST form.
+      XSS 特指的是通过脚本发起的跨域请求.
+
+    - CSRF 一般是伪造向用户信任的站点的请求, 以企图冒充用户实现某种行为;
+      XSS 一般是向 attacker 自己的站点发送请求, 包含从用户端收集到的敏感信息.
+
+  * CSRF attack 的应对方式:
+
+    - 在 form 中加入 CSRF token field, 由于不是 same origin 的请求拿不到该页面上的
+      token, 即使拿到敏感 cookie 也无法让 POST 合法.
+
+    - 对于动态的 ajax 请求, 设置 csrf token header. 跨域请求虽然能带上 csrf token
+      cookie, 但读不到 cookie 的值, 不能设置 csrf token header, 这样的请求会被
+      服务端拒绝.
+
+    - 目前一种新方式是使用 SameSite cookie. 这样不是相同来源的请求根本拿不到敏感
+      cookie, 不再需要额外的 csrf token 的验证. 让浏览器自己去限制, 省去了人工实现
+      csrf token 的麻烦.
+
+  * CSRF 的对抗手段一般只保护状态改变类的操作比如 PUT/POST. 因为默认 GET 仅用于 "获取"
+    类型的操作, 考虑到 CSRF 的各种实现手段, 这样的 GET 不会造成危险.
+
+- 不能用 GET 进行 state change 操作的最致命原因: 默认 GET 是安全操作, 一般没有 CSRF
+  防护.
+
+- 作为客户端用户, 防止 XSS/CSRF attack 的唯一靠谱方式就是不访问不靠谱的网站.
+  剩下的只能依靠 "靠谱" 网站的研发能重视安全性, 使用了 HttpOnly/SameSite cookie,
+  检查输入的 html 和 js 代码, 等防范手段.
+
+- 敏感信息重登录和 session fixation.
+
+  如果浏览器本身具有未过期的合法 session id, 那么可以认为当前浏览器 "可能是" session
+  对应用户, 可以显示基本的用户信息如用户名, 以及应用用户的自定义设置等 (例如 google
+  search); 但是当浏览器访问敏感信息时, 需要要求用户重登录, 认证确实用户本人. 在认证
+  后, 返回新的 session id, 并标识用户 session 已经认证 (例如在 session 数据中添加
+  已认证的 key).
+
+  这么做 (认证当前用户确实是声称的用户) 一般化地讲, 是为了避免 session fixation attack.
+  就是用户 B 使用 A 的合法 session id, 仿冒用户 A. 这种仿冒在重登录操作处被截断.
