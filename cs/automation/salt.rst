@@ -4,7 +4,7 @@
   不同的方式仅在 Salt 的使用方式上有区别 (例如 ``salt``, ``salt-call`` 等),
   salt 的所有 modules 可以在任何一种方式中使用.
 
-- 在 jinja2 模板中可访问的参数:
+- 在 jinja2 模板中可访问的 salt 参数 (除了标准 jinja 功能之外):
 
   * minion configuration values
 
@@ -161,7 +161,7 @@ State
 
   * ``module.run`` 用于在 salt state 中执行 execution module.
 
-- Top file.
+- Top file
 
   The Top file is used to apply multiple state files to your Salt minions
   during a highstate. Targets are used within the Top file to define which
@@ -179,7 +179,7 @@ State
 
 - Salt YAML requirements.
 
-  * 每层缩进必须是 2 spaces.
+  * 每层缩进推荐是 2 spaces.
 
   * quick vim config: ``# vim:ft=yaml:expandtab:tabstop=2:shiftwidth=2:softtabstop=2``.
 
@@ -293,11 +293,25 @@ Runner
   这些操作可能是关于 master 自己的, 或者是整个 master/minion 系统的管理性质的操作,
   总之不是直接去对 minion 进行操作.
 
-- Orchestrate runner
-
 - runner modules
 
   * ``state.event``
+
+Orchestrate Runner
+------------------
+
+- orchestrate runner 用于配置 salt master 所管理的各系统之间的的依赖关系状态.
+  默认情况下, salt 并发地对所有 minion 发布任务, 并且各 minion 之间是相互独立的.
+  Orchestrate runner 允许配置 minion 之间的 dependency 关系, 状态应用的顺序,
+  以及 (minion 级别的) 状态应用的条件等.
+
+- The state.sls, state.highstate, et al. execution functions allow you to statefully
+  manage each minion and the state.orchestrate runner allows you to statefully
+  manage your entire infrastructure.
+
+- orchestrate runner 与其他 runner 一样, 是运行在 master 上的 (这样才可以进行
+  inter minion 的 orchestration, 就像乐团指挥一样).
+
 
 Wheel
 -----
@@ -312,7 +326,25 @@ Returner
 Salt Cloud
 ----------
 
-- 目前不支持 docker 作为 cloud privder.
+docker
+~~~~~~
+docker 有两种使用模式, 这对应着 salt 与 docker 的搭配使用有两种模式:
+
+1. 如果 docker container 是看作一个独立的虚拟机运行环境, 在其中运行一整套或者
+   部分 userspace 进程体系, 这个运行环境一旦 spawn up 就不再轻易重建, 是持续
+   运行的, 所需的修改是直接应用在容器环境中, 而不代表由 dockerfile 定义的状态.
+   这样则适合在容器环境中安装 salt-minion, 进行自动化修改.
+
+2. 如果 docker container 是看作一个 sandboxed 的应用, 对这个应用所做的所有修改
+   都需要在 dockerfile 中保存状态、重新构建镜像、重新部署容器, 不会在容器内部
+   进行应用状态修改. 这样意味着整个容器就代表着某个由 dockefile 定义的状态,
+   从而不该在容器内部安装 salt-minion 进行 runtime 修改, 而是在 host machine
+   中安装 salt-minion, 来应用容器状态 (即起停容器等操作).
+
+对于第一种方式, 适合 docker cloud 的方式. 但是由于目前不支持 docker 作为
+cloud privder, 所以只能手动做.
+
+对于第二种方式, 有 docker-ng state module.
 
 Configuration
 -------------
@@ -389,7 +421,7 @@ Internals
 
   * publish-subscribe model.
 
-    - publisher port 4505, minion 连接 master 上的 4050 端口, 监听任务信息.
+    - publisher port 4505, minion 连接 master 上的 4505 端口, 监听任务信息.
       任务异步地从该端口发送至所有 minions.
 
     - request server port 4506, minion 按需连接该端口以获取各种所需文件和数据,
