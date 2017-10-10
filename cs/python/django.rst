@@ -2333,6 +2333,14 @@
         在 process_exception 处理时, 若任一返回 HttpResponse 则继续下面的步骤;
         若全部都返回 None, 则 re-raise exception.
 
+- messages framework
+
+  * 提供 cookie- and session-based messaging.
+
+  * ``django.contrib.messages`` 默认就有运行. 它提供 ``MessageMiddleware``, 并
+    依赖于 SessionMiddleware (messages 部分功能依赖 session 生效), 以及
+    ``messages`` context processor.
+
 - django release
 
   * new feature release (A.B, A.B+1) every 8 months.
