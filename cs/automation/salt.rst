@@ -44,12 +44,48 @@ Grains
 
 - The static information SaltStack collects about the underlying managed system.
 
-- Add custom ``role`` grain to minion configuration file to categorize minions
-  by functionality.
+- grains types
+
+  * core grains modules, 在 salt package 中 grains 部分的所有公有函数.
+
+  * 自定义静态 grains data. 在 ``/etc/salt/minion`` 的 ``grains:`` 下面添加, 或者
+    ``/etc/salt/grains`` 文件中添加. 例如, Add custom ``role`` grain to categorize
+    minions by functionality.
+
+  * custom grains modules. Custom grains modules should be placed in a
+    subdirectory named _grains located under the file_roots specified by the
+    master config file. The default path would be /srv/salt/_grains. Custom
+    grains modules will be distributed to the minions when state.highstate is
+    run, or by executing the saltutil.sync_grains or saltutil.sync_all
+    functions.
+
+  注意, grains 数据对特定的 minion 应该是相对静态的. 因此 custom grains module
+  对特定 minion 应该生成比较稳定的输出. 并且这些数据是用于 targeting minions.
+
+- grains 数据优先级从高至低:
+
+  * custom grains modules ``salt://_grains``
+
+  * custom grains data ``/etc/salt/minion``
+
+  * custom grains data ``/etc/salt/grains``
+
+  * core grains modules
+
+- The content of /etc/salt/grains is ignored if you specify grains in
+  the minion config.
 
 - Since grains are simpler than remote execution modules, each grain module
   contains the logic to gather grain data across OSs (instead of using multiple
   modules and __virtualname__).
+
+- ``grains.ls``, ``grains.items`` execution module 获取 grains 列表和 grains 数据.
+
+- ``grains.get`` execution module 获取某项 grain 值.
+
+- ``saltutil.refresh_modules`` execution module 更新 modules 和 grain data.
+
+- ``saltutil.sync_grains`` 同步 custom grains modules 至各个 minion.
 
 Execution
 ---------
@@ -77,6 +113,18 @@ Execution
   * ``event.send``
 
   * ``sys.doc`` 获取 module/function doc.
+
+  * ``grains.ls``
+
+  * ``grains.items``
+
+  * ``grains.get``
+
+  * ``saltutil.refresh_modules``
+
+  * ``saltutil.sync_grains``
+
+  * ``saltutil.sync_all`` 同步各种 custom modules 至 minion.
 
 
 - Execution functions vs State functions
@@ -465,3 +513,31 @@ Internals
 
   * 注意到 salt yaml 配置中使用 list 里嵌 single-keyed map 的原因就是为了同时支持
     python 的 postional args 和 kwargs 两种参数形式.
+
+Configuration
+-------------
+
+minion
+~~~~~~
+
+- Primary configurations
+
+  * ``minion_id_caching``, 将 minion id 缓存在 ``minion_id`` file 中. 这是为了当
+    minion 配置文件中没有定义 ``id`` 时, resolved minion id 值不随 hostname 的
+    改变而改变, 避免 master 不认识这个 minion.
+
+  * ``id``, 指定 minion id. minion id 的 resolution order:
+
+    - ``id`` 值 override 所有其他.
+
+    - ``socket.getfqdn()``
+
+    - ``/etc/hostname``
+
+    - ``/etc/hosts`` 中 127.0.0.0/8 子网下的任何域名.
+
+    - publicly-routable ip address
+
+    - privately-routable ip address
+
+    - localhost
