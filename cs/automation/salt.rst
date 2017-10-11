@@ -331,7 +331,7 @@ Reactor
       <operation_id>:
         local.<module>.<function>:
           - tgt: <target>
-          [- expr_form: <type>]
+          [- tgt_type: <type>]
           - arg: <arg_list>
 
 Runner

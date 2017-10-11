@@ -1560,7 +1560,8 @@
     unapply necessary migrations.
 
   * django 生成的 migrations 需要仔细检查, 对于复杂的数据库修改, 不能保证不出错,
-    必要时需要手动修改甚至手动创建 migrations.
+    必要时需要手动修改甚至手动创建 migrations. 对于自动生成的 migrations, 尤其是
+    ``squashmigrations`` 生成的 migration file, 一定要测试可用.
 
   * ``makemigrations`` 和 ``migrate`` 操作一般不要限制 ``app_label``, 要对所有 apps
     同时进行. 因为 model 之间经常是相互依赖的. 如果只对某个 model 更新数据库状态
