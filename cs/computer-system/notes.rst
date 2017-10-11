@@ -24,46 +24,6 @@
 - 一个设备不需要驱动不是说它真的不需要驱动, 而是说它遵从某种标准规范, 使用某种
   标准驱动, 而在大部分情况下, 这种标准驱动的 kernel module 已经安装好了.
 
-- USB
-
-  * 标准: 1.0, 1.1, 2.0, 3.0, 3.1.
-
-  * 速度: Low Speed (1.0), Full Speed (1.1), High Speed (2.0), Super Speed (3.0),
-          Super Speed+ (3.1).
-
-  * 插头类型:
-
-    - plug: type-A, type-B, type-C.
-
-    - receptacle: type-A, type-B, type-C, type-AB
-
-    - 子类型: standard, mini, micro
-
-    注意 USB 标准的设计考虑的是计算机 (host) 和其他设备之间的连接, 这种连接在设计时
-    考虑了方向性 (例如供电的方向性, 避免过载等). 为了在物理连接上能强制实施这种方向性,
-    USB cable 的两端一般采用不同类型的 connector, 例如 standard-A 和 micro-B. 由于
-    host 一般是计算机等大型设备, A 端一般采用的是 standard 子类型, 而 B 端一般采用
-    mini 或 micro 类型, 或者另一端不是 B 而是 C.
-
-    cable 两端都不是 standard-A 的情况出现在 USB On-The-GO 中, 也就是说两个便携设备之间
-    直连的情况.
-
-  * Host controller interface (HCI): HCI 是 usb 控制端硬件实现的控制接口, 它在
-    即主板或 usb 扩展卡上实现, 用于控制 usb 硬件设备. 在操作系统中实现了 HCI 的驱动,
-    即 Host Controller Driver (HCD). HCI 有以下几代:
-
-    - Open Host Controller Interface (OHCI) 和 Universal Host Controller Interface (UHCI).
-      For USB 1.0 low speed & USB 1.1 full speed (两者都支持这两种速度).
-      Linux driver 是 ohci_hcd 和 uhci_hcd.
-
-    - Enhanced Host Controller Interface (EHCI). For USB 2.0, high speed.
-      Linux driver 是 ehci_hcd.
-
-    - eXtensible Host Controller Interface (XHCI). 替代 OHCI/UHCI/EHCI,
-      支持所有过去的 USB 标准, 新的 USB 3.0 SuperSpeed 和 3.1 SuperSpeed+,
-      以及未来的标准.
-      Linux driver 是 xhci_hcd.
-
 - 整个主板上的各个组件需要的时钟频率都是从一处生成然后再转换成各种总线所需的
   频率的. 原始的时钟频率可能有两个来源:
 
@@ -146,42 +106,6 @@
   至 PCH, 经由 DMI 至 CPU uncore (memory controller), 经由 DDR4 memory bus 至
   DIMM RAM 设备.
 
-- memory-mapped IO vs port-mapped IO
-
-  port-mapped IO 是出现得比较早的, 因为在早期, 访问内存和设备 IO 这两件事比较适合
-  分开处理, 那时 cpu 的地址寄存器比较小, 只够存物理内存地址的长度, 不能再多出来
-  几个 bits 构成包含设备地址的 extended address space.
-
-  对于基于 port-mapped IO 的系统, 有 memory address space 和 IO address space
-  两种. 前者就是 RAM 访问, 后者是 peripheral device 访问. 在 IO address space
-  中, 一个设备使用的地址范围中, 第一个地址被称为 IO port 或 IO base address.
-  由于 CPU 对内存和设备的读写是不同的, 对设备进行 IO 需要使用 (不同于内存的)
-  专门设计的指令. 因此使用 port-mapped IO 的 CPU, 需要实现更复杂的逻辑,
-  带来了更多的麻烦.
-
-  对于基于 memory-mapped IO 的系统, 只有 memory address space, 但其中的一部分是
-  分配给 RAM, 其他部分按需分配给各个 peripheral device. 由于 CPU 对内存和设备
-  的读写使用通用的指令, 这样的 CPU 逻辑相对简单一些, 更易于编程, 运行更快.
-
-  PMIO 实现方式: IO address space, CPU IO 指令, CPU IO pin, IO bus.
-  MMIO 实现方式: memory address space, CPU 内存指令, address code decoder.
-
-  peripheral device 进行 IO 的流程:
-  1. driver 通过 MMIO/PMIO 方式向设备的寄存器写入 DMA 相关信息
-     (要读写的 DMA 地址和读写长度等);
-  2. driver 启动设备 DMA;
-  3. 设备通过 IOMMU 进行 DMA, 完成 IO 过程;
-  4. 设备向 CPU 发送 interrupt, 告知 IO 已经完成;
-  5. kernel 的 interrupt handler 中, driver 进行清理工作, 包括清理 DMA mapping,
-     清理数据 buffer, etc.
-
-  x86 架构的系统, 两种 IO 都有使用. 且应该主要是在使用 MMIO.
-  在 linux 中, MMIO 映射可以通过 ``/proc/iomem`` 找到, 尤其是对于 PCIe 设备,
-  还可以通过 ``lspci -vvv`` 看到; PMIO 映射可以通过 ``/proc/ioports`` 找到.
-
-  在 OS 中, usersapce 应用一般不能直接访问映射的内存地址或 IO 地址. 这些只有
-  device driver 能直接访问.
-
 - Modern memory buses are designed to connect directly to DRAM chips. 这大致意味着
   memory bus 本身的速度上限相对于 DIMM 本身的速度可能是一个高阶量, 可以不去考虑.
   只考虑内存条本身的数据传输速度即可.
@@ -189,151 +113,6 @@
 - 如何访问 DRAM 中存储的一个 bit: 向 DIMM 上一个确定的 memory chip 发送请求,
   给出要访问的 memory bank array 的编号, 给出这个 array 上要访问的 word line (行)
   和 bit line (列) 编号.
-
-- 主板的 BIOS 软件存在 flash memory 上 (NOR or NAND), 由于是 flash memory, 可以重写
-  以升级 BIOS.
-
-  主板的设置保存在 CMOS 存储上. CMOS 是 volatile 的, 需要通电以维持数据. 它的电力
-  由主板上的电池提供. 所以把主板电池扣下来或者采用特定的 CMOS 短路机制可以重置
-  主板设置. (重置 CMOS 应该能够重置主板密码吧?)
-
-- 主板上的电池用于维持 CMOS 数据以及维持 Real Time Clock (RTC).
-
-- reset button 如何工作的:
-
-  按了 reset button 之后, 主板给所有设备发送 reset signal.
-  由于 CPU 被 reset, 所以从固定的 reset vector 地址处开始执行. 对于 cold
-  boot, northbridge (uncore) 把这个地址请求转发到 firmware flash memory 上;
-  对于 soft boot, BIOS 已经在内存中了, 所以该地址请求直接转发到内存中的对应
-  地址上. 总之, CPU 从 reset vector 处开始执行, 即开始执行 BIOS, 从而开始了
-  boot sequence. BIOS 在 soft boot 时, 会跳过 POST 过程.
-
-- Bootup sequence
-
-  #. PSU 接通, 主板 chipset 等待 PSU 稳定下来, 期间给 CPU 发送 reset signal,
-     防止 CPU 过早启动. chipset 收到 PSU 发送的 Power Good signal 之后, 停止
-     抑制 CPU 运行.
-
-  #. CPU 从主板 firmware (EEPROM/flash memory) 上的固定地址位置开始执行,
-     即 UEFI/BIOS 开始接管启动流程.
-
-  #. BIOS 进行 Power On Self-Test (POST), 检查 CPU, 中断控制器、DMA controllers
-     以及 chipset 的其他设备, DRAM, 显卡, 硬盘等等. 并对这些硬件进行基本的配置.
-     如今 POST 已经不会仔细检查 RAM 了, 否则会太慢, 只进行很基本的检查以及读取
-     SPD info 来配置 CPU memory controller.
-
-  #. BIOS 把自己加载到内存中. 此后, BIOS 程序只在内存中运行.
-
-  #. BIOS 启动显卡, 点亮屏幕, 输出 POST 以及其他检测信息.
-
-  #. BIOS 检查 USB, 硬盘, 键盘等 peripherals, 并输出相应信息.
-
-  #. BIOS 读取系统时间, 读取 CMOS 存储的配置.
-
-  #. BIOS 根据 CMOS 保存的启动顺序选择从哪个存储设备启动, 并从该设备读取
-     bootloader 程序至内存. 若该存储设备是硬盘, 对于 BIOS-MBR, BIOS 读取
-     MBR 来加载 bootloader; 对于 UEFI-GPT, UEFI 读取 EFI System Partition (ESP)
-     来加载所需 bootloader.
-
-  #. BIOS 将 CPU 控制权移交 bootloader. 自己仍在内存中, 成为 runtime service,
-     供 bootloader 和 OS 使用.
-
-  #. bootloader 使用 BIOS 访问存储设备, 读取自己的配置.
-
-  #. bootloader 根据某个配置, 使用 BIOS 访问存储设备和文件系统, 找到并将 kernel
-     和 initramfs 读入内存.
-
-  #. bootloader 执行 kernel 并添加指定的命令行参数, 将 CPU 控制权移交 kernel.
-
-- firmware 是主板的软件, UEFI/BIOS 是这个软件提供的面向操作系统的 interface.
-  主板的 firmware 主要提供两种服务, boot service 和 runtime service.
-  在启动时, 它主要提供硬件检查和配置以及加载 OS bootloader 的服务;
-  在运行时, bootloader 使用 BIOS/UEFI firmware 来访问存储设备等, OS 使用 firmware
-  来进行某些硬件控制.
-
-- firmware 和 OS 各需要一套 driver, 以访问硬件. 显然 firmware 这套驱动要基础很多,
-  只包含很基础的功能.
-
-- 如今几乎所有的 PC/server 等类型的计算机的主板都使用的是遵循 UEFI 标准的固件.
-  Linux/Windows/macOS 等都是 UEFI-aware 的, 意思是它们的 bootloader 能够在 bootup
-  过程中调用 UEFI boot service 去访问硬件 (在 OS kernel 加载之前), 并且在 OS kernel
-  运行过程中, 可以调用 UEFI runtime service 去进行某些硬件操作 (比如 RTC, fans,
-  suspend-to-RAM, 等).
-
-  OS kernel 尽量通过自己的 driver 直接访问几乎所有硬件, 原因是:
-
-  * kernel driver 可以灵活地使用设备的全部功能和发挥其性能;
-
-  * 通过 UEFI/BIOS 转发会低效一些;
-
-  * BIOS 运行在 real mode, 在 kernel 和 BIOS 之间切换需要切换 CPU 的模式 3 遍, 更低效.
-
-  但仍有极少量硬件操作需要依赖 UEFI/BIOS, 比如 suspend-to-RAM.
-  基本上在 OS 常态运行期间, kernel 已经不再需要 BIOS/UEFI 提供的 runtime service,
-  从而不需要控制权转换或 CPU 模式转换, 而是自己直接访问硬件.
-
-- BIOS 运行时 CPU 处于 16-bit real mode, 读取 MBR、加载 bootloader 和 bootloader
-  的初始执行, 都是在 16-bit real mode 下.
-  bootloader (e.g., GRUB) 的任务之一就是切换 CPU 到 protected mode.
-
-  对于 UEFI 系统, UEFI 开始执行后很快就切换到 protected mode. 而 ESP 分区上的所有
-  EFI applications 都是在 protected mode 中执行的. 注意到这些 ``.efi`` 应用都是
-  PE32 executable, 使用的虚拟内存.
-
-  因此, BIOS 系统中的 grub 与 UEFI 系统中的 grub 应该是不同的.
-
-- UEFI 的设计要求易于扩展, 功能丰富、灵活. 这些自然要求 UEFI firmware 是运行在
-  protected mode 或 long mode 中的, 并且具有模块化的设计 (EFI applications).
-
-  UEFI 相对于 BIOS firmware 的一些优点:
-
-  * 支持 GPT, 向后兼容 MBR.
-
-  * 模块化设计 (EFI application).
-
-  * 运行于 protected/long mode, 而不是 real mode. 能够实现复杂的 EFI application,
-    从而可以构建灵活的 pre-OS environment.
-
-- 由于 x86 CPU 启动时运行在 real mode, 要求 BIOS 软件在这个模式下运行, 而且 BIOS 由于
-  历史原因, 一直只在 real mode 中运行, 因此很不灵活, 且直接依赖于 x86 CPU real mode.
-  与之对应, UEFI 在启动后迅速切换 CPU 至自己所需的 mode, 比如 protected mode, long mode.
-  因此 UEFI 是 CPU-independent 的架构.
-
-- UEFI-MBR 或 UEFI-GPT 组合在分区时要有 ESP 分区, 放置 EFI application,
-  包含 bootloaders (比如 grub), UEFI shell 等. ESP 分区的文件系统是 UEFI 规定的 FAT fs,
-  这样 UEFI 才有能力去访问.
-
-  注意 UEFI 不是说一定要和 GPT 分区方式配合.
-
-- 几种 bootup 组合方式:
-
-  * BIOS-MBR
-
-    BIOS (或者 UEFI 在 CSM 模式下) 读取 MBR 分区表 LBA0, 执行 bootstrap code,
-    后者加载 bootloader.
-
-  * BIOS-GPT
-
-    GPT 的 LBA0 是 protective MBR, 可以设置在安装 bootloader 时, 与 MBR 相同, 将
-    bootstrap code 写入 protective MBR. 这样 BIOS 可以和平时一样, 不去管分区表,
-    直接读 LBA0 来加载 bootloader. 由于 BIOS 不认识 GPT 分区表, 此后 bootloader
-    需靠自己访问硬盘.
-
-  * UEFI-MBR
-
-    UEFI 从 MBR 中找到 ESP 分区, 访问 ESP 分区加载 bootloader.
-
-  * UEFI-GPT
-
-    UEFI 从 GPT 中找到 ESP 分区 (根据 GPT 规定的 partition type GUID),
-    访问 ESP 分区加载 bootloader.
-
-- UEFI boot manager 存储有多个 entry, 每条是一个 boot config, 对应加载一个 ESP 中的
-  application. 这与 BIOS 不同, 对于 BIOS 系统, 启动顺序列表中只有不同的设备, 选定
-  设备后如何启动是预设的机制.
-
-- grub 的 EFI application 是 ``grubx64.efi``. 若开启了 secure boot, 需执行 ``shim.efi``,
-  后者通过 UEFI 认证后再加载 ``grubx64.efi``.
 
 - 在 protective MBR 中写入了 bootstrap code 的 GPT 分区表可以在 BIOS-based system 中
   使用, 只要 bootloader 和 OS 本身都支持 GPT, 即它们本身可以直接识别和访问 GPT 分区表.
@@ -534,6 +313,155 @@
   到达目的网段后无法网关无法转换成目的机器 MAC 地址, 从而失败. 所以, 在目的网段,
   需要一些其他配置, 来配合 WOL.
 
+firmware
+--------
+
+- 主板的 BIOS 软件存在 flash memory 上 (NOR or NAND), 由于是 flash memory, 可以重写
+  以升级 BIOS.
+
+  主板的设置保存在 CMOS 存储上. CMOS 是 volatile 的, 需要通电以维持数据. 它的电力
+  由主板上的电池提供. 所以把主板电池扣下来或者采用特定的 CMOS 短路机制可以重置
+  主板设置. (重置 CMOS 应该能够重置主板密码吧?)
+
+- 主板上的电池用于维持 CMOS 数据以及维持 Real Time Clock (RTC).
+
+- Bootup sequence
+
+  #. PSU 接通, 主板 chipset 等待 PSU 稳定下来, 期间给 CPU 发送 reset signal,
+     防止 CPU 过早启动. chipset 收到 PSU 发送的 Power Good signal 之后, 停止
+     抑制 CPU 运行.
+
+  #. CPU 从主板 firmware (EEPROM/flash memory) 上的固定地址位置开始执行,
+     即 UEFI/BIOS 开始接管启动流程.
+
+  #. BIOS 进行 Power On Self-Test (POST), 检查 CPU, 中断控制器、DMA controllers
+     以及 chipset 的其他设备, DRAM, 显卡, 硬盘等等. 并对这些硬件进行基本的配置.
+     如今 POST 已经不会仔细检查 RAM 了, 否则会太慢, 只进行很基本的检查以及读取
+     SPD info 来配置 CPU memory controller.
+
+  #. BIOS 把自己加载到内存中. 此后, BIOS 程序只在内存中运行.
+
+  #. BIOS 启动显卡, 点亮屏幕, 输出 POST 以及其他检测信息.
+
+  #. BIOS 检查 USB, 硬盘, 键盘等 peripherals, 并输出相应信息.
+
+  #. BIOS 读取系统时间, 读取 CMOS 存储的配置.
+
+  #. BIOS 根据 CMOS 保存的启动顺序选择从哪个存储设备启动, 并从该设备读取
+     bootloader 程序至内存. 若该存储设备是硬盘, 对于 BIOS-MBR, BIOS 读取
+     MBR 来加载 bootloader; 对于 UEFI-GPT, UEFI 读取 EFI System Partition (ESP)
+     来加载所需 bootloader.
+
+  #. BIOS 将 CPU 控制权移交 bootloader. 自己仍在内存中, 成为 runtime service,
+     供 bootloader 和 OS 使用.
+
+  #. bootloader 使用 BIOS 访问存储设备, 读取自己的配置.
+
+  #. bootloader 根据某个配置, 使用 BIOS 访问存储设备和文件系统, 找到并将 kernel
+     和 initramfs 读入内存.
+
+  #. bootloader 执行 kernel 并添加指定的命令行参数, 将 CPU 控制权移交 kernel.
+
+- firmware 是主板的软件, UEFI/BIOS 是这个软件提供的面向操作系统的 interface.
+  主板的 firmware 主要提供两种服务, boot service 和 runtime service.
+  在启动时, 它主要提供硬件检查和配置以及加载 OS bootloader 的服务;
+  在运行时, bootloader 使用 BIOS/UEFI firmware 来访问存储设备等, OS 使用 firmware
+  来进行某些硬件控制.
+
+- firmware 和 OS 各需要一套 driver, 以访问硬件. 显然 firmware 这套驱动要基础很多,
+  只包含很基础的功能.
+
+- 如今几乎所有的 PC/server 等类型的计算机的主板都使用的是遵循 UEFI 标准的固件.
+  Linux/Windows/macOS 等都是 UEFI-aware 的, 意思是它们的 bootloader 能够在 bootup
+  过程中调用 UEFI boot service 去访问硬件 (在 OS kernel 加载之前), 并且在 OS kernel
+  运行过程中, 可以调用 UEFI runtime service 去进行某些硬件操作 (比如 RTC, fans,
+  suspend-to-RAM, 等).
+
+  OS kernel 尽量通过自己的 driver 直接访问几乎所有硬件, 原因是:
+
+  * kernel driver 可以灵活地使用设备的全部功能和发挥其性能;
+
+  * 通过 UEFI/BIOS 转发会低效一些;
+
+  * BIOS 运行在 real mode, 在 kernel 和 BIOS 之间切换需要切换 CPU 的模式 3 遍
+    (triple fault) 很低效.
+
+  但仍有极少量硬件操作需要依赖 UEFI/BIOS, 比如 suspend-to-RAM.
+  基本上在 OS 常态运行期间, kernel 已经不再需要 BIOS/UEFI 提供的 runtime service,
+  从而不需要控制权转换或 CPU 模式转换, 而是自己直接访问硬件.
+
+- BIOS 运行时 CPU 处于 16-bit real mode, 读取 MBR、加载 bootloader 和 bootloader
+  的初始执行, 都是在 16-bit real mode 下.
+  bootloader (e.g., GRUB) 的任务之一就是切换 CPU 到 protected mode.
+
+  对于 UEFI 系统, UEFI 开始执行后很快就切换到 protected mode. 而 ESP 分区上的所有
+  EFI applications 都是在 protected mode 中执行的. 注意到这些 ``.efi`` 应用都是
+  PE32 executable, 使用的虚拟内存.
+
+  因此, BIOS 系统中的 grub 与 UEFI 系统中的 grub 应该是不同的.
+
+- UEFI 的设计要求易于扩展, 功能丰富、灵活. 这些自然要求 UEFI firmware 是运行在
+  protected mode 或 long mode 中的, 并且具有模块化的设计 (EFI applications).
+
+  UEFI 相对于 BIOS firmware 的一些优点:
+
+  * 支持 GPT, 向后兼容 MBR.
+
+  * 模块化设计 (EFI application).
+
+  * 运行于 protected/long mode, 而不是 real mode. 能够实现复杂的 EFI application,
+    从而可以构建灵活的 pre-OS environment.
+
+- 由于 x86 CPU 启动时运行在 real mode, 要求 BIOS 软件在这个模式下运行, 而且 BIOS 由于
+  历史原因, 一直只在 real mode 中运行, 因此很不灵活, 且直接依赖于 x86 CPU real mode.
+  与之对应, UEFI 在启动后迅速切换 CPU 至自己所需的 mode, 比如 protected mode, long mode.
+  因此 UEFI 是 CPU-independent 的架构.
+
+- UEFI-MBR 或 UEFI-GPT 组合在分区时要有 ESP 分区, 放置 EFI application,
+  包含 bootloaders (比如 grub), UEFI shell 等. ESP 分区的文件系统是 UEFI 规定的 FAT fs,
+  这样 UEFI 才有能力去访问.
+
+  注意 UEFI 不是说一定要和 GPT 分区方式配合.
+
+- 几种 bootup 组合方式:
+
+  * BIOS-MBR
+
+    BIOS (或者 UEFI 在 CSM 模式下) 读取 MBR 分区表 LBA0, 执行 bootstrap code,
+    后者加载 bootloader.
+
+  * BIOS-GPT
+
+    GPT 的 LBA0 是 protective MBR, 可以设置在安装 bootloader 时, 与 MBR 相同, 将
+    bootstrap code 写入 protective MBR. 这样 BIOS 可以和平时一样, 不去管分区表,
+    直接读 LBA0 来加载 bootloader. 由于 BIOS 不认识 GPT 分区表, 此后 bootloader
+    需靠自己访问硬盘.
+
+  * UEFI-MBR
+
+    UEFI 从 MBR 中找到 ESP 分区, 访问 ESP 分区加载 bootloader.
+
+  * UEFI-GPT
+
+    UEFI 从 GPT 中找到 ESP 分区 (根据 GPT 规定的 partition type GUID),
+    访问 ESP 分区加载 bootloader.
+
+- UEFI boot manager 存储有多个 entry, 每条是一个 boot config, 对应加载一个 ESP 中的
+  application. 这与 BIOS 不同, 对于 BIOS 系统, 启动顺序列表中只有不同的设备, 选定
+  设备后如何启动是预设的机制.
+
+- grub 的 EFI application 是 ``grubx64.efi``. 若开启了 secure boot, 需执行 ``shim.efi``,
+  后者通过 UEFI 认证后再加载 ``grubx64.efi``.
+
+- reset button 如何工作的:
+
+  按了 reset button 之后, 主板给所有设备发送 reset signal.
+  由于 CPU 被 reset, 所以从固定的 reset vector 地址处开始执行. 对于 cold
+  boot, northbridge (uncore) 把这个地址请求转发到 firmware flash memory 上;
+  对于 soft boot, BIOS 已经在内存中了, 所以该地址请求直接转发到内存中的对应
+  地址上. 总之, CPU 从 reset vector 处开始执行, 即开始执行 BIOS, 从而开始了
+  boot sequence. BIOS 在 soft boot 时, 会跳过 POST 过程.
+
 processor
 ---------
 
@@ -566,6 +494,26 @@ processor
   * x86 cpu 支持那么多 extensions (see lscpu output), 其实有很多都是为了向后兼容而保留
     的. 平时运行时, 那么多并不能全用上.
 
+  * processor modes.
+
+    - real mode.
+
+      20bit (1MiB) segmented memory address space. No memory protection,
+      unlimited software access to all addressable memory, I/O memory, peripheral
+      hardware. No multitasking. No code privilege levels. 考虑到 UEFI 的普及, 如今
+      real mode 除了启动 CPU 的一瞬间之外, 已经不再使用. 除了还在使用 BIOS 的机器.
+
+    - protected mode.
+
+      虚拟内存, paging, safe multitasking, privilege levels (ring).
+      首先在 80286 上出现. 80386 及之后的 cpu 支持从 protected mode 回到 real mode.
+
+  * x86 processor 支持 5 privilege levels (5 rings).
+    ring 0 大致是 kernel, ring 3 是 user app.
+    ring -1 是 hypervisor, 用于 x86 virtualization, 由 VT-x extension 提供.
+    没必要使用所有的 rings, 事实上 Linux, Windows 只使用 0 和 3, 对应 kernel/user
+    land.
+
 - x86 architecture with 64bit extension
 
   * x86 with 64bit extension 的 intel CPU 支持运行在 long mode, 即访问 64-bit
@@ -585,3 +533,88 @@ processor
     * If your computer has more than 4GB of RAM, only a 64-bit OS will be able to fully
       utilize it.
 
+- Unix, Linux, OS/2, Windows NT 3.x and later, 被认为是 modern OS 的重要原因就是
+  它们在运行过程中 CPU 始终处于 protected mode, kernel 自己 (通过 driver) 访问硬件,
+  而不再需要在 real/protected mode 之间切换以及 firmware 的介入.
+
+memory
+------
+
+bus & IO
+--------
+
+- USB
+
+  * 标准: 1.0, 1.1, 2.0, 3.0, 3.1.
+
+  * 速度: Low Speed (1.0), Full Speed (1.1), High Speed (2.0), Super Speed (3.0),
+          Super Speed+ (3.1).
+
+  * 插头类型:
+
+    - plug: type-A, type-B, type-C.
+
+    - receptacle: type-A, type-B, type-C, type-AB
+
+    - 子类型: standard, mini, micro
+
+    注意 USB 标准的设计考虑的是计算机 (host) 和其他设备之间的连接, 这种连接在设计时
+    考虑了方向性 (例如供电的方向性, 避免过载等). 为了在物理连接上能强制实施这种方向性,
+    USB cable 的两端一般采用不同类型的 connector, 例如 standard-A 和 micro-B. 由于
+    host 一般是计算机等大型设备, A 端一般采用的是 standard 子类型, 而 B 端一般采用
+    mini 或 micro 类型, 或者另一端不是 B 而是 C.
+
+    cable 两端都不是 standard-A 的情况出现在 USB On-The-GO 中, 也就是说两个便携设备之间
+    直连的情况.
+
+  * Host controller interface (HCI): HCI 是 usb 控制端硬件实现的控制接口, 它在
+    即主板或 usb 扩展卡上实现, 用于控制 usb 硬件设备. 在操作系统中实现了 HCI 的驱动,
+    即 Host Controller Driver (HCD). HCI 有以下几代:
+
+    - Open Host Controller Interface (OHCI) 和 Universal Host Controller Interface (UHCI).
+      For USB 1.0 low speed & USB 1.1 full speed (两者都支持这两种速度).
+      Linux driver 是 ohci_hcd 和 uhci_hcd.
+
+    - Enhanced Host Controller Interface (EHCI). For USB 2.0, high speed.
+      Linux driver 是 ehci_hcd.
+
+    - eXtensible Host Controller Interface (XHCI). 替代 OHCI/UHCI/EHCI,
+      支持所有过去的 USB 标准, 新的 USB 3.0 SuperSpeed 和 3.1 SuperSpeed+,
+      以及未来的标准.
+      Linux driver 是 xhci_hcd.
+
+- memory-mapped IO vs port-mapped IO
+
+  port-mapped IO 是出现得比较早的, 因为在早期, 访问内存和设备 IO 这两件事比较适合
+  分开处理, 那时 cpu 的地址寄存器比较小, 只够存物理内存地址的长度, 不能再多出来
+  几个 bits 构成包含设备地址的 extended address space.
+
+  对于基于 port-mapped IO 的系统, 有 memory address space 和 IO address space
+  两种. 前者就是 RAM 访问, 后者是 peripheral device 访问. 在 IO address space
+  中, 一个设备使用的地址范围中, 第一个地址被称为 IO port 或 IO base address.
+  由于 CPU 对内存和设备的读写是不同的, 对设备进行 IO 需要使用 (不同于内存的)
+  专门设计的指令. 因此使用 port-mapped IO 的 CPU, 需要实现更复杂的逻辑,
+  带来了更多的麻烦.
+
+  对于基于 memory-mapped IO 的系统, 只有 memory address space, 但其中的一部分是
+  分配给 RAM, 其他部分按需分配给各个 peripheral device. 由于 CPU 对内存和设备
+  的读写使用通用的指令, 这样的 CPU 逻辑相对简单一些, 更易于编程, 运行更快.
+
+  PMIO 实现方式: IO address space, CPU IO 指令, CPU IO pin, IO bus.
+  MMIO 实现方式: memory address space, CPU 内存指令, address code decoder.
+
+  peripheral device 进行 IO 的流程:
+  1. driver 通过 MMIO/PMIO 方式向设备的寄存器写入 DMA 相关信息
+     (要读写的 DMA 地址和读写长度等);
+  2. driver 启动设备 DMA;
+  3. 设备通过 IOMMU 进行 DMA, 完成 IO 过程;
+  4. 设备向 CPU 发送 interrupt, 告知 IO 已经完成;
+  5. kernel 的 interrupt handler 中, driver 进行清理工作, 包括清理 DMA mapping,
+     清理数据 buffer, etc.
+
+  x86 架构的系统, 两种 IO 都有使用. 且应该主要是在使用 MMIO.
+  在 linux 中, MMIO 映射可以通过 ``/proc/iomem`` 找到, 尤其是对于 PCIe 设备,
+  还可以通过 ``lspci -vvv`` 看到; PMIO 映射可以通过 ``/proc/ioports`` 找到.
+
+  在 OS 中, usersapce 应用一般不能直接访问映射的内存地址或 IO 地址. 这些只有
+  device driver 能直接访问.
