@@ -508,6 +508,21 @@ processor
       虚拟内存, paging, safe multitasking, privilege levels (ring).
       首先在 80286 上出现. 80386 及之后的 cpu 支持从 protected mode 回到 real mode.
 
+      80286 及以后支持 16-bit protected mode, 80386 及以后支持 32-bit protected mode.
+
+    - virtual 8086 mode. 模拟 8086 processor, 在受保护环境下运行 real mode program.
+      或者说, 在 protected mode OS 中运行 real mode program.
+
+    - system management mode. all normal execution, including the operating
+      system, is suspended. A special separate software, which is usually part
+      of the firmware or a hardware-assisted debugger, is then executed with
+      high privileges.
+
+    - long mode. 64-bit programs are run in a sub-mode called 64-bit mode,
+      while 32-bit programs and 16-bit protected mode programs are executed in
+      a sub-mode called compatibility mode. Real mode or virtual 8086 mode
+      programs cannot be natively run in long mode.
+
   * x86 processor 支持 5 privilege levels (5 rings).
     ring 0 大致是 kernel, ring 3 是 user app.
     ring -1 是 hypervisor, 用于 x86 virtualization, 由 VT-x extension 提供.
@@ -583,6 +598,34 @@ bus & IO
       以及未来的标准.
       Linux driver 是 xhci_hcd.
 
+- thunderbolt
+
+  * 在一条 cable 中 multiplex PCIe, DisplayPort 等多种协议的信号, 并提供 DC power.
+    thunderbolt cable 一端连接 host motherboard 上的 thunderbolt controller, 另一端
+    连接 hub 上的 thunderbolt controller. 在 motherboard 上, thunderbolt controller
+    连接 PCIe 和 DisplayPort 等等总线; 在 hub 上, 连接 PCIe 和 DP 等设备.
+
+  * Connector. thunderbolt 1/2: MiniDP, thunderbolt 3: USB type-C.
+
+  * bus protocols: PCIe, DisplayPort, HDMI, USB.
+
+  * speed:
+    thunderbolt 1: two channels, 10Gb/s each.
+    thunderbolt 2: 20Gb/s.
+    thunderbolt 3: 40Gb/s.
+
+    At the physical level, the bandwidth of Thunderbolt 1 and Thunderbolt 2 are
+    identical, and Thunderbolt 1 cabling is thus compatible with Thunderbolt 2
+    interfaces. At the logical level, Thunderbolt 2 enables channel
+    aggregation, whereby the two previously separate 10 Gbit/s channels can be
+    combined into a single logical 20 Gbit/s channel.
+
+  * 连接方式: hub or daisy chain.
+
+  * DMA attack vulnerability. 由于 thunberbolt 把系统 PCIe bus 外接出来, 可直接
+    插入外置的 PCIe 设备连接主板. 因此设备可以从硬件层直接发起 DMA, 访问内存.
+    这需要靠正确配置的 IOMMU 来防范.
+
 - memory-mapped IO vs port-mapped IO
 
   port-mapped IO 是出现得比较早的, 因为在早期, 访问内存和设备 IO 这两件事比较适合
@@ -618,3 +661,8 @@ bus & IO
 
   在 OS 中, usersapce 应用一般不能直接访问映射的内存地址或 IO 地址. 这些只有
   device driver 能直接访问.
+
+connector
+~~~~~~~~~
+- COM. 一种 IBM PC Compatible 上面的古老的串口接口. 现在 PC 上已经没有了, 部分旧
+  PC 上仍保留一个 COM header, 用于接入.
