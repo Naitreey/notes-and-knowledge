@@ -8,9 +8,9 @@
 
   * minion configuration values
 
-  * grains
+  * grains (via ``grains`` dict)
 
-  * salt pillar data
+  * salt pillar data (via ``pillar`` dict)
 
   * salt execution modules
 
@@ -110,6 +110,10 @@ Execution
 
   * ``pillar.items``
 
+  * ``pillar.get``
+
+  * ``pillar.raw``
+
   * ``event.send``
 
   * ``sys.doc`` 获取 module/function doc.
@@ -122,10 +126,11 @@ Execution
 
   * ``saltutil.refresh_modules``
 
+  * ``saltutil.refresh_pillar``
+
   * ``saltutil.sync_grains``
 
   * ``saltutil.sync_all`` 同步各种 custom modules 至 minion.
-
 
 - Execution functions vs State functions
 
@@ -149,6 +154,9 @@ State
 
   * 在 salt states 中, 使用 ``salt://<path>`` 来引用 ``file_roots`` 下的文件,
     其中 ``<path>`` 是相对于 ``file_roots`` 的路径.
+
+  * 整个 state tree 是在不同 minion 之间共享的. 各个 minion 获取到这些文件后
+    在本地编译模板生成最终版本的 state tree. 这与 pillar data 是不同的.
 
 - State file.
 
@@ -217,6 +225,9 @@ State
 
   Top file 中的 target pattern, 是对其下的状态的应用对象进行限制.
 
+  top file 中 pattern 下面的列表, 可以是包含的单个 state file, 也可以是整个
+  目录. 后者情况时, 目录中所有 sls 文件都被包含.
+
 - Highstate.
 
   A highstate causes all targeted minions to download the /srv/salt/top.sls
@@ -248,6 +259,24 @@ State
   * 用于在 states 之间建立联系. 这可以包含修改默认的 states execution order 或者
     conditional state apply. 例如某文件修改时, 重启某服务.
 
+  * ``require``, 要求 required state 必须成功, 本状态才执行.
+
+  * ``watch``, add additional behavior when there are changes, but otherwise
+    the state executes normally. 具体来讲, 如果 watched state 失败, watching
+    state 不会执行; 如果 watched state 成功但没有修改, watching state 执行,
+    但无 additional behavior; 如果 watched state 成功且有修改, watching state
+    执行, 然后 additional behavior 也执行.
+
+    additional behavior 由 ``<module>.mod_watch`` function 定义. 该函数的
+    参数在 watching state function 的参数列表中指定 (它会把自己不需要的参数
+    传入 mod_watch).
+
+    A good example of using watch is with a ``service.running`` state.
+
+  * ``onchanges``, makes a state only apply if the required states generate
+    changes, and if the watched state's "result" is True. ``onchanges`` 用于
+    在某个其他系统产生修改时执行 posthook.
+
 Pillar
 ------
 
@@ -258,9 +287,35 @@ Pillar
 - 与 state file 不同, pillar data 不是对所有 minion 共享的, 只有 matched target
   minion 才会收到分配给他的 pillar data. 所以可以用这个来存储 secure data.
 
-- Salt pillar data is never written to disk on the minion.
+- Pillar data is compiled on the master and is never written to disk on the minion.
+  In-memory pillar data 是在 minion 启动时生成的.
 
-- 查看 pillar data: ``pillar.items`` execution module.
+- Running states 以及 ``pillar.items`` 时, minion 会从 master 获取最新的 pillar data.
+  但不会更新 in-memory pillar data. 若要更新, 需要执行 ``saltutil.refresh_pillar``.
+
+- pillar data 位于 ``pillar_roots``, 其中文件结构与 ``file_roots`` 相同.
+  pillar_roots 必须在 file_roots 之外, 不能是后者的子目录, 为了保密.
+
+- pillar data merging:
+  
+  * Pillar files are applied in the order they are listed in the top file.
+
+  * 对于不同 pillar sls file 中的同名 key, 其值若是 dict, 则 recursively merged;
+    否则后执行的值覆盖先前执行的值.
+
+- pillar file 可以相互 ``include``.
+
+- 查看 pillar data: ``pillar.items`` execution module. 从 master 获取最新的
+  pillar data.
+
+- 查看当前的 pillar data: ``pillar.raw`` execution module. 不会从 master 获取最新
+  pillar data.
+
+- 获取某个 pillar data: ``pillar.get`` execution module.
+
+- 更新 in-memory pillar data: ``saltutil.refresh_pillar`` execution module.
+
+- 程序中使用 ``__pillar__`` 访问 in-memory pillar data.
 
 - 为了保密, pillar yaml file 可以放在一个 private git repo 中.
 
@@ -300,12 +355,17 @@ Event
 
   * 使用 ``event.send`` 直接发送任意 event.
 
-- salt beacon
+beacon
+------
 
-  * 用于监控 salt 之外的系统状态, 当预设的状态、条件等满足时, 向 bus 发送
-    该事件. 它应用 event system 实现.
+- 用于监控 salt 之外的系统状态, 当预设的状态、条件等满足时, 向 bus 发送
+  该事件. 它应用 event system 实现.
 
-  * 在 minion config 中的 ``beacons`` 部分配置.
+- beacon 和 event 的唯一区别是, event 系统负责生成 salt 自己运行过程中发生
+  的事件; beacon 基于 event 机制, 负责系统内发生的任何的自定义事件, 它是
+  event 的扩展.
+
+- 在 minion config 中的 ``beacons`` 部分或者单独的 ``beacons.conf`` 文件中配置.
 
 Reactor
 -------
@@ -344,6 +404,12 @@ Runner
 - runner modules
 
   * ``state.event``
+
+  * ``jobs.lookup_jid``
+
+  * ``jobs.list_jobs``
+
+  * ``jobs.active``
 
 Orchestrate Runner
 ------------------
