@@ -1143,6 +1143,9 @@
 
     - ``load``, 父模板加载的 custom tags/filters 若要在子模板中使用, 需要重新加载.
 
+    - ``comment``, block comment. opening tag 中可以包含 optional note. 这可用于
+      例如说明这段代码注释掉的原因.
+
   * template inheritance.
 
     Template inheritance allows you to build a base “skeleton” template that
