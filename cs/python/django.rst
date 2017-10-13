@@ -231,6 +231,9 @@
       on an existing object and then save it, a new object will be created alongside
       the old one.
 
+    - ``default`` 仅在创建时该列的值未指定时生效, 而不是 ``field=None`` 时. 后者
+      情况是指定了该列, 但值是 null.
+
     - ``null`` 默认是 False, 所以 create table 时有 ``NOT NULL``.
 
     - ``null`` 是规定数据库中 empty value 是否存储为 NULL 值;
@@ -1043,7 +1046,30 @@
 - template
 
   * django 支持同时配置多个模板 backend engine. 包含 django 自己的模板语言和 jinja2.
-    ``get_template`` 等操作遍历所有后端找到并返回第一个模板.
+
+  * ``settings.TEMPLATES``, 对每种 template engine, 支持以下参数:
+
+    - ``BACKEND``, engine import path,
+
+    - ``DIRS``, 全局模板路径.
+
+    - ``APP_DIRS``, 是否包含考虑各个 app 目录下的模板目录.
+
+    - ``OPTIONS``, 模板引擎参数.
+
+  * ``django.template.loader`` module. 通用的加载模板 api, 对所有 backend 遍历.
+
+    - ``get_template()``, 根据模板路径, 返回 Template instance.
+
+    - ``select_template()``, 在一系列可能路径中选择一个模板.
+
+    - ``render_to_string()``, shorcut function.
+
+  * ``django.template.base.Template`` 是各 engine 实现的模板类的父类.
+
+    - ``render()``, render template with context and request.
+
+  * ``django.template.engines`` 包含当前所有 template engines.
 
 - django template system & language
 
@@ -1518,8 +1544,8 @@
 
 - django-admin
 
-  * ``./manage.py shell`` 会在启动解释器后设置一些项目相关项; 若想不用这个命令行
-    但初始化同样的项目配置, 可以这样:
+  * ``./manage.py shell`` 启动 shell 并加载项目相关 django 配置; 这相当于
+    执行了:
 
       .. code:: python
 
@@ -2344,6 +2370,14 @@
   * ``django.contrib.messages`` 默认就有运行. 它提供 ``MessageMiddleware``, 并
     依赖于 SessionMiddleware (messages 部分功能依赖 session 生效), 以及
     ``messages`` context processor.
+
+- 在独立的程序或脚本中使用 django 功能.
+
+  * 使用当前项目完整配置.
+      .. code:: python
+
+        os.environ['DJANGO_SETTINGS_MODULE'] = "<project>.settings"
+        import django; django.setup()
 
 - django release
 
