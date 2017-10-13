@@ -374,9 +374,17 @@ Reactor
 
 - 配置: master config 中的 ``reactor`` section. 只允许一个 reactor section.
 
-- reactor file
+- reactor sls file
 
-  * 跟 state file 一样支持 jinja2.
+  * 跟 state file 一样支持 jinja2. 它的 jinja context:
+
+    - grains & pillar 不存在.
+
+    - salt object.
+
+    - tag -- tag of triggering event.
+
+    - data -- event's data.
 
   * Salt reactor SLS files execute on the Salt master.
     It is useful to think of them more as entry points into the salt and
@@ -607,3 +615,8 @@ minion
     - privately-routable ip address
 
     - localhost
+
+Output
+------
+
+- CLI 中默认使用的 output module 是 highstate.
