@@ -1,3 +1,5 @@
+- TDP. PC 各组件的重要功率指标. 电源提供的功率应当至少是各组件 TDP 之和的 1.5 倍.
+
 - 现代的计算机中, 不同组件通过各种 bus 进行 communication 的过程更像是计算机网络.
   这种交流过程涉及 protocol, connection, packet 等概念.
 
@@ -453,6 +455,11 @@ firmware
 - grub 的 EFI application 是 ``grubx64.efi``. 若开启了 secure boot, 需执行 ``shim.efi``,
   后者通过 UEFI 认证后再加载 ``grubx64.efi``.
 
+- Option ROM. BIOS 和 UEFI 都有 option ROM 概念, 即 peripherals 可以提供固件,
+  作为 firmware plugin 在启动时加载. 例子: 所有显卡都有 Option ROM 用于在启动
+  期间控制视频信号输出, 在 POST 期间它就被主板固件加载, 否则 POST 之后屏幕不会
+  点亮.
+
 - reset button 如何工作的:
 
   按了 reset button 之后, 主板给所有设备发送 reset signal.
@@ -622,6 +629,8 @@ bus & IO
 
   * 连接方式: hub or daisy chain.
 
+  * thunderbolt 是基于 MiniDP 的, 是后者的继承.
+
   * DMA attack vulnerability. 由于 thunberbolt 把系统 PCIe bus 外接出来, 可直接
     插入外置的 PCIe 设备连接主板. 因此设备可以从硬件层直接发起 DMA, 访问内存.
     这需要靠正确配置的 IOMMU 来防范.
@@ -666,3 +675,104 @@ connector
 ~~~~~~~~~
 - COM. 一种 IBM PC Compatible 上面的古老的串口接口. 现在 PC 上已经没有了, 部分旧
   PC 上仍保留一个 COM header, 用于接入.
+
+Video
+-----
+
+- HSA 架构是在 CPU 和 GPU 之间共享 RAM 和 Graphics RAM 以及统一的任务调度队列.
+  将 GPU/GRAM 提升到和 CPU/RAM 同样的地位, 并做抽象层统一, 对外作为一个整体
+  提供 API. 这样做的好处时, 简化涉及 GPU/GRAM 的任务处理逻辑, 尤其是避免数据
+  复制以及简化任务调度.
+
+  HSA 在 SOC (即移动端) 上用的很多.
+
+- Graphics accelerating. 不使用 CPU 运算将图形点阵化再传给显卡输出, 而是将
+  原始的 graphics drawing commands 直接传给 GPU, 后者负责点阵化构建 framebuffer.
+  节省大量 CPU 时间, 并提高输出效率.
+
+  While early accelerators focused on improving the performance of 2D GUI
+  systems, most modern accelerators focus on producing 3D imagery in real time.
+  A common design is to send commands to the graphics accelerator using a
+  library such as OpenGL or Direct3D. The graphics driver then translates those
+  commands to instructions for the accelerator's graphics processing unit
+  (GPU). The GPU uses those microinstructions to compute the rasterized
+  results. Those results are bit blitted to the framebuffer. The framebuffer's
+  signal is then produced in combination with built-in video overlay devices
+  (usually used to produce the mouse cursor without modifying the framebuffer's
+  data) and any analog special effects that are produced by modifying the
+  output signal. An example of such analog modification was the spatial
+  anti-aliasing technique used by the 3dfx Voodoo cards. These cards add a
+  slight blur to output signal that makes aliasing of the rasterized graphics
+  much less obvious.
+
+video card
+~~~~~~~~~~
+- A modern video card is also a computer unto itself.
+
+- 主要供应商: AMD, Nvidia
+
+- integrated graphics
+
+  * CPU 上的集成显卡又称为 Accelerated Processing Unit (APU).
+
+  * 集成显卡一般可以在 firmware 中禁用, 而选择使用独立显卡.
+
+  * 集成显卡的缺点:
+
+    - 与 CPU 共用计算资源, cooling system 等;
+
+    - 占用一部分 RAM 作为显存;
+
+- 现在显卡的 TDP 一般很高, 远高于 PCIe 能提供的功率, 需要额外从 PSU 直接供电.
+
+- AMD CrossFireX 和 Nvidia SLI 提供多显卡并联运行. 这些显卡一般需要是相同的型号.
+
+- framebuffer 在 Graphics RAM 中. 它包含一帧图像输出所需的完整数据, 即一个 bitmap.
+  The information in the buffer typically consists of color values for every
+  pixel to be shown on the display. The total amount of memory required for the
+  framebuffer depends on the resolution of the output signal, and on the color
+  depth or palette size.
+
+- Video firmware 与主板 firmware 功能类似, 用于初始化配置显卡. 它被主板固件在
+  启动的极早期 (POST 期间或之后) 调用, 以配置显卡并激活图像输出.
+
+  It may contain information on the memory timing, operating speeds and
+  voltages of the graphics processor, RAM, and other details which can
+  sometimes be changed.
+
+  The modern Video BIOS does not support all the functions of the video card,
+  being only sufficient to identify and initialize the card to display one of a
+  few frame buffer or text display modes. 完整的显卡功能和配置要靠 OS 下的
+  显卡驱动去运行.
+
+- 显存相对于主内存而言, 是非常高速的. GDDR5, GDDR5X 之类的都有几百 GB/s 速度.
+
+Graphics API
+~~~~~~~~~~~~
+- user space 程序调用 API 进行图像操作; API 可能直接由显卡驱动提供, 也可能是由
+  什么中间件提供, 后者再调用显卡驱动.
+
+- OpenGL 是常见的跨平台 API 规范.
+
+bus & connector
+~~~~~~~~~~~~~~~
+
+- DisplayPort.
+  
+  * 数据传输使用 packet 机制, 类似于 ethernet 或 PCIe.
+
+  * 可同时传输视频和音频信号或传输其中任一. 还可以传输 USB 协议信号.
+
+  * DP is free to implement.
+
+- HDMI.
+
+  * bckward compatible with single-link DVI.
+
+- DP vs HDMI
+
+  * 大部分功能相同.
+
+  * HDMI 收费, DP 理论上免费.
+
+  * DP 1.4 throughput (32.4Gib/s) 高于 HDMI 2.0b (14.4Gib/s).
