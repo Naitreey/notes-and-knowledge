@@ -1057,19 +1057,53 @@
 
     - ``OPTIONS``, 模板引擎参数.
 
+    - ``NAME``, 引擎的名字, 默认是 ``django.template.backends`` 中各 module name.
+
   * ``django.template.loader`` module. 通用的加载模板 api, 对所有 backend 遍历.
 
     - ``get_template()``, 根据模板路径, 返回 Template instance.
 
     - ``select_template()``, 在一系列可能路径中选择一个模板.
 
-    - ``render_to_string()``, shorcut function.
+    - ``render_to_string()``, shortcut function.
 
   * ``django.template.base.Template`` 是各 engine 实现的模板类的父类.
 
     - ``render()``, render template with context and request.
 
   * ``django.template.engines`` 包含当前所有 template engines.
+
+  * ``django.template.backends.base.BaseEngine`` 所有 backend template engine
+    的父类.
+
+    - ``get_template()``
+
+    - ``from_string()``
+
+  * ``django.template.backends.django.DjangoTemplates`` backend
+
+    - OPTIONS:
+
+      * ``APP_DIRS``, 访问各 app 下的 ``templates`` 目录寻找模板.
+
+      * ``autoescape``, 对于非 html 模板应设置为 False.
+
+      * ``context_processors``
+
+      * ``string_if_invalid``, 对于 invalid variables 输出的默认值.
+
+      * ``builtins``, 添加 template tag modules 至 builtin tags.
+
+  * ``django.template.backends.jinja2.Jinja2`` backend
+
+    - OPTIONS:
+
+      * ``APP_DIRS``, 访问各 app 下的 ``jinja2`` 目录寻找模板.
+
+      * ``autoescape``
+
+    - jinja2 template 支持在模板内进行复杂的操作, 因此一般情况下不需要指定
+      context processor.
 
 - django template system & language
 
