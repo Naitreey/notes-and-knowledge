@@ -1,0 +1,46 @@
+\documentclass{article}
+\usepackage{physics}
+% \dv[n]{y}{x} 导数
+% \pdv[n]{z}{x}{y} 偏导
+% \fdv[n]... 变分
+
+\begin{document}
+%%%%%%%%%%%%%%%%%%%%
+\section{Heaviside step function}
+%%%%%%%%%%%%%%%%%%%%
+\begin{itemize}
+    \item 斜坡函数的导函数.
+        \begin{equation}
+            H(x) = \dv{max{x,0}}{x}
+        \end{equation}
+    \item delta function 的原函数.
+        \begin{equation}
+            H(x) = \int_{-\infty}{x}\delta(s)ds
+        \end{equation}
+\end{itemize}
+
+\begin{equation}
+    R(x) = max(x, 0)
+\end{equation}
+
+%%%%%%%%%%%%%%%%%%%%
+\section{Ramp function}
+%%%%%%%%%%%%%%%%%%%%
+\begin{itemize}
+    \item 形状像 ramp, 即斜坡.
+    \item
+        由于负值输入时输出为 0, 非负输入时输出等价于输入的性质, 在
+        电路中作为整流函数, 将交流电转变为直流电.
+    \item
+        在神经网络中作为整流函数, 类似电路中作用.
+    \item
+        其导数是 Heaviside step function.
+        \begin{equation}
+            R'(x) = H(x) \text{for} x \ne 0
+        \end{equation}
+        二阶导数是 Dirac delta function, 从而 ramp function 是 Green's function.
+        \begin{equation}
+            \dv[2]{R(x-x_0)}{x} = \delta(x-x_0)
+        \end{equation}
+\end{itemize}
+\end{document}
