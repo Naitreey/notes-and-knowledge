@@ -306,3 +306,6 @@
 - root account: 应该禁止以 root 身份远程登录, 但不要 lock root account 以至于都不能
   从本地使用 root 登录 (login, su, sulogin, etc.). 因为在 rescue mode 我们需要
   root login.
+
+- 向进程发送 SIGSTOP, SIGTSTP 等 signal, 或者在 shell 中 ctrl-z foreground process
+  会把进程置于 stop 状态, 再发送 SIGCONT 可以恢复运行.
