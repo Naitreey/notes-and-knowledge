@@ -1083,6 +1083,15 @@
   这时, 可以参考 ``django.utils.decorators.method_decorator`` 的实现, 将 decorator
   转化为预期有 self 参数的新的 decorator.
 
+- 只有需要考虑到跨平台兼容性时, 才使用 ``os.path.join`` 和 ``os.path.sep``
+  来构建路径; 对于仅在 unix 平台上运行的程序, 直接写 ``/path/some/thing``
+  就好了, 这样比较可读和方便. 或者在 python3.6+ 可以一概都使用 ``pathlib.Path``,
+  即跨平台, 又方便使用. (py3.6+ 是因为 ``os.PathLike`` 是在 py3.6 引入的.)
+
+builtin functions
+-----------------
+- ``enumerate()``, ``start=`` 设置第一项的序号值.
+
 Jinja template
 --------------
 language
