@@ -243,6 +243,8 @@
 
 - django 2.0 不再支持 python2.
 
+- coroutines 是在 python3.5+ 才有的功能.
+
 - py2py3 compatible
 
   * __future__
