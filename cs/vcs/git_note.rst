@@ -117,3 +117,5 @@
   这取决于成员的代码能力和自觉性. 理想情况下, 确实很简单的修改不需要 PR, 可直接
   merge 进入 master, 这样可减轻 manager 的 review 工作. 但是在成员代码质量不能
   完全信任的情况下, 需要强制 PR.
+
+- ``git fetch`` & ``git remote update`` 提供的功能基本是相同的.
