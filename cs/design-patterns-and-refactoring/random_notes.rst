@@ -391,3 +391,12 @@
 
   * 多进程、多线程写入、修改同一资源, 或 unique key 资源时, 若遇到冲突或竞争关系,
     最基本的解决办法就是使用循环.
+
+- A common pattern in computing: Systems start off in a very simple mode,
+  probably the first invented. Then, by examining their environment and
+  possibly talking to other systems, they shift up to more advanced, and
+  probably more efficient, modes - provided circumstances are right. Look at,
+  for example, the way USB systems climb up from USB 1 to 2 to 3 when they find
+  that the other end is capable of doing the more advanced operation; CPU
+  starts off in real mode then gets switched to protected mode or long mode
+  when firmware (needs and) finds that CPU is capable of advanced modes.
