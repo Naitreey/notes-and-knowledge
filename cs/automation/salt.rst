@@ -4,15 +4,26 @@
   不同的方式仅在 Salt 的使用方式上有区别 (例如 ``salt``, ``salt-call`` 等),
   salt 的所有 modules 可以在任何一种方式中使用.
 
-- 在 jinja2 模板中可访问的 salt 参数 (除了标准 jinja 功能之外):
+Salt Jinja extension
+--------------------
 
-  * minion configuration values
+- 在 jinja2 模板中可访问的 salt 参数:
 
-  * grains (via ``grains`` dict)
+  * ``salt``, a python dictionary containing all of the functions available to
+    the running salt minion.
 
-  * salt pillar data (via ``pillar`` dict)
+  * ``opts``, a dict containing minion configurations.
 
-  * salt execution modules
+  * ``grains``, a dict containing minion grains data.
+
+  * ``pillar`` a dict containing salt pillar data.
+
+  * ``saltenv``
+
+  * ``sls``, the value used to include the sls in top files or via the include
+    option.
+
+  * ``slspath``, 什么鸡巴玩意儿.
 
 - salt file server
 
@@ -253,6 +264,9 @@ State
     applied in the order listed.
 
   * ``state.show_sls`` execution module 查看某个 state file 中状态执行顺序.
+
+  * ``state.show_highstate`` execution module 查看对于某个 minion 的整体
+    highstate 时各任务执行顺序.
 
 - Requisites
 
@@ -620,3 +634,10 @@ Output
 ------
 
 - CLI 中默认使用的 output module 是 highstate.
+
+API
+---
+python
+~~~~~~
+
+- 不同的 salt 部分通过不同的 client 来访问.
