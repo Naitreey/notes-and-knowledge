@@ -1069,6 +1069,9 @@
 
   * ``django.template.base.Template`` 是各 engine 实现的模板类的父类.
 
+    - ``origin``, Origin object, 包含模板的 debug 信息, ``name`` (模板的路径) 和
+      ``template_name`` (加载模板所用的路径即模板名).
+
     - ``render()``, render template with context and request.
 
   * ``django.template.engines`` 包含当前所有 template engines.
@@ -1105,11 +1108,25 @@
     - jinja2 template 支持在模板内进行复杂的操作, 因此一般情况下不需要指定
       context processor.
 
-- django template system & language
-
   * components:
     engine, template, template language, context, context processor, loader.
     体会 django 是如何将用变量填充模板这件事模块化成一个个环节和组件对象的.
+
+  * context processors.
+
+    callable object, 输入 HttpRequest, 输出需要添加进 template context 的 dict
+    值. 它的目的是将通用的 context variables 的 添加过程通用化, 避免在每个 view
+    里面都写一遍.
+
+  * context.
+
+    在通用 API 中是纯粹的 dict.
+
+  * loaders.
+
+    responsible for locating, loading, and returning Template objects.
+
+- django template system & language
 
   * template namespace. 每个 app 下可以有 ``templates/`` 目录, 不同 app 的 templates
     目录在一个 namespace 中, 因此会相互覆盖. 所以需要再创建 ``templates/<app>`` 子目录.
@@ -1128,8 +1145,8 @@
     中才计算.
 
     This lookup order can cause some unexpected behavior with objects that override
-    dictionary lookup. 例如重定义了 ``__getitem__``, 导致没有 key 时没有 raise
-    KeyError, 从而轮不到 attribute lookup.
+    dictionary lookup. 例如重定义了 ``__getitem__`` (defaultdict), 导致没有 key
+    时没有 raise KeyError, 从而轮不到 attribute lookup.
 
     若最终没有找到, fallback 至 template backend 的 ``string_if_invalid`` option 值,
     默认是空字符串.
@@ -1153,20 +1170,23 @@
   * ``django.shortcuts.render()`` 调用 ``django.template.loader.render_to_string()``
     渲染模板成 string 然后加载至 HttpResponse.
 
-  * 模板有三类语法元素, 变量替换 ``{{ var|filter }}``, tag 执行 ``{% tag var1 var2 %}``,
-    注释 ``{# comment #}`` (只能单行, 不允许 newline).
+  * 模板有四类语法元素, 变量替换 ``{{ var }}``, tag 执行 ``{% tag var1 var2 %}``,
+    filter ``{{ var|filter:"sef" }}``, 注释 ``{# comment #}`` (只能单行,
+    不允许 newline).
 
   * filters.
 
     - ``default``
 
-    - ``length``
+    - ``length``, 返回长度数值, 所以可以进行数值类型的逻辑判断.
 
     - ``filesizeformat``
 
     - ``safe``
 
-    - ``escape``
+    - ``escape``, when auto-escaping is on, there’s no danger of the escape
+      filter double-escaping data – the escape filter does not affect
+      auto-escaped variables.
 
   * tags.
 
@@ -1201,7 +1221,8 @@
 
     - ``autoescape``
 
-    - ``load``, 父模板加载的 custom tags/filters 若要在子模板中使用, 需要重新加载.
+    - ``load``, 当加载 custom tag/filter library 时, 被加载的项只在当前模板中有效,
+      若要在父或子模板中使用, 需要重新加载.
 
     - ``comment``, block comment. opening tag 中可以包含 optional note. 这可用于
       例如说明这段代码注释掉的原因.
