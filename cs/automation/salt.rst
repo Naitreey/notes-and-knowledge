@@ -143,6 +143,8 @@ Execution
 
   * ``saltutil.sync_all`` 同步各种 custom modules 至 minion.
 
+  * ``service.available``
+
 - Execution functions vs State functions
 
   Salt state functions are designed to make only the changes necessary to apply
@@ -640,4 +642,51 @@ API
 python
 ~~~~~~
 
+- python API 只有等到全面支持 python3 时才有用.
+
 - 不同的 salt 部分通过不同的 client 来访问.
+
+- ``salt.client.LocalClient``
+
+  * 在 master 上使用, 用于向 minion 发送命令. 对应 ``salt`` command.
+
+  * methods.
+
+    - ``cmd()``, 执行 remote execution. ``tgt`` 可以是 list, 明确指定多个 minion.
+      ``fun`` 可以是 list, 一次性执行多个操作, 同时 ``arg`` must be a list of lists
+      of arguments.
+
+    - ``cmd_async()``, 返回 job id, 不等待任务完成.
+
+    - ``cmd_batch()``, 每次并行向一个 batch 的 minion 执行命令, 返回 a generator
+      of returns.
+
+    - ``cmd_iter()``, return a generator of minion returns.
+
+    - ``cmd_iter_no_block()``, return a generator, which yields minion return data
+      if available or None if not available. 不会 blocking 等待返回.
+
+    - ``cmd_subset()``, execute a command on a random subset of the targeted systems.
+
+    - ``get_cli_returns()``, ``get_event_iter_returns()``, 接收之前 async 执行的 job
+      结果. 有啥区别不知道.
+
+    - ``run_job()``, 什么玩意儿.
+
+- ``salt.client.Caller``
+
+  * 对应 ``salt-call``.
+
+- ``salt.runner.RunnerClient``
+
+  * 对应 ``salt-run``
+
+- ``salt.wheel.WheelClient``
+
+- ``salt.cloud.CloudClient``
+
+  * 对应 ``salt-cloud``
+
+- ``salt.client.ssh.client.SSHClient``
+
+  * 对应 ``salt-ssh``
