@@ -1132,4 +1132,7 @@ jinja 由于应用场景更加宽泛, 不仅仅是 render html, 因此它的一�
 
 - jinja 默认不对输出做 automatic html escaping.
 
+- 若要输出 literal 的 template control syntax, 可以直接作为字符串写出, 或用
+  ``raw`` statement.
+
 - control structure
