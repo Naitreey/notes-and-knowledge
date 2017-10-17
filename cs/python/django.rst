@@ -1181,30 +1181,138 @@
 
   * filters.
 
+    - ``add``
+
+    - ``first``
+
+    - ``last``
+
     - ``default``
+
+    - ``default_if_none``
 
     - ``length``, 返回长度数值, 所以可以进行数值类型的逻辑判断.
 
+    - ``length_is``
+
+    - ``wordcount``
+
     - ``filesizeformat``
 
+    - ``floatformat``
+
+    - ``stringformat``
+
     - ``safe``
+
+    - ``safeseq``
 
     - ``escape``, when auto-escaping is on, there’s no danger of the escape
       filter double-escaping data – the escape filter does not affect
       auto-escaped variables.
+
+    - ``force_escape``, applied immediately and returns a new, escaped string.
+      不管有没有已经 escaped.
+
+    - ``escapejs``, 不懂.
+
+    - ``capfirst``
+
+    - ``title``
+
+    - ``upper``
+
+    - ``lower``
+
+    - ``cut``
+
+    - ``addslashes``
+
+    - ``striptags``
+
+    - ``truncatechars``
+
+    - ``truncatechars_html``
+
+    - ``truncatewords``
+
+    - ``truncatewords_html``
+
+    - ``wordwrap``
+
+    - ``date``
+
+    - ``time``
+
+    - ``timesince``
+
+    - ``timeuntil``
+
+    - ``dictsort``, 支持 ``.`` operator 选择深层 sort key, 例如 ``obj.key|attr``.
+      dictsort can also order a list of lists (or any other object implementing
+      ``__getitem__()``) by elements at specified index.
+
+    - ``dictsortreversed``
+
+    - ``divisibleby``
+
+    - ``get_digit``
+
+    - ``iriencode``
+
+    - ``urlencode``
+
+    - ``join``
+
+    - ``linebreaks`` 根据情景把 ``\n`` 转变成 ``<br/>`` 或 ``</p>``, 最终是包在
+      ``<p></p>`` 中的.
+
+    - ``linebreaksbr`` 单纯地把 ``\n`` 转变成 ``<br/>``.
+
+    - ``unordered_list``
+
+    - ``urlize``
+
+    - ``urlizetrunc``
+
+    - ``make_list``
+
+    - ``pluralize``
+
+    - ``random``
+
+    - ``slice``
+
+    - ``slugify``
+
+    - ``yesno``
+
+    - ``center``
+
+    - ``ljust``
+
+    - ``rjust``
+
+    - ``phone2numeric``
+
+    - ``pprint``
 
   * tags.
 
     - ``extends``, 必须是模板中的第一个 tag. extends 的值可以是 string
       从而是模板名字, 或者是 Template object 从而 extends 这个模板.
 
-    - ``include``, 将模板嵌入当前模板, 并使用当前 context 进行 render.
+    - ``include``, 使用当前 context 来 render 所指向的模板, 然后将结果嵌入当前位置.
       与 extends 类似, 支持 Template object. 支持 ``with key=val key2=val2``
       语法向模板中传入额外 context. 支持 ``only`` option, 屏蔽当前 context,
       只传入指定的值或完全没有值.
 
+      注意被 include 的模板和当前模板的渲染是完全独立的, 除了 context 之外, 没有
+      任何相关性, 没有共享的状态. 这不是将模板嵌入, 而是将模板的渲染结果嵌入.
+
     - ``load``, 当加载 custom tag/filter library 时, 被加载的项只在当前模板中有效,
-      若要在父或子模板中使用, 需要重新加载.
+      若要在父或子模板中使用, 需要重新加载. 支持 ``from``, 从 module 中加载指定
+      的 tag/filter. ``load fil1 tag1 from module``.
 
     - ``block``, parent template 中定义的 blocks 越多越好. 这样增加了页面区域的
       模块化, child template 只需覆盖或扩展需要修改的 blocks.
@@ -1269,6 +1377,32 @@
 
     - ``ifchanged``, 它里面的内容或它后面的变量改变时, 才输出. 支持 ``else`` tag,
       即不改变时输出别的.
+
+    - ``lorem``, sample data.
+
+    - ``now``, now, 可以设置 format. format 可以是 settings 中的预定义量的字符串
+      形式. 支持 ``as`` 进行赋值.
+
+    - ``regroup``, ``{% regroup <list-of-objs> by <key> as <var> %}``
+      生成 a list of namedtuples. 每个 namedtuple 包含 ``grouper`` 和 ``list``
+      属性. 注意原来的 list 必须要根据 ``key`` 来排序, 例如可用 ``dictsort``
+      filter 来做. ``key`` 可以是 obj 的任何 key, attr, index 等. 相当于 ``obj.key``.
+
+    - ``resetcycle``
+
+    - ``spaceless``, 删除里面 tag 之间的 spaces.
+
+    - ``url``, 模板里的 ``reverse()``, 参数可以是 positional 或 kwargs.
+      支持 ``as`` 进行赋值, 此时 ``url`` tag 不输出东西, 只赋值.
+
+    - ``templatetag``, 单个 template 语法元素不能通过写在字符串里的方式 escape,
+      必须使用这个 tag 加适当参数写出, 或把整块内容放在 ``verbatim`` 里.
+
+    - ``verbatim``, verbatim 输出内容.
+
+    - ``widthratio``, 不懂.
+
+    - ``with``, 用于设置临时值, 或 cache 运算结果. 可以用 kwarg 形式设置多个.
 
     - compile-time & runtime tags
 
@@ -1466,10 +1600,19 @@
 
   * static file namespace 与 template namespace 机制类似.
 
-  * 使用 ``static`` template tag 来自动根据 ``STATIC_URL`` 生成 static file 的 url,
-    不要把静态文件的 url 写死在 html 里. 这样, 真正的 url 会根据
-    ``STATICFILES_STORAGE`` 的机制去生成, 这样只需要设置 ``StaticFilesStorage`` 或
-    某个 CDN 的 storage 实现, 就可以轻易切换所有 url 的指向, 真正做到了单一变量没有重复.
+  * template tags.
+   
+    - 使用 ``static`` template tag 来自动根据 ``STATIC_URL`` 生成 static file
+      的 url, 不要把静态文件的 url 写死在 html 里. 这样, 真正的 url 会根据
+      ``STATICFILES_STORAGE`` 的机制去生成, 这样只需要设置
+      ``StaticFilesStorage`` 或 某个 CDN 的 storage 实现, 就可以轻易切换所有
+      url 的指向, 真正做到了单一变量没有重复.
+
+      ``static`` tag 支持 ``as``, 只赋值不输出.
+
+    - ``get_static_prefix``, 获取 STATIC_URL, 自定义 url 补全, 支持 ``as``.
+
+    - ``get_media_prefix``
 
   * 静态文件的放置:
 
