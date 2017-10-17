@@ -427,7 +427,7 @@
           positional args 指定的 fields 可以包含 query expression, 这样在返回的
           fields tuple 中包含计算项.
 
-        - 多值关系中可能造成结果重复:
+          多值关系中可能造成结果重复:
 
           values() and values_list() are both intended as optimizations for a
           specific use case: retrieving a subset of data without the overhead
@@ -435,6 +435,9 @@
           with many-to-many and other multivalued relations (such as the
           one-to-many relation of a reverse foreign key) because the “one row,
           one object” assumption doesn’t hold.
+
+        - ``exists()``, 判断某项是否在 queryset 中. 这比 ``in`` operator 高效,
+          后者必须遍历整个 queryset.
 
     - Field lookups. 各种过滤和获取的方法的参数语法, 对应到 SQL ``WHERE`` clause.
       Syntax: ``<field>[__<field>...][__<lookuptype>]=value``.
@@ -1174,6 +1177,8 @@
     filter ``{{ var|filter:"sef" }}``, 注释 ``{# comment #}`` (只能单行,
     不允许 newline).
 
+  * 模板中 single quote 和 double quote 没有区别, 跟 python 一样.
+
   * filters.
 
     - ``default``
@@ -1190,7 +1195,16 @@
 
   * tags.
 
-    - ``extends``, 必须是模板中的第一个 tag.
+    - ``extends``, 必须是模板中的第一个 tag. extends 的值可以是 string
+      从而是模板名字, 或者是 Template object 从而 extends 这个模板.
+
+    - ``include``, 将模板嵌入当前模板, 并使用当前 context 进行 render.
+      与 extends 类似, 支持 Template object. 支持 ``with key=val key2=val2``
+      语法向模板中传入额外 context. 支持 ``only`` option, 屏蔽当前 context,
+      只传入指定的值或完全没有值.
+
+    - ``load``, 当加载 custom tag/filter library 时, 被加载的项只在当前模板中有效,
+      若要在父或子模板中使用, 需要重新加载.
 
     - ``block``, parent template 中定义的 blocks 越多越好. 这样增加了页面区域的
       模块化, child template 只需覆盖或扩展需要修改的 blocks.
@@ -1215,17 +1229,50 @@
             {% endif %}
           {% endblock %}
 
-    - compile-time & runtime tags
-
-      * compile-time: ``extends``, ``block``
-
-    - ``autoescape``
-
-    - ``load``, 当加载 custom tag/filter library 时, 被加载的项只在当前模板中有效,
-      若要在父或子模板中使用, 需要重新加载.
+    - ``autoescape``, 对于已经标记为 safe 的量, autoescape 不会去操作. 例如
+      经过 ``safe``, ``escape`` filter 的量已经被标记为 safe.
 
     - ``comment``, block comment. opening tag 中可以包含 optional note. 这可用于
       例如说明这段代码注释掉的原因.
+
+    - ``cycle``, 在循环过程中使用, 循环输出参数. 支持 ``as``, 将循环的当前值赋
+      给变量, 在后面使用. 支持 ``silent``, 可以单纯声明 cycle, 而不立即输出值.
+      ``{% cycle 1 2 as nums silent %}``
+
+    - ``debug``, 输出 debug 信息.
+
+    - ``filter``, 将整段内容经过一个或多个 filter.
+
+    - ``firstof``, first True value of args. 支持 ``as``, 给变量赋值.
+
+    - ``for``, 支持 ``reversed`` option, 反向循环.
+      支持 ``empty`` tag, 作为 fallback, 类似 for...else...
+      在 for loop tag 中, 可访问以下量:
+
+      * ``forloop.counter``
+
+      * ``forloop.counter0``
+
+      * ``forloop.revcounter``
+
+      * ``forloop.revcounter0``
+
+      * ``forloop.first``, whether is first time
+
+      * ``forloop.last``, whether is last time
+
+      * ``forloop.parentloop``, access parent loop in nested loops.
+
+    - ``if``, ``elif``, ``else``, truthy value 即可, 与 python 相同.
+      支持 python 相同的 logical operators and comparison operators.
+      注意使用 () 是 invalid.
+
+    - ``ifchanged``, 它里面的内容或它后面的变量改变时, 才输出. 支持 ``else`` tag,
+      即不改变时输出别的.
+
+    - compile-time & runtime tags
+
+      * compile-time: ``extends``, ``block``
 
   * template inheritance.
 
