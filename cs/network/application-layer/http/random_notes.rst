@@ -214,12 +214,19 @@
 
   尽量使用同一个 url 去获取 form 和处理 form data. 无论 GET/POST form.
 
-- url.
+- uri.
 
-  A clean, elegant URL scheme is an important detail in a high-quality
-  Web application.
+  * uri 是 url + urn 的统称. 但一般说 uri 就指的是 url.
 
-  Cool urls don't change. Try to make your url last as long as possible.
+  * IRI (internationalized resource identifier) 是 URI 的扩展.
+    URI 本身只支持 ASCII, IRI 扩展为 Unicode. 所以说现今的 URL
+    实际上是 IRI.
+
+  * A clean, elegant URL scheme is an important detail in a high-quality
+    Web application.
+
+    Cool urls don't change. Try to make your url last as long as possible.
+
 
 Headers
 -------
