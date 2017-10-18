@@ -1088,6 +1088,35 @@
   就好了, 这样比较可读和方便. 或者在 python3.6+ 可以一概都使用 ``pathlib.Path``,
   即跨平台, 又方便使用. (py3.6+ 是因为 ``os.PathLike`` 是在 py3.6 引入的.)
 
+- ``functools.lru_cache`` 的原理是在它 wrap 函数的 wrapper 里放一个 cache dict,
+  通过匹配 args, kwargs, type 来获取 cached value. 对每个这样的函数, 都新
+  创建了一个 dict cache, 注意这带来的内存影响.
+
+- ``django.utils.functional.cached_property`` 是将调用 class 上 property 函数的
+  访问结果 cache 到 instance 的同名 attr 上. 代价是这个 attr 是可写的. 使用与之
+  类似的方式, 我们之后写涉及复杂计算的 property 时, 不需要手动设置一个 private
+  attr 作为 cache:
+
+  .. code:: python
+    class cached_property(object):
+        """
+        Decorator that converts a method with a single self argument into a
+        property cached on the instance.
+    
+        Optional ``name`` argument allows you to make cached properties of other
+        methods. (e.g.  url = cached_property(get_absolute_url, name='url') )
+        """
+        def __init__(self, func, name=None):
+            self.func = func
+            self.__doc__ = getattr(func, '__doc__')
+            self.name = name or func.__name__
+    
+        def __get__(self, instance, cls=None):
+            if instance is None:
+                return self
+            res = instance.__dict__[self.name] = self.func(instance)
+            return res
+
 builtin functions
 -----------------
 - ``enumerate()``, ``start=`` 设置第一项的序号值.
