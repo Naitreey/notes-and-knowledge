@@ -1138,9 +1138,38 @@
 
   * context processors.
 
-    callable object, 输入 HttpRequest, 输出需要添加进 template context 的 dict
-    值. 它的目的是将通用的 context variables 的 添加过程通用化, 避免在每个 view
-    里面都写一遍.
+    - callable object, 输入 HttpRequest, 输出需要添加进 template context 的
+      dict 值. 它的目的是将通用的 context variables 的 添加过程通用化,
+      避免在每个 view 里面都写一遍.  这发生在 ``Template.render()`` method 中,
+      真正 render 操作之前. 注意这意味着 context processor 添加的量会覆盖从
+      view 传入的量.
+
+    - 初始化 engine 时输入的 processor list 按顺序应用, 这意味着越靠后的输出
+      结果优先级越高.
+
+    - ``django.contrib.auth.context_processors.auth``:
+      ``user``, ``perms``
+
+    - ``django.template.context_processors.debug``:
+      ``debug``, ``sql_queries``
+
+    - ``django.template.context_processors.i18n``:
+      ``LANGUAGES``, ``LANGUAGE_CODE``
+
+    - ``django.template.context_processors.media``:
+      ``STATIC_URL``
+
+    - ``django.template.context_processors.csrf``:
+      ``csrf_token``. django template engine 一定会启用这个, 即使没设置.
+
+    - ``django.template.context_processors.request``:
+      ``request``
+
+    - ``django.template.context_processors.tz``:
+      ``tz``
+
+    - ``django.contrib.messages.context_processors.messages``:
+      ``messages``, ``DEFAULT_MESSAGE_LEVELS``
 
   * context.
 
@@ -1465,11 +1494,20 @@
 
   * django template 的 context objects.
 
-    - ``Context`` 是一个 stack, 包含多层 context dicts.
+    - ``Context`` 是一个 stack, 包含多层 context dicts (dict or ``ContextDict``
+      instance).
 
     - ``Context`` wrap context dict. 具有大量 dict-like interface.
 
-    - 实现 ``push()`` stack 和 ``pop()`` stack, 即 context dict. 还有 ``update()``
+    - ``push()`` stack 和 ``pop()`` stack, 以及 ``update()``.
+
+    - ``flatten()`` 返回各层的综合结果为一个 dict. 这也用于 Context object
+      之间比较.
+
+    - ``RequestContext`` 是 ``Context`` 的子类, 它输入多一个 HttpRequest,
+      在 render 时通过 context processor 生成额外的 context variables.
+
+    - 注意 RequestContext 才会调用 context processor, Context 不会.
 
 - request and response
 
