@@ -210,6 +210,9 @@
   * 如果一个 app 中的 model 太多, 可以进一步模块化. 将 models 扩展成一个 subpackage.
     注意在 models package 的 init 文件中引入所有子模块中定义的 model.
 
+  * ``django.core.exceptions.ObjectDoesNotExist`` 是所有 ``Model.DoesNotExist``
+    exception 的父类.
+
 - model field
 
   * field constructor options.
@@ -1100,6 +1103,12 @@
 
       * ``builtins``, 添加 template tag modules 至 builtin tags.
 
+    - 由于历史原因, ``django.template.backends.django.DjangoTemplates``
+      engine 是 ``django.template.Engine`` 的 wrapper.
+      ``django.template.backends.django.Template`` 是 ``django.template.Template``
+      的 wrapper. 传入的 context dict 最终生成 ``django.template.context.Context``
+      和 ``django.template.context.RequestContext``.
+
   * ``django.template.backends.jinja2.Jinja2`` backend
 
     - OPTIONS:
@@ -1112,7 +1121,19 @@
       context processor.
 
   * components:
-    engine, template, template language, context, context processor, loader.
+
+    - engine (``Engine``)
+
+    - template (``Template``)
+
+    - template language
+
+    -  context (``Context``)
+
+    - context processor
+
+    - loader
+
     体会 django 是如何将用变量填充模板这件事模块化成一个个环节和组件对象的.
 
   * context processors.
@@ -1154,6 +1175,16 @@
     若最终没有找到, fallback 至 template backend 的 ``string_if_invalid`` option 值,
     默认是空字符串.
 
+  * 对于 callable variable, 执行中 raise exception, the exception will be propagated,
+    unless the exception has an attribute ``silent_variable_failure`` whose value
+    is True, 此时 ``string_if_invalid`` 会被使用. ``ObjectDoesNotExist`` 就是
+    这样, 因此获取 model instance 时若不存在会替换.
+
+    The template system won’t call a variable if it has alters_data=True set,
+    and will instead replace the variable with string_if_invalid,
+    unconditionally. 这是为了防止 render template 时误操作修改服务端状态.
+    ``Model.delete()`` ``Model.save()`` 之类的都有设置.
+
   * 在 template 中使用 symbolic url, 即使用 url 的名字, 而不写死 url 路径在模板中.
     这样可以降低 template 和 URLconf 之间的耦合. 在重构 url 结构时, 不需要修改模板
     文件.
@@ -1164,11 +1195,11 @@
 
     - 若 ``APP_DIRS == True``, 每个 app 目录下的 ``templates/`` 目录.
 
-  * template context. 模板在被 render 时, 处在一定的 context 中.
-    默认包含 ``object_list``, 即从数据库取到的对象列表. ``object_list``
-    还有一个更有意义的名字, 由 model class name 转换而成 (``CamelCase -> camel_case``).
+  * 每个 template context 至少包含 "True", "False", "None".
 
-  * 将可重用的 template 模块化, 并用 ``include`` tag 加载它.
+  * Django’s template language has no way to escape the characters used for its
+    own syntax. 只能使用 ``templatetag`` tag, ``verbatim`` tag, 或把这些字符放在
+    context variable 中, 或自定义 tag/filter.
 
   * ``django.shortcuts.render()`` 调用 ``django.template.loader.render_to_string()``
     渲染模板成 string 然后加载至 HttpResponse.
@@ -1432,6 +1463,14 @@
 
     template 中的 string literal 没有被 html escape, 而是原样包含在 html 中.
 
+  * django template 的 context objects.
+
+    - ``Context`` 是一个 stack, 包含多层 context dicts.
+
+    - ``Context`` wrap context dict. 具有大量 dict-like interface.
+
+    - 实现 ``push()`` stack 和 ``pop()`` stack, 即 context dict. 还有 ``update()``
+
 - request and response
 
   * ``HttpRequest``
@@ -1601,7 +1640,7 @@
   * static file namespace 与 template namespace 机制类似.
 
   * template tags.
-   
+
     - 使用 ``static`` template tag 来自动根据 ``STATIC_URL`` 生成 static file
       的 url, 不要把静态文件的 url 写死在 html 里. 这样, 真正的 url 会根据
       ``STATICFILES_STORAGE`` 的机制去生成, 这样只需要设置
@@ -1995,7 +2034,7 @@
     or modified.
 
   * settings.
-    
+
     - ``SESSION_COOKIE_AGE`` 设置全局的 session cookie ``max_age`` 参数值.
       该值默认为 2 weeks.
 
@@ -2204,7 +2243,7 @@
       authentication are saved in the user’s session. This allows the same
       authentication backend to fetch the user’s details on a future request
 
-    - 除了 ``login()`` 之外, ``AuthenticationMiddleware`` 会根据 request 
+    - 除了 ``login()`` 之外, ``AuthenticationMiddleware`` 会根据 request
       中的 session id 信息, 匹配相应用户, 设置 ``request.user``. 从而避免
       跳转至 login 页面和再次 ``login()``.
 
