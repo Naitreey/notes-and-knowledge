@@ -1117,6 +1117,15 @@
             res = instance.__dict__[self.name] = self.func(instance)
             return res
 
+language
+--------
+exception
+~~~~~~~~~
+
+- instantiate exception 时, 它的 ``__traceback__``, ``__cause__``, ``__context__``
+  还都是 None (因为在实例化处本来就没有这些). 之后 raise 之后, 解释器才会根据执行
+  情况设置这三个属性.
+
 builtin functions
 -----------------
 - ``enumerate()``, ``start=`` 设置第一项的序号值.
