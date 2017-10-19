@@ -1076,7 +1076,7 @@
   * ``django.template.base.Template`` 是各 engine 实现的模板类的父类.
 
     - ``origin``, Origin object, 包含模板的 debug 信息, ``name`` (模板的路径) 和
-      ``template_name`` (加载模板所用的路径即模板名).
+      ``template_name`` (加载模板所用的路径即模板名) 以及可能包含 loader.
 
     - ``render()``, render template with context and request.
 
@@ -1102,6 +1102,8 @@
       * ``string_if_invalid``, 对于 invalid variables 输出的默认值.
 
       * ``builtins``, 添加 template tag modules 至 builtin tags.
+
+      * ``loaders``
 
     - 由于历史原因, ``django.template.backends.django.DjangoTemplates``
       engine 是 ``django.template.Engine`` 的 wrapper.
@@ -1144,6 +1146,8 @@
       真正 render 操作之前. 注意这意味着 context processor 添加的量会覆盖从
       view 传入的量.
 
+    - context processor 对于不同 engine 基本上是通用的.
+
     - 初始化 engine 时输入的 processor list 按顺序应用, 这意味着越靠后的输出
       结果优先级越高.
 
@@ -1177,7 +1181,41 @@
 
   * loaders.
 
-    responsible for locating, loading, and returning Template objects.
+    - responsible for locating, loading, and returning Template objects.
+
+    - ``django.template.loaders.base.Loader`` 是所有 loader 的基类.
+
+      提供以下 API.
+
+      * ``get_template()``
+        调用 ``get_template_sources()`` 和 ``get_contents()``,
+        给出对应于输入的模板名的 Template object.
+
+      子类须实现以下方法:
+
+      * ``get_template_sources()``, 对于某个模板路径输入, 获取可能的
+        template Origin 列表.
+
+      * ``get_contents()``, 根据可能的 template Origin 获取 template 内容.
+
+    - engine 的 ``loaders`` 参数自定义 loaders.
+      loaders 中每项可以是 loader import paths, 或者是 a tuple/list of
+      loader 路径 + loader 初始化参数.
+
+    - ``django.template.loaders.filesystem.Loader``
+      使用 ``DIRS`` option
+
+    - ``django.template.loaders.app_directories.Loader``
+      使用各 app 的 ``templates`` dir.
+
+    - ``django.template.loaders.eggs.Loader``
+      从 eggs 加载.
+
+    - ``django.template.loaders.locmem.Loader``
+
+    - ``django.template.loaders.cached.Loader``
+      cache 已经加载过的和没找到的 templates. 当 ``DEBUG=False`` 且 ``loaders``
+      没有设置时, 这个 loader 是自动加载的.
 
 - django template system & language
 
