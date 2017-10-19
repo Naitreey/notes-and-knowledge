@@ -551,11 +551,6 @@
     如果一个程序需要处理任意编码的二进制文件名 (比如使用了不同的字符编码集), 则应该
     在程序中使用 bytes objects 来代表 pathname.
 
-- 注意 json format 不支持 binary data 这种类型. 所有的 binary data 都必须使用某种数字
-  进制编码成字符串, 才能用 json format 来传递.
-
-  由于 json 数据要求是纯文本, 因此 ``json.dumps`` 的结果一定是 `str` 而不会是 `bytes`.
-
 - ``__str__`` 默认 call ``__repr__``, 反之却不行. 即严格的 ``__repr__`` 可以代替
   informal 的 ``__str__``, 但反之不能用 ``__str__`` 代替 ``__repr__``.
 
@@ -1129,6 +1124,18 @@ exception
 builtin functions
 -----------------
 - ``enumerate()``, ``start=`` 设置第一项的序号值.
+
+json
+----
+
+- 注意 json format 不支持 binary data 这种类型. 所有的 binary data 都必须使用某种数字
+  进制编码成字符串, 才能用 json format 来传递.
+
+  由于 json 数据要求是纯文本, 因此 ``json.dumps`` 的结果一定是 `str` 而不会是 `bytes`.
+
+- 如果需要经常对某个数据结构进行 json 的转换, 可通过扩展 JSONDecoder/JSONEncoder
+  来实现. 使用时 ``json.loads`` ``json.dumps`` 之类操作加上自定义的 encoder/decoder,
+  这样很方便.
 
 Jinja template
 --------------
