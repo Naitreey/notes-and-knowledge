@@ -2732,6 +2732,7 @@
     ``messages`` context processor.
 
   * storage backends.
+    ``settings.MESSAGE_STORAGE`` 默认使用 FallbackStorage.
 
     base: ``django.contrib.messages.storage.base.BaseStorage``.
     所有子类实现 ``_get()``, ``_store()`` methods.
@@ -2751,7 +2752,17 @@
     - ``django.contrib.messages.storage.fallback.FallbackStorage``
       首先使用 cookie, 对于 cookie 放不下的, 存在 session 里.
 
-  * ``settings.MESSAGE_STORAGE`` 默认使用 FallbackStorage.
+  * message levels: DEBUG, INFO, SUCCESS, WARNING, ERROR.
+    ``settings.MESSAGE_LEVEL`` 设置最低接受添加的 message 的 level.
+
+  * 每个 message level 有对应的 lowercased version message tag.
+
+  * APIs.
+
+    - ``add_message()``. shortcuts: ``debug|info|success|warning|error()``
+
+    - ``get_messages()``
+
 
 - 在独立的程序或脚本中使用 django 功能.
 
