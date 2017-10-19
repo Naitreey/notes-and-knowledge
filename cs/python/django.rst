@@ -2725,11 +2725,33 @@
 
 - messages framework
 
-  * 提供 cookie- and session-based messaging.
+  * 提供 cookie- and session-based 临时信息.
 
   * ``django.contrib.messages`` 默认就有运行. 它提供 ``MessageMiddleware``, 并
     依赖于 SessionMiddleware (messages 部分功能依赖 session 生效), 以及
     ``messages`` context processor.
+
+  * storage backends.
+
+    base: ``django.contrib.messages.storage.base.BaseStorage``.
+    所有子类实现 ``_get()``, ``_store()`` methods.
+   
+    每种存储信息的方式对应一个 backend.
+
+    - ``django.contrib.messages.storage.session.SessionStorage``
+      在 session backend 中存储, 位于 session cookie key 所指向的条目内.
+
+    - ``django.contrib.messages.storage.cookie.CookieStorage``
+      在 cookie 中存储 (从而在 client/server 间传递). 同时还包含一个
+      message 的 signed hash, 使用 server 的一个 secret key 签署.
+      避免篡改.
+
+      cookie 相对于 session 的好处是性能. 因为不涉及存入 backend.
+
+    - ``django.contrib.messages.storage.fallback.FallbackStorage``
+      首先使用 cookie, 对于 cookie 放不下的, 存在 session 里.
+
+  * ``settings.MESSAGE_STORAGE`` 默认使用 FallbackStorage.
 
 - 在独立的程序或脚本中使用 django 功能.
 
