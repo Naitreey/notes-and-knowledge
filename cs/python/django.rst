@@ -2027,6 +2027,10 @@
     当数据库结构之间的关系非常复杂时, 慎用 squash migration. 最好检查 squash
     的结果是否符合当前 models 结构.
 
+  * 在 migration 中无法访问 model 中定义的 methods. 解决办法是在 migration 中
+    再定义一遍. 由于 migration 只代表在确定历史状态下的操作, 所以这种重复不造成
+    问题.
+
 - session
 
   * Session data is stored on the server side. 在客户端, session 通过 session ID
@@ -2725,7 +2729,10 @@
 
 - messages framework
 
-  * 提供 cookie- and session-based 临时信息.
+  * 提供 cookie- and session-based 临时信息. 这些信息 (或信息的标识) 经常是在
+    本次 view 处理中设置, 在下次 (可能不同的) view 处理中使用. (通过 302
+    redirect response 传至 client, 再次请求时传回 server.) 这些信息也可能是在
+    本次 view 中使用.
 
   * ``django.contrib.messages`` 默认就有运行. 它提供 ``MessageMiddleware``, 并
     依赖于 SessionMiddleware (messages 部分功能依赖 session 生效), 以及
@@ -2752,6 +2759,8 @@
     - ``django.contrib.messages.storage.fallback.FallbackStorage``
       首先使用 cookie, 对于 cookie 放不下的, 存在 session 里.
 
+  * ``django.contrib.messages.storage.base.Message``
+
   * message levels: DEBUG, INFO, SUCCESS, WARNING, ERROR.
     ``settings.MESSAGE_LEVEL`` 设置最低接受添加的 message 的 level.
 
@@ -2759,10 +2768,33 @@
 
   * APIs.
 
-    - ``add_message()``. shortcuts: ``debug|info|success|warning|error()``
+    - ``add_message()``. shortcuts: ``debug|info|success|warning|error()``.
 
-    - ``get_messages()``
+    - ``get_messages()``, 在代码中直接使用或模板 context variable ``messages``
+      间接使用.
 
+    - ``set_level()``, 直接修改 message storage 的最低保存 level, 从而可以
+      设置 per request level.
+
+    - ``get_level()``
+
+  * 逻辑:
+
+    每次请求, middleware 实例化 message storage, 赋值给 ``request._messages``.
+    在 view 中, 使用 ``add_message()`` 添加 message, 标记为 queued messages.
+    在代码或模板中遍历 message storage 时, 会标记该 storage 已经被使用过,
+    清空 queued messages. middleware 处理响应时, 会将往次设置但没有使用过的
+    以及新添加的 messages 保存起来, 附在响应中.
+
+    手动设置 ``BaseStorage.used=False`` 可避免遍历过的 message storage 被
+    清空. 下次仍可使用.
+
+  * 提供了一个 view class mixin 用于添加 success message. 其实这也是 message
+    的最常见用处.
+
+    ``django.contrib.messages.views.SuccessMessageMixin``
+    这需要配合 ``FormMixin`` 使用. ``success_message`` attr 设置信息 format
+    string.
 
 - 在独立的程序或脚本中使用 django 功能.
 
