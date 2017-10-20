@@ -119,3 +119,13 @@
   完全信任的情况下, 需要强制 PR.
 
 - ``git fetch`` & ``git remote update`` 提供的功能基本是相同的.
+
+- 如果某个 revision 和某个文件名字相同, ``git log <...>`` 时报错:
+  ``fatal: ambiguous argument ... both revision and filename``.
+  此时使用 ``--`` 对 revision 和 filename 进行区别:
+
+  - branch name: ``git log <...> --``
+
+  - filename: ``git log -- <...>``
+
+  - or both: ``git log <...> -- <...>``
