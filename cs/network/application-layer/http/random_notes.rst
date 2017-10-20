@@ -152,6 +152,8 @@
       浏览器会拒绝跨站的 cookie, 这是出于安全考虑. 否则任何一个网站可以随意给别的
       网站设置 cookie. 若指定了 ``<domain>``, 则它所有的 subdomains 都包含在内.
 
+    - 一个 response 中可以有多个 Set-Cookie, 但是 cookie-name 应该不同.
+
 - Session management:
 
   * 注意 session 概念在不同语境下的区别.
