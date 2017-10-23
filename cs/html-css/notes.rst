@@ -96,6 +96,33 @@ text content
 
   * ``cite``, quotation source url.
 
+- 三种 list: ol, ul, dl.
+
+- ``<ol>``, ordered list.
+
+  attributes.
+
+  * ``reversed``
+
+  * ``start``, 起始序数.
+
+- ``<ul>``, unordered list.
+
+- ``<li>``, 必须出现在 ol, ul, menu element 中.
+
+  attributes.
+
+  * ``value``, 当前序数. 下面的 li element 会从该值起递增.
+
+- ``<dl>``, description list. 里面是一系列的 dt-dd element groups.
+  对于每个 group, 由一个或多个 dt elements 起始, 表示要表述的 term
+  以及它的 aliases, followed by 一个或多个 dd elements, 是对它们的
+  解释.
+
+- ``<dt>``, description term.
+
+- ``<dd>``, description description. Indented.
+
 inline text semantics
 ~~~~~~~~~~~~~~~~~~~~~
 
@@ -158,6 +185,20 @@ inline text semantics
 - ``<s>``, strike-through. Represent things that are no longer relevant or no
   longer accurate. 这不同于表示 document editing 的 ``<del>``. 两者在不同的
   语义下使用. 注意不同于 del element, 这是 inline element.
+
+- ``<a>``, anchor.
+
+  attributes.
+
+  * ``href``, 值可以是 url 或 url fragment.
+
+    对于指向其他网站、其他协议等的 url, 显然需要是包含 schema, domain 等部分的
+    absolute url; 对于指向本站的其他资源的 url, 一般是使用从 document root
+    开始的 full path 形式 relative url; 注意一般不使用相对于本资源的 relative
+    url, 不然若本资源位置更改, 里面的 url 都得更改.
+
+    url fragment 由 fragement identifier ``#`` 起始, 指向本资源 (文档) 内部的
+    location.
 
 document edits
 ~~~~~~~~~~~~~~
