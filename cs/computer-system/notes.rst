@@ -1,5 +1,3 @@
-- TDP. PC 各组件的重要功率指标. 电源提供的功率应当至少是各组件 TDP 之和的 1.5 倍.
-
 - 现代的计算机中, 不同组件通过各种 bus 进行 communication 的过程更像是计算机网络.
   这种交流过程涉及 protocol, connection, packet 等概念.
 
@@ -314,6 +312,16 @@
   (255.255.255.255), 这样 unicast 送到目的机器的 NIC. 但由于 ARP 表的过期时间,
   到达目的网段后无法网关无法转换成目的机器 MAC 地址, 从而失败. 所以, 在目的网段,
   需要一些其他配置, 来配合 WOL.
+
+general
+-------
+
+- TDP. PC 各组件的重要功率指标. 它表示一个组件在正常的实际运行中的最大发热功率.
+  它并不是该组件的理论发热功率上限, 后者在极限情况下才会达到, 并不符合实际情况.
+
+  一个组件的实际使用功率上限会基本相同或略大于它的 TDP. 因此, 电源提供的功率应当
+  至少大于各组件 TDP 之和, 比较理想的是 1.5 倍.
+
 
 firmware
 --------
@@ -686,25 +694,6 @@ Video
 
   HSA 在 SOC (即移动端) 上用的很多.
 
-- Graphics accelerating. 不使用 CPU 运算将图形点阵化再传给显卡输出, 而是将
-  原始的 graphics drawing commands 直接传给 GPU, 后者负责点阵化构建 framebuffer.
-  节省大量 CPU 时间, 并提高输出效率.
-
-  While early accelerators focused on improving the performance of 2D GUI
-  systems, most modern accelerators focus on producing 3D imagery in real time.
-  A common design is to send commands to the graphics accelerator using a
-  library such as OpenGL or Direct3D. The graphics driver then translates those
-  commands to instructions for the accelerator's graphics processing unit
-  (GPU). The GPU uses those microinstructions to compute the rasterized
-  results. Those results are bit blitted to the framebuffer. The framebuffer's
-  signal is then produced in combination with built-in video overlay devices
-  (usually used to produce the mouse cursor without modifying the framebuffer's
-  data) and any analog special effects that are produced by modifying the
-  output signal. An example of such analog modification was the spatial
-  anti-aliasing technique used by the 3dfx Voodoo cards. These cards add a
-  slight blur to output signal that makes aliasing of the rasterized graphics
-  much less obvious.
-
 video card
 ~~~~~~~~~~
 - A modern video card is also a computer unto itself.
@@ -722,6 +711,9 @@ video card
     - 与 CPU 共用计算资源, cooling system 等;
 
     - 占用一部分 RAM 作为显存;
+
+    - GPU 图形运算需要大量的内存读写, 集成显卡需要和 CPU 竞争 RAM 读写, 而
+      且 main RAM 本来就很慢 (相对于 GRAM).
 
 - 现在显卡的 TDP 一般很高, 远高于 PCIe 能提供的功率, 需要额外从 PSU 直接供电.
 
@@ -747,12 +739,64 @@ video card
 
 - 显存相对于主内存而言, 是非常高速的. GDDR5, GDDR5X 之类的都有几百 GB/s 速度.
 
-Graphics API
-~~~~~~~~~~~~
-- user space 程序调用 API 进行图像操作; API 可能直接由显卡驱动提供, 也可能是由
+GPU
+~~~
+
+- Graphics acceleration. 不使用 CPU 运算将图形点阵化再传给显卡输出, 而是将
+  原始的 graphics drawing commands 直接传给 GPU, 后者负责点阵化构建 framebuffer.
+  节省大量 CPU 时间, 并提高输出效率.
+
+  While early accelerators focused on improving the performance of 2D GUI
+  systems, most modern accelerators focus on producing 3D imagery in real time.
+  A common design is to send commands to the graphics accelerator using a
+  library such as OpenGL or Direct3D. The graphics driver then translates those
+  commands to instructions for the accelerator's graphics processing unit
+  (GPU). The GPU uses those microinstructions to compute the rasterized
+  results. Those results are bit blitted to the framebuffer. The framebuffer's
+  signal is then produced in combination with built-in video overlay devices
+  (usually used to produce the mouse cursor without modifying the framebuffer's
+  data) and any analog special effects that are produced by modifying the
+  output signal. An example of such analog modification was the spatial
+  anti-aliasing technique used by the 3dfx Voodoo cards. These cards add a
+  slight blur to output signal that makes aliasing of the rasterized graphics
+  much less obvious.
+
+- 当代 GPU 完全为 3D 加速渲染设计和优化, 2D 渲染需要通过 3D 渲染来模拟.
+
+- GPU accelerated video decoding. 当代 GPU 支持 MPEG primitives 等视频处理
+  功能. 可以将部分视频解码和处理工作从 CPU 移至 GPU.
+
+- GPGPU: GPU 本来是专门为 3D/2D 图形输出优化的, 而这些运算中一般涉及大量的矢量
+  和矩阵运算, 也就是说 GPU 实际上很适合用于做科学计算和并行计算.
+
+  使用 GPU 训练神经网络的效率可以达到 CPU 的 250 倍.
+
+OpenGL
+~~~~~~
+
+- OpenGL is a cross-language, cross-platform API standard for hardware
+  accelerated 2D/3D graphics rendering.
+
+  user space 程序调用 API 进行图像操作; API 可能直接由显卡驱动提供, 也可能是由
   什么中间件提供, 后者再调用显卡驱动.
 
-- OpenGL 是常见的跨平台 API 规范.
+- 由于 OpenGL 定义了一系列 GPU 硬件必须支持的功能的通用 API, 所以它需要显卡
+  硬件去实现这些功能. 因此一款特定的显卡最高支持的 OpenGL 版本是固定的.
+
+- API implementations for different platforms.
+  WebGL (javascript), Windows WGL, X window system GLX (C),
+  OSX CGL, iOS components (C), Android components (C, Java)
+
+- GPU vendors 可在 OpenGL core API 之外提供 customized extensions.
+  All extensions are collected in, and defined by, the OpenGL Registry.
+
+  The features introduced by each new version of OpenGL are typically formed
+  from the combined features of several widely implemented extensions,
+  especially extensions of type ARB or EXT.
+
+- official docs.
+  The Red Book --- OpenGL Programming Guide.
+  The Orange Book --- OpenGL Shading Language.
 
 bus & connector
 ~~~~~~~~~~~~~~~
