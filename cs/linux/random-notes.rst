@@ -218,7 +218,7 @@
 
   考虑到 ASLR 的存在, stack, mmap file, heap, text 四个区域的起始地址存在随机化.
 
-- Weird Debian/Ubuntu
+- Debian/Ubuntu
 
   * udisks2 is patched by Ubuntu to use ``/media``, rather than default ``/run/media``.
 
@@ -235,6 +235,18 @@
     怎么会有人把手编的 python 的库放到 ``/usr/lib`` 中.
 
     如果在 virtual env 中, 则会安装到 ``site-packages`` 中.
+
+  * Ubuntu 17.10:
+
+    - GNOME 替代 Unity.
+
+    - Wayland 替代 Mir.
+
+    - GDM 替代 lightDM.
+
+    - Window control buttons are back on the right for the first time since 2010.
+
+    - python2 not installed by default. python3 upgraded to 3.6.
 
 - kernel 默认给出的设备名称是十分 generic 的. 它根据设备的类型以及发现顺序进行
   编号, 生成如 ``eth<N>``, ``sd<X><N>`` 等设备类型 + 编号的名字. 这样命名的问题
