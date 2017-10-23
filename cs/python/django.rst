@@ -236,7 +236,8 @@
       the old one.
 
     - ``default`` 仅在创建时该列的值未指定时生效, 而不是 ``field=None`` 时. 后者
-      情况是指定了该列, 但值是 null.
+      情况是指定了该列, 但值是 null. 默认情况下 ``default=None``, 但是否能顺利
+      使用该 default value, 还要看该列是否允许 null, 即 ``null=`` 的配置.
 
     - ``null`` 默认是 False, 所以 create table 时有 ``NOT NULL``.
 
