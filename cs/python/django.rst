@@ -158,7 +158,8 @@
   * 通过 ``Meta`` inner class 定义来定义 model 的 metadata.
 
     - ``ordering`` 决定 QuerySet 的默认排序. 语法与 ``QuerySet.order_by`` 相同.
-      若不设置, 则没有固定顺序 (SQL 没有 ORDER BY clause).
+      若不设置, 且 queryset 没有 ``order_by``, 则生成的 SQL 没有 ORDER BY clause,
+      即没有固定顺序.
 
   * Model object managers (like ``.objects``) are only accessible via model classes,
     not the model instances.
@@ -369,12 +370,7 @@
     实例中的 ``ManyToManyField`` 实际上是一个 Manager object, 需要用 ``.add()`` 给
     这个集合中增加关联关系. ``.add()`` 接受一次传入多个对象, 建立多个映射.
 
-  * Manager and QuerySet
-
-    - 每个 model 都有一个 ``Manager`` instance, 用于进行 table-level operations.
-      ``Manager`` instance is  accessible only via model class, rather than from
-      model instances, to enforce a separation between “table-level” operations and
-      “record-level” operations.
+  * QuerySet
 
     - 获取对象的各个方法在 ``Manager`` 和 ``QuerySet`` 中都有 (在 QuerySet 中定义,
       expose to Manager 中), 且可以串联在一起. ``.delete()`` 是唯一的 QuerySet 有
@@ -405,11 +401,6 @@
           一行可能排序后变成多行.
 
           chained ``.order_by`` 只有最后一个有用.
-
-          在 django 生成的 SQL 中, order_by 指定的 field 会出现在后端执行的
-          ``SELECT`` 语句中. (注意这是 django 的限制, 不是 SQL ``ORDER BY`` 的限制.)
-          但仅用于排序, 不一定会返回在 QuerySet 中. 这导致 ``.distinct()``
-          可能无法正常工作, 因为 fields 中包含额外的列.
 
         - ``.values()`` 给出的 QuerySet 每个元素为 field-value mapping dict, 方便
           遍历.
@@ -581,17 +572,39 @@
       层的封装特性, 例如 custom save, auto_now, pre_save/post_save signal 等
       都不会生效.
 
-    - related objects. 一对多、多对多关系中, 正向的 manager object (如果有) 是属性名,
-      逆向的 manager object 默认是 ``<lower_model>_set``, 可通过 ``related_name``
-      自定义. 在一对一的关系中, 正反向都是对称直接访问的.
-
+    - ``select_related()``.
       如果用户在查询某模型时, 已知会访问到关联的 FK 对象, 可使用 ``select_related()``
       来强制进行 JOIN 操作, 一次把所有 FK 对象数据取回来, 这样更高效. 避免获取各个
       FK object 时再单独访问数据库. To avoid the much larger result set that would
       result from joining across a ‘many’ relationship, ``select_related`` is limited
       to single-valued relationships - foreign key and one-to-one.
 
-      ``RelatedManager`` 的一些方法: ``add()``, ``create()``, ``remove()``,
+    - 对于十分复杂的一长串的 ORM 操作 QuerySet (涉及可能多个过滤、聚合等), 如果对它
+      到底会怎么执行不确定, 需要检查 raw SQL 长什么样子, 通过 ``QuerySet.query``.
+      对于直接执行不返回 queryset 的情况, 直接看 ``django.db.connection.queries``.
+
+    - 由于排序导致的反直觉现象.
+
+      若 model 有设置 ``Meta.ordering``, 或者 queryset 有含参的 ``.order_by()``,
+      则生成的 SQL 里一定会排序. 且 django 会在 select 部分添加排序相关的列.
+      进一步, 若 GROUP BY 不是按照默认的 id 来分组, 则会在现有的分组 fields 列表
+      中添加排序相关列. 即使这些排序列不在最终的 queryset 中作为 attribute 出现,
+      它们也会在 SQL 中被包含.
+
+      这可能导致 DISTINCT, GROUP BY, aggregation 等结果与预期不符. 需要小心对待.
+
+  * Manager.
+
+    - 每个 model 都有一个 ``Manager`` instance, 用于进行 table-level operations.
+      ``Manager`` instance is  accessible only via model class, rather than from
+      model instances, to enforce a separation between “table-level” operations and
+      “record-level” operations.
+
+    - related objects. 一对多、多对多关系中, 正向的 manager object (如果有) 是属性名,
+      逆向的 manager object 默认是 ``<lower_model>_set``, 可通过 ``related_name``
+      自定义. 在一对一的关系中, 正反向都是对称直接访问的.
+
+    - ``RelatedManager`` 的一些方法: ``add()``, ``create()``, ``remove()``,
       ``clear()``, ``set()``. 这些操作都是立即在数据库生效的.
 
 - aggregation.
@@ -616,9 +629,19 @@
     - 由于结果成为了 attributes, 返回的仍是一个 QuerySet, 因此可以继续
       operation chain.
 
+    - annotate 增加的 attributes 可以在后续的 operation chain 中使用, 例如
+      用于进一步 ``filter()``.
+
     - 使用 annotate 进行多项聚合时必须要谨慎, 很可能结果不对, 并且必要时检查
       生成的 raw sql statements. 多项聚合结果可能错误的原因是 django 简单
       地将多项聚合条件涉及的所有表 join 在一起, 然后再算聚合值.
+
+    - 一般意义的 GROUP BY 操作:
+      若 queryset operation chain 中, ``.annotate()`` 前面有 ``.values()``
+      或 ``.values_list()`` 且它们指定了列参数 (不是无参的), 则 annotate 时
+      的 GROUP BY 会使用这些列来分组, 不再使用原 model 的 pk. 此时, annotate
+      的结果不再与各个 model instance 对应. 这样, 生成的组不再局限于 model
+      instance.
 
   * aggregation functions.
 
