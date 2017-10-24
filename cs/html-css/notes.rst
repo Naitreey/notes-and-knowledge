@@ -24,6 +24,12 @@ syntax
 
 - whitespace collapsing. 文档中多个连续的 whitespace chars 会合并成一个.
 
+global attributes
+~~~~~~~~~~~~~~~~~
+
+- ``id``, 包含 ASCII letters, ``_``, ``-``, ``.``. Starting with underscore
+  or letter, must not contain whitespace. Must be unique in the whole document.
+
 elements
 --------
 
@@ -188,7 +194,15 @@ inline text semantics
 
 - ``<a>``, anchor.
 
+  不要滥用 a element + onclick event 来模拟 button, 还给 href 赋值
+  ``javascript:void(0)`` 来避免页面重载. 这种情况下请直接用 button.
+  You should only use an anchor for navigation using a proper URL.
+
   attributes.
+
+  * ``download``, 下载资源, 而不是 navigate to it. 即使后端没有返回
+    ``Content-Disposition: attachment`` 也会下载. 只对 same-origin url
+    有效. 若有值, 为预设的文件名.
 
   * ``href``, 值可以是 url 或 url fragment.
 
@@ -198,7 +212,25 @@ inline text semantics
     url, 不然若本资源位置更改, 里面的 url 都得更改.
 
     url fragment 由 fragement identifier ``#`` 起始, 指向本资源 (文档) 内部的
-    location.
+    location. ``#top`` 和 ``#`` fragment url 指向当前页面顶部.
+
+  * ``ping``
+
+  * ``referrerpolicy``, 何时加上或不加 Referer header, 以及其值是什么.
+
+  * ``rel``, link types.
+
+  * ``target``, where to display linked url. It's a name of, or keyword for,
+    a browsing context, i.e., a window, a tab, a iframe. 一些特殊 keywords:
+
+    - ``_self``, to current context, default;
+
+    - ``_blank``, to new context, 这个 new context 是在 new tab 还是 new window
+      取决于用户设置;
+
+    - ``_parent``, to parent context, 若没有 parent 则等于 ``_self``;
+
+    - ``_top``, to top context, 若没有 parent 则等于 ``_self``.
 
 document edits
 ~~~~~~~~~~~~~~
