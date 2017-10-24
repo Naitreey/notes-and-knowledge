@@ -24,6 +24,12 @@ syntax
 
 - whitespace collapsing. 文档中多个连续的 whitespace chars 会合并成一个.
 
+- block element vs inline element.
+
+  * block element 占据多个整行 -- 一个 block.
+
+  * inline element 位于 block element 之中, 不占整行, 可以在一行中并排出现.
+
 global attributes
 ~~~~~~~~~~~~~~~~~
 
@@ -128,6 +134,24 @@ text content
 - ``<dt>``, description term.
 
 - ``<dd>``, description description. Indented.
+
+- ``<figure>``
+
+  类似于 latex 中的 figure 或 listing environment. 它用于构建图例、
+  代码 listing 等等为文章或页面的内容进行辅助的内容. 一般包含一个
+  figcaption, 用于内容说明.
+
+  figure 不仅仅可以放图片. Usually a figure is an image, illustration, diagram,
+  code snippet, etc., that is referenced in the main flow of a document, but
+  that can be moved to another part of the document or to an appendix without
+  affecting the main flow.
+
+  Being a sectioning root, the outline of the content of the <figure> element
+  is excluded from the main outline of the document.
+
+  里面若有 figcaption element, 必须是第一个或最后一个.
+
+- ``<figcaption>``, 必须在 figure element 里.
 
 inline text semantics
 ~~~~~~~~~~~~~~~~~~~~~
@@ -248,6 +272,62 @@ document edits
   * ``datetime``, date and time of deletion.
 
 - ``<ins>``, 表示内容是插入的, 默认以下划线表示. 其他 ditto.
+
+image and multimedia
+~~~~~~~~~~~~~~~~~~~~
+
+- ``<img>``, image.
+
+  一些分辨率概念:
+
+  * ppi: (对于显示屏) pixels per (square) inch -- ppi.
+
+  * dpi: (对于打印材料) dots per (square) inch -- dpi.
+
+  image formats: bitmap and vector.
+
+  * jpeg. 适合照片等具有自然色彩、多种细致复杂的色彩和渐变等图像.
+
+  * png. 适合具有少数几种单一色彩的人工图像等 (flat color).
+
+  * gif. 适合具有少数几种色彩的静态或动态图像.
+
+  * svg. 矢量图 (一般是人工的).
+
+  attributes.
+
+  * 通过一些属性来明确图像的尺寸有助于在图像尚未加载完全时保持页面的 layout
+    固定.
+
+  * ``src``, source url. 必须有这个属性.
+
+  * ``srcset``, for responsive images.
+
+  * ``sizes``, for responsive images.
+
+  * ``height``, 图像的高度, in pixels.
+
+  * ``width``, 图像的宽度, in pixels.
+
+  * ``alt``, 描述图片的 alternative text.
+    You should provide a useful value for alt whenever possible, 这是为了
+    图片无法显示时或为了视觉障碍人士使用 screen reader 所考虑.
+    若不设置 alt, 表示该图片是文章内容的关键组成部分, 不可或缺.
+
+  * ``referrerpolicy``, which referrer to use when fetching the resource.
+
+  * ``crossorigin``, 明确指定跨站图片要用 CORS 方式获取, 从而让浏览器检验
+    external source 服务器是否允许该 url 访问. CORS 检验通过通过的跨站图片
+    能够在 canvas 中重用并保持 canvas not being tainted, 即 canvas 的数据
+    仍然可以提取出来. 这是为了避免敏感数据泄露.
+
+    若不指定该属性, resource is fetched without CORS, preventing its non-tainted
+    usage in canvas elements.
+
+  * ``ismap``, whether the image is part of a server-side map. If so, the
+    precise coordinates of a click are sent to the server.
+
+  * ``usemap``, 与图片关联的 map element id (``#id``).
 
 forms
 ~~~~~
