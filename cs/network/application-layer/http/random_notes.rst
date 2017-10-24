@@ -218,6 +218,15 @@
 
 - uri.
 
+  * absolute url vs relative url.
+
+    absolute url 包含 schema, userinfo, domain, port, path, query parameters,
+    url fragment 等.
+    relative url 包含 path, query parameters, url fragment 等部分.
+
+  * schema 后面的 ``//`` 本来并不必须, Tim Berners-Lee 为此错误道过歉.
+    事实上一些协议并不添加这部分, 例如 ``javascript:``, ``mailto:``, ``tel:``.
+
   * uri 是 url + urn 的统称. 但一般说 uri 就指的是 url.
 
   * IRI (internationalized resource identifier) 是 URI 的扩展.
@@ -229,9 +238,17 @@
 
     Cool urls don't change. Try to make your url last as long as possible.
 
-
 Headers
 -------
+
+- ``Referer``, 是 request header. 包含该请求来自的那个页面对应的 url.
+  浏览器自动加上它. 可被后端用于识别来源, 从而 logging, tracking 等等.
+  url fragment (``#id``) 和 userinfo ``user@pass`` 不被包含.
+
+  若原页面是 local ``file:`` ``data:`` uri 则不设置该 header;
+  若原页面是 https 的, 但本请求是 http 的, 则不设置该 header.
+
+  事实上这个单词拼错了: Referrer.
 
 - ``Expect`` request header: 指定为了完成请求, 预期服务器要满足的条件.
 
@@ -309,6 +326,8 @@ Headers
 
     - ``must-revalidate``, response only. stale resoures must be validated before
       serving.
+
+- ``Referer``
 
 Security
 --------
