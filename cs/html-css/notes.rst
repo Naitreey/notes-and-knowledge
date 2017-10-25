@@ -329,6 +329,27 @@ image and multimedia
 
   * ``usemap``, 与图片关联的 map element id (``#id``).
 
+table content
+~~~~~~~~~~~~~
+
+- ``<table>``, table.
+
+  它允许的 children, 按照下述顺序:
+
+  * one optional caption element;
+
+  * zero or more colgroup element;
+
+  * one optional thead element;
+
+  * zero or more tbody element 或者 one or more tr element;
+
+  * one optional tfoot element;
+
+- ``<tr>``, table row.
+  里面可以是 th or td element. tr element 可位于 table, thead, tfoot element 中.
+
+
 forms
 ~~~~~
 
