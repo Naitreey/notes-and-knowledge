@@ -319,6 +319,9 @@
 
     - 若 ``ForeignKey`` field 支持 ``null=True``, 则对这个属性赋值 None 即可去掉关联.
 
+    - 对各种 relationship field, 若要指向可能尚未定义的列, 用字符串
+      ``[app_label.]model`` 代替 model object.
+
   * many-to-many field.
 
     - 由于一个列无法体现多对多的关系, ``ManyToManyField`` 在实现时, 不是构成了一个列,
@@ -2457,7 +2460,8 @@
     - ``AccessMixin`` 是以上几个权限控制的 mixin class 的父类, 它具有最一般化的
       性质.
 
-    - ``RequestContext`` 为 template context 自动添加一系列用户、权限相关量.
+    - ``django.contrib.auth.context_processors.auth`` 为 template context 自动添加
+      一系列用户、权限相关量.
 
       * ``user``, 当前用户.
 
@@ -2547,7 +2551,8 @@
       为了在用户创建、删除等操作时两表同步, 需要使用 signal.
 
     - default User model just does not fit your need, create custom user
-      model as ``AUTH_USER_MODEL`` to override the default.
+      model as ``AUTH_USER_MODEL`` to override the default. AUTH_USER_MODEL
+      的形式和 relationship field 中引用 field 的形式相同: ``[app_label.]model``.
 
       即使 User model 已经足够, 也应该使用自定义的 user model, 这样方便之后
       进行扩展.
@@ -2556,8 +2561,52 @@
       This model behaves identically to the default user model, but you’ll be
       able to customize it in the future if the need arises.
 
-    - Change to custom user model mid-project.
-      **HORRIBLE**.
+    - Change to custom user model mid-project. **HORRIBLE**.
+      迁移步骤参考 https://code.djangoproject.com/ticket/25313#comment:2
+
+      开发时,
+
+        1. Create a custom user model identical to auth.User, call it User (so
+           many-to-many tables keep the same name) and set
+           `db_table='auth_user'` (so it uses the same table).
+
+        2. ``settings.AUTH_USER_MODEL`` 设置为上述 model.
+
+        3. 设置 user app 里所有 model 的 `db_table` 与数据库里表名字相同.
+           重命名 user app 为 `accounts`. 修改所有相关 import 等引用.
+
+        4. 删除所有 migrations.
+
+        5. `./manage.py makemigrations app1 app2 app3 ...`
+
+        6. 构建安装包.
+
+      测试时 (测试库),
+
+        1. 备份数据库.
+
+        2. Truncate `django_migrations` table.
+
+        3. 安装.
+
+        4. `./manage.py migrate --fake`
+
+      部署 (线上库),
+
+        1. 备份数据库.
+
+        2. Truncate `django_migrations` table.
+
+        3. 安装.
+
+        4. `./manage.py migrate --fake`
+
+      最后一步,
+
+        1. Unset `db_table`, make and apply this migration.
+
+        2. 将所有对 `auth.User` 的直接引用转换为 `get_user_model()` 或
+           `settings.AUTH_USER_MODEL`.
 
     - Reusable apps shouldn’t implement a custom user model.
       If you need to store per user information in your app, use a ForeignKey
@@ -2767,7 +2816,7 @@
 
     base: ``django.contrib.messages.storage.base.BaseStorage``.
     所有子类实现 ``_get()``, ``_store()`` methods.
-   
+
     每种存储信息的方式对应一个 backend.
 
     - ``django.contrib.messages.storage.session.SessionStorage``
