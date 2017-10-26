@@ -382,9 +382,45 @@ table content
 forms
 ~~~~~
 
-- 如果 ``<form>`` element 没有 ``action`` attribute 或者是空的值, 且内部没有
-  ``<button>`` 有 ``formaction`` attribute, 则浏览器默认 action uri 是当前
-  页面. 这经常用于: 一个 url 设计为 GET 时返回 form 页面, POST 时接受 form data.
+- ``<form>``
+  form 里可以有任何 flow content. submit 时 form 里的各层所有
+  input elements 的值都会一起提交.
+
+  attributes.
+
+  * ``accept-charset``, server 端接受的 character encodings. 默认是
+    ``UNKNOWN``, 表示使用与当前文档相同的编码.
+
+  * ``action``, uri where to send form data. form 里的 input/button
+    的 ``formaction`` attribute 会 override this.
+
+    如果 ``<form>`` element 没有 ``action`` attribute 或者是空的值, 且内部没有
+    ``<button>`` 有 ``formaction`` attribute, 则浏览器默认 action uri 是当前
+    页面. 这经常用于: 一个 url 设计为 GET 时返回 form 页面, POST 时接受 form
+    data.
+
+  * ``autocomplete``, 是否允许浏览器自动补全输入, ``on/off``, default on.
+    注意这个自动补全指的是弹出的可选输入列表.
+    注意对于 login form 的话, modern browsers 会忽略 这个选项的值, 即使是 off
+    也会提示是否保存至 password manager 并提供自动补全. 这是安全性考虑, 可以
+    设置强密码.
+
+  * ``enctype``, 只影响 post 时. 其值是 form data 要转换成的 mime type 格式.
+    ``application/x-www-form-urlencoded`` 默认; 自动变成 ``multipart/form-data``
+    若有 file input; ``text/plain``.
+    This value can be overridden by a ``formenctype`` attribute on a button/input
+    element.
+
+  * ``method``, get/post. 若是 get, form data 添加到 action uri 后面的 query
+    string 部分然后再 GET.
+
+  * ``novalidate``, 提交时不验证数据. can be overridden by a ``formnovalidate``
+    attribute on a button/input element belonging to the form.
+
+  * ``target``, where to display response of submitted request. 其值和 anchor
+    element 的 target attribute 一样.
+    This value can be overridden by a ``formtarget`` attribute on a
+    input/button element.
 
 accessibility
 -------------
