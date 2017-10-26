@@ -2886,6 +2886,8 @@
     这需要配合 ``FormMixin`` 使用. ``success_message`` attr 设置信息 format
     string.
 
+- signal
+
 - 在独立的程序或脚本中使用 django 功能.
 
   * 使用当前项目完整配置.
