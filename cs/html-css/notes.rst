@@ -346,9 +346,38 @@ table content
 
   * one optional tfoot element;
 
+- ``<caption>``, 若存在, 必须是 table element 里第一个元素.
+  When the ``<table>`` element that is the parent of this ``<caption>`` is the only
+  descendant of a ``<figure>`` element, use the ``<figcaption>`` element instead.
+
+- ``<thead>``, header part of table.
+
+- ``<tbody>``, body part of table. 可以有多个, 作为 table 的多个语义部分.
+  各自独立应用样式.
+
+- ``<tfoot>``, 若存在, 必须在 table 最后.
+
 - ``<tr>``, table row.
   里面可以是 th or td element. tr element 可位于 table, thead, tfoot element 中.
 
+- ``<th>``, table header. 必须在 tr element 内.
+
+  attributes.
+
+  * ``colspan``
+
+  * ``rowspan``
+
+  * ``scope``, 定义与这个 th 关联的 cells 是一行 (``row``) 还是一列 (``col``)
+    还是别的什么.
+
+- ``<td>``, table data. 必须在 tr element 内.
+
+  attributes.
+
+  * ``colspan``
+
+  * ``rowspan``
 
 forms
 ~~~~~
