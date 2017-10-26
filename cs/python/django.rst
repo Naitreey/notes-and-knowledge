@@ -235,13 +235,17 @@
       on an existing object and then save it, a new object will be created alongside
       the old one.
 
-    - ``default`` 仅在创建时该列的值未指定时生效, 而不是 ``field=None`` 时. 后者
-      情况是指定了该列, 但值是 null. 默认情况下 ``default=None``, 但是否能顺利
-      使用该 default value, 还要看该列是否允许 null, 即 ``null=`` 的配置.
+    - ``default`` 仅在 SQL 中创建 entry 时该列的值未指定时生效, 而不是
+      ``field=None`` 时. 后者情况是指定了该列, 但值是 null. 默认情况下
+      ``default=None``, 但是否能顺利使用该 default value, 还要看该列是否允许
+      null, 即 ``null=`` 的配置.
 
-    - ``null`` 默认是 False, 所以 create table 时有 ``NOT NULL``.
+    - ``blank`` 若为 True, form 中允许该项为空
 
-    - ``null`` 是规定数据库中 empty value 是否存储为 NULL 值;
+    - ``null`` 默认是 False, 此时 create table 时有 ``NOT NULL``, 且不允许
+      field 值为 None; 若 True, create table 时有 ``NULL``, 且允许 field 值
+      为 None.
+
       ``blank`` 是规定 form validation 时是否允许空值.
       两者的意义是不同的.
       ``null`` 和 ``blank`` 的默认值都是 ``False``.
@@ -2544,13 +2548,15 @@
 
   * 扩展或自定义 user model.
 
-    - purely behavioral extension, use proxy model.
+    - proxy model to auth.User: purely behavioral extension, use proxy model.
 
-    - store additional information (profile-like infos) related to a user,
+    - one-to-one relation to auth.User:
+      store additional information (profile-like infos) related to a user,
       but not auth-related, use new model with ``OneToOneField`` to ``User``.
       为了在用户创建、删除等操作时两表同步, 需要使用 signal.
 
-    - default User model just does not fit your need, create custom user
+    - custom user model:
+      default User model just does not fit your need, create custom user
       model as ``AUTH_USER_MODEL`` to override the default. AUTH_USER_MODEL
       的形式和 relationship field 中引用 field 的形式相同: ``[app_label.]model``.
 
@@ -2618,8 +2624,14 @@
 
     - 用户相关的信息的存储方式. 若这些信息是 app-specific 的, 而不是用户本身
       的属性或者通用的信息, 则应该存在 app models 中, 添加对 user model 的
-      关联关系即可. 若是属于用户本身, 甚至是用户认证相关的属性, 则应该放在
-      user model 中.
+      one-to-one relation, 这样是解耦合的.
+      若是属于用户本身, 甚至是用户认证相关的属性, 则应该放在 user model 中.
+
+      然而这涉及到在创建 user model instance 时需要创建 one-to-one relation
+      model instance. 尤其是调用 auth app 提供的各种 create_user, create_superuser
+      之类的方法时需要自动创建关联表中的实例, 这样才能保持解耦合效果 (若不能自动
+      创建, 而需要 override 用户创建方法加上 one-to-one field 的话, 则又耦合回来
+      了). 做到自动创建, 需要使用 signal framework.
 
     - django custom user model requirements
 
@@ -2721,6 +2733,11 @@
       初始化 User object (lazily).
 
   * Group
+
+    auth group 并不能在一切需要组的情况下使用, 这个组概念仅适用于权限分配
+    相关用途 (那是因为 Group class 中定义了 permissions relation),
+    即用户归于组、组具有权限. 而不适用于资源分配, 即用户归于组、
+    组具有资源. 那样的组还是要单独写 (即 Group class 定义 resources relation).
 
 - 当选择将 mixin 与 class 的功能结合使用时, 可以有多个 mixin class, 但只能有一个
   main class. 并且 mixin 先于 main class 出现在 MRO 中才行.
