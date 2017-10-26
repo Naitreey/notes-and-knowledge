@@ -1112,6 +1112,9 @@
             res = instance.__dict__[self.name] = self.func(instance)
             return res
 
+- 注意所有可以使用 function 的地方都可以一般化地使用 callable. 定义 callable class
+  有助于优化代码组织方式和重用等可能性 (应用所有 class 的优点来定义 function).
+
 language
 --------
 exception
