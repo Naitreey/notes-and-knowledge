@@ -2817,6 +2817,19 @@
         在 process_exception 处理时, 若任一返回 HttpResponse 则继续下面的步骤;
         若全部都返回 None, 则 re-raise exception.
 
+- applications.
+
+  * 配置 app:
+    settings.INSTALLED_APPS 中一定要写 path to AppConfig class, 即
+    ``<app>.apps.<app>Config``. 这是应用自定义 app config 的最佳方式.
+
+    若 INSTALLED_APPS 中只有 app module path, 则 django checks for 
+    ``<module>.default_app_config`` for app config class. 这仅用作
+    向后兼容.
+
+    若没找到自定义的 app config, fallback 至 ``django.apps.AppConfig``.
+    但这样就无法使用 custom app config.
+
 - messages framework
 
   * 提供 cookie- and session-based 临时信息. 这些信息 (或信息的标识) 经常是在
@@ -2887,6 +2900,70 @@
     string.
 
 - signal
+
+  builtin signals.
+
+  * before/after ``Model.save()`` is called:
+
+    - ``django.db.models.signals.pre_save``
+
+    - ``django.db.models.signals.post_save``
+
+  * before/after ``Model.delete()`` or ``QuerySet.delete()`` is called:
+
+    - ``django.db.models.signals.pre_delete``
+
+    - ``django.db.models.signals.post_delete``
+
+  * starts/finishes http request.
+
+    - ``django.core.signals.request_started``
+
+    - ``django.core.signals.request_finished``
+
+  定义 receiver function.
+
+  - args: ``sender``.
+
+  - kwargs: receiver function 必须接受任意数目的 kwargs, 即必须 ``**kwargs``.
+
+  注册 receiver function. 两种方式.
+
+  - ``Signal.connect()``
+
+  - ``django.dispatch.receiver()`` decorator.
+
+  signal 相关代码应该放在哪:
+
+  - signal receiver 定义放在 ``<app>/signals.py``.
+
+  - 注册操作放在 app 的 configuration class (``<app>/apps.py:AppConfig``)
+    ``.ready()`` method 中. 若定义时使用了 receiver decorator, 在这里
+    只需 import 即可.
+
+    注意 ``AppConfig.ready()`` 可能在测试时被执行多次, 为避免 signal
+    duplication, 要通过 ``dispatch_uid`` 保证注册过则不再注册.
+
+  定义 custom signal: 实例化 Signal 或它的子类 (例如 ModelSignal).
+    
+  ``Signal`` object.
+
+  * ``.connect()``, register a consumer function for this signal.
+    指定 ``sender=`` 来过滤 signal 的来源, ``dispatch_uid=`` 指定
+    receiver 的唯一标识, 避免某些情况下的重复注册.
+
+    指定 ``dispatch_uid`` 后, receiver 的注册标识将不再依赖于 receiver
+    function 的 id 即内存地址.
+
+  * ``.send()``, 发送信号, 调用所有注册的 receiver functions.
+    调用过程是在本线程中依次执行的. 若某个 receiver function 在执行过程
+    raise exception, send 不会 catch, 这导致 send 过程被中断, 不能保证
+    所有 receiver 都收到该信号 (即被调用).
+
+  * ``.send_robust()``, catch exception raised by receiver function.
+    从而保证所有 receiver 都调用一遍.
+
+  * ``.disconnect()`` unregister receiver function.
 
 - 在独立的程序或脚本中使用 django 功能.
 
