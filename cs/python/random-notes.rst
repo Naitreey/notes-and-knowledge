@@ -884,7 +884,10 @@
 
   * ``definition.__name__`` 对象的名字.
 
-  * ``definition.__qualname__`` qualified name.
+  * ``definition.__qualname__`` qualified name of module, class, function,
+    method, descriptor, or generator instance. 对于 module, 这是 entire dotted
+    path to the module; 对于其他对象, 这是 the “path” from a module’s global
+    scope to the object.
 
   * ``class.__bases__`` 一个类的基类们.
 
