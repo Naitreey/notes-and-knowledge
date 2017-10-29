@@ -800,6 +800,11 @@ OpenGL
   The Red Book --- OpenGL Programming Guide.
   The Orange Book --- OpenGL Shading Language.
 
+OpenCL
+~~~~~~
+
+- OpenCL 是为了能够在 HSA 架构平台中各组件上运行程序所创造的编程语言.
+
 bus & connector
 ~~~~~~~~~~~~~~~
 
