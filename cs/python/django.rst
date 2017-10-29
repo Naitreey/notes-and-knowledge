@@ -214,6 +214,11 @@
   * ``django.core.exceptions.ObjectDoesNotExist`` 是所有 ``Model.DoesNotExist``
     exception 的父类.
 
+- model meta options.
+
+  * ``app_label``, 定义 model 所属的 app. 对于已定义的 model, 可在 runtime
+    修改 ``model._meta.app_label`` 的值修改它所属 app.
+
 - model field
 
   * field constructor options.
@@ -1996,6 +2001,9 @@
 
     - 每个 migration operation 是 ``Operation`` class 的 (子类的) 实例.
 
+  * 若要在 migration 中删除/重命名某个 model 或者删除它的数据, 必须设置
+    dependency 保证依赖于原 model 和数据的 migration 执行在先.
+
   * data migration.
 
     - data migration 必须手写, 涉及 ``RunPython`` operation.
@@ -2470,7 +2478,7 @@
       * ``user``, 当前用户.
 
       * ``perms``, 当前用户的权限. ``perms.<app_label>`` 相当于
-        ``User.has_model_perms(<app_label>)``.
+        ``User.has_module_perms(<app_label>)``.
         ``perms.<app_label>.<perm>`` 相当于 ``User.has_perm(<app_label>.<perm>)``
         ``perms`` 支持使用 ``in`` operator 检查权限, ``<app_label> in perms``
         或 ``<app_label>.<perm> in perms`` 都可以.
@@ -2732,6 +2740,11 @@
       重载这个用户. 若不是在一个请求中, 一般没事, 因每次 request object 都会
       初始化 User object (lazily).
 
+  * django 自身提供了 per-model permission 机制. 对于 per-object 权限, 在
+    auth module 提供的 api 中已经提供 placeholder parameter ``obj``, 但没有
+    使用. 若要 per-object permission 机制, 需要自己实现, 或者使用比如
+    django-guardian.
+
   * Group
 
     auth group 并不能在一切需要组的情况下使用, 这个组概念仅适用于权限分配
@@ -2964,6 +2977,33 @@
     从而保证所有 receiver 都调用一遍.
 
   * ``.disconnect()`` unregister receiver function.
+
+- the contenttypes framework
+
+  ``django.contrib.contenttypes.models.ContentType`` 保存了一个 django project
+  中的所有 models 的唯一识别 (app_label + model), 并提供了一系列 contenttypes
+  和 model class 相互转换, generic relation 等功能.
+  
+  当在项目数据库中创建新的 model 时, 相应的 contenttypes 也自动创建. 这是通过在
+  ``AppConfig.ready()`` 中注册 pre_migrate/post_migrate signals 来实现的.
+
+  ContentType 的用途.
+
+  * 在需要对不确定的多个 model 数据进行相似逻辑的 CRUD 操作时, 使用 contenttypes
+    进行通用化. (``apps.get_model`` 也可以.)
+
+  * 如果需要设置某个 model field 它的值是其他的 model, 即这个列的数据是 model class
+    时, 需要设置 foreign key 至 ContentType. 因后者保存着 model class 数据.
+    ``django.contrib.auth.models.Permission`` 就是这样做的.
+
+  GenericForeignKey, GenericRelation 的用途.
+
+  * 当一个 table 需要关联的外键是来自不同的 table 的, 抽象地将, 一个 model 的实例
+    可能需要关联不同 model class 的实例时. 可以使用 GenericForeignKey 做到.
+    本质上是在这个 model 每个 entry 中保存了该 entry 关联的 contenttype (即 model)
+    以及关联该 model 中的 entry 的 primary key.
+
+    例如, 不同类型的对象比如 blog entry, picture, 等需要关联相同类型的 comment.
 
 - 在独立的程序或脚本中使用 django 功能.
 
