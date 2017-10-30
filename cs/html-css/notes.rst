@@ -406,8 +406,8 @@ forms
     设置强密码.
 
   * ``enctype``, 只影响 post 时. 其值是 form data 要转换成的 mime type 格式.
-    ``application/x-www-form-urlencoded`` 默认; 自动变成 ``multipart/form-data``
-    若有 file input; ``text/plain``.
+    ``application/x-www-form-urlencoded`` 默认; 若有 file input, 自动变成
+    ``multipart/form-data``; ``text/plain``.
     This value can be overridden by a ``formenctype`` attribute on a button/input
     element.
 
@@ -422,6 +422,82 @@ forms
     This value can be overridden by a ``formtarget`` attribute on a
     input/button element.
 
+- ``<input>``
+
+  general attributes.
+
+  * ``type``. the holly attribute. 默认是 text.
+    可能的类型:
+    button, image, submit, 
+    checkbox, radio, 
+    color,
+    date, time, datetime-local, month, week,
+    tel, email, url,
+    file,
+    hidden,
+    number, range, 
+    text, password,
+    reset,
+    search,
+
+  * ``autocomplete``, values: on/off 或者是描述该 input 的目的, 以协助浏览器选择
+    自动补全的 candidate list.
+    若未指定, autocomplete 使用 form owner 的 autocomplete 值.
+
+  * ``autofocus``, 页面加载后 autofocus 这个 input.
+
+  * ``checked``, 对于 checkbox 和 radio, 默认选中.
+
+  * ``disabled``, 禁用的 form control. 它的值不会 submit 至服务端.
+
+  * ``form``, form owner of this form control. id value of that form.
+    该属性允许 form control 不在 form 里, 也和 form 关联.
+
+  * ``formaction``, for submit/image type.
+
+  * ``formenctype``, for submit/image type.
+
+  * ``formmethod``, for submit/image type.
+
+  * ``formnovalidate``, for submit/image type.
+
+  * ``formtarget``, for submit/image type.
+
+  * ``list``, id to ``<datalist>`` element, a list of pre-defined options.
+    The browser displays only options that are valid values for this input
+    element.
+
+  * ``min``, for numeric (number, range) or date time (date, time, etc.).
+
+  * ``max``, ditto.
+
+- ``<input type="button">`` 这样的 button 没有默认行为.
+
+- ``<input type="file">``
+
+  attributes.
+
+  * ``accept``, 允许的上传文件类型.
+    值为 ``.<ext>``, mime type, ``audio/*``, ``video/*``, ``image/*``.
+
+  * ``capture``, 从 camera/microphone 之类的地方获取文件.
+
+- ``<input type="image">``
+
+  attributes.
+
+  * ``height``.
+
+- ``<input type="button">``
+- ``<input type="button">``
+- ``<input type="button">``
+- ``<input type="button">``
+- ``<input type="button">``
+- ``<input type="button">``
+- ``<input type="button">``
+- ``<input type="button">``
+- ``<input type="button">``
+- ``<input type="button">``
 accessibility
 -------------
 
