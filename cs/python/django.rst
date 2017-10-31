@@ -216,12 +216,48 @@
 
 - model meta options.
 
+  * ``abstract``, whether is abstract model.
+
   * ``app_label``, 定义 model 所属的 app. 对于已定义的 model, 可在 runtime
     修改 ``model._meta.app_label`` 的值修改它所属 app.
 
+  * ``db_table``
+
+  * ``default_related_name``, 对于 relation field, ``related_name`` 的默认值.
+    默认是 ``<model>_set``. 同时也是 ``related_query_name`` 的默认值.
+
+  * ``get_latest_by``, ``QuerySet.latest()`` ``QuerySet.earliest()`` 默认
+    使用的 field name.
+
+  * ``managed``, This is useful if the model represents an existing table or a
+    database view that has been created by some other means.
+
+  * ``order_with_respect_to``, This can be used to make related objects
+    orderable with respect to a parent object. ``order_with_respect_to`` and
+    ``ordering`` cannot be used together, and the ordering added by
+    order_with_respect_to will apply whenever you obtain a list of objects of
+    this model.
+
+  * ``ordering``. default ordering when obtaining a list of objects.
+    和 ``QuerySet.order_by()`` 语法相同.
+
+  * ``permissions``, extra permissions relating to this model (content type).
+
+  * ``default_permissions``, 对该 model 默认创建的一系列权限. 默认 add/change/delete.
+
+  * ``proxy``, proxy model.
+
+  * ``indexes``, A list of indexes that you want to define on the model.
+
+  * ``unique_together``, associative unique constraint.
+
+  * ``verbose_name``, ``verbose_name_plural``, human-readable name for the model.
+
+  * ``label``, ``label_lower``, readonly. ``<app_label>.<model_name>``.
+
 - model field
 
-  * field constructor options.
+  * constructor options.
 
     Many of Django’s model fields accept options that they don’t do anything with.
     This behavior simplifies the field classes, because they don’t need to
@@ -261,12 +297,15 @@
       display value for a choices field can be accessed using the
       ``get_FOO_display()`` method.
 
-    - 如果一个 model 包含多个与同一个其他 model 建立的 ``ManyToManyField``, 需要设置
-      ``related_name`` 以保证反向的查询没有歧义.
-
-    - ``help_text`` 设置该列值的更详细的帮助信息.
+    - ``help_text`` 设置该列值的更详细的帮助信息. ModelForm 会使用它.
+      其字符串值在 form 中直接显示, 不会被 escape. 因此可以加入 html 语法.
 
     - ``error_messages`` overrides default validation error messages.
+
+    - ``verbose_name``, 对于非关系型 field, 该参数是第一个 kwarg, 因此经常以
+      positional 形式写出; 对于关系型 field 必须以 kwarg 形式写出.
+
+    - ``db_index``, 是否创建 single field index.
 
   * ``Field`` methods.
 
@@ -303,8 +342,22 @@
     - 整数有 ``IntegerField``, ``PositiveIntegerField``, ``BigIntegerField``,
       ``SmallIntegerField``, ``PositiveSmallIntegerField``.
 
-    - ``DateField`` ``DateTimeField`` 可方便地实现创建时间、修改时间. 注意
-      ``auto_now_add``, ``auto_now`` 和 ``default`` 参数是互斥的.
+    - ``DateField`` ``DateTimeField``
+
+      * 在 python 中以 datetime.date, datetime.datetime 分别表示.
+
+      * ``auto_now_add`` 适合做 create time;
+        ``auto_now`` 适合做 update time.
+        这些参数在调用 ``Model.save()`` 来保存时才有效, 通过其他途径修改数据
+        时不会生效.
+
+        若只是想设置默认值, 那就用 ``default=``, 别用这两个选项.
+       
+        ``auto_now``, ``auto_now_add`` 和 ``default`` 是互斥的.
+
+        设置这两个参数, 意味着该列不能手动修改, 并且即使包含在了 form 中,
+        也不是必须输入的项 (即不是 required). 因此, django 自动设置
+        ``editable=False`` 和 ``blank=True``.
 
     - 若要允许在 ``BooleanField`` 中存 NULL, 使用 ``NullBooleanField``.
 
@@ -312,30 +365,78 @@
 
     - ``FilePathField`` 要求值必须是满足路径匹配条件的文件路径.
 
-  * many-to-one field.
+  * relation field: many-to-one.
 
     - 多对一的映射关系用 ``django.db.models.ForeignKey`` 实现.
 
     - foreign key field 的名字应该是所指向的 model 的名字的全小写版本.
 
-    - django 自动给 foreign key field 添加索引.
+    - ForeignKey field 默认设置 ``db_index=True``, 即默认建立该列的索引.
 
     - ``ForeignKey`` field 在数据库中命名为 ``<field>_id``, 除非用 ``db_column``
       自定义.
-
-    - ``on_delete`` 默认是 ``CASCADE``, 以后将变成 required parameter.
-      如果对象之间的关系不是必须的, ``on_delete`` 应该设置成别的值, 例如 ``SET_NULL``.
 
     - 若 ``ForeignKey`` field 支持 ``null=True``, 则对这个属性赋值 None 即可去掉关联.
 
     - 对各种 relationship field, 若要指向可能尚未定义的列, 用字符串
       ``[app_label.]model`` 代替 model object.
 
-  * many-to-many field.
+    - constructor parameters.
+     
+      * ``on_delete``
+        
+        虽然默认是 ``CASCADE``, 但 django 2.0 之后将变成 required parameter.
+        如果对象之间的关系不是必须的, ``on_delete`` 应该设置成别的值:
+        
+        - 若该条数据必须随指向的数据共存亡, ``django.db.models.CASCADE``.
+
+        - 若只要 FK 关系仍存在就禁止删除原数据, ``django.db.models.PROTECT``.
+
+        - 若需设置为 NULL 以表示不指向任何东西, ``django.db.models.SET_NULL``.
+
+        - 若需设置为默认指向的东西, ``django.db.models.SET_DEFAULT``.
+
+        - 若需自定义设置逻辑, ``django.db.models.SET(value|callable)``.
+
+        - 啥也不干, 由数据库决定该怎么办, ``django.db.models.DO_NOTHING``.
+
+      * ``limit_choices_to``, 限制 ModelForm 中该列的赋值范围.
+
+      * ``related_name``, 自定义从 related object 反向获取时, related manager
+        的名字. 默认是 ``Meta.default_related_name``, 后者的默认值是
+        ``<model>_set``. 若不让 django 创建反向关系, set related_name to '+' or
+        end it with '+'.
+
+      * ``related_query_name``, 在 field lookup syntax 中, 从 related model
+        向这个 model 反向查询时, 使用的名字. 若有设置 related_name 或
+        Meta.default_related_name, 默认使用它们中的一个, 否则默认为 model name.
+
+      * ``to_field``, 关联的 model 的 field, 默认是 primary key. 关联的 field
+        必须有 unique constraint.
+
+      * ``db_constraint``
+
+      * ``swappable``, 默认 True 即可. 与 swappable AUTH_USER_MODEL 相关, 为了
+        支持 custom user model.
+
+  * relation field: one-to-one.
+
+    - 一对一关系一般用于一个模型作为另一个模型的延伸、扩展、附加属性等.
+      ``OneToOneField`` 在 model 继承时用于定义父表和子表通过哪一列来关联.
+
+    - OneToOneField 本质上是 ForeignKey 的一种特例. 前者是后者的子类.
+
+    - one-to-one field 在 mysql 中实现时, 实际上是一个普通的 field (类型与指向
+      的 model 的 primary key 一致), 配合 unique key constraint 以及 foreign key
+      reference constraint.
+
+  * relation field: many-to-many.
 
     - 由于一个列无法体现多对多的关系, ``ManyToManyField`` 在实现时, 不是构成了一个列,
       而是一个单独的 table. table 的命名根据 ``<app>_<model>_<m2mfield>`` 全小写命名.
       table 中包含 many-to-many 关系的两种模型数据的行 id.
+
+      该表中的两个 FK 列都有 index.
 
     - It doesn’t matter which model has the ``ManyToManyField``, but you should only
       put it in one of the models – not both. ``ManyToManyField`` 应该放在那个编辑
@@ -346,27 +447,34 @@
       同样的, ``related_name`` ``related_query_name`` 也应该是表示反向关系的
       复数.
 
-    - intermediate model. 若多对多的关系不仅仅是一个简单双向的关系, 而需要包含
-      一些其他状态信息, 则需要使用一个中间模型去承载这个多对多关系.
-
     - ``ManyToManyField`` 不是一个列, 而是抽象了一个包含映射关系的表, 只有设置
       映射和没有映射, ``null=`` 参数对它没有意义. 指定该参数会导致 django
       system check 警告.
 
-    - through model. 多对多关系实际上是通过一个关系表来实现的. 这个关系表的 model
-      可通过 ``ManyToManyField.through`` attribute 获得, 并可以通过 ``through``
-      option 来指定单独创建的 through model.
-      ``.through`` 属性在 model instance 上与普通的 ForeignKey field 相同, 是一个
-      RelatedManager.
+    - ManyToManyField 不存在 on_delete 参数, 一方面是因为它本身不是一个列, 这个语义
+      就不太对; 另一个也是因为它背后的两个 FK field 都必须是 CASCADE 的, 所以没必要
+      指定.
 
-  * one-to-one field.
+    - constructor options.
 
-    - 一对一关系一般用于一个模型作为另一个模型的延伸、扩展、附加属性等.
-      ``OneToOneField`` 在 model 继承时用于定义父表和子表通过哪一列来关联.
+      * related_name, related_query_name, limit_choices_to.
 
-    - one-to-one field 在 mysql 中实现时, 实际上是一个普通的 field (类型与指向
-      的 model 的 primary key 一致), 配合 unique key constraint 以及 foreign key
-      reference constraint.
+      * ``symmetrical``, 与 recursive M2M relationship 相关.
+
+      * ``through``
+
+        through model. 多对多关系实际上是通过一个关系表来实现的. 这个关系表的 model
+        可通过 ``ManyToManyField.through`` attribute 获得. 并可以通过 ``through``
+        option 来指定单独创建的 through model, 这可用于在 through model 中加入额外的
+        状态信息等列.
+
+        ``.through`` 属性在 field instance 是一个 RelatedManager to through model.
+
+  * recursive relationship: 若 relation field 需要与自身表建立关联, 使用
+    ``"self"`` 作为 ``to`` 参数值.
+   
+    lazy relationship: 若 relation field 需与可能尚未建立的 model 建立关联,
+    使用 ``[<app_label>.]<model>``.
 
 - CRUD
 
@@ -412,6 +520,10 @@
           SQL 完全避免排序 (甚至避免 model 默认排序), 使用无参 ``.order_by()``.
           若要排序的是 reverse FK, many-to-many 类关系, 注意涉及到 JOIN, 原来的
           一行可能排序后变成多行.
+
+          ``?`` 随机排序跟不排序完全是两码事. 前者是对每行加入一个随机值然后再
+          根据这个值去排序各行, 对应的 sql 是 ``ORDER BY RAND() ASC``; 后者的
+          话就完全不排序, return in unspecified order.
 
           chained ``.order_by`` 只有最后一个有用.
 
@@ -462,10 +574,9 @@
       * 这种过滤可以反向进行, 即从一至多的方向进行筛选. 注意这与属性访问时得到
         RelatedManager 虽然语法相通, 但意义不同. 这里是通过对 related model 的行
         指定筛选条件, 来筛选 main object.
-        若 ForeignKey field 没有设置 ``related_name``, 在反向 lookup 语法时, 指定
-        related model 的全小写作为 reverse lookup 的起点; 若设置了 ``related_name``,
-        则使用该名字作为 reverse lookup 起点. 在此之后再指定 related model 中的
-        field 和条件.
+
+        reverse lookup 的起点是那个 model 中设置的 relation field 的
+        related_query_name 值. 在此之后再指定 related model 中的 field 和条件.
 
       * 对于每个查询方法, 传入的所有 positional and keyword arguments (Q objects +
         field lookup syntax) 代表的条件都会 ``AND`` 在一起.
