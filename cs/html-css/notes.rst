@@ -471,9 +471,39 @@ forms
 
   * ``max``, ditto.
 
+  * ``step``, step from min to max.
+
+  * ``minlength``, minimum number of characters user can enter. for
+    text, email, search, password, tel, url.
+
+  * ``maxlength``, ditto.
+
+  * ``multiple``, user can enter more than one value. for email, file.
+
+  * ``name``
+
+  * ``value``, 注意它是 input 的初始值. 可以不设置.
+
+  * ``pattern``, 在各个 type 的基本格式要求之外, 详细的 validation 要求.
+    regexp. 使用 ``title`` attribute 添加提示.
+
+  * ``placeholder``, 提示用户可输入的内容.
+
+  * ``readonly``, 不同于 disabled. readonly 会 submit 至服务端. disabled 不会.
+
+  * ``required``.
+
+  * ``spellcheck``, 是否检查输入内容的拼写.
+
+  * ``tabindex``, tabbling navigation order.
+
 - ``<input type="button">`` 这样的 button 没有默认行为.
 
 - ``<input type="file">``
+
+  the real path to the source file is not shown in the input's value attribute
+  for obvious security reasons. Instead, the filename is shown, with
+  ``C:\fakepath\`` appended to the beginning of it.
 
   attributes.
 
@@ -487,6 +517,10 @@ forms
   attributes.
 
   * ``height``.
+
+  * ``width``.
+
+  * ``src``, image source.
 
 - ``<input type="button">``
 - ``<input type="button">``
