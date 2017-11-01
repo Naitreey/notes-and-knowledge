@@ -216,6 +216,22 @@
 
   尽量使用同一个 url 去获取 form 和处理 form data. 无论 GET/POST form.
 
+  在 server-side, 若收到 post data 中包含多个相同 name 项, 程序逻辑应该能够
+  将之组成一个 value list. 即一个 name key 对应一个 value list.
+
+  form data validation:
+
+  client-side validation 和 server-side validation 都需要, 但两者的用途不同.
+
+  * client-side validation 属于易用性设计, 理论上讲, 可以没有. 它旨在给用户
+    提供即刻的错误反馈, 以帮助用户纠正输入错误, 比如非法字符啦, 格式错误啦,
+    迅速在 input 附近提示一下, 这种提示的要点是快速, 方便, 不需要访问服务端.
+    client-side validation 不能防止 data tampering, 即绕过 form
+    验证机制直接向服务端提交请求.
+
+  * server-side validation 属于合法性设计. 旨在为数据合法性做最终的把关.
+    这是必须有的.
+
 URI
 ---
 
