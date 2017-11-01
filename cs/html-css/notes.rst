@@ -482,7 +482,8 @@ forms
 
   * ``name``
 
-  * ``value``, 注意它是 input 的初始值. 可以不设置.
+  * ``value``, 注意它是 input 的初始值. form 里实际输入的值也不会更新到这里.
+    若没默认值可以不设置.
 
   * ``pattern``, 在各个 type 的基本格式要求之外, 详细的 validation 要求.
     regexp. 使用 ``title`` attribute 添加提示.
