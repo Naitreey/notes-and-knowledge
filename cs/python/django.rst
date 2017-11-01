@@ -218,8 +218,14 @@
 
   * ``abstract``, whether is abstract model.
 
-  * ``app_label``, 定义 model 所属的 app. 对于已定义的 model, 可在 runtime
-    修改 ``model._meta.app_label`` 的值修改它所属 app.
+  * ``app_label``, 定义 model 所属的 app.
+    
+    对于在其他 app 中已经定义的 model, 可在 import
+    过程中修改 ``model._meta.app_label`` 的值修改它所属 app.
+    
+    注意无论是在 Meta 中修改还是其他修改方式, 这直接改变了 django 看待这个 model
+    所属于的 app. 因此这导致相应的 migration 必须被创建和应用. 因此, 不能通过
+    这个方式修改 django contrib app 的 models. 因为这会修改这些应用的 migrations.
 
   * ``db_table``
 
@@ -291,11 +297,12 @@
       两者的意义是不同的.
       ``null`` 和 ``blank`` 的默认值都是 ``False``.
 
-    - ``choices`` 设置 field 的可选值. 每个选项的值的 symbolic enum 形式和整个选项
-      列表应设置在 model class 中. 这是为了方便后续在查询等操作中使用. 设置该选项后,
-      默认的 form 形式会变成 (multiple) select box. Given a model instance, the
-      display value for a choices field can be accessed using the
-      ``get_FOO_display()`` method.
+    - ``choices`` 设置 field 的可选值, 其值是 a iterable of ``(value, description)``
+      pairs. 每个选项的值的 symbolic enum 形式和整个选项 列表应设置在 model
+      class 中. 这是为了方便后续在查询等操作中使用. 设置该选项后, 默认的 form
+      形式会变成 (multiple) select box. Given a model instance, the display
+      value for a choices field can be accessed using the ``get_FOO_display()``
+      method.
 
     - ``help_text`` 设置该列值的更详细的帮助信息. ModelForm 会使用它.
       其字符串值在 form 中直接显示, 不会被 escape. 因此可以加入 html 语法.
@@ -352,7 +359,7 @@
         时不会生效.
 
         若只是想设置默认值, 那就用 ``default=``, 别用这两个选项.
-       
+
         ``auto_now``, ``auto_now_add`` 和 ``default`` 是互斥的.
 
         设置这两个参数, 意味着该列不能手动修改, 并且即使包含在了 form 中,
@@ -382,12 +389,12 @@
       ``[app_label.]model`` 代替 model object.
 
     - constructor parameters.
-     
+
       * ``on_delete``
-        
+
         虽然默认是 ``CASCADE``, 但 django 2.0 之后将变成 required parameter.
         如果对象之间的关系不是必须的, ``on_delete`` 应该设置成别的值:
-        
+
         - 若该条数据必须随指向的数据共存亡, ``django.db.models.CASCADE``.
 
         - 若只要 FK 关系仍存在就禁止删除原数据, ``django.db.models.PROTECT``.
@@ -472,7 +479,7 @@
 
   * recursive relationship: 若 relation field 需要与自身表建立关联, 使用
     ``"self"`` 作为 ``to`` 参数值.
-   
+
     lazy relationship: 若 relation field 需与可能尚未建立的 model 建立关联,
     使用 ``[<app_label>.]<model>``.
 
@@ -2947,7 +2954,7 @@
     settings.INSTALLED_APPS 中一定要写 path to AppConfig class, 即
     ``<app>.apps.<app>Config``. 这是应用自定义 app config 的最佳方式.
 
-    若 INSTALLED_APPS 中只有 app module path, 则 django checks for 
+    若 INSTALLED_APPS 中只有 app module path, 则 django checks for
     ``<module>.default_app_config`` for app config class. 这仅用作
     向后兼容.
 
@@ -3069,7 +3076,7 @@
     duplication, 要通过 ``dispatch_uid`` 保证注册过则不再注册.
 
   定义 custom signal: 实例化 Signal 或它的子类 (例如 ModelSignal).
-    
+
   ``Signal`` object.
 
   * ``.connect()``, register a consumer function for this signal.
@@ -3094,7 +3101,7 @@
   ``django.contrib.contenttypes.models.ContentType`` 保存了一个 django project
   中的所有 models 的唯一识别 (app_label + model), 并提供了一系列 contenttypes
   和 model class 相互转换, generic relation 等功能.
-  
+
   当在项目数据库中创建新的 model 时, 相应的 contenttypes 也自动创建. 这是通过在
   ``AppConfig.ready()`` 中注册 pre_migrate/post_migrate signals 来实现的.
 
