@@ -216,27 +216,32 @@
 
   尽量使用同一个 url 去获取 form 和处理 form data. 无论 GET/POST form.
 
-- uri.
+URI
+---
 
-  * absolute url vs relative url.
+- absolute url vs relative url.
 
-    absolute url 包含 schema, userinfo, domain, port, path, query parameters,
-    url fragment 等.
-    relative url 包含 path, query parameters, url fragment 等部分.
+  absolute url 包含 schema, userinfo, domain, port, path, query parameters,
+  url fragment 等.
+  relative url 包含 path, query parameters, url fragment 等部分.
 
-  * schema 后面的 ``//`` 本来并不必须, Tim Berners-Lee 为此错误道过歉.
-    事实上一些协议并不添加这部分, 例如 ``javascript:``, ``mailto:``, ``tel:``.
+- schema 后面的 ``//`` 本来并不必须, Tim Berners-Lee 为此错误道过歉.
+  事实上一些协议并不添加这部分, 例如 ``javascript:``, ``mailto:``, ``tel:``.
 
-  * uri 是 url + urn 的统称. 但一般说 uri 就指的是 url.
+- uri 是 url + urn 的统称. 但一般说 uri 就指的是 url.
 
-  * IRI (internationalized resource identifier) 是 URI 的扩展.
-    URI 本身只支持 ASCII, IRI 扩展为 Unicode. 所以说现今的 URL
-    实际上是 IRI.
+- IRI (internationalized resource identifier) 是 URI 的扩展.
+  URI 本身只支持 ASCII, IRI 扩展为 Unicode. 所以说现今的 URL
+  实际上是 IRI.
+
+- url design
 
   * A clean, elegant URL scheme is an important detail in a high-quality
     Web application.
-
+  
     Cool urls don't change. Try to make your url last as long as possible.
+
+  * 遵从 REST 思想.
 
 Headers
 -------
