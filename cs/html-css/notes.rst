@@ -36,6 +36,9 @@ global attributes
 - ``id``, 包含 ASCII letters, ``_``, ``-``, ``.``. Starting with underscore
   or letter, must not contain whitespace. Must be unique in the whole document.
 
+- ``accesskey``, 用于生成 keyboard shortcut for the current element.
+  配合浏览器预设的激活键 (Alt, Alt + Shift, etc.) 使用.
+
 elements
 --------
 
@@ -449,6 +452,7 @@ forms
   * ``checked``, 对于 checkbox 和 radio, 默认选中.
 
   * ``disabled``, 禁用的 form control. 它的值不会 submit 至服务端.
+    若没有设置, 会继承 parent element 的 disabled 状态.
 
   * ``form``, form owner of this form control. id value of that form.
     该属性允许 form control 不在 form 里, 也和 form 关联.
@@ -498,7 +502,24 @@ forms
 
   * ``tabindex``, tabbling navigation order.
 
-- ``<input type="button">`` 这样的 button 没有默认行为.
+- ``<input type="button">`` 没有默认行为, 也没有值. 要做什么
+  都要靠 js 去定义. 这使得 button input element 可以做任何事,
+  而 submit input & reset input 只能做各自确定的事.
+
+  由于现在有 ``<button>`` element, input 的 button 类型不再推荐.
+  button element 的优点有: button 上不仅可以是 text, 还可以任何
+  其他 element, 而 input button 不行 (因为通过 value attribute
+  指定文字).
+
+  由于 button input element 没有任何值的概念, 因此没有 validation.
+  submit 时也不会包含在数据里.
+
+  将 label element 与 input element 搭配起来, 用户可以点击 label
+  触发 input 的 click 效果, 增加了 input 的响应面积.
+
+  attributes.
+
+  * ``value``, button's label.
 
 - ``<input type="file">``
 
@@ -523,6 +544,49 @@ forms
 
   * ``src``, image source.
 
+- ``<input type="checkbox">``
+
+  checkbox 除了可以处于 checked/unchecked 状态之外, 还可以处于 indeterminate
+  状态. Like... a Schrödinger's checkbox... A checkbox in the indeterminate
+  state has a horizontal line in the box. (这种状态的 checkbox 在 submit 时
+  等价于 unchecked, 即不会有数据在 post data 中.)
+
+  attributes.
+
+  * ``value``
+
+    submit form 时, 若有选中 checkbox, 数据中包含 ``name`` 下面的数据是 ``value``
+    的值, 若没有设置 value, 默认使用 ``on``; 若没有选中, 数据中根本没有 checkbox
+    input 相应的任何信息.
+
+  * ``checked``
+
+- ``<input type="color">``, color is selected by a visual color picker or
+  ``#rrggbb`` (1600 万色) hex format. No alpha channel is allowed.
+
+  color input element 的值是 ``#rrggbb`` string (always lowercase). The value
+  is never in any other form, and is never empty.
+  
+  A color input's value is considered to be invalid if the user agent is unable
+  to convert the user's input into seven-character lower-case hexadecimal
+  notation. 任何非法值导致颜色值成为 ``#000000`` 即黑色.
+
+- ``<input type="date">``
+  let the user enter a date, either using a text box that automatically
+  validates the content, or using a special date picker interface.
+
+  其值是 ``yyyy-mm-dd`` 形式, 不包含时间. 注意在 input 中显示的日期格式是
+  locale-specific 的, 但保存的值是统一格式的.
+
+  由于不同浏览器对 date, datetime-local, time 等 input element 的实现
+  不尽相同, 为保证 cross-browser 一致的用户体验, 不该使用这些 input,
+  而是使用 js library 比如 jquery date picker 或者 enter the day, month, and
+  year in separate controls.
+
+  attributes.
+
+  * ``min``, ``max``. 因设置范围, 导致部分日期被禁用或者不可选.
+
 - ``<input type="button">``
 - ``<input type="button">``
 - ``<input type="button">``
@@ -530,9 +594,7 @@ forms
 - ``<input type="button">``
 - ``<input type="button">``
 - ``<input type="button">``
-- ``<input type="button">``
-- ``<input type="button">``
-- ``<input type="button">``
+
 accessibility
 -------------
 
