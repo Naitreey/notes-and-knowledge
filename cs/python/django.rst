@@ -921,6 +921,15 @@
       这些类提供了一些常用操作的通用实现, 以及一些自定义和扩展方式.
       但注意这些类仅适用于它所设计的情况, 若与需求不匹配, 请直接去
       subclass ``View``, 手动实现所需操作.
+      
+      例如, ListView 等直接与某个数据模型中的一系列 objects 相对应时才方便
+      使用. 意思是, 如果 view 就是要展示 a list of model object.
+      CreateView, UpdateView, DetailView, DeleteView 等直接与某个数据模型中的
+      特定一个 object 的操作相对应时才方便使用. 意思是, 如果 view 就是要
+      创建、更新、查看、删除特定的 object.
+      凡是实际 view 的目的与 generic view 预设的操作目的不一致时, 都不该
+      生搬硬套这些 generic view. 而是退而求其次, 例如 FormView, TemplateView,
+      View, RedirectView 等对操作的假设很少的一般化 view.
 
       CRUD & class-based views.
       C -- CreateView, R -- DetailView, U -- UpdateView, D -- DeleteView.
@@ -1734,7 +1743,10 @@
 
       * ``POST``. 以 QueryDict 形式保存的 form data, 即通过设置 Content-Type 为
         ``application/x-www-form-urlencoded`` 和 ``multipart/form-data`` 时 POST
-        的 body, 但并不包含文件上传部分.
+        的 body, 但并不包含文件上传部分. 
+
+      * 在 view 中 ``GET`` ``POST`` 是 immutable 的, 需要先 ``QueryDict.copy()``
+        后再修改.
 
       * ``COOKIES``.
 
@@ -1771,7 +1783,9 @@
       读操作.
 
   * ``QueryDict`` 是 django 对 query string 以及 form data 中存在一个 key 对应
-    多个值的情况的 dict 的封装. 它是 dict 的子类. 常见的 dict 操作只获取某个
+    多个值的情况的 dict 的封装.
+    
+    它是 dict 的子类. 具有所有 dict methods. 常见的 dict 操作只获取某个
     key 对应的最后一个值. 若要获取整个 list, 使用 list 类方法.
 
   * ``HttpResponse``
