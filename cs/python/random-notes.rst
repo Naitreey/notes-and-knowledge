@@ -892,9 +892,9 @@
   * ``class.__bases__`` 一个类的基类们.
 
   * ``class.mro()`` 一个类 MRO 顺序. 该方法在 class instantiation 时调用, 结果存储
-    在 ``class.__mro__`` 中.
+    在 ``class.__mro__`` 中. 注意 instance 上不能访问这个 method.
 
-  * ``class.__mro__`` 同上, 只记算一次.
+  * ``class.__mro__`` 同上, 只计算一次.
 
   * ``class.__subclasses__()`` 一个类的所有直接子类. 使用 weakref 来保存这些子类的
     列表.
