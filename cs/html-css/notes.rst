@@ -10,6 +10,14 @@ general
 - 很多公司并不自己购买服务器 serve 网站, 而是购买 web hosting company 的服务,
   例如云服务公司.
 
+html versions
+-------------
+html can be seen as a loosely formatted xml variants for the web.
+
+xhtml 是应用 xml 语法, 对 html 进行部分严格化和修正而发明的. xhtml 可以看作是
+xml 的严格子集, 是 html's serialized format. 不过 xhtml 已经死了. 根本没人 care,
+大家去用 json 了.
+
 html
 ====
 
@@ -38,6 +46,11 @@ global attributes
 
 - ``accesskey``, 用于生成 keyboard shortcut for the current element.
   配合浏览器预设的激活键 (Alt, Alt + Shift, etc.) 使用.
+
+comment
+~~~~~~~
+
+- ``<!-- comment -->``
 
 elements
 --------
@@ -308,7 +321,8 @@ image and multimedia
 
   * ``sizes``, for responsive images.
 
-  * ``height``, 图像的高度, in pixels.
+  * ``height``, 图像的高度, in pixels. 如果 height, width 只指定一个,
+    另一个自动调整, 以保持图像的原始宽高比.
 
   * ``width``, 图像的宽度, in pixels.
 
@@ -425,7 +439,19 @@ forms
     This value can be overridden by a ``formtarget`` attribute on a
     input/button element.
 
+- ``<label>`` label for a form control.
+  One form control can be associated with multiple labels.
+
+  attributes.
+
+  * ``for``, id of the labeled element, 该 label 与之关联, 包含点击事件等.
+    若 form control 位于 label 内部, for 可以没有.
+
 - ``<input>``
+
+  不同类型的 input element 有不同的验证要求 (以及 pattern attribute 的额外限制),
+  若验证不通过, submit 时会提示问题, 无法提交. 并且 input 根据值是否合法, 随时
+  有应用 ``:valid`` ``:invalid`` pseudo-class.
 
   general attributes.
 
@@ -446,6 +472,9 @@ forms
   * ``autocomplete``, values: on/off 或者是描述该 input 的目的, 以协助浏览器选择
     自动补全的 candidate list.
     若未指定, autocomplete 使用 form owner 的 autocomplete 值.
+
+  * ``inputmode``, 对于使用 virtual keyword 的移动端等浏览器很有用, 提示
+    应使用的 keyboard 形式. 例如, numeric, email, etc.
 
   * ``autofocus``, 页面加载后 autofocus 这个 input.
 
@@ -469,7 +498,8 @@ forms
 
   * ``list``, id to ``<datalist>`` element, a list of pre-defined options.
     The browser displays only options that are valid values for this input
-    element.
+    element. 此外, 如果 autocomplete attribute 没有禁用的话, datalist 还能
+    帮助自动补全.
 
   * ``min``, for numeric (number, range) or date time (date, time, etc.).
 
@@ -490,7 +520,7 @@ forms
     若没默认值可以不设置.
 
   * ``pattern``, 在各个 type 的基本格式要求之外, 详细的 validation 要求.
-    regexp. 使用 ``title`` attribute 添加提示.
+    regexp. 使用 ``title`` attribute 添加对 pattern 的输入提示.
 
   * ``placeholder``, 提示用户可输入的内容.
 
@@ -501,6 +531,8 @@ forms
   * ``spellcheck``, 是否检查输入内容的拼写.
 
   * ``tabindex``, tabbling navigation order.
+
+- ``<input type="text">`` 用于 single-line value, 并且没有更合适的具体类型时.
 
 - ``<input type="button">`` 没有默认行为, 也没有值. 要做什么
   都要靠 js 去定义. 这使得 button input element 可以做任何事,
@@ -521,22 +553,42 @@ forms
 
   * ``value``, button's label.
 
+- ``<input type="submit">``
+  When the click event occurs, the user agent attempts to submit the form.
+
+- ``<input type="reset">`` default click event handler that resets all of the
+  inputs in the form to their initial values. 各 input 的初始值可能是 value
+  attribute, checked attribute, 等等.
+
 - ``<input type="file">``
 
   the real path to the source file is not shown in the input's value attribute
   for obvious security reasons. Instead, the filename is shown, with
-  ``C:\fakepath\`` appended to the beginning of it.
+  ``C:\fakepath\`` prepended to it.
 
   attributes.
 
   * ``accept``, 允许的上传文件类型.
     值为 ``.<ext>``, mime type, ``audio/*``, ``video/*``, ``image/*``.
+    可以是一个 list.
 
   * ``capture``, 从 camera/microphone 之类的地方获取文件.
 
-- ``<input type="image">``
+  * ``multiple``, 从弹出的文件选择窗口中可以 (使用 ctrl) 选择多个文件.
+    此时, DOM API ``value`` 值只保存第一个文件. 获取所有文件需要使用
+    ``.files`` list (该 list 包含文件的一切信息, 是 file 在 js 中的
+    对象封装).
+
+- ``<input type="image">`` graphical submit buttons. 除了可以提交 form 之外, 和
+  img element 的用法基本相同.
+
+  没有 value 值, 因为是 submit button. 但点击时会自动包含 x, y 座标在
+  数据中. 这是额外添加的值. 若有 ``name`` attribute, 会作为前缀:
+  ``<name>.x``, ``<name>.y``. 座标系的原点在图片左上角.
 
   attributes.
+
+  * formaction, formenctype, formmethod, formnovalidate, formtarget.
 
   * ``height``.
 
@@ -550,6 +602,12 @@ forms
   状态. Like... a Schrödinger's checkbox... A checkbox in the indeterminate
   state has a horizontal line in the box. (这种状态的 checkbox 在 submit 时
   等价于 unchecked, 即不会有数据在 post data 中.)
+
+  注意 checkbox 不仅可以表达单项的选择或不选择; 还可以构建一个 checkbox group, 
+  进行多选. 此时, 它们的 name 相同, value 不同. form data 中出现多个相同的
+  name 对应不同的 value.
+
+  checkbox 的 label 应该在它的右侧.
 
   attributes.
 
@@ -587,13 +645,225 @@ forms
 
   * ``min``, ``max``. 因设置范围, 导致部分日期被禁用或者不可选.
 
-- ``<input type="button">``
-- ``<input type="button">``
-- ``<input type="button">``
-- ``<input type="button">``
-- ``<input type="button">``
-- ``<input type="button">``
-- ``<input type="button">``
+- ``<input type="datetime-local">`` date + time, in local timezone.
+  各浏览器对这个类型的 input 比 date, time 类型的支持还差.
+
+  其值是 ``yyyy-MM-ddThh:mm`` 格式. 其他与 date input 类似.
+
+- ``<input type="time">``, time only.
+
+  其值是 ``hh:mm[:ss]`` 格式. 是否有秒的部分取决于 step.
+
+  attributes.
+
+  * ``step``. 时间变化步长, 以秒为单位, 默认是 60s. 若 step < 60s, 则
+    时间值会包含 ``:ss`` 的部分.
+
+- ``<input type="month">`` 输入 ``yyyy-MM`` 部分. 其他同上.
+
+- ``<input type="week">`` 输入 year + week number.
+
+  其值是 ``yyyy-Www`` 格式.
+
+- ``<input type="email">`` 自动根据 email format 进行验证.
+
+  attributes.
+
+  * ``multiple``, 允许输入多个 email address, separated by commas (and possible
+    whitespaces). 此时, ``pattern`` attribute 须对每个值都匹配.
+
+- ``<input type="hidden">`` include data that cannot be seen or modified by
+  users when a form is submitted. 常见的应用场景是 security token (e.g. CSRF token),
+  或 object id.
+
+  没有任何方法 (除非修改源代码) 能够在页面上显示 hidden input.
+
+  由于没有可修改的值, 没有 validation.
+
+  attributes.
+
+  * ``value``, 不能修改的数据值.
+
+- ``<input type="number">``
+
+  built-in validation to reject non-numerical entries.
+  合法的输入可通过 min, max, step 等进一步限制.
+  
+  注意默认情况下 step == 1, 合法输入只能是整数. 调整 step 为小数后, 就可以输入
+  floating point number (包含 1.5e3 形式), 但要注意精度与 step 一致.
+
+  number input 不支持 pattern attribute, 理由是反正只能输入 number, 而且 min,
+  step, max 已经足够.
+
+- ``<input type="range">`` 指定一个从 min ~ max 之间的数值, 而这个数值到底
+  是多大并不重要. As a rule, if the user is more likely to be interested in the
+  percentage of the distance between minimum and maximum values than the actual
+  number itself, a range input is a great candidate.
+
+  attributes.
+
+  * ``value``, 默认初始值是 (min+max)/2.
+
+  * ``min``, ``max``, ``step``, 默认值分别是 0, 100, 1.
+    step == any 可以指定任意精度.
+
+    设置关联的 datalist element 可以给 range control 加上刻度.
+
+- ``<input type="password">`` the text is obscured so that it cannot be read.
+  mobile devices often display the typed character for a moment before obscuring
+  it.
+
+  attributes.
+
+  * ``autocomplete``. on: allow autocomplete. off: 对于 password input 浏览器会
+    忽略这个值. current-password: 自动补全当前密码, 而不是建议生成新密码.
+    new-password: 允许浏览器建议生成新密码, 禁止使用当前密码进行自动补全.
+
+- ``<input type="radio">`` 使用时应该有多个 radio input 组成一个 radio group.
+  一个 group 内只有一个 radio input 被选中.
+
+  多个 name 相同的 radio input 组成一个 radio group. 在 group 中, 选中一项时
+  自动反选其他任何. submit 时, form data 中只包含一项 name value 组合.
+  若没有选择任何 radio input, form data 中将不包含 name 项.
+
+  radio 的 label 应该在它的右侧.
+
+  They are called radio buttons because they look and operate in a similar
+  manner to the push buttons on old-fashioned radios.
+
+  attributes.
+
+  * ``value``, if omitted, value is ``on``.
+
+- ``<input type="search">`` 本质上跟 text input 一样, 单独分类是因为浏览器
+  可能进行与 text 稍不同的一些处理方式: 一些浏览器在输入框右边设置一个 x;
+  浏览器可能保存在不同地方的 search input 的输入, 用于提供 autocomplete.
+
+  ``name`` of search input is often ``q``.
+
+- ``<input type="tel">`` telephone number. 没有 validation 因为 telphone
+  在全世界没有统一格式.
+  
+  tel input 实际上和 text input 相同, 但是它的作用在于移动设备可根据 tel type
+  选择专门的 virtual keyboard; 以及便于进行 css, js 等 manipulation.
+
+- ``<input type="url">`` 支持 absolute url, 还支持 relative url.
+
+- ``<button>``, 里面可以是任何 phrasing content, 不仅是 text. 这让 button
+  的形式很灵活 (相对于 button input).
+
+  与相应的 button input 不同, button element 可以带值 (name, value), 并加入
+  form data 中.
+
+  attributes.
+
+  * ``autofocus``
+
+  * ``disabled``
+
+  * ``form``
+
+  * ``name``
+
+  * ``value``
+
+  * ``type``, submit (default), reset, button. 与相应类型的 input 类似.
+
+  * formaction, formenctype, formmethod, formnovalidate, formtarget
+
+- ``<textarea>`` multiline plain-text. 许多属性与 input 的相应属性相同.
+
+  它的初始值直接写在 open/closing tag 内部.
+
+  attributes.
+
+  * ``autocomplete``
+
+  * ``autofocus``
+
+  * ``required``
+
+  * ``readonly``
+
+  * ``disabled``
+
+  * ``form``
+
+  * ``minlength``, ``maxlength``
+
+  * ``name``
+
+  * ``placeholder``
+
+  * ``rows``, ``cols``, 行列数.
+
+  * ``spellcheck``
+
+  * ``wrap``, 如何 wrap text.
+    
+    ``hard``: 自动添加 CRLF 以保证每行宽度不大于 cols.
+    ``soft``: 不自动添加, 只是保证 linebreaks 都是 CRLF, 这是默认值.
+
+- ``<select>`` select one or more choices from options. 这类似于 radio group
+  或 checkbox group.
+
+  它里面是 option/optgroup elements.
+
+  设置 multiple 或 size 后不使用下拉列表, 使用滚动列表.
+
+  attributes.
+
+  * ``autofocus``
+
+  * ``disabled``
+
+  * ``form``
+
+  * ``multiple``, 允许选择多个.
+
+  * ``name``
+
+  * ``required``
+
+  * ``size``, 设置滚动列表中可见行数.
+
+- ``<datalist>``, 表示一系列可选的值, 需要配合其他 form control 使用.
+  里面是 zero or more option elements.
+
+- ``<option>``, 只能在 datalist, select 或 optgroup element 中.
+
+  attributes.
+
+  * ``disabled``, 不能选这个选项.
+
+  * ``label``, 与选项 text 一起出现的 label, indicating meaning of the option.
+
+  * ``selected``, 初始选中.
+
+  * ``value``, 单独指定 option 的 value, 以不同于 option text content. 若不设置,
+    option value 就是文字内容.
+
+- ``<optgroup>`` option group. 在 select element 中使用. 里面允许 zero or more
+  option elements.
+
+  attributes.
+
+  * ``disabled``
+
+  * ``label``, group name.
+
+- ``<fieldset>`` form controls groups.
+  里面允许是一个 optional legend element followed by flow content.
+
+  attributes.
+
+  * ``disabled``
+
+  * ``form``
+
+  * ``name``, name of the group.
+
+- ``<legend>``, title of parent fieldset.
 
 accessibility
 -------------
