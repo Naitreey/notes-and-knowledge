@@ -219,6 +219,9 @@
   在 server-side, 若收到 post data 中包含多个相同 name 项, 程序逻辑应该能够
   将之组成一个 value list. 即一个 name key 对应一个 value list.
 
+  如果 form 中包含敏感信息, 例如密码, 用户身份信息等, 则整个 form data
+  应该通过 https 传输. 如今浏览器对 insecure login forms 都有警告.
+
   form data validation:
 
   client-side validation 和 server-side validation 都需要, 但两者的用途不同.
@@ -368,7 +371,9 @@ Security
   * CSRF attack 的应对方式:
 
     - 在 form 中加入 CSRF token field, 由于不是 same origin 的请求拿不到该页面上的
-      token, 即使拿到敏感 cookie 也无法让 POST 合法.
+      token, 即使拿到敏感 cookie 也无法让 POST 合法. 当然, 伪造方可以猜测 CSRF token
+      值应该是什么. 所以这还要求服务端去实现难以猜中的 token 值 (以及每次刷新 form
+      都有不同的 csrf token 值).
 
     - 对于动态的 ajax 请求, 设置 csrf token header. 跨域请求虽然能带上 csrf token
       cookie, 但读不到 cookie 的值, 不能设置 csrf token header, 这样的请求会被
