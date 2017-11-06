@@ -321,3 +321,23 @@
 
 - 向进程发送 SIGSTOP, SIGTSTP 等 signal, 或者在 shell 中 ctrl-z foreground process
   会把进程置于 stop 状态, 再发送 SIGCONT 可以恢复运行.
+
+- buffer and cache.
+
+  * buffer: A storage used to temporarily store data while it is being moved from
+    one place to another.
+    
+    使用 buffer 的目的是为了提高不同速率的组件之间的数据传输效率. 当发送方和接受方
+    在数据速率上有差异 (一般是接受方比发送方慢) 时, 需要一个缓冲层, 暂时放置那些尚未
+    处理的数据, 避免发送方每次发数据时都要 blocking 等待所有数据接受完毕. 这样就提高
+    了不同速度的组件协同工作时的效率.
+
+    例如, OS 一般实现了 filesystem buffer. userspace app 只需写数据到 kernel
+    fs buffer 即可返回执行下一指令, 无需 blocking 等待内核真把数据写入硬盘.
+
+  * cache: A storage used to temporarily store data which is very probable to be
+    accessed again.
+
+    使用 cache 的目的是减少向慢存储的访问次数, 从而提高数据访问效率. 它的应用场景
+    是相同的数据需要多次读取时. 此外, 在设计 IO API 时, cache 层应该是对用户透明的,
+    即用户直接调用向真实存储设备的 IO API, 而无需知道 cache 层的存在, cache 自动生效.
