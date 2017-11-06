@@ -474,7 +474,8 @@ forms
     若未指定, autocomplete 使用 form owner 的 autocomplete 值.
 
   * ``inputmode``, 对于使用 virtual keyword 的移动端等浏览器很有用, 提示
-    应使用的 keyboard 形式. 例如, numeric, email, etc.
+    应使用的 keyboard 形式. 例如, numeric, email, etc. 但若可以指定具体的
+    合适的 input type, 则不需要指定这个值.
 
   * ``autofocus``, 页面加载后 autofocus 这个 input.
 
