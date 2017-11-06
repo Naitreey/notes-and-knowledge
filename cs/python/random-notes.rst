@@ -1187,3 +1187,39 @@ jinja 由于应用场景更加宽泛, 不仅仅是 render html, 因此它的一�
   ``raw`` statement.
 
 - control structure
+
+queues
+------
+
+celery
+~~~~~~
+
+- Definition: Celery is a distributed task queue system.
+
+- version: next version of celery (5.x) works only on python3.5+.
+
+- features:
+
+  * HA:
+    automatically retry in the event of connection loss or failure,
+    and some brokers support HA in way of primary/primary or primary/replica
+    replication.
+
+  * Fast: millions of tasks a minute with RabbitMQ.
+
+  * integration for many web frameworks: django, flask, tornado, pyramid, pylons,
+    web2py.
+
+- celery 的各个部分有提供了很多实现方式, 并与现有系统集成:
+
+  * message transport: rabbitmq, redis, amazon SQS, zookeeper, pyro, slmq, consul.
+
+  * concurrency: prefork, eventlet, gevent, single threaded
+
+  * result stores: AMQP, redis, memcached (memcache, pymemcache), couchbase,
+    sqlalchemy, django ORM, apache cassandra, IronCache, elasticsearch, riak, consul.
+
+  * serialization: pickle, json, yaml, msgpack, zlib, bzip2,
+    cryptographic message signing (auth).
+
+- RabbitMQ 和 Redis 作为 message transport 是支持得最好的.
