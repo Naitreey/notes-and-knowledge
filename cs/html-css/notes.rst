@@ -515,7 +515,9 @@ forms
 
   * ``multiple``, user can enter more than one value. for email, file.
 
-  * ``name``
+  * ``name``, 若一个 form 中多个 form control 有相同的 ``name``, 则
+    form data 中出现多个 name/value 数据, 且这些数据按 form control 的先后顺序
+    而出现. 服务端有义务保持这个数据顺序.
 
   * ``value``, 注意它是 input 的初始值. form 里实际输入的值也不会更新到这里.
     若没默认值可以不设置.
