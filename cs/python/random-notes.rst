@@ -1057,7 +1057,7 @@
   .. code:: python
     def decorator(func=None, arg1=None, arg2=None):
         def actual_decorator():
-            # decorator logic using arg1, arg2
+            pass # decorator logic using arg1, arg2
         if func:
             return actual_decorator(func)
         else:
@@ -1080,6 +1080,10 @@
   该 decorator 无法直接应用到包含 self 的同类 method 上 (显然参数形式发生了变化).
   这时, 可以参考 ``django.utils.decorators.method_decorator`` 的实现, 将 decorator
   转化为预期有 self 参数的新的 decorator.
+
+- 我们不可能定义一个 instance method decorator, 作用在本类的其他 method 上.
+  这是因为 decorator syntax 要求它作用在 class namespace 中, 在这里 self
+  实例尚未定义.
 
 - 只有需要考虑到跨平台兼容性时, 才使用 ``os.path.join`` 和 ``os.path.sep``
   来构建路径; 对于仅在 unix 平台上运行的程序, 直接写 ``/path/some/thing``
