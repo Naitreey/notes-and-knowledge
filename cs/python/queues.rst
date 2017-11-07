@@ -5,6 +5,25 @@ Overview
 --------
 - Definition: Celery is a distributed task queue system.
 
+- 注意 celery 的定义, 它是 task queue, 不是 message queue.
+  Message queue 实现了一个功能: It receives and delivers messages.
+  Task queue uses MQ as message broker to receive tasks (from user)
+  and deliver results (to user).
+
+  Celery 是 task queue, 它是以任务为核心的. 它所有的功能都是 task-oriented.
+  It's not generic message receiving/delivery kind of stuff.
+
+  常见的 web app 中的 out-of-cycle 任务处理方式: 从 request/response
+  cycle 中发送某个信息至 MQ, 某个长期运行的 (worker) 进程接受该信息,
+  处理后给出结果. Celery 做的事情就是将这各个环节封装起来, 成为易于
+  使用的一系列 API, 从而省去手工构建上述流程的麻烦.
+  
+  We no longer need to learn or worry about the details of AMQP or RabbitMQ. We
+  can use Redis or even a database (MySQL for example) as a message broker.
+  Celery allows us to define "Tasks" with our worker codes. When we need to do
+  something in the background (or even foreground), we can just call this task
+  (for instant execution) or schedule this task for delayed processing.
+
 - version: next version of celery (5.x) works only on python3.5+.
 
 - features:
