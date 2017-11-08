@@ -219,10 +219,10 @@
   * ``abstract``, whether is abstract model.
 
   * ``app_label``, 定义 model 所属的 app.
-    
+
     对于在其他 app 中已经定义的 model, 可在 import
     过程中修改 ``model._meta.app_label`` 的值修改它所属 app.
-    
+
     注意无论是在 Meta 中修改还是其他修改方式, 这直接改变了 django 看待这个 model
     所属于的 app. 因此这导致相应的 migration 必须被创建和应用. 因此, 不能通过
     这个方式修改 django contrib app 的 models. 因为这会修改这些应用的 migrations.
@@ -801,6 +801,87 @@
 
     - ``Sum``
 
+- database transactions.
+
+  * django 对 transaction 的处理逻辑:
+    对于 django db API 提供的一些需要通过多个 sql 才能实现的复杂操作 (例如,
+    QuerySet.delete(), QuerySet.update()), django 自动构造 transaction
+    & savepoints. 对于单个的 sql statement, 默认开启 autocommit mode.
+
+  * autocommit.
+
+    django by default runs in autocommit mode (即默认会开启数据库后端的 autocommit
+    mode). 意思是, 若当前 SQL statement 并非已经处于一个 active transaction 中,
+    则自动将该 SQL wrap 在一个自己的 transaction 中. 根据该语句是否成功, 自动
+    commit/rollback.
+
+    autocommit 可以由 ``settings.DATABASES.AUTOCOMMIT`` option 控制.
+
+  * ``django.db.transaction.atomic`` decorator/context manager 手动创建
+    transaction. For nested ``atomic`` operations, the inner ``atomic``
+    create savepoints.
+
+    避免在 transaction 内部 catch ``django.db.DatabaseError``, 因为
+    ``atomic`` 是靠这个 exception 判断是否 rollback. 如果需要 catch 这类
+    异常, 正确做法是在 atomic block 外部.
+
+    Attempting to commit, roll back, or change the autocommit state of the
+    database connection within an atomic block will raise an exception.
+
+    Nested atomic blocks workflow:
+
+    - opens a transaction when entering the outermost atomic block;
+
+    - creates a savepoint when entering an inner atomic block;
+
+    - releases or rolls back to the savepoint when exiting an inner block;
+
+    - commits or rolls back the transaction when exiting the outermost block.
+
+  * atomic requests.
+
+    处理 http request 时, 可以直接将整个 view 的操作放在一个 transaction 中.
+    从而保证一个 view 进行的所有 db state change 是一起生效或不生效. django
+    提供了 ``settings.DATABASES.ATOMIC_REQUESTS`` 自动将所有 view wrap 在
+    该数据库的 ``transaction.atomic`` 中. (注意只有 view function 被 wrap,
+    middleware 等过程并没有.)
+
+    此时在 view 中, 再使用 ``django.db.transaction.atomic`` 则是在 transaction
+    中创建 savepoints.
+
+    若 view 里没有 raise exception, 则 commit; 否则 rollback. 注意, 我们不能在
+    view 里随便 raise exception, 不恰当的异常 django 会转换成 500 error. 这是
+    不合适的. 因此, 在 atomic views 的前提下, 我们必须规范 view 中 raise 的
+    exception, 避免非必要的 500 error:
+
+    - ``Http404`` -> HttpResponseNotFound
+
+    - ``PermissionDenied`` -> HttpResponseForbidden
+
+    - ``MultiPartParserError`` -> HttpResponseBadRequest
+
+    - ``SuspiciousOperation`` -> HttpResponseBadRequest
+
+    - other exceptions -> HttpResponseServerError
+
+    局部禁用 atomic requests: ``django.db.transaction.non_atomic_requests``
+    decorator.
+
+    何时使用和不使用 atomic requests: 如果在大部分的 view 的处理中, 需要考虑
+    使用 ``non_atomic_requests`` decorator, 则不该设置 ``ATOMIC_REQUESTS``.
+
+  * transaction hook: ``django.db.transaction.on_commit()``. 若当前 transaction
+    commit 成功, 则执行注册的操作. 可以在 transaction 内部注册多个 hooks,
+    在最外层 commit 时按顺序执行.
+
+    如果 on_commit 注册不在 atomic block 中, hook 会立即执行. 这使得即使外层
+    transaction 被去掉后, hook 仍能得到执行. 尽管执行时机不一定合理.
+
+    ``on_commit`` hook 还是挺有用的. 例如无法在 transaction 外部直接添加后续执行
+    逻辑时, 就可以通过这个 hook 加入代码.
+
+  * low-level APIs.
+
 - view
 
   * view 这个概念没有什么很好的意义. 应该说, 从一定程度上, HTTP 的请求可以看作是
@@ -921,7 +1002,7 @@
       这些类提供了一些常用操作的通用实现, 以及一些自定义和扩展方式.
       但注意这些类仅适用于它所设计的情况, 若与需求不匹配, 请直接去
       subclass ``View``, 手动实现所需操作.
-      
+
       例如, ListView 等直接与某个数据模型中的一系列 objects 相对应时才方便
       使用. 意思是, 如果 view 就是要展示 a list of model object.
       CreateView, UpdateView, DetailView, DeleteView 等直接与某个数据模型中的
@@ -1743,7 +1824,7 @@
 
       * ``POST``. 以 QueryDict 形式保存的 form data, 即通过设置 Content-Type 为
         ``application/x-www-form-urlencoded`` 和 ``multipart/form-data`` 时 POST
-        的 body, 但并不包含文件上传部分. 
+        的 body, 但并不包含文件上传部分.
 
       * 在 view 中 ``GET`` ``POST`` 是 immutable 的, 需要先 ``QueryDict.copy()``
         后再修改.
@@ -1784,7 +1865,7 @@
 
   * ``QueryDict`` 是 django 对 query string 以及 form data 中存在一个 key 对应
     多个值的情况的 dict 的封装.
-    
+
     它是 dict 的子类. 具有所有 dict methods. 常见的 dict 操作只获取某个
     key 对应的最后一个值. 若要获取整个 list, 使用 list 类方法.
 
