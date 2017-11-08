@@ -818,6 +818,9 @@ forms
 
   它的初始值直接写在 open/closing tag 内部.
 
+  注意 textarea 中, 所有 newline 都是 CRLF 的. 所以后端必须按照业务需要
+  进行转换, 不可不加考虑地直接使用.
+
   attributes.
 
   * ``autocomplete``
