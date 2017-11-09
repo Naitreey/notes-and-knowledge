@@ -1119,24 +1119,90 @@
             res = instance.__dict__[self.name] = self.func(instance)
             return res
 
+  进一步, 我们可以扩展该代码让它不仅可读, 也可写.
+
+  .. code:: python
+    class cached_mutable_property(object):
+        """
+        Decorator that converts a method with a single self argument into a
+        property cached on the instance.
+
+        Optional ``name`` argument allows you to make cached properties of other
+        methods. (e.g.  url = cached_property(get_absolute_url, name='url') )
+        """
+        def __init__(self, fget, fset=None, name=None):
+            self.fget = fget
+            self.fset = fset
+            self.__doc__ = getattr(fget, '__doc__')
+            self.name = name or fget.__name__
+
+        def __get__(self, instance, cls=None):
+            if instance is None:
+                return self
+            if self.name in instance.__dict__:
+                return instance.__dict__[self.name]
+            else:
+                res = instance.__dict__[self.name] = self.fget(instance)
+                return res
+
+        def __set__(self, instance, value):
+            if self.fset:
+                self.fset(instance, value)
+                instance.__dict__[self.name] = value
+            else:
+                raise AttributeError("read-only attribute")
+
+        def setter(self, fset):
+            self.fset = fset
+            return self
+
 - 注意所有可以使用 function 的地方都可以一般化地使用 callable. 定义 callable class
   有助于优化代码组织方式和重用等可能性 (应用所有 class 的优点来定义 function).
 
 language
---------
+========
+
+special methods
+---------------
+
+container protocol
+~~~~~~~~~~~~~~~~~~
+
+- ``object.__len__()``
+
+- ``object.__len_hint__()``, optional.
+
+- ``object.__getitem__()``
+
+- ``object.__missing__()``, dict 定义了该 hook, 在 ``__getitem__`` 中使用.
+  当 key 不存在时, 调用 ``__missing__`` 进行自定义处理. dict 是啥都不做.
+
+  ``collections.defaultdict`` overrides ``__missing__`` method to define
+  default value for the missing key.
+
+- ``object.__setitem__()``
+
+- ``object.__delitem__()``
+
+- ``object.__iter__()``
+
+- ``object.__reversed__()``, optional.
+
+- ``object.__contains__()``, optional.
+
 exception
-~~~~~~~~~
+---------
 
 - instantiate exception 时, 它的 ``__traceback__``, ``__cause__``, ``__context__``
   还都是 None (因为在实例化处本来就没有这些). 之后 raise 之后, 解释器才会根据执行
   情况设置这三个属性.
 
 builtin functions
------------------
+=================
 - ``enumerate()``, ``start=`` 设置第一项的序号值.
 
 json
-----
+====
 
 - 注意 json format 不支持 binary data 这种类型. 所有的 binary data 都必须使用某种数字
   进制编码成字符串, 才能用 json format 来传递.
@@ -1148,9 +1214,9 @@ json
   这样很方便.
 
 Jinja template
---------------
+==============
 language
-~~~~~~~~
+--------
 
 以下主要记录需要注意点以及与 django template 的不同之处.
 
