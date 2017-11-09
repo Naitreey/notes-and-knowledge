@@ -21,8 +21,23 @@ xml 的严格子集, 是 html's serialized format. 不过 xhtml 已经死了. �
 html
 ====
 
+document structure
+------------------
+
+1. byte order mark (BOM) character. (optional)
+
+2. Any number of comments and ASCII whitespaces.
+
+3. A DOCTYPE.
+
+4. Any number of comments and ASCII whitespaces.
+
+5. The document element -- ``html`` element.
+
+6. Any number of comments and ASCII whitespaces.
+
 syntax
--------
+------
 
 - element & tag.
   A html element comprises an opening tag and closing tag and contents in between,
@@ -38,59 +53,7 @@ syntax
 
   * inline element 位于 block element 之中, 不占整行, 可以在一行中并排出现.
 
-global attributes
-~~~~~~~~~~~~~~~~~
-- Global attributes are attributes common to all HTML elements; they can be
-  used on all elements, though the attributes may have no effect on some
-  elements.
-
-  Global attributes may be specified on all HTML elements, even those not
-  specified in the standard. That means that any non-standard elements must
-  still permit these attributes.
-
-- ``id``, 包含 ASCII letters, ``_``, ``-``, ``.``. Starting with underscore
-  or letter, must not contain whitespace. Must be unique in the whole document.
-
-- ``accesskey``, 用于生成 keyboard shortcut for the current element.
-  配合浏览器预设的激活键 (Alt, Alt + Shift, etc.) 使用.
-
-  其值是 space separated list of characters. The browser uses the first one
-  that exists on the computer keyboard layout.
-
-- ``aria-*``, ARIA attributes, used for improve accessibility.
-
-- ``on<event>``, event handler attributes.
-
-- ``class``, a space-separated list of classes of element.
-
-  class 名字应该按照元素的某种逻辑上、语义上的特质进行分类命名, 而不是
-  按照 presentation 形式进行分类命名.
-
-- ``contenteditable``, 是否允许直接编辑 element 的内容. 注意不能手写
-  html tag (会被 escape), 这相当于对页面进行 WYSIWYG 式的编辑.
-
-  这是 enumrated attribute, not boolean attribute. 其值必须是
-  true/"": editable; false: not editalbe; 不设置该属性: inherited.
-
-- ``contextmenu``, its value is the id of menu element to use as
-  a context menu of this element.
-
-  注意除了 firefox 目前没有浏览器支持!!
-
-- ``data-*``, custom data attributes, 允许在 html 代码中保存任意数据, 然后在
-  脚本中通过 DOM 来获取.
-
-  标识符 ``*`` 部分不能包含大写字母, 但可以包含 ``-``. 获取数据时, data 标识符
-  若包含 ``-``, key 须去掉 ``-`` 并将 dash 后面第一个字符大写.
-
-  data attributes 的目的是提供一种标准的方式, 从而能够在特定的 html element
-  上存储与之相关的数据 (之前没有标准方式实现这个需求). 这些属性没有预定义的含义,
-  从而允许自定义使用.
-
-comment
-~~~~~~~
-
-- ``<!-- comment -->``
+- comment: ``<!-- comment -->``
 
 elements
 --------
@@ -921,6 +884,55 @@ interactive elements
 - ``<menuitem>``, 定义 menu element 中的一项.
 
   注意除了 firefox, edge 目前没有浏览器支持!!
+
+global attributes
+-----------------
+- Global attributes are attributes common to all HTML elements; they can be
+  used on all elements, though the attributes may have no effect on some
+  elements.
+
+  Global attributes may be specified on all HTML elements, even those not
+  specified in the standard. That means that any non-standard elements must
+  still permit these attributes.
+
+- ``id``, 包含 ASCII letters, ``_``, ``-``, ``.``. Starting with underscore
+  or letter, must not contain whitespace. Must be unique in the whole document.
+
+- ``accesskey``, 用于生成 keyboard shortcut for the current element.
+  配合浏览器预设的激活键 (Alt, Alt + Shift, etc.) 使用.
+
+  其值是 space separated list of characters. The browser uses the first one
+  that exists on the computer keyboard layout.
+
+- ``aria-*``, ARIA attributes, used for improve accessibility.
+
+- ``on<event>``, event handler attributes.
+
+- ``class``, a space-separated list of classes of element.
+
+  class 名字应该按照元素的某种逻辑上、语义上的特质进行分类命名, 而不是
+  按照 presentation 形式进行分类命名.
+
+- ``contenteditable``, 是否允许直接编辑 element 的内容. 注意不能手写
+  html tag (会被 escape), 这相当于对页面进行 WYSIWYG 式的编辑.
+
+  这是 enumrated attribute, not boolean attribute. 其值必须是
+  true/"": editable; false: not editalbe; 不设置该属性: inherited.
+
+- ``contextmenu``, its value is the id of menu element to use as
+  a context menu of this element.
+
+  注意除了 firefox 目前没有浏览器支持!!
+
+- ``data-*``, custom data attributes, 允许在 html 代码中保存任意数据, 然后在
+  脚本中通过 DOM 来获取.
+
+  标识符 ``*`` 部分不能包含大写字母, 但可以包含 ``-``. 获取数据时, data 标识符
+  若包含 ``-``, key 须去掉 ``-`` 并将 dash 后面第一个字符大写.
+
+  data attributes 的目的是提供一种标准的方式, 从而能够在特定的 html element
+  上存储与之相关的数据 (之前没有标准方式实现这个需求). 这些属性没有预定义的含义,
+  从而允许自定义使用.
 
 accessibility
 -------------
