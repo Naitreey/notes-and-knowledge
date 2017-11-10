@@ -895,7 +895,7 @@ global attributes
   specified in the standard. That means that any non-standard elements must
   still permit these attributes.
 
-- ``id``, 包含 ASCII letters, ``_``, ``-``, ``.``. Starting with underscore
+- ``id``, 包含 ASCII letters, digits, ``_``, ``-``, ``.``. Starting with underscore
   or letter, must not contain whitespace. Must be unique in the whole document.
 
 - ``accesskey``, 用于生成 keyboard shortcut for the current element.
@@ -930,9 +930,50 @@ global attributes
   标识符 ``*`` 部分不能包含大写字母, 但可以包含 ``-``. 获取数据时, data 标识符
   若包含 ``-``, key 须去掉 ``-`` 并将 dash 后面第一个字符大写.
 
-  data attributes 的目的是提供一种标准的方式, 从而能够在特定的 html element
+  data attributes 的目的是提供一种标准的方式去实现在特定的 html element
   上存储与之相关的数据 (之前没有标准方式实现这个需求). 这些属性没有预定义的含义,
   从而允许自定义使用.
+
+- ``dir``, direction of text in the element. ltr, rtl, auto.
+
+- ``draggable``, whether the element can be dragged.
+
+  enumerated value: true/false/auto. auto if not defined, meaning the behavior
+  is the one defined by browser.
+
+  By default, only text selections, images, and links can be dragged. For all
+  others elements, the event ondragstart must be set for the drag and drop
+  mechanism to work.
+
+- ``hidden``, a Boolean attribute indicating that the element is not yet, or is
+  no longer, relevant.
+  
+  If it should be hidden from everybody in all contexts, use semantic hidden.
+  if it should only be hidden for specific browsing scenarios, use stylistic
+  ``display: none`` (or, ``visibility: hidden`` maybe). 
+
+- ``lang``, language of the element.
+
+- ``style``, for quick css styling. having the highest priority.
+
+- ``tabindex``, 定义 tab navigation 的顺序.
+
+  负数值表示不能通过 tab focus 到该元素, 一般写成 ``tabindex=-1``.
+  0 表示按照元素在源代码中的出现顺序去 navigation, 这是元素的默认值.
+  正整数值表示按照该值的递增顺序去 navigation, 若多个元素有相同的
+  tabindex 值, 按照源代码顺序决定先后顺序.
+
+  整体的 navigation 顺序是先是正值的 tabindex 元素, 然后是值为 0 的
+  tabindex 元素.
+
+- ``title``, containing text representing advisory information for the element.
+  Usually displayed as tooltip.
+
+  Use cases: 对元素内容进行描述、解释或补充; 对于文字段落等, 还可作为注释.
+
+  一个元素的 title 会覆盖作用在它和它所以子元素上面, 除非子元素自己有 title.
+
+  对于 link, abbr, input, menuitem 元素, title 属性有额外的语义和作用.
 
 accessibility
 -------------
