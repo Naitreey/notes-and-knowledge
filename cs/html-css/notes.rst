@@ -47,13 +47,35 @@ syntax
 
 - whitespace collapsing. 文档中多个连续的 whitespace chars 会合并成一个.
 
-- block element vs inline element.
+inline-level and block-level elements
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  * block element 占据多个整行 -- 一个 block.
+- block-level element 占据多个整行 -- 一个 block. Browsers typically display
+  the block-level element with a newline both before and after the element.
 
-  * inline element 位于 block element 之中, 不占整行, 可以在一行中并排出现.
+  block element 中可以存在 block or inline elements.
 
-- comment: ``<!-- comment -->``
+  block elements 只能在 body 中出现.
+
+- inline-level element 位于 block-level element 之中, 不占整行, 可以在一行
+  中并排出现. An inline element does not start on a new line and only takes up
+  as much width as necessary.
+
+  inline element 中只能存在 inline elements.
+
+- CSS ``display`` property 可以改变一个元素的 level.
+
+- block & inline elements 的概念在 html5 中已经被 content categories 所替代.
+  block elements 类似于 flow content, inline elements 类似于 phrasing
+  content.
+
+  但注意在 html5 中, flow & phrasing content 两种类型不是互斥的. 一个元素可以
+  同时是这两种类型.
+
+comment
+~~~~~~~
+
+- ``<!-- comment -->``
 
 elements
 --------
@@ -84,6 +106,47 @@ document metadata
 - ``<head>``, general information or metadata.
   里面必须有一个 ``<title>`` element. 除非是 iframe srcdoc.
 
+- ``<meta>``, generic metadata that cannot be represented by other metadata
+  elements. 当没有其他更合适的 metadata element 可以使用时, 使用 meta element.
+
+  attributes.
+
+  * ``name``, 这个 metadata 的名字.
+
+    当 itemprop, http-equiv, charset 设置时, 不设置该属性.
+
+    values:
+
+    - ``application-name``.
+
+    - ``author``.
+
+    - ``description``, 包含本页面的简短描述. 在搜索引擎中搜索时, 若关键字命中了
+      description 的内容, 搜索引擎会在 title 下面展示 description 的所有内容.
+
+    - ``generator``.
+
+    - ``keywords``, useless. 在搜索引擎早期是靠关键字进行搜索的.
+
+    - ``robots``, 影响 cooperative crawlers 的行为. 与 robots.txt 类似.
+      对于非 html 内容, 使用 ``X-Robot-Tags`` 影响 crawlers 的行为.
+
+    - ``viewport``, 用于移动端浏览器. viewport 是页面尺寸大小的范围, 它不同
+      于屏幕的显示范围. 由于移动端屏幕尺寸可能很小, 为了保持页面元素的良好
+      布局效果, 需要明确设置 viewport.
+
+      对应的 ``content`` 值是 a list of ``key=val`` pairs.
+
+  * ``http-equiv``, 设置一个 http header 的名字, ``content`` 是内容.
+
+  * ``content``, ``http-equiv`` or ``name`` 属性对应的值.
+
+  * ``charset``, page's character encoding. 最好使用 utf-8. 其值必须和文件本身
+    的 encoding 一致. 这个 encoding 会被 ``Content-Type`` header 值 override.
+
+    尽管优先级不高, 但仍然建议设置 charset meta element.
+
+
 - ``<title>``, 在 browser title bar 或 tab bar 中显示, 只能包含 text.
 
 sectioning root
@@ -111,6 +174,11 @@ content sectioning
 
   如果地址信息不是为了某个 parent element 服务, 而只是一个独立的地址, 不需要使用
   address element.
+
+- ``<div>``, 没有任何本征含义, 只用于 wrap flow content, 以形成一个 division
+  in the document. 方便对这个整体进行操作.
+
+  div element 只该在别的 semantic sectioning element 不合适的情况下使用.
 
 text content
 ~~~~~~~~~~~~
@@ -275,6 +343,13 @@ inline text semantics
 
     - ``_top``, to top context, 若没有 parent 则等于 ``_self``.
 
+- ``<span>``, 没有任何本征含义, 用于 wrap phrasing content 以形成一个 inline
+  division. 方便进行整体操作.
+
+  span 相当于 inline 的 div.
+
+  span 应该在没有其他合适的 semantic elements 的情况下使用.
+
 document edits
 ~~~~~~~~~~~~~~
 
@@ -348,6 +423,74 @@ image and multimedia
     precise coordinates of a click are sent to the server.
 
   * ``usemap``, 与图片关联的 map element id (``#id``).
+
+- ``<video>``, video.
+
+  视频源由 src attribute 或者 source elements 指定. 浏览器遍历 source elements
+  选择第一个它支持的视频格式.
+
+  video element 里面包含 source, track elements, 以及 fallback 内容. 若
+  浏览器不支持 video element, 则显示 fallback 内容.
+
+  attributes.
+
+  * ``autoplay``, 是否自动播放.
+
+  * ``controls``, 默认的 video controls. 一些网站不启用, 而是使用自定义风格
+    和功能的控制键. 默认的 controls 就会显示 buffered 情况.
+
+  * ``poster``, poster image.
+
+  * ``src``, video url.
+
+  * ``crossorigin``, 是否使用 CORS 方式获取 poster image, 与 img element 的
+    属性相同.
+
+  * ``height``
+
+  * ``width``
+
+  * ``loop``, 播放完后是否 loop back to start.
+
+  * ``muted``, 是否静音.
+
+  * ``preload``, 预加载什么内容.
+
+- ``<audio>``, audio.
+
+  音频源指定与 video element 类似.
+
+  attributes.
+
+  * autoplay, controls, loop, muted, preload, src
+
+  * ``volume``, 0.0 ~ 1.0.
+
+- ``<source>``, 指定资源的源. 常用于对同一个资源提供多个格式的源, 供浏览器选择.
+  浏览器通过 ``type`` 属性或资源的 ``Content-Type`` 来确定自己能不能处理这个格式.
+
+  attributes.
+
+  * ``src``, url of resource. required attributes if it's in audio, video elements;
+    ignored if it's in picture elements.
+
+  * ``type``, MIME type of the resource.
+
+- ``<track>``, 为 video elements 添加 time-based data, 例如字幕.
+  track 必须是 ``.vtt`` file.
+
+  attributes.
+
+  * ``default``, 默认启动这个 track.
+
+  * ``kind``, track 的类型, 即干嘛用的. value: ``subtitles`` (default), ``captions``,
+    ``descriptions``, ``chapters``, ``metadata``.
+
+  * ``label``, 这个 track 的名字, 在 controls 中选择 track 时显示它的 label.
+
+  * ``src``, url of track.
+
+  * ``srclang``, 语言.
 
 table content
 ~~~~~~~~~~~~~
@@ -460,14 +603,14 @@ forms
 
   * ``type``. the holly attribute. 默认是 text.
     可能的类型:
-    button, image, submit, 
-    checkbox, radio, 
+    button, image, submit,
+    checkbox, radio,
     color,
     date, time, datetime-local, month, week,
     tel, email, url,
     file,
     hidden,
-    number, range, 
+    number, range,
     text, password,
     reset,
     search,
@@ -609,7 +752,7 @@ forms
   state has a horizontal line in the box. (这种状态的 checkbox 在 submit 时
   等价于 unchecked, 即不会有数据在 post data 中.)
 
-  注意 checkbox 不仅可以表达单项的选择或不选择; 还可以构建一个 checkbox group, 
+  注意 checkbox 不仅可以表达单项的选择或不选择; 还可以构建一个 checkbox group,
   进行多选. 此时, 它们的 name 相同, value 不同. form data 中出现多个相同的
   name 对应不同的 value.
 
@@ -630,7 +773,7 @@ forms
 
   color input element 的值是 ``#rrggbb`` string (always lowercase). The value
   is never in any other form, and is never empty.
-  
+
   A color input's value is considered to be invalid if the user agent is unable
   to convert the user's input into seven-character lower-case hexadecimal
   notation. 任何非法值导致颜色值成为 ``#000000`` 即黑色.
@@ -694,7 +837,7 @@ forms
 
   built-in validation to reject non-numerical entries.
   合法的输入可通过 min, max, step 等进一步限制.
-  
+
   注意默认情况下 step == 1, 合法输入只能是整数. 调整 step 为小数后, 就可以输入
   floating point number (包含 1.5e3 形式), 但要注意精度与 step 一致.
 
@@ -749,7 +892,7 @@ forms
 
 - ``<input type="tel">`` telephone number. 没有 validation 因为 telphone
   在全世界没有统一格式.
-  
+
   tel input 实际上和 text input 相同, 但是它的作用在于移动设备可根据 tel type
   选择专门的 virtual keyboard; 以及便于进行 css, js 等 manipulation.
 
@@ -809,7 +952,7 @@ forms
   * ``spellcheck``
 
   * ``wrap``, 如何 wrap text.
-    
+
     ``hard``: 自动添加 CRLF 以保证每行宽度不大于 cols.
     ``soft``: 不自动添加, 只是保证 linebreaks 都是 CRLF, 这是默认值.
 
@@ -885,6 +1028,59 @@ interactive elements
 
   注意除了 firefox, edge 目前没有浏览器支持!!
 
+embedded content
+~~~~~~~~~~~~~~~~
+
+- ``<iframe>``, 将另一个 html document 嵌入外层的 html document. 这种嵌套构建了
+  nested browsing context. 每个 browsing context 有它自己的 session history.
+
+  iframe -- inline frame.
+
+  attributes.
+
+  * ``allowfullscreen``
+
+  * ``height``, in pixel.
+
+  * ``width``, in pixel.
+
+  * ``name``, name of browsing context.
+
+  * ``sandbox``, 设置对 iframe document 的操作限制.
+
+  * ``src``, src url of document.
+
+  * ``srcdoc``, embedded document 的内容. 和 ``sandbox`` 一起使用.
+
+  何时可以使用 iframe? iframe 有哪些问题?
+
+  * iframe 的用处在于展示一个独立于主体的页面. 也就是说, 它的存在应该是作为
+    网站的一个 optional part, 而不是网站实现的主要方式: It should never be used
+    as an integral part of your site.  例如, 用 iframe 加载一个小的 google map;
+    嵌入一个 youtube video; 加载一个外部的静态页面等.
+
+  * 原则: 凡是觉得 "iframe 好像能方便实现这个功能啊" 的时候, 先考虑有没有
+    别的更好的选择. Use iframe as last resort.
+
+  * iframe breaks bookmarks & navigation. 除非用脚本获取 iframe src/srcdoc,
+    否则用户无法直接获得 iframe 里的 url. 也就是说浏览器无法 bookmark 整个
+    页面以保存当前 iframe 的状态 (所指向的链接). 当用户再次打开外部页面的
+    url 时, iframe 将被重置. 若 iframe 是网站的重要交互逻辑的组成部分, 则
+    用户必须重复很多操作才能恢复到之前的状态, 不能靠 url + cookies 简单地
+    保存状态.
+
+  * 一个常见的 iframe abuse 原因是为了在页面分栏的情况下提高加载效率, 只需
+    加载一次的部分放在 iframe 外边, 需重复加载的部分放在 iframe 中. 但问题是
+    这并没有很大的效率提高 (以至于能抵消它带来的麻烦). 因为 browser 的 local
+    cache 会缓存静态文件.
+
+- ``<embed>``, an integration point for an external application or interactive
+  content. 这东西曾经用于嵌入视频和 flash 等, 现在基本上没啥用.
+
+- ``<object>``, an external resource, which can be treated as an image, a
+  nested browsing context, or a resource to be handled by a plugin. 这东西
+  曾经用于 flash, svg 等, 现在基本没啥用.
+
 global attributes
 -----------------
 - Global attributes are attributes common to all HTML elements; they can be
@@ -947,10 +1143,10 @@ global attributes
 
 - ``hidden``, a Boolean attribute indicating that the element is not yet, or is
   no longer, relevant.
-  
+
   If it should be hidden from everybody in all contexts, use semantic hidden.
   if it should only be hidden for specific browsing scenarios, use stylistic
-  ``display: none`` (or, ``visibility: hidden`` maybe). 
+  ``display: none`` (or, ``visibility: hidden`` maybe).
 
 - ``lang``, language of the element.
 
@@ -980,6 +1176,13 @@ accessibility
 
 - 理想情况下, 网站实现时须应用 accessibility features, 使得具有视力障碍的人也能
   通过 screen reader 了解网站内容.
+
+flash
+=====
+
+- obsolete technology.
+
+- 一般通过 js 加载 flash 文件放在 div 中显示.
 
 misc
 ====
