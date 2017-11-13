@@ -750,9 +750,12 @@
 
     - 由于返回一个 dict, 所以 ``.aggregate`` 要作为 QuerySet chain 的最后操作.
 
-  * ``QuerySet.annotate()``: 给 QuerySet 里的每个元素生成聚合值. 这不仅仅
-    可用于 ``GROUP BY`` 聚合, 还可用于对每行返回所需的运算结果, 即 annotate
-    的一般含义.
+  * ``QuerySet.annotate()``:
+    
+    给 QuerySet 里的每个元素生成聚合值. 这不仅仅可用于 ``GROUP BY`` 聚合,
+    还可用于对每行返回所需的运算结果, 即 annotate 的一般含义. 使用这个一般
+    意义, 还可以进行 sql ``SELECT name AS name2`` 操作:
+    ``queryset.annotate(name2=F("name"))``.
 
     - annotate 语法与 aggregate 相同, 但是每个聚合值是 attach 到各个
       元素上的, 成为元素的 attribute.
