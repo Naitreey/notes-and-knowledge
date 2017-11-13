@@ -45,6 +45,14 @@ syntax
 
 - attribute of elements.
 
+  * boolean attributes. 存在为 true, 不存在为 false. 不需要设置值, 事实上
+    值没有任何用. 注意对于 boolean 属性, ``attr="false"`` 实际上是 true,
+    因为存在.
+
+  * enumerated attributes. 必须设置在预定义的列表中的值. 这些值可能包含
+    true, false. 但注意这仍然是 enumerated attribute, 而不是 boolean
+    attribute.
+
 - whitespace collapsing. 文档中多个连续的 whitespace chars 会合并成一个.
 
 inline-level and block-level elements
