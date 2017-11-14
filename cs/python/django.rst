@@ -575,6 +575,20 @@
         实例进行比较; 2. FK 列 与 FK 值进行比较; 3. 使用 ``<FK>_id`` 虚拟的列
         和 FK 值进行比较.
 
+      * 对 many-to-many 关系进行 lookup 时, 由于实质上是在 through table 中对
+        FK 指向的 entry 进行匹配, 所以虽然起点处写的是 plural 形式, 但实际上是
+        单行的匹配概念: 对这个对象关联的所有对象进行单行的匹配, 只要有一行匹配
+        上了, 就认为 main object 符合条件. e.g.,
+
+        - ``Group.objects.filter(users=jack)``, 筛选包含 jack 的组. 对每个组 join
+          through table, 然后进行单行匹配筛选.
+
+        - ``Group.objects.filter(users__in=[jack, michael, jane])``, 筛选包含这些
+          用户的组.
+
+        注意, 由于 table JOIN 操作, 这样的匹配很容易在结果集中出现重复的 object,
+        所以需要对结果去重.
+
       * 对于表达关系的列, 可以从多至一的方向深入被指向的模型进行筛选, 这抽象了各种
         SQL ``JOIN``.
 
