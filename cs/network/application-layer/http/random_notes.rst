@@ -236,7 +236,7 @@
     这是必须有的.
 
 URI
----
+===
 
 - absolute url vs relative url.
 
@@ -257,13 +257,13 @@ URI
 
   * A clean, elegant URL scheme is an important detail in a high-quality
     Web application.
-  
+
     Cool urls don't change. Try to make your url last as long as possible.
 
   * 遵从 REST 思想.
 
 Headers
--------
+=======
 
 - ``Referer``, 是 request header. 包含该请求来自的那个页面对应的 url.
   浏览器自动加上它. 可被后端用于识别来源, 从而 logging, tracking 等等.
@@ -354,7 +354,7 @@ Headers
 - ``Referer``
 
 Security
---------
+========
 - Cross Site Request Forgery
 
   * CSRF 是恶意页面假冒为用户, 向可信站点的请求行为.
@@ -403,3 +403,10 @@ Security
 
   这么做 (认证当前用户确实是声称的用户) 一般化地讲, 是为了避免 session fixation attack.
   就是用户 B 使用 A 的合法 session id, 仿冒用户 A. 这种仿冒在重登录操作处被截断.
+
+Browser development tools
+=========================
+- 若从浏览器已经发出请求, 但尚未收到响应 (无论成功失败) 且请求本身没有或有
+  很长的超时上限, 此时在 dev tools 的 Network 部分是看不到该请求记录的.
+  确认请求是否发出的方式是查看浏览器左下角 是否有 "Waiting for <some website>...".
+  若有则已经发出. 实在不行可以抓包查看是否有 HTTP request 流量.
