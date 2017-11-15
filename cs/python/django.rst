@@ -2184,6 +2184,11 @@
   * ``clearsessions`` 清除过期的 session data. django 不提供自动清理
     session 的机制. 可以定期执行这个命令手动清除过期的 session.
 
+  * ``runserver``.
+
+    对于 runserver 输出的请求相应日志, 每一行是在该请求结束后才输出, 因此
+    才记录有 method, url, http version, status code 等信息.
+
 - migration
 
   * You should think of migrations as a version control system for your
