@@ -1213,6 +1213,10 @@ json
   来实现. 使用时 ``json.loads`` ``json.dumps`` 之类操作加上自定义的 encoder/decoder,
   这样很方便.
 
+enum
+====
+- python 3.4 之后就有 enum module 了.
+
 Jinja template
 ==============
 language
