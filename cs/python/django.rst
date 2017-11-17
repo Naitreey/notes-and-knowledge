@@ -1290,6 +1290,21 @@
         应用时, 按需 override ``render_to_response()`` 调用
         ``render_to_json_response()``.
 
+  * view, template, form/formset 等的构建.
+    
+    前端构建的传至后端的 form data 必须要能再次回到前端填充成原始的 form
+    输入内容. 也就是说, Form, BaseFormSet 等的实例必须包含能重新构建前端
+    form 填充形式的所有数据.
+
+    form/formset 没必要和 model 一致 (也就是说没必要用 modelform), 而是完全
+    由前端业务逻辑决定的. 但是, form 中的各项最好和页面模板中的 html form
+    项是一致的. 这样从 POST 数据构建 form, ``form_valid``, ``form_invalid``
+    等的处理和数据重填都很方便.
+    
+    如果想要传递某些 form 项但不希望用户输入, 则使用 hidden input type (配合
+    js 进行输入), 而不是直接从 form 中去掉这项. 注意 view 中逻辑需要对 hidden
+    input 的数据合法性进行验证.
+
 - file upload
 
   * 上传文件都是 ``UploadedFile`` instance.
@@ -1659,7 +1674,11 @@
   * tags.
 
     - ``extends``, 必须是模板中的第一个 tag. extends 的值可以是 string
-      从而是模板名字, 或者是 Template object 从而 extends 这个模板.
+      从而是模板路径, 或者是 Template object 从而 extends 这个模板.
+
+      路径是基于 template loader 的 root directory 的, 即与 ``get_template()``
+      中使用的路径相同. 或者路径还可以是 ``./`` ``../`` 等明确的相对路径起始的,
+      此时是相对于本模板的路径的.
 
     - ``include``, 使用当前 context 来 render 所指向的模板, 然后将结果嵌入当前位置.
       与 extends 类似, 支持 Template object. 支持 ``with key=val key2=val2``
