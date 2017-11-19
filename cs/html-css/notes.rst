@@ -21,6 +21,10 @@ xml 的严格子集, 是 html's serialized format. 不过 xhtml 已经死了. �
 html
 ====
 
+- 别用严格的 markup language 标准去要求 html 然后嫌人家垃圾, 功能不完善, 鄙视什么的.
+  html 不过是一个工具, 它和 css, js 等一起支撑着 web 和相关技术栈, 创造着非常多的
+  价值. 这就够了. 别介意太多. 反正你也不把它当平时写东西的标记语言用嘛.
+
 document structure
 ------------------
 
@@ -45,9 +49,9 @@ syntax
 
 - attribute of elements.
 
-  * boolean attributes. 存在为 true, 不存在为 false. 不需要设置值, 事实上
-    值没有任何用. 注意对于 boolean 属性, ``attr="false"`` 实际上是 true,
-    因为存在.
+  * boolean attributes. 存在为 true, 不存在为 false, 而无论设置值是多少.
+    按照标准要求, 可以设置 ``attr=""``. 注意对于 boolean 属性,
+    ``attr="false"`` 实际上是 true, 因为存在.
 
   * enumerated attributes. 必须设置在预定义的列表中的值. 这些值可能包含
     true, false. 但注意这仍然是 enumerated attribute, 而不是 boolean
@@ -169,12 +173,45 @@ sectioning root
 content sectioning
 ~~~~~~~~~~~~~~~~~~
 
+- ``<article>``, a self-contained composition in a page. 常用于表示各种文章内容
+  主体. h1-h6 一般在 article 内部用于 section heading.
+
+  When an ``<article>`` element is nested, the inner element represents an article
+  related to the outer element.
+
+  address element and time element 在 article 中表示作者地址和写作时间.
+
+- ``<aside>``, 与页面主要内容相关联的但不属于主要内容的东西, 即 aside 字面意思.
+
+- ``<nav>``, 提供 navigation links, 例如导航栏, menu, index, TOC.
+  sectioning content element.
+
+  Not all links of a document must be in a ``<nav>`` element, which is intended
+  only for major block of navigation links; typically the ``<footer>`` element
+  often has a list of links that don't need to be in a ``<nav>`` element.
+
+- ``<section>``, a section of semantic/logical functionality in document.
+  每个 section 应该由某种 heading element (e.g., h1-h6) 进行识别.
+
+  section vs div. The ``<section>`` element is not a generic container element.
+  When an element is needed only for styling purposes or as a convenience for
+  scripting, authors are encouraged to use the ``<div>`` element instead.
+  A general rule is that the ``<section>`` element is appropriate only if
+  the element’s contents would be listed explicitly in the document’s outline.
+
 - ``<h1>-<h6>``, html 支持 6 层 headings. 不同的 heading 层级应该在文章逻辑
-  上进行考虑和使用, 而不是文章的展现样式上.
+  上进行考虑和使用, 而不是文章的展现样式上. 这些元素在各种 sectioning content
+  中使用.
 
   Avoid skipping heading levels: always start from <h1>, next use <h2> and so on.
 
   如果一个页面需要有标题, 应使用 h1 element, 此时 h1 显然只应出现一次.
+
+- ``<header>``, header to its nearest sectioning content or sectioning root element.
+  The ``<header>`` ``<footer>`` elements are not sectioning content.
+
+- ``<footer>``, footer to its nearest sectioning content or sectioning root
+  element. 它包含例如 address element.
 
 - ``<address>``, 为它最近的 parent article/body element 联系信息. 这是
   sectioning element, 是比较大的 block 范围. 它里面不能有 heading content,
@@ -183,15 +220,36 @@ content sectioning
   如果地址信息不是为了某个 parent element 服务, 而只是一个独立的地址, 不需要使用
   address element.
 
-- ``<div>``, 没有任何本征含义, 只用于 wrap flow content, 以形成一个 division
-  in the document. 方便对这个整体进行操作.
-
-  div element 只该在别的 semantic sectioning element 不合适的情况下使用.
-
 text content
 ~~~~~~~~~~~~
 
+- ``<main>``, semantic main content, central functionality, etc. of the document,
+  or application. 如果一个页面需要多个 article 构成主体, main 中可以有多个 article.
+
+- ``<div>``, 任意的 content container block, 没有任何本征含义, 只用于
+  wrap flow content, 以形成一个 division in the document. 方便对这个整体进行操作.
+
+  div element 只该在别的 semantic sectioning element 不合适的情况下使用.
+
 - ``<p>``.
+
+- ``<pre>`` preformatted text. 虽然默认使用 monospace font, 但这在语义上
+  不仅仅是代码, 可以是任何内容, 仅仅是 preformatted 而已. 注意 pre 里面
+  的 html element 仍会解析.
+
+  html is such a incompetent markup language that can not embed verbatim
+  UNMODIFIED code written in itself. 无论是 pre 还是 code element, 都不能
+  真正地 verbatim 包含代码. 所有 html 特殊字符都需要转义. Such a shame.
+  (真正可以实现 verbatim 的 tag 是已经废除的 ``xmp`` example tag.)
+
+  As a markup language, html is awful. That's why nobody use it to write
+  serious article-like stuff -- only generates it from sources written in other
+  markup languages, and only for purpose of display on the web.
+
+  html is the tool of The Web. That's the fact, so be it. Eventually it's
+  just a tool that either solves your problem or not. Let's use this ugly
+  tool ONLY for the web and all its related tech stacks. And forget about
+  it being a so-called markup language.
 
 - ``<hr />``, 表示某种 paragraph-level elements 之间的 separation.
   It may be displayed as a horizontal rule in visual browsers, but is now
@@ -248,6 +306,15 @@ text content
 
 - ``<figcaption>``, 必须在 figure element 里.
 
+- ``<data>``, 主要用于将数据的文字表现形式和它的真实值关联起来, 跟
+  ``data-*`` attribute 作用类似. 那么, 使用 data element 的场景是
+  当这部分文字本省没有一个语义合适的 tag wrap it, 从而没处写 ``data-*``
+  属性时, 可以使用 data element, 配合 value attribute.
+
+  attributes.
+
+  * ``value``, value of content of this element.
+
 inline text semantics
 ~~~~~~~~~~~~~~~~~~~~~
 
@@ -290,6 +357,31 @@ inline text semantics
   An example for ``<i>`` could be: "The <i>Queen Mary</i> sailed last night". Here,
   there is no added emphasis or importance on the word "Queen Mary".
 
+- ``<mark>``, highlighted text. a run of text marked for reference purpose, due
+  to its relevance in a particular context. 例如搜索结果中标记关键字.
+
+  strong vs em vs mark.
+
+  * The <strong> element represents strong importance for its contents. Changing
+    the importance of a piece of text with the strong element does not change the
+    meaning of the sentence.
+ 
+    <strong> denotes important text, but does not affect meaning.
+
+  * The <em> element represents stress emphasis of its contents. The placement
+    of stress emphasis changes the meaning of the sentence.
+
+    <em> denotes important text and affects the meaning of the content by saying
+    that it should be read/spoken with emphasis.
+ 
+  * The <mark> element represents a run of text in one document marked or
+    highlighted for reference purposes, due to its relevance in another
+    context.
+   
+    <mark> doesn't really have relevance to content, only context
+    (e.g.  marking content that matches a search term, misspelled words,
+    selected content in a web app, etc.).
+
 - ``<q>``, inline quote. for short quote that does not require paragraph break.
   Most modern browsers will automatically add quotation marks around text inside.
 
@@ -304,6 +396,7 @@ inline text semantics
   * ``title``, 提供缩写对应的全称.
 
 - ``<cite>``, a reference to a work. 里面的内容是 cite 的内容的名字或 url.
+  它存在的意义是 semantic meaning.
 
 - ``<dfn>``, definition. 里面是要定义的 term.
 
@@ -351,12 +444,33 @@ inline text semantics
 
     - ``_top``, to top context, 若没有 parent 则等于 ``_self``.
 
+- ``<code>``, inline code in monospace font. 注意 code 里面不会 escape
+  html code, 或者准确的说, 里面允许包含并且浏览器会解释里面的其他 html elements.
+
+- ``<kbd>``, keyboard input, 默认显示为 monospace text. 与 code element 的区别
+  仅在于 semantic purpose.
+ 
+- ``<samp>``, sample output from program. 默认显示为 monospace text.
+  与 code element 的区别仅在于 semantic purpose.
+
+- ``<small>``, represent side-comments and small print, including copyright and
+  legal text, independent of its styled presentation. 默认 makes the text font
+  size one size smaller down to the browser's minimum font size.
+
+- ``<bdi>``, bidirectional isolation. 意思是不去继承 parent 的 dir value,
+  使用默认的 auto 值, 让浏览器自动识别里面内容的 direction. 例如用于当一
+  部分文字的方向性未知, 需要和周围文字的方向性隔离、并由浏览器自动识别时.
+
+- ``<bdo>``, bidirectional override. override 外部的 dir, 使用指定的 dir
+  属性值. 这比使用 ``<span>`` 在语义上更合适.
+
 - ``<span>``, 没有任何本征含义, 用于 wrap phrasing content 以形成一个 inline
   division. 方便进行整体操作.
 
   span 相当于 inline 的 div.
 
   span 应该在没有其他合适的 semantic elements 的情况下使用.
+
 
 document edits
 ~~~~~~~~~~~~~~
