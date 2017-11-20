@@ -640,7 +640,8 @@ table content
 - ``<tbody>``, body part of table. 可以有多个, 作为 table 的多个语义部分.
   各自独立应用样式.
 
-- ``<tfoot>``, 若存在, 必须在 table 最后.
+- ``<tfoot>``, 用于放置对各列内容进行总结的列, 例如总计、平均等. 若存在, 必须在
+  table 最后.
 
 - ``<tr>``, table row.
   里面可以是 th or td element. tr element 可位于 table, thead, tfoot element 中.

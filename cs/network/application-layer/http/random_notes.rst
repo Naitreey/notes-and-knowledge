@@ -262,6 +262,9 @@ URI
 
   * 遵从 REST 思想.
 
+  * ajax 返回 json 的 url api 可以直接以 ``.json`` 结尾, 以示与普通 view
+    的区别.
+
 Headers
 =======
 
