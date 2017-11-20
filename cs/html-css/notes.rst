@@ -365,7 +365,7 @@ inline text semantics
   * The <strong> element represents strong importance for its contents. Changing
     the importance of a piece of text with the strong element does not change the
     meaning of the sentence.
- 
+
     <strong> denotes important text, but does not affect meaning.
 
   * The <em> element represents stress emphasis of its contents. The placement
@@ -373,11 +373,11 @@ inline text semantics
 
     <em> denotes important text and affects the meaning of the content by saying
     that it should be read/spoken with emphasis.
- 
+
   * The <mark> element represents a run of text in one document marked or
     highlighted for reference purposes, due to its relevance in another
     context.
-   
+
     <mark> doesn't really have relevance to content, only context
     (e.g.  marking content that matches a search term, misspelled words,
     selected content in a web app, etc.).
@@ -400,9 +400,15 @@ inline text semantics
 
 - ``<dfn>``, definition. 里面是要定义的 term.
 
-- ``<s>``, strike-through. Represent things that are no longer relevant or no
-  longer accurate. 这不同于表示 document editing 的 ``<del>``. 两者在不同的
-  语义下使用. 注意不同于 del element, 这是 inline element.
+- ``<s>``, Represent things that are no longer relevant or no longer accurate.
+  默认显示为 strike-through. 这不同于表示 document editing 的 ``<del>``. 两者在
+  不同的语义下使用. 注意不同于 del element, 这是 inline element.
+
+- ``<u>``, Represents a span of text with an unarticulated, though explicitly
+  rendered, non-textual annotation. 默认显示为 underline.
+
+  The HTML 5 specification reminds developers that other elements are almost
+  always more appropriate than <u>.
 
 - ``<a>``, anchor.
 
@@ -449,7 +455,7 @@ inline text semantics
 
 - ``<kbd>``, keyboard input, 默认显示为 monospace text. 与 code element 的区别
   仅在于 semantic purpose.
- 
+
 - ``<samp>``, sample output from program. 默认显示为 monospace text.
   与 code element 的区别仅在于 semantic purpose.
 
@@ -457,12 +463,52 @@ inline text semantics
   legal text, independent of its styled presentation. 默认 makes the text font
   size one size smaller down to the browser's minimum font size.
 
+- ``<ruby>``, a ruby annotation (CJK 字符的旁注标记, 不是红宝石). 里面包含需要
+  注记的文字部分, 以及 rp, rt 等注记 element. rt element 里面的文字会出现在
+  它前面的文字部分的上面.
+
+  .. code:: html
+    <ruby>
+    漢 <rp>(</rp><rt>Kan</rt><rp>)</rp>
+    字 <rp>(</rp><rt>ji</rt><rp>)</rp>
+    </ruby>
+
+    <ruby>
+      明日 <rp>(</rp><rt>Ashita</rt><rp>)</rp>
+    </ruby>
+
+- ``<rp>``, ruby parenthesis. fallback parentheses for browsers that do not
+  support display of ruby annotations. ``<rp>`` must be positioned immediately
+  before or after an ``<rt>`` element.
+
+  the <rp> content provides what should be displayed in order to indicate the
+  presence of a ruby annotation, usually parentheses.
+
+  rp element is optional in ruby element.
+
+- ``<rt>``, ruby text. it contains pronunciation of characters presented in a
+  ruby annotation.
+
+- ``<time>``, 表达时间. 这个的唯一目的是提供 semantic meaning to time,
+  让机器也能轻易找到并理解时间 (通过 datetime attribute).
+
+- ``<wbr>``, a word break opportunity, a position within text where the browser
+  may optionally break a line. 这用于段内的 inline break hint. url 等长串字符
+  浏览器有时候可能不知如何 break line, 可以通过 wbr element 添加 line break hint.
+
+  注意 wbr & hr 的区别. 前者是 inline break, 不影响整个段的 text flow; 后者
+  是 block element, 是强制在该处换行.
+
 - ``<bdi>``, bidirectional isolation. 意思是不去继承 parent 的 dir value,
   使用默认的 auto 值, 让浏览器自动识别里面内容的 direction. 例如用于当一
   部分文字的方向性未知, 需要和周围文字的方向性隔离、并由浏览器自动识别时.
 
 - ``<bdo>``, bidirectional override. override 外部的 dir, 使用指定的 dir
-  属性值. 这比使用 ``<span>`` 在语义上更合适.
+  属性值. 当没有更合适的 tag 来 wrap 要修改的文字部分时, 这比使用 ``<span>``
+  在语义上更合适.
+
+- ``<var>``, represents a variable in a mathematical expression or a
+  programming context. 这玩意儿看上去超级没用啊, 为啥不用 MathML.
 
 - ``<span>``, 没有任何本征含义, 用于 wrap phrasing content 以形成一个 inline
   division. 方便进行整体操作.
@@ -470,7 +516,6 @@ inline text semantics
   span 相当于 inline 的 div.
 
   span 应该在没有其他合适的 semantic elements 的情况下使用.
-
 
 document edits
 ~~~~~~~~~~~~~~
@@ -613,6 +658,12 @@ image and multimedia
   * ``src``, url of track.
 
   * ``srclang``, 语言.
+
+- ``<map>``, used with <area> elements to define an image map (a clickable link
+  area). 好像已经很少使用了.
+
+- ``<area>``, used with map element. defines a hot-spot region on an image, and
+  optionally associates it with a hypertext link. 好像已经很少使用了.
 
 table content
 ~~~~~~~~~~~~~
