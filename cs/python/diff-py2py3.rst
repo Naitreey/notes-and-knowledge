@@ -245,6 +245,10 @@
 
 - coroutines 是在 python3.5+ 才有的功能.
 
+- python3.4 添加了 enum module.
+
+- python3.2 添加了 html module.
+
 - py2py3 compatible
 
   * __future__
