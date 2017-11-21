@@ -1294,7 +1294,8 @@
     
     前端构建的传至后端的 form data 必须要能再次回到前端填充成原始的 form
     输入内容. 也就是说, Form, BaseFormSet 等的实例必须包含能重新构建前端
-    form 填充形式的所有数据.
+    form 填充形式的所有数据. 不要在前端 form 和 django form/formset 之间
+    进行数据格式转换, 这是多此一举的, 而且非常麻烦.
 
     form/formset 没必要和 model 一致 (也就是说没必要用 modelform), 而是完全
     由前端业务逻辑决定的. 但是, form 中的各项最好和页面模板中的 html form
