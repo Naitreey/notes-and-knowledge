@@ -158,8 +158,32 @@ document metadata
 
     尽管优先级不高, 但仍然建议设置 charset meta element.
 
-
 - ``<title>``, 在 browser title bar 或 tab bar 中显示, 只能包含 text.
+
+- ``<link>``, 声明该 document 与一个 external resource 的关系.
+  link element 是否能出现在 body element 中 (或只能出现在 head element 中) 取决于
+  它的 link type. 例如 stylesheet link 可以出现在 body 中.
+
+  attributes.
+
+  * ``crossorigin``, 使用 CORS 机制进行跨域请求. enumerated.
+
+  * ``href``, url of the linked resource.
+
+  * ``hreflang``, only used with ``href``. 指定资源的语言. only advisory.
+
+  * ``media``, 定义该资源适合的 media type. 值是 media query.
+
+  * ``rel``, 链接的资源相对于本文档而言是什么关系. 值是 a space separated link types.
+
+  * ``sizes``, 与 ``rel="icon"`` 一起使用, 指定 icon size.
+
+  * ``title``, 与 ``rel="stylesheet"`` 一起使用, 指定 prefered or alternate
+    stylesheet.
+
+  * ``as``, 与 ``rel="preload"`` 一起使用,
+
+  * ``type``, mime type of the linked resource.
 
 sectioning root
 ~~~~~~~~~~~~~~~
@@ -1406,11 +1430,99 @@ global attributes
 
   对于 link, abbr, input, menuitem 元素, title 属性有额外的语义和作用.
 
+link types
+----------
+
+- alternate. alternative stylesheet, or syndication feed, or alternative page
+  (例如指向 android app url, 移动端浏览器提示在 app 中打开).
+  
+- author. a link to page describing the author.
+
+- bookmark.
+
+- canonical. the "canonical" or "preferred" version of a web page as part of SEO.
+  避免搜索引擎重复显示相同内容的不同 url.
+
+- external.
+
+- help. help materials for the element or the whole page.
+
+- icon. 指定显示在 tab 上的 icon. The ``media``, ``type`` and ``sizes``
+  attributes allow the browser to select the most appropriate icon for its
+  context.
+
+  iOS 的特殊情况要求使用 apple-touch-icon & apple-touch-startup-image.
+
+- license. 指向 license 信息.
+
+- manifest. web app manifest file.
+
+- nofollow. the linked document is not endorsed by the author of this one.
+
+- noopener. open the link without granting the new browsing context access to
+  the document that opened it.
+
+- noreferrer.
+
+- pingback.
+
+- prefetch.
+
+- preload. Tells the browser to download a resource because this resource will
+  be needed later.
+
+- first, last, prev, next.
+
+- search. the hyperlink references a document whose interface is specially
+  designed for searching in this document, or site, and its resources.
+
+  If the type attribute is set to application/opensearchdescription+xml the
+  resource is an OpenSearch plugin that can be easily added to the interface of
+  some browsers like Firefox or Internet Explorer.
+
+- shortlink.
+
+- stylesheet. 就是 stylesheet, type 若没设置默认是 text/css.
+
+- tag.
+
 accessibility
 -------------
 
 - 理想情况下, 网站实现时须应用 accessibility features, 使得具有视力障碍的人也能
   通过 screen reader 了解网站内容.
+
+css
+===
+
+syntax
+------
+
+- 每个 html element 都是由一个 invisible box 包裹起来的.
+
+- 一个 css rule 由 selectors + declaration 构成.
+
+- selectors 由 a comma separated list of selectors 构成.
+
+- 一个 declaration 由 a semicolon separated list of property/value pairs 构成.
+  property 和 value 以 colon 分隔. 一个 declaration 整体由一组 braces 包裹.
+
+- stylesheet 的类型:
+
+  * persistent, link element 中没有 ``rel="alternate"`` 以及 ``title=``. 
+    这种总是应用.
+
+  * prefered, link element 中没有 ``rel="alternate"`` 但有 ``title=``.
+    这种默认使用. prefered stylesheet 只能有一个.
+
+  * alternate, link element 有 ``rel="alternate"`` 和 ``title=``.
+    这种默认不使用, 用户可以通过浏览器提供的方式选择使用.
+
+- alternate stylesheet. 通过 ``rel="alternate stylesheet"`` link element
+  定义. 用户可选择不同的 css 文件应用不同的页面风格. alternate stylesheet
+  需要定义 ``title=`` 作为选择的名字. Style sheets linked with the same title
+  are part of the same choice.
+
 
 Web Components
 ==============
