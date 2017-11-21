@@ -1191,16 +1191,73 @@ forms
 
 - ``<legend>``, title of parent fieldset.
 
+- ``<meter>``, 包含一个值, 表示它在两个值 (min/max) 之间的程度.
+
+  meter & progress element 本身都不是 form control, 而是配合其他 form control
+  的状态指示.
+
+  meter 可以做例如输入密码的强度提示.
+
+  attributes.
+
+  * ``value``
+
+  * ``min``, default 0.
+
+  * ``max``, default 1.
+
+  * ``low``
+
+  * ``high``
+
+  * ``optimum``
+
+- ``<progress>``, 包含一个值, 表示一项任务的完成进度. 注意它的最小值固定是 0.
+
+  attributes.
+
+  * ``max``, default 1.
+
+  * ``value``. 若没有值, progress bar 处于 indeterminate state, 否则是
+    determinate state.
+
+- ``<output>``, represents the result of a calculation or user action.
+
+  attributes.
+
+  * ``for``, a list of ids of form controls that contribute to input of
+    the calculation.
+
+  * ``name``
+
 interactive elements
 ~~~~~~~~~~~~~~~~~~~~
 
 - ``<menu>``, 定义一个用于交互的列表.
 
-  注意除了 firefox, edge 目前没有浏览器支持!!
+  注意除了 firefox, edge 目前其他浏览器不支持!!
 
 - ``<menuitem>``, 定义 menu element 中的一项.
 
-  注意除了 firefox, edge 目前没有浏览器支持!!
+  注意除了 firefox, edge 目前其他浏览器不支持!!
+
+- ``<details>``, 可打开可收起的 UI widget, 里面包含 one summary element
+  和其他 flow content.
+
+  attributes.
+
+  * ``open``, boolean, 存在则默认是打开.
+
+- ``<summary>``, summary of details element. 在 open/close line 显示.
+
+- ``<dialog>``, a dialog box, inspector, or window. 可以单独使用或者与 form
+  配合使用.
+
+  除了 chrome, opera 目前其他浏览器不支持!!
+
+  attributes.
+
+  * ``open``, boolean, 存在则默认出现.
 
 embedded content
 ~~~~~~~~~~~~~~~~
@@ -1254,6 +1311,10 @@ embedded content
 - ``<object>``, an external resource, which can be treated as an image, a
   nested browsing context, or a resource to be handled by a plugin. 这东西
   曾经用于 flash, svg 等, 现在基本没啥用.
+
+web components
+~~~~~~~~~~~~~~
+
 
 global attributes
 -----------------
@@ -1350,6 +1411,11 @@ accessibility
 
 - 理想情况下, 网站实现时须应用 accessibility features, 使得具有视力障碍的人也能
   通过 screen reader 了解网站内容.
+
+Web Components
+==============
+
+- Why it took it so long for html to be finally programmable?
 
 flash
 =====
