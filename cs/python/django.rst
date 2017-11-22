@@ -2209,6 +2209,10 @@
     对于 runserver 输出的请求相应日志, 每一行是在该请求结束后才输出, 因此
     才记录有 method, url, http version, status code 等信息.
 
+  * ``dbshell``
+
+    似乎不会使用平时 django 运行时传入的 OPTIONS 参数.
+
 - migration
 
   * You should think of migrations as a version control system for your
