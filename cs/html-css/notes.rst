@@ -10,6 +10,13 @@ general
 - 很多公司并不自己购买服务器 serve 网站, 而是购买 web hosting company 的服务,
   例如云服务公司.
 
+html
+====
+
+- 别用严格的 markup language 标准去要求 html 然后嫌人家垃圾, 功能不完善, 鄙视什么的.
+  html 不过是一个工具, 它和 css, js 等一起支撑着 web 和相关技术栈, 创造着非常多的
+  价值. 这就够了. 别介意太多. 反正你也不把它当平时写东西的标记语言用嘛.
+
 html versions
 -------------
 html can be seen as a loosely formatted xml variants for the web.
@@ -17,13 +24,6 @@ html can be seen as a loosely formatted xml variants for the web.
 xhtml 是应用 xml 语法, 对 html 进行部分严格化和修正而发明的. xhtml 可以看作是
 xml 的严格子集, 是 html's serialized format. 不过 xhtml 已经死了. 根本没人 care,
 大家去用 json 了.
-
-html
-====
-
-- 别用严格的 markup language 标准去要求 html 然后嫌人家垃圾, 功能不完善, 鄙视什么的.
-  html 不过是一个工具, 它和 css, js 等一起支撑着 web 和相关技术栈, 创造着非常多的
-  价值. 这就够了. 别介意太多. 反正你也不把它当平时写东西的标记语言用嘛.
 
 document structure
 ------------------
@@ -88,6 +88,22 @@ comment
 ~~~~~~~
 
 - ``<!-- comment -->``
+
+content preloading
+------------------
+- preloading 是指定一些资源不要等到 rendering 时遇到才下载, 而是在页面加载的
+  早期, 在 rendering 发生之前就早早开始下载. 从而避免在 rendering 时卡住 (等待
+  下载), 提高效率.
+
+  例如预加载 font, This makes it much more likely that the font will be
+  available by the time the page render is complete, cutting down on FOUT
+  (flash of unstyled text) issues.
+
+- link element 中包含 ``ref="preload"`` 以及 ``as=`` 指定 preload resource 的
+  类型.
+
+- 可加入 ``type=`` attribute 指定资源的 mime type, 帮助浏览器选择只 preload
+  它支持的类型的资源. 以及 ``media=`` 选择满足 media query 的资源.
 
 elements
 --------
@@ -184,6 +200,16 @@ document metadata
   * ``as``, 与 ``rel="preload"`` 一起使用,
 
   * ``type``, mime type of the linked resource.
+
+- ``<style>``
+
+   attributes.
+
+   * ``type``, mime type of styling language.
+
+   * ``media``, a media query defining which media the style applies to.
+
+   * ``title``, 定义该 style definition 所属的 alternative stylesheet set.
 
 sectioning root
 ~~~~~~~~~~~~~~~
@@ -1435,7 +1461,7 @@ link types
 
 - alternate. alternative stylesheet, or syndication feed, or alternative page
   (例如指向 android app url, 移动端浏览器提示在 app 中打开).
-  
+
 - author. a link to page describing the author.
 
 - bookmark.
@@ -1495,6 +1521,23 @@ accessibility
 css
 ===
 
+type of stylesheets
+-------------------
+
+- persistent, link element 中没有 ``rel="alternate"`` 以及 ``title=``.
+  这种总是应用.
+
+- prefered, link element 中没有 ``rel="alternate"`` 但有 ``title=``.
+  这种默认使用. prefered stylesheet 只能有一个.
+
+- alternate, link element 有 ``rel="alternate"`` 和 ``title=``.
+  这种默认不使用, 用户可以通过浏览器提供的方式选择使用.
+
+  alternate stylesheet 通过 ``rel="alternate stylesheet"`` link element
+  定义. 用户可选择不同的 css 文件应用不同的页面风格. alternate stylesheet
+  需要定义 ``title=`` 作为选择的名字. Style sheets linked with the same title
+  are part of the same choice.
+
 syntax
 ------
 
@@ -1502,27 +1545,47 @@ syntax
 
 - 一个 css rule 由 selectors + declaration 构成.
 
-- selectors 由 a comma separated list of selectors 构成.
+selector
+~~~~~~~~
 
-- 一个 declaration 由 a semicolon separated list of property/value pairs 构成.
-  property 和 value 以 colon 分隔. 一个 declaration 整体由一组 braces 包裹.
+- selectors 由 a comma separated list of selectors 构成. selectors are
+  case-sensitive.
 
-- stylesheet 的类型:
+- basic selectors
 
-  * persistent, link element 中没有 ``rel="alternate"`` 以及 ``title=``. 
-    这种总是应用.
+  * universal selector. ``*``
 
-  * prefered, link element 中没有 ``rel="alternate"`` 但有 ``title=``.
-    这种默认使用. prefered stylesheet 只能有一个.
+  * type selector. ``element-name``
 
-  * alternate, link element 有 ``rel="alternate"`` 和 ``title=``.
-    这种默认不使用, 用户可以通过浏览器提供的方式选择使用.
+  * class selector. ``.class``
 
-- alternate stylesheet. 通过 ``rel="alternate stylesheet"`` link element
-  定义. 用户可选择不同的 css 文件应用不同的页面风格. alternate stylesheet
-  需要定义 ``title=`` 作为选择的名字. Style sheets linked with the same title
-  are part of the same choice.
+  * id selector. ``#id``
 
+  * attribute selector. ``[attr=value]``
+
+- combinators
+
+  * child combinator. ``a > b``
+
+  * descendant combinator. ``a b``
+
+  * adjacent sibling combinator. ``a + b``
+
+  * general sibling combinator. ``a ~ b``
+
+declaration
+~~~~~~~~~~~
+
+- 一个 declaration 由 property + value 构成. property 和 value 以 colon 分隔.
+
+- 一个 declaration block 整体由一组 braces 包裹, 里面包含 0 或多个 declarations,
+  由 semicolon 分隔.
+
+cascade, specificity, inheritance
+---------------------------------
+
+
+when to put css definitions at XXX?
 
 Web Components
 ==============
