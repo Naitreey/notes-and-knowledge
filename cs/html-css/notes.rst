@@ -1543,13 +1543,36 @@ syntax
 
 - 每个 html element 都是由一个 invisible box 包裹起来的.
 
-- 一个 css rule 由 selectors + declaration 构成.
+- CSS statement:
+  a css statement begins with any non-space characters and ends at the first
+  closing brace or semi-colon.
+
+  一个 css 文件由多个 css statement 构成.
+
+  css statement 包含两类: at-rules & rulesets.
+
+- css ruleset:
+  一个 css ruleset (or simply rule) 由 a group of selectors + declaration block
+  构成.
+
+  * selector group:
+    a selector group 由 a comma separated list of selectors 构成. selectors are
+    case-sensitive.
+  
+  * declaration block:
+    一个 declaration block 整体由一组 braces 包裹, 里面包含 0 或多个 declarations,
+    由 semicolon 分隔. 最后一个 declaration 理论上没必要以 semicolon 结尾.
+  
+  * declaration:
+    一个 declaration 由 property + value 构成. property 和 value 以 colon 分隔.
+    property & value are case-insensitive.
+
+- at-rules:
+  starts with an at sign, followed by an identifier and then continuing up to
+  the next semi-colon outside of a block or the end of the next block.
 
 selector
-~~~~~~~~
-
-- selectors 由 a comma separated list of selectors 构成. selectors are
-  case-sensitive.
+--------
 
 - basic selectors
 
@@ -1573,19 +1596,106 @@ selector
 
   * general sibling combinator. ``a ~ b``
 
-declaration
-~~~~~~~~~~~
-
-- 一个 declaration 由 property + value 构成. property 和 value 以 colon 分隔.
-
-- 一个 declaration block 整体由一组 braces 包裹, 里面包含 0 或多个 declarations,
-  由 semicolon 分隔.
-
 cascade, specificity, inheritance
 ---------------------------------
 
 
 when to put css definitions at XXX?
+
+最终决定一套生效的 css 规则的基本流程:
+
+首先应用 cascade algorithm, 结果中优先级相同的通过 specificity algorithm 进一步筛选,
+结果中再有具体性相同的, 通过定义顺序筛选.
+
+cascade
+~~~~~~~
+
+- cascade 是通过 css 定义的重要性和来源进行筛选的算法.
+
+- cascading 只对 css declarations 有效. 这包括单纯的 ruleset 和 at-rule
+  包裹的 nested statement.
+
+- css 定义的三个来源: user-agent stylesheet, author stylesheet, user stylesheet.
+
+- cascading procedure:
+
+  1. 从三种定义源获取 css 定义, 对任意一个 element, 保留对它能够生效的那些
+     css 规则 (通过考虑 selectors 以及 at-rules).
+
+  2. 首先根据规则的 importance (``!important``) 然后根据规则的来源进行优先级
+     排序.
+     
+     - 对于 important ruleset, 来源的优先级顺序 (依次递减):
+       user-agent, user, author.
+     
+     - 对于 normal ruleset, 来源的优先级顺序 (依次递减): 
+       author, user, user-agent.
+
+     注意对于 important ruleset 的来源优先级和普通的是相反的. 这是为了让本地
+     端 have last say on what styles appear on my browser.
+
+  3. 对于 cascading 后处于同优先级的 ruleset, 通过 specificity 来进一步选择.
+     注意, 如果在 cascading 阶段就被排除 (重要性和来源), 你再多的具体性也没用.
+
+- considerations on ``!important``
+
+  * Always look for a way to use specificity before even considering ``!important``
+
+  * Only use ``!important`` on page-specific CSS that overrides foreign CSS.
+
+  * Never use ``!important`` when you're writing a plugin/mashup.
+
+  * Never use ``!important`` on site-wide CSS.
+
+  * 一些不得不使用 ``!important`` 的情况:
+
+    - 某些你无法控制的外部插件使用 inline styles on elements 来强制一些样式.
+      此时只能通过在 page-specific 或 site-wide css 中设置针对的 important
+      rule.
+
+specificity
+~~~~~~~~~~~
+
+- specificity 定义一个 css declaration 的权重.
+
+- 非直接定义的 css declaration (即继承来的定义) 的 specificity 低于任何直接定义的
+  css declaration. 无论它本身的 selector 定义的 specificity 如何.
+
+- specificity 由四组数字构成, ``N.N.N.N``, 对应 specificity 由高至低.
+  它们的值分别由以下四类定义贡献:
+
+  1. inline style
+
+  2. ID selector
+
+  3. class selector, attribute selector, pseudo-class
+
+  4. type selector, pseudo-element
+
+  对于每个类型, 在 selector 中 (除了 inline) 每出现一次, 相应位置的数值加一.
+
+- Universal selector (``*``), combinators (``+``, ``>``, ``~``, ``' '``)
+  and negation pseudo-class (``:not()``) have no effect on specificity.
+
+- selectors in ``:not()`` do have effect on specificity.
+
+- The tree proximity of an element to other elements that are referenced in a
+  given selector has no impact on specificity. e.g., ``body h1`` vs ``html h1``
+  是相同的 specificity.
+
+inheritance
+~~~~~~~~~~~
+
+- 当一个元素本身没有任何 css declaration 作用在其上时, inheritance 才会生效.
+
+- 继承时, 元素的 css property 继承 computed value on its parent element,
+  即直接继承最终结果. 对于 root element of document, 由于没有可继承的,
+  此时使用 initial value.
+
+at-rule
+-------
+
+- 一些 at-rule 可以 nested, 即构成 nested at-rules.
 
 Web Components
 ==============
