@@ -201,15 +201,16 @@ document metadata
 
   * ``type``, mime type of the linked resource.
 
-- ``<style>``
+- ``<style>``, 属于 metadata content, 从 html 规范上讲, 只能放在 head element 中.
+  Although in practice, every browser allows style element in body.
 
-   attributes.
+  attributes.
 
-   * ``type``, mime type of styling language.
+  * ``type``, mime type of styling language.
 
-   * ``media``, a media query defining which media the style applies to.
+  * ``media``, a media query defining which media the style applies to.
 
-   * ``title``, 定义该 style definition 所属的 alternative stylesheet set.
+  * ``title``, 定义该 style definition 所属的 alternative stylesheet set.
 
 sectioning root
 ~~~~~~~~~~~~~~~
@@ -1604,8 +1605,9 @@ when to put css definitions at XXX?
 
 最终决定一套生效的 css 规则的基本流程:
 
-首先应用 cascade algorithm, 结果中优先级相同的通过 specificity algorithm 进一步筛选,
-结果中再有具体性相同的, 通过定义顺序筛选.
+- 首先应用 cascade algorithm, 结果中优先级相同的通过 specificity algorithm 进一步筛选,
+  结果中再有具体性相同的, 通过定义顺序筛选.
+
 
 cascade
 ~~~~~~~
@@ -1682,6 +1684,11 @@ specificity
 - The tree proximity of an element to other elements that are referenced in a
   given selector has no impact on specificity. e.g., ``body h1`` vs ``html h1``
   是相同的 specificity.
+
+- css 定义无论是在 html 代码嵌入的 style element, 还是 link element 引用的
+  完整 css stylesheet 文件, ``@import`` at-rule 导入的文件等等, 都不影响它
+  的 specificity. 它们只影响规则的导入顺序, 从而在 speicificity 相同时, 根据
+  先后顺序决定使用哪个规则.
 
 inheritance
 ~~~~~~~~~~~
