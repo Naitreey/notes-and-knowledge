@@ -1559,18 +1559,153 @@ syntax
   * selector group:
     a selector group 由 a comma separated list of selectors 构成. selectors are
     case-sensitive.
-  
+
   * declaration block:
     一个 declaration block 整体由一组 braces 包裹, 里面包含 0 或多个 declarations,
     由 semicolon 分隔. 最后一个 declaration 理论上没必要以 semicolon 结尾.
-  
+
   * declaration:
     一个 declaration 由 property + value 构成. property 和 value 以 colon 分隔.
     property & value are case-insensitive.
 
+- shorthand property. a css property that let you set the values of several
+  other css properties simultaneously. This is to make css declarations more
+  concise and readable.
+
+  * 在 shorthand property 中, 对于未设置值的子项, 将自动设置值为它的 initial value.
+    这意味着, 对于在 shorthand property 中省略的子项, 并不是自动使用了其他地方设置
+    的值, 而是设置了一个新值为 initial. 这个值是否最终会生效, 仍然要靠 cascade,
+    specificity, inheritance 等算法计算给出结果.
+
+  * shorthand property 在参与 cascade/specificity/inheritance 等计算时, 会先拆成它
+    所代表的各项属性后才输入的.
+
+  * shorthand property 中的子项的值不能是 inherit/initial, 只能说整体属性的值是
+    inherit/initial.
+
+  * 当 shorthand property 中的各项值的类型不同时, 子项值的书写顺序并不重要, 解析
+    时会自动识别值与属性的对应关系. 但对于各项值的类型相同时, 子项值的位置具有
+    重要性.
+
+    - 与 box 四边相关的属性, 可以指定 1-4 个值. 赋值是从 top 开始顺时针进行的.
+
+      * 一个值 (top, right, bottom, left): 1, 1, 1, 1.
+
+      * 两个值: 1, 2, 1, 2 (未指定的对边相同).
+
+      * 三个值: 1, 2, 3, 2 (未指定的对边相同).
+
+      * 四个值: 1, 2, 3, 4.
+
+    - 与 box 四角相关的属性, 可以指定 1-4 个值. 赋值是从左上角开始顺时针进行的.
+
+      * 一个值 (LT, RT, RB, LB): 1, 1, 1, 1.
+
+      * 两个值: 1, 2, 1, 2.
+
+      * 三个值: 1, 2, 3, 2.
+
+      * 四个值: 1, 2, 3, 4.
+
+    - ``font`` shorthand property 在指定 font-size & line-height 时使用
+      ``<font-size>/<line-height>`` 形式.
+
 - at-rules:
   starts with an at sign, followed by an identifier and then continuing up to
   the next semi-colon outside of a block or the end of the next block.
+
+- comment. c-style ``/* */``.
+
+- value definition syntax (类似 BNF notation, 用于定义 property 的允许值).
+
+  * value types.
+
+    - keywords. a word with a predefined meaning that appears literally,
+      without quotation marks.
+
+      所有 css properties 都支持 inherit, initial, unset 三个 keyword values.
+
+    - literals. ``/``, ``,`` 等在 value 中 literally 出现的字符.
+
+    - data types.
+
+      * basic data types.
+
+      * non-terminal data types.
+
+  * value combinators.
+
+    - brackets ``[]``.
+
+    - juxtaposition ``' '``. Placing several keywords, literals or data types,
+      next to one another, only separated by one or several spaces. All
+      juxtaposed components are mandatory and should appear in the exact order.
+
+    - double ampersand ``&&``. the components are mandatory but may appear in any order.
+
+    - double bar ``||``. at least one of the components must be present, and they may
+      appear in any order. 
+
+    - single bar ``|``. exactly one of these options must be present.
+
+
+  * value multipliers.
+
+    - no multiplier. exactly 1.
+
+    - asterisk ``*``. 0 or more.
+
+    - plus ``+``. one or more.
+
+    - hash mark ``#``. one or more, separated by comma.
+
+    - question mark ``?``. 0 or 1.
+
+    - curly braces ``{A,B}``. at least A, at most B times.
+
+    - exclamation point ``!`` (after the brackets group). the group is
+      required, and must produce at least one value; even if the grammar of the
+      items within the group would otherwise allow the entire contents to be
+      omitted.
+
+  * precedences.
+
+    - value multipliers have precedence over all value combinators.
+
+    - Juxtaposition has precedence over the double ampersand. e.g.,
+    ``bold thin && <length>`` equals to ``[ bold thin ] && <length>``.
+
+    - The double ampersand has precedence over the double bar. e.g.,
+    ``bold || thin && <length>`` is equivalent to ``bold || [ thin && <length> ]``.
+
+    - the double bar has precedence over the single bar, meaning that
+      ``bold | thin || <length>`` is equivalent to ``bold | [ thin || <length> ]``.
+
+- 各种 values.
+
+  * initial value. a property's default value, as listed in its definition table.
+    对于任何元素, 可以通过 ``initial`` keyword 明确指定使用 initial value.
+
+  * specified value. the value it receives from the document's style sheet.
+    就是经过 cascade/specificity/inheritance 等算法后得到的最终定义数值.
+    注意这组数值是根据各 css declaration 得到的最终定义值, 还不是最终使用值.
+
+  * computed value. 根据 specified value 进行计算, 解析 inherit, initial,
+    unset, revert 等特殊值至具体的值, 将所有 specified value 转换成属性定义
+    允许的 computed value.
+
+  * used value. 这些值是从将 computed value 再解析成绝对数值可直接在页面中使用
+    以确定各元素布局和位置等等绝对信息的值.
+
+    computed value & used value 只有当该属性与 layout 相关时才可能有区别.
+    这是因为, computed value 可以是百分数等相对值, 而 used value 需要根据
+    layout 去解析成绝对值. 除此之外, 两个值是相同的. 事实上, DOM API
+    ``getComputedStyle()`` 会返回绝对数值, 即根据属性不同可能返回的是 computed
+    value 或 used value. 所以从这个角度看, 两个值在实现中就是一个.
+
+  * actual value. the used value of that property after any necessary
+    approximations have been applied by user agent. 这些值是最终浏览器使用的值,
+    在考虑到具体环境的局限性等因素后的完全真实值.
 
 selector
 --------
@@ -1605,9 +1740,15 @@ when to put css definitions at XXX?
 
 最终决定一套生效的 css 规则的基本流程:
 
-- 首先应用 cascade algorithm, 结果中优先级相同的通过 specificity algorithm 进一步筛选,
-  结果中再有具体性相同的, 通过定义顺序筛选.
+1. 首先应用 cascade algorithm.
+ 
+2. 结果中优先级相同的通过 specificity algorithm 进一步筛选.
 
+3. 结果中再有具体性相同的, 通过定义顺序筛选.
+
+4. 对于没有直接指定值的属性, 若是 inherited property, 从 parent element
+   继承值或对于 root element 使用初始值; 若是 non-inherited property,
+   使用初始值.
 
 cascade
 ~~~~~~~
@@ -1626,11 +1767,11 @@ cascade
 
   2. 首先根据规则的 importance (``!important``) 然后根据规则的来源进行优先级
      排序.
-     
+
      - 对于 important ruleset, 来源的优先级顺序 (依次递减):
        user-agent, user, author.
-     
-     - 对于 normal ruleset, 来源的优先级顺序 (依次递减): 
+
+     - 对于 normal ruleset, 来源的优先级顺序 (依次递减):
        author, user, user-agent.
 
      注意对于 important ruleset 的来源优先级和普通的是相反的. 这是为了让本地
@@ -1693,11 +1834,21 @@ specificity
 inheritance
 ~~~~~~~~~~~
 
-- 当一个元素本身没有任何 css declaration 作用在其上时, inheritance 才会生效.
+- 属性分为两类: inherited property & non-inherited property.
 
-- 继承时, 元素的 css property 继承 computed value on its parent element,
-  即直接继承最终结果. 对于 root element of document, 由于没有可继承的,
-  此时使用 initial value.
+  * inherited property. 对于这种属性, 当某个元素上没有通过任何 css declaration
+    指定该属性的值时, 该属性值为 computed value of that property on its parent
+    element. 对于 root element, inherited property 的值为该属性的 initial value.
+
+    e.g., color.
+
+  * non-inherited property. 对于这种属性, 当某个元素上没有通过任何 css declaration
+    指定该属性的值时, 该属性值为它的 initial value.
+
+    e.g., border-style.
+
+- 无论 inherited or non-inherited property, 都可以指定 value 为 ``inherit`` 来
+  明确要求继承 parent element value.
 
 at-rule
 -------
