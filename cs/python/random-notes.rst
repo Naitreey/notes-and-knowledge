@@ -1222,6 +1222,13 @@ enum
   仅仅定义了 methods, 没定义任何 member, 可以被继承. 这是为了方便在不同
   enum class 之间共用相同的 methods, behaviors, etc.
 
+functools
+=========
+
+- 由于 ``update_wrapper()`` 需要 wrapper, wrapped 两个参数, 别忘了相应的
+  ``wraps()`` 函数需要以 wrapped 为参数, 返回一个 decorator 作用在 wrapper
+  function 上.
+
 Jinja template
 ==============
 language
