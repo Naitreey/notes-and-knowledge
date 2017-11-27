@@ -3264,6 +3264,10 @@
 
     例如, 不同类型的对象比如 blog entry, picture, 等需要关联相同类型的 comment.
 
+  * 注意 GenericForeignKey 由于只是与之关联的 content_type, object_id 两个列的抽象,
+    在 migration 过程中, ``apps.get_model()`` 构建的 model 不包含 GenericForeignKey,
+    只能直接设置两个实际列的值.
+
 - 在独立的程序或脚本中使用 django 功能.
 
   * 使用当前项目完整配置.
