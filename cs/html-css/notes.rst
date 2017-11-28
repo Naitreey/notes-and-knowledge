@@ -1855,6 +1855,17 @@ at-rule
 
 - 一些 at-rule 可以 nested, 即构成 nested at-rules.
 
+property
+--------
+
+color
+~~~~~
+- color
+
+- background-color
+
+- data type: ``<color>``
+
 Web Components
 ==============
 
