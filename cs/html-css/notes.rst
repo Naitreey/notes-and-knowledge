@@ -1866,6 +1866,35 @@ color
 
 - data type: ``<color>``
 
+  颜色值的表达形式:
+
+  * ``rgb(r, g, b)``, 每项 0-255, 共 24 bits 真彩色 (1677~万色).
+
+  * hex value ``#rrggbb``.
+
+  * ``<named-color>``, 除了常见颜色之外, 用得不多. 谁记那么多颜色名字啊.
+
+  * ``hsl(h, s, l)``
+
+- opacity. opacity 指定的不透明性对一个元素和它所有 dom children nodes 一起生效.
+
+  注意 opacity 本身是 non-inherited property. 它的初始值是 1, 完全不透明.
+ 
+  一个元素的所有子元素上的 opacity值都是相对于该元素的 background
+  (即父元素的区域) 的. 例如, 若 ``<a><b></b></a>`` 两层, a 透明 50%, b
+  不设置, b 相对于 a opacity=1, 故 b 的整体效果是 50%. 若 b opacity!=1,
+  则相对于 a 更透明一些.
+
+  opacity vs alpha channel:
+  
+  * 通过 ``rgba()`` ``hsla()`` 等设置的 alpha channel 导致的透明性是绝对的,
+    不是相对于该元素的 background. 即通过设置 alpha channel 子元素可以比父
+    元素不透明. 
+
+  * rgba 等值经常设置在 inherited property 上. 由于子元素默认继承, 逻辑上是
+    绝对效果而不是相对效果也比较合理.
+
+
 Web Components
 ==============
 
