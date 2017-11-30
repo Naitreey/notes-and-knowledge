@@ -265,6 +265,16 @@ URI
   * ajax 返回 json 的 url api 可以直接以 ``.json`` 结尾, 以示与普通 view
     的区别.
 
+- url length limit
+
+  * HTTP 协议本身并不限制 url 长度. 但建议接收方和发送方都支持至少 8000 bytes
+    长度的 url.
+
+  * 若 url 太长服务端无法处理, 应返回 414 (URI Too Long).
+
+  * 各浏览器有不同的 url 长度限制 (可输入的或可接受的 url 长度). IE8+ ~ 2000 bytes,
+    其他浏览器都比这个长, 甚至长很多. 所以 2000 bytes 可看作是长度的上确界.
+
 Headers
 =======
 
