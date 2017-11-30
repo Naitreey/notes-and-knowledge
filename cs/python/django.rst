@@ -1906,6 +1906,11 @@
     它是 dict 的子类. 具有所有 dict methods. 常见的 dict 操作只获取某个
     key 对应的最后一个值. 若要获取整个 list, 使用 list 类方法.
 
+    QueryDict 能处理一个 key 多个值时放在一个 list 中; 但不能重组以明确的
+    list index 形式序列化的数组或多维数组参数. 例如 ``array[0]=0&array[1]=1``
+    ``array[0][0]=0&array[1][1]=1``. 可使用
+    https://github.com/bernii/querystring-parser.git 提供的操作解决.
+
   * ``HttpResponse``
 
     - constructor 可传入 byte string, 或者 iterator, 作为初始相应 body.
@@ -3267,6 +3272,20 @@
   * 注意 GenericForeignKey 由于只是与之关联的 content_type, object_id 两个列的抽象,
     在 migration 过程中, ``apps.get_model()`` 构建的 model 不包含 GenericForeignKey,
     只能直接设置两个实际列的值.
+
+- Pagination.
+
+  * 若 pagination 是由前端 js library 去实现 (例如 datatables), 只传递给后端所需
+    页的第一个记录的 id 以及记录数目, 则没必要在 view 中使用纯后端的 paginator.
+    只需返回前端任何它需要的数据即可.
+
+- Serialization.
+
+  * JSON
+
+    - DjangoJSONEncoder 在 ``json.JSONEncoder`` 基础上, 额外支持:
+      datetime.datetime, datetime.date, datetime.time, datetime.timedelta,
+      decimal.Decimal, django.utils.functional.Promise, uuid.UUID.
 
 - 在独立的程序或脚本中使用 django 功能.
 
