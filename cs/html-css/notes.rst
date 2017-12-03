@@ -1614,6 +1614,9 @@ syntax
   starts with an at sign, followed by an identifier and then continuing up to
   the next semi-colon outside of a block or the end of the next block.
 
+  若 at-rule 后面是 block, 可能里面是一系列 descriptor/value pairs, 也可能是
+  别的.
+
 - comment. c-style ``/* */``.
 
 - value definition syntax (类似 BNF notation, 用于定义 property 的允许值).
@@ -1644,7 +1647,7 @@ syntax
     - double ampersand ``&&``. the components are mandatory but may appear in any order.
 
     - double bar ``||``. at least one of the components must be present, and they may
-      appear in any order. 
+      appear in any order.
 
     - single bar ``|``. exactly one of these options must be present.
 
@@ -1741,7 +1744,7 @@ when to put css definitions at XXX?
 最终决定一套生效的 css 规则的基本流程:
 
 1. 首先应用 cascade algorithm.
- 
+
 2. 结果中优先级相同的通过 specificity algorithm 进一步筛选.
 
 3. 结果中再有具体性相同的, 通过定义顺序筛选.
@@ -1855,45 +1858,250 @@ at-rule
 
 - 一些 at-rule 可以 nested, 即构成 nested at-rules.
 
-property
---------
+properties
+----------
 
-color
+text
 ~~~~~
-- color
+- color. 负责元素的 text content and text decoration 部分的颜色.
+
+  specified value 是 a value of ``<color>`` data type.
+  inherited property. computed value 是 ``rgb()`` or ``rgba()``.
+
+  keyword 颜色值 ``currentColor`` 指的就是当前元素的 color 属性值. (无论 css 中
+  是否有明确的 color 属性定义, 浏览器一定会通过 css 算法给每个元素确定一个 color
+  值, 所以 currentColor 总是存在的.)
+
+- font-family. a priorized, comma-separated list of ``<family-name>`` and/or
+  ``<generic-name>``. 浏览器会使用第一个已安装的或可以通过 ``@font-face``
+  at-rule 下载到的字体.
+
+  inherited property.
+
+  You should always include at least one generic family name in a font-family
+  list, since there's no guarantee that any given font is available. This lets
+  the browser select an acceptable fallback font when necessary.
+
+  Font selection is done one character at a time, so that if an available font
+  does not have a glyph for a needed character, the latter fonts are tried.
+  意思是, 若一个高优先级字体虽然已经安装, 但无法完整显示所需的全部字符, 则不会
+  使用该字体.
+
+- @font-face. 定义一个字体. 通过 descriptors 指定字体的名字, 路径等信息.
+  The @font-face rule should be added to the stylesheet before any styles.
+
+  Web fonts are subject to the Same-Origin restriction (font files must be on
+  the same domain as the css file using them), unless CORS are used to relax this
+  restriction. 一个常见做法就是直接使用外部字体网站提供的 css file (通过 @import 
+  at-rule 或者 link element), 里面包含 @font-face rules 加载所需字体. 绕过了
+  same-origin 问题.
+
+  descriptors.
+
+  * font-family. define name of the font.
+
+  * src. the source of the font.
+    ``[ <url> [format(<string>#)]? | local(<family-name>) ]#``
+
+    a priorized, comma-separated list of external or local references. For
+    ``url()``, If the url actually points to a file of font container format,
+    ``#id`` fragment identifiers are used to indicate which font in the file to
+    load.
+
+    For url external font, there can be an optional ``format()`` describing
+    the format of the font. If a UA does not support the format, it'll skip
+    the font in ``src`` list.
+
+  web font formats: just use woff, woff2.
+
+- font-size.
+
+  initial value: medium. inherited property. computed value: 相对长度转换成
+  绝对长度.
+
+  它的值影响 em, ex 等长度单位.
+
+  字体值:
+
+  * relative-size keywords:
+
+    - xx-small, x-small, small, medium, large, x-large, xx-large. 这些大小
+      是基于 medium 值进行放大和缩小的. medium 的值是用户设置的浏览器默认
+      字体大小 (which is usually 16px).
+
+    - larger, smaller. 比 parent element 字体大或者小. 比例与 small/medium/large
+      等变化比例一致.
+
+  * relative ``<percentage>`` or ``<length>``, 与 parent element 或 root element
+    的 font-size 的关系.
+
+    对于单位是 ``em`` ``rem`` ``ex`` 的长度 em, ex 相对于 parent element, rem
+    相对于 root html element. rem 相比 em 的好处是, 前者不存在叠加效应. 即结果
+    是稳定的 (因相对的是 root, 是确定的元素).
+
+  * absolute ``<length>``, 绝对长度.
+
+  root element 的 initial value 是 medium. 因此对于 relative font-size, 若没有在
+  任何 parent element 设置 font-size, 则结果就是相对于 medium, 即浏览器默认字体
+  大小.
+
+  inherited.
+
+  一般最好使用相对数值, 即与用户设置的默认字体大小相关的 font-size, 这样便于页面
+  显示效果统一缩放. 而不使用绝对数值. 若必须使用绝对字体大小, 则应该使用 px.
+  Setting the font size in pixel values (px) is a good choice when you need
+  pixel accuracy. A px value is static. This is an OS-independent and
+  cross-browser way of literally telling the browsers to render the letters at
+  exactly the number of pixels in height that you specified.
+
+- font-weight. boldness of font. 可用的值取决于使用的 font-family.
+
+  initial value: normal. computed value: 相对值转换成绝对值, 其他不变.
+  values: lighter, bolder, normal (400), bold (700), 100~900. inherited.
+
+  100~900 大致对应:
+  thin, extra light, light, normal, medium, semi bold, bold, extra bold, black.
+
+- font-style. 首先从 font-family 字体中选择所需 style 的部分. 对于 italic/oblique,
+  若其中一种不存在, 使用另一种代替. 若两种都不存在, 使用 normal 进行模拟.
+
+  initial value: normal. values: normal, italic, oblique. inherited.
+
+- text-transform. 根据 html element ``lang`` attribute 定义的当前语言, 该操作有
+  不同的细节处理.
+
+  initial value: none. values: capitalize, uppercase, lowercase, none.
+  inherited.
+
+- text-decoration.
+  short for text-decoration-line, text-decoration-style, text-decoration-color.
+
+  根据定义 text decorations 会覆盖到该元素的各层 children text elements. 并且
+  子元素只能增加更多的 decoration 而无法 override 父元素设置的 decoration.
+
+- text-decoration-line. position of line.
+
+  initial value: none. non-inherited property.
+  value: ``none | [underline || overline || line-through]``
+
+- text-decoration-style. style of line.
+
+  initial value: solid. values: ``solid | double | dotted | dashed | wavy``.
+  non-inherited.
+
+  If the specified decoration has a specific semantic meaning, like a
+  line-through line meaning that some text has been deleted, authors are
+  encouraged to denote this meaning using an HTML tag, like ``<del>`` or
+  ``<s>``. As browsers can disable styling in some cases, the semantic meaning
+  won't disappear in such a situation.
+
+- text-decoration-color. color of line.
+
+  initial value: currentColor. value: ``<color>``. non-inherited.
+
+background
+~~~~~~~~~~
 
 - background-color
 
-- data type: ``<color>``
-
-  颜色值的表达形式:
-
-  * ``rgb(r, g, b)``, 每项 0-255, 共 24 bits 真彩色 (1677~万色).
-
-  * hex value ``#rrggbb``.
-
-  * ``<named-color>``, 除了常见颜色之外, 用得不多. 谁记那么多颜色名字啊.
-
-  * ``hsl(h, s, l)``
-
+element
+~~~~~~~
 - opacity. opacity 指定的不透明性对一个元素和它所有 dom children nodes 一起生效.
 
+  specified value 是 0~1.0 的 ``<number>``. computed value 是 0~1.0 的数字,
+  若不在范围内, 取最近的确界值.
   注意 opacity 本身是 non-inherited property. 它的初始值是 1, 完全不透明.
- 
+
   一个元素的所有子元素上的 opacity值都是相对于该元素的 background
   (即父元素的区域) 的. 例如, 若 ``<a><b></b></a>`` 两层, a 透明 50%, b
   不设置, b 相对于 a opacity=1, 故 b 的整体效果是 50%. 若 b opacity!=1,
   则相对于 a 更透明一些.
 
   opacity vs alpha channel:
-  
+
   * 通过 ``rgba()`` ``hsla()`` 等设置的 alpha channel 导致的透明性是绝对的,
     不是相对于该元素的 background. 即通过设置 alpha channel 子元素可以比父
-    元素不透明. 
+    元素不透明.
 
   * rgba 等值经常设置在 inherited property 上. 由于子元素默认继承, 逻辑上是
     绝对效果而不是相对效果也比较合理.
 
+value data types
+----------------
+- ``<color>`` value, in sRGB color space, with optionally alpha-channel
+  transparency value.
+
+  颜色值的表达形式:
+
+  * 在 RGB 笛卡尔座标系统下:
+
+    - ``rgb()``, 每项 0-255 ``<integer>`` 或 0%-100% ``<percentage>``.
+
+    - ``rgba()``, alpha 的部分是 0~1 的 ``<number>`` 或 0%~100% 的
+      ``<percentage>``.
+
+    - ``<hex-color>``, ``#RRGGBB[AA]`` 或 ``#RGB[A]``. 若 AA 部分省略,
+      等于 FF, 即完全不透明. #RGBA 相当于 R/G/B/A 每个值重复一遍得到的
+      标准形式.
+
+    在 css4 中, rgba is an alias for rgb.
+
+  * 在 HSL 柱座标系统下:
+
+    - ``hsl()``, hue is ``<angle>``, 若没写单位认为是 ``deg``. saturation
+      & lightness 是 ``<percentage>``.
+
+    - ``hsla()``, alpha 和 rgba 中相同.
+
+    In css4, hsla is an alias for hsl.
+
+  * keyword values. case-insensitive.
+
+    - ``<named-color>``, 除了常见颜色之外, 用得不多. 谁记那么多颜色名字啊.
+      这些颜色都没有任何 transparency, 相当于 alpha channel == 1.
+
+    - ``transparent``, 全透明. 等价于 ``rgba(0,0,0,0)``.
+
+    - ``currentColor``. 当前 (元素) 的 color property value.
+
+- ``<number>``, 实数. 可以是整数, 有限的有理数, 并支持 ``+n.m``, ``.m``,
+  科学计数法等形式.
+
+- ``<percentage>``, 百分数. ``<number>%``.
+
+- ``<angle>``, ``[+|-]<number>deg|grad|rad|turn``. positive angle is clockwise,
+  negative angle is counterclockwise.
+
+- ``<family-name>``, font family name. Font family names containing whitespace
+  should be quoted. 注意若一个字体名字完全是由 valid identifier name 和
+  whitespace 组成, 则也可以不 quote (see: https://mathiasbynens.be/notes/unquoted-font-family).
+
+- ``<generic-name>``, generic font family names are keywords and must not be
+  quoted. values: serif, sans-serif, monospace, cursive (as in cursive writing),
+  fantasy (decorative fonts), system-ui (the default user interface font on a
+  given platform).
+
+- ``<length>``,  ``<number><length-unit>?``, 数值是 0 时可以没有单位.
+
+  * font-relative length: em (等于当前或父元素的 font-size), ex (x-height), rem.
+
+  * viewport-percentage length: vh (1% of viewport height), vw (1% of viewport width),
+    vmin (min of vh, vw), vmax (max of vh, vw).
+
+  * absolute length: px, mm, cm, in, pt, pc. 注意由于不同屏幕分辨率等等烦人
+    的情况, 除了 px, 这些单位可能并不代表它本意的尺寸. 所以尽量别用吧.
+
+    对于 px, 标准情况下, 一个 px 就是一个 screen pixel. 所以是确定的. 除非使用了
+    浏览器的缩放功能去放大和缩小整体页面. 此时, px 即 css pixel 与 physical pixel
+    会有缩放的比例关系. 但由于本质上所有页面元素尺寸最终 computed value 都转换
+    成 pixel, 故效果是页面整体进行等比例缩放.
+
+- ``<url>``, ``url(...)`` functional notation. It may be written without quotes,
+  or surrounded by single or double quotes. Relative URLs are allowed, and are
+  relative to the URL of the stylesheet.
+
+- ``<string>``, any unicode chars with single or double quotes. 字符串支持通过
+  ``\`` escape char, 尤其是可以 escape newline 来做到跨行.
 
 Web Components
 ==============
