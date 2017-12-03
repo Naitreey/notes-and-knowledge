@@ -1027,7 +1027,7 @@
       创建、更新、查看、删除特定的 object.
       凡是实际 view 的目的与 generic view 预设的操作目的不一致时, 都不该
       生搬硬套这些 generic view. 而是退而求其次, 例如 FormView, TemplateView,
-      View, RedirectView 等对操作的假设很少的一般化 view.
+      View 等对操作的假设很少的一般化 view.
 
       CRUD & class-based views.
       C -- CreateView, R -- DetailView, U -- UpdateView, D -- DeleteView.
@@ -1039,6 +1039,10 @@
         - ``url`` 或 ``pattern_name`` 必须设置至少其一, 以指定 redirect url.
           对于 ``pattern_name``, 通过 ``reverse()`` 生成 url.
           若两个参数都不能正确获得 url, 将返回 HttpResponseGone (410 -- Gone).
+
+        - 适用场景: 只适用于 GET 某个资源时进行简单的 302 Found redirect 至该
+          资源的新 url. 不适合任何需要复杂后端业务逻辑处理后返回 redirect 至
+          结果页面等情况. RedirectView 没有什么扩展性.
 
       * ``TemplateView``
 
