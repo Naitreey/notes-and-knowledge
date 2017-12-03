@@ -1159,6 +1159,33 @@
 - 注意所有可以使用 function 的地方都可以一般化地使用 callable. 定义 callable class
   有助于优化代码组织方式和重用等可能性 (应用所有 class 的优点来定义 function).
 
+- variable definition, scope & UnboundLocalError.
+
+  python 语法没有单纯的变量定义语句. 它定义凡是 在一个 scope 中赋值的变量,
+  都是这个 scope 下的 local variable. (这么定义 是为了简化变量引用逻辑,
+  让程序易懂.  然后对于在 scope 中只引用不修改的量 则定义 free variable 概念.
+  对于需要修改的 outer scope 量定义 global/nonlocal keyword.)
+
+  然而在解释器在运行代码时, 遇到一个 scope, 创建一个 stack, 是必须要首先给 scope
+  中定义的各个变量创建内存区域的. 也就是说, 需要在 scope 起始处 implicitly 定义
+  各个变量. 这就是 UnboundLocalError 的由来.
+
+  考虑以下代码:
+
+  .. code:: python
+    x = 10
+    def foo():
+        print(x)
+        x += 1
+    foo()
+
+  解释器在解释 foo function body 时, 发现 x 有赋值, 故认为是 local definition,
+  在起始处添加定义 (但注意不赋值). 这导致 global x 被 shadow, 并且 print(x) 
+  语句引用了未赋值的 x, 导致
+  ``UnboundLocalError: local variable 'x' referenced before assignment``
+  错误. 这需要注意的是, 解析函数体和运行函数体是不同阶段的事. 发现 local variable
+  并添加隐性定义代码是在解析编译阶段做的事. 而上述错误需要等到运行时才能发现.
+
 language
 ========
 
