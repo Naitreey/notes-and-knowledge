@@ -1186,6 +1186,8 @@
   错误. 这需要注意的是, 解析函数体和运行函数体是不同阶段的事. 发现 local variable
   并添加隐性定义代码是在解析编译阶段做的事. 而上述错误需要等到运行时才能发现.
 
+- 判断两个条件中有且仅有一个条件为真是, 可使用 exclusive OR operator ``^``.
+
 language
 ========
 
@@ -1227,6 +1229,20 @@ exception
 builtin functions
 =================
 - ``enumerate()``, ``start=`` 设置第一项的序号值.
+
+builtin types
+=============
+set types
+---------
+
+operations
+~~~~~~~~~~
+- the non-operator versions of ``union()``, ``intersection()``,
+  ``difference()``, and ``symmetric_difference()``, ``issubset()``, and
+  ``issuperset()`` methods will accept any iterable as an argument. In
+  contrast, their operator based counterparts require their arguments to be
+  sets. 然而两种方式并没有效率上的区别, 因为虽然接受任何 iterable, 但是仍然
+  会在内部转换成 set 再进行比较.
 
 json
 ====
