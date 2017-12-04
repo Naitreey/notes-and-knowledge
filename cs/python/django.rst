@@ -1910,6 +1910,10 @@
     它是 dict 的子类. 具有所有 dict methods. 常见的 dict 操作只获取某个
     key 对应的最后一个值. 若要获取整个 list, 使用 list 类方法.
 
+    methods.
+
+    - ``__getitem__()`` 会 raise MultiValueDictKeyError (subclass of KeyError).
+
     QueryDict 能处理一个 key 多个值时放在一个 list 中; 但不能重组以明确的
     list index 形式序列化的数组或多维数组参数. 例如 ``array[0]=0&array[1]=1``
     ``array[0][0]=0&array[1][1]=1``. 可使用
