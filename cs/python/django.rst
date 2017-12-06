@@ -2612,6 +2612,8 @@
 
 - authentication and authorization. django auth module: ``django.contrib.auth``.
 
+  * authentication: 管理用户身份. authorization: 管理用户权限.
+
   * 创建用户. ``User.objects.create_user()`` 创建用户.
     ``./manage.py createsuperuser`` 或 ``User.objects.create_superuser()``
     创建超级管理员.
