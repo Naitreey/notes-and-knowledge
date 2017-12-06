@@ -341,3 +341,16 @@
     使用 cache 的目的是减少向慢存储的访问次数, 从而提高数据访问效率. 它的应用场景
     是相同的数据需要多次读取时. 此外, 在设计 IO API 时, cache 层应该是对用户透明的,
     即用户直接调用向真实存储设备的 IO API, 而无需知道 cache 层的存在, cache 自动生效.
+
+- calculator: bc vs dc.
+
+  * dc: It is one of the oldest Unix utilities, predating even the invention of the
+    C programming language; like other utilities of that vintage, it has a
+    powerful set of features but an extremely terse syntax.
+
+    dc 使用 reverse polish notation. 非常反直觉.
+
+  * bc: POSIX-standardized, 稍微现代化一些, 比 dc 直观很多. bc 算是一门计算语言和
+    解释器. Traditionally bc was only a front end tool that compiled the bc
+    notation to the notation of dc and piped that into dc to get the result.
+    但如今并不是这样. bc 自己计算结果.
