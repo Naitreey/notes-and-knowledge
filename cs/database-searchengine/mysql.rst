@@ -7,7 +7,7 @@
   同时开启.
 
 mysql client
-------------
+============
 
 - ``\g`` ``\G`` 可以执行语句, 相当于 ``;``. 后者将结果列以竖排的形式输出, 比较方便.
 
@@ -29,7 +29,7 @@ mysql client
   For processing convenience, such output is tab-delimited for each column.
 
 Language driver
----------------
+===============
 - python driver 需要根据应用场景和需求来选择.
 
   目前主要的 python driver 以及各自的特点:
@@ -106,7 +106,7 @@ Language driver
   根据以上分析, 我会选择 mysqlclient 和 PyMySQL, 在同步和异步的情况下使用.
 
 SQL language
-------------
+============
 - In general, treat all identifiers (database names, table names, column names,
   etc.) and strings as case sensitive; treat SQL keywords, mysql builtin commands,
   etc. as case insensitive.
@@ -198,7 +198,7 @@ SQL language
   避免多个 session 同时创建同一个实例时导致的重复 (race condition).
 
 Design
-------
+======
 
 - 在 RDBMS 里保存 JSON 合适么?
   
@@ -211,3 +211,8 @@ Design
 
   如果你需要对 JSON 中的字段单独访问, 进行数据库操作, 例如 join, filter, index 等,
   则不适合作为整块 JSON 保存.
+
+  A rule of thumb: 一般情况下尽量把数据 normalized 化. 尽量避免存储 json, 而是
+  扩展成 fields 或者 foreign key 连接的 extension table 等形式. 这样可能长期看,
+  对于 MVC 和减少重复是有好处的 (因为格式在 model 中都建立好了, 不需要手动解析
+  数据构建 json 等).
