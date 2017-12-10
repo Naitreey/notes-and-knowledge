@@ -173,33 +173,88 @@
 
   * inheritance.
 
-    - 使用 ``Meta.abstract = True`` 定义 ABC model.
+    三种 model 继承方式.
 
-    - ABC model 的子类的自己的 ``Meta`` attribue 自动设置 ``abstract = False``.
-      若子类 model 仍需是 ABC, 需要再设置.
+    - abstract base model
 
-    - 仔细想想, 非 ABC model 在继承时, 子类 model 表中只保存那些扩展的信息, 继承的
-      信息都保留在父类表中. 这个设计实际上才是合理的. 因为子类的实例也是父类的实例,
-      我们可以从子类实例中抽出纯父类实例那部分 (例如通过 ``super``). 我们把这种继承
-      和实例化的思路应用在 ORM 上, 就得到了父类 model 的数据集显然是应该包含子类
-      model 的数据集的 (抽出公有部分). 所以子类表只存扩展字段即可, 通过 one-to-one
-      field 与存在父类表中的基础数据对应, 两部分数据构成一个完整的子类实例.
+      * ABC model 用于将多个 model 中的相同部分抽象出来, 避免重复. 它并不创建
+        实际的数据库表. 仅用于从 python class 的视角上去做逻辑一般化. 每个
+        继承了它的 concrete model 仍然包含并在数据库表中实例化所有列.
 
-    - proxy model 不修改 model, 而是修改对 model 数据的操作. 因此 model 和它的
-      proxy model 共享所有数据集. The whole point of proxy objects is that code
-      relying on the original Person will use those and your own code can use
-      the extensions you included (that no other code is relying on anyway).
+      * 使用 ``Meta.abstract = True`` 定义 ABC model.
 
-    - multiple inheritance. The main use-case where this is useful is for “mix-in”
-      classes: adding a particular extra field or method to every class that inherits
-      the mix-in.
+      * subclass model 自动继承父类的 Meta class. 若要扩展, 则继承 Meta class 即可.
+        ABC model 的子类的自己的 ``Meta`` attribue 自动设置 ``abstract = False``.
+        若子类 model 仍需是 ABC, 需要再设置.
 
-    - 若 model 继承时不是继承的 ABC model, 而是实体 model, 则子类的 field 不能
-      和父类的 field 重名, 即 field attribute can not be overrided. 这与一般的
-      python 类不同. 这是因为 model instance 实际上是数据库表 entry 的抽象,
-      如果重名, 在获取属性即列值时就存在歧义和令人困惑之处.
-      对于 ABC model 的继承, 可以覆盖列名. 因为 ABC model 并没有实际的表去关联,
-      没有歧义.
+      * 对于 ABC model 的继承, 可以覆盖列名. 因为 ABC model 并没有实际的表去关联.
+        还可以设置 ``field = None`` 在子类中去掉特定列.
+
+      * 若 ABC model 中包含 FK 等关系列, 则 related_name/related_query_name  应该
+        使用默认的值或者设置对于不同的 subclass model 自动取不同的值, 例如包含
+        ``%(class)s`` ``%(app_label)s``, 否则会造成反向关系冲突.
+
+    - concrete model inheritance
+
+      * subclass model 继承 concrete model 时, 在数据库层, 子类的表只建立多出来的
+        那些列, 属于父类的信息则保存在父类的表中. 两者通过隐性建立的 OneToOneField 
+        关联:
+
+        .. code:: python
+          <parent>_ptr = models.OneToOneField(
+            <parent-model>,
+            on_delete=models.CASCADE,
+            parent_link=True,
+          )
+
+        注意 ``parent_link`` 让父类的 fields 在子类实例中可以直接获取. 这才符合
+        继承概念. 此外, 注意这个 OTO field 默认命名为 ``<parent-model>_ptr``.
+        也可以在子类 model 中明确定义这个 OTO field, 例如修改名字之类的.
+
+        在子类实例中, 可以访问 OTO 获取父类实例. 注意父类实例由于具有 OTO field
+        的反向关系, 也还可以再获取子类实例本身. 甚至由于子类实例本身就是父类实例,
+        子类实例中也访问父类中的反向关系, 再得到自己的另一个 instance.
+
+      * 仔细想想, 非 ABC model 在继承时, 子类 model 表中只保存那些扩展的信息, 继承的
+        信息都保留在父类表中. 这个设计实际上才是合理的. 因为子类的实例也是父类的实例,
+        我们可以从子类实例中抽出纯父类实例那部分 (例如通过 ``super``). 我们把这种继承
+        和实例化的思路应用在 ORM 上, 就得到了父类 model 的数据集显然是应该包含子类
+        model 的数据集的 (抽出公有部分). 所以子类表只存扩展字段即可, 通过 one-to-one
+        field 与存在父类表中的基础数据对应, 两部分数据构成一个完整的子类实例.
+
+      * 若 model 继承时不是继承的 ABC model, 而是实体 model, 则子类的 field 不能
+        和父类的 field 重名, 即 field attribute can not be overrided. 这与一般的
+        python 类不同. 这是因为 model instance 实际上是数据库表 entry 的抽象,
+        如果重名, 在获取属性即列值时就存在歧义和令人困惑之处.
+
+      * 在继承实体 model 时, 不继承 Meta, 因为这是不合理. 因为这时 parent Meta
+        的值仅应对父类生效, 例如 verbose_name. 子类也使用显然不合理. 但有一个
+        例外, 即 ordering 会从父类继承.
+
+      * 继承实体模型时, 若父模型中有 FK 等关系列, 子模型直接使用保存在父模型表
+        中的关系. 这体现在, 从子模型实例中可以得到父模型指向的 related model
+        instances, 但在 related model instance 中, 只有向父模型的反向关系. 无法
+        区分 related manager 得到的实例哪些是父, 哪些是子 (除非在父模型中保存
+        有对不同子模型区分的列值).
+
+    - proxy model
+
+      * proxy model 不修改 model, 而是修改对 model 数据的操作, 即 only change
+        the python behavior of a model.  因此 proxy model 和它的原始 model
+        共享所有数据集. The whole point of proxy objects is that code relying
+        on the original Person will use those and your own code can use the
+        extensions you included (that no other code is relying on anyway).
+
+      * proxy model 可以用来添加 method, 修改 Meta options 例如 ordering.
+
+      * QuerySets still return the original model.
+
+    - multiple inheritance. The main use-case where this is useful is for
+      “mix-in” classes: adding a particular extra field or method to every
+      class that inherits the mix-in.
+
+      注意根据一般的 MRO 规则, 只有第一个父类的 Meta 会对子类有效 (如果允许访问
+      的话).
 
   * unmanaged model.
 
@@ -436,6 +491,9 @@
     - one-to-one field 在 mysql 中实现时, 实际上是一个普通的 field (类型与指向
       的 model 的 primary key 一致), 配合 unique key constraint 以及 foreign key
       reference constraint.
+
+    - OTO field 的 ``parent_link`` 结合 conrete model inheritance 时有特殊作用,
+      它让父类的 field 可在子类即 OTO field 所在 model 中直接访问.
 
   * relation field: many-to-many.
 
