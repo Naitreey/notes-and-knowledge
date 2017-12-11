@@ -89,6 +89,10 @@
 
   * change time (``st_ctime``): 修改文件的 metadata 时会更新.
 
+- cron
+
+  Etymology: cron 名字与 chronology 同源, 即希腊语中表示时间的词. chronos.
+
 - cron 和 anacron 的关系.
 
   cron 负责 ``crontab``, ``cron.d`` 里的项, ``cron.d`` 里一般会有 ``0hourly``,
