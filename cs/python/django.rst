@@ -237,6 +237,12 @@
         区分 related manager 得到的实例哪些是父, 哪些是子 (除非在父模型中保存
         有对不同子模型区分的列值).
 
+      * 在数据库层, subclass table 的 PK 直接使用了 OTO 关系列的值, 即 parent
+        table 的 PK id, 因此, 这保证了在 django 中, subclass model 实例的 id
+        与它对应的 parent model 实例部分的 id 实际是一个项, 且 pk 值即外键值
+        也能正确地与 parent model id 一致. 所以不存在区分子模型实例 id 与父
+        模型实例部分 id 的问题.
+
     - proxy model
 
       * proxy model 不修改 model, 而是修改对 model 数据的操作, 即 only change
@@ -426,6 +432,9 @@
     - ``SlugField`` 要配合 ``slugify`` 函数使用, 只应该在创建 instance 时保存该列值.
 
     - ``FilePathField`` 要求值必须是满足路径匹配条件的文件路径.
+
+    - ``JSONField``. postgresql 可以使用 native JSONField, 对于 mysql 可以使用
+      django-jsonfield module 用 TextField/CharField 模拟.
 
   * relation field: many-to-one.
 
