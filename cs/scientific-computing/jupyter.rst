@@ -20,11 +20,16 @@ architecture
 
 notebook
 --------
-- notebook file 即 ``.ipynb`` 文件以 JSON 格式存储数据. 里面存储 code, output,
-  markdown text, multimedia 等.
+the web application
+~~~~~~~~~~~~~~~~~~~
+- notebook 的 frontend, an interactive authoring tool.
+  它和 notebook server 之间通过 http & websocket 进行通信.
 
-- notebook 在浏览器中展示, 这是 notebook 的 frontend, 它和 notebook server
-  之间通过 http & websocket 进行通信.
+notebook documents
+~~~~~~~~~~~~~~~~~~
+- notebook file is a representation of all content visible in the web
+  application. ``.ipynb`` 文件以 JSON 格式存储数据, 包含 code, output,
+  markdown text, multimedia 等.
 
 kernels
 -------
