@@ -20,16 +20,24 @@ architecture
 
 notebook
 --------
+
 the web application
 ~~~~~~~~~~~~~~~~~~~
 - notebook 的 frontend, an interactive authoring tool.
   它和 notebook server 之间通过 http & websocket 进行通信.
+
+- 在 dashboard 界面可以 drag & drop 上传 notebook and python source files.
+
+- 可以启动多个 notebook server, 例如对于不同的目录. 多个 server 会自动递增
+  端口号, 除非命令行上指定.
 
 notebook documents
 ~~~~~~~~~~~~~~~~~~
 - notebook file is a representation of all content visible in the web
   application. ``.ipynb`` 文件以 JSON 格式存储数据, 包含 code, output,
   markdown text, multimedia 等.
+
+- 使用 JSON 是因为是 text-based format, 能进行版本管理.
 
 kernels
 -------
@@ -99,6 +107,8 @@ commandline
 -----------
 jupyter notebook
 ~~~~~~~~~~~~~~~~
+- jupyter notebook 运行 notebook server.
+
 - ``--notebook-dir=<dir>``
   ``jupyter notebook`` 默认以当前目录作为 notebook 的文件根目录. 这个参数修改
   根目录.
