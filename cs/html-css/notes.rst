@@ -288,6 +288,23 @@ text content
   不仅仅是代码, 可以是任何内容, 仅仅是 preformatted 而已. 注意 pre 里面
   的 html element 仍会解析.
 
+  在一般情况下, html 中出现的任意多个连续的 whitespace chars 会 collapse
+  成一个, 这是一个全局的效果, 而不论是什么 element 内部或外部. 可以认为,
+  在 pre element 中, 只是屏蔽掉了这个 whitespace collapsing 算法而已.
+  因此 pre 保证了它里面的 text 以及它里面任何元素的 text 部分的 whitespace
+  chars 都会被保留下来.
+
+  对于 code block, 则一般使用
+
+  .. code:: html
+    <pre><code>
+    ...
+    </code></pre>
+
+  注意虽然 pre 默认就是 monospace font, 但是由于 pre 代表的是禁用 whitespace
+  collapsing, 本质上不一定用 monospace, 所以这里应理解为 code element
+  提供了 semantics & monospace appearance.
+
   html is such a incompetent markup language that can not embed verbatim
   UNMODIFIED code written in itself. 无论是 pre 还是 code element, 都不能
   真正地 verbatim 包含代码. 所有 html 特殊字符都需要转义. Such a shame.
