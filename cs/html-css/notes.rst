@@ -1710,12 +1710,22 @@ syntax
     就是经过 cascade/specificity/inheritance 等算法后得到的最终定义数值.
     注意这组数值是根据各 css declaration 得到的最终定义值, 还不是最终使用值.
 
+    注意一个 css property 的 specified value 仍然是它定义中允许的任何值. 这
+    与 computed value 不同.
+
   * computed value. 根据 specified value 进行计算, 解析 inherit, initial,
     unset, revert 等特殊值至具体的值, 将所有 specified value 转换成属性定义
     允许的 computed value.
+    
+    The computed value of a CSS property is the value that is transferred from
+    parent to child during inheritance. 这是 computed value & specified value
+    & used value 的重要区别.
 
   * used value. 这些值是从将 computed value 再解析成绝对数值可直接在页面中使用
     以确定各元素布局和位置等等绝对信息的值.
+    
+    注意 used value 这里已经是绝对值, 由于绝对值很多时候不适合去继承, 所以有
+    computed value & used value 的区分.
 
     computed value & used value 只有当该属性与 layout 相关时才可能有区别.
     这是因为, computed value 可以是百分数等相对值, 而 used value 需要根据
@@ -1931,7 +1941,7 @@ text
 
   web font formats: just use woff, woff2.
 
-- font-size.
+- font-size. 相当于从 baseline 至 ascender 的高度.
 
   initial value: medium. inherited property. computed value: 相对长度转换成
   绝对长度.
@@ -2016,6 +2026,38 @@ text
 
   initial value: currentColor. value: ``<color>``. non-inherited.
 
+- line-height. 行的高度, 等于 font-size + leading 高度之和.
+  Increasing line-height can make text easier to read.
+
+  inherited.
+
+  initial value: normal.
+  values:
+
+  * normal: 大致相当于 1.2
+
+  * ``<number>``: number 倍的 font-size.
+
+  * ``<length>``
+
+  * ``<percentage>``: 相对 font-size.
+
+  computed value: for percentage and length values, the absolute length,
+  otherwise as specified.
+  注意这决定了对于 line-height 属性指定数值是比较 合理的方式. 否则, 若
+  subelement 继承了绝对的 line-height 长度值, 则无法 根据自身字体进行调整.
+
+- letter-spacing. spacing between letters.
+
+  inherited.
+
+  values: normal, ``<length>``. length may be negative.
+
+  User agents may not further increase or decrease the inter-character space in
+  order to justify text.
+
+- word-spacing
+
 background
 ~~~~~~~~~~
 
@@ -2042,6 +2084,16 @@ element
 
   * rgba 等值经常设置在 inherited property 上. 由于子元素默认继承, 逻辑上是
     绝对效果而不是相对效果也比较合理.
+
+special
+~~~~~~~
+- all. a shorthand property representing all properties, apart from
+  ``unicode-bidi`` and ``direction``.
+
+  values: initial, inherit, unset, revert. 这属性用于方便地重置某元素
+  的所有属性值.
+
+  non-inherited property.
 
 value data types
 ----------------
@@ -2119,6 +2171,29 @@ value data types
 
 - ``<string>``, any unicode chars with single or double quotes. 字符串支持通过
   ``\`` escape char, 尤其是可以 escape newline 来做到跨行.
+
+global values
+~~~~~~~~~~~~~
+
+- initial. 明确使用该属性的 initial value.
+
+- inherit. 对于 inherited-property, 明确要求使用从 parent 继承来的 computed value;
+  对于 non-inherited property, 要求从 parent 继承值.
+
+- unset. 去掉由其他 css rulesets 明确定义的关于该属性的值. 也就是说, 若有继承值,
+  则重置为继承值, 若没有则重置为初始值.
+
+- revert. revert 该属性的 cascading, 使用相对于当前定义所在源的前一个定义源中的
+  定义.
+
+  The revert keyword is useful for isolating embedded widgets or components
+  from the styles of the page that contains them. 也就是说, 对于嵌入的组件, 屏蔽
+  author styles, revert to user 或 user-agent styles.
+
+  ``all`` property 可以配合 revert value 使用, 比较方便.
+
+  No stable UA support yet!!
+
 
 Web Components
 ==============
