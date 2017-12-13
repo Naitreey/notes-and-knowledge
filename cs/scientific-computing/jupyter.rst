@@ -19,20 +19,77 @@ architecture
   的 notebook server 实现. 这包含 jupyterhub, tmpnb, nbgrader 等.
 
 notebook
---------
+========
+
 the web application
-~~~~~~~~~~~~~~~~~~~
+-------------------
+
 - notebook 的 frontend, an interactive authoring tool.
   它和 notebook server 之间通过 http & websocket 进行通信.
 
+cells
+~~~~~
+- cells: code cell, markdown cell, raw cell. cell types can be changed
+  via menu or keyboard shortcut.
+
+- code cell. 能够输出 rich output.
+
+- markdown cell.
+  
+  When markdown cell is executed, the Markdown code is converted into the
+  corresponding formatted rich text. Markdown allows arbitrary HTML code for
+  formatting.
+
+  通过 mathjax, markdown cell 里可以直接写 latex. 具体支持的 latex 语法参考
+  mathjax. 例如, standard latex math macros and amsmath package are supported.
+
+- raw cell. 在格式转换时有用, where you can write output directly. 这里 output
+  指的是使用 nbconvert 目标格式书写的内容. 因此 raw cell 不会被执行, 并且原样
+  保留至目标格式文件中.
+
+downloads
+~~~~~~~~~
+- 当 notebook 以 python source 文件输出时, all rich output has been removed and
+  the content of markdown cells have been inserted as comments.
+
+shortcuts
+~~~~~~~~~
+- shift-enter: run current cell and jump to next cell or create a new cell.
+
+- ctrl-enter: run current cell and keep focus on current cell. useful for
+  temporary execution.
+
+- alt-enter: run current cell and insert a new cell below the current one.
+
+- Esc: escape to normal mode.
+
+- Enter: enter into insert mode.
+
 notebook documents
-~~~~~~~~~~~~~~~~~~
+------------------
 - notebook file is a representation of all content visible in the web
   application. ``.ipynb`` 文件以 JSON 格式存储数据, 包含 code, output,
   markdown text, multimedia 等.
 
+trust
+~~~~~
+- notebook 中包含 signature 信息. server 在打开 notebook file 时校验
+  signature. 若失败, 则不会 render.
+
+- ``jupyter trust`` 可以强制 trust 文件.
+
+qtconsole
+=========
+
+- 一个 jupyter qt GUI console app. 它和 jupyter console 即 ipython 的区别
+  是, 由于 qtconsole 是用 GUI 模拟 TUI terminal, 它可以在 console 中显示
+  GUI 图形. 这是无法在真正的 TUI 界面中做到的.
+
+- 对于 ipykernel, ``%qtconsole`` magic 可以调出一个 qtconsole 使用同一个
+  kernel process.
+
 kernels
--------
+=======
 - jupyter 提供了很多语言 kernel 的集成, 在 notebook 中可以使用非常多种语言.
   明白何时该使用 jupyter + kernel 何时该使用各种语言自身提供的工具是很重要的:
   当我们的需求是构建一个文档, 且其中需要具有非纯文本内容, 包含数学、多媒体
@@ -50,19 +107,25 @@ kernels
 
 - kernel & client 之间的通信使用 JSON 格式, 通过 ZMQ 传输.
 
+- 每一个正在 running/active notebook 有一个独立的 kernel process 在后端
+  运行. 每个 kernel process 有 id. 可以在命令行上指定该 kernel id, 通过
+  jupyter console 等其他方式连上这个 kernel process, 重用这个计算环境.
+
 IPyKernel
-~~~~~~~~~
+---------
 - IPyKernel 是 jupyter 的 python kernel, 即是对 ipython 的一层向 kernel 适配
   的封装. a pre-installed kernel, reference implementation of kernels.
 
+- 对于 ipykernel, 执行 ``%connect_info`` ipython magic 可获得 kernel 连接信息.
+
 export
-------
+======
 - notebook 向其他格式导出的过程: preprocessing -> exporting -> postprocessing.
   即 notebook 经过 preprocessor, 运行代码更新所有 output 的最终结果; 经过
   exporter 导出指定格式文件; 导出的文件经过 postprocessor 再处理.
 
 nbviewer
-~~~~~~~~
+--------
 - nbviewer 是一个 jupyter notebook 的共享阅读服务, 提供对 publicly accessible
   notebooks 的 rendering service. 从而大家可以阅读和参考很多用 jupyter 写成的
   有价值的资料.
@@ -77,7 +140,7 @@ nbviewer
   locally.
 
 widgets
--------
+=======
 这些 widget 是 jupyter 的插件, 是配合 jupyter 在浏览器中运行的. 与 matploblib
 等独立运行的库目的不同.
 
@@ -96,23 +159,31 @@ widgets
 - template for widgets: cookiecutter
 
 commandline
------------
+===========
+
 jupyter notebook
-~~~~~~~~~~~~~~~~
+----------------
 - ``--notebook-dir=<dir>``
   ``jupyter notebook`` 默认以当前目录作为 notebook 的文件根目录. 这个参数修改
   根目录.
 
 jupyter console
-~~~~~~~~~~~~~~~
+---------------
+- ``--existing [<arg>]`` 连接 existing active kernel process.
+
+jupyter qtconsole
+-----------------
+
+jupyter trust
+-------------
 
 jupyterhub
-----------
+==========
 - jupyterhub is a multi-user version of the notebook designed for companies,
   classrooms and research labs.
 
 
 binder
-------
+======
 - binder 服务基本就是远程运行 jupyter notebook, 提供交互式的 notebook 共享服务.
   这是与 nbviewer 不同之处.
