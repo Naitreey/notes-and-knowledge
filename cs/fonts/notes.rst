@@ -46,9 +46,15 @@ typeface alignment
 
 - baseline. the line where characters sit on.
 
-- descender.
+- descender. the part of a letter that drops beneath the baseline.
 
-- ascender.
+- ascender. the highest point of a letter.
+
+- leading. from the bottom of the descender on one line to the top of the
+  ascender on the next.
+
+units
+-----
 
 - cap height. height of capital letters.
 

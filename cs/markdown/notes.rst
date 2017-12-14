@@ -1,5 +1,8 @@
 General
 =======
+
+markdown & web 的关系
+---------------------
 - Markdown’s syntax is intended for one purpose: to be used as a format for
   writing for the web.  The idea for Markdown is to make it easy to read,
   write, and edit prose. HTML is a publishing format; Markdown is a writing
@@ -14,15 +17,18 @@ General
 - markdown 和 html/css/js 一起使用, 才可以解决所有问题. markdown 只解决书写部分
   的问题, 即让 web content 更容易书写.
 
+- 书写 markdown 时, 需要时常想着它生成的 html elements 是什么, 才能对最终效果有信心.
+
 syntax
 ======
+
 escaping
-~~~~~~~~
+--------
 - ``\`` escape. use backslash escapes to generate literal characters which
   would otherwise have special meaning in Markdown’s formatting syntax.
 
 inline html
-~~~~~~~~~~~
+-----------
 - block-level html elements must be separated from surrounding content by blank
   lines, and the start and end tags of the block should not be indented with
   tabs or spaces.
@@ -39,7 +45,7 @@ inline html
   字符时, 都会被 escape.
 
 block elements
-~~~~~~~~~~~~~~
+--------------
 - paragraph. one or more consecutive lines of text, separated by one or more
   blank lines. A blank line is any line that looks like a blank line — a line
   containing nothing but spaces or tabs is considered blank.
@@ -81,17 +87,17 @@ block elements
   基于 list item 段首的缩进量进行.
 
 verbatim blocks
-~~~~~~~~~~~~~~~
+---------------
 - Indent every line of the block by at least 4 spaces.
 
 - Regular Markdown syntax is not processed within code blocks.
 
 horizontal rules
-~~~~~~~~~~~~~~~~
+----------------
 - 多个 ``*`` 或 ``-`` 或 ``_`` 在单独的一行. 注意与 heading 的情况区分.
 
 links
-~~~~~
+-----
 - inline link. ``[link text](url "title")``. ``"title"`` part is optional.
 
 - reference link. ``[link text][id]``. 可以在中间加空格: ``[...] [..]``.
@@ -127,11 +133,11 @@ links
   with angle brackets. ``<url>``, 这样 url 本身同时为 href & link text.
 
 emphasis
-~~~~~~~~
+--------
 - ``*`` or ``_``. 一对时等于 ``<em/>``, 两对时等于 ``<strong/>``.
 
 inline code
-~~~~~~~~~~~
+-----------
 - use backtick. To include a literal backtick character within a code span, you
   can use multiple backticks as the opening and closing delimiters.
 
@@ -140,14 +146,14 @@ inline code
   backtick characters at the beginning or end of a code span.
 
 images
-~~~~~~
+------
 - inline image: ``![alt text](url "title")``.
 
 - reference image: ``![alt text][id]``. 然后使用 link reference 完全相同的方式
   定义 id.
 
 comment
-~~~~~~~
+-------
 - markdown 没有 comment syntax. 但我们可以 hack:
 
   * method 1. 使用标准 html comment ``<!-- eee -->``.

@@ -197,7 +197,7 @@
     - concrete model inheritance
 
       * subclass model 继承 concrete model 时, 在数据库层, 子类的表只建立多出来的
-        那些列, 属于父类的信息则保存在父类的表中. 两者通过隐性建立的 OneToOneField 
+        那些列, 属于父类的信息则保存在父类的表中. 两者通过隐性建立的 OneToOneField
         关联:
 
         .. code:: python
@@ -316,7 +316,8 @@
 
   * ``indexes``, A list of indexes that you want to define on the model.
 
-  * ``unique_together``, associative unique constraint.
+  * ``unique_together``, 一组或多组 associative unique constraint. 使用
+    a tuple of tuples 来定义.
 
   * ``verbose_name``, ``verbose_name_plural``, human-readable name for the model.
 
@@ -324,7 +325,7 @@
 
 - model field
 
-  * constructor options.
+  * options.
 
     Many of Django’s model fields accept options that they don’t do anything with.
     This behavior simplifies the field classes, because they don’t need to
@@ -375,6 +376,9 @@
 
     - ``db_index``, 是否创建 single field index.
 
+    - ``validators``, 指定 validators. 这些 validators 会在 form validation
+      或 model instance validation 的时候生效.
+
   * ``Field`` methods.
 
     - Field deconstruction: ``Field.deconstruct()``
@@ -393,7 +397,6 @@
     - ``get_prep_value()``
 
     - ``get_db_prep_value()``
-
 
   * custom field type.
 
@@ -549,6 +552,87 @@
 
     lazy relationship: 若 relation field 需与可能尚未建立的 model 建立关联,
     使用 ``[<app_label>.]<model>``.
+
+- model index.
+
+  index 通过 ``Model.Meta.indexes`` option 指定, a list of Index objects.
+
+  ``Index`` object.
+
+  * ``fields``, 指定单一索引或复合索引的列, 以及方向. 语法和 QuerySet.order_by
+    相同.
+
+  * ``name``, index name.
+
+  * ``db_tablespace``.
+
+- model instance & form instance validations.
+
+  * 在定义 model class 时, 要考虑应该在 model 层就限制的数据合法性要求.
+    这包括:
+
+    - 对于 model field, ``validators``.
+      对于自定义 model fields, 还可以自定义 field 的 clean methods 等.
+
+    - 对于 model 内各数据之间的制约关系, 自定义 model 的 clean methods 等.
+
+- validators.
+
+  a callable that takes a value and raise ValidationError if it failed.
+  由于是 callable 即可, 所以还可以是 object with ``__call__`` method.
+
+  注意 class-based validator 若要用在 model field 中, 应该保证 serializable.
+
+  validators can be added to model fields and form fields.
+
+  builtin validators ``django.core.validators``.
+
+  * various string validators.
+
+    - RegexValidator, 通用正则 validator.
+
+    - URLValidator, a RegexValidator subclass for url.
+
+    - EmailValidator.
+
+    - validate_email, a EmailValidator instance.
+
+    - validate_slug, a RegexValidator instance for slug, i.e., letters, numbers,
+      underscores and hyphens.
+
+    - validate_unicode_slug, a RegexValidator instance for unicode slug.
+
+    - validate_comma_separated_integer_list, a RegexValidator instance.
+
+    - int_list_validator, a RegexValidator instance.
+
+    - MaxLengthValidator.
+
+    - MinLengthValidator.
+
+    - ProhibitNullCharactersValidator
+
+  * ip address.
+
+    - validate_ipv4_address, for ipv4.
+
+    - validate_ipv6_address, for ipv6.
+
+    - validate_ipv46_address, for both ipv4 and v6.
+
+  * numerical:
+
+    - MaxValueValidator.
+
+    - MinValueValidator.
+
+    - DecimalValidator.
+
+  * file:
+
+    - FileExtensionValidator.
+
+    - validate_image_file_extension
 
 - CRUD
 
@@ -832,7 +916,7 @@
     - 由于返回一个 dict, 所以 ``.aggregate`` 要作为 QuerySet chain 的最后操作.
 
   * ``QuerySet.annotate()``:
-    
+
     给 QuerySet 里的每个元素生成聚合值. 这不仅仅可用于 ``GROUP BY`` 聚合,
     还可用于对每行返回所需的运算结果, 即 annotate 的一般含义. 使用这个一般
     意义, 还可以进行 sql ``SELECT name AS name2`` 操作:
@@ -1362,7 +1446,7 @@
         ``render_to_json_response()``.
 
   * view, template, form/formset 等的构建.
-    
+
     前端构建的传至后端的 form data 必须要能再次回到前端填充成原始的 form
     输入内容. 也就是说, Form, BaseFormSet 等的实例必须包含能重新构建前端
     form 填充形式的所有数据. 不要在前端 form 和 django form/formset 之间
@@ -1372,10 +1456,16 @@
     由前端业务逻辑决定的. 但是, form 中的各项最好和页面模板中的 html form
     项是一致的. 这样从 POST 数据构建 form, ``form_valid``, ``form_invalid``
     等的处理和数据重填都很方便.
-    
+
     如果想要传递某些 form 项但不希望用户输入, 则使用 hidden input type (配合
     js 进行输入), 而不是直接从 form 中去掉这项. 注意 view 中逻辑需要对 hidden
     input 的数据合法性进行验证.
+
+  * form validation. 不要在 view 本身的逻辑中写 form 本身数据 validation 逻辑,
+    要归入 form class 的定义中, 对于 model form 的情况, 还可考虑是否应当
+    再归入 model class 中, 即从 model 层对数据的合法性进行进一步限制.
+
+    但对于 form data 是否 suspicious 之类的检查, 需要在 view 中进行.
 
 - file upload
 
