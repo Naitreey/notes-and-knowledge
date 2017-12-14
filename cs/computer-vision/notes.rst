@@ -115,7 +115,7 @@ K-nearest neighbor
      why: no data to test the model's performance on fresh untouched data.
 
   3. better: split data to train & val & test. choose hyperparams that perform
-     best on val and evaluate it *only once* on test. (for each model? what if
+     best on val and evaluate it *only once* on test. (Q: for each model? what if
      test failed?)
 
   4. cross-validation: split data into folds, try each fold as validation and
@@ -207,4 +207,49 @@ linear classifier
   ``y_i`` is integer label, loss over the dataset is a sum of loss over examples:
   ``L = \frac{1}{N}\sum_i L_i (f(x_i, W), y_i)``. This is a very general definition.
 
-- multiclass SVM loss.
+  在实际中, 选择 ``L_i`` 即 loss function 的形式是很重要的. 它体现作者对不同 score
+  的 badness 情况的糟糕程度判断. 例如, hinge loss 是线性的, score 差别一点造成的
+  badness 差别并不那么大; 若选择 square loss, 一点 score 差别造成的 badness
+  可能很大.
+
+  训练时经常选择 random W 作为初始值.
+
+- multiclass SVM loss. (Q: SVM?)
+
+  Given ``(x_i, y_i)``, let ``s = f(x_i, W)``, we define the SVM loss:
+  ``L_i= \piecewise{0, s_j - s_{y_i} + 1} = \sum_{\ne y_i}\max(0, s_j - s_{y_i} + safety)``
+
+  需要一个 safety value 的原因是去除 W 的一种错误情况: 即 W 的值导致每个样本的分数
+  都差不多, 此时若没有 safety value, 将是得到 L = 0 的合理 W 值.
+
+  Hinge loss. the shape of the graph.
+
+  * value range of L: ``[0, \infty)``
+
+  * 已经正确标记的训练样本分数 (在 threshold 以上时) 贡献 loss 0.
+
+  * 当 W 很小时, 所有样本的 ``s \approx 0``, 此时 ``L = 样本数 - 1``.
+    这是一个很有用的 debugging strategy, 即初始时检验是否符合预期.
+
+  * 去掉 ``s_j = s_{y_i}`` 的求和项是为了将最小 L = 0, 否则最小 L = 1.
+
+  * L = 0 的 W 值不是唯一的, 尤其是 ``W -> N*W`` 总能令 L = 0, scale up/down 
+    不影响模型 (线性).
+
+- overfitting & regularization. 训练的过程本质上是拟合 ``f(x, W)`` 的过程. 所以存在
+  过拟合问题. 过拟合的效果是, 拟合曲线 (或者说 ``f(x, W)``) 完美匹配训练数据点,
+  但对测试数据预测能力很差.
+
+  解决过拟合问题, 直觉上我们需要对拟合曲线做一个 "矫正", "平滑化", 操作,
+  penalizing your model. 假设 我们已经得到一个过拟合的 ``f``, 则应该在 ``y =
+  f(x, W)`` 后面加一项补偿项, ``y = f(x, W) + c h(x) = f'(x, W)``. 这是在 x
+  空间的描述. 为了求解这个新的 ``f'``, 对应在 W
+  空间定义损失函数后面添加一个正则项 (regularization) ``\lambda R(W)``,
+  得到新的 loss function 形式: ``L(W) = \frac{1}{N}\sum_{i=1}^N L_i(f(x_i, W),
+  y_i) + \lambda R(W)``.
+
+  hyperparameter lambda trades off between the two.
+
+  * common regularizations
+
+    - L2 regularization
