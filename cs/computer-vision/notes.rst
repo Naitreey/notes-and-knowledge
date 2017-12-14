@@ -133,6 +133,8 @@ K-nearest neighbor
 linear classifier
 ~~~~~~~~~~~~~~~~~
 
+- a basic example of parametric classifiers.
+
 - the most fundamental building blocks for neutral network.
 
 - parametric model
@@ -170,9 +172,13 @@ linear classifier
   other classifiers may not have this one-template-only restriction. So may looks
   better.
 
-- 如果把像素值矢量 ``x`` 看作是一个 N 维座标平面上的点, 则 ``W`` 的每一行 (即一个 class
-  template 图像) 是斜率. ``f(x,W) = Wx+b`` 定义了一个 N+1 维平面. 这个面与 N 维座标
-  平面的交线就是该类的 decision boundary. 也就是说在这条线的一边是这类的图像, 另一边不是.
+- 如果把像素值矢量 ``x`` 看作是一个 N 维座标平面上的点 (每个像素点的强度是都是一个
+  座标轴), 则 ``W`` 的每一行 (即一个 class template 图像) 是斜率.
+  ``f(x,W) = Wx+b`` 定义了一个 N+1 维平面. 这个面与 N 维座标 平面的交线就是该类的
+  decision boundary. 也就是说在这条线的一边是这类的图像, 另一边不是.
+
+  这也是对 linear classification 的线性特性的一种理解. 即 ``Wx+b=0`` 的 decision boundary
+  在 N 维座标面上是一条直线.
   
 - hard cases
   
@@ -185,5 +191,20 @@ linear classifier
 
   * 一个分类在高维平面中以环状出现.
 
-- 如何选择 W. 即如何选择各个斜率最终让所有的训练数据点的分数 ``f(x,W)`` 合理,
-  decision boundary ``Wx+b=0`` 位置合理.
+- loss function definition.
+ 
+  解决: 如何通过 training data 得到合适的 W. 即如何选择各个斜率最终让所有的训练数据点的
+  分布 ``f(x,W)`` 合理, decision boundary ``Wx+b=0`` 位置合理.
+
+  这需要量化 badness of different choices of W. 即一个函数, 它输入 W, 根据 W 计算对
+  各个训练样本的分数, 然后得出 badness value. 这就是 loss function 的概念.
+
+  寻找 loss function 的极小值点, 即得到了最合适的 W 参数值.
+
+  definition:
+
+  Given a dataset of examples ``{(x_i, y_i)}_{i=1}^N``, where ``x_i`` is image and
+  ``y_i`` is integer label, loss over the dataset is a sum of loss over examples:
+  ``L = \frac{1}{N}\sum_i L_i (f(x_i, W), y_i)``. This is a very general definition.
+
+- multiclass SVM loss.
