@@ -139,18 +139,6 @@
   * 对于 class namespace 中的各个属性, 只有 ``django.db.models.Field`` 的实例
     才会认为是 model field. 其他属性实际上可以随意设置.
 
-  * validation.
-
-    ``.save()`` 时不会自动调用 ``.full_clean()`` (因 form 验证时会执行它),
-    若 model instance 不是来源于上层 form, 这验证操作必须手动执行. 或者
-    等着数据库下层报错.
-
-    ``Model.full_clean()`` 只能进行数据库层 data integrity 方面的检验, 复杂的检验
-    要靠 ``ModelForm.full_clean()`` 去进行.
-    field 中的很多限制条件, 例如 ``choices``, ``blank``, 以及一些 field type, 例如
-    ``FilePathField`` 等, 本身不能限制存储的值, 因为这些条件不能在数据库中表达.
-    这些条件只有配合 ``ModelForm`` 使用, 才能有用.
-
   * 表之间的关系抽象为在一个模型中包含另一个模型的实例作为属性. 这种抽象在逻辑上十分自然.
     并且在实例中进行 attribute lookup 以及在 QuerySet 中进行 field lookup 筛选时, 自然地
     支持了多级深入的操作.
@@ -553,6 +541,14 @@
     lazy relationship: 若 relation field 需与可能尚未建立的 model 建立关联,
     使用 ``[<app_label>.]<model>``.
 
+- model instance.
+
+  * instantiation.
+
+    - 在创建 model instance 时, 对于 FK field, 有两种指定方式:
+      ``<FK-field>=<FK-model-object>``, ``<FK>_id=<FK-model-object>.{id|pk}``.
+      这不同于 field lookup, 不支持 id 和 object 交叉混合的方式.
+
 - model index.
 
   index 通过 ``Model.Meta.indexes`` option 指定, a list of Index objects.
@@ -575,6 +571,17 @@
       对于自定义 model fields, 还可以自定义 field 的 clean methods 等.
 
     - 对于 model 内各数据之间的制约关系, 自定义 model 的 clean methods 等.
+
+  * model instance validation.
+
+    ``.save()`` 时不会自动调用 ``.full_clean()`` (因 form 验证时会执行它),
+    若 model instance 不是来源于上层 form, 这验证操作必须手动执行. 或者
+    等着数据库下层报错.
+
+    ``Model.full_clean()`` 默认只进行数据库层 data integrity 方面的检验.
+    field 中的很多限制条件, 例如 ``choices``, ``blank``, 以及一些 field type, 例如
+    ``FilePathField`` 等, 本身不能限制存储的值, 因为这些条件不能在数据库中表达.
+    这些条件只有配合 ``ModelForm`` 使用, 才能有用.
 
 - validators.
 
