@@ -1188,6 +1188,8 @@
 
 - 判断两个条件中有且仅有一个条件为真是, 可使用 exclusive OR operator ``^``.
 
+- 简化 ``x == a or x == b`` 之类的条件成 ``x in (a, b)``.
+
 language
 ========
 
