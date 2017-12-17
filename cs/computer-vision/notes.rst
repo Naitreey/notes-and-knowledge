@@ -139,7 +139,7 @@ linear classifier
 
 - parametric model
 
-  ``f(x, W)`` -> array of scores for each class
+  ``f(x, W)`` -> array of scores for each class. (Q: how can score be negative?)
  
   ``x`` input, ``W`` parameters or weights.
 
@@ -233,23 +233,139 @@ linear classifier
 
   * 去掉 ``s_j = s_{y_i}`` 的求和项是为了将最小 L = 0, 否则最小 L = 1.
 
-  * L = 0 的 W 值不是唯一的, 尤其是 ``W -> N*W`` 总能令 L = 0, scale up/down 
-    不影响模型 (线性).
+- overfitting & regularization.
 
-- overfitting & regularization. 训练的过程本质上是拟合 ``f(x, W)`` 的过程. 所以存在
-  过拟合问题. 过拟合的效果是, 拟合曲线 (或者说 ``f(x, W)``) 完美匹配训练数据点,
+  只根据一些分立已知的数据点去求 W 矩阵, 显然是一个 underdetermined question (因为
+  可以找到无数种方式靠近或穿过样本数据点). 也就是说, 训练的过程本质是根据已知数据
+  拟合 ``f(x, W)`` 的过程. 因此这种拟合算法求得的令 L = 0 的 W 值不是唯一的.
+  例如, ``W -> N*W`` 总能令 L = 0. 不同的 W 对应着不同的拟合曲线, 因此可能存在
+  overfitting 问题. 过拟合的结果是, 拟合曲线 (或者说 ``f(x, W)``) 完美匹配训练数据点,
   但对测试数据预测能力很差.
 
-  解决过拟合问题, 直觉上我们需要对拟合曲线做一个 "矫正", "平滑化", 操作,
-  penalizing your model. 假设 我们已经得到一个过拟合的 ``f``, 则应该在 ``y =
-  f(x, W)`` 后面加一项补偿项, ``y = f(x, W) + c h(x) = f'(x, W)``. 这是在 x
-  空间的描述. 为了求解这个新的 ``f'``, 对应在 W
-  空间定义损失函数后面添加一个正则项 (regularization) ``\lambda R(W)``,
-  得到新的 loss function 形式: ``L(W) = \frac{1}{N}\sum_{i=1}^N L_i(f(x_i, W),
-  y_i) + \lambda R(W)``.
+  解决过拟合问题, 直觉上我们需要对拟合曲线做一个 "矫正", "平滑化" 操作,
+  penalizing your model. (最简单的模型才是最通用的. (ocaccm's razor)) 假设我们已经得到
+  一个过拟合的 ``f``, 则应该在 ``y = f(x, W)`` 后面加一项补偿项,
+  ``y = f(x, W) + c h(x) = f'(x, W)``. 这是在 x 空间的描述. 为了求解这个新的
+  ``f'``, 对应在 W 空间定义损失函数后面添加一个正则项 (regularization)
+  ``\lambda R(W)``, 得到新的 loss function 形式:
+  ``L(W) = \frac{1}{N}\sum_{i=1}^N L_i(f(x_i, W), y_i) + \lambda R(W)``.
 
   hyperparameter lambda trades off between the two.
 
   * common regularizations
 
-    - L2 regularization
+    - L2: squared norm, half squared norm (for nicer derivative)
+      ``R(W) = \sum_k\sum_l W_{k,l}^2`` (Q: what is L1, L2?)
+
+      L2 norm 的特点大致可理解为, 当 W 的值各项分散在它的各个项时, 得到的
+      loss 相对于 W 的值集中在少数几个项时的 loss 更小. 也就是说, L2
+      regularization 倾向于比较分散的 W, 而不是集中的 W. 也就是说, 它可能
+      更适用于当 x 的各维度都具有一定影响时, 而不是仅有少数几个维度有影响.
+
+      L2 regularization 与 Bayesian inference 有关.
+
+    - L1: ``R(W) = \sum_k\sum_l \abs{W_{k,l}}``, encouraging sparsity (Q: why?).
+
+      L1 的倾向与 L2 相反, 即它更倾向于较集中的 W, 而不是更分散的 W. 这就是
+      encouraging sparsity 的意思. 它容易让 W 的值倾向于大量的 0, 除了少数
+      一些值之外. (more thoughts on this:
+      https://stats.stackexchange.com/questions/45643/why-l1-norm-for-sparse-models
+      https://en.wikipedia.org/wiki/Elastic_net_regularization
+      http://www.chioka.in/differences-between-l1-and-l2-as-loss-function-and-regularization/)
+
+    - Elastic net (L1+L2): ``R(W) = \sum_k\sum_l \beta W_{k,l}^2 + \abs{W_{k,l}}``
+
+    - Max norm.
+
+    - Dropout.
+
+    - Batch normalization.
+
+    - stochastic depth.
+
+- cross entropy loss (softmax loss) (multinomial logistic regression)
+  (Q: WTF?
+  https://en.wikipedia.org/wiki/Multinomial_logistic_regression
+  https://en.wikipedia.org/wiki/Cross_entropy)
+
+  * softmax function (Q: what is it?)
+    ``\frac{e^{s_k}}{\sum_j e^{s_j}}``
+    where ``s = f(x_j; W)``
+    (Q: semicolon?
+    https://math.stackexchange.com/questions/342268/what-does-the-semicolon-mean-in-a-function-definition)
+
+  * 对 score 进行定义. score = unnormalized log probabilities of the classes.
+    (Q: log probability?)
+    经过 softmax 操作后得到的是该样本 ``x_i`` 被识别为某个 class ``k`` 的概率分布.
+    即 ``P(Y=k|X=x_i) = \frac{e^{s_k}}{\sum_j e^{s_j}}``
+
+  * log probability 比原始的概率分布更容易在计算机上计算. 因此, 对该条件概率做 log
+    运算. 我们希望最大化这个 log probability. 构建 loss function ``Li = - log p(Y|x)``
+    即我们希望最小化这个 Li 损失 (这么构建是因为 loss 应该是正的).
+
+  * 最终得到 loss function 形式:
+    ``L = \frac{1}{N}\sum_i^N Li = - \frac{1}{N}\sum_i^N log(\frac{e^{s_{y_i}}}{\sum_j e^{s_j}})``
+
+  * Li 的值域: ``[0, \infty]``
+
+  * 为了得到 Li = 0, 除了 yi 之外的 ``s_j`` 必须是无限趋于 ``-\infty``. 而 ``s_{y_i}``
+    应该是很大的正值. (Q: 需要是 infinity 么?)
+    由于计算机无法做到 infinity, 在有限的时间下, 得不到 Li = 0 的结果, 只能很小.
+    即得不到完全的 ``(1,0,0,...)`` 式的 softmax 概率分布. 类似的, 也无法在有限时间
+    资源和精度下, 得到 ``Li -> \infty`` 的情形, 因为需要 ``e^{s_{y_i}} -> -\infty`` .
+
+  * 初始时, W 很小, ``s\approx 0``, 此时 ``Li = -log(\frac{1}{C})``, 可用于 debug.
+
+- SVM vs cross entropy
+
+  * SVM loss 中, 当正确和错误的分类分数差达到一定的 threshold 之后, loss 就 = 0 了.
+    因此, 在 SVM 中, 参数优化到一定程度就会停止.
+
+  * cross entropy loss 中, 要达到 L = 0, 要求错误分类的分数达到 ``-\infty``,
+    正确分类的分数足够大. 因此系统会不断优化参数, 一直将错误分类的分数向负无穷
+    靠近, 正确分类的分数向正无穷靠近.
+
+  * 虽然在理论上两者有这些区别, 但在实际使用中, 结果区别并不大.
+
+optimization of W
+-----------------
+
+现在的任务是寻找一个能够让 loss 取最小值的 W. 有多种优化解法.
+
+为什么不直接去解 ``\gradient F(x) = 0`` 的解析解呢?
+因为:
+
+setting derivatives to 0 is only useful when the system ∇F(x)=0 happens to be a
+linear one (or at least, an explicit system of equations in which x can be
+isolated). Otherwise, one may have to solve a system of nonlinear equations,
+which entails the use of some gradient-descent or Newton type method.
+
+when your first-order derivative system is a linear system of equations,
+solving this system directly is typically much more computationally attractive
+than using gradient-descent (whose convergence can be slow). When your
+first-order derivative system is not a linear system, then alternative
+strategies (including, but not limited to, gradient descent) may be more
+attractive.
+
+random search
+~~~~~~~~~~~~~
+of course not.
+
+gradient descent
+~~~~~~~~~~~~~~~~
+simple and effective.
+
+- numerical gradient: 假设步长, 对每个分量做有限差分, 求得梯度分量值, 选取负梯度
+  最大的方向对应的 W 是新的 W.
+
+  approximate, slow, easy to write.
+
+- analytic gradient: 根据 loss function 解析形式给出它的梯度解析形式. 梯度给出了
+  x 的变化方向, 所以 W 矢量减去步长*梯度就得到了下一个 W 值.
+
+  exact, fast, error-prone.
+
+use analytic gradient in practice, but check implementation with
+numerical gradient (common debugging strategy: gradient check).
+
+- 步长是一个重要 hyperparameter.
