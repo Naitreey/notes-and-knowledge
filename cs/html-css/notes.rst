@@ -2051,12 +2051,65 @@ text
 
   inherited.
 
-  values: normal, ``<length>``. length may be negative.
+  initial: normal. values: normal, ``<length>``. length may be negative.
 
   User agents may not further increase or decrease the inter-character space in
   order to justify text.
 
+  在全大写的情况下, 增加 letter spacing 有助于提高可读性. 对于普通的小写情况,
+  一般无论增加或减小 letter spacing 都会降低可读性. 一般不动即可.
+
 - word-spacing
+
+  inherited.
+
+  initial: normal. values: normal, ``<length>``, ``<percentage>``.
+  对于 percentage, 是相对于当前字体的 character advance width.
+
+  对于 bold 情况, 或者修改了 letter spacing 时, 适当修改 word spacing 会有更好
+  的可读性.
+
+- text-align. 即行内各 inline elements 如何进行 align & justification. 注意只
+  管 inline elements, block elements 不管.
+
+  inherited.
+
+  initial: start (or left if direction is ltr, right if direction is rtl).
+  values: start, end, left, right, center, justify, justify-all, match-parent.
+
+  start & end 是 direction-aware (ltr/rtl) 的 left & right.
+  justify-all 与 justify 的区别是前者会连最后一行也 justify 掉.
+
+- vertical-align. 两种用途:
+ 
+  1. 对于某个 inline element 相对于 line box 的 alignment.
+
+  2. 对于 table cell content 相对于 cell box 的 alignment.
+
+  注意该属性对 block-level element 不起作用.
+
+  non-inherited.
+
+  initial: baseline.
+  values:
+
+  * for inline:
+
+    - baseline. 该元素的 baseline 和 parent 的 baseline.
+
+    - sub. 该元素的 baseline 和 parent 的 subscript baseline.
+
+    - super. 该元素的 baseline 和 parent 的 superscript baseline.
+
+    - text-top. 该元素的 top 和 parent 的字体的 top.
+
+    - text-bottom. 该元素的 bottom 和 parent 的字体的 bottom.
+
+    - middle. 该元素的 middle 位置和 parent 的 baseline + 1/2 * x-height.
+
+    - ``<length>``. baseline 以上 length 长度. 可以为负.
+
+    - ``<percentage>``. 相对 line-height 的比例, 基于 baseline.
 
 background
 ~~~~~~~~~~
@@ -2162,7 +2215,7 @@ value data types
 
     对于 px, 标准情况下, 一个 px 就是一个 screen pixel. 所以是确定的. 除非使用了
     浏览器的缩放功能去放大和缩小整体页面. 此时, px 即 css pixel 与 physical pixel
-    会有缩放的比例关系. 但由于本质上所有页面元素尺寸最终 computed value 都转换
+    会有缩放的比例关系. 但由于本质上所有页面元素尺寸最终 used value 都转换
     成 pixel, 故效果是页面整体进行等比例缩放.
 
 - ``<url>``, ``url(...)`` functional notation. It may be written without quotes,
