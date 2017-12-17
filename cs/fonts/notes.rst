@@ -41,6 +41,11 @@ stretch
 
 - extended
 
+kerning
+~~~~~~~
+
+kerning is the space between each letter in a word.
+
 typeface alignment
 ------------------
 
