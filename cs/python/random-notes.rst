@@ -1230,7 +1230,26 @@ exception
 
 builtin functions
 =================
-- ``enumerate()``, ``start=`` 设置第一项的序号值.
+很多 builtin function 本质上应该看作是该 class 的 constructor.
+
+iteration
+---------
+
+- ``enumerate()``, enumerate object constructor. ``start=`` 设置第一项的序号值.
+
+number
+------
+
+- ``float()``, float object constructor. 输入是 number, string 或 object.
+
+  对于 string:
+  可以包含 leading or trailing whitespace chars;
+  可以包含 +/- sign;
+  值的部分可以是 ``infinity|inf|nan`` (case-insensitive), 对应正负无穷和 NaN.
+
+  对于 object, ``object.__float__`` method is called.
+
+  无参数时返回 0.0.
 
 builtin types
 =============
