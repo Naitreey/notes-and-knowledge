@@ -32,6 +32,33 @@ the web application
 - 可以启动多个 notebook server, 例如对于不同的目录. 多个 server 会自动递增
   端口号, 除非命令行上指定.
 
+notebook UI components overview
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- notebook dashboard
+
+  * file tree
+
+    - 有 active kernel 的 notebooks 有个绿色的图标和 running 标识.
+
+- notebook editor
+
+  * menubar
+
+  * toolbar
+
+  * notification area: messages in response to user actions.
+
+  * cell mode indicator: edit/command mode, 通过 pencil 图标区别.
+
+  * kernel indicator: which kernel in use. 灰色的空心圆表示 kernel 空闲状态;
+    实心圆表示 kernel is busy; 断裂状表示和 kernel 连接断掉了.
+
+  * active cell 处于 edit/command mode 边框不同.
+
+- file editor. 编辑非 notebook 的文本文件, 可选择高亮语言.
+
+  从 dashboard 中直接点击打开后是只读的, 不能编辑. 需要 select 后点击 edit.
+
 cells
 ~~~~~
 - cells: code cell, markdown cell, raw cell. cell types can be changed
@@ -57,6 +84,14 @@ downloads
 - 当 notebook 以 python source 文件输出时, all rich output has been removed and
   the content of markdown cells have been inserted as comments.
 
+modes
+~~~~~
+- command mode: 可以使用很多 shortcuts.
+
+- edit mode: 文本编辑模式.
+
+command/edit modes 之间通过 enter/esc 切换.
+
 shortcuts
 ~~~~~~~~~
 - shift-enter: run current cell and jump to next cell or create a new cell.
@@ -68,7 +103,7 @@ shortcuts
 
 - Esc: escape to normal mode.
 
-- Enter: enter into insert mode.
+- Enter: enter into edit mode.
 
 notebook documents
 ------------------
