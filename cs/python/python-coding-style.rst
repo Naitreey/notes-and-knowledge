@@ -170,6 +170,16 @@ import
         name3, ...
     )
 
+- 有时候 import 的时候引入整个或部分 namespace 的名字, 而不是 namespace 下面的具体
+  要使用的内容, 具有更好的代码可读性. 因此时调用任何所需量的时候, 需要 prefix
+  namespace 的名字. 这样提供了 context:
+
+  .. code:: python
+    import liba
+    liba.func(...)
+
+  但这是一个细致的问题, 需要具体看情况选择不同的 import 方式, 没有绝对好坏之分.
+
 strings literal
 ---------------
 - For triple-quoted string, always use double quote character.
