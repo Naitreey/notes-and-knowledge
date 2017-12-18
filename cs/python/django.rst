@@ -19,6 +19,23 @@
 
   对于仅有一个功能模块的项目, 可以简单地将 project 直接应用为 app.
 
+- project
+
+  * 由于 django 设计的 project 代码 import 逻辑 -- 即 project 目录需要在 ``sys.path``
+    中, 导致 django project 不适合整个打包为 python package 然后用 pip 安装至
+    site-packages 目录. 因为这样的效果是在 ``sys.path`` 中包含 site-packages 的子目录.
+    结果就是 import 时可能存在覆盖问题.
+
+    整个 django project 适合打包成 rpm/deb, 放在 ``/usr/lib`` 下.
+
+    然而, 一个 django project 中的每个 app, 都应该可以打包成 python package 用 pip
+    安装.
+
+  * project 目录可以作为一个全局 app 来使用. 全局的模板, 全局的静态文件, 全局的 url,
+    全局的管理命令等, 都可以放在这个全局 app 中.
+
+  * project structure.
+
 - app
 
   * In essence, a Django application is just a Python package that is specifically
@@ -39,20 +56,18 @@
   * 若需要在代码中获取当前安装的 django apps, 应该使用 ``django.apps.apps``
     application registry, 而不是直接访问 ``settings.INSTALLED_APPS``.
 
-- project
+  * app structure.
 
-  * 由于 django 设计的 project 代码 import 逻辑 -- 即 project 目录需要在 ``sys.path``
-    中, 导致 django project 不适合整个打包为 python package 然后用 pip 安装至
-    site-packages 目录. 因为这样的效果是在 ``sys.path`` 中包含 site-packages 的子目录.
-    结果就是 import 时可能存在覆盖问题.
+    - ``mixins.py``. 所有在本 app 中定义的 mixin classes. 这些 mixins 可能不仅仅
+      是 views 会用到, forms, models 等也可能使用. 所以单独拿出来.
 
-    整个 django project 适合打包成 rpm/deb, 放在 ``/usr/lib`` 下.
+    - ``tasks.py``. 需要使用 task queue 时, 放置所有任务.
 
-    然而, 一个 django project 中的每个 app, 都应该可以打包成 python package 用 pip
-    安装.
+    - ``validators.py``. 放置所有自定义的 forms/models validators.
 
-  * project 目录可以作为一个全局 app 来使用. 全局的模板, 全局的静态文件, 全局的 url,
-    全局的管理命令等, 都可以放在这个全局 app 中.
+  * special global app.
+
+    - structure.
 
 - URLconf
 
