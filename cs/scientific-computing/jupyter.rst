@@ -94,16 +94,115 @@ command/edit modes 之间通过 enter/esc 切换.
 
 shortcuts
 ~~~~~~~~~
-- shift-enter: run current cell and jump to next cell or create a new cell.
+可自定义.
 
-- ctrl-enter: run current cell and keep focus on current cell. useful for
-  temporary execution.
+- normal mode
 
-- alt-enter: run current cell and insert a new cell below the current one.
+  * run current cell and jump to next cell or create a new cell.
+  
+  * run current cell and keep focus on current cell. useful for
+    temporary execution.
+  
+  * run current cell and insert a new cell below the current one.
+  
+  * enter into edit mode.
 
-- Esc: escape to normal mode.
+  * convert cell types: to code, to markdown, to raw.
 
-- Enter: enter into edit mode.
+  * convert to heading 1-6
+
+  * move focus to cell below, to cell above.
+
+  * extend selected cells below/above.
+
+  * insert cell above/below.
+
+  * cut selected cells.
+
+  * copy selected cells.
+
+  * paste cells above/below.
+
+  * undo cell deletion.
+
+  * delete selected cells.
+
+  * merge selected cells.
+
+  * save and checkpoint.
+
+  * toggle line numbers.
+
+  * toggle line numbers in all cells.
+
+  * toggle output of selected cells.
+
+  * help.
+
+  * interrupt kernel.
+
+  * restart kernel.
+
+  * close pager.
+
+  * scroll notebook up/down.
+
+- edit mode
+
+  * escape to normal mode.
+
+  * code completion.
+
+  * tooltip.
+
+  * indent/dedent.
+
+  * select all.
+
+  * undo/redo.
+
+  * go to cell start/end.
+
+  * go one word left/right.
+
+  * delete word before/after.
+
+  * run current cell and jump to next cell or create a new cell.
+  
+  * run current cell and keep focus on current cell. useful for
+    temporary execution.
+  
+  * run current cell and insert a new cell below the current one.
+
+  * split cell.
+
+  * save and checkpoint.
+
+  * move cursor up/down.
+
+extension
+~~~~~~~~~
+
+- jupyter-vim-binding
+
+  * modes: Jupyter mode (For manipulating Jupyter) and Vim mode (For
+    manipulating text). In Vim mode, there are Command mode and Insert mode
+    like native Vim. Users can distinguish these mode by background color of
+    the cell.
+
+  * vim mode mappings.
+
+    - help: ``F1``
+
+    - enter vim mode: double click, enter.
+
+    - exit vim mode: ``:q``, ``<S-Esc>``.
+
+    - completion: tab.
+
+    - tooltip: ``<C-g>``. repeating can make tooltip larger.
+
+    - move focus to next/previous cell: j/k.
 
 notebook documents
 ------------------
@@ -220,6 +319,9 @@ jupyter qtconsole
 
 jupyter trust
 -------------
+
+jupyter nbextension
+-------------------
 
 jupyterhub
 ==========
