@@ -1701,7 +1701,7 @@ syntax
     - the double bar has precedence over the single bar, meaning that
       ``bold | thin || <length>`` is equivalent to ``bold | [ thin || <length> ]``.
 
-- 各种 values.
+- various property values.
 
   * initial value. a property's default value, as listed in its definition table.
     对于任何元素, 可以通过 ``initial`` keyword 明确指定使用 initial value.
@@ -1737,36 +1737,82 @@ syntax
     approximations have been applied by user agent. 这些值是最终浏览器使用的值,
     在考虑到具体环境的局限性等因素后的完全真实值.
 
+- replaced & non-replaced elements
+
+  * replaced element 是具有 intrinsic dimension 的元素. 它的意思是这些元素的内容
+    具有本征的长宽等尺寸 (这些内容替换了 tag 本身, 故命名 replaced). 这些尺寸不受
+    css 控制.
+
+    常见 replaced elements:
+    iframe, video, embed, img, ``<input type="image">``;
+    content property value: anonymous replaced elements;
+    一些情况下的 audio, canvas, object, applet.
+
 selector
 --------
 
-- basic selectors
+basic selectors
+~~~~~~~~~~~~~~~
 
-  * universal selector. ``*``
+- universal selector. ``*``
 
-  * type selector. ``element-name``
+- type selector. ``element-name``
 
-  * class selector. ``.class``
+- class selector. ``.class``
 
-  * id selector. ``#id``
+- id selector. ``#id``
 
-  * attribute selector. ``[attr=value]``
+- attribute selector. ``[attr=value]``
 
-- combinators
+combinators
+~~~~~~~~~~~
 
-  * child combinator. ``a > b``
+- child combinator. ``a > b``
 
-  * descendant combinator. ``a b``
+- descendant combinator. ``a b``
 
-  * adjacent sibling combinator. ``a + b``
+- adjacent sibling combinator. ``a + b``
 
-  * general sibling combinator. ``a ~ b``
+- general sibling combinator. ``a ~ b``
+
+pseudo-classes
+~~~~~~~~~~~~~~
+- 作用: 在 selector 后面加上 ``:<...>``, 用于在已经选定的元素中进一步只选择
+  它的某个子状态.
+
+  关键字是状态.
+
+pseudo-elements
+~~~~~~~~~~~~~~~
+- 作用: 在 selector 后附加 ``::<...>`` 语法, 用于在已经选定的元素中进一步限定
+  只选择它的某个子部分.
+
+  关键字是部分.
+
+- 一个 selector 中只能出现一个 pseudo-element. 且必须位于所有 basic selectors
+  之后.
+
+- ``::before``
+  creates a pseudo-element as the first child of the selected elements.
+  The created element is inline by default.
+
+  该 selector 对应的 declaration block 就是在对这个 created element 进行 styling.
+
+- ``::after``
+  与 ``::before`` 类似, 对应地创建最后一个子元素.
+
+- ``::first-letter``
+
+- ``::first-line``
+
+- ``::selection``
 
 cascade, specificity, inheritance
 ---------------------------------
 
+when to put css definitions at element-inline, document-level, external, etc.?
 
-when to put css definitions at XXX?
+
 
 最终决定一套生效的 css 规则的基本流程:
 
@@ -2088,6 +2134,10 @@ text
 
   注意该属性对 block-level element 不起作用.
 
+  注意 text-align & vertical-align 作用对象是不同的. 前者是影响
+  设置了该属性的 element box 内部的各元素之间的 alignment; 后者是影响
+  设置了该属性的 element box 如何在它的父元素内部进行 alignment.
+
   non-inherited.
 
   initial: baseline.
@@ -2101,15 +2151,69 @@ text
 
     - super. 该元素的 baseline 和 parent 的 superscript baseline.
 
-    - text-top. 该元素的 top 和 parent 的字体的 top.
+    - text-top. 该元素的 top 和 parent 的字体的 top, 即 font-size 的高度.
 
-    - text-bottom. 该元素的 bottom 和 parent 的字体的 bottom.
+    - text-bottom. 该元素的 bottom 和 parent 的字体的 bottom, 即 font descender.
 
     - middle. 该元素的 middle 位置和 parent 的 baseline + 1/2 * x-height.
+
+    - top. 该元素的 top 和 parent 中一行的 top, 即行的最高点, 它在 text-top 之上.
+
+    - bottom. 该元素的 bottom 和 parent 中一行的 bottom, 即行的最低点, 它在
+      text-bottom 之下.
 
     - ``<length>``. baseline 以上 length 长度. 可以为负.
 
     - ``<percentage>``. 相对 line-height 的比例, 基于 baseline.
+
+  * for table cell:
+
+    - top. Aligns the top padding edge of the cell with the top of the row.
+
+    - middle. Centers the padding box of the cell within the row.
+
+    - bottom. Aligns the bottom padding edge of the cell with the bottom of the row.
+
+    注意此时是直接调整 table cell 内部的 padding 情况的.
+
+- text-indent. indent lines of text within an element.
+
+  inherited.
+
+  initial value: 0, 即没有缩进.
+  value: 缩进量是从 containing block-level element 的 padding box 开始计算的.
+  可以是负值. ``<length>``, ``<percentage>`` (containing block element 宽度).
+  
+  除了以上值还可以附加 keyword:
+  ``each-line``: 每个 forced line break 后的第一行都会缩进;
+  ``hanging``: 除了第一行之外的所有行都会缩进.
+
+- text-shadow. 给文字添加影子文字. It accepts a comma-separated list of shadows
+  to be applied, each of them is some combination of X and Y offsets from the
+  element, blur radius, and color.
+
+  The first two <length> values are the <offset-x> and <offset-y> values. The
+  third, optional, <length> value is the <blur-radius>. The <color> value is the
+  shadow's color. offset-x 的正向是向右的; offset-y 的正向是向下的. 若 offset-x
+  offset-y 都是 0, 则依靠 blur radius 给效果. blur-radius 控制影子文字的线条扩散
+  的情况, 它越小影子越清晰, 越大越有 blur 的效果.
+
+  When more than one shadow is given, shadows are applied front-to-back, with
+  the first-specified shadow on top.
+
+  inherited.
+
+  initial: none.
+
+- quotes. 设置自动添加的 open/close quote marks 长什么样.
+  例如 ``<q>`` element使用, 或者 ``open-quote`` ``close-quote`` value 使用.
+
+  inherited.
+
+  values:
+  none, quote marks 为空;
+  ``[<string> <string>]+``, 设置一级或多级 quotes 使用的 open/close quote mark
+  pairs.
 
 background
 ~~~~~~~~~~
@@ -2137,6 +2241,35 @@ element
 
   * rgba 等值经常设置在 inherited property 上. 由于子元素默认继承, 逻辑上是
     绝对效果而不是相对效果也比较合理.
+
+pseudo-element
+~~~~~~~~~~~~~~
+- content.
+  和 ``::before`` ``::after`` 一起使用. 通过这种方式生成的元素是
+  anonymous replaced elements.
+
+  non-inherited.
+
+  initial: normal 或 none.
+  values:
+  
+  * none. 不生成元素.
+
+  * normal. same as none.
+
+  * ``<string>``. text characters. 注意所有内容 verbatim 显示. 不做解析.
+
+  * ``<url>``. an external resource to be displayed, e.g., image.
+
+  * ``<counter>``. 设置 css counter 内容. 作为 counter 配置的一部分.
+
+  * ``attr(x)``. value of attribute x. 注意 value 是 verbatim 显示. 不做解析.
+
+  * ``open-quote``, ``close-quote``.
+
+  * ``no-open-quote``, ``no-close-quote``.
+
+  除了 none, normal 两个 keyword, 其他内容可以同时指定任意次数. 所以可以非常复杂.
 
 special
 ~~~~~~~
@@ -2246,7 +2379,6 @@ global values
   ``all`` property 可以配合 revert value 使用, 比较方便.
 
   No stable UA support yet!!
-
 
 Web Components
 ==============
