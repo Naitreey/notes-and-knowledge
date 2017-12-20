@@ -1801,11 +1801,14 @@ pseudo-elements
 - ``::after``
   与 ``::before`` 类似, 对应地创建最后一个子元素.
 
-- ``::first-letter``
+- ``::first-letter``, match first letter of the first line of a block element.
+  注意它不能随便用在所有元素上以期待它能匹配该元素内的第一个字符. 它必须应用在
+  block-level element 上.
 
-- ``::first-line``
+- ``::first-line``, match first line of a block element.
+  与 ``::first-letter`` 类似, 它必须应用在 block-level element 上.
 
-- ``::selection``
+- ``::selection``, match the part of text selected by user.
 
 cascade, specificity, inheritance
 ---------------------------------
@@ -2271,6 +2274,34 @@ pseudo-element
 
   除了 none, normal 两个 keyword, 其他内容可以同时指定任意次数. 所以可以非常复杂.
 
+counter
+~~~~~~~
+Counters 可以用于 auto-numbering headers 等.
+相关属性和值: ``counter-reset``, ``counter-increment``, ``content``,
+``<counter>``.
+
+A new instance of the counter is automatically created in child elements.
+但默认情况下, 这个新的实例的初始值是父元素中实例的当前值. 使用 counter-reset
+则可以对这个新实例重新赋值. 配合 ``counters()`` function 使用效果很好.
+
+- counter-reset. reset one or more counter to their specified values or 0.
+  在受影响的 element scope 内部, 新的 counter identifier value 将重置.
+
+  non-inherited.
+
+  initial: none. 即默认情况下不会重置 counter.
+  values: ``[ <custom-ident> <integer>? ]+ | none``
+
+  注意到属性值中 (多个) identifier 后面若没有 integer 就重置为 0.
+
+- counter-increment. increase the specified counter, optionally by the
+  specified amount.
+
+  non-inherited.
+
+  initial: none. 不递增.
+  values: ``[ <custom-ident> <integer>? ]+ | none``
+
 special
 ~~~~~~~
 - all. a shorthand property representing all properties, apart from
@@ -2357,6 +2388,15 @@ value data types
 
 - ``<string>``, any unicode chars with single or double quotes. 字符串支持通过
   ``\`` escape char, 尤其是可以 escape newline 来做到跨行.
+
+- ``<counter>``, 值是 css function.
+
+  * ``counter(name[, style])``. 输出一个 counter value.
+    name 是选择输出的 css counter variable, 是 identifier, 不是字符串.
+    style 是 counter style, 可以是 list-style-type 允许的任何值.
+
+  * ``counters(name, string[, style])``. 输出每层的同名 counter 的值.
+    string 是每层 counter value 之间的分隔符.
 
 global values
 ~~~~~~~~~~~~~
