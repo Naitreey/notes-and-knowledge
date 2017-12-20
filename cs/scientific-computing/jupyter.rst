@@ -223,11 +223,15 @@ qtconsole
 =========
 
 - 一个 jupyter qt GUI console app. 它和 jupyter console 即 ipython 的区别
-  是, 由于 qtconsole 是用 GUI 模拟 TUI terminal, 它可以在 console 中显示
-  GUI 图形. 这是无法在真正的 TUI 界面中做到的.
+  是, 由于 qtconsole 是用 GUI 模拟 TUI terminal, 它可以在 console 中 inline
+  地显示 GUI 图形. 这是无法在真正的 TUI 界面中做到的. (但在 ipython 中可以
+  调用外部 gui 组件显示 GUI 输出.)
 
 - 对于 ipykernel, ``%qtconsole`` magic 可以调出一个 qtconsole 使用同一个
   kernel process.
+
+- 由于 jupyter console & ipython 本身都可以加载 GUI 输出, 感觉 qtconsole
+  没什么用啊.
 
 kernels
 =======
