@@ -939,16 +939,23 @@
 
 - choose dnf/apt/pacman vs pip for python module installations
 
-  * 在一个多用途的系统中, 例如 PC, 多服务共用的 server, 等场景中, 系统层的
-    python 解释器被各个程序共用, 因此应该使用系统的 package manager 去安装
-    python modules. 这样才能保证各个 package 的版本依赖关系得到满足, 即某个
-    module 的版本是经过和其他 package 的兼容性测试的.
+  * 系统层的 python 解释器被所有程序和脚本共用, 尤其是来自发行版的脚本或者
+    通过 package manager 安装的 python 应用. 因此应该使用系统的 package manager
+    去安装 python modules. 这样才能保证各个 package 的版本依赖关系得到满足,
+    即某个 module 的版本是经过和其他 package 的兼容性测试的.
 
-  * 对于某个用户、某个项目或某个程序自己使用的 python, 则使用 pip 安装.
-    此时构建 virtualenv 或 pyenv, 将 modules 安装在局限的范围内, 与全局独立.
+    注意不要在全局范围内使用 pip 安装 packages. 这可能导致的麻烦有: 1) 覆盖
+    package manager 管理的版本, 导致 package manager 数据库与实际情况不符,
+    出现 broken dependency; 2) 存在一些安全问题. ``sudo pip`` 相当于执行
+    任意从 PyPI 上下载的 python 代码.
 
-  * 对于为某个服务单独运行的容器, 可以使用 pip 安装系统层的 modules. 因整个
-    容器为它服务, 不太需要考虑跟别的兼容.
+  * 对于某个用户希望自己能够随处使用的时候, 使用 ``pip install --user``
+    安装到 ``$HOME/.local`` 下.
+    
+  * 某个项目或某个程序自己使用的 python, 构建 virtualenv/venv, 使用 pip 安装.
+    这将 modules 安装在局限的范围内, 与全局独立.
+
+    若该项目需要特别的 python 版本, 还可考虑使用 pyenv.
 
 - 一个 package 中的 private module/subpackage 命名应该以 ``_`` 起始.
 
