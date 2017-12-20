@@ -1467,6 +1467,9 @@
         应用时, 按需 override ``render_to_response()`` 调用
         ``render_to_json_response()``.
 
+  * 当选择将 mixin 与 class 的功能结合使用时, 可以有多个 mixin class, 但只能有一个
+    main class. 并且 mixin 先于 main class 出现在 MRO 中才行.
+
   * view, template, form/formset 等的构建.
 
     前端构建的传至后端的 form data 必须要能再次回到前端填充成原始的 form
@@ -2789,710 +2792,753 @@
   若要传输很大的 csv 文件, 需要使用 StreamingHttpResponse. 这需要一些技巧.
   详见 django 文档.
 
-- authentication and authorization. django auth module: ``django.contrib.auth``.
+authentication and authorization
+================================
+- django auth module: ``django.contrib.auth``.
 
-  * authentication: 管理用户身份. authorization: 管理用户权限.
+- authentication: 管理用户身份. authorization: 管理用户权限.
 
-  * 创建用户. ``User.objects.create_user()`` 创建用户.
-    ``./manage.py createsuperuser`` 或 ``User.objects.create_superuser()``
-    创建超级管理员.
+- 创建用户. ``User.objects.create_user()`` 创建用户.
+  ``./manage.py createsuperuser`` 或 ``User.objects.create_superuser()``
+  创建超级管理员.
 
-  * 修改密码: 通过 ``./manage.py changepassword`` 和 ``User.set_password()``
-    来修改密码.
+- 修改密码: 通过 ``./manage.py changepassword`` 和 ``User.set_password()``
+  来修改密码.
 
-  * Authentication
+Authentication
+--------------
 
-    - ``authenticate()`` function 提供认证检验. 若认证成功返回 User object,
-      否则 None. 注意它只做检验 (返回相符的 User instance), 不改变状态.
+- ``authenticate()`` function 提供认证检验. 若认证成功返回 User object,
+  否则 None. 注意它只做检验 (返回相符的 User instance), 不改变状态.
 
-    - ``login()`` 在 ``authenticate()`` 的基础上, 改变认证状态, 并将认证相关信息
-      保存在 session 中. 未 login 时, ``request.user`` 是 ``AnonymousUser``,
-      login 后成为 ``User``. 两者的 ``is_authenticated`` attribute 的值分别是
-      False/True, 可用于判断是否登录了.
-      Note that any data set during the anonymous session is retained in the
-      session after a user logs in.
-      When a user logs in, the user’s ID and the backend that was used for
-      authentication are saved in the user’s session. This allows the same
-      authentication backend to fetch the user’s details on a future request
+- ``login()`` 在 ``authenticate()`` 的基础上, 改变认证状态, 并将认证相关信息
+  保存在 session 中. 未 login 时, ``request.user`` 是 ``AnonymousUser``,
+  login 后成为 ``User``. 两者的 ``is_authenticated`` attribute 的值分别是
+  False/True, 可用于判断是否登录了.
+  Note that any data set during the anonymous session is retained in the
+  session after a user logs in.
+  When a user logs in, the user’s ID and the backend that was used for
+  authentication are saved in the user’s session. This allows the same
+  authentication backend to fetch the user’s details on a future request
 
-    - 除了 ``login()`` 之外, ``AuthenticationMiddleware`` 会根据 request
-      中的 session id 信息, 匹配相应用户, 设置 ``request.user``. 从而避免
-      跳转至 login 页面和再次 ``login()``.
+- 除了 ``login()`` 之外, ``AuthenticationMiddleware`` 会根据 request
+  中的 session id 信息, 匹配相应用户, 设置 ``request.user``. 从而避免
+  跳转至 login 页面和再次 ``login()``.
 
-    - login url 在 ``settings.LOGIN_URL`` 设置, 默认是 ``/acounts/login``.
-      该值应该按照项目中用户模型、view 等的具体情况进行设置. 并且可以设置为
-      url pattern name.
+- login url 在 ``settings.LOGIN_URL`` 设置, 默认是 ``/acounts/login``.
+  该值应该按照项目中用户模型、view 等的具体情况进行设置. 并且可以设置为
+  url pattern name.
 
-    - login redirect url ``settings.LOGIN_REDIRECT_URL``, 登录后的默认跳转路径.
+- login redirect url ``settings.LOGIN_REDIRECT_URL``, 登录后的默认跳转路径.
 
-    - logout redirect url ``settings.LOGOUT_REDIRECT_URL``, 登出后的默认跳转路径.
+- logout redirect url ``settings.LOGOUT_REDIRECT_URL``, 登出后的默认跳转路径.
 
-    - ``logout()`` 撤销认证状态和清空 session 信息.
+- ``logout()`` 撤销认证状态和清空 session 信息.
 
-    - authentication views.
-      auth views 不提供默认的 templates, 需要自己写模板以加载 context variables.
+- authentication views.
+  auth views 不提供默认的 templates, 需要自己写模板以加载 context variables.
 
-      若不想直接使用默认的 auth.urls 设置, 可单独使用 views 以对参数进行自定义,
-      以及 bind to custom urls.
+  若不想直接使用默认的 auth.urls 设置, 可单独使用 views 以对参数进行自定义,
+  以及 bind to custom urls.
 
-      * login:
-        ``login()``, ``LoginView``.
+  * login:
+    ``login()``, ``LoginView``.
 
-      * logout:
-        ``logout()``, ``LogoutView``.
+  * logout:
+    ``logout()``, ``LogoutView``.
 
-      * logout then redirect to login:
-        ``logout_then_login()``.
+  * logout then redirect to login:
+    ``logout_then_login()``.
 
-      * password change:
-        ``password_change()``, ``PasswordChangeView``.
+  * password change:
+    ``password_change()``, ``PasswordChangeView``.
 
-      * password change done:
-        ``password_change_done()``, ``PasswordChangeDoneView``.
+  * password change done:
+    ``password_change_done()``, ``PasswordChangeDoneView``.
 
-      * password reset:
-        ``password_reset()``, ``PasswordResetView``.
+  * password reset:
+    ``password_reset()``, ``PasswordResetView``.
 
-      * password reset done:
-        ``password_reset_done()``, ``PasswordResetDoneView``.
-        密码重置请求已经发出后显示的页面.
+  * password reset done:
+    ``password_reset_done()``, ``PasswordResetDoneView``.
+    密码重置请求已经发出后显示的页面.
 
-      * password reset confirm:
-        ``password_reset_confirm()``, ``PasswordResetConfirmView``.
-        点击邮件中的密码重置链接后显示的密码重置页面.
+  * password reset confirm:
+    ``password_reset_confirm()``, ``PasswordResetConfirmView``.
+    点击邮件中的密码重置链接后显示的密码重置页面.
 
-      * password reset complete:
-        ``password_reset_complete()``, ``PasswordResetCompleteView``.
-        重置密码后提示成功的页面.
+  * password reset complete:
+    ``password_reset_complete()``, ``PasswordResetCompleteView``.
+    重置密码后提示成功的页面.
 
-    - authentication forms.
+- authentication forms.
 
-      若不想使用 auth views, 可单独使用 auth forms.
+  若不想使用 auth views, 可单独使用 auth forms.
 
-      * ``AdminPasswordChangeForm``
-        used in admin site.
+  * ``AdminPasswordChangeForm``
+    used in admin site.
 
-      * ``AuthenticationForm``
+  * ``AuthenticationForm``
 
-      * ``PasswordChangeForm``
+  * ``PasswordChangeForm``
 
-      * ``PasswordResetForm``
-        ``.save()`` method 并不修改任何状态, 而是调用 ``.send_mail()`` 发送重置邮件.
+  * ``PasswordResetForm``
+    ``.save()`` method 并不修改任何状态, 而是调用 ``.send_mail()`` 发送重置邮件.
 
-      * ``SetPasswordForm``
-        form to set new password without entering old password.
+  * ``SetPasswordForm``
+    form to set new password without entering old password.
 
-      * ``UserChangeForm``
-        used in admin site.
+  * ``UserChangeForm``
+    used in admin site.
 
-      * ``UserCreationForm``
+  * ``UserCreationForm``
 
-    - ``django.contrib.auth`` app 提供了一系列 authentication urls.
-      这些 url 是没有 namespace 的. 在使用时可以直接放在 url root path 上,
-      或者 ``include()`` 中设置 namespace.
+- ``django.contrib.auth`` app 提供了一系列 authentication urls.
+  这些 url 是没有 namespace 的. 在使用时可以直接放在 url root path 上,
+  或者 ``include()`` 中设置 namespace.
 
-      * ``login/``
+  * ``login/``
 
-      * ``logout/``
+  * ``logout/``
 
-      * ``password_change/``
+  * ``password_change/``
 
-      * ``password_change/done/``
+  * ``password_change/done/``
 
-      * ``password_reset/``
+  * ``password_reset/``
 
-      * ``password_reset/done/``
+  * ``password_reset/done/``
 
-      * ``reset/<uidb64>/<token>/``
+  * ``reset/<uidb64>/<token>/``
 
-      * ``reset/done/``
+  * ``reset/done/``
 
-  * Permission and Authorization
+Permission and Authorization
+----------------------------
 
-    - 当 ``django.contrib.auth`` app 存在时, 每个 app 的每个 model 都默认存在
-      add, change, delete 三个权限.
+- 当 ``django.contrib.auth`` app 存在时, 每个 app 的每个 model 都默认存在
+  add, change, delete 三个权限.
 
-    - 权限检查 ``User.has_perm(<app_label>."add|change|delete"_<model>)``
+- 权限检查 ``User.has_perm(<app_label>."add|change|delete"_<model>)``
 
-    - 一个用户或一个组可以有任意个权限 (many-to-many). 组具有的权限用户自动具有.
+- 一个用户或一个组可以有任意个权限 (many-to-many). 组具有的权限用户自动具有.
 
-    - 限制操作范围为登录用户: ``login_required`` decorator 和 ``LoginRequiredMixin``.
+- 限制操作范围为登录用户: ``login_required`` decorator 和 ``LoginRequiredMixin``.
 
-    - 用户权限检查: ``permission_required`` decorator 和 ``PermissionRequiredMixin``.
+- 用户权限检查: ``permission_required`` decorator 和 ``PermissionRequiredMixin``.
 
-    - 通用的 test 检查: ``user_passes_test`` decorator 和 ``UserPassesTestMixin``.
+- 通用的 test 检查: ``user_passes_test`` decorator 和 ``UserPassesTestMixin``.
 
-    - ``AccessMixin`` 是以上几个权限控制的 mixin class 的父类, 它具有最一般化的
-      性质.
+- ``AccessMixin`` 是以上几个权限控制的 mixin class 的父类, 它具有最一般化的
+  性质.
 
-    - ``django.contrib.auth.context_processors.auth`` 为 template context 自动添加
-      一系列用户、权限相关量.
+- ``django.contrib.auth.context_processors.auth`` 为 template context 自动添加
+  一系列用户、权限相关量.
 
-      * ``user``, 当前用户.
+  * ``user``, 当前用户.
 
-      * ``perms``, 当前用户的权限. ``perms.<app_label>`` 相当于
-        ``User.has_module_perms(<app_label>)``.
-        ``perms.<app_label>.<perm>`` 相当于 ``User.has_perm(<app_label>.<perm>)``
-        ``perms`` 支持使用 ``in`` operator 检查权限, ``<app_label> in perms``
-        或 ``<app_label>.<perm> in perms`` 都可以.
+  * ``perms``, 当前用户的权限. ``perms.<app_label>`` 相当于
+    ``User.has_module_perms(<app_label>)``.
+    ``perms.<app_label>.<perm>`` 相当于 ``User.has_perm(<app_label>.<perm>)``
+    ``perms`` 支持使用 ``in`` operator 检查权限, ``<app_label> in perms``
+    或 ``<app_label>.<perm> in perms`` 都可以.
 
-  * auth backend.
-    ``auth`` app 中的各种上层认证和授权操作实际上要转发给底层 backend 去操作.
-    不同类型的 backend 的实现不同, 但符合相同的预定义的 api, 供上层调用.
+auth backend
+------------
+``auth`` app 中的各种上层认证和授权操作实际上要转发给底层 backend 去操作.
+不同类型的 backend 的实现不同, 但符合相同的预定义的 api, 供上层调用.
 
-    - ``AUTHENTICATION_BACKENDS`` 配置 backend list. django 按照 list 顺序进行
-      认证尝试.
+- ``AUTHENTICATION_BACKENDS`` 配置 backend list. django 按照 list 顺序进行
+  认证尝试.
 
-    - 在 ``authenticate()`` 时, 依次尝试所有的 backend, 直到:
+- 在 ``authenticate()`` 时, 依次尝试所有的 backend, 直到:
 
-      * 第一个认证成功为止;
+  * 第一个认证成功为止;
 
-      * 或某个 raised ``PermissionDenied``;
+  * 或某个 raised ``PermissionDenied``;
 
-      * 或遍历结束整个 list.
+  * 或遍历结束整个 list.
 
-    - auth backend 会保存在 session (``django_session`` table) 中, 从而对于一个
-      session, 只用已知的 backend. 如果要更改 backends setting 以使用不同的
-      backend 来认证, 需要清空 session.
+- auth backend 会保存在 session (``django_session`` table) 中, 从而对于一个
+  session, 只用已知的 backend. 如果要更改 backends setting 以使用不同的
+  backend 来认证, 需要清空 session.
 
-    - 结合使用外部的 auth backend 时, 仍然需要根据 ``AUTH_USER_MODEL`` 对每个
-      用户创建系统账户. 因为从逻辑上讲, 这些 user objects 才是这个系统 (django)
-      自己的用户. 外部 auth backend 只是提供了一系列用户实体集合. user model
-      才是这个系统所需的 user 所具有的属性和功能的表征. 从实现上讲, 没有 user
-      model 什么也没法弄, 没有用户概念的实体寄托.
+- 结合使用外部的 auth backend 时, 仍然需要根据 ``AUTH_USER_MODEL`` 对每个
+  用户创建系统账户. 因为从逻辑上讲, 这些 user objects 才是这个系统 (django)
+  自己的用户. 外部 auth backend 只是提供了一系列用户实体集合. user model
+  才是这个系统所需的 user 所具有的属性和功能的表征. 从实现上讲, 没有 user
+  model 什么也没法弄, 没有用户概念的实体寄托.
 
-    - ``ModelBackend`` 和 ``RemoteUserBackend`` 不允许 inactive user 认证.
-      ``AllowAllUsersModelBackend`` 和 ``AllowAllUsersRemoteUserBackend``
-      允许 inactive user 认证.
+- ``ModelBackend`` 和 ``RemoteUserBackend`` 不允许 inactive user 认证.
+  ``AllowAllUsersModelBackend`` 和 ``AllowAllUsersRemoteUserBackend``
+  允许 inactive user 认证.
 
-    - API.
+- API.
 
-      * ``.get_user(<pk>)`` return user object.
+  * ``.get_user(<pk>)`` return user object.
 
-      * ``.authenticate(...)`` return user object or None.
+  * ``.authenticate(...)`` return user object or None.
 
-      * ``.get_group_permissions()``
+  * ``.get_group_permissions()``
 
-      * ``.get_all_permissions()``
+  * ``.get_all_permissions()``
 
-      * ``.has_perm(...)``
+  * ``.has_perm(...)``
 
-      * ``.has_module_perms()``
+  * ``.has_module_perms()``
 
-  * User 和 Group 是 many-to-many 的关系.
+User
+----
 
-  * ``User``
+- fields, attributes
 
-    - fields, attributes
+  * ``groups``.
 
-      * ``groups``.
+  * ``user_permissions``.
 
-      * ``user_permissions``.
+  * ``username``.
 
-      * ``username``.
+  * ``password``. 密码以 hash 形式存放, 符合密码存储的一般准则. 因此不该手动修改
+    该属性值.
 
-      * ``password``. 密码以 hash 形式存放, 符合密码存储的一般准则. 因此不该手动修改
-        该属性值.
+  * ``email``.
 
-      * ``email``.
+  * ``first_name``.
 
-      * ``first_name``.
+  * ``last_name``.
 
-      * ``last_name``.
+- methods.
 
-    - methods.
+  * ``has_module_perms(<app>)``, 判断用户是否在某个 app 中有至少一个权限.
 
-      * ``has_module_perms(<app>)``, 判断用户是否在某个 app 中有至少一个权限.
+AnonymousUser
+-------------
+- ``AnonymousUser`` 虽然不具备很多 ``User`` 的属性和方法, 但是可以检查权限,
+  因为很多时候网站是允许匿名用户的.
 
-  * ``AnonymousUser`` 虽然不具备很多 ``User`` 的属性和方法, 但是可以检查权限,
-    因为很多时候网站是允许匿名用户的.
+扩展和自定义 user model
+-----------------------
 
-  * 扩展或自定义 user model.
+- proxy model to auth.User: purely behavioral extension, use proxy model.
 
-    - proxy model to auth.User: purely behavioral extension, use proxy model.
+- one-to-one relation to auth.User:
+  store additional information (profile-like infos) related to a user,
+  but not auth-related, use new model with ``OneToOneField`` to ``User``.
+  为了在用户创建、删除等操作时两表同步, 需要使用 signal.
 
-    - one-to-one relation to auth.User:
-      store additional information (profile-like infos) related to a user,
-      but not auth-related, use new model with ``OneToOneField`` to ``User``.
-      为了在用户创建、删除等操作时两表同步, 需要使用 signal.
+- custom user model:
+  default User model just does not fit your need, create custom user
+  model as ``AUTH_USER_MODEL`` to override the default. AUTH_USER_MODEL
+  的形式和 relationship field 中引用 field 的形式相同: ``[app_label.]model``.
 
-    - custom user model:
-      default User model just does not fit your need, create custom user
-      model as ``AUTH_USER_MODEL`` to override the default. AUTH_USER_MODEL
-      的形式和 relationship field 中引用 field 的形式相同: ``[app_label.]model``.
+  即使 User model 已经足够, 也应该使用自定义的 user model, 这样方便之后
+  进行扩展.
+  If you’re starting a new project, it’s **highly recommended** to set up a
+  custom user model, even if the default User model is sufficient for you.
+  This model behaves identically to the default user model, but you’ll be
+  able to customize it in the future if the need arises.
 
-      即使 User model 已经足够, 也应该使用自定义的 user model, 这样方便之后
-      进行扩展.
-      If you’re starting a new project, it’s **highly recommended** to set up a
-      custom user model, even if the default User model is sufficient for you.
-      This model behaves identically to the default user model, but you’ll be
-      able to customize it in the future if the need arises.
+- Change to custom user model mid-project. **HORRIBLE**.
+  迁移步骤参考 https://code.djangoproject.com/ticket/25313#comment:2
 
-    - Change to custom user model mid-project. **HORRIBLE**.
-      迁移步骤参考 https://code.djangoproject.com/ticket/25313#comment:2
+  开发时,
 
-      开发时,
+    1. Create a custom user model identical to auth.User, call it User (so
+       many-to-many tables keep the same name) and set
+       `db_table='auth_user'` (so it uses the same table).
 
-        1. Create a custom user model identical to auth.User, call it User (so
-           many-to-many tables keep the same name) and set
-           `db_table='auth_user'` (so it uses the same table).
+    2. ``settings.AUTH_USER_MODEL`` 设置为上述 model.
 
-        2. ``settings.AUTH_USER_MODEL`` 设置为上述 model.
+    3. 设置 user app 里所有 model 的 `db_table` 与数据库里表名字相同.
+       重命名 user app 为 `accounts`. 修改所有相关 import 等引用.
 
-        3. 设置 user app 里所有 model 的 `db_table` 与数据库里表名字相同.
-           重命名 user app 为 `accounts`. 修改所有相关 import 等引用.
+    4. 删除所有 migrations.
 
-        4. 删除所有 migrations.
+    5. `./manage.py makemigrations app1 app2 app3 ...`
 
-        5. `./manage.py makemigrations app1 app2 app3 ...`
+    6. 构建安装包.
 
-        6. 构建安装包.
+  测试时 (测试库),
 
-      测试时 (测试库),
+    1. 备份数据库.
 
-        1. 备份数据库.
+    2. Truncate `django_migrations` table.
 
-        2. Truncate `django_migrations` table.
+    3. 安装.
 
-        3. 安装.
+    4. `./manage.py migrate --fake`
 
-        4. `./manage.py migrate --fake`
+  部署 (线上库),
 
-      部署 (线上库),
+    1. 备份数据库.
 
-        1. 备份数据库.
+    2. Truncate `django_migrations` table.
 
-        2. Truncate `django_migrations` table.
+    3. 安装.
 
-        3. 安装.
+    4. `./manage.py migrate --fake`
 
-        4. `./manage.py migrate --fake`
+  最后一步,
 
-      最后一步,
+    1. Unset `db_table`, make and apply this migration.
 
-        1. Unset `db_table`, make and apply this migration.
+    2. 将所有对 `auth.User` 的直接引用转换为 `get_user_model()` 或
+       `settings.AUTH_USER_MODEL`.
 
-        2. 将所有对 `auth.User` 的直接引用转换为 `get_user_model()` 或
-           `settings.AUTH_USER_MODEL`.
+- Reusable apps shouldn’t implement a custom user model.
+  If you need to store per user information in your app, use a ForeignKey
+  or OneToOneField to ``settings.AUTH_USER_MODEL``.
 
-    - Reusable apps shouldn’t implement a custom user model.
-      If you need to store per user information in your app, use a ForeignKey
-      or OneToOneField to ``settings.AUTH_USER_MODEL``.
+- 由于 ``AUTH_USER_MODEL`` 不一定是 ``django.contrib.auth.models.User``,
+  因此在某个 app 中使用 user model 时, 不能直接 import User 类, 而是要
+  根据具体场景使用 API ``get_user_model()`` 或者 ``settings.AUTH_USER_MODEL``.
 
-    - 由于 ``AUTH_USER_MODEL`` 不一定是 ``django.contrib.auth.models.User``,
-      因此在某个 app 中使用 user model 时, 不能直接 import User 类, 而是要
-      根据具体场景使用 API ``get_user_model()`` 或者 ``settings.AUTH_USER_MODEL``.
+- 用户相关的信息的存储方式. 若这些信息是 app-specific 的, 而不是用户本身
+  的属性或者通用的信息, 则应该存在 app models 中, 添加对 user model 的
+  one-to-one relation, 这样是解耦合的.
+  若是属于用户本身, 甚至是用户认证相关的属性, 则应该放在 user model 中.
 
-    - 用户相关的信息的存储方式. 若这些信息是 app-specific 的, 而不是用户本身
-      的属性或者通用的信息, 则应该存在 app models 中, 添加对 user model 的
-      one-to-one relation, 这样是解耦合的.
-      若是属于用户本身, 甚至是用户认证相关的属性, 则应该放在 user model 中.
+  然而这涉及到在创建 user model instance 时需要创建 one-to-one relation
+  model instance. 尤其是调用 auth app 提供的各种 create_user, create_superuser
+  之类的方法时需要自动创建关联表中的实例, 这样才能保持解耦合效果 (若不能自动
+  创建, 而需要 override 用户创建方法加上 one-to-one field 的话, 则又耦合回来
+  了). 做到自动创建, 需要使用 signal framework.
 
-      然而这涉及到在创建 user model instance 时需要创建 one-to-one relation
-      model instance. 尤其是调用 auth app 提供的各种 create_user, create_superuser
-      之类的方法时需要自动创建关联表中的实例, 这样才能保持解耦合效果 (若不能自动
-      创建, 而需要 override 用户创建方法加上 one-to-one field 的话, 则又耦合回来
-      了). 做到自动创建, 需要使用 signal framework.
+- django custom user model requirements
 
-    - django custom user model requirements
+  * 对于 django builtin auth backends, user model 必须有某种 unique field
+    可唯一识别用户. 对于 custom backends, 当然随意.
 
-      * 对于 django builtin auth backends, user model 必须有某种 unique field
-        可唯一识别用户. 对于 custom backends, 当然随意.
+  * Your model must provide a way to address the user in a “short” and
+    “long” form.
 
-      * Your model must provide a way to address the user in a “short” and
-        “long” form.
+- ``AbstractBaseUser``, ``AbstractUser``:
+  AbstractBaseUser provides the core implementation of a user model,
+  including hashed passwords and tokenized password resets.
+  If you want to rethink some of Django's assumptions about
+  authentication, then AbstractBaseUser gives you the power to do so.
+  If you're just adding things to the existing user (i.e. profile data
+  with extra fields), then use AbstractUser because it's simpler and
+  easier.
 
-    - ``AbstractBaseUser``, ``AbstractUser``:
-      AbstractBaseUser provides the core implementation of a user model,
-      including hashed passwords and tokenized password resets.
-      If you want to rethink some of Django's assumptions about
-      authentication, then AbstractBaseUser gives you the power to do so.
-      If you're just adding things to the existing user (i.e. profile data
-      with extra fields), then use AbstractUser because it's simpler and
-      easier.
+- ``BaseUserManager``, ``UserManager``:
+  自定义的 user model 还需要自定义 user manager.
 
-    - ``BaseUserManager``, ``UserManager``:
-      自定义的 user model 还需要自定义 user manager.
+- ``AbstractBaseUser``
 
-    - ``AbstractBaseUser``
+  * ``USERNAME_FIELD``, the name of field used as identifier, must be unique.
 
-      * ``USERNAME_FIELD``, the name of field used as identifier, must be unique.
+  * ``EMAIL_FIELD``
 
-      * ``EMAIL_FIELD``
+  * ``REQUIRED_FIELDS``, prompted for when creating superuser.
 
-      * ``REQUIRED_FIELDS``, prompted for when creating superuser.
+  * ``is_active``
 
-      * ``is_active``
+  * ``get_full_name()``
 
-      * ``get_full_name()``
+  * ``get_short_name()``
 
-      * ``get_short_name()``
+  * ``get_username()``
 
-      * ``get_username()``
+  * ``clean()``
 
-      * ``clean()``
+  * ``get_email_field_name()``
 
-      * ``get_email_field_name()``
+  * ``normalize_username()``
 
-      * ``normalize_username()``
+  * ``is_authenticated``, True for any instance.
 
-      * ``is_authenticated``, True for any instance.
+  * ``is_anonymous``, False for any instance.
 
-      * ``is_anonymous``, False for any instance.
+  * ``set_password(...)``
 
-      * ``set_password(...)``
+  * ``check_password(...)``
 
-      * ``check_password(...)``
+  * ``set_unusable_password()``, 当使用外部认证机制时, 禁用普通密码.
 
-      * ``set_unusable_password()``, 当使用外部认证机制时, 禁用普通密码.
+  * ``has_usable_password()``
 
-      * ``has_usable_password()``
+  * ``get_session_auth_hash()``
 
-      * ``get_session_auth_hash()``
+- ``BaseUserManager``
 
-    - ``BaseUserManager``
+  * ``normalize_email(...)``
 
-      * ``normalize_email(...)``
+  * ``get_by_natural_key(...)``
 
-      * ``get_by_natural_key(...)``
+  * ``make_random_password(...)``
 
-      * ``make_random_password(...)``
+- ``UserManager``
 
-    - ``UserManager``
+  * ``create_user(...)``
 
-      * ``create_user(...)``
+  * ``create_superuser(...)``
 
-      * ``create_superuser(...)``
+- 自定义的 user model 还需考虑 builtin auth form, 以及在 admin site 对
+  user model 的额外要求.
 
-    - 自定义的 user model 还需考虑 builtin auth form, 以及在 admin site 对
-      user model 的额外要求.
+- ``PermissionsMixin`` 为自定义的 user model 提供了对 django group &
+  permission model 的支持.
 
-    - ``PermissionsMixin`` 为自定义的 user model 提供了对 django group &
-      permission model 的支持.
+  - ``is_superuser``
 
-      - ``is_superuser``
+  - ``get_group_permissions(...)``
 
-      - ``get_group_permissions(...)``
+  - ``get_all_permissions(...)``
 
-      - ``get_all_permissions(...)``
+  - ``has_perm(...)``
 
-      - ``has_perm(...)``
+  - ``has_perms(...)``
 
-      - ``has_perms(...)``
+  - ``has_module_perms(...)``
 
-      - ``has_module_perms(...)``
+Permission
+----------
 
-  * ``Permission``
+- 创建 Permission object 需要配合合适的 ``ContentType``.
 
-    - 创建 Permission object 需要配合合适的 ``ContentType``.
+- 可以通过 ``Model.Meta.permissions`` 来创建与 model 直接相关的自定义权限.
 
-    - 可以通过 ``Model.Meta.permissions`` 来创建与 model 直接相关的自定义权限.
+- caching. ``ModelBackend`` 会在取到一个用户的权限信息后进行 cache. 若在
+  一个 request-response cycle 中, 需要修改权限并立即进行验证, 最好从数据库
+  重载这个用户. 若不是在一个请求中, 一般没事, 因每次 request object 都会
+  初始化 User object (lazily).
 
-    - caching. ``ModelBackend`` 会在取到一个用户的权限信息后进行 cache. 若在
-      一个 request-response cycle 中, 需要修改权限并立即进行验证, 最好从数据库
-      重载这个用户. 若不是在一个请求中, 一般没事, 因每次 request object 都会
-      初始化 User object (lazily).
+- django 自身提供了 per-model permission 机制. 对于 per-object 权限, 在
+  auth module 提供的 api 中已经提供 placeholder parameter ``obj``, 但没有
+  使用. 若要 per-object permission 机制, 需要自己实现, 或者使用比如
+  django-guardian.
 
-  * django 自身提供了 per-model permission 机制. 对于 per-object 权限, 在
-    auth module 提供的 api 中已经提供 placeholder parameter ``obj``, 但没有
-    使用. 若要 per-object permission 机制, 需要自己实现, 或者使用比如
-    django-guardian.
+Group
+-----
 
-  * Group
+User 和 Group 是 many-to-many 的关系.
 
-    auth group 并不能在一切需要组的情况下使用, 这个组概念仅适用于权限分配
-    相关用途 (那是因为 Group class 中定义了 permissions relation),
-    即用户归于组、组具有权限. 而不适用于资源分配, 即用户归于组、
-    组具有资源. 那样的组还是要单独写 (即 Group class 定义 resources relation).
+auth group 并不能在一切需要组的情况下使用, 这个组概念仅适用于权限分配
+相关用途 (那是因为 Group class 中定义了 permissions relation),
+即用户归于组、组具有权限. 而不适用于资源分配, 即用户归于组、
+组具有资源. 那样的组还是要单独写 (即 Group class 定义 resources relation).
 
-- 当选择将 mixin 与 class 的功能结合使用时, 可以有多个 mixin class, 但只能有一个
-  main class. 并且 mixin 先于 main class 出现在 MRO 中才行.
+middleware
+==========
 
-- middleware
+overview
+--------
+- middleware 是在 request/response cycle 中, server 和 views 之间的一系列
+  中间操作 (hooks). middleware 的作用是 pre-process request 以及 post-process
+  response.
 
-  * middleware 是在 request/response cycle 中, server 和 views 之间的一系列
-    中间操作 (hooks). middleware 的作用是 pre-process request 以及 post-process
-    response.
+- 整个 middleware 体系可类比为一层套一层的同心环, 第一个 middleware 在最外层,
+  views 在圆心. 当外部 call 一个 middleware 并传入 request 时, 这个 middleware
+  负责调用它内层的 middleware/view, 后者再重复进行这个调用链, 完成 request
+  从外部一层层经过所有 middleware 以及 view 的过程. 反向地, response 也进行类似
+  的过程.
 
-  * 整个 middleware 体系可类比为一层套一层的同心环, 第一个 middleware 在最外层,
-    views 在圆心. 当外部 call 一个 middleware 并传入 request 时, 这个 middleware
-    负责调用它内层的 middleware/view, 后者再重复进行这个调用链, 完成 request
-    从外部一层层经过所有 middleware 以及 view 的过程. 反向地, response 也进行类似
-    的过程.
+define middleware
+-----------------
+- middleware 通过 middleware factory 定义. 调用它时返回一个 middleware
+  callable. 这个 callable 接受 request 参数, 返回相应的 response.
 
-  * middleware 通过 middleware factory 定义. 调用它时返回一个 middleware
-    callable. 这个 callable 接受 request 参数, 返回相应的 response.
+- middleware factory 可以是一个 function, 也可以是 middleware class.
+  它的参数是 ``get_response()`` callable, 即它内层的 middleware.
+  它给出的 middleware 可以是一个 function, 也可以是一个 callable instance of
+  middleware class.
 
-  * middleware factory 可以是一个 function, 也可以是 middleware class.
-    它的参数是 ``get_response()`` callable, 即它内层的 middleware.
-    它给出的 middleware 可以是一个 function, 也可以是一个 callable instance of
-    middleware class.
+- class-based middleware 专有的 other hooks
 
-  * 在进程的生命周期中, 各个 middleware 只生成一次, 对每个 request 重用.
+  * ``process_view()``, 在 request pass-through 完成, 即经过所有 middleware 到达
+    view 时, 在 call view function 之前, 会依次调用所有 middleware 的
+    ``process_view()`` hook. 这个 hook 返回 None or HttpResponse. 若是 None,
+    则执行下一个 ``process_view()`` 直至 view function; 若是 HttpResponse,
+    则直接进入 response pass-through 流程, 即经过各 middleware 反向向外走.
 
-  * ``settings.MIDDLEWARE`` 定义启用的 middlewares. The order in settings.MIDDLEWARE
-    matters because a middleware can depend on other middleware.
+  * ``process_exception()``, Django calls process_exception() when a view
+    raises an exception. process_exception() should return either None or an
+    HttpResponse object. If it returns an HttpResponse object, the template
+    response and response middleware will be applied. Otherwise, default
+    exception handling kicks in.
 
-  * class-based middleware 专有的 other hooks
+  * ``process_template_response()``, called just after the view has finished
+    executing, if the response instance has a render() method. It must return
+    a response object that implements a render method. It could alter the
+    given response by changing response.template_name and response.context_data,
+    or it could create and return a brand-new TemplateResponse or equivalent.
 
-    - ``process_view()``, 在 request pass-through 完成, 即经过所有 middleware 到达
-      view 时, 在 call view function 之前, 会依次调用所有 middleware 的
-      ``process_view()`` hook. 这个 hook 返回 None or HttpResponse. 若是 None,
-      则执行下一个 ``process_view()`` 直至 view function; 若是 HttpResponse,
-      则直接进入 response pass-through 流程, 即经过各 middleware 反向向外走.
+  * Django automatically converts exceptions raised by the view or by
+    middleware into an appropriate HTTP response with an error status code.
+    This conversion takes place before and after each middleware.
 
-    - ``process_exception()``, Django calls process_exception() when a view
-      raises an exception. process_exception() should return either None or an
-      HttpResponse object. If it returns an HttpResponse object, the template
-      response and response middleware will be applied. Otherwise, default
-      exception handling kicks in.
+use middleware
+--------------
+- ``settings.MIDDLEWARE`` 定义启用的 middlewares. The order in settings.MIDDLEWARE
+  matters because a middleware can depend on other middleware.
 
-    - ``process_template_response()``, called just after the view has finished
-      executing, if the response instance has a render() method. It must return
-      a response object that implements a render method. It could alter the
-      given response by changing response.template_name and response.context_data,
-      or it could create and return a brand-new TemplateResponse or equivalent.
+- 在进程的生命周期中, 各个 middleware 只生成一次, 对每个 request 重用.
 
-    - Django automatically converts exceptions raised by the view or by
-      middleware into an appropriate HTTP response with an error status code.
-      This conversion takes place before and after each middleware.
+- 在 request/response cycle 中, middleware/view 的执行流程.
 
-  * 在 request/response cycle 中, middleware/view 的执行流程.
+  1. request pass-through 阶段, request 正向经过各个 middleware, 若在任何一个
+     middleware 中 return HttpResponse, 则开始反向向外走.
 
-    1. request pass-through 阶段, request 正向经过各个 middleware, 若在任何一个
-       middleware 中 return HttpResponse, 则开始反向向外走.
+  2. 经过所有 middleware 之后, 进入 view 处理阶段.
 
-    2. 经过所有 middleware 之后, 进入 view 处理阶段.
+     2a. 正向应用所有 middleware 的 ``process_view()``, 它们返回 None 或 HttpResponse.
+         若其中任一个给出 HttpResponse, 直接开始 response pass-through.
 
-       2a. 正向应用所有 middleware 的 ``process_view()``, 它们返回 None 或 HttpResponse.
-           若其中任一个给出 HttpResponse, 直接开始 response pass-through.
+     2b. 执行 view function. 若执行过程中 raised exception, 反向执行各个 middleware
+         的 ``process_exception()``. 若 view function 返回的不是 HttpResponse, raise
+         exception.
 
-       2b. 执行 view function. 若执行过程中 raised exception, 反向执行各个 middleware
-           的 ``process_exception()``. 若 view function 返回的不是 HttpResponse, raise
-           exception.
+     2c. 若 HttpResponse 有 ``.render()`` method, 反向执行各个 middleware 的
+         ``process_template_response()``. 它必须返回带有 ``.render()`` 的
+         HttpResponse. 都执行完成后 render response, 若 render 时 raised exception,
+         再次反向执行各个 middleware 的 ``process_exception()``.
 
-       2c. 若 HttpResponse 有 ``.render()`` method, 反向执行各个 middleware 的
-           ``process_template_response()``. 它必须返回带有 ``.render()`` 的
-           HttpResponse. 都执行完成后 render response, 若 render 时 raised exception,
-           再次反向执行各个 middleware 的 ``process_exception()``.
+  3. response pass-through 阶段, response 反向经过各个 middleware.
 
-    3. response pass-through 阶段, response 反向经过各个 middleware.
+  NB: 在任何一个 middleware/view 中 raised exception 会被转换成 HttpResponse
+      再传递回上层 middleware.
+      在 process_exception 处理时, 若任一返回 HttpResponse 则继续下面的步骤;
+      若全部都返回 None, 则 re-raise exception.
 
-    NB: 在任何一个 middleware/view 中 raised exception 会被转换成 HttpResponse
-        再传递回上层 middleware.
-        在 process_exception 处理时, 若任一返回 HttpResponse 则继续下面的步骤;
-        若全部都返回 None, 则 re-raise exception.
+applications
+============
 
-- applications.
+配置 app
+--------
+settings.INSTALLED_APPS 中一定要写 path to AppConfig class, 即
+``<app>.apps.<app>Config``. 这是应用自定义 app config 的最佳方式.
 
-  * 配置 app:
-    settings.INSTALLED_APPS 中一定要写 path to AppConfig class, 即
-    ``<app>.apps.<app>Config``. 这是应用自定义 app config 的最佳方式.
+若 INSTALLED_APPS 中只有 app module path, 则 django checks for
+``<module>.default_app_config`` for app config class. 这仅用作
+向后兼容.
 
-    若 INSTALLED_APPS 中只有 app module path, 则 django checks for
-    ``<module>.default_app_config`` for app config class. 这仅用作
-    向后兼容.
+若没找到自定义的 app config, fallback 至 ``django.apps.AppConfig``.
+但这样就无法使用 custom app config.
 
-    若没找到自定义的 app config, fallback 至 ``django.apps.AppConfig``.
-    但这样就无法使用 custom app config.
+messages framework
+==================
 
-- messages framework
+* 提供 cookie- and session-based 临时信息. 这些信息 (或信息的标识) 经常是在
+  本次 view 处理中设置, 在下次 (可能不同的) view 处理中使用. (通过 302
+  redirect response 传至 client, 再次请求时传回 server.) 这些信息也可能是在
+  本次 view 中使用.
 
-  * 提供 cookie- and session-based 临时信息. 这些信息 (或信息的标识) 经常是在
-    本次 view 处理中设置, 在下次 (可能不同的) view 处理中使用. (通过 302
-    redirect response 传至 client, 再次请求时传回 server.) 这些信息也可能是在
-    本次 view 中使用.
+* ``django.contrib.messages`` 默认就有运行. 它提供 ``MessageMiddleware``, 并
+  依赖于 SessionMiddleware (messages 部分功能依赖 session 生效), 以及
+  ``messages`` context processor.
 
-  * ``django.contrib.messages`` 默认就有运行. 它提供 ``MessageMiddleware``, 并
-    依赖于 SessionMiddleware (messages 部分功能依赖 session 生效), 以及
-    ``messages`` context processor.
+storage backend
+---------------
+``settings.MESSAGE_STORAGE`` 默认使用 FallbackStorage.
 
-  * storage backends.
-    ``settings.MESSAGE_STORAGE`` 默认使用 FallbackStorage.
+base: ``django.contrib.messages.storage.base.BaseStorage``.
+所有子类实现 ``_get()``, ``_store()`` methods.
 
-    base: ``django.contrib.messages.storage.base.BaseStorage``.
-    所有子类实现 ``_get()``, ``_store()`` methods.
+每种存储信息的方式对应一个 backend.
 
-    每种存储信息的方式对应一个 backend.
+- ``django.contrib.messages.storage.session.SessionStorage``
+  在 session backend 中存储, 位于 session cookie key 所指向的条目内.
 
-    - ``django.contrib.messages.storage.session.SessionStorage``
-      在 session backend 中存储, 位于 session cookie key 所指向的条目内.
+- ``django.contrib.messages.storage.cookie.CookieStorage``
+  在 cookie 中存储 (从而在 client/server 间传递). 同时还包含一个
+  message 的 signed hash, 使用 server 的一个 secret key 签署.
+  避免篡改.
 
-    - ``django.contrib.messages.storage.cookie.CookieStorage``
-      在 cookie 中存储 (从而在 client/server 间传递). 同时还包含一个
-      message 的 signed hash, 使用 server 的一个 secret key 签署.
-      避免篡改.
+  cookie 相对于 session 的好处是性能. 因为不涉及存入 backend.
 
-      cookie 相对于 session 的好处是性能. 因为不涉及存入 backend.
+- ``django.contrib.messages.storage.fallback.FallbackStorage``
+  首先使用 cookie, 对于 cookie 放不下的, 存在 session 里.
 
-    - ``django.contrib.messages.storage.fallback.FallbackStorage``
-      首先使用 cookie, 对于 cookie 放不下的, 存在 session 里.
+message
+-------
+- ``django.contrib.messages.storage.base.Message``
 
-  * ``django.contrib.messages.storage.base.Message``
+message level
+-------------
+- message levels: DEBUG, INFO, SUCCESS, WARNING, ERROR.
+  ``settings.MESSAGE_LEVEL`` 设置最低接受添加的 message 的 level.
 
-  * message levels: DEBUG, INFO, SUCCESS, WARNING, ERROR.
-    ``settings.MESSAGE_LEVEL`` 设置最低接受添加的 message 的 level.
+- 每个 message level 有对应的 lowercased version message tag.
 
-  * 每个 message level 有对应的 lowercased version message tag.
+APIs
+----
 
-  * APIs.
+- ``add_message()``. shortcuts: ``debug|info|success|warning|error()``.
 
-    - ``add_message()``. shortcuts: ``debug|info|success|warning|error()``.
+- ``get_messages()``, 在代码中直接使用或模板 context variable ``messages``
+  间接使用.
 
-    - ``get_messages()``, 在代码中直接使用或模板 context variable ``messages``
-      间接使用.
+- ``set_level()``, 直接修改 message storage 的最低保存 level, 从而可以
+  设置 per request level.
 
-    - ``set_level()``, 直接修改 message storage 的最低保存 level, 从而可以
-      设置 per request level.
+- ``get_level()``
 
-    - ``get_level()``
+逻辑
+----
 
-  * 逻辑:
+每次请求, middleware 实例化 message storage, 赋值给 ``request._messages``.
+在 view 中, 使用 ``add_message()`` 添加 message, 标记为 queued messages.
+在代码或模板中遍历 message storage 时, 会标记该 storage 已经被使用过,
+清空 queued messages. middleware 处理响应时, 会将往次设置但没有使用过的
+以及新添加的 messages 保存起来, 附在响应中.
 
-    每次请求, middleware 实例化 message storage, 赋值给 ``request._messages``.
-    在 view 中, 使用 ``add_message()`` 添加 message, 标记为 queued messages.
-    在代码或模板中遍历 message storage 时, 会标记该 storage 已经被使用过,
-    清空 queued messages. middleware 处理响应时, 会将往次设置但没有使用过的
-    以及新添加的 messages 保存起来, 附在响应中.
+手动设置 ``BaseStorage.used=False`` 可避免遍历过的 message storage 被
+清空. 下次仍可使用.
 
-    手动设置 ``BaseStorage.used=False`` 可避免遍历过的 message storage 被
-    清空. 下次仍可使用.
+view mixin
+----------
+提供了一个 view class mixin 用于添加 success message. 其实这也是 message
+的最常见用处.
 
-  * 提供了一个 view class mixin 用于添加 success message. 其实这也是 message
-    的最常见用处.
+``django.contrib.messages.views.SuccessMessageMixin``
+这需要配合 ``FormMixin`` 使用. ``success_message`` attr 设置信息 format
+string.
 
-    ``django.contrib.messages.views.SuccessMessageMixin``
-    这需要配合 ``FormMixin`` 使用. ``success_message`` attr 设置信息 format
-    string.
+signal
+======
 
-- signal
+builtin signals
+---------------
 
-  builtin signals.
+* before/after ``Model.save()`` is called:
 
-  * before/after ``Model.save()`` is called:
+  - ``django.db.models.signals.pre_save``
 
-    - ``django.db.models.signals.pre_save``
+  - ``django.db.models.signals.post_save``
 
-    - ``django.db.models.signals.post_save``
+* before/after ``Model.delete()`` or ``QuerySet.delete()`` is called:
 
-  * before/after ``Model.delete()`` or ``QuerySet.delete()`` is called:
+  - ``django.db.models.signals.pre_delete``
 
-    - ``django.db.models.signals.pre_delete``
+  - ``django.db.models.signals.post_delete``
 
-    - ``django.db.models.signals.post_delete``
+* starts/finishes http request.
 
-  * starts/finishes http request.
+  - ``django.core.signals.request_started``
 
-    - ``django.core.signals.request_started``
+  - ``django.core.signals.request_finished``
 
-    - ``django.core.signals.request_finished``
+定义 receiver function
+----------------------
 
-  定义 receiver function.
+- args: ``sender``.
 
-  - args: ``sender``.
+- kwargs: receiver function 必须接受任意数目的 kwargs, 即必须 ``**kwargs``.
 
-  - kwargs: receiver function 必须接受任意数目的 kwargs, 即必须 ``**kwargs``.
+注册 receiver function
+----------------------
 
-  注册 receiver function. 两种方式.
+两种方式.
 
-  - ``Signal.connect()``
+- ``Signal.connect()``
 
-  - ``django.dispatch.receiver()`` decorator.
+- ``django.dispatch.receiver()`` decorator.
 
-  signal 相关代码应该放在哪:
+signal 相关代码应该放在哪
+-------------------------
 
-  - signal receiver 定义放在 ``<app>/signals.py``.
+- signal receiver 定义放在 ``<app>/signals.py``.
 
-  - 注册操作放在 app 的 configuration class (``<app>/apps.py:AppConfig``)
-    ``.ready()`` method 中. 若定义时使用了 receiver decorator, 在这里
-    只需 import 即可.
+- 注册操作放在 app 的 configuration class (``<app>/apps.py:AppConfig``)
+  ``.ready()`` method 中. 若定义时使用了 receiver decorator, 在这里
+  只需 import 即可.
 
-    注意 ``AppConfig.ready()`` 可能在测试时被执行多次, 为避免 signal
-    duplication, 要通过 ``dispatch_uid`` 保证注册过则不再注册.
+  注意 ``AppConfig.ready()`` 可能在测试时被执行多次, 为避免 signal
+  duplication, 要通过 ``dispatch_uid`` 保证注册过则不再注册.
 
-  定义 custom signal: 实例化 Signal 或它的子类 (例如 ModelSignal).
+定义 custom signal
+------------------
 
-  ``Signal`` object.
+实例化 Signal 或它的子类 (例如 ModelSignal).
 
-  * ``.connect()``, register a consumer function for this signal.
-    指定 ``sender=`` 来过滤 signal 的来源, ``dispatch_uid=`` 指定
-    receiver 的唯一标识, 避免某些情况下的重复注册.
+``Signal`` object.
 
-    指定 ``dispatch_uid`` 后, receiver 的注册标识将不再依赖于 receiver
-    function 的 id 即内存地址.
+- ``.connect()``, register a consumer function for this signal.
+  指定 ``sender=`` 来过滤 signal 的来源, ``dispatch_uid=`` 指定
+  receiver 的唯一标识, 避免某些情况下的重复注册.
 
-  * ``.send()``, 发送信号, 调用所有注册的 receiver functions.
-    调用过程是在本线程中依次执行的. 若某个 receiver function 在执行过程
-    raise exception, send 不会 catch, 这导致 send 过程被中断, 不能保证
-    所有 receiver 都收到该信号 (即被调用).
+  指定 ``dispatch_uid`` 后, receiver 的注册标识将不再依赖于 receiver
+  function 的 id 即内存地址.
 
-  * ``.send_robust()``, catch exception raised by receiver function.
-    从而保证所有 receiver 都调用一遍.
+- ``.send()``, 发送信号, 调用所有注册的 receiver functions.
+  调用过程是在本线程中依次执行的. 若某个 receiver function 在执行过程
+  raise exception, send 不会 catch, 这导致 send 过程被中断, 不能保证
+  所有 receiver 都收到该信号 (即被调用).
 
-  * ``.disconnect()`` unregister receiver function.
+- ``.send_robust()``, catch exception raised by receiver function.
+  从而保证所有 receiver 都调用一遍.
 
-- the contenttypes framework
+- ``.disconnect()`` unregister receiver function.
 
-  ``django.contrib.contenttypes.models.ContentType`` 保存了一个 django project
-  中的所有 models 的唯一识别 (app_label + model), 并提供了一系列 contenttypes
-  和 model class 相互转换, generic relation 等功能.
+the contenttypes framework
+==========================
 
-  当在项目数据库中创建新的 model 时, 相应的 contenttypes 也自动创建. 这是通过在
-  ``AppConfig.ready()`` 中注册 pre_migrate/post_migrate signals 来实现的.
+``django.contrib.contenttypes.models.ContentType`` 保存了一个 django project
+中的所有 models 的唯一识别 (app_label + model), 并提供了一系列 contenttypes
+和 model class 相互转换, generic relation 等功能.
 
-  ContentType 的用途.
+当在项目数据库中创建新的 model 时, 相应的 contenttypes 也自动创建. 这是通过在
+``AppConfig.ready()`` 中注册 pre_migrate/post_migrate signals 来实现的.
 
-  * 在需要对不确定的多个 model 数据进行相似逻辑的 CRUD 操作时, 使用 contenttypes
-    进行通用化. (``apps.get_model`` 也可以.)
+ContentType 的用途.
 
-  * 如果需要设置某个 model field 它的值是其他的 model, 即这个列的数据是 model class
-    时, 需要设置 foreign key 至 ContentType. 因后者保存着 model class 数据.
-    ``django.contrib.auth.models.Permission`` 就是这样做的.
+- 在需要对不确定的多个 model 数据进行相似逻辑的 CRUD 操作时, 使用 contenttypes
+  进行通用化. (``apps.get_model`` 也可以.)
 
-  GenericForeignKey, GenericRelation 的用途.
+- 如果需要设置某个 model field 它的值是其他的 model, 即这个列的数据是 model class
+  时, 需要设置 foreign key 至 ContentType. 因后者保存着 model class 数据.
+  ``django.contrib.auth.models.Permission`` 就是这样做的.
 
-  * 当一个 table 需要关联的外键是来自不同的 table 的, 抽象地将, 一个 model 的实例
-    可能需要关联不同 model class 的实例时. 可以使用 GenericForeignKey 做到.
-    本质上是在这个 model 每个 entry 中保存了该 entry 关联的 contenttype (即 model)
-    以及关联该 model 中的 entry 的 primary key.
+GenericForeignKey, GenericRelation 的用途.
 
-    例如, 不同类型的对象比如 blog entry, picture, 等需要关联相同类型的 comment.
+- 当一个 table 需要关联的外键是来自不同的 table 的, 抽象地将, 一个 model 的实例
+  可能需要关联不同 model class 的实例时. 可以使用 GenericForeignKey 做到.
+  本质上是在这个 model 每个 entry 中保存了该 entry 关联的 contenttype (即 model)
+  以及关联该 model 中的 entry 的 primary key.
 
-  * 注意 GenericForeignKey 由于只是与之关联的 content_type, object_id 两个列的抽象,
-    在 migration 过程中, ``apps.get_model()`` 构建的 model 不包含 GenericForeignKey,
-    只能直接设置两个实际列的值.
+  例如, 不同类型的对象比如 blog entry, picture, 等需要关联相同类型的 comment.
 
-- Pagination.
+- 注意 GenericForeignKey 由于只是与之关联的 content_type, object_id 两个列的抽象,
+  在 migration 过程中, ``apps.get_model()`` 构建的 model 不包含 GenericForeignKey,
+  只能直接设置两个实际列的值.
 
-  * 若 pagination 是由前端 js library 去实现 (例如 datatables), 只传递给后端所需
-    页的第一个记录的 id 以及记录数目, 则没必要在 view 中使用纯后端的 paginator.
-    只需返回前端任何它需要的数据即可.
+Pagination
+==========
 
-- Serialization.
+- 若 pagination 是由前端 js library 去实现 (例如 datatables), 只传递给后端所需
+  页的第一个记录的 id 以及记录数目, 则没必要在 view 中使用纯后端的 paginator.
+  只需返回前端任何它需要的数据即可.
 
-  * JSON
+Serialization
+=============
 
-    - DjangoJSONEncoder 在 ``json.JSONEncoder`` 基础上, 额外支持:
-      datetime.datetime, datetime.date, datetime.time, datetime.timedelta,
-      decimal.Decimal, django.utils.functional.Promise, uuid.UUID.
+JSON
+----
 
-- 在独立的程序或脚本中使用 django 功能.
+- DjangoJSONEncoder 在 ``json.JSONEncoder`` 基础上, 额外支持:
+  datetime.datetime, datetime.date, datetime.time, datetime.timedelta,
+  decimal.Decimal, django.utils.functional.Promise, uuid.UUID.
 
-  * 使用当前项目完整配置.
-      .. code:: python
+在独立的程序或脚本中使用 django 功能
+====================================
 
-        os.environ['DJANGO_SETTINGS_MODULE'] = "<project>.settings"
-        import django; django.setup()
+- 使用当前项目完整配置.
+  .. code:: python
 
-- django release
+    os.environ['DJANGO_SETTINGS_MODULE'] = "<project>.settings"
+    import django; django.setup()
 
-  * new feature release (A.B, A.B+1) every 8 months.
-    new LTS release (X.2) every 2 years, LTS is supported with security updates
-    for 3 years.
-    each version following an LTS will bump to the A+1 major version number.
-    patch release (A.B.C, A.B.C+1) will be issued as needed.
+django release
+==============
 
-  * 1.11 LTS is the last version supporting python2.
+- new feature release (A.B, A.B+1) every 8 months.
+  new LTS release (X.2) every 2 years, LTS is supported with security updates
+  for 3 years.
+  each version following an LTS will bump to the A+1 major version number.
+  patch release (A.B.C, A.B.C+1) will be issued as needed.
 
-  * Django 2.0 和 1.11 相比, 不会是特别大的区别, 不会充满 breaking changes,
-    而是连续的演进.
+- 1.11 LTS is the last version supporting python2.
+
+- Django 2.0 和 1.11 相比, 不会是特别大的区别, 不会充满 breaking changes,
+  而是连续的演进.
