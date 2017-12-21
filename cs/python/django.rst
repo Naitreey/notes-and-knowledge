@@ -2378,8 +2378,14 @@
 
   * NEVER deploy a site into production with ``DEBUG`` turned on.
 
-  * In debug mode, ``ALLOWED_HOSTS == []`` 时, 只允许一些本地 ``HOST`` header,
+  * In debug mode, ``ALLOWED_HOSTS == []`` 时, 只允许一些本地 ``HTTP_HOST`` header,
     localhost, 127.0.0.1, ::1.
+
+    当作为 nginx 的上游服务器时, django 部分本应局限在本地, 并不依赖于服务器 IP.
+    此时 ``ALLOWED_HOSTS`` 可以只设置为本地 IP, 将 Host header 的访问安全性限制在 
+    nginx 层解决, 然后 nginx 去重写 HTTP_Host 为本地.
+
+    若 HTTP_HOST 不在 ALLOWED_HOSTS 中, raise SuspiciousOperation, return 400.
 
   * ``UST_TZ`` determines whether datetime objects are naive.
 
