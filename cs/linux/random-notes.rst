@@ -326,6 +326,9 @@
 - 向进程发送 SIGSTOP, SIGTSTP 等 signal, 或者在 shell 中 ctrl-z foreground process
   会把进程置于 stop 状态, 再发送 SIGCONT 可以恢复运行.
 
+- 进程可以对 SIGTERM & SIGQUIT 的处理进行区分. 前者相当于告知程序立即退出, 后者是
+  告知程序把现在正在做的事情做完就退出. 参考 nginx 的处理.
+
 - buffer and cache.
 
   * buffer: A storage used to temporarily store data while it is being moved from
