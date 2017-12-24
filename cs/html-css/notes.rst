@@ -500,6 +500,9 @@ inline text semantics
     url fragment 由 fragement identifier ``#`` 起始, 指向本资源 (文档) 内部的
     location. ``#top`` 和 ``#`` fragment url 指向当前页面顶部.
 
+    href 属性省略时, anchor element is placeholder link. 若 href 属性存在但值为
+    空字符串, 则指向当前页面 url.
+
   * ``ping``
 
   * ``referrerpolicy``, 何时加上或不加 Referer header, 以及其值是什么.
@@ -1748,13 +1751,23 @@ syntax
     content property value: anonymous replaced elements;
     一些情况下的 audio, canvas, object, applet.
 
-selector
---------
+selectors
+---------
+
+任何一种 basic selector 可以单独出现. 而 pseudo-class, pseudo-element 等
+按逻辑显然必须依附于一定的 basic selectors.
 
 basic selectors
 ~~~~~~~~~~~~~~~
-
 - universal selector. ``*``
+
+  添加 css namespace 后, 成为:
+  ``ns|*`` (in specified namespace),
+  ``*|*`` (in any namespace),
+  ``|*`` (匹配所有没有 namespace 的元素).
+
+  除了给所有元素设置基准属性之外, 还可以有别的用处. 例如, 与 combinators 一起
+  使用: ``.floating + *``.
 
 - type selector. ``element-name``
 
@@ -1762,7 +1775,27 @@ basic selectors
 
 - id selector. ``#id``
 
-- attribute selector. ``[attr=value]``
+- attribute selector.
+
+  * ``[attr]``, match when attr is present.
+
+  * ``[attr=value]``, value of attr is exactly ``value``.
+
+  * ``[attr~=value]``, attr whose value is a whitespace-separated list of
+    words, one of which is exactly value.
+
+  * ``[attr|=value]``, attr whose value can be exactly value or can begin with
+    value immediately followed by a hyphen. It is often used for language
+    subcode matches.
+
+  * ``[attr^=value]``, attr whose value is prefixed by value.
+
+  * ``[attr$=value]``, attr whose value is suffixed by value.
+
+  * ``[attr*=value]``, attr whose value contains at least one occurrence of
+    value within the string.
+
+  * ``[attr operator value i|I]``, any above but case-insensitive.
 
 combinators
 ~~~~~~~~~~~
@@ -1781,6 +1814,37 @@ pseudo-classes
   它的某个子状态.
 
   关键字是状态.
+
+- 一个 selector 中可以出现多个 pseudo-classes.
+
+- ``:link``. match every ``<a>`` element that has a href attribute. 也就是说
+  是个真正的 link 的 anchor element.
+  (实际上还匹配同样的 ``<area>`` & ``<link>`` elements, 但这没用啊.)
+
+  所以作为 selector, ``a`` & ``a:link`` 的区别是, 前者匹配所有 a tag, 后者
+  只匹配有 href 的那些. 前者适合指定对对所有 a tag 都生效的基本属性, 例如
+  text-decoration, font-family, etc. 后者的话, 则是对那些进行区别.
+
+  当指定 anchor 的不同状态的样式时, 按照 LVHFA 顺序可获得正确的结果, 即
+  ``:link``, ``:visited``, ``:hover``, ``:focus``, ``:active``.
+
+- ``:visited``, match links that are visited.
+
+  For privacy reasons, browsers strictly limit which styles you can apply using
+  this pseudo-class, and how they can be used.
+
+  Properties that would otherwise have no color or be transparent cannot be
+  modified with :visited. Thus, if you want to modify the other properties,
+  you'll need to give them a base value outside the :visited selector.
+
+- ``:hover``, match an element when pointing device is hovering upon it.
+  注意是对任何元素都可用.
+
+- ``:focus``, match when an element receives focus. 注意这个和 :active 不同.
+  It is generally triggered when the user clicks or taps on an element or
+  selects it with the keyboard's "tab" key. 例如常用于 form controls.
+
+- ``:active``, match an element when it's being activated by pointing device.
 
 pseudo-elements
 ~~~~~~~~~~~~~~~
@@ -2132,6 +2196,7 @@ text
 - vertical-align. 两种用途:
  
   1. 对于某个 inline element 相对于 line box 的 alignment.
+     (平时用鼠标 select text 时, 高亮的部分大致就是 line box.)
 
   2. 对于 table cell content 相对于 cell box 的 alignment.
 
