@@ -1197,6 +1197,10 @@
 
 - 简化 ``x == a or x == b`` 之类的条件成 ``x in (a, b)``.
 
+- f-string 和 string.format 不能混用. 因为两者使用相同 ``{...}`` 语法.
+  f-string 最先 interpolation, 它就要转换所有 ``{...}`` 的内容.
+  但它可以和 %-formating 混用.
+
 builtin functions
 =================
 很多 builtin function 本质上应该看作是该 class 的 constructor.
