@@ -1197,44 +1197,6 @@
 
 - 简化 ``x == a or x == b`` 之类的条件成 ``x in (a, b)``.
 
-language
-========
-
-special methods
----------------
-
-container protocol
-~~~~~~~~~~~~~~~~~~
-
-- ``object.__len__()``
-
-- ``object.__len_hint__()``, optional.
-
-- ``object.__getitem__()``
-
-- ``object.__missing__()``, dict 定义了该 hook, 在 ``__getitem__`` 中使用.
-  当 key 不存在时, 调用 ``__missing__`` 进行自定义处理. dict 是啥都不做.
-
-  ``collections.defaultdict`` overrides ``__missing__`` method to define
-  default value for the missing key.
-
-- ``object.__setitem__()``
-
-- ``object.__delitem__()``
-
-- ``object.__iter__()``
-
-- ``object.__reversed__()``, optional.
-
-- ``object.__contains__()``, optional.
-
-exception
----------
-
-- instantiate exception 时, 它的 ``__traceback__``, ``__cause__``, ``__context__``
-  还都是 None (因为在实例化处本来就没有这些). 之后 raise 之后, 解释器才会根据执行
-  情况设置这三个属性.
-
 builtin functions
 =================
 很多 builtin function 本质上应该看作是该 class 的 constructor.
