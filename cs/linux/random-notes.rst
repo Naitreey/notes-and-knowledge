@@ -252,6 +252,11 @@
 
     - python2 not installed by default. python3 upgraded to 3.6.
 
+  * apt.
+
+    - ``apt install`` 安装一个 package 时, 在 unpacking 之后的 setup 阶段, 它懂得
+      先 setup package 的所有依赖, 再 setup package 本身, 从而解决了依赖问题.
+
 - kernel 默认给出的设备名称是十分 generic 的. 它根据设备的类型以及发现顺序进行
   编号, 生成如 ``eth<N>``, ``sd<X><N>`` 等设备类型 + 编号的名字. 这样命名的问题
   是系统中看到的设备逻辑名称与其物理身份无法直接对应起来. 只能通过 sysfs 来研究
