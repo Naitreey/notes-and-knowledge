@@ -65,6 +65,8 @@
 
     - ``validators.py``. 放置所有自定义的 forms/models validators.
 
+    - ``fields.py``. 放置所有自定义的 model fields.
+
   * special global app.
 
     - structure.
@@ -958,11 +960,22 @@
       地将多项聚合条件涉及的所有表 join 在一起, 然后再算聚合值.
 
     - 一般意义的 GROUP BY 操作:
+
       若 queryset operation chain 中, ``.annotate()`` 前面有 ``.values()``
       或 ``.values_list()`` 且它们指定了列参数 (不是无参的), 则 annotate 时
       的 GROUP BY 会使用这些列来分组, 不再使用原 model 的 pk. 此时, annotate
       的结果不再与各个 model instance 对应. 这样, 生成的组不再局限于 model
       instance.
+
+      注意, 此时 ``.values()`` ``.values_list()`` 选择的列, 以及 ``.annotate()``
+      中新增的列, 是在 GROUP BY 之后进行的. SQL 对应为
+      SELECT `values, values_list columns and annotate columns` FROM `some_table`
+      GROUP BY `values and values_list columns`.
+
+      需要明确, 当 annotate 出现在 ``.values()`` ``.values_list()`` 后面时,
+      并不是说只剩下了它们选择出来的列, 而是在最终构建的复合表 (包含 GROUP 之后)
+      中取出这些列. 所以, annotate 仍然可以访问所有在这个复合表中存在的列, 它
+      不限于 values, values_list 的列.
 
   * aggregation functions.
 
