@@ -3561,3 +3561,16 @@ django release
 
 - Django 2.0 和 1.11 相比, 不会是特别大的区别, 不会充满 breaking changes,
   而是连续的演进.
+
+plugins
+=======
+
+- reusable django packages 可以从 django packages 网站查询. 这个网站的好处是,
+  对于一个 package, 它上面有详细信息, 包含版本支持情况, 最近更新时间, 有多少
+  人在使用, 以及同类 packages 之间的比较 grid.
+
+django-nested-admin
+-------------------
+
+django-jsonfield
+----------------
