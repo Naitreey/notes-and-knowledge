@@ -73,6 +73,13 @@ RPC
 
 - It sends state back as transient messages.
 
+- 它对于每个 client 开一个队列.
+
+AMQP
+~~~~
+
+- amqp result backend 相比于 rpc 非常低效, 它对于每个任务都单独开一个队列.
+
 Configuration
 -------------
 
