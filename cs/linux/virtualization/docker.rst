@@ -63,8 +63,44 @@ General
 
   * docker 提供了一些便利的容器操作 (commit, diff, etc.), 让开发更方便.
 
+versions
+========
+
+- CE or EE.
+
+CE
+--
+- CE has two update channels.
+
+  * stable: reliable updates every quarter.
+
+  * edge: new features every month.
+
+- A given Edge release will not receive any updates once a new edge release is
+  available.
+
+- setup docker official package repository for up-to-date releases.
+
+EE
+--
+- EE major releases twice per year.
+
+terms
+=====
+
+- image.
+
+configuration
+=============
+
+- let non-root use docker.
+
+  docker group 的用户都可以使用 docker.
+
+
 docker registry
 ===============
+
 - docker hub 实际上是一个 public docker registry.
 
 - A production-ready registry must be protected by TLS and should ideally use
@@ -75,8 +111,17 @@ docker registry
 - 若要把 image 上传到 private registry, 必须对它打相应的 tag. docker 通过镜像的 tag
   去分辨该访问什么 registry.
 
+dockerd
+=======
+
+- run as root.
+
+- binds to unix socket: ``/var/run/docker.sock``. 这个 socket 的 user 是
+  root, group 是 docker. 所以 docker 组里的用户可以访问.
+
 commandline
 ===========
+
 - ``docker stop`` 的效果不受 ``docker run --restart=`` 参数影响. 即使
   ``--restart=always``, docker stop 也能把容器停下来.
 
