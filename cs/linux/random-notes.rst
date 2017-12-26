@@ -226,6 +226,14 @@
 
   * udisks2 is patched by Ubuntu to use ``/media``, rather than default ``/run/media``.
 
+  * distribution release with fixed software version, is a total failure. 大家
+    不得不给每个软件设置一个单独的官方 apt 源. 这实在是太搞笑了. rolling release 
+    显然才是合理的方式.
+
+    对于 ubuntu, 我宁愿一直使用最新的发行版, 然后尽量只使用 ubuntu 默认提供的
+    软件版本, 除非某些软件有必要使用最新的. 反正每半年升级一次系统. 至多会有
+    半年的版本滞后. 对于 arch 则没事.
+
   * sh is symlink to dash, rather than bash.
 
   * /bin, /sbin, /lib 等目录不是向 /usr 目录下同名目录的 symlink, 所以仍然存在
@@ -366,3 +374,13 @@
     解释器. Traditionally bc was only a front end tool that compiled the bc
     notation to the notation of dc and piped that into dc to get the result.
     但如今并不是这样. bc 自己计算结果.
+
+- why adding a new group to current user needs a re-login to have effect?
+
+  内核 (通过一定的 userspace 程序例如 login) 给进程赋予权限, 这权限体现为赋予该进程
+  一系列的 uids 和 gids. 一般情况下, 一个进程不能修改赋予自己的组. 所以虽然修改了
+  ``/etc/group``, 但当前进程例如 shell 的权限不受影响, 所以它新开的子进程继承的权限
+  仍然是旧的权限. 所以需要重新登录.
+
+  基于同样的原理, 使用 ``newgrp`` command 可以在不重新登录的情况下修改 group. 这本质
+  上就是重新认证给新进程加新的组. 注意 newgrp is setuid-root.
