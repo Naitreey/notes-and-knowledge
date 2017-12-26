@@ -22,7 +22,8 @@ General
     却避免了虚拟机带来的严重的 overhead. 例如, 不同的容器之间是独立的,
     因此可以各自做自己所需的修改, 做自己要做的任何事而不怕相互干扰 (除了修改内核);
     不同容器可以是不同的操作系统版本或发行版, 因此可以用于解决单一发行版或者固定
-    系统版本带来的局限性, 同时使用多个版本带来的能力; 等等.
+    系统版本带来的局限性, 同时使用多个版本带来的能力; 可以很 cheap 地在同一台机器上
+    对一个程序开多个实例, 让它们并行做相同的事等等.
 
     虚拟机的 overhead 是多方面的, CPU, memory, IO, 硬盘空间等都有很大的 overhead;
     容器的 overhead 仅为硬盘空间占用, 并且仍比虚拟机在这方面的 overhead 小很多.
@@ -56,12 +57,35 @@ General
 
   * 应用隔离和服务隔离, 避免依赖冲突、配置冲突等问题.
 
-  * 比虚拟机轻量化得多的 server consolidation, 服务器资源整合.
+  * 比虚拟机轻量化得多的 server consolidation, 服务器资源利用密度更高.
 
   * 快速、轻量化的部署, 让改动不再是 heavy-lifting, 不会每次修改都花费
     很多时间和资源重新部署.
 
   * docker 提供了一些便利的容器操作 (commit, diff, etc.), 让开发更方便.
+
+  * 轻量的服务并行.
+
+- 为什么使用 docker 强调一个容器里只有一个功能 (functionality/service/concern)?
+
+  单一功能的好处.
+
+  * Scaling containers horizontally is much easier if the container is isolated
+    to a single function. 由于一个功能的容器镜像是构建好的不变的, 在不同的机器
+    上起多个实例仅仅是 docker run 同一个 image 而已. 而且可以保证服务完全相同.
+
+  * Having a single function per container allows the container to be easily
+    re-used for other projects and purpose, and at different location.
+
+  * Changes (both the OS and the application) can be made in a more isolated
+    and controlled manner. CI/CD can push updates to any part of a distributed
+    application. 当以水平扩展为前提时, 我们可以一次只修改部分容器,
+    让剩下的继续工作, 从而维持整个系统 online 和高可用.
+
+  此外, 虽然容器和虚拟机都是独立的虚拟运行环境, 但只有容器强调单一功能.
+  这是因为, 运行一台虚拟机的代价太高, 如果只运行一个服务的话, 太不划算了.
+  换句话说, 容器的低成本、轻量级特性, 才允许它开多个, 每个里面只运行一个
+  服务或进程.
 
 versions
 ========
@@ -79,7 +103,10 @@ CE
 - A given Edge release will not receive any updates once a new edge release is
   available.
 
-- setup docker official package repository for up-to-date releases.
+- Ubuntu: setup docker official package repository for up-to-date releases.
+  使用 stable release channel.
+
+- archlinux: pacman 安装的是 edge release channel.
 
 EE
 --
@@ -88,7 +115,13 @@ EE
 terms
 =====
 
-- image.
+- image. 在 docker 语境下, image 指的是程序文件以及它的一整套运行环境,
+  包括文件系统, 依赖项, 环境变量, 配置等等. 注意, 镜像本身不包含要在
+  其中运行的进程. 它仅仅包含运行任何可能进程的环境.
+
+- container. container 是 image 的实例. 也就是在 image 提供的环境中真正
+  运行所需进程. 基于同一个 image 提供的环境可以运行不同的进程. 也就是说,
+  基于同一个镜像的不同容器实例并不需要运行相同的进程或服务.
 
 configuration
 =============
