@@ -92,6 +92,9 @@ General & Concepts
   因此, 对于数据库的容器化, 需要构成多台机器的 swarm 集群. 每台机器上只有一个数据库
   容器.
 
+  那么对于数据库而言, 仍需要使用容器的原因是, 至少在测试和部署、升级等方面, 容器
+  化仍然相比于实体机要有很多如上述的便利之处.
+
 versions
 ========
 
@@ -222,7 +225,7 @@ terms
 - registry. A registry is a collection of repositories grouped by
   usernames/scopes.
 
-- repository. a repository is a collection of version-controlled images.
+- repository. a repository is a collection of version-controlled (by tags) images.
 
 - image name. 一个 repository 中的某个 image 通过 repository name + version tag
   来唯一识别.
