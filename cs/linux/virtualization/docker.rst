@@ -1,5 +1,5 @@
-General
-=======
+General & Concepts
+==================
 - Why use container?
 
   * short answer:
@@ -60,7 +60,7 @@ General
   * 比虚拟机轻量化得多的 server consolidation, 服务器资源利用密度更高.
 
   * 快速、轻量化的部署, 让改动不再是 heavy-lifting, 不会每次修改都花费
-    很多时间和资源重新部署.
+    很多时间和资源重新部署. 这个好处同样也适用于测试阶段.
 
   * docker 提供了一些便利的容器操作 (commit, diff, etc.), 让开发更方便.
 
@@ -86,6 +86,11 @@ General
   这是因为, 运行一台虚拟机的代价太高, 如果只运行一个服务的话, 太不划算了.
   换句话说, 容器的低成本、轻量级特性, 才允许它开多个, 每个里面只运行一个
   服务或进程.
+
+- 对于数据库. 数据库实例需要大量的资源占用, 这包括内存, I/O 等. 它对硬件资源的要求
+  很高. 把它放在容器中并在单机上多开, 并不能提高效率. 相反会造成资源竞争, 降低效率.
+  因此, 对于数据库的容器化, 需要构成多台机器的 swarm 集群. 每台机器上只有一个数据库
+  容器.
 
 versions
 ========
@@ -123,6 +128,14 @@ terms
   运行所需进程. 基于同一个 image 提供的环境可以运行不同的进程. 也就是说,
   基于同一个镜像的不同容器实例并不需要运行相同的进程或服务.
 
+- image tag. 完整的 tag 由 registry domain, username, repository name, tag version
+  四部分组成. 完整格式是 ``[[<registry>/]<username>/]<repository>[:<tag>]``.
+  若省略 registry, 默认是 docker.io. 若省略 username, 默认是 library.
+  若省略 tag, 默认是 latest.
+
+  若要把 image 上传到某个 registry, 或从某个 registry 下载镜像, 必须指定相应
+  的 tag.
+
 configuration
 =============
 
@@ -130,19 +143,11 @@ configuration
 
   docker group 的用户都可以使用 docker.
 
+dockerfile
+==========
 
-docker registry
-===============
-
-- docker hub 实际上是一个 public docker registry.
-
-- A production-ready registry must be protected by TLS and should ideally use
-  an access-control mechanism.
-
-- TLS, authentication, Docker Hub cache, Docker Hub mirror(how to do?), notification.
-
-- 若要把 image 上传到 private registry, 必须对它打相应的 tag. docker 通过镜像的 tag
-  去分辨该访问什么 registry.
+networking
+==========
 
 dockerd
 =======
@@ -155,15 +160,75 @@ dockerd
 commandline
 ===========
 
-- ``docker stop`` 的效果不受 ``docker run --restart=`` 参数影响. 即使
-  ``--restart=always``, docker stop 也能把容器停下来.
+container
+----------
 
-- ``docker pull <name>`` 命令后面的 image name 参数说明了镜像的来源.
-  ``<name>`` 的格式是 ``[[<registry>/]<repository>/]<image>[:<tag>]``.
-  若省略 registry, 默认是 docker.io. 若省略 repository, 默认是 library.
-  若省略 tag, 默认是 latest.
+docker run, docker container run
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  ``docker pull ubuntu`` 实际是 ``docker pull docker.io/library/ubuntu:latest``.
+- ``--hostname``. 默认情况下容器的 hostname 是它的 short UUID, 该选项
+  指定 hostname.
+
+docker stop, docker container stop
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+``docker stop`` 的效果不受 ``docker run --restart=`` 参数影响. 即使
+``--restart=always``, docker stop 也能把容器停下来.
+
+docker kill, docker container kill
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+main process inside container will be killed by SIGKILL or other signal
+specified by ``--signal`` option.
+
+docker logs, docker contaienr logs
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- ``-f, --follow`` follow output. 此时 docker attach to the running container.
+
+- ``-t, --timestamps`` 显示日志的时间. 这是 docker 给记录的. 也就是说, docker
+  化的应用, 即使是异常崩溃等本身并无时间记录的输出信息, 也会有时间信息. 这很有用.
+
+image
+-----
+
+docker build, docker image build
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+build context 可以是本地目录, tarball, URL 或 stdin. 但无论哪种方式,
+最终的根目录下或指定的 ``--file`` 路径都要有 Dockerfile 文件.
+
+- 对于 local path, 该目录作为 build context 全部传输给 daemon;
+
+- 对于 tarball 等 url, daemon 先下载再解压作为 build context;
+  
+- 若 url 指向一个 git repository, daemon 先 clone 再作为 build context.
+
+docker pull, docker image pull
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- ``docker pull <name>`` 命令后面的 image name 即标准的 image tag 形式.
+
+  e.g., ``docker pull ubuntu`` 实际是 ``docker pull docker.io/library/ubuntu:latest``.
+
+docker registry
+===============
+
+- docker hub 实际上是一个 public docker registry. 它是 docker CLI 默认使用的
+  registry.
+
+- A production-ready registry must be protected by TLS and should ideally use
+  an access-control mechanism.
+
+terms
+-----
+
+- registry. A registry is a collection of repositories grouped by
+  usernames/scopes.
+
+- repository. a repository is a collection of version-controlled images.
+
+- image name. 一个 repository 中的某个 image 通过 repository name + version tag
+  来唯一识别.
+
+docker compose
+==============
 
 misc
 ====
