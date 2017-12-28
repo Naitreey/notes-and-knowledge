@@ -141,444 +141,6 @@
 - 日期时间使用 django.utils.timezone 里的函数, 它们会自动根据 settings.py 里的时间
   相关设置来返回恰当的结果. 直接使用 datetime module 还需要去手动读取配置.
 
-- model
-
-  * model 是一个数据对象类型, 它是数据库表的抽象. 或者从另一个角度来看, 由于 model
-    的存在, 要求数据库表应该按照 object-oriented 的方式进行设计. 而一个 entry 就是
-    一个 instance. 这是一种比较好的设计思路.
-
-  * model 定义时 field 以 class attribute 方式去定义, 而实例化后, 每个实例会
-    生成同名的 attribute 在自己的 ``__dict__`` 中, 覆盖 class attribute.
-
-  * 当 model class 创建时, 定义在 class namespace 中的各个 ``Field`` 实际上
-    存储在 ``Model._meta.fields`` 中.
-
-  * 对于 class namespace 中的各个属性, 只有 ``django.db.models.Field`` 的实例
-    才会认为是 model field. 其他属性实际上可以随意设置.
-
-  * 表之间的关系抽象为在一个模型中包含另一个模型的实例作为属性. 这种抽象在逻辑上十分自然.
-    并且在实例中进行 attribute lookup 以及在 QuerySet 中进行 field lookup 筛选时, 自然地
-    支持了多级深入的操作.
-
-  * 通过 ``Meta`` inner class 定义来定义 model 的 metadata.
-
-    - ``ordering`` 决定 QuerySet 的默认排序. 语法与 ``QuerySet.order_by`` 相同.
-      若不设置, 且 queryset 没有 ``order_by``, 则生成的 SQL 没有 ORDER BY clause,
-      即没有固定顺序.
-
-  * Model object managers (like ``.objects``) are only accessible via model classes,
-    not the model instances.
-
-  * 定义 ``__str__`` method 给模型的实例一个有意义的 string 形式.
-
-  * 注意 ``Meta.verbose_name`` 和 ``__str__`` 的区别. 前者是模型本身的 verbose name,
-    后者是 model instance 的字符串表现形式.
-    在 admin site 中, 分类管理的 section 名字用 verbose name, 每个部分中, 对实例
-    进行批量编辑的列表中, 显示实例用的 string 形式.
-
-  * inheritance.
-
-    三种 model 继承方式.
-
-    - abstract base model
-
-      * ABC model 用于将多个 model 中的相同部分抽象出来, 避免重复. 它并不创建
-        实际的数据库表. 仅用于从 python class 的视角上去做逻辑一般化. 每个
-        继承了它的 concrete model 仍然包含并在数据库表中实例化所有列.
-
-      * 使用 ``Meta.abstract = True`` 定义 ABC model.
-
-      * subclass model 自动继承父类的 Meta class. 若要扩展, 则继承 Meta class 即可.
-        ABC model 的子类的自己的 ``Meta`` attribue 自动设置 ``abstract = False``.
-        若子类 model 仍需是 ABC, 需要再设置.
-
-      * 对于 ABC model 的继承, 可以覆盖列名. 因为 ABC model 并没有实际的表去关联.
-        还可以设置 ``field = None`` 在子类中去掉特定列.
-
-      * 若 ABC model 中包含 FK 等关系列, 则 related_name/related_query_name  应该
-        使用默认的值或者设置对于不同的 subclass model 自动取不同的值, 例如包含
-        ``%(class)s`` ``%(app_label)s``, 否则会造成反向关系冲突.
-
-    - concrete model inheritance
-
-      * subclass model 继承 concrete model 时, 在数据库层, 子类的表只建立多出来的
-        那些列, 属于父类的信息则保存在父类的表中. 两者通过隐性建立的 OneToOneField
-        关联:
-
-        .. code:: python
-          <parent>_ptr = models.OneToOneField(
-            <parent-model>,
-            on_delete=models.CASCADE,
-            parent_link=True,
-          )
-
-        注意 ``parent_link`` 让父类的 fields 在子类实例中可以直接获取. 这才符合
-        继承概念. 此外, 注意这个 OTO field 默认命名为 ``<parent-model>_ptr``.
-        也可以在子类 model 中明确定义这个 OTO field, 例如修改名字之类的.
-
-        在子类实例中, 可以访问 OTO 获取父类实例. 注意父类实例由于具有 OTO field
-        的反向关系, 也还可以再获取子类实例本身. 甚至由于子类实例本身就是父类实例,
-        子类实例中也访问父类中的反向关系, 再得到自己的另一个 instance.
-
-      * 仔细想想, 非 ABC model 在继承时, 子类 model 表中只保存那些扩展的信息, 继承的
-        信息都保留在父类表中. 这个设计实际上才是合理的. 因为子类的实例也是父类的实例,
-        我们可以从子类实例中抽出纯父类实例那部分 (例如通过 ``super``). 我们把这种继承
-        和实例化的思路应用在 ORM 上, 就得到了父类 model 的数据集显然是应该包含子类
-        model 的数据集的 (抽出公有部分). 所以子类表只存扩展字段即可, 通过 one-to-one
-        field 与存在父类表中的基础数据对应, 两部分数据构成一个完整的子类实例.
-
-      * 若 model 继承时不是继承的 ABC model, 而是实体 model, 则子类的 field 不能
-        和父类的 field 重名, 即 field attribute can not be overrided. 这与一般的
-        python 类不同. 这是因为 model instance 实际上是数据库表 entry 的抽象,
-        如果重名, 在获取属性即列值时就存在歧义和令人困惑之处.
-
-      * 在继承实体 model 时, 不继承 Meta, 因为这是不合理. 因为这时 parent Meta
-        的值仅应对父类生效, 例如 verbose_name. 子类也使用显然不合理. 但有一个
-        例外, 即 ordering 会从父类继承.
-
-      * 继承实体模型时, 若父模型中有 FK 等关系列, 子模型直接使用保存在父模型表
-        中的关系. 这体现在, 从子模型实例中可以得到父模型指向的 related model
-        instances, 但在 related model instance 中, 只有向父模型的反向关系. 无法
-        区分 related manager 得到的实例哪些是父, 哪些是子 (除非在父模型中保存
-        有对不同子模型区分的列值).
-
-      * 在数据库层, subclass table 的 PK 直接使用了 OTO 关系列的值, 即 parent
-        table 的 PK id, 因此, 这保证了在 django 中, subclass model 实例的 id
-        与它对应的 parent model 实例部分的 id 实际是一个项, 且 pk 值即外键值
-        也能正确地与 parent model id 一致. 所以不存在区分子模型实例 id 与父
-        模型实例部分 id 的问题.
-
-    - proxy model
-
-      * proxy model 不修改 model, 而是修改对 model 数据的操作, 即 only change
-        the python behavior of a model.  因此 proxy model 和它的原始 model
-        共享所有数据集. The whole point of proxy objects is that code relying
-        on the original Person will use those and your own code can use the
-        extensions you included (that no other code is relying on anyway).
-
-      * proxy model 可以用来添加 method, 修改 Meta options 例如 ordering.
-
-      * QuerySets still return the original model.
-
-    - multiple inheritance. The main use-case where this is useful is for
-      “mix-in” classes: adding a particular extra field or method to every
-      class that inherits the mix-in.
-
-      注意根据一般的 MRO 规则, 只有第一个父类的 Meta 会对子类有效 (如果允许访问
-      的话).
-
-  * unmanaged model.
-
-    - If you are mirroring an existing model or database table and don’t want all
-      the original database table columns, use ``Meta.managed=False``. That option
-      is normally useful for modeling database views and tables not under the
-      control of Django.
-
-  * 如果一个 app 中的 model 太多, 可以进一步模块化. 将 models 扩展成一个 subpackage.
-    注意在 models package 的 init 文件中引入所有子模块中定义的 model.
-
-  * ``django.core.exceptions.ObjectDoesNotExist`` 是所有 ``Model.DoesNotExist``
-    exception 的父类.
-
-- model meta options.
-
-  * ``abstract``, whether is abstract model.
-
-  * ``app_label``, 定义 model 所属的 app.
-
-    对于在其他 app 中已经定义的 model, 可在 import
-    过程中修改 ``model._meta.app_label`` 的值修改它所属 app.
-
-    注意无论是在 Meta 中修改还是其他修改方式, 这直接改变了 django 看待这个 model
-    所属于的 app. 因此这导致相应的 migration 必须被创建和应用. 因此, 不能通过
-    这个方式修改 django contrib app 的 models. 因为这会修改这些应用的 migrations.
-
-  * ``db_table``
-
-  * ``default_related_name``, 对于 relation field, ``related_name`` 的默认值.
-    默认是 ``<model>_set``. 同时也是 ``related_query_name`` 的默认值.
-
-  * ``get_latest_by``, ``QuerySet.latest()`` ``QuerySet.earliest()`` 默认
-    使用的 field name.
-
-  * ``managed``, This is useful if the model represents an existing table or a
-    database view that has been created by some other means.
-
-  * ``order_with_respect_to``, This can be used to make related objects
-    orderable with respect to a parent object. ``order_with_respect_to`` and
-    ``ordering`` cannot be used together, and the ordering added by
-    order_with_respect_to will apply whenever you obtain a list of objects of
-    this model.
-
-  * ``ordering``. default ordering when obtaining a list of objects.
-    和 ``QuerySet.order_by()`` 语法相同.
-
-  * ``permissions``, extra permissions relating to this model (content type).
-
-  * ``default_permissions``, 对该 model 默认创建的一系列权限. 默认 add/change/delete.
-
-  * ``proxy``, proxy model.
-
-  * ``indexes``, A list of indexes that you want to define on the model.
-
-  * ``unique_together``, 一组或多组 associative unique constraint. 使用
-    a tuple of tuples 来定义.
-
-  * ``verbose_name``, ``verbose_name_plural``, human-readable name for the model.
-
-  * ``label``, ``label_lower``, readonly. ``<app_label>.<model_name>``.
-
-- model field
-
-  * options.
-
-    Many of Django’s model fields accept options that they don’t do anything with.
-    This behavior simplifies the field classes, because they don’t need to
-    check for options that aren’t necessary. They just pass all the options
-    to the parent class and then don’t use them later on.
-
-    - primary key:
-
-      可以用 ``primary_key=True`` 设置某个 field 为 primary key, 否则 django 自动
-      给 model 添加 id field 作为 primary key
-
-      .. code:: python
-        id = models.AutoField(primary_key=True)
-
-      The primary key field is read-only. If you change the value of the primary key
-      on an existing object and then save it, a new object will be created alongside
-      the old one.
-
-    - ``default`` 仅在 SQL 中创建 entry 时该列的值未指定时生效, 而不是
-      ``field=None`` 时. 后者情况是指定了该列, 但值是 null. 默认情况下
-      ``default=None``, 但是否能顺利使用该 default value, 还要看该列是否允许
-      null, 即 ``null=`` 的配置.
-
-    - ``blank`` 若为 True, form 中允许该项为空
-
-    - ``null`` 默认是 False, 此时 create table 时有 ``NOT NULL``, 且不允许
-      field 值为 None; 若 True, create table 时有 ``NULL``, 且允许 field 值
-      为 None.
-
-      ``blank`` 是规定 form validation 时是否允许空值.
-      两者的意义是不同的.
-      ``null`` 和 ``blank`` 的默认值都是 ``False``.
-
-    - ``choices`` 设置 field 的可选值, 其值是 a iterable of ``(value, description)``
-      pairs. 每个选项的值的 symbolic enum 形式和整个选项 列表应设置在 model
-      class 中. 这是为了方便后续在查询等操作中使用. 设置该选项后, 默认的 form
-      形式会变成 (multiple) select box. Given a model instance, the display
-      value for a choices field can be accessed using the ``get_FOO_display()``
-      method.
-
-    - ``help_text`` 设置该列值的更详细的帮助信息. ModelForm 会使用它.
-      其字符串值在 form 中直接显示, 不会被 escape. 因此可以加入 html 语法.
-
-    - ``error_messages`` overrides default validation error messages.
-
-    - ``verbose_name``, 对于非关系型 field, 该参数是第一个 kwarg, 因此经常以
-      positional 形式写出; 对于关系型 field 必须以 kwarg 形式写出.
-
-    - ``db_index``, 是否创建 single field index.
-
-    - ``validators``, 指定 validators. 这些 validators 会在 form validation
-      或 model instance validation 的时候生效.
-
-  * ``Field`` methods.
-
-    - Field deconstruction: ``Field.deconstruct()``
-
-    - ``db_type()`` 给出底层数据库对应的实际 field type.
-      若这个方法返回 None, 则生成的 SQL 会直接跳过这个 Field.
-
-    - ``rel_db_type()`` 决定指向这个 Field 的 Field 的数据库类型.
-      这被 ForeignKey, OneToOneField 等使用. 也就是说, 当创建一个 field A reference
-      另一个 field B 时, B 的 ``rel_db_type()`` 决定 A 的数据库类型.
-
-    - ``from_db_value()``
-
-    - ``to_python()``
-
-    - ``get_prep_value()``
-
-    - ``get_db_prep_value()``
-
-  * custom field type.
-
-    - You can’t change the base class of a custom field because Django won’t
-      detect the change and make a migration for it. Instead, you must create a
-      new custom field class and update your models to reference it.
-
-  * field types. 所有 field types 都是 ``Field`` 子类.
-
-    - IP address 用 ``GenericIPAddressField``.
-
-    - 实数一般用 ``FloatField``, 精确要求时考虑 ``DecimalField``.
-
-    - 整数有 ``IntegerField``, ``PositiveIntegerField``, ``BigIntegerField``,
-      ``SmallIntegerField``, ``PositiveSmallIntegerField``.
-
-    - ``DateField`` ``DateTimeField``
-
-      * 在 python 中以 datetime.date, datetime.datetime 分别表示.
-
-      * ``auto_now_add`` 适合做 create time;
-        ``auto_now`` 适合做 update time.
-        这些参数在调用 ``Model.save()`` 来保存时才有效, 通过其他途径修改数据
-        时不会生效.
-
-        若只是想设置默认值, 那就用 ``default=``, 别用这两个选项.
-
-        ``auto_now``, ``auto_now_add`` 和 ``default`` 是互斥的.
-
-        设置这两个参数, 意味着该列不能手动修改, 并且即使包含在了 form 中,
-        也不是必须输入的项 (即不是 required). 因此, django 自动设置
-        ``editable=False`` 和 ``blank=True``.
-
-    - 若要允许在 ``BooleanField`` 中存 NULL, 使用 ``NullBooleanField``.
-
-    - ``SlugField`` 要配合 ``slugify`` 函数使用, 只应该在创建 instance 时保存该列值.
-
-    - ``FilePathField`` 要求值必须是满足路径匹配条件的文件路径.
-
-    - ``JSONField``. postgresql 可以使用 native JSONField, 对于 mysql 可以使用
-      django-jsonfield module 用 TextField/CharField 模拟.
-
-  * relation field: many-to-one.
-
-    - 多对一的映射关系用 ``django.db.models.ForeignKey`` 实现.
-
-    - foreign key field 的名字应该是所指向的 model 的名字的全小写版本.
-
-    - ForeignKey field 默认设置 ``db_index=True``, 即默认建立该列的索引.
-
-    - ``ForeignKey`` field 在数据库中命名为 ``<field>_id``, 除非用 ``db_column``
-      自定义.
-
-    - 若 ``ForeignKey`` field 支持 ``null=True``, 则对这个属性赋值 None 即可去掉关联.
-
-    - 对各种 relationship field, 若要指向可能尚未定义的列, 用字符串
-      ``[app_label.]model`` 代替 model object.
-
-    - constructor parameters.
-
-      * ``on_delete``
-
-        虽然默认是 ``CASCADE``, 但 django 2.0 之后将变成 required parameter.
-        如果对象之间的关系不是必须的, ``on_delete`` 应该设置成别的值:
-
-        - 若该条数据必须随指向的数据共存亡, ``django.db.models.CASCADE``.
-
-        - 若只要 FK 关系仍存在就禁止删除原数据, ``django.db.models.PROTECT``.
-
-        - 若需设置为 NULL 以表示不指向任何东西, ``django.db.models.SET_NULL``.
-
-        - 若需设置为默认指向的东西, ``django.db.models.SET_DEFAULT``.
-
-        - 若需自定义设置逻辑, ``django.db.models.SET(value|callable)``.
-
-        - 啥也不干, 由数据库决定该怎么办, ``django.db.models.DO_NOTHING``.
-
-      * ``limit_choices_to``, 限制 ModelForm 中该列的赋值范围.
-
-      * ``related_name``, 自定义从 related object 反向获取时, related manager
-        的名字. 默认是 ``Meta.default_related_name``, 后者的默认值是
-        ``<model>_set``. 若不让 django 创建反向关系, set related_name to '+' or
-        end it with '+'.
-
-      * ``related_query_name``, 在 field lookup syntax 中, 从 related model
-        向这个 model 反向查询时, 使用的名字. 若有设置 related_name 或
-        Meta.default_related_name, 默认使用它们中的一个, 否则默认为 model name.
-
-      * ``to_field``, 关联的 model 的 field, 默认是 primary key. 关联的 field
-        必须有 unique constraint.
-
-      * ``db_constraint``
-
-      * ``swappable``, 默认 True 即可. 与 swappable AUTH_USER_MODEL 相关, 为了
-        支持 custom user model.
-
-  * relation field: one-to-one.
-
-    - 一对一关系一般用于一个模型作为另一个模型的延伸、扩展、附加属性等.
-      ``OneToOneField`` 在 model 继承时用于定义父表和子表通过哪一列来关联.
-
-    - OneToOneField 本质上是 ForeignKey 的一种特例. 前者是后者的子类.
-
-    - one-to-one field 在 mysql 中实现时, 实际上是一个普通的 field (类型与指向
-      的 model 的 primary key 一致), 配合 unique key constraint 以及 foreign key
-      reference constraint.
-
-    - OTO field 的 ``parent_link`` 结合 conrete model inheritance 时有特殊作用,
-      它让父类的 field 可在子类即 OTO field 所在 model 中直接访问.
-
-  * relation field: many-to-many.
-
-    - 由于一个列无法体现多对多的关系, ``ManyToManyField`` 在实现时, 不是构成了一个列,
-      而是一个单独的 table. table 的命名根据 ``<app>_<model>_<m2mfield>`` 全小写命名.
-      table 中包含 many-to-many 关系的两种模型数据的行 id.
-
-      该表中的两个 FK 列都有 index.
-
-    - It doesn’t matter which model has the ``ManyToManyField``, but you should only
-      put it in one of the models – not both. ``ManyToManyField`` 应该放在那个编辑
-      起来更自然的 model 中, 也就是说, 从哪个方向建立多对多映射关系更自然, 就把它
-      放在哪个 model 中.
-
-    - many-to-many field 的名字应该是一个复数类型的名字, 以表示多个的概念.
-      同样的, ``related_name`` ``related_query_name`` 也应该是表示反向关系的
-      复数.
-
-    - ``ManyToManyField`` 不是一个列, 而是抽象了一个包含映射关系的表, 只有设置
-      映射和没有映射, ``null=`` 参数对它没有意义. 指定该参数会导致 django
-      system check 警告.
-
-    - ManyToManyField 不存在 on_delete 参数, 一方面是因为它本身不是一个列, 这个语义
-      就不太对; 另一个也是因为它背后的两个 FK field 都必须是 CASCADE 的, 所以没必要
-      指定.
-
-    - constructor options.
-
-      * related_name, related_query_name, limit_choices_to.
-
-      * ``symmetrical``, 与 recursive M2M relationship 相关.
-
-      * ``through``
-
-        through model. 多对多关系实际上是通过一个关系表来实现的. 这个关系表的 model
-        可通过 ``ManyToManyField.through`` attribute 获得. 并可以通过 ``through``
-        option 来指定单独创建的 through model, 这可用于在 through model 中加入额外的
-        状态信息等列.
-
-        ``.through`` 属性在 field instance 是一个 RelatedManager to through model.
-
-  * recursive relationship: 若 relation field 需要与自身表建立关联, 使用
-    ``"self"`` 作为 ``to`` 参数值.
-
-    lazy relationship: 若 relation field 需与可能尚未建立的 model 建立关联,
-    使用 ``[<app_label>.]<model>``.
-
-- model instance.
-
-  * instantiation.
-
-    - 在创建 model instance 时, 对于 FK field, 有两种指定方式:
-      ``<FK-field>=<FK-model-object>``, ``<FK>_id=<FK-model-object>.{id|pk}``.
-      这不同于 field lookup, 不支持 id 和 object 交叉混合的方式.
-
-- model index.
-
-  index 通过 ``Model.Meta.indexes`` option 指定, a list of Index objects.
-
-  ``Index`` object.
-
-  * ``fields``, 指定单一索引或复合索引的列, 以及方向. 语法和 QuerySet.order_by
-    相同.
-
-  * ``name``, index name.
-
-  * ``db_tablespace``.
-
 - model instance & form instance validations.
 
   * 在定义 model class 时, 要考虑应该在 model 层就限制的数据合法性要求.
@@ -2402,31 +1964,6 @@
 
   * ``UST_TZ`` determines whether datetime objects are naive.
 
-- django-admin
-
-  * ``./manage.py shell`` 启动 shell 并加载项目相关 django 配置; 这相当于
-    执行了:
-
-      .. code:: python
-
-        os.environ['DJANGO_SETTINGS_MODULE'] = "<project>.settings"
-        import django; django.setup()
-
-  * ``makemigrations --dry-run`` 可用来检查当前记录的数据库结构 (通过
-    migration files 来体现) 是否和 models 里的模型代码保持一致.
-
-  * ``clearsessions`` 清除过期的 session data. django 不提供自动清理
-    session 的机制. 可以定期执行这个命令手动清除过期的 session.
-
-  * ``runserver``.
-
-    对于 runserver 输出的请求相应日志, 每一行是在该请求结束后才输出, 因此
-    才记录有 method, url, http version, status code 等信息.
-
-  * ``dbshell``
-
-    似乎不会使用平时 django 运行时传入的 OPTIONS 参数.
-
 - migration
 
   * You should think of migrations as a version control system for your
@@ -2575,6 +2112,9 @@
     - attributes
 
       * ``session_key``, session data 唯一标识, readonly.
+        
+        对于 db-based session, 这是存储在 session cookie 中的值,
+        即唯一传递至客户端的 session 信息.
 
       * ``modified``, session data 是否被修改过. 修改 ``request.session``
         时, 该属性自动设置 True. 从 view function 返回之后, SessionMiddle
@@ -2811,203 +2351,618 @@
   若要传输很大的 csv 文件, 需要使用 StreamingHttpResponse. 这需要一些技巧.
   详见 django 文档.
 
+model
+=====
+
+* model 是一个数据对象类型, 它是数据库表的抽象. 或者从另一个角度来看, 由于 model
+  的存在, 要求数据库表应该按照 object-oriented 的方式进行设计. 而一个 entry 就是
+  一个 instance. 这是一种比较好的设计思路.
+
+* model 定义时 field 以 class attribute 方式去定义, 而实例化后, 每个实例会
+  生成同名的 attribute 在自己的 ``__dict__`` 中, 覆盖 class attribute.
+
+* 当 model class 创建时, 定义在 class namespace 中的各个 ``Field`` 实际上
+  存储在 ``Model._meta.fields`` 中.
+
+* 对于 class namespace 中的各个属性, 只有 ``django.db.models.Field`` 的实例
+  才会认为是 model field. 其他属性实际上可以随意设置.
+
+* 表之间的关系抽象为在一个模型中包含另一个模型的实例作为属性. 这种抽象在逻辑上十分自然.
+  并且在实例中进行 attribute lookup 以及在 QuerySet 中进行 field lookup 筛选时, 自然地
+  支持了多级深入的操作.
+
+* 通过 ``Meta`` inner class 定义来定义 model 的 metadata.
+
+  - ``ordering`` 决定 QuerySet 的默认排序. 语法与 ``QuerySet.order_by`` 相同.
+    若不设置, 且 queryset 没有 ``order_by``, 则生成的 SQL 没有 ORDER BY clause,
+    即没有固定顺序.
+
+* Model object managers (like ``.objects``) are only accessible via model classes,
+  not the model instances.
+
+* 定义 ``__str__`` method 给模型的实例一个有意义的 string 形式.
+
+* 注意 ``Meta.verbose_name`` 和 ``__str__`` 的区别. 前者是模型本身的 verbose name,
+  后者是 model instance 的字符串表现形式.
+  在 admin site 中, 分类管理的 section 名字用 verbose name, 每个部分中, 对实例
+  进行批量编辑的列表中, 显示实例用的 string 形式.
+
+* 如果一个 app 中的 model 太多, 可以进一步模块化. 将 models 扩展成一个 subpackage.
+  注意在 models package 的 init 文件中引入所有子模块中定义的 model.
+
+* ``django.core.exceptions.ObjectDoesNotExist`` 是所有 ``Model.DoesNotExist``
+  exception 的父类.
+
+inheritance
+-----------
+
+三种 model 继承方式.
+
+- abstract base model
+
+  * ABC model 用于将多个 model 中的相同部分抽象出来, 避免重复. 它并不创建
+    实际的数据库表. 仅用于从 python class 的视角上去做逻辑一般化. 每个
+    继承了它的 concrete model 仍然包含并在数据库表中实例化所有列.
+
+  * 使用 ``Meta.abstract = True`` 定义 ABC model.
+
+  * subclass model 自动继承父类的 Meta class. 若要扩展, 则继承 Meta class 即可.
+    ABC model 的子类的自己的 ``Meta`` attribue 自动设置 ``abstract = False``.
+    若子类 model 仍需是 ABC, 需要再设置.
+
+  * 对于 ABC model 的继承, 可以覆盖列名. 因为 ABC model 并没有实际的表去关联.
+    还可以设置 ``field = None`` 在子类中去掉特定列.
+
+  * 若 ABC model 中包含 FK 等关系列, 则 related_name/related_query_name  应该
+    使用默认的值或者设置对于不同的 subclass model 自动取不同的值, 例如包含
+    ``%(class)s`` ``%(app_label)s``, 否则会造成反向关系冲突.
+
+  * multiple inheritance. 一个 model 可以继承多个 abstract model. 这常用于
+    将一些公共的列提取出来构成 abstract mixin model class. 然后在不同的 model
+    继承使用. 此外, 注意根据 MRO, 只有第一个 parent Meta 有效.
+
+- concrete model inheritance
+
+  * subclass model 继承 concrete model 时, 在数据库层, 子类的表只建立多出来的
+    那些列, 属于父类的信息则保存在父类的表中. 两者通过隐性建立的 OneToOneField
+    关联:
+
+    .. code:: python
+      <parent>_ptr = models.OneToOneField(
+        <parent-model>,
+        on_delete=models.CASCADE,
+        parent_link=True,
+      )
+
+    注意 ``parent_link`` 让父类的 fields 在子类实例中可以直接获取. 这才符合
+    继承概念. 此外, 注意这个 OTO field 默认命名为 ``<parent-model>_ptr``.
+    也可以在子类 model 中明确定义这个 OTO field, 例如修改名字之类的.
+
+    在子类实例中, 可以访问 OTO 获取父类实例. 注意父类实例由于具有 OTO field
+    的反向关系, 也还可以再获取子类实例本身. 甚至由于子类实例本身就是父类实例,
+    子类实例中也访问父类中的反向关系, 再得到自己的另一个 instance.
+
+  * 仔细想想, 非 ABC model 在继承时, 子类 model 表中只保存那些扩展的信息, 继承的
+    信息都保留在父类表中. 这个设计实际上才是合理的. 因为子类的实例也是父类的实例,
+    我们可以从子类实例中抽出纯父类实例那部分 (例如通过 ``super``). 我们把这种继承
+    和实例化的思路应用在 ORM 上, 就得到了父类 model 的数据集显然是应该包含子类
+    model 的数据集的 (抽出公有部分). 所以子类表只存扩展字段即可, 通过 one-to-one
+    field 与存在父类表中的基础数据对应, 两部分数据构成一个完整的子类实例.
+
+  * 若 model 继承时不是继承的 ABC model, 而是实体 model, 则子类的 field 不能
+    和父类的 field 重名, 即 field attribute can not be overrided. 这与一般的
+    python 类不同. 这是因为 model instance 实际上是数据库表 entry 的抽象,
+    如果重名, 在获取属性即列值时就存在歧义和令人困惑之处.
+
+  * 在继承实体 model 时, 不继承 Meta, 因为这是不合理. 因为这时 parent Meta
+    的值仅应对父类生效, 例如 verbose_name. 子类也使用显然不合理. 但有一个
+    例外, 即 ordering 会从父类继承.
+
+  * 继承实体模型时, 若父模型中有 FK 等关系列, 子模型直接使用保存在父模型表
+    中的关系. 这体现在, 从子模型实例中可以得到父模型指向的 related model
+    instances, 但在 related model instance 中, 只有向父模型的反向关系. 无法
+    区分 related manager 得到的实例哪些是父, 哪些是子 (除非在父模型中保存
+    有对不同子模型区分的列值).
+
+  * 在数据库层, subclass table 的 PK 直接使用了 OTO 关系列的值, 即 parent
+    table 的 PK id, 因此, 这保证了在 django 中, subclass model 实例的 id
+    与它对应的 parent model 实例部分的 id 实际是一个项, 且 pk 值即外键值
+    也能正确地与 parent model id 一致. 所以不存在区分子模型实例 id 与父
+    模型实例部分 id 的问题.
+
+  * multiple inheritance. 继承多个 concrete model 可能造成一些麻烦.
+    首先, 数据会分散在各个继承的模型表中. 其次, 不同的模型列可能冲突.
+    尤其是, 默认的 id field 会冲突, 因此 parent models 需要使用 AutoField
+    指定明确的 id field 或者指定完全自定义的 primary key field. 若继承
+    的几个 parent models 具有相同的 parent concrete model, 则这些 model
+    中的指向 parent model 的 OneToOneField 必须显性定义, 因为默认的列名
+    是 ``<parent>_ptr``. 所以再次继承时会发生冲突.
+
+- proxy model
+
+  * proxy model 不修改 model, 而是修改对 model 数据的操作, 即 only change
+    the python behavior of a model.  因此 proxy model 和它的原始 model
+    共享所有数据集. The whole point of proxy objects is that code relying
+    on the original Person will use those and your own code can use the
+    extensions you included (that no other code is relying on anyway).
+
+  * proxy model 可以用来添加 method, 修改 Meta options 例如 ordering.
+
+  * QuerySets still return the original model.
+
+unmanaged model
+---------------
+
+- If you are mirroring an existing model or database table and don’t want all
+  the original database table columns, use ``Meta.managed=False``. That option
+  is normally useful for modeling database views and tables not under the
+  control of Django.
+
+model meta options
+------------------
+
+* ``abstract``, whether is abstract model.
+
+* ``app_label``, 定义 model 所属的 app.
+
+  对于在其他 app 中已经定义的 model, 可在 import
+  过程中修改 ``model._meta.app_label`` 的值修改它所属 app.
+
+  注意无论是在 Meta 中修改还是其他修改方式, 这直接改变了 django 看待这个 model
+  所属于的 app. 因此这导致相应的 migration 必须被创建和应用. 因此, 不能通过
+  这个方式修改 django contrib app 的 models. 因为这会修改这些应用的 migrations.
+
+* ``db_table``
+
+* ``default_related_name``, 对于 relation field, ``related_name`` 的默认值.
+  默认是 ``<model>_set``. 同时也是 ``related_query_name`` 的默认值.
+
+* ``get_latest_by``, ``QuerySet.latest()`` ``QuerySet.earliest()`` 默认
+  使用的 field name.
+
+* ``managed``, This is useful if the model represents an existing table or a
+  database view that has been created by some other means.
+
+* ``order_with_respect_to``, This can be used to make related objects
+  orderable with respect to a parent object. ``order_with_respect_to`` and
+  ``ordering`` cannot be used together, and the ordering added by
+  order_with_respect_to will apply whenever you obtain a list of objects of
+  this model.
+
+* ``ordering``. default ordering when obtaining a list of objects.
+  和 ``QuerySet.order_by()`` 语法相同.
+
+* ``permissions``, extra permissions relating to this model (content type).
+
+* ``default_permissions``, 对该 model 默认创建的一系列权限. 默认 add/change/delete.
+
+* ``proxy``, proxy model.
+
+* ``indexes``, A list of indexes that you want to define on the model.
+
+* ``unique_together``, 一组或多组 associative unique constraint. 使用
+  a tuple of tuples 来定义.
+
+* ``verbose_name``, ``verbose_name_plural``, human-readable name for the model.
+
+* ``label``, ``label_lower``, readonly. ``<app_label>.<model_name>``.
+
+model field
+-----------
+
+* options.
+
+  Many of Django’s model fields accept options that they don’t do anything with.
+  This behavior simplifies the field classes, because they don’t need to
+  check for options that aren’t necessary. They just pass all the options
+  to the parent class and then don’t use them later on.
+
+  - primary key:
+
+    可以用 ``primary_key=True`` 设置某个 field 为 primary key, 否则 django 自动
+    给 model 添加 id field 作为 primary key
+
+    .. code:: python
+      id = models.AutoField(primary_key=True)
+
+    The primary key field is read-only. If you change the value of the primary key
+    on an existing object and then save it, a new object will be created alongside
+    the old one.
+
+  - ``default`` 仅在 SQL 中创建 entry 时该列的值未指定时生效, 而不是
+    ``field=None`` 时. 后者情况是指定了该列, 但值是 null. 默认情况下
+    ``default=None``, 但是否能顺利使用该 default value, 还要看该列是否允许
+    null, 即 ``null=`` 的配置.
+
+  - ``blank`` 若为 True, form 中允许该项为空
+
+  - ``null`` 默认是 False, 此时 create table 时有 ``NOT NULL``, 且不允许
+    field 值为 None; 若 True, create table 时有 ``NULL``, 且允许 field 值
+    为 None.
+
+    ``blank`` 是规定 form validation 时是否允许空值.
+    两者的意义是不同的.
+    ``null`` 和 ``blank`` 的默认值都是 ``False``.
+
+  - ``choices`` 设置 field 的可选值, 其值是 a iterable of ``(value, description)``
+    pairs. 每个选项的值的 symbolic enum 形式和整个选项 列表应设置在 model
+    class 中. 这是为了方便后续在查询等操作中使用. 设置该选项后, 默认的 form
+    形式会变成 (multiple) select box. Given a model instance, the display
+    value for a choices field can be accessed using the ``get_FOO_display()``
+    method.
+
+  - ``help_text`` 设置该列值的更详细的帮助信息. ModelForm 会使用它.
+    其字符串值在 form 中直接显示, 不会被 escape. 因此可以加入 html 语法.
+
+  - ``error_messages`` overrides default validation error messages.
+
+  - ``verbose_name``, 对于非关系型 field, 该参数是第一个 kwarg, 因此经常以
+    positional 形式写出; 对于关系型 field 必须以 kwarg 形式写出.
+
+  - ``db_index``, 是否创建 single field index.
+
+  - ``validators``, 指定 validators. 这些 validators 会在 form validation
+    或 model instance validation 的时候生效.
+
+* ``Field`` methods.
+
+  - Field deconstruction: ``Field.deconstruct()``
+
+  - ``db_type()`` 给出底层数据库对应的实际 field type.
+    若这个方法返回 None, 则生成的 SQL 会直接跳过这个 Field.
+
+  - ``rel_db_type()`` 决定指向这个 Field 的 Field 的数据库类型.
+    这被 ForeignKey, OneToOneField 等使用. 也就是说, 当创建一个 field A reference
+    另一个 field B 时, B 的 ``rel_db_type()`` 决定 A 的数据库类型.
+
+  - ``from_db_value()``
+
+  - ``to_python()``
+
+  - ``get_prep_value()``
+
+  - ``get_db_prep_value()``
+
+* custom field type.
+
+  - You can’t change the base class of a custom field because Django won’t
+    detect the change and make a migration for it. Instead, you must create a
+    new custom field class and update your models to reference it.
+
+* field types. 所有 field types 都是 ``Field`` 子类.
+
+  - IP address 用 ``GenericIPAddressField``.
+
+  - 实数一般用 ``FloatField``, 精确要求时考虑 ``DecimalField``.
+
+  - 整数有 ``IntegerField``, ``PositiveIntegerField``, ``BigIntegerField``,
+    ``SmallIntegerField``, ``PositiveSmallIntegerField``.
+
+  - ``DateField`` ``DateTimeField``
+
+    * 在 python 中以 datetime.date, datetime.datetime 分别表示.
+
+    * ``auto_now_add`` 适合做 create time;
+      ``auto_now`` 适合做 update time.
+      这些参数在调用 ``Model.save()`` 来保存时才有效, 通过其他途径修改数据
+      时不会生效.
+
+      若只是想设置默认值, 那就用 ``default=``, 别用这两个选项.
+
+      ``auto_now``, ``auto_now_add`` 和 ``default`` 是互斥的.
+
+      设置这两个参数, 意味着该列不能手动修改, 并且即使包含在了 form 中,
+      也不是必须输入的项 (即不是 required). 因此, django 自动设置
+      ``editable=False`` 和 ``blank=True``.
+
+  - 若要允许在 ``BooleanField`` 中存 NULL, 使用 ``NullBooleanField``.
+
+  - ``SlugField`` 要配合 ``slugify`` 函数使用, 只应该在创建 instance 时保存该列值.
+
+  - ``FilePathField`` 要求值必须是满足路径匹配条件的文件路径.
+
+  - ``JSONField``. postgresql 可以使用 native JSONField, 对于 mysql 可以使用
+    django-jsonfield module 用 TextField/CharField 模拟.
+
+* relation field: many-to-one.
+
+  - 多对一的映射关系用 ``django.db.models.ForeignKey`` 实现.
+
+  - foreign key field 的名字应该是所指向的 model 的名字的全小写版本.
+
+  - ForeignKey field 默认设置 ``db_index=True``, 即默认建立该列的索引.
+
+  - ``ForeignKey`` field 在数据库中命名为 ``<field>_id``, 除非用 ``db_column``
+    自定义.
+
+  - 若 ``ForeignKey`` field 支持 ``null=True``, 则对这个属性赋值 None 即可去掉关联.
+
+  - 对各种 relationship field, 若要指向可能尚未定义的列, 用字符串
+    ``[app_label.]model`` 代替 model object.
+
+  - constructor parameters.
+
+    * ``on_delete``
+
+      虽然默认是 ``CASCADE``, 但 django 2.0 之后将变成 required parameter.
+      如果对象之间的关系不是必须的, ``on_delete`` 应该设置成别的值:
+
+      - 若该条数据必须随指向的数据共存亡, ``django.db.models.CASCADE``.
+
+      - 若只要 FK 关系仍存在就禁止删除原数据, ``django.db.models.PROTECT``.
+
+      - 若需设置为 NULL 以表示不指向任何东西, ``django.db.models.SET_NULL``.
+
+      - 若需设置为默认指向的东西, ``django.db.models.SET_DEFAULT``.
+
+      - 若需自定义设置逻辑, ``django.db.models.SET(value|callable)``.
+
+      - 啥也不干, 由数据库决定该怎么办, ``django.db.models.DO_NOTHING``.
+
+    * ``limit_choices_to``, 限制 ModelForm 中该列的赋值范围.
+
+    * ``related_name``, 自定义从 related object 反向获取时, related manager
+      的名字. 默认是 ``Meta.default_related_name``, 后者的默认值是
+      ``<model>_set``. 若不让 django 创建反向关系, set related_name to '+' or
+      end it with '+'.
+
+    * ``related_query_name``, 在 field lookup syntax 中, 从 related model
+      向这个 model 反向查询时, 使用的名字. 若有设置 related_name 或
+      Meta.default_related_name, 默认使用它们中的一个, 否则默认为 model name.
+
+    * ``to_field``, 关联的 model 的 field, 默认是 primary key. 关联的 field
+      必须有 unique constraint.
+
+    * ``db_constraint``
+
+    * ``swappable``, 默认 True 即可. 与 swappable AUTH_USER_MODEL 相关, 为了
+      支持 custom user model.
+
+* relation field: one-to-one.
+
+  - 一对一关系一般用于一个模型作为另一个模型的延伸、扩展、附加属性等.
+    ``OneToOneField`` 在 model 继承时用于定义父表和子表通过哪一列来关联.
+
+  - OneToOneField 本质上是 ForeignKey 的一种特例. 前者是后者的子类.
+
+  - one-to-one field 在 mysql 中实现时, 实际上是一个普通的 field (类型与指向
+    的 model 的 primary key 一致), 配合 unique key constraint 以及 foreign key
+    reference constraint.
+
+  - OTO field 的 ``parent_link`` 结合 conrete model inheritance 时有特殊作用,
+    它让父类的 field 可在子类即 OTO field 所在 model 中直接访问.
+
+* relation field: many-to-many.
+
+  - 由于一个列无法体现多对多的关系, ``ManyToManyField`` 在实现时, 不是构成了一个列,
+    而是一个单独的 table. table 的命名根据 ``<app>_<model>_<m2mfield>`` 全小写命名.
+    table 中包含 many-to-many 关系的两种模型数据的行 id.
+
+    该表中的两个 FK 列都有 index.
+
+  - It doesn’t matter which model has the ``ManyToManyField``, but you should only
+    put it in one of the models – not both. ``ManyToManyField`` 应该放在那个编辑
+    起来更自然的 model 中, 也就是说, 从哪个方向建立多对多映射关系更自然, 就把它
+    放在哪个 model 中.
+
+  - many-to-many field 的名字应该是一个复数类型的名字, 以表示多个的概念.
+    同样的, ``related_name`` ``related_query_name`` 也应该是表示反向关系的
+    复数.
+
+  - ``ManyToManyField`` 不是一个列, 而是抽象了一个包含映射关系的表, 只有设置
+    映射和没有映射, ``null=`` 参数对它没有意义. 指定该参数会导致 django
+    system check 警告.
+
+  - ManyToManyField 不存在 on_delete 参数, 一方面是因为它本身不是一个列, 这个语义
+    就不太对; 另一个也是因为它背后的两个 FK field 都必须是 CASCADE 的, 所以没必要
+    指定.
+
+  - constructor options.
+
+    * related_name, related_query_name, limit_choices_to.
+
+    * ``symmetrical``, 与 recursive M2M relationship 相关.
+
+    * ``through``
+
+      through model. 多对多关系实际上是通过一个关系表来实现的. 这个关系表的 model
+      可通过 ``ManyToManyField.through`` attribute 获得. 并可以通过 ``through``
+      option 来指定单独创建的 through model, 这可用于在 through model 中加入额外的
+      状态信息等列.
+
+      ``.through`` 属性在 field instance 是一个 RelatedManager to through model.
+
+* recursive relationship: 若 relation field 需要与自身表建立关联, 使用
+  ``"self"`` 作为 ``to`` 参数值.
+
+  lazy relationship: 若 relation field 需与可能尚未建立的 model 建立关联,
+  使用 ``[<app_label>.]<model>``.
+
+model instance
+--------------
+
+* instantiation.
+
+  - 在创建 model instance 时, 对于 FK field, 有两种指定方式:
+    ``<FK-field>=<FK-model-object>``, ``<FK>_id=<FK-model-object>.{id|pk}``.
+    这不同于 field lookup, 不支持 id 和 object 交叉混合的方式.
+
+model index
+-----------
+
+index 通过 ``Model.Meta.indexes`` option 指定, a list of Index objects.
+
+``Index`` object.
+
+* ``fields``, 指定单一索引或复合索引的列, 以及方向. 语法和 QuerySet.order_by
+  相同.
+
+* ``name``, index name.
+
+* ``db_tablespace``.
+
 authentication and authorization
 ================================
 - django auth module: ``django.contrib.auth``.
 
 - authentication: 管理用户身份. authorization: 管理用户权限.
 
-- 创建用户. ``User.objects.create_user()`` 创建用户.
-  ``./manage.py createsuperuser`` 或 ``User.objects.create_superuser()``
-  创建超级管理员.
+user model
+----------
+一个恰当的 user model 是认证和授权的基础.
 
-- 修改密码: 通过 ``./manage.py changepassword`` 和 ``User.set_password()``
-  来修改密码.
+``./manage.py createsuperuser`` 或 ``AUTH_USER_MODEL.objects.create_superuser()``
+创建超级管理员.
 
-Authentication
---------------
+managers
+~~~~~~~~
 
-- ``authenticate()`` function 提供认证检验. 若认证成功返回 User object,
-  否则 None. 注意它只做检验 (返回相符的 User instance), 不改变状态.
+- ``BaseUserManager``
 
-- ``login()`` 在 ``authenticate()`` 的基础上, 改变认证状态, 并将认证相关信息
-  保存在 session 中. 未 login 时, ``request.user`` 是 ``AnonymousUser``,
-  login 后成为 ``User``. 两者的 ``is_authenticated`` attribute 的值分别是
-  False/True, 可用于判断是否登录了.
-  Note that any data set during the anonymous session is retained in the
-  session after a user logs in.
-  When a user logs in, the user’s ID and the backend that was used for
-  authentication are saved in the user’s session. This allows the same
-  authentication backend to fetch the user’s details on a future request
+  * ``normalize_email(...)``
 
-- 除了 ``login()`` 之外, ``AuthenticationMiddleware`` 会根据 request
-  中的 session id 信息, 匹配相应用户, 设置 ``request.user``. 从而避免
-  跳转至 login 页面和再次 ``login()``.
+  * ``get_by_natural_key(...)``
 
-- login url 在 ``settings.LOGIN_URL`` 设置, 默认是 ``/acounts/login``.
-  该值应该按照项目中用户模型、view 等的具体情况进行设置. 并且可以设置为
-  url pattern name.
+  * ``make_random_password(...)``
 
-- login redirect url ``settings.LOGIN_REDIRECT_URL``, 登录后的默认跳转路径.
+- ``UserManager``
 
-- logout redirect url ``settings.LOGOUT_REDIRECT_URL``, 登出后的默认跳转路径.
+  * ``create_user(...)``
 
-- ``logout()`` 撤销认证状态和清空 session 信息.
+  * ``create_superuser(...)``
 
-- authentication views.
-  auth views 不提供默认的 templates, 需要自己写模板以加载 context variables.
+AbstractBaseUser
+~~~~~~~~~~~~~~~~
+提供了最核心最必须的那些 user model 列和功能, 剩下的所有内容, 包括用户识别列
+(username, email 等) 都没有实现, 需要子类去实现. 它提供了 password 管理方法.
 
-  若不想直接使用默认的 auth.urls 设置, 可单独使用 views 以对参数进行自定义,
-  以及 bind to custom urls.
+在认证方面, 提供 ``is_authenticated`` ``is_anonymous`` 属性用于认证检查.
+注意 AbstractBaseUser 以及它的子类在认证方面表示已认证用户, 故该两个属性
+分别是只读的 True/False.
 
-  * login:
-    ``login()``, ``LoginView``.
+子类必须提供 username, email 等信息的列, 并设置必要的配置参数.
 
-  * logout:
-    ``logout()``, ``LogoutView``.
+- 配置.
 
-  * logout then redirect to login:
-    ``logout_then_login()``.
+  * ``USERNAME_FIELD``, the name of field used as identifier, must be unique.
 
-  * password change:
-    ``password_change()``, ``PasswordChangeView``.
+  * ``EMAIL_FIELD``
 
-  * password change done:
-    ``password_change_done()``, ``PasswordChangeDoneView``.
+  * ``REQUIRED_FIELDS``, prompted for when creating superuser.
 
-  * password reset:
-    ``password_reset()``, ``PasswordResetView``.
+- fields.
 
-  * password reset done:
-    ``password_reset_done()``, ``PasswordResetDoneView``.
-    密码重置请求已经发出后显示的页面.
+  * password. 密码以 hash 形式存放, 符合密码存储的一般准则. 因此不该手动修改
+    该属性值. 而使用 ``set_password()``.
 
-  * password reset confirm:
-    ``password_reset_confirm()``, ``PasswordResetConfirmView``.
-    点击邮件中的密码重置链接后显示的密码重置页面.
+  * last_login
 
-  * password reset complete:
-    ``password_reset_complete()``, ``PasswordResetCompleteView``.
-    重置密码后提示成功的页面.
+- attributes.
 
-- authentication forms.
+  * is_anonymous.
 
-  若不想使用 auth views, 可单独使用 auth forms.
+  * is_authenticated.
 
-  * ``AdminPasswordChangeForm``
-    used in admin site.
+- methods.
 
-  * ``AuthenticationForm``
+  用户信息获取.
 
-  * ``PasswordChangeForm``
+  * ``get_username()``
 
-  * ``PasswordResetForm``
-    ``.save()`` method 并不修改任何状态, 而是调用 ``.send_mail()`` 发送重置邮件.
+  * ``get_full_name()``
 
-  * ``SetPasswordForm``
-    form to set new password without entering old password.
+  * ``get_short_name()``
 
-  * ``UserChangeForm``
-    used in admin site.
+  * ``get_email_field_name()``
 
-  * ``UserCreationForm``
+  校验.
 
-- ``django.contrib.auth`` app 提供了一系列 authentication urls.
-  这些 url 是没有 namespace 的. 在使用时可以直接放在 url root path 上,
-  或者 ``include()`` 中设置 namespace.
+  * ``clean()``
 
-  * ``login/``
+  * ``normalize_username()``
 
-  * ``logout/``
+  密码管理.
 
-  * ``password_change/``
+  * ``set_password()``
 
-  * ``password_change/done/``
+  * ``set_password(...)``
 
-  * ``password_reset/``
+  * ``check_password(...)``
 
-  * ``password_reset/done/``
+  * ``set_unusable_password()``, 当使用外部认证机制时, 禁用普通密码.
 
-  * ``reset/<uidb64>/<token>/``
+  * ``has_usable_password()``
 
-  * ``reset/done/``
+  session.
 
-Permission and Authorization
-----------------------------
+  * ``get_session_auth_hash()``
 
-- 当 ``django.contrib.auth`` app 存在时, 每个 app 的每个 model 都默认存在
-  add, change, delete 三个权限.
+PermissionMixin
+~~~~~~~~~~~~~~~
+PermissionsMixin 为 user model 提供 Group & Permission 即权限相关数据列
+和功能.
 
-- 权限检查 ``User.has_perm(<app_label>."add|change|delete"_<model>)``
+- fields.
 
-- 一个用户或一个组可以有任意个权限 (many-to-many). 组具有的权限用户自动具有.
+  * is_superuser.
 
-- 限制操作范围为登录用户: ``login_required`` decorator 和 ``LoginRequiredMixin``.
+- relations.
 
-- 用户权限检查: ``permission_required`` decorator 和 ``PermissionRequiredMixin``.
+  * M2M with Group, 即用户所属的权限组.
 
-- 通用的 test 检查: ``user_passes_test`` decorator 和 ``UserPassesTestMixin``.
+  * M2M with Permission, 即用户本身具有的权限.
 
-- ``AccessMixin`` 是以上几个权限控制的 mixin class 的父类, 它具有最一般化的
-  性质.
+- methods. 实现权限相关方法. django 默认的权限控制是 Model level 的, 没有
+  实现 instance level 的权限控制. 但它仍然在 API 上预留了 instance level
+  权限控制的参数 ``obj``. 这为扩展提供了可能.
 
-- ``django.contrib.auth.context_processors.auth`` 为 template context 自动添加
-  一系列用户、权限相关量.
+  获取权限.
 
-  * ``user``, 当前用户.
+  * ``get_all_permissions()``. 全部权限, 包括自身的权限和组提供的权限.
 
-  * ``perms``, 当前用户的权限. ``perms.<app_label>`` 相当于
-    ``User.has_module_perms(<app_label>)``.
-    ``perms.<app_label>.<perm>`` 相当于 ``User.has_perm(<app_label>.<perm>)``
-    ``perms`` 支持使用 ``in`` operator 检查权限, ``<app_label> in perms``
-    或 ``<app_label>.<perm> in perms`` 都可以.
+  * ``get_group_permissions()``. 组提供的权限.
 
-auth backend
-------------
-``auth`` app 中的各种上层认证和授权操作实际上要转发给底层 backend 去操作.
-不同类型的 backend 的实现不同, 但符合相同的预定义的 api, 供上层调用.
+  检查权限.
 
-- ``AUTHENTICATION_BACKENDS`` 配置 backend list. django 按照 list 顺序进行
-  认证尝试.
+  * ``has_perm()``. 检查是否有单个权限.
 
-- 在 ``authenticate()`` 时, 依次尝试所有的 backend, 直到:
+  * ``has_perms()``. 检查是否有多个权限.
 
-  * 第一个认证成功为止;
+  * ``has_module_perms()``. 检查是否有对某个 app 的权限.
 
-  * 或某个 raised ``PermissionDenied``;
+AbstractUser
+~~~~~~~~~~~~
+AbstractUser 实际上完整地实现了 django 所使用的默认的 user model. 它之所以
+是抽象的, 是为了 project 在自定义 user model 时能直接利用现有的模型.
 
-  * 或遍历结束整个 list.
+基于 AbstractUser 的 user model 有三种用户: 普通用户, 管理员 (is_staff),
+超级管理员 (is_superuser). 两种状态: 正常用户和禁用用户 (is_active).
 
-- auth backend 会保存在 session (``django_session`` table) 中, 从而对于一个
-  session, 只用已知的 backend. 如果要更改 backends setting 以使用不同的
-  backend 来认证, 需要清空 session.
+- fields.
 
-- 结合使用外部的 auth backend 时, 仍然需要根据 ``AUTH_USER_MODEL`` 对每个
-  用户创建系统账户. 因为从逻辑上讲, 这些 user objects 才是这个系统 (django)
-  自己的用户. 外部 auth backend 只是提供了一系列用户实体集合. user model
-  才是这个系统所需的 user 所具有的属性和功能的表征. 从实现上讲, 没有 user
-  model 什么也没法弄, 没有用户概念的实体寄托.
+  * username.
 
-- ``ModelBackend`` 和 ``RemoteUserBackend`` 不允许 inactive user 认证.
-  ``AllowAllUsersModelBackend`` 和 ``AllowAllUsersRemoteUserBackend``
-  允许 inactive user 认证.
+  * first_name.
 
-- API.
+  * last_name.
 
-  * ``.get_user(<pk>)`` return user object.
+  * email.
 
-  * ``.authenticate(...)`` return user object or None.
+  * is_staff.
 
-  * ``.get_group_permissions()``
+  * is_active.
 
-  * ``.get_all_permissions()``
+  * date_joined.
 
-  * ``.has_perm(...)``
+- methods.
 
-  * ``.has_module_perms()``
+  * ``email_user()``.
 
 User
-----
+~~~~
+User 只是将抽象的 AbstractUser 具体化成实际模型所建立的 placeholder class.
+它本身并不定义任何额外的内容, 除了 Meta.swappable. 这样便于 project 自己
+去自定义 User model. 即直接 subclass AbstractUser 即可.
 
 - fields, attributes
 
@@ -3015,28 +2970,23 @@ User
 
   * ``user_permissions``.
 
-  * ``username``.
-
-  * ``password``. 密码以 hash 形式存放, 符合密码存储的一般准则. 因此不该手动修改
-    该属性值.
-
-  * ``email``.
-
-  * ``first_name``.
-
-  * ``last_name``.
-
 - methods.
 
   * ``has_module_perms(<app>)``, 判断用户是否在某个 app 中有至少一个权限.
 
 AnonymousUser
--------------
-- ``AnonymousUser`` 虽然不具备很多 ``User`` 的属性和方法, 但是可以检查权限,
-  因为很多时候网站是允许匿名用户的.
+~~~~~~~~~~~~~
+``AnonymousUser`` 虽然不具备很多 ``User`` 的属性和方法, 但是可以进行
+认证检查和权限检查. 因为很多时候网站是允许匿名用户的.
+
+在权限方面, AnonymousUser 没有任何组权限, 但注意对于它个人的权限并不一定
+是什么都没有, 而是取决于 auth backend.
+
+在认证方面, AnonymousUser 的 ``is_authenticated`` ``is_anonymous`` 分别是
+只读的 False/True.
 
 扩展和自定义 user model
------------------------
+~~~~~~~~~~~~~~~~~~~~~~~
 
 - proxy model to auth.User: purely behavioral extension, use proxy model.
 
@@ -3140,83 +3090,31 @@ AnonymousUser
   with extra fields), then use AbstractUser because it's simpler and
   easier.
 
-- ``BaseUserManager``, ``UserManager``:
-  自定义的 user model 还需要自定义 user manager.
-
-- ``AbstractBaseUser``
-
-  * ``USERNAME_FIELD``, the name of field used as identifier, must be unique.
-
-  * ``EMAIL_FIELD``
-
-  * ``REQUIRED_FIELDS``, prompted for when creating superuser.
-
-  * ``is_active``
-
-  * ``get_full_name()``
-
-  * ``get_short_name()``
-
-  * ``get_username()``
-
-  * ``clean()``
-
-  * ``get_email_field_name()``
-
-  * ``normalize_username()``
-
-  * ``is_authenticated``, True for any instance.
-
-  * ``is_anonymous``, False for any instance.
-
-  * ``set_password(...)``
-
-  * ``check_password(...)``
-
-  * ``set_unusable_password()``, 当使用外部认证机制时, 禁用普通密码.
-
-  * ``has_usable_password()``
-
-  * ``get_session_auth_hash()``
-
-- ``BaseUserManager``
-
-  * ``normalize_email(...)``
-
-  * ``get_by_natural_key(...)``
-
-  * ``make_random_password(...)``
-
-- ``UserManager``
-
-  * ``create_user(...)``
-
-  * ``create_superuser(...)``
+- 注意自定义的 user model 可能还需要搭配自定义的 user manager.
 
 - 自定义的 user model 还需考虑 builtin auth form, 以及在 admin site 对
   user model 的额外要求.
 
-- ``PermissionsMixin`` 为自定义的 user model 提供了对 django group &
-  permission model 的支持.
+Permission and Authorization
+----------------------------
 
-  - ``is_superuser``
+- 每个 app 的每个 model 都默认存在 add, change, delete 三个权限. 这些权限
+  是在 Model.Meta.default_permissions 定义的.
 
-  - ``get_group_permissions(...)``
+- 权限检查 ``User.has_perm(<app_label>."add|change|delete"_<model>)``
 
-  - ``get_all_permissions(...)``
-
-  - ``has_perm(...)``
-
-  - ``has_perms(...)``
-
-  - ``has_module_perms(...)``
+- 一个用户或一个组可以有任意个权限 (many-to-many). 组具有的权限用户自动具有.
 
 Permission
-----------
+~~~~~~~~~~
+- auth package 提供的 Permission 对象一定是和某个 model 关联的 (通过
+  ContentType). 这其实符合一般的权限限制要求.
 
 - 创建 Permission object 需要配合合适的 ``ContentType``.
 
 - 可以通过 ``Model.Meta.permissions`` 来创建与 model 直接相关的自定义权限.
+  这些权限在 migration 的时候, 通过 django.contrib.auth 的 post_migrate
+  signal hook 来创建.
 
 - caching. ``ModelBackend`` 会在取到一个用户的权限信息后进行 cache. 若在
   一个 request-response cycle 中, 需要修改权限并立即进行验证, 最好从数据库
@@ -3229,14 +3127,245 @@ Permission
   django-guardian.
 
 Group
------
+~~~~~
 
 User 和 Group 是 many-to-many 的关系.
 
-auth group 并不能在一切需要组的情况下使用, 这个组概念仅适用于权限分配
+builtin Group model 并不能在一切需要组的情况下使用, 这个组概念仅适用于权限分配
 相关用途 (那是因为 Group class 中定义了 permissions relation),
 即用户归于组、组具有权限. 而不适用于资源分配, 即用户归于组、
-组具有资源. 那样的组还是要单独写 (即 Group class 定义 resources relation).
+组具有资源.
+
+那样的组还是要单独写 (即 Group class 定义 resources relation) 或者使用
+django-guardian.
+
+Authentication
+--------------
+- 一个正经的 web app 不会存储用户的原始密码, 只会存储密码的 hash.
+  因此, 
+
+- 修改密码: 通过 ``./manage.py changepassword`` 和 ``User.set_password()``
+  来修改密码.
+
+authenticate & login/logout
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- authentication.
+  ``authenticate()`` 提供认证检验. 若认证成功返回 User object, 否则 None.
+  注意它只做检验 (返回相符的 User instance), 不改变状态. 它将 credentials
+  传递给 auth backends, 真正的认证过程依靠各个 auth backends 实现.
+
+- login.
+
+  * ``login()`` 在 ``authenticate()`` 的基础上, 改变认证状态, 并将认证相关信息
+    保存在 session 中.
+    
+    未 login 时, ``request.user`` 是 ``AnonymousUser``, login 后成为 user
+    instance. 两者的 ``is_authenticated`` attribute 的值分别是 False/True,
+    可用于判断是否登录了.
+
+    在登录时, 若本来有非匿名用户 session 信息, 会校验登录前后用户是否相同.
+    若不相同, 则原有 session 会被 flush 掉. 若相同或原来是匿名用户, session
+    会保留下来, 但 session key 即 session cookie 值会重新生成.
+
+    最后, session 对应的用户 id, 认证使用的 backend 会保存在 session 中.
+
+  * ``AuthenticationMiddleware`` 会根据 request 中的 session id 信息,
+    匹配相应用户, 设置 ``request.user``. 从而避免每次请求都跳转至 login
+    页面再次登录.
+
+- logout.
+
+  ``logout()`` 清空 session 信息, 重设 request.user 为 AnonymousUser.
+
+- settings.
+
+  login url 在 ``settings.LOGIN_URL`` 设置, 默认是 ``/accounts/login``.
+  该值应该按照项目中用户模型、view 等的具体情况进行设置. 并且可以设置为
+  url pattern name.
+
+  login redirect url ``settings.LOGIN_REDIRECT_URL``, 登录后的默认跳转路径.
+
+  logout redirect url ``settings.LOGOUT_REDIRECT_URL``, 登出后的默认跳转路径.
+
+authentication views
+~~~~~~~~~~~~~~~~~~~~
+auth views 不提供默认的 templates, 需要自己写模板以加载 context variables.
+
+若不想直接使用默认的 auth.urls 设置, 可单独使用 views 以对参数进行自定义,
+以及 bind to custom urls.
+
+* login:
+  ``login()``, ``LoginView``.
+
+* logout:
+  ``logout()``, ``LogoutView``.
+
+* logout then redirect to login:
+  ``logout_then_login()``.
+
+* password change:
+  ``password_change()``, ``PasswordChangeView``.
+
+* password change done:
+  ``password_change_done()``, ``PasswordChangeDoneView``.
+
+* password reset:
+  ``password_reset()``, ``PasswordResetView``.
+
+* password reset done:
+  ``password_reset_done()``, ``PasswordResetDoneView``.
+  密码重置请求已经发出后显示的页面.
+
+* password reset confirm:
+  ``password_reset_confirm()``, ``PasswordResetConfirmView``.
+  点击邮件中的密码重置链接后显示的密码重置页面.
+
+* password reset complete:
+  ``password_reset_complete()``, ``PasswordResetCompleteView``.
+  重置密码后提示成功的页面.
+
+authentication forms
+~~~~~~~~~~~~~~~~~~~~
+
+若不想使用 auth views, 可单独使用 auth forms.
+
+* ``AdminPasswordChangeForm``
+  used in admin site.
+
+* ``AuthenticationForm``
+
+* ``PasswordChangeForm``
+
+* ``PasswordResetForm``
+  ``.save()`` method 并不修改任何状态, 而是调用 ``.send_mail()`` 发送重置邮件.
+
+* ``SetPasswordForm``
+  form to set new password without entering old password.
+
+* ``UserChangeForm``
+  used in admin site.
+
+* ``UserCreationForm``
+
+authentication-related urls
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- ``django.contrib.auth`` app 提供了一系列 authentication urls.
+  这些 url 是没有 namespace 的. 在使用时可以直接放在 url root path 上,
+  或者 ``include()`` 中设置 namespace.
+
+  * ``login/``
+
+  * ``logout/``
+
+  * ``password_change/``
+
+  * ``password_change/done/``
+
+  * ``password_reset/``
+
+  * ``password_reset/done/``
+
+  * ``reset/<uidb64>/<token>/``
+
+  * ``reset/done/``
+
+authorization and authentication backends
+-----------------------------------------
+``auth`` app 中的各种上层认证和授权操作实际上要转发给底层 backend 去操作.
+不同类型的 backend 的实现不同, 但符合相同的 api, 供上层调用.
+
+- ``AUTHENTICATION_BACKENDS`` 配置 backend list. django 按照 list 顺序进行
+  认证尝试.
+
+- 在 ``authenticate()`` 时, 依次尝试所有的 backend, 直到:
+
+  * 第一个认证成功为止;
+
+  * 或某个 raised ``PermissionDenied``;
+
+  * 或遍历结束整个 list.
+
+- auth backend 会保存在 session (``django_session`` table) 中, 从而对于一个
+  session, 只用已知的 backend. 如果要更改 backends setting 以使用不同的
+  backend 来认证, 需要清空 session.
+
+- 结合使用外部的 auth backend 时, 仍然需要根据 ``AUTH_USER_MODEL`` 对每个
+  用户创建系统账户. 因为从逻辑上讲, 这些 user objects 才是这个系统 (django)
+  自己的用户. 外部 auth backend 只是提供了一系列用户实体集合. user model
+  才是这个系统所需的 user 所具有的属性和功能的表征. 从实现上讲, 没有 user
+  model 什么也没法弄, 没有用户概念的实体寄托.
+
+- ``ModelBackend`` 和 ``RemoteUserBackend`` 不允许 inactive user 认证.
+  ``AllowAllUsersModelBackend`` 和 ``AllowAllUsersRemoteUserBackend``
+  允许 inactive user 认证.
+
+API
+~~~
+
+- ``.get_user(<pk>)`` return user object.
+
+- ``.authenticate(...)`` return user object or None.
+
+- ``.get_group_permissions()``
+
+- ``.get_all_permissions()``
+
+- ``.has_perm(...)``
+
+- ``.has_module_perms()``
+
+ModelBackend
+~~~~~~~~~~~~
+ModelBackend 会将取到的用户权限 cache 在 user instance 上. 对于组权限和用户权限
+分别是 ``_group_perm_cache`` & ``_user_perm_cache``.
+
+middlewares
+-----------
+
+AuthenticationMiddleware
+~~~~~~~~~~~~~~~~~~~~~~~~
+根据 request 中 cookie 保存的 session 信息进行自动的用户识别和认证, 避免每次访问
+都要登录. 若认证成功返回 user instance, 否则返回 AnonymousUser.
+
+无论认证的结果是什么用户, 都保存在 ``request.user`` 上.
+
+RemoteUserMiddleware
+~~~~~~~~~~~~~~~~~~~~
+
+PersistentRemoteUserMiddleware
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+view mixins & decorators
+------------------------
+
+decorators
+~~~~~~~~~~
+
+- ``login_required``
+ 
+- ``LoginRequiredMixin``
+
+- ``permission_required``
+  
+- ``PermissionRequiredMixin``
+
+- ``user_passes_test``, ``UserPassesTestMixin``
+
+- ``AccessMixin`` 是以上几个权限控制的 mixin class 的父类, 它具有最一般化的
+  性质.
+
+- ``django.contrib.auth.context_processors.auth`` 为 template context 自动添加
+  一系列用户、权限相关量.
+
+  * ``user``, 当前用户.
+
+  * ``perms``, 当前用户的权限. ``perms.<app_label>`` 相当于
+    ``User.has_module_perms(<app_label>)``.
+    ``perms.<app_label>.<perm>`` 相当于 ``User.has_perm(<app_label>.<perm>)``
+    ``perms`` 支持使用 ``in`` operator 检查权限, ``<app_label> in perms``
+    或 ``<app_label>.<perm> in perms`` 都可以.
 
 middleware
 ==========
@@ -3539,8 +3668,34 @@ JSON
   datetime.datetime, datetime.date, datetime.time, datetime.timedelta,
   decimal.Decimal, django.utils.functional.Promise, uuid.UUID.
 
-在独立的程序或脚本中使用 django 功能
-====================================
+django-admin
+============
+
+* ``./manage.py shell`` 启动 shell 并加载项目相关 django 配置; 这相当于
+  执行了:
+
+    .. code:: python
+
+      os.environ['DJANGO_SETTINGS_MODULE'] = "<project>.settings"
+      import django; django.setup()
+
+* ``makemigrations --dry-run`` 可用来检查当前记录的数据库结构 (通过
+  migration files 来体现) 是否和 models 里的模型代码保持一致.
+
+* ``clearsessions`` 清除过期的 session data. django 不提供自动清理
+  session 的机制. 可以定期执行这个命令手动清除过期的 session.
+
+* ``runserver``.
+
+  对于 runserver 输出的请求相应日志, 每一行是在该请求结束后才输出, 因此
+  才记录有 method, url, http version, status code 等信息.
+
+* ``dbshell``
+
+  似乎不会使用平时 django 运行时传入的 OPTIONS 参数.
+
+在独立的程序或脚本中使用 django
+===============================
 
 - 使用当前项目完整配置.
   .. code:: python
@@ -3559,8 +3714,8 @@ django release
 
 - 1.11 LTS is the last version supporting python2.
 
-- Django 2.0 和 1.11 相比, 不会是特别大的区别, 不会充满 breaking changes,
-  而是连续的演进.
+- Django 2.0 和 1.11 相比, 不是特别大的区别, 不充满 breaking changes,
+  而是连续的演进. 只是版本号规范的重新定义.
 
 plugins
 =======
