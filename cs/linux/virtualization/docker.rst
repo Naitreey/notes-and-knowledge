@@ -139,6 +139,8 @@ terms
   若要把 image 上传到某个 registry, 或从某个 registry 下载镜像, 必须指定相应
   的 tag.
 
+- task. A single container running in a service is called a task.
+
 configuration
 =============
 
@@ -210,6 +212,31 @@ docker pull, docker image pull
 
   e.g., ``docker pull ubuntu`` 实际是 ``docker pull docker.io/library/ubuntu:latest``.
 
+compose
+-------
+
+swarm
+-----
+
+docker swarm init
+~~~~~~~~~~~~~~~~~
+initialize a swarm.
+
+docker swarm join
+~~~~~~~~~~~~~~~~~
+
+stack
+-----
+
+docker stack deploy
+~~~~~~~~~~~~~~~~~~~
+
+service
+-------
+
+docker service ls
+~~~~~~~~~~~~~~~~~
+
 docker registry
 ===============
 
@@ -230,8 +257,25 @@ terms
 - image name. 一个 repository 中的某个 image 通过 repository name + version tag
   来唯一识别.
 
-docker compose
-==============
+compose
+=======
+docker compose is a tool for defining and running multi-container Docker
+applications. 就是说, 一个 project 需要同时使用多个 containers 时, 使用
+compose 可以方便地管理.
+
+swarm
+=====
+swarm mode 重用 docker-compose.yml 配置. 原因是两者在配置上是十分相似的.
+swarm mode 提供多实例并行和负载均衡.
+
+stack
+=====
+
+service
+=======
+service is named by ``<stack-name>_<service-name>``
+
+一个 service 里的每个 task 命名为 ``<stack-name>_<service-name>.<N>``.
 
 misc
 ====
