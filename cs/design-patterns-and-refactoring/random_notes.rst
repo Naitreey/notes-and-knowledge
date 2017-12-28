@@ -389,13 +389,19 @@
   因此, hooks 定义很多时候也可以是 class 定义. 当 hook 逻辑很复杂时, 这有助于
   优化代码组织方式和重用等可能.
 
-- mixin class and code reuse
+- code reuse
 
-  Mixins are an excellent way of reusing code across multiple classes, but they
-  come with some cost. The more your code is scattered among mixins, the harder
-  it will be to read a child class and know what exactly it is doing, and the
-  harder it will be to know which methods from which mixins to override if you
-  are subclassing something that has a deep inheritance tree.
+  * mixin class.
+    Mixins are an excellent way of reusing code across multiple classes, but they
+    come with some cost. The more your code is scattered among mixins, the harder
+    it will be to read a child class and know what exactly it is doing, and the
+    harder it will be to know which methods from which mixins to override if you
+    are subclassing something that has a deep inheritance tree.
+
+  * 抽象一般化函数.
+    若需要重用的逻辑仅仅是单一的函数逻辑, 则可以简单地抽象出一个公有的函数.
+    组织化地放在恰当的全局位置或单独的模块中. 然后在需要的类中调用它. 这没有什么
+    不对的. 没必要一定去写 mixin class, 不要过分复杂化.
 
 - multiprocessing, concurrency, race condition, conflict
 
