@@ -1208,6 +1208,10 @@
   f-string 最先 interpolation, 它就要转换所有 ``{...}`` 的内容.
   但它可以和 %-formating 混用.
 
+- 当代码中需要一个没有任何含义的量来表达某种具有唯一性的东西时, 可以使用
+  ``object()``, 而不是 ``None``, 因后者仍然是有意义的. 而每个 object instance
+  是唯一的, 且毫无意义的.
+
 builtin functions
 =================
 很多 builtin function 本质上应该看作是该 class 的 constructor.
