@@ -750,10 +750,16 @@
 
     - methods.
 
+      * ``__init__``. 每个 class-based view 的 constructor 的参数形式都应该
+        是 ``**kwargs``, 它们成为 view 实例属性.
+
       * ``as_view()`` class method, returns a function that can be called
         when a request arrives for a URL matching the associated pattern.
         The function creates an instance of the class and calls its
         ``dispatch()`` method.
+
+        它的参数用于在 urlpatterns 中对 view 的参数进行自定义.
+        任何传入 as_view() 的 kwargs 都会成为 view instance 的 attribute.
 
       * ``dispatch()`` looks at the request to determine whether it is a
         GET, POST, etc, and relays the request to a matching method if
@@ -3142,10 +3148,23 @@ django-guardian.
 Authentication
 --------------
 - 一个正经的 web app 不会存储用户的原始密码, 只会存储密码的 hash.
-  因此, 
+  因此, User instance 需要使用 ``set_password()``.
 
 - 修改密码: 通过 ``./manage.py changepassword`` 和 ``User.set_password()``
   来修改密码.
+
+- 在 project 中嵌入 django auth 功能的几种方式:
+
+  * 直接全部使用默认配置, 在 project 的 root urlconf 中直接 include
+    django.contrib.auth.urls. 只实现所需的 templates 即可.
+
+  * 使用 auth 提供的各种 views, 或者 subclass 进行自定义. 绑定任意的
+    urls.
+
+  * 使用自定义的 view 和 urls 等, 在其中使用 auth 提供的 forms.
+
+  * 以上 auth 提供的方便玩意儿都不使用, 只手动使用 ``authenticate()`` 和
+    ``login()`` ``logout()`` 等.
 
 authenticate & login/logout
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -3180,49 +3199,110 @@ authenticate & login/logout
 
 - settings.
 
-  login url 在 ``settings.LOGIN_URL`` 设置, 默认是 ``/accounts/login``.
-  该值应该按照项目中用户模型、view 等的具体情况进行设置. 并且可以设置为
+  ``settings.LOGIN_URL``, default ``/accounts/login``. 该值可以设置为
   url pattern name.
 
-  login redirect url ``settings.LOGIN_REDIRECT_URL``, 登录后的默认跳转路径.
+  ``settings.LOGIN_REDIRECT_URL``, 登录后的默认跳转路径.
 
-  logout redirect url ``settings.LOGOUT_REDIRECT_URL``, 登出后的默认跳转路径.
+  ``settings.LOGOUT_REDIRECT_URL``, 登出后的默认跳转路径.
 
 authentication views
 ~~~~~~~~~~~~~~~~~~~~
-auth views 不提供默认的 templates, 需要自己写模板以加载 context variables.
+auth views 不提供默认的 templates, 需要自己写模板.
 
 若不想直接使用默认的 auth.urls 设置, 可单独使用 views 以对参数进行自定义,
 以及 bind to custom urls.
 
-* login:
-  ``login()``, ``LoginView``.
+- ``LoginView``, for login.
 
-* logout:
-  ``logout()``, ``LogoutView``.
+  配置项.
 
-* logout then redirect to login:
-  ``logout_then_login()``.
+  * template_name. default: ``registration/login.html``.
 
-* password change:
-  ``password_change()``, ``PasswordChangeView``.
+  * redirect_field_name. default: ``next``.
 
-* password change done:
-  ``password_change_done()``, ``PasswordChangeDoneView``.
+  * authentication_form. default: ``AuthenticationForm``.
 
-* password reset:
-  ``password_reset()``, ``PasswordResetView``.
+  * extra_context.
 
-* password reset done:
+  * redirect_authenticated_user. 对于已经登录的用户, 访问 login view 时
+    是否自动 redirect 至 next url.
+
+  * success_url_allowed_hosts.
+
+  context variables.
+
+  * form.
+
+  * next.
+
+  * site.
+
+  * site_name.
+
+- logout: ``LogoutView``.
+
+  配置项.
+
+  * next_page. 用于登出后的 redirect. default ``settings.LOGOUT_REDIRECT_URL``.
+
+  * template_name. 登出后显示的页面内容. default ``registration/logged_out.html``.
+
+  * redirect_field_name. default next.
+
+  * extra_context.
+
+  * success_url_allowed_hosts.
+
+  这些参数的逻辑是, 若希望登出后 redirect 至某个 url, 则设置 next_page.
+  当 logout 请求的 url query string 存在 redirect_field_name 时, 会
+  redirect 至它指向的 url, override next_page 的配置.
+  若希望登出后显示一个某种已登出之类状态页面, 不设置 next_page, 设置
+  template_name.
+
+  context variables.
+
+  * title.
+
+  * site.
+
+  * site_name.
+
+- logout then redirect to login: ``logout_then_login()``.
+  只是一个 shortcut to LogoutView.
+
+- password change: ``PasswordChangeView``.
+  这些 view 会在更新密码后再更新 session 中的 auth hash, 所以它们不会因为
+  修改密码而登出用户.
+
+  配置.
+
+  * template_name. default ``registration/password_change_form.html``.
+
+  * success_url. default ``password_change_done``.
+
+  * form_class. default ``PasswordChangeForm``.
+
+  * extra_context.
+
+  密码修改成功后默认 redirect 至 password_change_done.
+
+- password change done: ``PasswordChangeDoneView``.
+
+  配置.
+
+  * template_name. default ``registration/password_change_done.html``.
+
+- password reset: ``PasswordResetView``.
+
+- password reset done:
   ``password_reset_done()``, ``PasswordResetDoneView``.
   密码重置请求已经发出后显示的页面.
 
-* password reset confirm:
-  ``password_reset_confirm()``, ``PasswordResetConfirmView``.
+- password reset confirm: ``PasswordResetConfirmView``.
   点击邮件中的密码重置链接后显示的密码重置页面.
 
-* password reset complete:
-  ``password_reset_complete()``, ``PasswordResetCompleteView``.
+- password reset complete: ``PasswordResetCompleteView``.
   重置密码后提示成功的页面.
 
 authentication forms
@@ -3251,25 +3331,9 @@ authentication forms
 authentication-related urls
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- ``django.contrib.auth`` app 提供了一系列 authentication urls.
-  这些 url 是没有 namespace 的. 在使用时可以直接放在 url root path 上,
-  或者 ``include()`` 中设置 namespace.
-
-  * ``login/``
-
-  * ``logout/``
-
-  * ``password_change/``
-
-  * ``password_change/done/``
-
-  * ``password_reset/``
-
-  * ``password_reset/done/``
-
-  * ``reset/<uidb64>/<token>/``
-
-  * ``reset/done/``
+- ``auth.urls`` 提供了完整的 auth urls 和 view 实现. 这些 url 是没有
+  namespace 的. 在使用时可以直接放在 url root path 上, 或者 ``include()``
+  中设置 namespace.
 
 authorization and authentication backends
 -----------------------------------------
@@ -3326,9 +3390,14 @@ middlewares
 
 AuthenticationMiddleware
 ~~~~~~~~~~~~~~~~~~~~~~~~
-根据 request 中 cookie 保存的 session 信息进行自动的用户识别和认证, 避免每次访问
-都要登录. 若认证成功返回 user instance, 否则返回 AnonymousUser.
 
+根据 request 中 cookie 保存的 session 信息进行自动的用户识别和认证, 避免每次访问
+都要登录. 从 session 中获取到 user id 之后, 还会校验存储的 session auth hash
+与从 user instance 中计算得到的是否一致. 若不一致, 则 flush session, 设置
+AnonymousUser. 对于 AbstractBaseUser, 效果是在修改密码后会自动登出用户, 要求
+重新登录.
+
+若认证成功返回 user instance, 否则返回 AnonymousUser.
 无论认证的结果是什么用户, 都保存在 ``request.user`` 上.
 
 RemoteUserMiddleware
@@ -3339,33 +3408,87 @@ PersistentRemoteUserMiddleware
 
 view mixins & decorators
 ------------------------
+以下 decorators and mixins 提供在各个 app 的 view 中提供用户认证和权限管理.
 
 decorators
 ~~~~~~~~~~
 
-- ``login_required``
+- ``login_required``.
+  
+  * ``redirect_field_name`` 默认是 next, 为了让登录后再次跳转至 next 的 url,
+    相应的 login view 中需要使用 next 值再次跳转.
+
+  * ``login_url``.
  
+- ``permission_required``, 检查用户是否有权限.
+
+  * ``perm``. 单个的或 a list of permissions.
+
+  * ``login_url``.
+
+  * ``raise_exception`` 是否直接 raise PermissionDenied, 不然就跳转登录.
+
+- ``user_passes_test``, 通用的用户认证和权限类条件判断. 注意它的应用场景仍然是
+  认证和权限范围. 这是它的设计目的: 条件检查失败后跳转至 login url 或 raise 403.
+  所以不能说所有条件判断时都可以使用.
+
+mixins
+~~~~~~
+``AccessMixin`` 共同父类. AccessMixin 不会 override ``.dispatch()`` method.
+由于它提供了一系列参数和 ``handle_no_permission`` 方法, 除了可以作为以下的
+共同父类之外, 还可以作为比较一般化的 mixin class, 在 view 中按需求使用它提供
+的方法.
+
+class attribute.
+
+* login_url.
+
+* permission_denied_message.
+
+* raise_exception.
+
+* redirect_field_name.
+
+以下 mixin class 都会 override ``View.dispatch()`` method, 因此需要保证在
+MRO 的最左边.
+
 - ``LoginRequiredMixin``
 
-- ``permission_required``
-  
 - ``PermissionRequiredMixin``
 
-- ``user_passes_test``, ``UserPassesTestMixin``
+  class attribute.
 
-- ``AccessMixin`` 是以上几个权限控制的 mixin class 的父类, 它具有最一般化的
-  性质.
+  * permission_required.
 
-- ``django.contrib.auth.context_processors.auth`` 为 template context 自动添加
-  一系列用户、权限相关量.
+- ``UserPassesTestMixin``
 
-  * ``user``, 当前用户.
+  methods.
 
-  * ``perms``, 当前用户的权限. ``perms.<app_label>`` 相当于
-    ``User.has_module_perms(<app_label>)``.
-    ``perms.<app_label>.<perm>`` 相当于 ``User.has_perm(<app_label>.<perm>)``
-    ``perms`` 支持使用 ``in`` operator 检查权限, ``<app_label> in perms``
-    或 ``<app_label>.<perm> in perms`` 都可以.
+  * ``test_func()``. 要进行的检查.
+
+context processors
+------------------
+
+django.contrib.auth.context_processors.auth
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+为 template context 自动添加一系列用户、权限相关量.
+
+- ``user``, 当前用户.
+
+- ``perms``, 当前用户的权限.
+  
+  * ``perms.<app_label>`` 相当于 ``User.has_module_perms(<app_label>)``.
+
+  * ``perms.<app_label>.<perm>`` 相当于 ``User.has_perm(<app_label>.<perm>)``
+
+  * ``perms`` 支持使用 ``in`` operator 检查权限, ``<app_label> in perms`` 或
+    ``<app_label>.<perm> in perms`` 都可以.
+
+helpers
+-------
+
+- ``update_session_auth_hash()``.
 
 middleware
 ==========
