@@ -500,27 +500,6 @@
 - ``logging`` module 中, 对于 ``propagate == True`` 的 logger, ``LogRecord`` 在向上层
   传递时, 不会考虑父级 logger 的 level 和 filters, 而是直接传递个父级的各个 handlers.
 
-- argparse
-
-  * 局限性:
-
-    无法指定 ``--foo`` ``--bar`` 必须同时存在或同时不存在.
-
-  * 用 ``nargs='?'`` 指定 optional positional argument.
-
-  * ``store_const|store_true|store_false`` action 意味着这个 cmdline option 是 flag,
-    不能再设置 ``nargs``, 即不跟参数.
-
-  * ``store`` action 可以设置 ``nargs``, 且 ``nargs='?'|'*'`` 时
-    ``const``, ``default`` 有用处.
-
-  * 若要在 help text 中显示 default value, 应该在 help text 中使用 ``%(default)s``
-    format specifier. 不要使用 ``ArgumentDefaultsHelpFormatter``, 因为它会在
-    所有参数后面都加上 ``(default: ...)`` 这种. 即使是不存在默认值的 required option.
-
-  * help text 支持 format specifier. available specifiers include ``%(prog)s`` and
-    most keyword arguments to ``add_argument()``.
-
 - 关于 python3 中 filesystem encoding 的处理相关问题.
 
   * 默认情况下, 所有的文件系统上的文件路径都会使用固定的 encoding 来 decode/encode.
@@ -951,7 +930,7 @@
 
   * 对于某个用户希望自己能够随处使用的时候, 使用 ``pip install --user``
     安装到 ``$HOME/.local`` 下.
-    
+
   * 某个项目或某个程序自己使用的 python, 构建 virtualenv/venv, 使用 pip 安装.
     这将 modules 安装在局限的范围内, 与全局独立.
 
@@ -1118,7 +1097,7 @@
         """
         Decorator that converts a method with a single self argument into a
         property cached on the instance.
-    
+
         Optional ``name`` argument allows you to make cached properties of other
         methods. (e.g.  url = cached_property(get_absolute_url, name='url') )
         """
@@ -1126,7 +1105,7 @@
             self.func = func
             self.__doc__ = getattr(func, '__doc__')
             self.name = name or func.__name__
-    
+
         def __get__(self, instance, cls=None):
             if instance is None:
                 return self
@@ -1194,7 +1173,7 @@
     foo()
 
   解释器在解释 foo function body 时, 发现 x 有赋值, 故认为是 local definition,
-  在起始处添加定义 (但注意不赋值). 这导致 global x 被 shadow, 并且 print(x) 
+  在起始处添加定义 (但注意不赋值). 这导致 global x 被 shadow, 并且 print(x)
   语句引用了未赋值的 x, 导致
   ``UnboundLocalError: local variable 'x' referenced before assignment``
   错误. 这需要注意的是, 解析函数体和运行函数体是不同阶段的事. 发现 local variable
@@ -1235,6 +1214,12 @@ number
 
   无参数时返回 0.0.
 
+scope
+-----
+- ``vars()``, return ``__dict__`` of any object.
+  无参数时, 返回 local dictionary, 即当前 scope 中可以访问到的所有量. 等价于
+  ``locals()``.
+
 builtin types
 =============
 set types
@@ -1266,7 +1251,7 @@ enum
 
 - python 3.4 之后就有 enum module 了.
 
-- 对于已经定义了 members 的 enum class 不能再被 subclass. 但若一个 enum 
+- 对于已经定义了 members 的 enum class 不能再被 subclass. 但若一个 enum
   仅仅定义了 methods, 没定义任何 member, 可以被继承. 这是为了方便在不同
   enum class 之间共用相同的 methods, behaviors, etc.
 
