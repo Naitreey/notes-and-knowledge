@@ -1,5 +1,6 @@
 General & Concepts
 ==================
+
 - Why use container?
 
   * short answer:
@@ -60,7 +61,10 @@ General & Concepts
   * 比虚拟机轻量化得多的 server consolidation, 服务器资源利用密度更高.
 
   * 快速、轻量化的部署, 让改动不再是 heavy-lifting, 不会每次修改都花费
-    很多时间和资源重新部署. 这个好处同样也适用于测试阶段.
+    很多时间和资源重新部署.
+    
+    这个好处同样也适用于测试阶段. 即测试时不需要可能十分繁琐的手动安装,
+    一步完成部署, 可以直接开始测试.
 
   * docker 提供了一些便利的容器操作 (commit, diff, etc.), 让开发更方便.
 
@@ -120,8 +124,8 @@ EE
 --
 - EE major releases twice per year.
 
-terms
-=====
+image & container
+=================
 
 - image. 在 docker 语境下, image 指的是程序文件以及它的一整套运行环境,
   包括文件系统, 依赖项, 环境变量, 配置等等. 注意, 镜像本身不包含要在
@@ -139,8 +143,6 @@ terms
   若要把 image 上传到某个 registry, 或从某个 registry 下载镜像, 必须指定相应
   的 tag.
 
-- task. A single container running in a service is called a task.
-
 configuration
 =============
 
@@ -154,100 +156,180 @@ dockerfile
 networking
 ==========
 
+engine
+======
+docker engine 是 docker ecosystem 最根本的组成部分, 所有其他工具都是建立
+在它的基础上的. 它负责 build images, run containers, image and container
+storage, data storage, swarm 等等.
+
 dockerd
-=======
+-------
 
 - run as root.
 
 - binds to unix socket: ``/var/run/docker.sock``. 这个 socket 的 user 是
   root, group 是 docker. 所以 docker 组里的用户可以访问.
 
+- docker 命令的执行设计中, 命令和文件一同传递给 daemon. 这种设计保证了
+  跨机器协作. 通过几个简单的环境变量修改, 一个 docker (CLI) client 可以
+  切换控制本地或远端等多个 daemon. 
+
 commandline
 ===========
 
+engine
+------
+
 container
-----------
+~~~~~~~~~
 
-docker run, docker container run
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- docker container run, docker run.
 
-- ``--hostname``. 默认情况下容器的 hostname 是它的 short UUID, 该选项
+  ``--hostname``. 默认情况下容器的 hostname 是它的 short UUID, 该选项
   指定 hostname.
 
-docker stop, docker container stop
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-``docker stop`` 的效果不受 ``docker run --restart=`` 参数影响. 即使
-``--restart=always``, docker stop 也能把容器停下来.
+- docker container stop, docker stop.
+  ``docker stop`` 的效果不受 ``docker run --restart=`` 参数影响. 即使
+  ``--restart=always``, docker stop 也能把容器停下来.
 
-docker kill, docker container kill
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-main process inside container will be killed by SIGKILL or other signal
-specified by ``--signal`` option.
+- docker container kill, docker kill.
+  main process inside container will be killed by SIGKILL or other signal
+  specified by ``--signal`` option.
 
-docker logs, docker contaienr logs
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-- ``-f, --follow`` follow output. 此时 docker attach to the running container.
+- docker contaienr logs, docker logs.
 
-- ``-t, --timestamps`` 显示日志的时间. 这是 docker 给记录的. 也就是说, docker
+  ``-f, --follow`` follow output. 此时 docker attach to the running container.
+
+  ``-t, --timestamps`` 显示日志的时间. 这是 docker 给记录的. 也就是说, docker
   化的应用, 即使是异常崩溃等本身并无时间记录的输出信息, 也会有时间信息. 这很有用.
 
 image
------
+~~~~~
 
-docker build, docker image build
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-build context 可以是本地目录, tarball, URL 或 stdin. 但无论哪种方式,
-最终的根目录下或指定的 ``--file`` 路径都要有 Dockerfile 文件.
+- docker image build, docker build.
+  build context 可以是本地目录, tarball, URL 或 stdin. 但无论哪种方式,
+  最终的根目录下或指定的 ``--file`` 路径都要有 Dockerfile 文件.
 
-- 对于 local path, 该目录作为 build context 全部传输给 daemon;
+  对于 local path, 该目录作为 build context 全部传输给 daemon;
 
-- 对于 tarball 等 url, daemon 先下载再解压作为 build context;
-  
-- 若 url 指向一个 git repository, daemon 先 clone 再作为 build context.
+  对于 tarball 等 url, daemon 先下载再解压作为 build context;
 
-docker pull, docker image pull
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  若 url 指向一个 git repository, daemon 先 clone 再作为 build context.
 
-- ``docker pull <name>`` 命令后面的 image name 即标准的 image tag 形式.
+- docker image pull, docker pull.
+
+  ``docker pull <name>`` 命令后面的 image name 即标准的 image tag 形式.
 
   e.g., ``docker pull ubuntu`` 实际是 ``docker pull docker.io/library/ubuntu:latest``.
+
+swarm
+~~~~~
+
+- docker swarm init. initialize a swarm.
+  并自动让当前节点成为 swarm manager.
+
+- docker swarm join.
+
+- docker swarm leave. leave the swarm.
+
+  ``--force``. 作为 swarm 的最后一个 manager, leave 会导致所有状态信息丢失,
+  故此时需要强制离开.
+
+- docker swarm join-token. 获取 join current swarm 的 token. worker & manager
+  需要不同的 token.
+
+node
+~~~~
+
+- docker node ls.
+
+stack
+~~~~~
+
+- docker stack deploy
+
+- docker stack rm.
+
+- docker stack ls. list stacks in swarm.
+
+- docker stack ps. list tasks in the specified stack.
+
+service
+~~~~~~~
+
+- docker service ls. list services in swarm.
+
+- docker service ps. list tasks of the specified services.
+
+inspect
+~~~~~~~
+
+- docker inspect. insepct any docker objects.
+  实际上各个主要 docker object 的子命令中还有 inspect 命令专门查看该类型对象.
+
+registry
+~~~~~~~~
+
+- docker login.
+
+- docker logout.
+
+network
+~~~~~~~
+
+- docker network create.
+
+- docker network ls.
+
+- docker network inspect.
+  输出还包括各个 attached container 的网络信息, 例如 ip.
+
+- docker network connect.
+  显然一个容器可以连接多个网络.
+
+  ``--ip``, ``--ip6``, 连接时可以指定 ip. 对于自定义的网络.
+
+- docker network disconnect.
+  disconnect container from network. 断掉后容器内的相应虚拟网卡直接消失.
+  注意这个操作是在修改容器的网络连接配置, 所以是持久的 (make sense).
 
 compose
 -------
 
-swarm
------
-
-docker swarm init
-~~~~~~~~~~~~~~~~~
-initialize a swarm.
-
-docker swarm join
-~~~~~~~~~~~~~~~~~
-
-stack
------
-
-docker stack deploy
-~~~~~~~~~~~~~~~~~~~
-
-service
+machine
 -------
 
-docker service ls
-~~~~~~~~~~~~~~~~~
+- docker-machine create.
+
+- docker-machine ls.
+  其中 ACTIVE 列表示当前控制的 virtual host 是哪个.
+
+- docker-machine ssh.
+
+- docker-machine env. 将输出的环境变量导入当前 shell 环境中, 再直接执行各种
+  docker commands 时就直接控制 docker engine on virtual host.
+
+  此时, docker CLI 与 virtual host dockerd 通过 TCP 2376 端口通信 (而不是与本地
+  dockerd 的 /var/run/docker.sock unix socket 通信). docker client 不但把
+  命令传递给 daemon, 也包括命令执行所需文件. 这点无论是本地 unix socket
+  或 TCP 方式都是统一的.
+
+  ``--unset``. 清除远程 dockerd 环境变量. CLI 回归本地.
+
+- docker-machine scp. copy files between local-remote or remote-remote.
+
+  ``--delta``. 使用 rsync 从而只传输 difference.
+
+- docker-machine ip.
+
+- docker-machine start.
+
+- docker-machine stop.
+
+- docker-machine rm.
 
 docker registry
 ===============
-
-- docker hub 实际上是一个 public docker registry. 它是 docker CLI 默认使用的
-  registry.
-
-- A production-ready registry must be protected by TLS and should ideally use
-  an access-control mechanism.
-
-terms
------
 
 - registry. A registry is a collection of repositories grouped by
   usernames/scopes.
@@ -257,25 +339,145 @@ terms
 - image name. 一个 repository 中的某个 image 通过 repository name + version tag
   来唯一识别.
 
+- docker hub 实际上是一个 public docker registry. 它是 docker CLI 默认使用的
+  registry.
+
+- A production-ready registry must be protected by TLS and should ideally use
+  an access-control mechanism.
+
 compose
 =======
 docker compose is a tool for defining and running multi-container Docker
 applications. 就是说, 一个 project 需要同时使用多个 containers 时, 使用
 compose 可以方便地管理.
 
+It is a frontend to the same api's used by the docker cli, so you can reproduce
+it's behavior with usual docker commands.
+
+docker-compose vs docker-swarm. 两者的适用场景不同, 并不存在取代关系.
+docker-compose is needed to manage multiple containers as a service outside of
+swarm mode, on a single docker engine.
+
 swarm
 =====
-swarm mode 重用 docker-compose.yml 配置. 原因是两者在配置上是十分相似的.
-swarm mode 提供多实例并行和负载均衡.
+A swarm is a group of machines that are running Docker and joined into a
+cluster.
+
+A node is a docker host machine in swarm.
+
+Swarm managers are the only machines in a swarm that can execute commands,
+or authorize other machines to join the swarm as workers.
+
+Workers are just there to provide capacity and do not have the authority to
+tell any other machine what it can and cannot do.
+
+Swarm manager 执行的 docker commands 自动影响整个集群, 而不是仅仅影响本机.
+
+strategies
+----------
+Swarm managers can use several strategies to distribute containers in the
+cluster.
 
 stack
 =====
 
+A stack is a group of interrelated services that share dependencies, and can be
+orchestrated and scaled together, these may be defined using a docker-compose.yml
+file.
+
+docker stack 重用 docker-compose.yml 配置. 原因是两者在配置上是十分相似的.
+它在 docker-compose.yml 中可以配置多实例并行和负载均衡.
+
+修改 compose file 之后 re-deploy 不需要先删除当前的 stack, 而是直接 in-place
+update. 其实这也容易理解, 因为有状态的存储部分和无状态的容器部分在 compose
+file 中区分和定义的是清晰的. 所以知道该如何更新.
+
+一个 stack 就是一个 app. 一个 stack/app 可以有多个 services, 每个 services
+可以有多个 tasks.
+
 service
 =======
+A service consists of one or more containers for the same image and
+configuration within swarm, multiple containers provide scalability.
+
+- task. A single container running in a service is called a task.
+
 service is named by ``<stack-name>_<service-name>``
 
 一个 service 里的每个 task 命名为 ``<stack-name>_<service-name>.<N>``.
+
+compose file
+============
+Definition file for a group of containers, used by docker-compose and by swarm
+mode.
+
+服务端口设置. 注意到 ports 是对 service 进行设置的, 而不是对 task 设置的.
+service 属于整个 stack. 所以在整个 swarm 的所有节点上, 这个端口映射至相应
+服务都要成立. 这与各个 tasks 部署在哪个节点上无关. 无论从哪个节点访问, 都
+可以 load balance. 这由一个 ingress routing mesh 实现.
+
+network
+=======
+
+- 三个默认网络: none, host, bridge.
+
+  docker container 默认使用 bridge network.
+
+  默认的 bridge network ``Options.com.docker.network.bridge.name`` 为 docker0.
+  默认的 bridge network 不能删除.
+
+- 网络内使用容器的名字可以 DNS 解析到 IP 地址.
+
+ingress routing mesh
+--------------------
+
+- Port 7946 TCP/UDP for container network discovery.
+
+- Port 4789 UDP for the container ingress network.
+
+drivers
+-------
+
+bridge
+~~~~~~
+
+bridge 指的是各个容器与一个网桥或交换机 (通过 veth) 连通. 从而可以相互访问.
+通过 ip_masquerade 等设置, 该交换机能够兼有 NAT 路由器功能, 即成为 layer-3 switch.
+
+根据网络原理, 一个 bridge network 显然只能独立于一台 docker host machine 上面.
+(指的是 bridge network 这个子网的范围. 里面的容器和外界或者其他机器上的容器是
+有办法互通的.)
+
+overlay
+~~~~~~~
+
+overlay network 可以跨多个 docker hosts. 这指的是, 每个 host 上的容器所在的
+子网都是相通的, 或者说, 可以抽象地认为这些不同机器上的容器都位于同一个子网.
+不同机器上的容器之间可以通过名字或 IP 直接访问.
+
+overlay network 之所以可能, 不是仅仅依靠标准的网络原理和配置实现的. 要借助
+应用层的实现和转发. 即若访问不在一台机器上的容器时, 要靠 dockerd 保持的
+分布式的网络状态存储, 来知道该向哪个机器转发.
+
+machine
+=======
+Docker Machine is a tool that lets you install Docker Engine on virtual hosts,
+and manage the hosts with docker-machine commands. 
+
+docker-machine 是用于管理专门用于 docker 运行的虚拟机的. 只有需要使用虚拟机来
+运行 docker 时, 并且是专门用于运行 docker 时, 才需要使用 docker-machine.
+
+严格地讲, docker-machine 所在机器如果只是用于管理 virtual docker hosts,
+本地是不需要安装 docker engine 的.
+
+driver. docker-machine 有很多云服务商的 driver. 本地虚拟机使用 virtualbox driver.
+
+docker-machine 在 VM 中安装专门为了运行 docker 的 linux distro Boot2Docker.
+
+cloud
+=====
+docker cloud 是专门用于基于云服务的 dockerized environment. 它是一项 Docker Inc.
+提供的在线服务. 这与 docker-machine 有本质区别.
 
 misc
 ====
