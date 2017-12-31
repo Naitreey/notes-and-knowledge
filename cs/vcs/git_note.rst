@@ -129,3 +129,29 @@
   - filename: ``git log -- <...>``
 
   - or both: ``git log <...> -- <...>``
+
+- pathspec. see gitglossary(7). In summary:
+
+  * 若要 pathspec 安全地起效, surround pathspecs in quotes.
+
+  * 基本结构: ``[/directory/prefix/]<pattern>``
+
+  * 默认 ``*`` ``?`` 支持匹配 directory separator, 即不同于 glob.
+
+  * special pattern:
+    
+    ``:<magic-signature>+:<pattern>`` or ``:(<magic-word>,...)``
+
+    magic words:
+
+    - top (``/``)
+
+    - literal
+
+    - icase
+
+    - glob
+
+    - attr
+
+    - exclude (``!``)
