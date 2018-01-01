@@ -1149,8 +1149,25 @@
             self.fset = fset
             return self
 
-- 注意所有可以使用 function 的地方都可以一般化地使用 callable. 定义 callable class
-  有助于优化代码组织方式和重用等可能性 (应用所有 class 的优点来定义 function).
+- 注意大部分情况下可以使用 function 的地方都可以一般化地使用 callable. 定义
+  callable class 有助于优化代码组织方式和重用等可能性 (应用所有 class 的优点
+  来定义 function).
+
+  反之亦然. 所以, 很多时候, 以下两种形式是效果类似的:
+
+  .. code:: python
+    def callable_factory(*args, **kwargs):
+        def actual_callable(*args_, **kwargs_):
+            # use args, kwargs, args_, kwargs_
+        return actual_callable
+
+    class Clazz:
+
+        def __init__(self, *args, **kwargs):
+            # use args, kwargs
+
+        def __call__(self, *args_, **kwargs_):
+            # use args_, kwargs_
 
 - variable definition, scope & UnboundLocalError.
 
