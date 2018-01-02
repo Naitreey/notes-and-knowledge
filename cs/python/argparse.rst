@@ -13,8 +13,6 @@ misc
   - 所有 help 参数. 若 help 是 SUPPRESS, 则不输出参数的 help, 以及不在 usage 中
     包含该参数.
 
-* 解释 subparsers 的描述问题. title, description, metavar, choices, ...
-
 general
 =======
 - 根据命令行配置自动生成 help messages 和自动进行命令行校验.
@@ -263,18 +261,32 @@ metavar
 
 - default: 对于 positional, dest value; 对于 optional, uppercased dest value.
 
-add_argument_group
-------------------
+add_argument_group()
+--------------------
+create new argument group. positional arguments 和 optional arguments,
+以及 subcommands 都是 argument group.
 
-add_subparsers
---------------
+一般的 argument group 只是在修改 help message 的表现方式方面有意义.
+
+add_argument()
+~~~~~~~~~~~~~~
+给该组增加 action, 这与 ArgumentParser 的方法是同一个. (同一个父类的继承.)
+增加的 action 同时注册在该组和整个 parser 中.
+
+add_mutually_exclusive_group()
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+mutex group 也是 argument group. 但是这些组目前不会在 help 中单独分组, 它的
+actions 散布在 positional/optional argument groups 中. 只在 usage 中
+显示互斥性.
+
+主要作用是在 parse_arg 时进行互斥性检查.
+
+add_subparsers()
+----------------
 - 添加 subcommands.
 
 - 从解析逻辑上看, subparsers 与 parser 本身的各种 parameters 是同一层级的.
-  因此, 本质是 subparsers action.
-
-- 由于 ``add_subparsers`` 与 ``add_argument()`` 一样生成 action instance,
-  所以两者接受的参数是差不多的. (但它还多出来可能会生成 argument group.)
+  本质是 subparsers action.
 
 - help message 形式. 与一般的 positional argument 类似, 会以 metavar 和
   help 两个参数的值为一行出现. 不同的是, 由于 subparsers action 存在
@@ -324,24 +336,63 @@ add_subparsers
     subparsers = parser.add_subparsers()
     subparsers.required = True
 
+- 由于 ``add_subparsers`` 与 ``add_argument()`` 一样生成 action instance,
+  两者接受的参数是差不多的. (但它还多出来可能会生成 argument group.)
+
+title
+~~~~~
+当存在 title and/or description 时, 生成一个单独的 argument group.
+title/description 就是该 group 的 title 和 description.
+
+当 title and description 都不存在时, subparsers action 与其他 positionals
+一起出现在 positional argument group 中.
+
+- default: subcommands (若创建单独的组).
+
+description
+~~~~~~~~~~~
+- default: None.
+
+* 解释 subparsers 的描述问题.
+
 prog
 ~~~~
 subparsers group 整体的 prog_prefix. 它是 subcommand ``prog`` 值的统一
-前缀 (如果 subparser 不自定义的话.)
+前缀 (如果 subparser 不自定义 prog 的话.)
 
 - default: parent prog + parent positional arguments.
 
+dest
+~~~~
+name of the attribute under which sub-command name will be stored.
+
+- default: SUPPRESS. 即默认不存储 subcommand name.
+
 metavar
 ~~~~~~~
-指定 subcommands 在 usage 命令行上的形式. override choices 形式.
+指定 subcommands 在 usage 命令行上和参数 help 中的形式. override 默认的
+choices 形式.
 
-- default: None. 此时使用 choices 形式即 ``{cmd1,cmd2,...}``
+- default: None. 此时使用 choices 形式即 ``{cmd1,cmd2,...}``.
+  默认的 choices 形式源于 _SubParsersAction 在实例化时将 choices 属性赋值为
+  自身存储的 subcommand choices mapping.
 
 help
 ~~~~
+subparsers group 在 argument help 中的 help message.
+
+parser_class
+~~~~~~~~~~~~
+parser class to use for subparsers.
+
+action
+~~~~~~
+定义生成 subparsers action 使用的 action class.
+
+- default: parsers.
 
 add_parser()
-------------
+~~~~~~~~~~~~
 接受所有 ArgumentParser 参数和以下参数:
 
 - name. subcommand name.
@@ -354,6 +405,26 @@ add_parser()
 以下参数需特殊说明:
 
 - prog. 若不设置, 默认为 subparsers 的 prog 值 + subcommand name.
+
+One particularly effective way of handling sub-commands is to combine the use
+of the add_subparsers() method with calls to set_defaults() so that each
+subparser knows which Python function it should execute. 每个 subparser 都
+设置一个相同的 namespace attribute, e.g. ``operation``, 但每个 subparser
+设置不同的值, 即不同 subcommand 对应不同的操作. 这样在结果中获取该属性就得到了
+要进行的操作.
+.. code:: python
+  parser = ArgumentParser()
+  subparsers = parser.add_subparsers()
+  sub1 = subparsers.add_parser()
+  sub2 = subparsers.add_parser()
+  sub1.set_defaults(operation=op1)
+  sub2.set_defaults(operation=op2)
+  args = parser.parse_args()
+  args.operation(**vars(args))
+
+set_defaults()
+--------------
+设置各 dest 在 parser 中的默认值. 这是第二层 default.
 
 parse_args()
 ------------
@@ -379,6 +450,23 @@ parse_args()
 - ``--`` 表示 optionals 结束, 后面全是 positionals.
 
 - ``allow_abbrev`` 允许的各种缩写形式.
+
+- subparsers.
+
+  * 在结果中, subparser 的解析结果 merge 到 main parser 中.
+
+parse_known_args()
+------------------
+仅解析已知参数, 留下未知参数. 返回 a tuple of namespace and unknown args list.
+
+这可用于向调用的脚本传递参数. 或者通过 REMAINDER 方式向调用的脚本传递参数.
+
+exiting methods
+---------------
+
+- exit(), exit with custom message and status code.
+
+- error(), exit with usage and custom message with status 2.
 
 formatters
 ==========
