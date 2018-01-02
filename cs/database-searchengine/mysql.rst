@@ -216,3 +216,28 @@ Design
   扩展成 fields 或者 foreign key 连接的 extension table 等形式. 这样可能长期看,
   对于 MVC 和减少重复是有好处的 (因为格式在 model 中都建立好了, 不需要手动解析
   数据构建 json 等).
+
+- 对于具有少数几个确定字符串值的 enum 类型量, 应该在数据库里存储字符串本身还是
+  integer flags?
+
+  存储字符串, 或者使用 RDBMS 本身支持的 enum 类型, 这样存储时是数字、读写时是
+  字符串. 理由:
+
+  首先, 在现今的计算能力下, 从字符串至 int flag 的转换是 micro optimization.
+  存储字符串 (或 enum) 带来的好处大于它造成的问题. 好处: 数据可读性更高, 不需要
+  业务逻辑代码进行翻译, 且部分前端/GUI 可直接使用这些数据, 程序员不需要记忆无聊
+  且易错的 enum table. 坏处: 需要更大的存储空间.
+
+  由于硬盘相对于程序员的编程时间和排错时间便宜很多, so anything that trades
+  development effort for disk space is also a good thing, from a business
+  perspective.
+
+  其次, 对于支持 enum 类型的数据库, 则可以使用这个类型在两方面之间达成一个折中.
+
+  aside: the scripting language Lua, renowned for being direct and
+  high-performance, used to write entire game engines, etc. They never bothered
+  having a number type at all. Their string handling code is so effective, they
+  can add numbers together that are actually strings, in time-sensitive game
+  engine code. Like JavaScript, they don't even have objects - just very fancy
+  hash tables. The C programmer's view of "a huge array of chars? How
+  inefficient!" is outdated.
