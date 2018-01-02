@@ -1208,6 +1208,11 @@
   ``object()``, 而不是 ``None``, 因后者仍然是有意义的. 而每个 object instance
   是唯一的, 且毫无意义的.
 
+- virtual env 中的 sys.path 包含或不包含哪些路径是基于第三方原则. 因此默认不包含
+  user 或 system 层的 site-packages directory. 但注意全局的 ``/usr/lib/pythonX.X``
+  路径下的 modules, 即 stdlib 部分的、随 python 一同发布的 modules, 以及一些其他
+  的 sys.path 中的路径, 都是可以访问的. 因为它们不是第三方的.
+
 builtin functions
 =================
 很多 builtin function 本质上应该看作是该 class 的 constructor.
