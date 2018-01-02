@@ -4,23 +4,16 @@ misc
 
   无法指定 ``--foo`` ``--bar`` 必须同时存在或同时不存在.
 
-* 用 ``nargs='?'`` 指定 optional positional argument.
+* argparse.SUPPRESS 各种抑制各种输出. 它可用的地方有:
 
-* ``store_const|store_true|store_false`` action 意味着这个 cmdline option 是 flag,
-  不能再设置 ``nargs``, 即不跟参数.
+  - 所有 argument group, 包括 subparsers, 的 title & description.
 
-* ``store`` action 可以设置 ``nargs``, 且 ``nargs='?'|'*'`` 时
-  ``const``, ``default`` 有用处.
+  - ArgumentParser 的 usage, description, epilog.
 
-* 若要在 help text 中显示 default value, 应该在 help text 中使用 ``%(default)s``
-  format specifier. 不要使用 ``ArgumentDefaultsHelpFormatter``, 因为它会在
-  所有参数后面都加上 ``(default: ...)`` 这种. 即使是不存在默认值的 required option.
+  - 所有 help 参数. 若 help 是 SUPPRESS, 则不输出参数的 help, 以及不在 usage 中
+    包含该参数.
 
-* help text 支持 format specifier. available specifiers include ``%(prog)s`` and
-  most keyword arguments to ``add_argument()``.
-
-* SUPPRESS 的各种用处.
-  解释 subparsers 的描述问题. title, description, metavar, choices, ...
+* 解释 subparsers 的描述问题. title, description, metavar, choices, ...
 
 general
 =======
@@ -140,43 +133,138 @@ allow_abbrev
 - 是否允许多个 short options 连在一起写, 并且最后一个 short option 还
   可以有参数.
 
-注意 long option 不能参数连着写, 必须使用 ``=`` or 空格分隔.
+default: True.
 
-- default: True.
+add_argument()
+--------------
+在什么都不自定义的情况下,
 
-add_argument
-------------
+- optional argument 默认是 optional 的, 若设置则默认接受一个参数.
 
-dest
-~~~~
+- positional argument 默认是 required 的, 默认接受一个参数.
 
-若 dest 未指定,
+action
+~~~~~~
+- builtin actions:
 
-- 对于 optional parameter, 使用第一个 long option 或第一个 short option
-  作为 dest.
+  * store. positional/optional 都可以. nargs 必须 > 0.
+
+  * store_const. 存储 const 指定的值. 此时 const 参数是必须的, nargs
+    必须不指定, 且 ``nargs=0``. 该参数只对 optional argument 有意义.
+    适用于构建 flag.
+
+  * store_true. 存储 True. 其他同 store_const.
+
+  * store_false. 存储 False. 其他同 store_const.
+
+  * append. 同一个参数多次出现时, 每次的值 append 至一个 list.
+    其他类似于 store. 该参数只对 optional argument 有意义.
+
+  * append_const. 同一个参数多次出现时, 将固定的 const 值 append 至 list.
+    其他类似于 store_const. 该参数只对 optional argument 有意义.
+
+  * count. 统计一个参数的出现次数. 必须不指定 nargs 且 ``nargs=0``.
+    该参数只对 optional argument 有意义. 适用于表达程度. 例如 verbosity
+    ``-vvvv``.
+
+  * help. print help. 一般没啥用.
+
+  * version. 输出版本信息. 要求指定 ``version`` 参数, 其值可包含 ``prog``
+    interpolation argument.
+
+  * parsers. 内部用于生成 subparsers.
+
+- default: store.
+
+nargs
+~~~~~
+
+- 选项:
+
+  * ``N``, 对于 optional/positional argument 都是接受 N 个命令行参数. 生成一个 list.
+  
+  * ``?``, 对于 positional, 接受 1 个或使用 default; 对于 optional, 当该命令行参数
+    出现时, 接受 1 个值或使用 const.
+  
+  * ``*``, 对于 optional argument, flag 后面的 0 个或多个参数 (直到下一个 flag 为止)
+    都进入一个 list; 对于 positional argument, 命令行上剩余所有 0 个或多个 positional
+    进入一个 list. 因此, 对于多个 optional, ``nargs="*"`` 可使用多次; 对于 positional,
+    只能使用一次, 且应该是最后一个 positional.
+  
+  * ``+``, 与 ``*`` 类似, 除了要求必须至少有一个.
+
+  * ``argparse.REMAINDER``, 命令行上所有右侧剩余参数放在 list 中. 用于传参数至别的程序.
+    应作为最后一个参数. 它与 ``*`` 的区别是, ``*`` 在 positional 时是只识别
+    positional 的, 若中间夹杂 optional 形式的参数会报错, 需要 ``--`` 进行分隔.
+    而这个参数会直接把右侧所有剩余参数都扔进去.
+
+- default: 根据不同 action 而不同.
+
+required
+~~~~~~~~
+只有 optional argument 可以设置 required.
+
+对于 positional, required 不能设置, 而是通过 nargs 的设置来推断 required 的值.
+
+const
+~~~~~
 
 default
 ~~~~~~~
+对于 optional argument, 未指定时使用.
+对于 positional argument, 当 nargs 的设定允许参数省略时, 即: ``nargs="?", nargs="*"``
+时使用.
+
 - default: None.
 
 - default value 的 fallback 顺序:
 
   * 明确指定.
-  
+
   * ``set_defaults()`` 关于相应 dest 的设置.
-  
+
   * ``ArgumentParser.argument_default`` 的值.
-  
+
   * default: None.
 
-nargs
-~~~~~
+- 若 default is SUPPRESS, 结果 namespace 中不添加 dest 对应的默认值.
+
+type
+~~~~
+参数值格式检查和类型转换.
 
 choices
 ~~~~~~~
+any sequence supporting ``in`` operator will do.
+由于先转换再检查 choices, the type of its values should match that of ``type``
+argument.
+
+dest
+~~~~
+
+- default:
+
+  * 对于 optional parameter, 使用第一个 long option 或第一个 short option
+    作为 dest.
+  
+  * 对于 positional parameter, 使用第一个参数.
+
+若 dest is SUPPRESS, namespace 中不添加相应结果.
+
+help
+~~~~
+控制各参数的 help message.
+
+- interpolation args: 这个 action 的全部参数. 去除 SUPPRESS 参数.
 
 metavar
 ~~~~~~~
+控制 usage 行和参数帮助行中的形式参数.
+
+- default: 对于 positional, dest value; 对于 optional, uppercased dest value.
+
+add_argument_group
+------------------
 
 add_subparsers
 --------------
@@ -203,20 +291,20 @@ add_subparsers
   .. code:: python
     from argparse import ArgumentParser, HelpFormatter, _SubParsersAction
     class NoSubparsersMetavarFormatter(HelpFormatter):
-    
+
         def _format_action(self, action):
             result = super()._format_action(action)
             if isinstance(action, _SubParsersAction):
                 # fix indentation on first line
                 return "%*s%s" % (self._current_indent, "", result.lstrip())
             return result
-    
+
         def _format_action_invocation(self, action):
             if isinstance(action, _SubParsersAction):
                 # remove metavar and help line
                 return ""
             return super()._format_action_invocation(action)
-    
+
         def _iter_indented_subactions(self, action):
             if isinstance(action, _SubParsersAction):
                 try:
@@ -229,8 +317,19 @@ add_subparsers
             else:
                 yield from super()._iter_indented_subactions(action)
 
+- add_subparsers 本应支持 ``required`` kwarg, 但目前不支持. workaround
+  是直接对生成的 subparsers action ``required`` 属性赋值. (因为它是
+  subclass of Action.)
+  .. code:: python
+    subparsers = parser.add_subparsers()
+    subparsers.required = True
+
 prog
 ~~~~
+subparsers group 整体的 prog_prefix. 它是 subcommand ``prog`` 值的统一
+前缀 (如果 subparser 不自定义的话.)
+
+- default: parent prog + parent positional arguments.
 
 metavar
 ~~~~~~~
@@ -240,6 +339,46 @@ metavar
 
 help
 ~~~~
+
+add_parser()
+------------
+接受所有 ArgumentParser 参数和以下参数:
+
+- name. subcommand name.
+
+- aliases. a sequence of aliases for this subcommand. 即在 subcommand
+  choice list 中增加这些 alias, 指向同一个 subparser.
+
+- help. subcommand 在 parent parser help message 中的 help 部分.
+
+以下参数需特殊说明:
+
+- prog. 若不设置, 默认为 subparsers 的 prog 值 + subcommand name.
+
+parse_args()
+------------
+
+- optional/positional argument 的参数顺序:
+  
+  * 为避免麻烦, 一般遵循 optional 在先, positional 在后的规则.
+    
+  * 包含 subparsers 时, subcommand 之前的参数都是 parent parser 的参数,
+    之后的参数都是 subparser 的参数.
+
+  * 用 ``--`` 表示 optional argument 部分结束, 之后所有参数按照 positional
+    去解析.
+
+- optional arguments 形式:
+
+  * short option 可以与值连着写.
+
+  * 多个 short options 可以连写, 且最后一个可跟参数值 (连着或不连着).
+  
+  * long option 不能和值连着写, 必须使用 ``=`` or 空格分隔.
+
+- ``--`` 表示 optionals 结束, 后面全是 positionals.
+
+- ``allow_abbrev`` 允许的各种缩写形式.
 
 formatters
 ==========
@@ -267,6 +406,8 @@ ArgumentDefaultsHelpFormatter
 -----------------------------
 当 help message 中没有 ``%(default)`` format specifier, 即没有已经加入 default
 信息时, 自动在末尾加入 default 值.
+
+若想要某些 option 不显示这自动生成的 default, 使用 ``default=SUPPRESS``.
 
 MetavarTypeHelpFormatter
 ------------------------
@@ -313,3 +454,14 @@ an action is a callable which returns a callable.
 
   the callable may perform arbitrary actions, but will typically set
   attributes on the namespace based on ``dest`` and ``values``.
+
+types
+=====
+
+FileType
+--------
+用于封装文件 type, 转换后在结果中直接成为 fileobj.
+
+API
+---
+any callable that takes arg string, then checks and returns the converted value.
