@@ -1583,17 +1583,17 @@
     - ``Context`` 是一个 stack, 包含多层 context dicts (dict or ``ContextDict``
       instance).
 
-    - ``Context`` wrap context dict. 具有大量 dict-like interface.
+      * ``Context`` wrap context dict. 具有大量 dict-like interface.
 
-    - ``push()`` stack 和 ``pop()`` stack, 以及 ``update()``.
+      * ``push()`` stack 和 ``pop()`` stack, 以及 ``update()``.
 
-    - ``flatten()`` 返回各层的综合结果为一个 dict. 这也用于 Context object
-      之间比较.
+      * ``flatten()`` 返回各层的综合结果为一个 dict. 这也用于 Context object
+        之间比较.
 
     - ``RequestContext`` 是 ``Context`` 的子类, 它输入多一个 HttpRequest,
       在 render 时通过 context processor 生成额外的 context variables.
 
-    - 注意 RequestContext 才会调用 context processor, Context 不会.
+      * 注意 RequestContext 才会调用 context processor, Context 不会.
 
 - request and response
 
@@ -3295,23 +3295,124 @@ auth views 不提供默认的 templates, 需要自己写模板.
 
 - password reset: ``PasswordResetView``.
 
-- password reset done:
-  ``password_reset_done()``, ``PasswordResetDoneView``.
+  配置:
+
+  * template_name. default ``registration/password_reset_form.html``
+
+  * form_class. Form that input email. default ``PasswordResetForm``
+
+  * email_template_name. reset email template.
+    default ``registration/password_reset_email.html``
+
+  * subject_template_name. template for email subject.
+    default ``registration/password_reset_subject.txt``
+
+  * token_generator. default:
+    ``django.contrib.auth.tokens.PasswordResetTokenGenerator``.
+
+  * success_url. default: password_reset_done.
+
+  * from_email. default: settings.DEFAULT_FROM_EMAIL.
+
+  * html_email_template_name. html 邮件模板. 默认不使用.
+
+  * extra_context.
+
+  * extra_email_context.
+
+  email template context.
+
+  * email.
+
+  * user.
+
+  * site_name.
+
+  * domain.
+
+  * protocol. https or http.
+
+  * uid. user's pk in base64.
+
+  * token.
+
+  密码重置流程:
+
+  * 发起重置: 用户输入注册邮箱, 确认重置密码, 生成一次性密码重置链接,
+    发送至用户邮箱 (若邮箱不存在, 不会报错, 但也不会发送邮件, 这样避免泄露
+    注册情况).
+    
+    Users flagged with an unusable password aren’t allowed to request a
+    password reset to prevent misuse when using an external authentication
+    source like LDAP.
+
+  * 发起重置完成: 邮件发送后显示邮件发送成功页面.
+
+  * 确认重置: 用户从自己的邮箱中点击重置链接, 后端验证后 redirect 至填入新密码
+    的 form url, 进行重置.
+
+  * 重置完成: 提示重置完成.
+
+- password reset done: ``PasswordResetDoneView``.
   密码重置请求已经发出后显示的页面.
+
+  配置.
+
+  * template_name. default: ``registration/password_reset_done.html``.
+
+  * extra_context.
 
 - password reset confirm: ``PasswordResetConfirmView``.
   点击邮件中的密码重置链接后显示的密码重置页面.
 
+  Store the token in the session and redirect to the
+  password reset form at a URL without the token. That
+  avoids the possibility of leaking the token in the
+  HTTP Referer header.
+
+  url kwargs:
+
+  * uidb64.
+
+  * token.
+
+  配置.
+
+  * template_name. default: ``registration/password_reset_confirm.html``
+
+  * token_generator.
+
+  * post_reset_login. 重置后是否自动登录.
+
+  * post_reset_login_backend.
+
+  * form_class. default: SetPasswordForm.
+
+  * success_url. default: password_reset_complete.
+
+  * extra_context.
+
+  template context.
+
+  * form.
+
+  * validlink.
+
 - password reset complete: ``PasswordResetCompleteView``.
   重置密码后提示成功的页面.
+
+  配置.
+
+  * template_name. default: ``registration/password_reset_complete.html``.
+
+  * extra_context.
+
+- view helper: ``redirect_to_login()``.
 
 authentication forms
 ~~~~~~~~~~~~~~~~~~~~
 
 若不想使用 auth views, 可单独使用 auth forms.
-
-* ``AdminPasswordChangeForm``
-  used in admin site.
 
 * ``AuthenticationForm``
 
@@ -3327,6 +3428,9 @@ authentication forms
   used in admin site.
 
 * ``UserCreationForm``
+
+* ``AdminPasswordChangeForm``
+  used in admin site.
 
 authentication-related urls
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -3489,6 +3593,27 @@ helpers
 -------
 
 - ``update_session_auth_hash()``.
+
+token generator
+---------------
+
+django.contrib.auth.tokens.PasswordResetTokenGenerator
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+必要特性.
+
+- 安全性. 合法的 token 依赖于用户当前密码的 hash 和服务器配置的 secret key,
+  所以具有安全性.
+
+- 唯一性. 生成的 token 依赖于当前密码 hash, 用户上次登录时间和当前服务器时间.
+  所以每次重置成功 token 后新生成的 token 都会变化.
+
+- 时效性. token 包含生成时间. 若 token 已经过期, 则验证失败.
+
+配置.
+
+- settings.SECRET_KEY.
+
+- settings.PASSWORD_RESET_TIMEOUT_DAYS.
 
 middleware
 ==========
