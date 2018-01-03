@@ -124,16 +124,12 @@ EE
 --
 - EE major releases twice per year.
 
-image & container
-=================
+image
+=====
 
 - image. 在 docker 语境下, image 指的是程序文件以及它的一整套运行环境,
   包括文件系统, 依赖项, 环境变量, 配置等等. 注意, 镜像本身不包含要在
   其中运行的进程. 它仅仅包含运行任何可能进程的环境.
-
-- container. container 是 image 的实例. 也就是在 image 提供的环境中真正
-  运行所需进程. 基于同一个 image 提供的环境可以运行不同的进程. 也就是说,
-  基于同一个镜像的不同容器实例并不需要运行相同的进程或服务.
 
 - image tag. 完整的 tag 由 registry domain, username, repository name, tag version
   四部分组成. 完整格式是 ``[[<registry>/]<username>/]<repository>[:<tag>]``.
@@ -142,6 +138,24 @@ image & container
 
   若要把 image 上传到某个 registry, 或从某个 registry 下载镜像, 必须指定相应
   的 tag.
+
+- Each instruction in a Dockerfile creates a layer in the image. When you
+  change the Dockerfile and rebuild the image, only those layers which have
+  changed are rebuilt. 
+
+container
+=========
+
+- container. container 是 image 的实例. 也就是在 image 提供的环境中真正
+  运行所需进程.
+  
+  一个容器是由它基于的 image 以及容器创建时指定的配置选项共同决定的. 镜像
+  提供各种运行环境, 包括文件, 依赖, 环境变量等. 而配置选项指定非常多的
+  运行类参数, 包括运行的命令行, 网络, 存储, 等等.
+
+- 可以基于容器当前的状态去创建新的镜像.
+
+- 可以控制容器的 isolation level, 即控制几个 namespace 的独立情况.
 
 configuration
 =============
@@ -159,11 +173,31 @@ networking
 engine
 ======
 docker engine 是 docker ecosystem 最根本的组成部分, 所有其他工具都是建立
-在它的基础上的. 它负责 build images, run containers, image and container
-storage, data storage, swarm 等等.
+在它的基础上的.
+
+architecture
+------------
+Docker Engine is a client-server application.
+
+components:
+
+- server daemon - dockerd.
+  
+- CLI client - docker command.
+
+- REST API to interact with daemon, either from docker CLI or by using
+  API directly.
+
+The Docker client and daemon can run on the same system (communicate via unix
+socket), or you can connect a Docker client to a remote Docker daemon (communicate
+via TCP network).
 
 dockerd
 -------
+- The daemon creates and manages Docker objects, such as images, containers,
+  networks, and volumes.
+
+- A daemon can also communicate with other daemons to manage Docker services.
 
 - run as root.
 
@@ -174,8 +208,8 @@ dockerd
   跨机器协作. 通过几个简单的环境变量修改, 一个 docker (CLI) client 可以
   切换控制本地或远端等多个 daemon. 
 
-commandline
-===========
+CLI
+===
 
 engine
 ------
@@ -328,19 +362,22 @@ machine
 
 - docker-machine rm.
 
-docker registry
-===============
-
-- registry. A registry is a collection of repositories grouped by
-  usernames/scopes.
-
-- repository. a repository is a collection of version-controlled (by tags) images.
-
-- image name. 一个 repository 中的某个 image 通过 repository name + version tag
-  来唯一识别.
+registry
+========
+- docker registry stores images.
 
 - docker hub 实际上是一个 public docker registry. 它是 docker CLI 默认使用的
   registry.
+
+- hierarchy.
+
+  * registry. A registry is a collection of repositories grouped by
+    usernames/scopes.
+  
+  * repository. a repository is a collection of version-controlled (by tags) images.
+  
+  * image name. 一个 repository 中的某个 image 通过 repository name + version tag
+    来唯一识别.
 
 - A production-ready registry must be protected by TLS and should ideally use
   an access-control mechanism.
@@ -363,7 +400,7 @@ swarm
 A swarm is a group of machines that are running Docker and joined into a
 cluster.
 
-A node is a docker host machine in swarm.
+A node is a docker host in swarm. (managed by docker daemon residing on it.)
 
 Swarm managers are the only machines in a swarm that can execute commands,
 or authorize other machines to join the swarm as workers.
@@ -397,10 +434,13 @@ file 中区分和定义的是清晰的. 所以知道该如何更新.
 
 service
 =======
-A service consists of one or more containers for the same image and
+A service consists of one or more replica containers for the same image and
 configuration within swarm, multiple containers provide scalability.
 
-- task. A single container running in a service is called a task.
+task. A single container running in a service is called a task.
+一个 service 的多个 task replica 是自动负载均衡的. 多个 replica
+成为一个整体 (service), 从 consumer 的角度看, 只有 service, 而
+不见 tasks. 所以在 swarm mode 中, service 是功能单元.
 
 service is named by ``<stack-name>_<service-name>``
 
@@ -478,6 +518,44 @@ cloud
 =====
 docker cloud 是专门用于基于云服务的 dockerized environment. 它是一项 Docker Inc.
 提供的在线服务. 这与 docker-machine 有本质区别.
+
+internals
+=========
+
+namespace
+---------
+Each aspect of a container runs in a separate namespace and its access is
+limited to that namespace.
+
+- The pid namespace: Process isolation (PID: Process ID).
+
+- The net namespace: Managing network interfaces (NET: Networking).
+
+- The ipc namespace: Managing access to IPC resources (IPC: InterProcess
+  Communication).
+
+- The mnt namespace: Managing filesystem mount points (MNT: Mount).
+
+- The uts namespace: Isolating kernel and version identifiers. (UTS: Unix
+  Timesharing System).
+
+
+control groups (cgroups)
+------------------------
+A cgroup limits an application to a specific set of resources. Control groups
+allow Docker Engine to share available hardware resources to containers and
+optionally enforce limits and constraints.
+
+UnionFS
+-------
+operate by creating layers, making them very lightweight and fast.
+
+Docker Engine can use multiple UnionFS variants, including AUFS, btrfs, vfs,
+and DeviceMapper.
+
+container format
+----------------
+- libcontainer.
 
 misc
 ====
