@@ -2861,7 +2861,9 @@ managers
 
 - ``UserManager``
 
-  * ``create_user(...)``
+  * ``create_user(...)``.
+  若 password=None, set unusable password. 任何不认识的 kwarg 会传入新建的
+  user instance.
 
   * ``create_superuser(...)``
 
@@ -2901,7 +2903,8 @@ AbstractBaseUser
 
   用户信息获取.
 
-  * ``get_username()``
+  * ``get_username()``, 这个方法的意义在于它获取 USERNAME_FIELD 的值, 因此
+    对 swapped user model 是通用的.
 
   * ``get_full_name()``
 
@@ -2917,13 +2920,16 @@ AbstractBaseUser
 
   密码管理.
 
-  * ``set_password()``
+  * ``set_password()`` 参数是 None 时设置 unusable password. 与
+    ``set_unusable_password()`` 一样.
 
   * ``set_password(...)``
 
   * ``check_password(...)``
 
-  * ``set_unusable_password()``, 当使用外部认证机制时, 禁用普通密码.
+  * ``set_unusable_password()``.
+    当使用外部认证机制时, 禁用普通密码. 此时 ``check_password()`` will always
+    be False.
 
   * ``has_usable_password()``
 
@@ -2935,6 +2941,8 @@ PermissionMixin
 ~~~~~~~~~~~~~~~
 PermissionsMixin 为 user model 提供 Group & Permission 即权限相关数据列
 和功能.
+
+它规定 superuser 有一切权限而无需明确赋予.
 
 - fields.
 
@@ -2972,6 +2980,13 @@ AbstractUser 实际上完整地实现了 django 所使用的默认的 user model
 基于 AbstractUser 的 user model 有三种用户: 普通用户, 管理员 (is_staff),
 超级管理员 (is_superuser). 两种状态: 正常用户和禁用用户 (is_active).
 
+若一个用户不再使用, 应使用 ``is_active`` flag 来禁用用户, 而不是删除. 这样,
+与用户相关的各种 FK, M2M 等关系不会失效, 或者被级联删除, 这在历史记录类型的
+表方面尤其如此.
+
+auth backend 应当检查用户是否被禁用. 对于 ModelBackend & RemoteUserBackend
+都是有检查的.
+
 - fields.
 
   * username.
@@ -2990,7 +3005,7 @@ AbstractUser 实际上完整地实现了 django 所使用的默认的 user model
 
 - methods.
 
-  * ``email_user()``.
+  * ``email_user()``. 为啥有这么个奇葩的方法放在这里?
 
 User
 ~~~~
@@ -3010,6 +3025,8 @@ User 只是将抽象的 AbstractUser 具体化成实际模型所建立的 placeh
 
 AnonymousUser
 ~~~~~~~~~~~~~
+AnonymousUser implements basic interface of AbstractUser.
+
 ``AnonymousUser`` 虽然不具备很多 ``User`` 的属性和方法, 但是可以进行
 认证检查和权限检查. 因为很多时候网站是允许匿名用户的.
 
@@ -3160,6 +3177,16 @@ Permission
   使用. 若要 per-object permission 机制, 需要自己实现, 或者使用比如
   django-guardian.
 
+- ``Permission`` model.
+
+  fields.
+
+  * name.
+
+  * content_type.
+
+  * codename.
+
 Group
 ~~~~~
 
@@ -3172,6 +3199,12 @@ builtin Group model 并不能在一切需要组的情况下使用, 这个组概�
 
 那样的组还是要单独写 (即 Group class 定义 resources relation) 或者使用
 django-guardian.
+
+- ``Group`` model.
+
+  * name.
+
+  * permissions.
 
 Authentication
 --------------
@@ -3442,7 +3475,8 @@ authentication forms
 
 若不想使用 auth views, 可单独使用 auth forms.
 
-* ``AuthenticationForm``
+* ``AuthenticationForm``.
+  注意它会拒绝 inactive user.
 
 * ``PasswordChangeForm``
 
@@ -3466,6 +3500,35 @@ urls
 - ``auth.urls`` 提供了完整的 auth urls 和 view 实现. 这些 url 是没有
   namespace 的. 在使用时可以直接放在 url root path 上, 或者 ``include()``
   中设置 namespace.
+
+authentication signals
+~~~~~~~~~~~~~~~~~~~~~~
+
+- ``user_logged_in``
+
+  args.
+
+  * sender.
+
+  kwargs.
+
+  * request.
+
+  * user.
+
+- ``user_logged_out``, params ditto.
+
+- ``user_login_failed``.
+
+  args.
+
+  * sender.
+
+  kwargs.
+
+  * credentials.
+
+  * request.
 
 authorization and authentication backends
 -----------------------------------------
@@ -3497,25 +3560,45 @@ authorization and authentication backends
   ``AllowAllUsersModelBackend`` 和 ``AllowAllUsersRemoteUserBackend``
   允许 inactive user 认证.
 
-API
-~~~
-
-- ``.get_user(<pk>)`` return user object.
-
-- ``.authenticate(...)`` return user object or None.
-
-- ``.get_group_permissions()``
-
-- ``.get_all_permissions()``
-
-- ``.has_perm(...)``
-
-- ``.has_module_perms()``
-
 ModelBackend
 ~~~~~~~~~~~~
+默认的 auth backend. 通过 USERNAME_FIELD/password 进行认证.
+
 ModelBackend 会将取到的用户权限 cache 在 user instance 上. 对于组权限和用户权限
 分别是 ``_group_perm_cache`` & ``_user_perm_cache``.
+
+Inactive users are rejected.
+
+API.
+
+* 从这个 backend 中获取一个 user.
+
+  - ``.get_user(<pk>)``
+
+* 认证.
+
+  - ``.authenticate(...)`` return user object or None.
+
+  - ``.user_can_authenticate()``
+
+* 权限.
+
+  - ``.get_user_permissions()``
+
+  - ``.get_group_permissions()``
+
+  - ``.get_all_permissions()``
+
+  - ``.has_perm(...)``
+
+  - ``.has_module_perms()``
+
+AllowAllUsersModelBackend
+~~~~~~~~~~~~~~~~~~~~~~~~~
+允许 inactive user 认证. 但仍然没有任何权限.
+
+RemoteUserBackend
+~~~~~~~~~~~~~~~~~
 
 middlewares
 -----------
