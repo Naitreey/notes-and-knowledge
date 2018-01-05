@@ -3231,9 +3231,18 @@ authenticate & login/logout
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 - authentication.
+
   ``authenticate()`` 提供认证检验. 若认证成功返回 User object, 否则 None.
   注意它只做检验 (返回相符的 User instance), 不改变状态. 它将 credentials
   传递给 auth backends, 真正的认证过程依靠各个 auth backends 实现.
+
+  在认证时, 它依次尝试所有的 backend, 直到:
+
+  * 第一个认证成功为止;
+
+  * 或某个 raised ``PermissionDenied``;
+
+  * 或遍历结束整个 list.
 
 - login.
 
@@ -3249,6 +3258,9 @@ authenticate & login/logout
     会保留下来, 但 session key 即 session cookie 值会重新生成.
 
     最后, session 对应的用户 id, 认证使用的 backend 会保存在 session 中.
+
+    由于对于一定的 session, 校验时使用的 auth backend 是存储在 session 中的.
+    如果要更改 backends setting 以使用不同的 backend 来认证, 需要清空 session.
 
   * ``AuthenticationMiddleware`` 会根据 request 中的 session id 信息,
     匹配相应用户, 设置 ``request.user``. 从而避免每次请求都跳转至 login
@@ -3535,20 +3547,9 @@ authorization and authentication backends
 ``auth`` app 中的各种上层认证和授权操作实际上要转发给底层 backend 去操作.
 不同类型的 backend 的实现不同, 但符合相同的 api, 供上层调用.
 
-- ``AUTHENTICATION_BACKENDS`` 配置 backend list. django 按照 list 顺序进行
-  认证尝试.
-
-- 在 ``authenticate()`` 时, 依次尝试所有的 backend, 直到:
-
-  * 第一个认证成功为止;
-
-  * 或某个 raised ``PermissionDenied``;
-
-  * 或遍历结束整个 list.
-
-- auth backend 会保存在 session (``django_session`` table) 中, 从而对于一个
-  session, 只用已知的 backend. 如果要更改 backends setting 以使用不同的
-  backend 来认证, 需要清空 session.
+- ``AUTHENTICATION_BACKENDS`` 配置 backend list. 很多 auth 相关操作遍历该 list.
+  若在使用外部认证机制认证的同时, 还要使用 django 默认的认证和权限系统,
+  则在这个列表中包含某个外部认证 backend + ModelBackend 作为 fallback.
 
 - 结合使用外部的 auth backend 时, 仍然需要根据 ``AUTH_USER_MODEL`` 对每个
   用户创建系统账户. 因为从逻辑上讲, 这些 user objects 才是这个系统 (django)
@@ -3597,8 +3598,35 @@ AllowAllUsersModelBackend
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 允许 inactive user 认证. 但仍然没有任何权限.
 
+这是 ModelBackend 的子类.
+
 RemoteUserBackend
 ~~~~~~~~~~~~~~~~~
+通过外部认证机制进行自动的用户认证和创建. 这用于与 LDAP 等统一认证机制结合使用.
+需要认证的用户名通过 ``REMOTE_USER`` header 传递至 django.
+
+这是 ModelBackend 的子类. 因此包含上述的 API.
+
+inactive users are rejected.
+
+attributes.
+
+- ``create_unknown_user``. 是否自动创建 django 数据库中不存在的用户.
+
+methods.
+
+- ``authenticate()``. 实际上无需认证, 因为是外部认证. 所以这里对传入的用户直接
+  就认为是 authenticated. 若用户不存在则创建, 否则直接获取并返回.
+
+- ``clean_username()``. 在认证前, 将 REMOTE_USER clean 成所需的格式.
+
+- ``configure_user()``. 对于新创建的用户, 进行配置.
+
+AllowAllUsersRemoteUserBackend
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+允许 inactive user 认证. 但仍然没有任何权限.
+
+这是 RemoteUserBackend 的子类.
 
 middlewares
 -----------
@@ -3617,9 +3645,32 @@ AnonymousUser. 对于 AbstractBaseUser, 效果是在修改密码后会自动登�
 
 RemoteUserMiddleware
 ~~~~~~~~~~~~~~~~~~~~
+在 AuthenticationMiddleware 的基础上, 进行检查和认证.
+所以是在 ``settings.MIDDLEWARE`` 中, AuthenticationMiddleware 后面添加
+这个 middleware.
+
+经过 AuthenticationMiddleware 之后, 若用户本来是认证的, session 中保存的
+用户已经赋值给了 ``request.user``, 则这里检查用户名与 REMOTE_USER 是否
+相同. 若用户本来是未认证的, 则使用 RemoteUserBackend 认证和登录用户.
+
+注意这个 middleware 默认要求 REMOTE_USER 在每个请求中都有. 这只适用于
+HTTP Basic Auth 之类的简单认证. 若只希望在 login 等页面进行远程认证, 之后
+就通过 session, 则使用 PersistentRemoteUserMiddleware.
+
+attributes.
+
+- header. 包含 remote username 的 header.
+
+- force_logout_if_no_header. 没有 header 时, 是否 logout user.
 
 PersistentRemoteUserMiddleware
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+没有 header 时也不 logout user. 它是 RemoteUserMiddleware 的子类.
+
+Useful for setups when the external authentication via ``REMOTE_USER`` is only
+expected to happen on some "logon" URL and the rest of the application wants to
+use Django's authentication mechanism.
 
 view mixins & decorators
 ------------------------
@@ -4079,12 +4130,32 @@ django release
 plugins
 =======
 
-- reusable django packages 可以从 django packages 网站查询. 这个网站的好处是,
-  对于一个 package, 它上面有详细信息, 包含版本支持情况, 最近更新时间, 有多少
-  人在使用, 以及同类 packages 之间的比较 grid.
+reusable django packages 可以从 django packages 网站查询. 这个网站的好处是,
+对于一个 package, 它上面有详细信息, 包含版本支持情况, 最近更新时间, 有多少
+人在使用, 以及同类 packages 之间的比较 grid.
 
 django-nested-admin
 -------------------
 
 django-jsonfield
 ----------------
+
+django-auth-ldap
+----------------
+
+添加一个 LDAPBackend 即可. 不需要单独的 middleware. 所以在 LDAP 认证之后,
+登录状态与平时一样, 通过 session + AuthenticationMiddleware 维持.
+
+authentication
+~~~~~~~~~~~~~~
+authentication methods.
+
+1. connecting to the LDAP server either anonymously or with a fixed account and
+   searching for the distinguished name of the authenticating user. Then we can
+   attempt to bind again with the user’s password.
+
+2. derive the user’s DN from his username and attempt to bind as the user
+   directly.
+
+user
+~~~~
