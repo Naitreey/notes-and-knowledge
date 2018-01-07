@@ -1476,7 +1476,7 @@ settings
   localhost, 127.0.0.1, ::1.
 
   当作为 nginx 的上游服务器时, django 部分本应局限在本地, 并不依赖于服务器 IP.
-  此时 ``ALLOWED_HOSTS`` 可以只设置为本地 IP, 将 Host header 的访问安全性限制在 
+  此时 ``ALLOWED_HOSTS`` 可以只设置为本地 IP, 将 Host header 的访问安全性限制在
   nginx 层解决, 然后 nginx 去重写 HTTP_Host 为本地.
 
   若 HTTP_HOST 不在 ALLOWED_HOSTS 中, raise SuspiciousOperation, return 400.
@@ -1633,7 +1633,7 @@ session
   - attributes
 
     * ``session_key``, session data 唯一标识, readonly.
-      
+
       对于 db-based session, 这是存储在 session cookie 中的值,
       即唯一传递至客户端的 session 信息.
 
@@ -3248,7 +3248,7 @@ authenticate & login/logout
 
   * ``login()`` 在 ``authenticate()`` 的基础上, 改变认证状态, 并将认证相关信息
     保存在 session 中.
-    
+
     未 login 时, ``request.user`` 是 ``AnonymousUser``, login 后成为 user
     instance. 两者的 ``is_authenticated`` attribute 的值分别是 False/True,
     可用于判断是否登录了.
@@ -3414,7 +3414,7 @@ auth views 不提供默认的 templates, 需要自己写模板.
   * 发起重置: 用户输入注册邮箱, 确认重置密码, 生成一次性密码重置链接,
     发送至用户邮箱 (若邮箱不存在, 不会报错, 但也不会发送邮件, 这样避免泄露
     注册情况).
-    
+
     Users flagged with an unusable password aren’t allowed to request a
     password reset to prevent misuse when using an external authentication
     source like LDAP.
@@ -3572,9 +3572,11 @@ Inactive users are rejected.
 
 API.
 
-* 从这个 backend 中获取一个 user.
+* 获取用户实体.
 
   - ``.get_user(<pk>)``
+    该操作由 ``auth.get_user()`` 调用. 后者根据 session 中存储的 user id 以及
+    auth backend 调用正确的 ``.get_user()`` method. 获取用户实体.
 
 * 认证.
 
@@ -3635,10 +3637,12 @@ AuthenticationMiddleware
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 根据 request 中 cookie 保存的 session 信息进行自动的用户识别和认证, 避免每次访问
-都要登录. 从 session 中获取到 user id 之后, 还会校验存储的 session auth hash
-与从 user instance 中计算得到的是否一致. 若不一致, 则 flush session, 设置
-AnonymousUser. 对于 AbstractBaseUser, 效果是在修改密码后会自动登出用户, 要求
-重新登录.
+都要登录.
+
+调用 ``auth.get_user()`` 操作, 后者从 session 中获取到 user id 之后, 还会校验
+存储的 session auth hash 与从 user instance 中计算得到的是否一致. 若不一致,
+则 flush session, 设置 AnonymousUser. 对于 AbstractBaseUser, 效果是在修改密码
+后会自动登出用户, 要求 重新登录.
 
 若认证成功返回 user instance, 否则返回 AnonymousUser.
 无论认证的结果是什么用户, 都保存在 ``request.user`` 上.
@@ -3680,12 +3684,12 @@ decorators
 ~~~~~~~~~~
 
 - ``login_required``.
-  
+
   * ``redirect_field_name`` 默认是 next, 为了让登录后再次跳转至 next 的 url,
     相应的 login view 中需要使用 next 值再次跳转.
 
   * ``login_url``.
- 
+
 - ``permission_required``, 检查用户是否有权限.
 
   * ``perm``. 单个的或 a list of permissions.
@@ -3743,7 +3747,7 @@ django.contrib.auth.context_processors.auth
 - ``user``, 当前用户.
 
 - ``perms``, 当前用户的权限.
-  
+
   * ``perms.<app_label>`` 相当于 ``User.has_module_perms(<app_label>)``.
 
   * ``perms.<app_label>.<perm>`` 相当于 ``User.has_perm(<app_label>.<perm>)``
@@ -4146,16 +4150,66 @@ django-auth-ldap
 添加一个 LDAPBackend 即可. 不需要单独的 middleware. 所以在 LDAP 认证之后,
 登录状态与平时一样, 通过 session + AuthenticationMiddleware 维持.
 
+
+
 authentication
 ~~~~~~~~~~~~~~
 authentication methods.
 
-1. connecting to the LDAP server either anonymously or with a fixed account and
+1. Search/bind.
+   Connecting to the LDAP server either anonymously or with a fixed account and
    searching for the distinguished name of the authenticating user. Then we can
    attempt to bind again with the user’s password.
 
-2. derive the user’s DN from his username and attempt to bind as the user
+2. Direct bind.
+   Derive the user’s DN from his username and attempt to bind as the user
    directly.
 
 user
 ~~~~
+``LDAPBackend.authenticate()`` 在认证成功后会建立对应的 django 用户. 然后,
+
+- 根据配置的 DN entry attributes 更新 user model fields.
+
+- 执行 ``populate_user`` signal handlers, 进行任意的自定义修改.
+
+- 根据 ldap 里组的情况, 设置用户和组的 M2M 关系.
+
+对应的 django user 会设置 unusable password.
+
+settings
+~~~~~~~~
+- config prefix. 默认为 ``AUTH_LDAP_``. LDAPBackend subclass can override this.
+  When several LDAP backend co-exist and operate independently, each of them
+  may need a different prefix.
+
+- LDAP server URI: ``AUTH_LDAP_SERVER_URI``.
+
+- LDAP 使用 StartTLS extension 做加密连接. ``AUTH_LDAP_START_TLS``.
+
+- 访问 ldap 使用的 Distinguished Name & password.
+  ``AUTH_LDAP_BIND_DN``, ``AUTH_LDAP_BIND_PASSWORD``.
+
+  默认为空, 为 anonymous bind.
+
+  无论使用 search/bind 或 direct bind 进行用户认证, 这两个选项都是需要的. 因为
+  访问 ldap 可进行的操作不仅仅是认证, 这里设置的 DN 是用于任何 ldap 操作的 DN.
+
+- 用户认证方式.
+
+  * 对于 search/bind, 需要设置对认证用户的搜索范围和 pattern 等信息.
+    ``AUTH_LDAP_USER_SEARCH``.
+
+  * 对于 direct bind, 需要设置要认证的用户 DN 的模板.
+    ``AUTH_LDAP_USER_DN_TEMPLATE``.
+
+- 是否允许待认证用户有空密码.
+  ``AUTH_LDAP_PERMIT_EMPTY_PASSWORD``.
+
+- 是否 bind as authenticating user, 这样避免在 connecting user & authenticating
+  user 之间来回切换, 即反复 bind 不同用户.
+  ``AUTH_LDAP_BIND_AS_AUTHENTICATING_USER``.
+  
+  the LDAP connection would be bound as the authenticating user during login
+  requests and as the default credentials during other requests, so you might
+  see inconsistent LDAP attributes depending on the nature of the Django view.
