@@ -2882,9 +2882,10 @@ AbstractBaseUser
 
   * ``USERNAME_FIELD``, the name of field used as identifier, must be unique.
 
-  * ``EMAIL_FIELD``
+  * ``EMAIL_FIELD``, used by get_email_field_name().
 
-  * ``REQUIRED_FIELDS``, prompted for when creating superuser.
+  * ``REQUIRED_FIELDS``, all required fields on your user model, except for
+    USERNAME_FIELD and password. Will be prompted for when creating superuser.
 
 - fields.
 
@@ -2895,9 +2896,9 @@ AbstractBaseUser
 
 - attributes.
 
-  * is_anonymous.
+  * is_anonymous. always False.
 
-  * is_authenticated.
+  * is_authenticated. always True.
 
 - methods.
 
@@ -2906,11 +2907,11 @@ AbstractBaseUser
   * ``get_username()``, 这个方法的意义在于它获取 USERNAME_FIELD 的值, 因此
     对 swapped user model 是通用的.
 
+  * ``get_email_field_name()``, ditto for EMAIL_FIELD.
+
   * ``get_full_name()``
 
   * ``get_short_name()``
-
-  * ``get_email_field_name()``
 
   校验.
 
@@ -3041,10 +3042,13 @@ AnonymousUser implements basic interface of AbstractUser.
 
 - proxy model to auth.User: purely behavioral extension, use proxy model.
 
-- one-to-one relation to auth.User:
+- one-to-one relation to user model:
   store additional information (profile-like infos) related to a user,
-  but not auth-related, use new model with ``OneToOneField`` to ``User``.
+  but not auth-related, create new model with ``OneToOneField`` to user model.
+
   为了在用户创建、删除等操作时两表同步, 需要使用 signal.
+  在 admin site 中使用 InlineModelAdmin 同时编辑 user model 和 profile model
+  信息.
 
 - custom user model:
   default User model just does not fit your need, create custom user
@@ -3111,12 +3115,31 @@ AnonymousUser implements basic interface of AbstractUser.
 
 - 由于 ``AUTH_USER_MODEL`` 不一定是 ``django.contrib.auth.models.User``,
   因此在某个 app 中使用 user model 时, 不能直接 import User 类, 而是要
-  根据具体场景使用 API ``get_user_model()`` 或者 ``settings.AUTH_USER_MODEL``.
+  在 runtime 使用 ``get_user_model()`` 或者 import-time 使用
+  ``settings.AUTH_USER_MODEL``. 例如,
 
-- 用户相关的信息的存储方式. 若这些信息是 app-specific 的, 而不是用户本身
-  的属性或者通用的信息, 则应该存在 app models 中, 添加对 user model 的
-  one-to-one relation, 这样是解耦合的.
-  若是属于用户本身, 甚至是用户认证相关的属性, 则应该放在 user model 中.
+  * 需要动态获取 user model 时, 一般使用 ``get_user_model()``.
+
+  * model 定义中建立 user model 关系时, 使用 lazy binding, 即 AUTH_USER_MODEL.
+
+  * 在 connect handler to signal 时, 若需要 filter user model, 使用 AUTH_USER_MODEL.
+
+  ``get_user_model()`` 也可以在 import-time 使用.
+
+- 用户相关的信息的存储位置.
+
+  * 若这些信息是 app-specific 的, 而不是用户本身的属性、通用的信息或认证和权限
+  相关的信息, 则应该存在 app models 中, 添加对 user model 的 one-to-one
+  relation, 这样是解耦合的.
+
+  理由: 1. 当多个 app 需要添加相似的 user model 关系, 若直接与 user model 建立
+  关系, 则可能出现冲突, 因此降低了 app 的重用价值. 若与 app 自己的 user profile
+  model 建立关系, 在由它统一与 user model建立关系, 则大大降低了冲突的可能.
+  2. 假如需要途中替换 user model, 若统一通过 profile model 间接建立关联, 则
+  每个 app 只需更新 profile model 与 user model 的关联; 若各 model 直接与 user
+  model 关联, 则需要更新所有关联.
+
+  * 若是属于用户本身, 甚至是用户认证相关的属性, 才应该放在 user model 中.
 
   然而这涉及到在创建 user model instance 时需要创建 one-to-one relation
   model instance. 尤其是调用 auth app 提供的各种 create_user, create_superuser
@@ -3172,10 +3195,13 @@ Permission
   重载这个用户. 若不是在一个请求中, 一般没事, 因每次 request object 都会
   初始化 User object (lazily).
 
-- django 自身提供了 per-model permission 机制. 对于 per-object 权限, 在
-  auth module 提供的 api 中已经提供 placeholder parameter ``obj``, 但没有
-  使用. 若要 per-object permission 机制, 需要自己实现, 或者使用比如
-  django-guardian.
+- object-level permission.
+  django 自身提供了 per-model permission 机制. 对于 per-object 权限, 在
+  auth module 提供的 api 中已经提供 placeholder parameter ``obj``, 但默认的
+  ModelBackend 没有使用. 若要 per-object permission 机制, 需要自己实现, 或者
+  使用比如 django-guardian.
+
+- 自定义权限. 通过 ``Model.Meta.permissions`` 设置.
 
 - ``Permission`` model.
 
@@ -3561,6 +3587,32 @@ authorization and authentication backends
   ``AllowAllUsersModelBackend`` 和 ``AllowAllUsersRemoteUserBackend``
   允许 inactive user 认证.
 
+- General interface of auth backend.
+
+  Required:
+
+  * ``get_user()``, takes a user_id – which could be a username, database ID or
+    whatever, but has to be the primary key of your user object – and returns a
+    user object.
+
+  * ``authenticate()``, takes a request argument and credentials as keyword
+    arguments, return a user object that matches those credentials if the
+    credentials are valid. If they’re not valid, it should return None.
+
+  Optional: 权限类方法. 在 AbstractUser 上调用这些方法时, 会 delegate 至各个
+  定义了这些方法的 backend 去执行. 即遍历 AUTHENTICATION_BACKENDS 检查是否定义了
+  所需的方法.
+
+  各个 backend 给出的权限的并集是用户的相应部分权限.
+
+  * ``get_group_permissions()``
+
+  * ``get_all_permissions()``
+    
+  * ``has_perm()``
+
+  * ``has_module_perms()``
+
 ModelBackend
 ~~~~~~~~~~~~
 默认的 auth backend. 通过 USERNAME_FIELD/password 进行认证.
@@ -3595,6 +3647,9 @@ API.
   - ``.has_perm(...)``
 
   - ``.has_module_perms()``
+
+  没有实现 object-level permission, 即当传入 ``obj`` instance 时, 总是返回
+  空权限集 ``set()`` 或者 False.
 
 AllowAllUsersModelBackend
 ~~~~~~~~~~~~~~~~~~~~~~~~~
