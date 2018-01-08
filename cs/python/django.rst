@@ -2850,12 +2850,24 @@ user model
 
 managers
 ~~~~~~~~
+If your user model defines ``username``, ``email``, ``is_staff``,
+``is_active``, ``is_superuser``, ``last_login``, and ``date_joined`` fields the
+same as Django’s default user, you can just install Django’s UserManager;
+however, if your user model defines different fields, you’ll need to define a
+custom manager that extends BaseUserManager provding two API methods:
+
+- ``create_user()``
+
+- ``create_superuser()``
+
+managers.
 
 - ``BaseUserManager``
 
   * ``normalize_email(...)``
 
-  * ``get_by_natural_key(...)``
+  * ``get_by_natural_key(...)``, Retrieves a user instance using the contents
+    of the field nominated by USERNAME_FIELD.
 
   * ``make_random_password(...)``
 
@@ -2926,7 +2938,8 @@ AbstractBaseUser
 
   * ``set_password(...)``
 
-  * ``check_password(...)``
+  * ``check_password(...)``, 校验密码. 若发现需要更新密码, 则会自动更新.
+    例如因为 hash algorithm 有变化或者它默认的 iteration 有变化.
 
   * ``set_unusable_password()``.
     当使用外部认证机制时, 禁用普通密码. 此时 ``check_password()`` will always
@@ -2936,18 +2949,21 @@ AbstractBaseUser
 
   session.
 
-  * ``get_session_auth_hash()``
+  * ``get_session_auth_hash()``, Used for Session invalidation on password
+    change.
 
 PermissionMixin
 ~~~~~~~~~~~~~~~
 PermissionsMixin 为 user model 提供 Group & Permission 即权限相关数据列
-和功能.
+和功能. 便于 custom user model 使用, giving you all the methods and database
+fields necessary to support Django’s permission model.
 
 它规定 superuser 有一切权限而无需明确赋予.
 
 - fields.
 
-  * is_superuser.
+  * is_superuser. Superuser has all permissions without needing to be
+    assigned explicitly.
 
 - relations.
 
@@ -2998,7 +3014,7 @@ auth backend 应当检查用户是否被禁用. 对于 ModelBackend & RemoteUser
 
   * email.
 
-  * is_staff.
+  * is_staff. 对于 admin site 有意义.
 
   * is_active.
 
@@ -3835,6 +3851,92 @@ django.contrib.auth.tokens.PasswordResetTokenGenerator
 - settings.SECRET_KEY.
 
 - settings.PASSWORD_RESET_TIMEOUT_DAYS.
+
+password management
+-------------------
+
+加密后的密码存储格式: ``<algorithm>$<iterations>$<salt>$<hash>``
+
+默认的算法: PBKDF2 with SHA256 hash.
+Recommended by NIST, sufficient for most uses.
+
+password hashing
+~~~~~~~~~~~~~~~~
+
+- ``PASSWORD_HASHERS``. a list of supported hashing algorithms.
+  第一项用于加密密码. 其他所有项 (包含第一项) 都可用于检验密码.
+
+- PBKDF2, Argon2, Bcrypt, SHA1, MD5, Crypt.
+
+- iterations. subclass hasher class and override ``iterations`` attribute.
+
+A set of functions to create and validate hashed password. Can be used
+independently from the User model.
+
+- ``check_password()``
+
+- ``make_password()``
+
+- ``is_password_usable()``
+
+password upgrading
+~~~~~~~~~~~~~~~~~~
+使用 django 默认的认证机制 ModelBackend 时, 在用户在登录认证时, 若存储的密码的
+hash 算法、iterations 等参数与 PASSWORD_HASHERS 配置的不同时,
+``user.check_password()`` 会根据当前配置自动更新密码.
+
+This means that old installs of Django will get automatically more secure as
+users log in, and it also means that you can switch to new (and better) storage
+algorithms as they get invented.
+
+Django can only upgrade passwords that use algorithms mentioned in
+PASSWORD_HASHERS, so as you upgrade to new systems you should make sure never
+to remove entries from this list.
+
+password strength validation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+By default, validators are used in the forms to reset or change passwords and
+in the ``createsuperuser`` and ``changepassword`` management commands. Validators
+aren’t applied at the model level.
+
+配置.
+
+- ``AUTH_PASSWORD_VALIDATORS``. a list of validator config dicts.
+  Each of which contains a ``NAME`` and optionally ``OPTIONS`` dict.
+  ``NAME`` is import path of validator class; ``OPTIONS`` is kwargs
+  to initialize validator instance.
+
+builtin strength validators.
+
+- ``UserAttributeSimilarityValidator``
+
+- ``MinimumLengthValidator``
+
+- ``CommonPasswordValidator``
+
+- ``NumericPasswordValidator``
+
+A set of functions to validate password.
+
+- ``validate_password()``
+
+- ``password_changed()``. Informs all validators that the password has been
+  changed. This can be used by validators such as one that prevents password
+  reuse. This should be called once the password has been successfully changed.
+
+- ``password_validators_help_texts()``. 用于提供全部密码要求.
+
+- ``password_validators_help_text_html()``. ditto in html.
+
+- ``get_password_validators()``
+
+Password validator API.
+
+- ``validate()``
+
+- ``get_help_text()``
+
+- ``password_changed()``. optional.
 
 middleware
 ==========
