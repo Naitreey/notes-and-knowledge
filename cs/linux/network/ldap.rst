@@ -1,4 +1,6 @@
-- implementation: OpenLDAP.
+OpenLDAP
+========
+- OpenLDAP 是 LDAP protocol 的一个实现.
 
 - OpenLDAP 提供了
 
@@ -13,3 +15,8 @@
 
 - 基于 libldap 的 Python bindings 为 python-ldap.
   基于 python-ldap 的 django 认证 backend 为 django-auth-ldap.
+
+Active Directory
+================
+Active Directory 是 windows 中的一个 LDAP 实现. 它基于 LDAP 但提供了更多的功能
+和扩展.

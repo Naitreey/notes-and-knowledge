@@ -4340,13 +4340,13 @@ settings
   When several LDAP backend co-exist and operate independently, each of them
   may need a different prefix.
 
-- LDAP server URI: ``AUTH_LDAP_SERVER_URI``.
+- ``AUTH_LDAP_SERVER_URI``
 
-- LDAP 使用 StartTLS extension 做加密连接. ``AUTH_LDAP_START_TLS``.
+- ``AUTH_LDAP_START_TLS``. LDAP 使用 StartTLS extension 做加密连接. 
 
-- 访问 ldap 使用的 Distinguished Name & password.
-  ``AUTH_LDAP_BIND_DN``, ``AUTH_LDAP_BIND_PASSWORD``.
-
+- ``AUTH_LDAP_BIND_DN``, ``AUTH_LDAP_BIND_PASSWORD``.
+  访问 ldap 使用的 Distinguished Name & password.
+  
   默认为空, 为 anonymous bind.
 
   无论使用 search/bind 或 direct bind 进行用户认证, 这两个选项都是需要的. 因为
@@ -4354,19 +4354,22 @@ settings
 
 - 用户认证方式.
 
-  * 对于 search/bind, 需要设置对认证用户的搜索范围和 pattern 等信息.
-    ``AUTH_LDAP_USER_SEARCH``.
+  * ``AUTH_LDAP_USER_SEARCH``.
+    对于 search/bind, 需要设置对认证用户的搜索范围和 pattern 等信息.
+    
+  * ``AUTH_LDAP_USER_DN_TEMPLATE``.
+    对于 direct bind, 需要设置要认证的用户 DN 的模板.
 
-  * 对于 direct bind, 需要设置要认证的用户 DN 的模板.
-    ``AUTH_LDAP_USER_DN_TEMPLATE``.
+- ``AUTH_LDAP_PERMIT_EMPTY_PASSWORD``.
+  是否允许待认证用户有空密码.
 
-- 是否允许待认证用户有空密码.
-  ``AUTH_LDAP_PERMIT_EMPTY_PASSWORD``.
-
-- 是否 bind as authenticating user, 这样避免在 connecting user & authenticating
+- ``AUTH_LDAP_BIND_AS_AUTHENTICATING_USER``.
+  是否 bind as authenticating user, 这样避免在 connecting user & authenticating
   user 之间来回切换, 即反复 bind 不同用户.
-  ``AUTH_LDAP_BIND_AS_AUTHENTICATING_USER``.
   
   the LDAP connection would be bound as the authenticating user during login
   requests and as the default credentials during other requests, so you might
   see inconsistent LDAP attributes depending on the nature of the Django view.
+
+- ``AUTH_LDAP_USER_ATTR_MAP``.
+  LDAP attribute 至 user model fields 的映射.

@@ -82,6 +82,20 @@ Search for an entry.
 
 Check a attributes of DN in request with its stored values.
 
+filter syntax
+~~~~~~~~~~~~~
+syntax::
+    (<operator>[<filter>]+)
+    <filter>=(<attribute><operator><value>)
+
+operators::
+    =, ~=, <=, >=
+    &, |, !
+
+wildcard: ``*``
+
+Special characters can be escaped by ``\``.
+
 Modify
 ------
 Make changes to existing entries.
@@ -110,3 +124,4 @@ URI scheme
 
 schema
 ======
+
