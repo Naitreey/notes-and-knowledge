@@ -62,7 +62,7 @@ General & Concepts
 
   * 快速、轻量化的部署, 让改动不再是 heavy-lifting, 不会每次修改都花费
     很多时间和资源重新部署.
-    
+
     这个好处同样也适用于测试阶段. 即测试时不需要可能十分繁琐的手动安装,
     一步完成部署, 可以直接开始测试.
 
@@ -139,16 +139,34 @@ image
   若要把 image 上传到某个 registry, 或从某个 registry 下载镜像, 必须指定相应
   的 tag.
 
+  tag 应该尽量详细, 包含 version, release stage, purpose (test/production) 等.
+
+
 - Each instruction in a Dockerfile creates a layer in the image. When you
   change the Dockerfile and rebuild the image, only those layers which have
-  changed are rebuilt. 
+  changed are rebuilt.
+
+- How to keep image small.
+
+  * start with appropriate base image.
+
+  * use multistage builds. Your final image shouldn't include dependencies
+    needed for building your app, just for running.
+
+  * 若不使用 multistage build, 尽量减少 dockerfile 中镜像的层数, 即减少
+    ``RUN`` command 的数量.
+
+  * 若多个 app 镜像实际上基于一些共同的基础环境, 则制作一个能够最大程度通用
+    和减少重复的 base image. 然后各个镜像再基于它来制作. 除了显而易见的好处
+    之外, 这样做还可以减少内存用量和提高加载速度. 因相同的 readonly layers
+    docker 只加载一份至内存.
 
 container
 =========
 
 - container. container 是 image 的实例. 也就是在 image 提供的环境中真正
   运行所需进程.
-  
+
   一个容器是由它基于的 image 以及容器创建时指定的配置选项共同决定的. 镜像
   提供各种运行环境, 包括文件, 依赖, 环境变量等. 而配置选项指定非常多的
   运行类参数, 包括运行的命令行, 网络, 存储, 等等.
@@ -182,7 +200,7 @@ Docker Engine is a client-server application.
 components:
 
 - server daemon - dockerd.
-  
+
 - CLI client - docker command.
 
 - REST API to interact with daemon, either from docker CLI or by using
@@ -206,7 +224,7 @@ dockerd
 
 - docker 命令的执行设计中, 命令和文件一同传递给 daemon. 这种设计保证了
   跨机器协作. 通过几个简单的环境变量修改, 一个 docker (CLI) client 可以
-  切换控制本地或远端等多个 daemon. 
+  切换控制本地或远端等多个 daemon.
 
 CLI
 ===
@@ -373,9 +391,9 @@ registry
 
   * registry. A registry is a collection of repositories grouped by
     usernames/scopes.
-  
+
   * repository. a repository is a collection of version-controlled (by tags) images.
-  
+
   * image name. 一个 repository 中的某个 image 通过 repository name + version tag
     来唯一识别.
 
@@ -502,7 +520,7 @@ overlay network 之所以可能, 不是仅仅依靠标准的网络原理和配�
 machine
 =======
 Docker Machine is a tool that lets you install Docker Engine on virtual hosts,
-and manage the hosts with docker-machine commands. 
+and manage the hosts with docker-machine commands.
 
 docker-machine 是用于管理专门用于 docker 运行的虚拟机的. 只有需要使用虚拟机来
 运行 docker 时, 并且是专门用于运行 docker 时, 才需要使用 docker-machine.
