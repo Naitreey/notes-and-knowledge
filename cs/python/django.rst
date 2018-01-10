@@ -602,6 +602,11 @@ file upload
 template
 ========
 
+general
+-------
+
+template backend
+~~~~~~~~~~~~~~~~
 * django 支持同时配置多个模板 backend engine. 包含 django 自己的模板语言和 jinja2.
 
 * ``settings.TEMPLATES``, 对每种 template engine, 支持以下参数:
@@ -689,84 +694,87 @@ template
 
   体会 django 是如何将用变量填充模板这件事模块化成一个个环节和组件对象的.
 
-* context processors.
+context processors
+~~~~~~~~~~~~~~~~~~
 
-  - callable object, 输入 HttpRequest, 输出需要添加进 template context 的
-    dict 值. 它的目的是将通用的 context variables 的 添加过程通用化,
-    避免在每个 view 里面都写一遍.  这发生在 ``Template.render()`` method 中,
-    真正 render 操作之前. 注意这意味着 context processor 添加的量会覆盖从
-    view 传入的量.
+- callable object, 输入 HttpRequest, 输出需要添加进 template context 的
+  dict 值. 它的目的是将通用的 context variables 的 添加过程通用化,
+  避免在每个 view 里面都写一遍.  这发生在 ``Template.render()`` method 中,
+  真正 render 操作之前. 注意这意味着 context processor 添加的量会覆盖从
+  view 传入的量.
 
-  - context processor 对于不同 engine 基本上是通用的.
+- context processor 对于不同 engine 基本上是通用的.
 
-  - 初始化 engine 时输入的 processor list 按顺序应用, 这意味着越靠后的输出
-    结果优先级越高.
+- 初始化 engine 时输入的 processor list 按顺序应用, 这意味着越靠后的输出
+  结果优先级越高.
 
-  - ``django.contrib.auth.context_processors.auth``:
-    ``user``, ``perms``
+- ``django.contrib.auth.context_processors.auth``:
+  ``user``, ``perms``
 
-  - ``django.template.context_processors.debug``:
-    ``debug``, ``sql_queries``
+- ``django.template.context_processors.debug``:
+  ``debug``, ``sql_queries``
 
-  - ``django.template.context_processors.i18n``:
-    ``LANGUAGES``, ``LANGUAGE_CODE``
+- ``django.template.context_processors.i18n``:
+  ``LANGUAGES``, ``LANGUAGE_CODE``
 
-  - ``django.template.context_processors.media``:
-    ``STATIC_URL``
+- ``django.template.context_processors.media``:
+  ``STATIC_URL``
 
-  - ``django.template.context_processors.csrf``:
-    ``csrf_token``. django template engine 一定会启用这个, 即使没设置.
+- ``django.template.context_processors.csrf``:
+  ``csrf_token``. django template engine 一定会启用这个, 即使没设置.
 
-  - ``django.template.context_processors.request``:
-    ``request``
+- ``django.template.context_processors.request``:
+  ``request``
 
-  - ``django.template.context_processors.tz``:
-    ``tz``
+- ``django.template.context_processors.tz``:
+  ``tz``
 
-  - ``django.contrib.messages.context_processors.messages``:
-    ``messages``, ``DEFAULT_MESSAGE_LEVELS``
+- ``django.contrib.messages.context_processors.messages``:
+  ``messages``, ``DEFAULT_MESSAGE_LEVELS``
 
-* context.
+template context
+~~~~~~~~~~~~~~~~
 
-  在通用 API 中是纯粹的 dict.
+- Context object 在通用 API 中是纯粹的 dict.
 
-* loaders.
+template loaders
+~~~~~~~~~~~~~~~~
 
-  - responsible for locating, loading, and returning Template objects.
+- responsible for locating, loading, and returning Template objects.
 
-  - ``django.template.loaders.base.Loader`` 是所有 loader 的基类.
+- ``django.template.loaders.base.Loader`` 是所有 loader 的基类.
 
-    提供以下 API.
+  提供以下 API.
 
-    * ``get_template()``
-      调用 ``get_template_sources()`` 和 ``get_contents()``,
-      给出对应于输入的模板名的 Template object.
+  * ``get_template()``
+    调用 ``get_template_sources()`` 和 ``get_contents()``,
+    给出对应于输入的模板名的 Template object.
 
-    子类须实现以下方法:
+  子类须实现以下方法:
 
-    * ``get_template_sources()``, 对于某个模板路径输入, 获取可能的
-      template Origin 列表.
+  * ``get_template_sources()``, 对于某个模板路径输入, 获取可能的
+    template Origin 列表.
 
-    * ``get_contents()``, 根据可能的 template Origin 获取 template 内容.
+  * ``get_contents()``, 根据可能的 template Origin 获取 template 内容.
 
-  - engine 的 ``loaders`` 参数自定义 loaders.
-    loaders 中每项可以是 loader import paths, 或者是 a tuple/list of
-    loader 路径 + loader 初始化参数.
+- engine 的 ``loaders`` 参数自定义 loaders.
+  loaders 中每项可以是 loader import paths, 或者是 a tuple/list of
+  loader 路径 + loader 初始化参数.
 
-  - ``django.template.loaders.filesystem.Loader``
-    使用 ``DIRS`` option
+- ``django.template.loaders.filesystem.Loader``
+  使用 ``DIRS`` option
 
-  - ``django.template.loaders.app_directories.Loader``
-    使用各 app 的 ``templates`` dir.
+- ``django.template.loaders.app_directories.Loader``
+  使用各 app 的 ``templates`` dir.
 
-  - ``django.template.loaders.eggs.Loader``
-    从 eggs 加载.
+- ``django.template.loaders.eggs.Loader``
+  从 eggs 加载.
 
-  - ``django.template.loaders.locmem.Loader``
+- ``django.template.loaders.locmem.Loader``
 
-  - ``django.template.loaders.cached.Loader``
-    cache 已经加载过的和没找到的 templates. 当 ``DEBUG=False`` 且 ``loaders``
-    没有设置时, 这个 loader 是自动加载的.
+- ``django.template.loaders.cached.Loader``
+  cache 已经加载过的和没找到的 templates. 当 ``DEBUG=False`` 且 ``loaders``
+  没有设置时, 这个 loader 是自动加载的.
 
 django template system & language
 ---------------------------------
@@ -827,281 +835,299 @@ django template system & language
   filter ``{{ var|filter:"sef" }}``, 注释 ``{# comment #}`` (只能单行,
   不允许 newline).
 
+* 似乎 filter, tag, variable 模板元素本质上都属于 template context? 只是通过
+  不同的方式去使用, 就有不同的结果. 它们都可以通过 context processors 在 render
+  的时候添加
+
 * 模板中 single quote 和 double quote 没有区别, 跟 python 一样.
 
-* filters.
+filters
+~~~~~~~
 
-  - ``add``
+- ``add``
 
-  - ``first``
+- ``first``
 
-  - ``last``
+- ``last``
 
-  - ``default``
+- ``default``
 
-  - ``default_if_none``
+- ``default_if_none``
 
-  - ``length``, 返回长度数值, 所以可以进行数值类型的逻辑判断.
+- ``length``, 返回长度数值, 所以可以进行数值类型的逻辑判断.
 
-  - ``length_is``
+- ``length_is``
 
-  - ``wordcount``
+- ``wordcount``
 
-  - ``filesizeformat``
+- ``filesizeformat``
 
-  - ``floatformat``
+- ``floatformat``
 
-  - ``stringformat``
+- ``stringformat``
 
-  - ``safe``
+- ``safe``
 
-  - ``safeseq``
+- ``safeseq``
 
-  - ``escape``, when auto-escaping is on, there’s no danger of the escape
-    filter double-escaping data – the escape filter does not affect
-    auto-escaped variables.
+- ``escape``, when auto-escaping is on, there’s no danger of the escape
+  filter double-escaping data – the escape filter does not affect
+  auto-escaped variables.
 
-  - ``force_escape``, applied immediately and returns a new, escaped string.
-    不管有没有已经 escaped.
+- ``force_escape``, applied immediately and returns a new, escaped string.
+  不管有没有已经 escaped.
 
-  - ``escapejs``, 不懂.
+- ``escapejs``, 不懂.
 
-  - ``capfirst``
+- ``capfirst``
 
-  - ``title``
+- ``title``
 
-  - ``upper``
+- ``upper``
 
-  - ``lower``
+- ``lower``
 
-  - ``cut``
+- ``cut``
 
-  - ``addslashes``
+- ``addslashes``
 
-  - ``striptags``
+- ``striptags``
 
-  - ``truncatechars``
+- ``truncatechars``
 
-  - ``truncatechars_html``
+- ``truncatechars_html``
 
-  - ``truncatewords``
+- ``truncatewords``
 
-  - ``truncatewords_html``
+- ``truncatewords_html``
 
-  - ``wordwrap``
+- ``wordwrap``
 
-  - ``date``
+- ``date``
 
-  - ``time``
+- ``time``
 
-  - ``timesince``
+- ``timesince``
 
-  - ``timeuntil``
+- ``timeuntil``
 
-  - ``dictsort``, 支持 ``.`` operator 选择深层 sort key, 例如 ``obj.key|attr``.
-    dictsort can also order a list of lists (or any other object implementing
-    ``__getitem__()``) by elements at specified index.
+- ``dictsort``, 支持 ``.`` operator 选择深层 sort key, 例如 ``obj.key|attr``.
+  dictsort can also order a list of lists (or any other object implementing
+  ``__getitem__()``) by elements at specified index.
 
-  - ``dictsortreversed``
+- ``dictsortreversed``
 
-  - ``divisibleby``
+- ``divisibleby``
 
-  - ``get_digit``
+- ``get_digit``
 
-  - ``iriencode``
+- ``iriencode``
 
-  - ``urlencode``
+- ``urlencode``
 
-  - ``join``
+- ``join``
 
-  - ``linebreaks`` 根据情景把 ``\n`` 转变成 ``<br/>`` 或 ``</p>``, 最终是包在
-    ``<p></p>`` 中的.
+- ``linebreaks`` 根据情景把 ``\n`` 转变成 ``<br/>`` 或 ``</p>``, 最终是包在
+  ``<p></p>`` 中的.
 
-  - ``linebreaksbr`` 单纯地把 ``\n`` 转变成 ``<br/>``.
+- ``linebreaksbr`` 单纯地把 ``\n`` 转变成 ``<br/>``.
 
-  - ``unordered_list``
+- ``unordered_list``
 
-  - ``urlize``
+- ``urlize``
 
-  - ``urlizetrunc``
+- ``urlizetrunc``
 
-  - ``make_list``
+- ``make_list``
 
-  - ``pluralize``
+- ``pluralize``
 
-  - ``random``
+- ``random``
 
-  - ``slice``
+- ``slice``
 
-  - ``slugify``
+- ``slugify``
 
-  - ``yesno``
+- ``yesno``
 
-  - ``center``
+- ``center``
 
-  - ``ljust``
+- ``ljust``
 
-  - ``rjust``
+- ``rjust``
 
-  - ``phone2numeric``
+- ``phone2numeric``
 
-  - ``pprint``
+- ``pprint``
 
-* tags.
+tags
+~~~~
 
-  - ``extends``, 必须是模板中的第一个 tag. extends 的值可以是 string
-    从而是模板路径, 或者是 Template object 从而 extends 这个模板.
+- ``extends``, 必须是模板中的第一个 tag. extends 的值可以是 string
+  从而是模板路径, 或者是 Template object 从而 extends 这个模板.
 
-    路径是基于 template loader 的 root directory 的, 即与 ``get_template()``
-    中使用的路径相同. 或者路径还可以是 ``./`` ``../`` 等明确的相对路径起始的,
-    此时是相对于本模板的路径的.
+  路径是基于 template loader 的 root directory 的, 即与 ``get_template()``
+  中使用的路径相同. 或者路径还可以是 ``./`` ``../`` 等明确的相对路径起始的,
+  此时是相对于本模板的路径的.
 
-  - ``include``, 使用当前 context 来 render 所指向的模板, 然后将结果嵌入当前位置.
-    与 extends 类似, 支持 Template object. 支持 ``with key=val key2=val2``
-    语法向模板中传入额外 context. 支持 ``only`` option, 屏蔽当前 context,
-    只传入指定的值或完全没有值.
+- ``include``, 使用当前 context 来 render 所指向的模板, 然后将结果嵌入当前位置.
+  与 extends 类似, 支持 Template object. 支持 ``with key=val key2=val2``
+  语法向模板中传入额外 context. 支持 ``only`` option, 屏蔽当前 context,
+  只传入指定的值或完全没有值.
 
-    注意被 include 的模板和当前模板的渲染是完全独立的, 除了 context 之外, 没有
-    任何相关性, 没有共享的状态. 这不是将模板嵌入, 而是将模板的渲染结果嵌入.
+  注意被 include 的模板和当前模板的渲染是完全独立的, 除了 context 之外, 没有
+  任何相关性, 没有共享的状态. 这不是将模板嵌入, 而是将模板的渲染结果嵌入.
 
-  - ``load``, 当加载 custom tag/filter library 时, 被加载的项只在当前模板中有效,
-    若要在父或子模板中使用, 需要重新加载. 支持 ``from``, 从 module 中加载指定
-    的 tag/filter. ``load fil1 tag1 from module``.
+- ``load``, 当加载 custom tag/filter library 时, 被加载的项只在当前模板中有效,
+  若要在父或子模板中使用, 需要重新加载. 支持 ``from``, 从 module 中加载指定
+  的 tag/filter. ``load fil1 tag1 from module``.
 
-  - ``block``, parent template 中定义的 blocks 越多越好. 这样增加了页面区域的
-    模块化, child template 只需覆盖或扩展需要修改的 blocks.
+- ``block``, parent template 中定义的 blocks 越多越好. 这样增加了页面区域的
+  模块化, child template 只需覆盖或扩展需要修改的 blocks.
 
-    * 对于扩展而非覆盖整个 block, 可以用 ``block.super`` tag 引用父模板中的同名
-      block 内容.
+  * 对于扩展而非覆盖整个 block, 可以用 ``block.super`` tag 引用父模板中的同名
+    block 内容.
 
-    * 使用 ``{% endblock <name> %}`` 增加可读性.
+  * 使用 ``{% endblock <name> %}`` 增加可读性.
 
-    * template blocks 表达的是模板结构的继承关系, 所有的 block 在 compile time
-      resolve 成为模板代码 (类似 cpp 和 c 的关系). 此后再也没有 block tag.
-      在 runtime, 模板代码去 render context, 生成页面.
-      因此, 不能通过某种 runtime 条件判断让 block 出现、消失或重定义.
+  * template blocks 表达的是模板结构的继承关系, 所有的 block 在 compile time
+    resolve 成为模板代码 (类似 cpp 和 c 的关系). 此后再也没有 block tag.
+    在 runtime, 模板代码去 render context, 生成页面.
+    因此, 不能通过某种 runtime 条件判断让 block 出现、消失或重定义.
 
-    * 接上, 若要根据 runtime 条件判断是否重新定义一个 block, 可以用以下方法:
-      .. code:: htmldjango
-        {% block name %}
-          {% if condition %}
-            {# redefinition/extension of parent block... #}
-          {% else %}
-            {{ block.super }}
-          {% endif %}
-        {% endblock %}
+  * 接上, 若要根据 runtime 条件判断是否重新定义一个 block, 可以用以下方法:
+    .. code:: htmldjango
+      {% block name %}
+        {% if condition %}
+          {# redefinition/extension of parent block... #}
+        {% else %}
+          {{ block.super }}
+        {% endif %}
+      {% endblock %}
 
-  - ``autoescape``, 对于已经标记为 safe 的量, autoescape 不会去操作. 例如
-    经过 ``safe``, ``escape`` filter 的量已经被标记为 safe.
+- ``autoescape``, 对于已经标记为 safe 的量, autoescape 不会去操作. 例如
+  经过 ``safe``, ``escape`` filter 的量已经被标记为 safe.
 
-  - ``comment``, block comment. opening tag 中可以包含 optional note. 这可用于
-    例如说明这段代码注释掉的原因.
+- ``comment``, block comment. opening tag 中可以包含 optional note. 这可用于
+  例如说明这段代码注释掉的原因.
 
-  - ``cycle``, 在循环过程中使用, 循环输出参数. 支持 ``as``, 将循环的当前值赋
-    给变量, 在后面使用. 支持 ``silent``, 可以单纯声明 cycle, 而不立即输出值.
-    ``{% cycle 1 2 as nums silent %}``
+- ``cycle``, 在循环过程中使用, 循环输出参数. 支持 ``as``, 将循环的当前值赋
+  给变量, 在后面使用. 支持 ``silent``, 可以单纯声明 cycle, 而不立即输出值.
+  ``{% cycle 1 2 as nums silent %}``
 
-  - ``debug``, 输出 debug 信息.
+- ``debug``, 输出 debug 信息.
 
-  - ``filter``, 将整段内容经过一个或多个 filter.
+- ``filter``, 将整段内容经过一个或多个 filter.
 
-  - ``firstof``, first True value of args. 支持 ``as``, 给变量赋值.
+- ``firstof``, first True value of args. 支持 ``as``, 给变量赋值.
 
-  - ``for``, 支持 ``reversed`` option, 反向循环.
-    支持 ``empty`` tag, 作为 fallback, 类似 for...else...
-    在 for loop tag 中, 可访问以下量:
+- ``for``, 支持 ``reversed`` option, 反向循环.
+  支持 ``empty`` tag, 作为 fallback, 类似 for...else...
+  在 for loop tag 中, 可访问以下量:
 
-    * ``forloop.counter``
+  * ``forloop.counter``
 
-    * ``forloop.counter0``
+  * ``forloop.counter0``
 
-    * ``forloop.revcounter``
+  * ``forloop.revcounter``
 
-    * ``forloop.revcounter0``
+  * ``forloop.revcounter0``
 
-    * ``forloop.first``, whether is first time
+  * ``forloop.first``, whether is first time
 
-    * ``forloop.last``, whether is last time
+  * ``forloop.last``, whether is last time
 
-    * ``forloop.parentloop``, access parent loop in nested loops.
+  * ``forloop.parentloop``, access parent loop in nested loops.
 
-  - ``if``, ``elif``, ``else``, truthy value 即可, 与 python 相同.
-    支持 python 相同的 logical operators and comparison operators.
-    注意使用 () 是 invalid.
+- ``if``, ``elif``, ``else``, truthy value 即可, 与 python 相同.
+  支持 python 相同的 logical operators and comparison operators.
+  注意使用 () 是 invalid.
 
-  - ``ifchanged``, 它里面的内容或它后面的变量改变时, 才输出. 支持 ``else`` tag,
-    即不改变时输出别的.
+- ``ifchanged``, 它里面的内容或它后面的变量改变时, 才输出. 支持 ``else`` tag,
+  即不改变时输出别的.
 
-  - ``lorem``, sample data.
+- ``lorem``, sample data.
 
-  - ``now``, now, 可以设置 format. format 可以是 settings 中的预定义量的字符串
-    形式. 支持 ``as`` 进行赋值.
+- ``now``, now, 可以设置 format. format 可以是 settings 中的预定义量的字符串
+  形式. 支持 ``as`` 进行赋值.
 
-  - ``regroup``, ``{% regroup <list-of-objs> by <key> as <var> %}``
-    生成 a list of namedtuples. 每个 namedtuple 包含 ``grouper`` 和 ``list``
-    属性. 注意原来的 list 必须要根据 ``key`` 来排序, 例如可用 ``dictsort``
-    filter 来做. ``key`` 可以是 obj 的任何 key, attr, index 等. 相当于 ``obj.key``.
+- ``regroup``, ``{% regroup <list-of-objs> by <key> as <var> %}``
+  生成 a list of namedtuples. 每个 namedtuple 包含 ``grouper`` 和 ``list``
+  属性. 注意原来的 list 必须要根据 ``key`` 来排序, 例如可用 ``dictsort``
+  filter 来做. ``key`` 可以是 obj 的任何 key, attr, index 等. 相当于 ``obj.key``.
 
-  - ``resetcycle``
+- ``resetcycle``
 
-  - ``spaceless``, 删除里面 tag 之间的 spaces.
+- ``spaceless``, 删除里面 tag 之间的 spaces.
 
-  - ``url``, 模板里的 ``reverse()``, 参数可以是 positional 或 kwargs.
-    支持 ``as`` 进行赋值, 此时 ``url`` tag 不输出东西, 只赋值.
+- ``url``, 模板里的 ``reverse()``, 参数可以是 positional 或 kwargs.
+  支持 ``as`` 进行赋值, 此时 ``url`` tag 不输出东西, 只赋值.
 
-  - ``templatetag``, 单个 template 语法元素不能通过写在字符串里的方式 escape,
-    必须使用这个 tag 加适当参数写出, 或把整块内容放在 ``verbatim`` 里.
+- ``templatetag``, 单个 template 语法元素不能通过写在字符串里的方式 escape,
+  必须使用这个 tag 加适当参数写出, 或把整块内容放在 ``verbatim`` 里.
 
-  - ``verbatim``, verbatim 输出内容.
+- ``verbatim``, verbatim 输出内容.
 
-  - ``widthratio``, 不懂.
+- ``widthratio``, 不懂.
 
-  - ``with``, 用于设置临时值, 或 cache 运算结果. 可以用 kwarg 形式设置多个.
+- ``with``, 用于设置临时值, 或 cache 运算结果. 可以用 kwarg 形式设置多个.
 
-  - compile-time & runtime tags
+- compile-time & runtime tags
 
-    * compile-time: ``extends``, ``block``
+  * compile-time: ``extends``, ``block``
 
-* template inheritance.
+template inheritance
+~~~~~~~~~~~~~~~~~~~~
 
-  Template inheritance allows you to build a base “skeleton” template that
-  contains all the common elements of your site and defines ``block``'s that
-  child templates can override.
+Template inheritance allows you to build a base “skeleton” template that
+contains all the common elements of your site and defines ``block``'s that
+child templates can override.
 
-  Content within a ``{% block %}`` tag in a parent template is always used as
-  a fallback.
+Content within a ``{% block %}`` tag in a parent template is always used as
+a fallback.
 
-  - common design.
+- common design.
 
-    * ``base.html`` 包含网站基本框架结构、样式风格等.
+  * ``base.html`` 包含网站基本框架结构、样式风格等.
 
-    * ``base_<section>.html`` 包含各自功能部分的各异的基本框架结构、样式风格.
+  * ``base_<section>.html`` 包含各自功能部分的各异的基本框架结构、样式风格.
 
-    * 每个功能部分的具体页面去实现所需功能.
+  * 每个功能部分的具体页面去实现所需功能.
 
-* escaping. django template 默认 escape output of every variable tag.
-  disable auto escaping: 在变量级别上, 使用 ``safe`` filter; 在 block 级别上,
-  使用 ``autoescape`` tag 来开启或关闭 auto escaping. ``autoescape`` tag
-  的影响包含在 child template 中的同名 block.
+escaping
+~~~~~~~~
+django template 默认 escape output of every variable tag.
+template 中的 string literal 没有被 html escape, 而是原样包含在 html 中.
 
-  template 中的 string literal 没有被 html escape, 而是原样包含在 html 中.
+disable auto escaping:
 
-* django template 的 context objects.
+- 在变量级别上, 使用 ``safe`` filter.
+  
+- 在 block 级别上, 使用 ``autoescape`` tag 来开启或关闭 auto escaping.
+  ``autoescape`` tag 的影响包含在 child template 中的同名 block.
 
-  - ``Context`` 是一个 stack, 包含多层 context dicts (dict or ``ContextDict``
-    instance).
+- 在代码中, 使用 ``make_safe()``
 
-    * ``Context`` wrap context dict. 具有大量 dict-like interface.
+安全性问题. 默认对模板变量的 auto-escaping 有助于避免 XSS attack. 若要
+disable auto-escaping, 需小心谨慎.
 
-    * ``push()`` stack 和 ``pop()`` stack, 以及 ``update()``.
+context objects
+~~~~~~~~~~~~~~~
 
-    * ``flatten()`` 返回各层的综合结果为一个 dict. 这也用于 Context object
-      之间比较.
+- ``Context`` 是一个 stack, 包含多层 context dicts (dict or ``ContextDict``
+  instance).
 
-  - ``RequestContext`` 是 ``Context`` 的子类, 它输入多一个 HttpRequest,
-    在 render 时通过 context processor 生成额外的 context variables.
+  * ``Context`` wrap context dict. 具有大量 dict-like interface.
 
-    * 注意 RequestContext 才会调用 context processor, Context 不会.
+  * ``push()`` stack 和 ``pop()`` stack, 以及 ``update()``.
+
+  * ``flatten()`` 返回各层的综合结果为一个 dict. 这也用于 Context object
+    之间比较.
+
+- ``RequestContext`` 是 ``Context`` 的子类, 它输入多一个 HttpRequest,
+  在 render 时通过 context processor 生成额外的 context variables.
+
+  * 注意 RequestContext 才会调用 context processor, Context 不会.
 
 request and response
 ====================
@@ -1793,10 +1819,6 @@ form
 
   ``.errors`` 的 string 形式是一个 ``<ul class="errorlist">`` element,
   但在 loop over 它的时候, 每个 error 只生成纯字符串.
-
-* csrf token. ``{% csrf_token %}`` 即可添加 form 级别的 CSRF token.
-  When submitting a form via POST with CSRF protection enabled you must use
-  the ``csrf_token`` template tag as in the preceding example.
 
 * ``ModelForm`` class.
 
@@ -4221,6 +4243,31 @@ GenericForeignKey, GenericRelation 的用途.
 - 注意 GenericForeignKey 由于只是与之关联的 content_type, object_id 两个列的抽象,
   在 migration 过程中, ``apps.get_model()`` 构建的 model 不包含 GenericForeignKey,
   只能直接设置两个实际列的值.
+
+CSRF protection
+===============
+
+middlewares
+-----------
+- ``django.middleware.csrf.CsrfViewMiddleware``.
+  Should come before any view middleware that assume that CSRF attacks have
+  been dealt with.
+
+  该 middleware 的主要逻辑在 ``process_view()`` 中执行. 这样可以与各种 csrf
+  decorators 配合使用. 因为 ``process_view()`` 的输入之一就是 view callable,
+  所以可以根据 ``csrf_exempt`` 等的作用进行不同操作.
+
+decorators
+----------
+- ``csrf_protect``. 强制保护特定的 view.
+
+- ``csrf_exempt``
+
+template rendering
+------------------
+* ``{% csrf_token %}``.
+  在 form 中使用 csrf token tag 添加 form 级别的 CSRF protection.
+
 
 Pagination
 ==========
