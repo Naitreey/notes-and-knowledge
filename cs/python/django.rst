@@ -835,10 +835,6 @@ django template system & language
   filter ``{{ var|filter:"sef" }}``, 注释 ``{# comment #}`` (只能单行,
   不允许 newline).
 
-* 似乎 filter, tag, variable 模板元素本质上都属于 template context? 只是通过
-  不同的方式去使用, 就有不同的结果. 它们都可以通过 context processors 在 render
-  的时候添加
-
 * 模板中 single quote 和 double quote 没有区别, 跟 python 一样.
 
 filters
@@ -4247,6 +4243,27 @@ GenericForeignKey, GenericRelation 的用途.
 CSRF protection
 ===============
 
+原理
+----
+
+
+use CSRF token during POST
+--------------------------
+任何种类的 POST 修改服务器状态时, 都要实现 CSRF protection.
+
+form post
+~~~~~~~~~
+添加 ``csrf_token`` form input. 作为 form data 的一部分 POST 至服务端.
+
+ajax post
+~~~~~~~~~
+添加 ``X-CSRFToken`` header. 随 body 一起 POST 至服务端.
+
+- 若 csrf token 存储在 session 中:
+
+- 若 csrf token 存储在 cookie 中: 访问 ``CSRF_COOKIE_NAME`` cookie
+  获取 token value.
+
 middlewares
 -----------
 - ``django.middleware.csrf.CsrfViewMiddleware``.
@@ -4263,10 +4280,26 @@ decorators
 
 - ``csrf_exempt``
 
+context processors
+------------------
+- ``django.template.context_processors.csrf``.
+  提供 ``csrf_token`` context variable, 这个 context processor 是默认就有的,
+  并且是强制添加的. 无需在 template backend settings 中设置.
+
 template rendering
 ------------------
-* ``{% csrf_token %}``.
-  在 form 中使用 csrf token tag 添加 form 级别的 CSRF protection.
+* ``csrf_token`` context variable.
+
+* ``{% csrf_token %}`` tag. 根据 ``csrf_token`` context variable 生成
+  hidden input element, ``name=csrfmiddlewaretoken``.
+
+settings
+--------
+- ``CSRF_USE_SESSIONS``
+
+- ``CSRF_COOKIE_NAME``
+
+- ``CSRF_HEADER_NAME``
 
 
 Pagination
