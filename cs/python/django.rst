@@ -4243,9 +4243,41 @@ GenericForeignKey, GenericRelation 的用途.
 CSRF protection
 ===============
 
-原理
-----
+原理与操作逻辑
+--------------
+1. CSRF token 是随机生成的. Possibly based on urandom.
+   csrf token 由 salt + secret 构成.
 
+   (token 本身已经很安全, 第三方站点不能访问. 加上 salt 是为了提高对
+   side-channel attack 的防范.)
+
+2. 后端设置 csrf token cookie (或者它在 DOM 中的等价形式), 它随响应到达
+   user agent.
+
+   * 在 cookie 中的 csrf token 维持一个 anonymous 或 login session 不变. 
+     在每次 login 时由 ``auth.login()`` 执行 ``rotate_token()``, 此时
+     salt 和 secret 都改变.
+   
+   * 在 DOM 中由 ``csrf_token`` context variable 生成的 csrf token 每次
+     调用都变化. 但是 salt 变化, secret 不改变.
+
+   * 后端在何时首次设置 csrf token cookie: 当用户登录时; 当访问的页面中存在 form
+     等需要设置 csrf token DOM element 时; 当某个 view 要求设置 csrf token cookie 
+     时, 例如通过 ``ensure_csrf_cookie`` decorator, 或者手动调用 ``get_token()``.
+
+     所以对于 anonymous user, 当他需要进行任何 post 操作时的复杂性, 其实
+     从另一个角度说明了应该避免 anonymous user 做状态修改. 而是要先登录.
+     这也是避免了恶意操作.
+
+3. 前端在提交 POST (form or ajax) 时将 csrf token 设置在 request header
+   中 (或者包含在 form data 中, 这都是第三方无法复制的方式). 这样在
+   请求中, 存在两份 token, 一份在 cookie 中, 一份在 header 中 (或 form 中).
+
+4. CsrfViewMiddleware 校验 secret 部分是否相等, 不管 salt 部分.
+   若校验失败, 则返回 403 Forbidden.
+
+5. 额外: 在 https 下还会检查 referer header, 只允许同一个 domain 或只允许指定的
+   subdomain 向该 domain 发起 POST. 这是避免 subdomain owned by untrusted user.
 
 use CSRF token during POST
 --------------------------
@@ -4259,10 +4291,13 @@ ajax post
 ~~~~~~~~~
 添加 ``X-CSRFToken`` header. 随 body 一起 POST 至服务端.
 
-- 若 csrf token 存储在 session 中:
-
 - 若 csrf token 存储在 cookie 中: 访问 ``CSRF_COOKIE_NAME`` cookie
   获取 token value.
+
+- 若 csrf token 存储在 session 中: 需要在模板中 render token 或者手动
+  加入 cookie, 不然前端看不见 token. 我认为 csrf token 存在 session 中
+  这种方式是无意义的, 因为最终都必须要靠某种方式传递到前端来. 不如只放在
+  cookie 中就可以了. 安全性方面 cookie 也没什么问题.
 
 middlewares
 -----------
@@ -4276,9 +4311,14 @@ middlewares
 
 decorators
 ----------
-- ``csrf_protect``. 强制保护特定的 view.
+- ``csrf_protect``. 强制保护特定的 view. 除了一般的用法之外, 对于 reusable app,
+  这可用于强制一些 view 进行 csrf 校验, 而无论所在的 project 是否开启 csrf.
 
-- ``csrf_exempt``
+- ``csrf_exempt``. 强制不检查 csrf.
+
+- ``ensure_csrf_cookie``. 强制 view 设置 csrf token cookie.
+
+- ``requires_csrf_token``.
 
 context processors
 ------------------
@@ -4299,8 +4339,26 @@ settings
 
 - ``CSRF_COOKIE_NAME``
 
+- ``CSRF_COOKIE_AGE``
+
+- ``CSRF_COOKIE_HTTPONLY``
+  Designating the CSRF cookie as HttpOnly doesn’t offer any practical
+  protection because CSRF is only to protect against cross-domain attacks. If
+  an attacker can read the cookie via JavaScript, they’re already on the same
+  domain as far as the browser knows, so they can do anything they like anyway.
+  (XSS is a much bigger hole than CSRF.)
+
+- ``CSRF_COOKIE_DOMAIN``
+
+- ``CSRF_COOKIE_PATH``
+
+- ``CSRF_COOKIE_SECURE``
+
 - ``CSRF_HEADER_NAME``
 
+- ``CSRF_FAILURE_VIEW``
+
+- ``CSRF_TRUSTED_ORIGINS``
 
 Pagination
 ==========
