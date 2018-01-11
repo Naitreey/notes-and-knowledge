@@ -366,6 +366,22 @@ Headers
 
 - ``Referer``
 
+- ``Strict-Transport-Security``. response header.
+  response 包含该 header 告知浏览器启动 HSTS 机制.
+
+  directives.
+  
+  * max-age. 持续 ``max-age`` 时间 (in seconds). 意思是浏览器会记这么久, 在这段时间
+    内, 所有对该 domain 的所有访问, 都强制使用 https. 无论是不是一个 browser session.
+    只考虑绝对时间. 过期后的非指定 scheme 的首次访问转回 http.
+
+    每次响应中出现该 header & max-age directive, 过期时间都会刷新, 重新计算.
+    若想 disable HSTS, 设置 max-age=0.
+
+  * includeSubDomains. this rule applies to all of the site's subdomains as well.
+
+  * preload. 表示该 domain 在 browser 预加载的 HSTS domain list 中.
+
 Browser development tools
 =========================
 - 若从浏览器已经发出请求, 但尚未收到响应 (无论成功失败) 且请求本身没有或有
@@ -373,3 +389,28 @@ Browser development tools
   确认请求是否发出的方式是查看浏览器左下角 是否有 "Waiting for <some website>...",
   即浏览器在等待 server 返回该请求的响应. 若有则已经发出. 实在不行可以抓包查看是否有
   HTTP request 流量.
+
+HTTPS
+=====
+
+HTTP Strict Transport Security
+------------------------------
+concept
+~~~~~~~
+- It allows web servers to declare that web browsers (or other complying user
+  agents) should only interact with it using secure HTTPS connections, and
+  never via the insecure HTTP protocol.
+
+- 在 HSTS 机制下,
+  
+  * same domain 的任何 insecure plain http url 都会在请求时转换为 https.
+
+  * 若连接的安全性不能保障, 例如 TLS 证书不可信, 则不允许访问该站点.
+
+- HSTS 能很大程度上解决 MITM attack.
+
+- 主流浏览器都 pre-load 了默认启用 HSTS 机制的网站列表.
+
+headers
+~~~~~~~
+- ``Strict-Transport-Security``
