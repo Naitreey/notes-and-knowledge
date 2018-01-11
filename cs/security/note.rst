@@ -54,6 +54,9 @@ CSRF & XSS attacks
 * XSS 是比较宽泛的攻击分类. 凡是未授权的脚本插入和运行, 都可算是 XSS. 例如,
   页面中嵌入了恶意的脚本, 或嵌入了恶意的链接然后执行了恶意的脚本.
 
+  XSS vulnerabilities already let an attacker do anything a CSRF vulnerability
+  allows and much worse.
+
 * CSRF 和 XSS attack 的区别:
 
   - CSRF 的形式不一定是脚本请求, 或者说往往不是脚本请求, 它往往是通过某种方式
@@ -72,23 +75,35 @@ CSRF & XSS attacks
 
   - 对于 js ajax 请求, 手动设置某个 csrf token header. 跨域请求虽然能带上
     csrf token cookie, 但读不到 cookie 的值, 不能设置 csrf token header,
-    这样的请求会被服务端拒绝.
+    这样的请求会被服务端拒绝. ajax 的 post 请求必须使用 csrf token header.
 
   - 目前一种新方式是使用 SameSite cookie. 这样不是相同来源的请求根本拿不到敏感
     cookie, 不再需要额外的 csrf token 的验证. 让浏览器自己去限制, 省去了人工实现
     csrf token 的麻烦.
 
+  - 考虑到 MITM attack, CSRF token 提供的保护如果没有 HTTPS 加密传输做配合,
+    是完全没有意义的.
+
 - GET/POST & CSRF.
 
-  CSRF 的对抗手段一般只保护状态改变类的操作比如 PUT/POST. 因为默认 GET 仅用于 "获取"
-  类型的操作, 考虑到 CSRF 的各种实现手段, 这样的 GET 不会造成危险. 所以必须保证
-  GET 等 "safe" methods 只做安全的事.
+  CSRF 的对抗手段一般只保护状态改变类的操作比如 PUT/POST. 因为 GET 等 "safe"
+  methods 只应该做安全的事.
 
   这也是不能用 GET 进行 state change 操作的最致命原因: 默认 GET 是安全操作,
-  一般没有 CSRF 防护.
+  一般不做 CSRF 防护.
 
   注意浏览器提交的 form POST 不涉及脚本, 不受到 Same-Origin Policy 限制, 可以
   post 至其他 domain. 因此必须采用一些避免 CSRF attack 的安全措施.
+
+- subdomain problem.
+  Subdomains within a site will be able to set cookies on the client for the
+  whole domain. By setting the cookie and using a corresponding token,
+  subdomains will be able to circumvent the CSRF protection. The only way to
+  avoid this is to ensure that subdomains are controlled by trusted users (or,
+  are at least unable to set cookies). Note that even without CSRF, there are
+  other vulnerabilities, such as session fixation, that make giving subdomains
+  to untrusted parties a bad idea, and these vulnerabilities cannot easily be
+  fixed with current browsers.
 
 - 作为客户端用户, 防止 XSS/CSRF attack 的唯一靠谱方式就是不访问不靠谱的网站.
   剩下的只能依靠 "靠谱" 网站的研发能重视安全性, 使用了 HttpOnly/SameSite cookie,
