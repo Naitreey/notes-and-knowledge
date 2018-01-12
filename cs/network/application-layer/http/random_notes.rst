@@ -235,6 +235,14 @@
   * server-side validation 属于合法性设计. 旨在为数据合法性做最终的把关.
     这是必须有的.
 
+- logout should be GET or POST?
+
+  我觉得应该是 post. 这是从安全性 (CSRF) 角度考虑, 以及与 login post 操作对应.
+  但是 post 的 logout 确实处理起来不太方便 (要 ajax), 一个办法是做成 hiddenform,
+  含 csrf token hidden input.
+
+  很多网站都用的是 get, 也有很多用的是 post.
+
 URI
 ===
 
