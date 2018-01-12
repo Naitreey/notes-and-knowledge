@@ -4256,7 +4256,7 @@ CSRF protection
 
    * 在 cookie 中的 csrf token 维持一个 anonymous 或 login session 不变. 
      在每次 login 时由 ``auth.login()`` 执行 ``rotate_token()``, 此时
-     salt 和 secret 都改变.
+     salt 和 secret 都改变. (csrf token cookie 本身的 max age 由配置控制.)
    
    * 在 DOM 中由 ``csrf_token`` context variable 生成的 csrf token 每次
      调用都变化. 但是 salt 变化, secret 不改变.
