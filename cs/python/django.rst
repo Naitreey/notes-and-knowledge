@@ -2423,278 +2423,163 @@ builtin validators ``django.core.validators``.
 
   - validate_image_file_extension
 
-CRUD
-----
-
-* ``.save()``, ``.filter()``, slicing, 等等任何的抽象操作, 都是最终要映射为
-  SQL statement 的.
-
-* 对于 model class 在实例化时, Django doesn’t hit the database until you
+model instance
+--------------
+- 对于 model class 在实例化时, Django doesn’t hit the database until you
   explicitly call ``save()``.
 
-* ``INSERT`` 和 ``UPDATE`` 都是用 ``.save()`` 实现.
+- ``INSERT`` 和 ``UPDATE`` 都是用 ``.save()`` 实现.
 
-* 对实例中 ``ForeignKey`` ``OneToOneField`` 等指向单一 model 实例的 field 赋值时
+- 对实例中 ``ForeignKey`` ``OneToOneField`` 等指向单一 model 实例的 field 赋值时
   使用相应 model 的 instance 即可.
   实例中的 ``ManyToManyField`` 实际上是一个 Manager object, 需要用 ``.add()`` 给
   这个集合中增加关联关系. ``.add()`` 接受一次传入多个对象, 建立多个映射.
 
-* QuerySet
+QuerySet
+--------
+- QuerySet 封装了 database entries 数据以及对数据的 CRUD 和聚合等操作.
 
-  - 获取对象的各个方法在 ``Manager`` 和 ``QuerySet`` 中都有 (在 QuerySet 中定义,
-    expose to Manager 中), 且可以串联在一起. ``.delete()`` 是唯一的 QuerySet 有
-    但 Manager 的没有的方法 (为了避免误删全部).
+- 获取对象的各个方法在 ``Manager`` 和 ``QuerySet`` 中都有 (在 QuerySet 中定义,
+  expose to Manager 中), 且可以串联在一起. ``.delete()`` 是唯一的 QuerySet 有
+  但 Manager 的没有的方法 (为了避免误删全部).
 
-    * attributes & methods.
+CRUD
+~~~~
+* attributes & methods.
 
-      - ``ordered``, QuerySet 是否有排序.
+  - ``ordered``, QuerySet 是否有排序.
 
-      - ``.all()``
+  - ``.all()``
 
-      - ``.filter()``
+  - ``.filter()``
 
-      - ``.exclude()``
+  - ``.exclude()``
 
-      - ``.get()``, 生成的 sql 与 ``.filter()`` 的相同, 也就是说取回的
-        queryset 可能是多行的, 没有在数据库层做 LIMIT 1 之类的限制.
-        而是在 python 中检查返回的是否为一行, 若不是则 raise DoesNotExist
-        或者 MultipleObjectsReturned.
+  - ``.get()``, 生成的 sql 与 ``.filter()`` 的相同, 也就是说取回的
+    queryset 可能是多行的, 没有在数据库层做 LIMIT 1 之类的限制.
+    而是在 python 中检查返回的是否为一行, 若不是则 raise DoesNotExist
+    或者 MultipleObjectsReturned.
 
-      - ``.distinct()``, 相当于 ``SELECT DISTINCT`` statement.
+  - ``.distinct()``, 相当于 ``SELECT DISTINCT`` statement.
 
-      - ``.order_by()``, ``-<field>`` 表示逆序, ``?`` 表示随机, 可使用 field
-        lookup 指定 related model fields. 若指定的 field 是 relation field,
-        使用相关 model 的默认排序, 如果没有默认排序, 使用 pk. 若希望生成的
-        SQL 完全避免排序 (甚至避免 model 默认排序), 使用无参 ``.order_by()``.
-        若要排序的是 reverse FK, many-to-many 类关系, 注意涉及到 JOIN, 原来的
-        一行可能排序后变成多行.
+  - ``.order_by()``, ``-<field>`` 表示逆序, ``?`` 表示随机, 可使用 field
+    lookup 指定 related model fields. 若指定的 field 是 relation field,
+    使用相关 model 的默认排序, 如果没有默认排序, 使用 pk. 若希望生成的
+    SQL 完全避免排序 (甚至避免 model 默认排序), 使用无参 ``.order_by()``.
+    若要排序的是 reverse FK, many-to-many 类关系, 注意涉及到 JOIN, 原来的
+    一行可能排序后变成多行.
 
-        ``?`` 随机排序跟不排序完全是两码事. 前者是对每行加入一个随机值然后再
-        根据这个值去排序各行, 对应的 sql 是 ``ORDER BY RAND() ASC``; 后者的
-        话就完全不排序, return in unspecified order.
+    ``?`` 随机排序跟不排序完全是两码事. 前者是对每行加入一个随机值然后再
+    根据这个值去排序各行, 对应的 sql 是 ``ORDER BY RAND() ASC``; 后者的
+    话就完全不排序, return in unspecified order.
 
-        chained ``.order_by`` 只有最后一个有用.
+    chained ``.order_by`` 只有最后一个有用.
 
-      - ``.values()`` 给出的 QuerySet 每个元素为 field-value mapping dict, 方便
-        遍历.
+  - ``.values()`` 给出的 QuerySet 每个元素为 field-value mapping dict, 方便
+    遍历.
 
-        可通过 positional args 指定要返回的 fields/field lookup.
+    可通过 positional args 指定要返回的 fields/field lookup.
 
-        通过 kwargs 传递聚合参数给 ``.annotate``. 这可用于对返回的 dict 中增加计算项.
+    通过 kwargs 传递聚合参数给 ``.annotate``. 这可用于对返回的 dict 中增加计算项.
 
-        注意 ``.values()`` 返回的仍是 QuerySet, 可以继续 chain 下去.
+    注意 ``.values()`` 返回的仍是 QuerySet, 可以继续 chain 下去.
 
-        对于 FK field, 返回的 dict 中 key 是 ``<field>_id``.
+    对于 FK field, 返回的 dict 中 key 是 ``<field>_id``.
 
-        对于 many-to-many field 若没有明确在参数中指定, 则不返回, 这是因为需要 JOIN,
-        导致 QuerySet 中的结果重复. 同理, 若明确指定 reverse FK, 也导致结果集重复.
+    对于 many-to-many field 若没有明确在参数中指定, 则不返回, 这是因为需要 JOIN,
+    导致 QuerySet 中的结果重复. 同理, 若明确指定 reverse FK, 也导致结果集重复.
 
-      - ``.values_list()`` 给出的 QuerySet 每个元素为 fields tuple.
+  - ``.values_list()`` 给出的 QuerySet 每个元素为 fields tuple.
 
-        positional args 指定的 fields 可以包含 query expression, 这样在返回的
-        fields tuple 中包含计算项.
+    positional args 指定的 fields 可以包含 query expression, 这样在返回的
+    fields tuple 中包含计算项.
 
-        多值关系中可能造成结果重复:
+    多值关系中可能造成结果重复:
 
-        values() and values_list() are both intended as optimizations for a
-        specific use case: retrieving a subset of data without the overhead
-        of creating a model instance. This metaphor falls apart when dealing
-        with many-to-many and other multivalued relations (such as the
-        one-to-many relation of a reverse foreign key) because the “one row,
-        one object” assumption doesn’t hold.
+    values() and values_list() are both intended as optimizations for a
+    specific use case: retrieving a subset of data without the overhead
+    of creating a model instance. This metaphor falls apart when dealing
+    with many-to-many and other multivalued relations (such as the
+    one-to-many relation of a reverse foreign key) because the “one row,
+    one object” assumption doesn’t hold.
 
-      - ``exists()``, 判断某项是否在 queryset 中. 这比 ``in`` operator 高效,
-        后者必须遍历整个 queryset.
+  - ``exists()``, 判断某项是否在 queryset 中. 这比 ``in`` operator 高效,
+    后者必须遍历整个 queryset.
 
-  - Field lookups. 各种过滤和获取的方法的参数语法, 对应到 SQL ``WHERE`` clause.
-    Syntax: ``<field>[__<field>...][__<lookuptype>]=value``.
-    若省略 lookuptype, 默认是 ``exact``.
-    常用 lookuptypes: ``exact``, ``iexact``, ``contains``, ``icontains``,
-    ``startswith``, ``endswith``, ``istartswith``, ``iendswith``.
+- 使用 extended indexing and slicing syntax 来进行 ``LIMIT`` ``OFFSET`` 之类的
+  操作. 注意 negative index 是不允许的. 如果是单个的 index, 就返回 QuerySet
+  中的单个结果, 如果是 slice, 就返回一个 QuerySet. 一般情况下返回的 QuerySet
+  仍然是 lazy 的, 但若 slice syntax 中有步长参数, 则会计算 QuerySet, 访问数据库.
 
-    * 对 foreign key field 指定条件, 可以用以下方式进行判断: 1. FK 列 与 FK object
-      实例进行比较; 2. FK 列 与 FK 值进行比较; 3. 使用 ``<FK>_id`` 虚拟的列
-      和 FK 值进行比较.
+- 在过滤方法串联中, 每次返回的 ``QuerySet`` 都是相互独立的, 各自可以单独使用,
+  不会相互影响.
 
-    * 对 many-to-many 关系进行 lookup 时, 由于实质上是在 through table 中对
-      FK 指向的 entry 进行匹配, 所以虽然起点处写的是 plural 形式, 但实际上是
-      单行的匹配概念: 对这个对象关联的所有对象进行单行的匹配, 只要有一行匹配
-      上了, 就认为 main object 符合条件. e.g.,
+- QuerySets are lazy. 在不得不访问数据库之前, 所有的过滤筛选等操作都是在内存
+  中进行的, 而不去执行底层的 SQL 语句.
 
-      - ``Group.objects.filter(users=jack)``, 筛选包含 jack 的组. 对每个组 join
-        through table, 然后进行单行匹配筛选.
+- QuerySet cache. The first time a QuerySet is evaluated – and, hence,
+  a database query happens – Django saves the query results in the QuerySet’s
+  cache and returns the results that have been explicitly requested. Subsequent
+  evaluations of the QuerySet reuse the cached results.
 
-      - ``Group.objects.filter(users__in=[jack, michael, jane])``, 筛选包含这些
-        用户的组.
+  当取一个 QuerySet 的部分数据时 (通过 extended indexing syntax, 即转换成
+  ``OFFSET`` ``LIMIT``), 若本身有 cache, 则直接返回结果, 否则只访问数据库
+  进行所需部分数据的查询和返回, 并不进行 cache. 这里的抽象逻辑是, slicing
+  和 indexing 这些操作是在一个完整的 QuerySet 上进行的部分截取. 而 cache
+  是属于 QuerySet 的, 若有则应该包含它代表的所有数据.
 
-      注意, 由于 table JOIN 操作, 这样的匹配很容易在结果集中出现重复的 object,
-      所以需要对结果去重.
+  注意 ``bool(queryset)`` 会计算整个 ``queryset``, 从而填入 cache. 然而
+  ``print()`` ``repr()`` 只计算整个 QuerySet 的一个 slice, 因此不会填入
+  cache.
 
-    * 对于表达关系的列, 可以从多至一的方向深入被指向的模型进行筛选, 这抽象了各种
-      SQL ``JOIN``.
+  若模型包含 ``ForeignKey`` ``OneToOneField`` field 时, QuerySet 在取实例时
+  相当于只将 FK_id 取回来, 而不会自动 JOIN 表查询取到关联的对象数据. 这是
+  为了避免不必要的 overhead. 当用户明确要访问 FK object 这个属性时, 才再次
+  访问数据库将数据填入 cache, 返回真实的关联对象. 之后再访问该属性时不再
+  访问数据库.
 
-    * 这种过滤可以反向进行, 即从一至多的方向进行筛选. 注意这与属性访问时得到
-      RelatedManager 虽然语法相通, 但意义不同. 这里是通过对 related model 的行
-      指定筛选条件, 来筛选 main object.
+- 同一个 model 的实例之间进行比较时, 比较的是 primary key. 不同 model 的实例
+  之间总是不相等的. 但是大小关系没有确定结果. (why not TypeError?)
 
-      reverse lookup 的起点是那个 model 中设置的 relation field 的
-      related_query_name 值. 在此之后再指定 related model 中的 field 和条件.
+- delete.
 
-    * 对于每个查询方法, 传入的所有 positional and keyword arguments (Q objects +
-      field lookup syntax) 代表的条件都会 ``AND`` 在一起.
-      但注意对于 ``.exclude()``, 这种与关系不太好理解.
+  * 删除时会返回删除的总对象数目和每个类型删除的对象数目. 这么做的一个
+    重要原因是模型或表之间有设置了级联删除的.所以很可能一个删除操作一下子级联
+    删除了很多不同表中的条目.
 
-    * ``.filter()`` 中同时指定多个条件时, 是在筛选所有这些条件都满足的实例, 这相当于
-      ``WHERE condition1 AND condition2``.
+  * model instance 和 QuerySet 都有 delete method.
 
-      当 ``.filter()`` 是对所指向的关系 (即 JOIN 表) 进行查询时, 注意
-      ``.filter(fk_obj__field1..., fk_obj__field2...)`` 以及
-      ``.filter(fk_obj__field1...).filter(fk_obj__field2...)`` 两个的区别.
-      前者是两个条件对 JOIN 表中一行同时满足; 后者是先 JOIN 一次筛出符合
-      条件的, 再 JOIN 一次筛出符合另一个条件的, 相当于 subquery 嵌套.
+- update. QuerySet ``.update()`` 中以 kwargs 形式写入要更新的列和值.
+  many-to-many field 无法这样更新.
 
-    * ``.exclude()`` 中同时指定多个条件时, 是在排除满足其中任一个条件的实例, 即筛选
-      所有这些条件都不满足的实例, 这相当于 ``WHERE NOT condition1 AND NOT condition2``.
+  ``.update()`` 更新操作是批量进行、立即生效的. 它不会使用 model 的 ``.save()``
+  method (否则就不是批量执行了), 而是直接生成批量执行的 SQL. 因此各种 model
+  层的封装特性, 例如 custom save, auto_now, pre_save/post_save signal 等
+  都不会生效.
 
-    * django 提供了一个特殊的 ``pk`` field 名称, 用来代指当前 model 的 pk field,
-      它可以像实际的 pk field 一样去写任何 field lookup 语法.
+- ``select_related()``.
+  如果用户在查询某模型时, 已知会访问到关联的 FK 对象, 可使用 ``select_related()``
+  来强制进行 JOIN 操作, 一次把所有 FK 对象数据取回来, 这样更高效. 避免获取各个
+  FK object 时再单独访问数据库. To avoid the much larger result set that would
+  result from joining across a ‘many’ relationship, ``select_related`` is limited
+  to single-valued relationships - foreign key and one-to-one.
 
-    * 对于字符串比较的各种 lookuptype, 基本上都转换成了 ``LIKE`` 类语句. 在这些
-      语句语法中, 由 SQL metachar ``%`` 和 ``_`` 概念. 在 django 层, 若输入这两个
-      字符, 将自动在 SQL 层进行转义, 保证 django 的抽象与底层 SQL 实现无关.
+- 对于十分复杂的一长串的 ORM 操作 QuerySet (涉及可能多个过滤、聚合等), 如果对它
+  到底会怎么执行不确定, 需要检查 raw SQL 长什么样子, 通过 ``QuerySet.query``.
+  对于直接执行不返回 queryset 的情况, 直接看 ``django.db.connection.queries``.
 
-  - 使用 extended indexing and slicing syntax 来进行 ``LIMIT`` ``OFFSET`` 之类的
-    操作. 注意 negative index 是不允许的. 如果是单个的 index, 就返回 QuerySet
-    中的单个结果, 如果是 slice, 就返回一个 QuerySet. 一般情况下返回的 QuerySet
-    仍然是 lazy 的, 但若 slice syntax 中有步长参数, 则会计算 QuerySet, 访问数据库.
+- 由于排序导致的反直觉现象.
 
-  - 在过滤方法串联中, 每次返回的 ``QuerySet`` 都是相互独立的, 各自可以单独使用,
-    不会相互影响.
+  若 model 有设置 ``Meta.ordering``, 或者 queryset 有含参的 ``.order_by()``,
+  则生成的 SQL 里一定会排序. 且 django 会在 select 部分添加排序相关的列.
+  进一步, 若 GROUP BY 不是按照默认的 id 来分组, 则会在现有的分组 fields 列表
+  中添加排序相关列. 即使这些排序列不在最终的 queryset 中作为 attribute 出现,
+  它们也会在 SQL 中被包含.
 
-  - QuerySets are lazy. 在不得不访问数据库之前, 所有的过滤筛选等操作都是在内存
-    中进行的, 而不去执行底层的 SQL 语句.
-
-  - QuerySet cache. The first time a QuerySet is evaluated – and, hence,
-    a database query happens – Django saves the query results in the QuerySet’s
-    cache and returns the results that have been explicitly requested. Subsequent
-    evaluations of the QuerySet reuse the cached results.
-
-    当取一个 QuerySet 的部分数据时 (通过 extended indexing syntax, 即转换成
-    ``OFFSET`` ``LIMIT``), 若本身有 cache, 则直接返回结果, 否则只访问数据库
-    进行所需部分数据的查询和返回, 并不进行 cache. 这里的抽象逻辑是, slicing
-    和 indexing 这些操作是在一个完整的 QuerySet 上进行的部分截取. 而 cache
-    是属于 QuerySet 的, 若有则应该包含它代表的所有数据.
-
-    注意 ``bool(queryset)`` 会计算整个 ``queryset``, 从而填入 cache. 然而
-    ``print()`` ``repr()`` 只计算整个 QuerySet 的一个 slice, 因此不会填入
-    cache.
-
-    若模型包含 ``ForeignKey`` ``OneToOneField`` field 时, QuerySet 在取实例时
-    相当于只将 FK_id 取回来, 而不会自动 JOIN 表查询取到关联的对象数据. 这是
-    为了避免不必要的 overhead. 当用户明确要访问 FK object 这个属性时, 才再次
-    访问数据库将数据填入 cache, 返回真实的关联对象. 之后再访问该属性时不再
-    访问数据库.
-
-  - 同一个 model 的实例之间进行比较时, 比较的是 primary key. 不同 model 的实例
-    之间总是不相等的. 但是大小关系没有确定结果. (why not TypeError?)
-
-  - query expressions.
-
-    * ``F()`` expression 在 CRUD 操作中代表一个列的值 (F for Field) 的 symbolic
-      form. django 不会去访问数据库将值取出来, 与 F expression 进行的各种操作的
-      结果是 ``CombinedExpression``, 仍然是保持 symbolic form. 当 ``.save()``
-      ``.filter()`` 等访问数据的操作时, 这些 symoblic expression 转化为 SQL
-      statement, 让数据库去执行所需操作. 全程不在 python 层进行数据的读写. 全部
-      由数据库进行.
-
-      这样的好处: 1. 效率更高, 因为没有读入内存和写回数据库的过程, 而是全部由数据库
-      自身去操作. 只是生成 SQL instruction 让数据库去执行. 2. 由于操作在数据库进程
-      中而不是业务代码的 python 进程中执行, 可以避免 race condition.
-
-      Django supports the use of ``+ - * / % **`` with F() objects, both with
-      constants and with other F() objects. 也就是说 ``F`` 定义了对这些算符的
-      overriding special methods.
-
-      F objects 还支持一些 bit operations: ``.bitand()``, ``.bitor()``,
-      ``.bitrightshift()``, ``.bitleftshift()``.
-
-      注意在保存包含 F object 的 model instance 之后, 需要 ``.refresh_from_db()``,
-      不然的话 instance 的属性仍然是 ``CombinedExpression``, 而不是真实的值.
-      如果对这些实例再次 save, 将再次执行 combinedExpression 对应的数据库过程,
-      从而进行了重复修改.
-
-    * ``Q()`` expression 用于将查询条件模块化成一个个可任意组合的抽象单元.
-      Q object 可以进行与、或、非操作 (``&`` ``|`` ``~``), 构成表达复杂逻辑
-      的 Q object. 它最终在底层转化成恰当的 SQL 查询语句.
-
-      ``.filter()`` ``.get()`` 等查询方法除了可以接受作为 kwargs 的 field lookup
-      语法, 还支持传入多个作为 positional args 的 Q objects, 这些 Q object
-      代表的条件会 ``AND`` 在一起. 这真是把 python 函数语法运用到极致了啊!!
-      抽象得真好!!!
-
-    * conditional expressions. ``Case()`` ``When()`` 封装了 ``CASE WHEN`` SQL
-      语句.
-
-      - ``When``. 条件通过 positional Q objects 或者 keyword field lookup syntax
-        指定. 结果通过 ``then=`` 指定, 结果可以是一个 query expression.
-
-      - ``Case``. 接受 positional ``When`` objects 作为 cases, 这些 When objects
-        依次执行, 直到有一个为 True 为止, 返回的结果是相应的 When 的 then.
-        若没有一个 When 为真, 则返回 ``default=`` 值或 None.
-
-  - delete.
-
-    * 删除时会返回删除的总对象数目和每个类型删除的对象数目. 这么做的一个
-      重要原因是模型或表之间有设置了级联删除的.所以很可能一个删除操作一下子级联
-      删除了很多不同表中的条目.
-
-    * model instance 和 QuerySet 都有 delete method.
-
-  - update. QuerySet ``.update()`` 中以 kwargs 形式写入要更新的列和值.
-    many-to-many field 无法这样更新.
-
-    ``.update()`` 更新操作是批量进行、立即生效的. 它不会使用 model 的 ``.save()``
-    method (否则就不是批量执行了), 而是直接生成批量执行的 SQL. 因此各种 model
-    层的封装特性, 例如 custom save, auto_now, pre_save/post_save signal 等
-    都不会生效.
-
-  - ``select_related()``.
-    如果用户在查询某模型时, 已知会访问到关联的 FK 对象, 可使用 ``select_related()``
-    来强制进行 JOIN 操作, 一次把所有 FK 对象数据取回来, 这样更高效. 避免获取各个
-    FK object 时再单独访问数据库. To avoid the much larger result set that would
-    result from joining across a ‘many’ relationship, ``select_related`` is limited
-    to single-valued relationships - foreign key and one-to-one.
-
-  - 对于十分复杂的一长串的 ORM 操作 QuerySet (涉及可能多个过滤、聚合等), 如果对它
-    到底会怎么执行不确定, 需要检查 raw SQL 长什么样子, 通过 ``QuerySet.query``.
-    对于直接执行不返回 queryset 的情况, 直接看 ``django.db.connection.queries``.
-
-  - 由于排序导致的反直觉现象.
-
-    若 model 有设置 ``Meta.ordering``, 或者 queryset 有含参的 ``.order_by()``,
-    则生成的 SQL 里一定会排序. 且 django 会在 select 部分添加排序相关的列.
-    进一步, 若 GROUP BY 不是按照默认的 id 来分组, 则会在现有的分组 fields 列表
-    中添加排序相关列. 即使这些排序列不在最终的 queryset 中作为 attribute 出现,
-    它们也会在 SQL 中被包含.
-
-    这可能导致 DISTINCT, GROUP BY, aggregation 等结果与预期不符. 需要小心对待.
-
-* Manager.
-
-  - 每个 model 都有一个 ``Manager`` instance, 用于进行 table-level operations.
-    ``Manager`` instance is  accessible only via model class, rather than from
-    model instances, to enforce a separation between “table-level” operations and
-    “record-level” operations.
-
-  - related objects. 一对多、多对多关系中, 正向的 manager object (如果有) 是属性名,
-    逆向的 manager object 默认是 ``<lower_model>_set``, 可通过 ``related_name``
-    自定义. 在一对一的关系中, 正反向都是对称直接访问的.
-
-  - ``RelatedManager`` 的一些方法: ``add()``, ``create()``, ``remove()``,
-    ``clear()``, ``set()``. 这些操作都是立即在数据库生效的.
+  这可能导致 DISTINCT, GROUP BY, aggregation 等结果与预期不符. 需要小心对待.
 
 aggregation
------------
+~~~~~~~~~~~
 
 * 两种聚合方式: ``QuerySet.aggregate()``, ``QuerySet.annotate``.
 
@@ -2770,6 +2655,125 @@ aggregation
   - ``Variance``
 
   - ``Sum``
+
+Field lookups
+~~~~~~~~~~~~~
+各种过滤和获取的方法的参数语法, 对应到 SQL ``WHERE`` clause.
+Syntax: ``<field>[__<field>...][__<lookuptype>]=value``.
+若省略 lookuptype, 默认是 ``exact``.
+常用 lookuptypes: ``exact``, ``iexact``, ``contains``, ``icontains``,
+``startswith``, ``endswith``, ``istartswith``, ``iendswith``.
+
+* 对 foreign key field 指定条件, 可以用以下方式进行判断: 1. FK 列 与 FK object
+  实例进行比较; 2. FK 列 与 FK 值进行比较; 3. 使用 ``<FK>_id`` 虚拟的列
+  和 FK 值进行比较.
+
+* 对 many-to-many 关系进行 lookup 时, 由于实质上是在 through table 中对
+  FK 指向的 entry 进行匹配, 所以虽然起点处写的是 plural 形式, 但实际上是
+  单行的匹配概念: 对这个对象关联的所有对象进行单行的匹配, 只要有一行匹配
+  上了, 就认为 main object 符合条件. e.g.,
+
+  - ``Group.objects.filter(users=jack)``, 筛选包含 jack 的组. 对每个组 join
+    through table, 然后进行单行匹配筛选.
+
+  - ``Group.objects.filter(users__in=[jack, michael, jane])``, 筛选包含这些
+    用户的组.
+
+  注意, 由于 table JOIN 操作, 这样的匹配很容易在结果集中出现重复的 object,
+  所以需要对结果去重.
+
+* 对于表达关系的列, 可以从多至一的方向深入被指向的模型进行筛选, 这抽象了各种
+  SQL ``JOIN``.
+
+* 这种过滤可以反向进行, 即从一至多的方向进行筛选. 注意这与属性访问时得到
+  RelatedManager 虽然语法相通, 但意义不同. 这里是通过对 related model 的行
+  指定筛选条件, 来筛选 main object.
+
+  reverse lookup 的起点是那个 model 中设置的 relation field 的
+  related_query_name 值. 在此之后再指定 related model 中的 field 和条件.
+
+* 对于每个查询方法, 传入的所有 positional and keyword arguments (Q objects +
+  field lookup syntax) 代表的条件都会 ``AND`` 在一起.
+  但注意对于 ``.exclude()``, 这种与关系不太好理解.
+
+* ``.filter()`` 中同时指定多个条件时, 是在筛选所有这些条件都满足的实例, 这相当于
+  ``WHERE condition1 AND condition2``.
+
+  当 ``.filter()`` 是对所指向的关系 (即 JOIN 表) 进行查询时, 注意
+  ``.filter(fk_obj__field1..., fk_obj__field2...)`` 以及
+  ``.filter(fk_obj__field1...).filter(fk_obj__field2...)`` 两个的区别.
+  前者是两个条件对 JOIN 表中一行同时满足; 后者是先 JOIN 一次筛出符合
+  条件的, 再 JOIN 一次筛出符合另一个条件的, 相当于 subquery 嵌套.
+
+* ``.exclude()`` 中同时指定多个条件时, 是在排除满足其中任一个条件的实例, 即筛选
+  所有这些条件都不满足的实例, 这相当于 ``WHERE NOT condition1 AND NOT condition2``.
+
+* django 提供了一个特殊的 ``pk`` field 名称, 用来代指当前 model 的 pk field,
+  它可以像实际的 pk field 一样去写任何 field lookup 语法.
+
+* 对于字符串比较的各种 lookuptype, 基本上都转换成了 ``LIKE`` 类语句. 在这些
+  语句语法中, 由 SQL metachar ``%`` 和 ``_`` 概念. 在 django 层, 若输入这两个
+  字符, 将自动在 SQL 层进行转义, 保证 django 的抽象与底层 SQL 实现无关.
+
+query expressions
+~~~~~~~~~~~~~~~~~
+
+* ``F()`` expression 在 CRUD 操作中代表一个列的值 (F for Field) 的 symbolic
+  form. django 不会去访问数据库将值取出来, 与 F expression 进行的各种操作的
+  结果是 ``CombinedExpression``, 仍然是保持 symbolic form. 当 ``.save()``
+  ``.filter()`` 等访问数据的操作时, 这些 symoblic expression 转化为 SQL
+  statement, 让数据库去执行所需操作. 全程不在 python 层进行数据的读写. 全部
+  由数据库进行.
+
+  这样的好处: 1. 效率更高, 因为没有读入内存和写回数据库的过程, 而是全部由数据库
+  自身去操作. 只是生成 SQL instruction 让数据库去执行. 2. 由于操作在数据库进程
+  中而不是业务代码的 python 进程中执行, 可以避免 race condition.
+
+  Django supports the use of ``+ - * / % **`` with F() objects, both with
+  constants and with other F() objects. 也就是说 ``F`` 定义了对这些算符的
+  overriding special methods.
+
+  F objects 还支持一些 bit operations: ``.bitand()``, ``.bitor()``,
+  ``.bitrightshift()``, ``.bitleftshift()``.
+
+  注意在保存包含 F object 的 model instance 之后, 需要 ``.refresh_from_db()``,
+  不然的话 instance 的属性仍然是 ``CombinedExpression``, 而不是真实的值.
+  如果对这些实例再次 save, 将再次执行 combinedExpression 对应的数据库过程,
+  从而进行了重复修改.
+
+* ``Q()`` expression 用于将查询条件模块化成一个个可任意组合的抽象单元.
+  Q object 可以进行与、或、非操作 (``&`` ``|`` ``~``), 构成表达复杂逻辑
+  的 Q object. 它最终在底层转化成恰当的 SQL 查询语句.
+
+  ``.filter()`` ``.get()`` 等查询方法除了可以接受作为 kwargs 的 field lookup
+  语法, 还支持传入多个作为 positional args 的 Q objects, 这些 Q object
+  代表的条件会 ``AND`` 在一起. 这真是把 python 函数语法运用到极致了啊!!
+  抽象得真好!!!
+
+* conditional expressions. ``Case()`` ``When()`` 封装了 ``CASE WHEN`` SQL
+  语句.
+
+  - ``When``. 条件通过 positional Q objects 或者 keyword field lookup syntax
+    指定. 结果通过 ``then=`` 指定, 结果可以是一个 query expression.
+
+  - ``Case``. 接受 positional ``When`` objects 作为 cases, 这些 When objects
+    依次执行, 直到有一个为 True 为止, 返回的结果是相应的 When 的 then.
+    若没有一个 When 为真, 则返回 ``default=`` 值或 None.
+
+Manager
+-------
+
+- 每个 model 都有一个 ``Manager`` instance, 用于进行 table-level operations.
+  ``Manager`` instance is  accessible only via model class, rather than from
+  model instances, to enforce a separation between “table-level” operations and
+  “record-level” operations.
+
+- related objects. 一对多、多对多关系中, 正向的 manager object (如果有) 是属性名,
+  逆向的 manager object 默认是 ``<lower_model>_set``, 可通过 ``related_name``
+  自定义. 在一对一的关系中, 正反向都是对称直接访问的.
+
+- ``RelatedManager`` 的一些方法: ``add()``, ``create()``, ``remove()``,
+  ``clear()``, ``set()``. 这些操作都是立即在数据库生效的.
 
 database transactions
 ---------------------
