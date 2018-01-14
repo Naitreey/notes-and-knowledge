@@ -2658,6 +2658,13 @@ aggregation
 
   - ``Sum``
 
+raw SQL
+~~~~~~~
+``QuerySet.raw()`` 和 ``Manager.raw()``.
+输入 SQL statements, 输出 ``RawQuerySet``.
+
+Should be used sparingly and carefully.
+
 Field lookups
 ~~~~~~~~~~~~~
 各种过滤和获取的方法的参数语法, 对应到 SQL ``WHERE`` clause.
@@ -2761,6 +2768,31 @@ query expressions
   - ``Case``. 接受 positional ``When`` objects 作为 cases, 这些 When objects
     依次执行, 直到有一个为 True 为止, 返回的结果是相应的 When 的 then.
     若没有一个 When 为真, 则返回 ``default=`` 值或 None.
+
+RawQuerySet
+-----------
+An iterable. Iterating its resultant iterator yields model instances.
+
+SQL query 中的列名需要和 model field name 对应或者使用 ``translations=``
+参数指定映射关系, 才能正确生成 model instance.
+
+SQL query 的参数使用 ``params=`` 传入. 为了避免 SQL injection attack,
+不要使用 str.formatting, 不要 quote parameter placeholder.
+
+若 SQL 中 SELECT 的列不是 model 的全部列, 而只是一部分, 则返回的 model
+instance 是 defered model instance. 注意 primary key field 不能省去,
+否则后续获取 defered fields 时无法定位 entry 了.
+
+SQL 中除了 model field 之外的列, 会在结果中以 annotated field 形式出现.
+
+methods.
+
+- 显然 QuerySet 的很多方法 RawQuerySet 都不具备. RawQuerySet 没有实现
+  ``__bool__`` & ``__len__``, all RawQuerySet's are True.
+
+- ``__getitem__``. 支持 sequence indexing protocol. 但实际上是在内存中
+  进行 indexing. 即全取回来成 list, 再 index. 对于大数据量要避免, 而
+  应该使用 OFFSET, LIMIT.
 
 Manager
 -------
