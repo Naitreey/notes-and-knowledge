@@ -1213,6 +1213,10 @@
   路径下的 modules, 即 stdlib 部分的、随 python 一同发布的 modules, 以及一些其他
   的 sys.path 中的路径, 都是可以访问的. 因为它们不是第三方的.
 
+- 由于从 instance 上只能读取 class attribute, 不能修改和删除 class attribute,
+  所有修改和删除只操作 instance 的 ``__dict__``, 可以将 class attribute 设置为
+  属性默认值. 在需要改动的 instance 上再做修改.
+
 builtin functions
 =================
 很多 builtin function 本质上应该看作是该 class 的 constructor.
