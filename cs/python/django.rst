@@ -2091,6 +2091,8 @@ model meta options
 
 * ``label``, ``label_lower``, readonly. ``<app_label>.<model_name>``.
 
+* ``default_manager_name``. 指定 ``Model._default_manager`` 使用哪个名字的 manager.
+
 model field
 -----------
 
@@ -2763,17 +2765,94 @@ query expressions
 Manager
 -------
 
-- 每个 model 都有一个 ``Manager`` instance, 用于进行 table-level operations.
-  ``Manager`` instance is  accessible only via model class, rather than from
-  model instances, to enforce a separation between “table-level” operations and
-  “record-level” operations.
-
-- related objects. 一对多、多对多关系中, 正向的 manager object (如果有) 是属性名,
+- related manager. 一对多、多对多关系中, 正向的 manager object (如果有) 是属性名,
   逆向的 manager object 默认是 ``<lower_model>_set``, 可通过 ``related_name``
   自定义. 在一对一的关系中, 正反向都是对称直接访问的.
 
 - ``RelatedManager`` 的一些方法: ``add()``, ``create()``, ``remove()``,
   ``clear()``, ``set()``. 这些操作都是立即在数据库生效的.
+
+BaseManager
+~~~~~~~~~~~
+attributes.
+
+* ``auto_created``. 该 manager 是否是自动创建, 而不是在 model class 中明确定义的.
+
+* ``model``. The attached model class.
+
+Manager
+~~~~~~~
+
+每个 model 都有至少一个 ``Manager`` instance, 用于进行 table-level operations.
+``Manager`` instance is accessible only via model class, rather than from
+model instances, to enforce a separation between “table-level” operations and
+“record-level” operations.
+
+Manager object 是对某个 model 进行表级别的数据库的起点. 它将所有合适的 QuerySet
+methods 都 attach 到这个 manager class 上. 它的本质是从 manager object 上访问
+任何 queryset method 的时候, 都立即创建一个 QuerySet object, 然后就是正常的
+queryset methods 操作.
+
+methods.
+
+- 从 QuerySet 复制过来的各种 methods. 复制标准:
+
+  * Public methods are copied by default.
+
+  * Private methods are not copied by default.
+
+  * ``queryset_only=True`` methods are not copied.
+
+  * ``queryset_only=False`` methods (even if private) are copied.
+
+specify manager in model
+~~~~~~~~~~~~~~~~~~~~~~~~
+- 当定义 model 时, 若不明确指定 manager (无论是修改 manager name 还是 custom
+  manager class), 则会自动生成 ``objects = Manager()`` manager. 若明确设置,
+  可以设置任意个 managers. This is an easy way to define common “filters” for
+  your models.
+
+- default manager.
+
+  ``Model.Meta.default_manager_name`` 或 model class 中第一个定义的
+  manager object 当作 ``_default_manager``.
+
+  当程序逻辑需要使用未知 model 的 manager 时, 应使用 default manager,
+  而不该假设 ``objects`` manager 存在.
+
+- base manager. 当通过一个 model instance 访问 related objects 时, 使用
+  related model 的 ``_base_manager`` 获取 queryset (再筛选出关联的 entries),
+  而不是使用 ``_default_manager``. 这是因为 default manager 可能进行了一些
+  过滤和限制. 而默认情况下 base manager 不使用 model class 中定义的一系列 
+  managers. 而是使用最通用的 ``django.db.models.Manager``.
+
+  ``Model.Meta.base_manager_name`` 可以指定使用预定义的某个 manager 作为
+  base manager.
+
+custom manager
+~~~~~~~~~~~~~~
+subclass ``django.db.models.Manager`` 以进行自定义.
+
+- 添加 custom manager method. 用处: 当需要对 models 添加 table-level 的功能
+  和操作时 (而不是对 row-level 即具体 model instance 的方法.)
+
+- customize initial queryset. override ``get_queryset()`` method.
+  ``Manager.all()`` method 的返回值与之一致.
+
+若自定义了 QuerySet 的 methods, 然后希望这些方法也 expose 到 manager 中,
+需要使用 ``QuerySet.as_manager`` classmethod 创建 manager class. 它调用
+``BaseManager.from_queryset`` class method.
+
+自定义的 manager class 必须能够 shallow copied by ``copy.copy()``.
+
+in model inheritance
+~~~~~~~~~~~~~~~~~~~~
+- model 继承 parent model 定义的 managers. 标准的 python inheritance 机制.
+
+- 若 model 和 parents 都没定义 managers, 自动创建 ``objects`` manager.
+
+- default manager 若没指定, 使用该 model 中定义的第一个 manager 或 parent
+  model 的 default manager.
 
 database transactions
 ---------------------
