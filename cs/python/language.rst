@@ -1,6 +1,25 @@
 Data model
 ==========
 
+The standard type hierarchy
+---------------------------
+包含对一系列类型概念的标准陈述.
+
+- class instance.
+
+  * attribute reference.
+    
+    搜索顺序. 首先搜索 instance ``__dict__``, 然后搜索 class & parent
+    classes attributes, in MRO order.
+
+    若属性是一个 function object, 转变成 bound instance method, 它的
+    ``__self__`` attribute is the instance.
+
+    若最终没找到, call ``__getattr__``.
+
+  * attribute modification. 修改和删除属性只更新 ``__dict__``. 若
+    定义了 ``__setattr__``, ``__delattr__`` 则直接调用这两个方法.
+
 special methods
 ---------------
 
