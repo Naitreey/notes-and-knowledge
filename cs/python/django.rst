@@ -2886,6 +2886,8 @@ in model inheritance
 - default manager 若没指定, 使用该 model 中定义的第一个 manager 或 parent
   model 的 default manager.
 
+database
+========
 database transactions
 ---------------------
 
@@ -2967,6 +2969,32 @@ database transactions
   逻辑时, 就可以通过这个 hook 加入代码.
 
 * low-level APIs.
+
+database connection
+-------------------
+- default connection: ``django.db.connection``.
+  这是与 ``settings.DATABASES['default']`` 配置的数据库相对应的连接.
+
+- all connections: ``django.db.connections``.
+  包含该 django project 配置的全部 databases 连接, 每一项与 ``settings.DATABASES``
+  对应.
+
+- Connection & cursor implement Python DB-API (PEP-249).
+  SQL statement 使用 ``%s`` placeholder.
+
+cursor
+------
+
+CursorWrapper
+~~~~~~~~~~~~~
+封装 database library 给出的 cursor object. 封装了或者传递了各种 cursor methods.
+
+BaseDatabaseWrapper
+~~~~~~~~~~~~~~~~~~~
+
+methods.
+
+- ``cursor()``. create a cursor.
 
 authentication and authorization
 ================================
