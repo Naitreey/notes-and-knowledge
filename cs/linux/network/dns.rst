@@ -14,3 +14,6 @@ dnsmasq
 - DNS
 
   * able to load ``/etc/hosts`` for local DNS lookup
+
+systemd-resolved
+================

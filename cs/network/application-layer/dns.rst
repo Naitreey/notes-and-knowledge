@@ -28,7 +28,13 @@ concept
   aliases (CNAME), responsible person (RP), DNSSEC records.
 
 - 一个 domain name 可能对应多个 IP 甚至 IPv4 和 v6. DNS 的一个好处是可以根据
-  与客户端最合适的 IP 协议、最近的距离给出最恰当的 IP 地址结果.
+  与客户端最合适的 IP 协议、最近的距离给出最恰当的 IP 地址结果, 以及负载均衡.
+
+- 一个 IP 也可以反向对应多个 domain name, 例如 virtual hosting.
+
+transport
+=========
+TCP/UDP on port 53. normally UDP.
 
 structure
 =========
@@ -105,11 +111,14 @@ name servers
   deemed authoritative, by setting a protocol flag, called the "Authoritative
   Answer" (AA) bit in its responses.
 
+operations
+==========
+
 addresss resolution mechanism
 -----------------------------
 
-standard recursive address resolution procedure
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+standard address resolution procedure
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 - 从最右边 null label 开始. 访问 root name servers, 询问要找的 FQDN 的 IP 是什么.
   root name server 会根据 FQDN 的 TLD label, 找到自己存储的该 TLD 对应的 NS record,
   告诉你去相应的 name server 询问.
@@ -117,10 +126,15 @@ standard recursive address resolution procedure
   * host must initially caches a list of ip addresses of known root name servers.
     不然的话无从开始. 这个缓存应定期更新.
 
+  * Name servers in delegations are identified by name, rather than by IP
+    address. This means that a resolving name server must issue another DNS
+    request to find out the IP address of the server to which it has been
+    referred.
+
 - 类似地, TLD domain 的 name server 会根据它存的 domain NS record 告诉你去问具体
   domain 自己的 name server. 直到某个 name server 给出了 authoritative answer.
 
-若每个主机都按照这种标准的递归方式查询 DNS:
+若每个主机都按照这种标准方式查询 DNS:
 
 1. 越顶层的 name server 会越忙网络负担越重;
 
@@ -128,9 +142,9 @@ standard recursive address resolution procedure
 
 3. DNS 解析会很慢;
   
-4. 每个类型的主机都需实现一套递归查询算法.
+4. 每个类型的主机都需实现一套查询算法.
    
-所以需要能够代替 host 进行递归查询和缓存查询结果的服务.
+所以需要能够代替 host 进行查询和缓存查询结果的服务.
 
 recursive and caching name server
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -143,12 +157,202 @@ domain. With this function implemented in the name server, user applications
 gain efficiency in design and operation.
 
 Caching name server 的存在, 允许一个网络区域内的主机只访问该 name server 即可.
-它返回给主机所需的解析结果, 如果需要, 代替主机进行递归查询.
+它返回给主机所需的解析结果, 如果需要, 代替主机进行查询.
+
+Caching name server 首先是 name server, 然后是具有 cache & recursive query
+附加功能的 name server. 也就是说, 它可能对于部分 domain 而言是 authoritative
+name server. 例如, 对于对局域网路由器, 它对网内的 hostname 具有解析权威.
 
 这就是我们平时在网络配置中写入的 DNS server. 需要明确, 我们写入的实际上都是
 caching name server, 我们理应能够从它 (或者它们中的某一个, 如果配置了多个 DNS)
-那里获取到需要查询的所有域名结果. 它才是真正去参与标准 DNS 递归查询的终端.
+那里获取到需要查询的所有域名结果. 它才是真正去参与标准 DNS 查询流程的终端.
 
 平时在局域网中, 常用的子网路由器 (3 层交换机) 就是这样的 caching name server;
 ISP 提供的 DNS 配置, 也指向一个或多个 caching name server;
-平时配置的 google DNS 等也是 caching name server.
+平时配置的 google DNS 等也是 caching name server;
+若主机上有本地的 name server daemon, 也是 caching name server, 例如 dnsmasq,
+systemd-resolved.
+
+DNS resolver
+------------
+DNS resolver is responsible for initiating and sequencing the queries that
+ultimately lead to a full resolution (translation) of the resource sought.
+
+The DNS resolver will almost invariably have a cache (see above) containing
+recent lookups.
+
+DNS resolver 可以是客户端主机, 可以是局域网路由器, 可以是 ISP DNS server 等等.
+
+resolution methods
+------------------
+
+- recursive query. the DNS client requires that the DNS server respond to the
+  client with either the requested resource record or an error message stating
+  that the record or domain name does not exist. The DNS server cannot just
+  refer the DNS client to a different DNS server. If a DNS server does not have
+  the requested information when it receives a recursive query, it queries
+  other servers until it gets the information (by recursive or iterative method),
+  or until the name query fails.
+
+  一般 DNS client 向配置的 DNS server 发送的查询是 recursive query.
+
+- iterative query. a DNS client allows the DNS server to return the best answer
+  it can give based on its cache or zone data. If the queried DNS server does
+  not have an exact match for the queried name, the best possible information
+  it can return is a referral (that is, a pointer to a DNS server authoritative
+  for a lower level of the domain namespace). The DNS client can then query the
+  DNS server for which it obtained a referral. It continues this process until
+  it locates a DNS server that is authoritative for the queried name, or until
+  an error or time-out condition is met.
+
+  caching name server 一般需要进行 iterative query 向客户端给出最终结果.
+
+circular dependency
+-------------------
+若某个 domain `example.com` 的解析被 refered to authoritative name server
+`ns1.example.com`, 则显然出现 circular dependency. 此时, 上层 name server
+需要同时提供 referred-to name server 的 IP address. 这些信息叫做 glue.
+
+The delegating name server provides this glue in the form of records in the
+additional section of the DNS response, and provides the delegation in the
+authority section of the response. A glue record is a combination of the name
+server and IP address.
+
+record caching
+--------------
+A standard practice in implementing name resolution in applications is to
+reduce the load on the Domain Name System servers by caching results locally,
+or in intermediate resolver hosts. Results obtained from a DNS request are
+always associated with the time to live (TTL), an expiration time after which
+the results must be discarded or refreshed.
+
+Negative response caching. 如果查询的 RR 不存在, 这个结果也需要缓存起来.
+为了让此时作为客户端的 caching name server 知道这个结果需要缓存多久, negative
+DNS caching 要求此时返回的是该 name server 的 SOA record. 这里面有 TTL 信息.
+
+reverse lookup
+--------------
+A reverse lookup is a query of the DNS for domain names when the IP address is
+known. Multiple domain names may be associated with an IP address.
+
+为支持反向查询时, IP 以 domain name 的形式存储在 pointer record 中 (PTR).
+The IP address is represented as a name in reverse-ordered octet representation
+for IPv4, and reverse-ordered nibble representation for IPv6.
+
+例如, 8.8.4.4 -> 4.4.8.8.in-addr.arpa.
+2001:db8::567:89ab -> b.a.9.8.7.6.5.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.8.b.d.0.1.0.0.2.ip6.arpa.
+
+需要把 ip 反过来写是因为, 在 domain name 中, 从右至左是 zone 范围右大至小的过程.
+这样每个反向的 ip 段都是嵌套的 domain, 完全符合正常的 DNS iterative query method
+流程. 可以像正常的 domain 一样, 把 ip 的 PTR record 也分配给不同层的 name server,
+然后 iterative query.
+
+`arpa` TLD 的存在仅用于 reverse DNS lookup. 准确地讲, 该 TLD 下包含
+``in-addr.arpa`` 和 ``ip6.arpa`` 两个 domain 用于 reverse DNS lookup.
+(历史原因. arpa 即 ARPAnet 主机在 DNS 系统中的初始 TLD.)
+
+进行反向查询时, client 将 IP 转换成上述的 domain name 形式, 然后按照与正常
+DNS 相同的流程进行查询.
+
+例如, 208.80.152.2 的 reverse lookup domain 形式是 2.152.80.208.in-addr.arpa.
+When the DNS resolver gets a pointer (PTR) request, it begins by querying the
+root servers, which point to the servers of American Registry for Internet
+Numbers (ARIN) for the 208.in-addr.arpa zone. ARIN's servers delegate
+152.80.208.in-addr.arpa to Wikimedia to which the resolver sends another query
+for 2.152.80.208.in-addr.arpa, which results in an authoritative response.
+
+client
+------
+当 IPv4, v6 同时支持时, client 一般会先后发出分别对应于 ipv4, v6 的两个 query 请求,
+一个查询的 header 中 type = A, 另一个 header 中 type = AAAA.
+
+message format
+==============
+
+- two type of messages: queries and responses. They both have same format.
+
+- Each message consists of a header and four sections: question, answer,
+  authority, and an additional space.
+
+- The header section contains the following fields:
+  
+  * Identification. can be used to match responses with queries.
+    
+  * Flags.
+
+  * Number of questions.
+    
+  * Number of answers.
+    
+  * Number of authority resource records (RRs). 指的是 authoritative name server
+    的 SOA record.
+   
+  * Number of additional RRs.
+
+- The question section contains the domain name and type of record (A, AAAA,
+  MX, TXT, etc.) being resolved.
+
+- The answer section has the resource records of the queried name. A domain
+  name may occur in multiple records if it has multiple IP addresses
+  associated. 每次返回的多个 IP 顺序可能不同, 用于负载均衡.
+
+resource records (RR)
+=====================
+
+- Each record has a type (name and number), an expiration time (time to live),
+  a class, and type-specific data.
+
+- Resource records of the same type are described as a resource record set
+  (RRset).
+
+- fields in a RR:
+
+  * NAME. FQDN of the node in the DNS namespace tree.
+
+  * TYPE. the record type. It indicates the format of the data and it gives a
+    hint of its intended use.
+
+  * CLASS. 不同的网络类型. Each class is an independent name space with
+    potentially different delegations of DNS zones. It is set to IN (for
+    Internet) for common DNS records involving Internet hostnames, servers, or
+    IP addresses.
+
+  * TTL. Count of seconds that the RR stays valid.
+
+  * RDLENGTH.
+
+  * RDATA. data of the specific record. such as the IP address for address
+    records, or the priority and hostname for MX records.
+
+- RR types (part of).
+
+  * A. IPv4 address record.
+
+  * AAAA. IPv6 address record. (32*4=128, hence 4 "A"s)
+
+  * CNAME. canonical name record. Alias of one name to another: the DNS lookup
+    will continue by retrying the lookup with the new name.
+
+  * MX. Mail exchange record. Maps a domain name to a list of message transfer
+    agents for that domain.
+
+  * NS. Name server record. Delegates a DNS zone to use the given authoritative
+    name servers.
+
+  * PTR. Pointer record. Pointer to a canonical name.
+
+  * RP. Responsible persion. Information about the responsible person(s) for
+    the domain.
+
+  * SOA. Start of [a zone of] authority record. Specifies authoritative
+    information about a DNS zone, including the primary name server, the email
+    of the domain administrator, the domain serial number, and several timers
+    relating to refreshing the zone.
+
+  * TXT. Text record. arbitrary text in a DNS record.
+
+domain name
+===========
+
+registration
+------------
