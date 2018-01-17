@@ -4503,6 +4503,28 @@ settings
 
 - ``CSRF_TRUSTED_ORIGINS``
 
+Clickjacking Protection
+=======================
+
+middleware
+----------
+- ``django.middleware.clickjacking.XFrameOptionsMiddleware``
+  当 ``X-Frame-Options`` header 没有已经设置的时候, 给所有 response 添加
+  这个 header. 取 ``settings.X_FRAME_OPTIONS`` 的值.
+
+decorators
+----------
+- xframe_options_deny. 设置 DENY. set the header on per-view-basis.
+
+- xframe_options_sameorigin. 设置 SAMEORIGIN. set the header on per-view-basis.
+
+- xframe_options_exempt. 避免 middleware 设置这个 header.
+
+settings
+--------
+
+- ``settings.X_FRAME_OPTIONS``. 默认是 SAMEORIGIN.
+
 Pagination
 ==========
 

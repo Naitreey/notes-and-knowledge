@@ -390,6 +390,18 @@ Headers
 
   * preload. 表示该 domain 在 browser 预加载的 HSTS domain list 中.
 
+- ``X-Frame-Options``. response header.
+  服务端通过设置该 header, 告知浏览器是否允许以 ``<iframe>``, ``<frame>``,
+  ``<object>`` 等嵌入式方式 render 这个响应. 这用于解决 clickjacking.
+
+  directives.
+
+  * DENY. 禁止一切嵌入.
+
+  * SAMEORIGIN. 当该资源与触发请求的页面同源时才允许嵌入.
+
+  * ALLOW-FROM <uri>. 只允许匹配的 domain 来源时嵌入.
+
 Browser development tools
 =========================
 - 若从浏览器已经发出请求, 但尚未收到响应 (无论成功失败) 且请求本身没有或有
