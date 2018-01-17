@@ -7,25 +7,72 @@ general
 
 concept
 =======
+
+name server
+-----------
+A DNS name server is a server that stores the DNS records for a
+domain; a DNS name server responds with answers to queries against its
+database.
+
+authoritative name servers for each domain, is responsible for
+assigning domain names and mapping those names to Internet resources.
+
+zone
+----
+每个 domain 是一个 zone, name server 在 domain 内部对 sub-domains 具有
+自治权, 可将 DNS 解析自由分配给更低层的 name servers.
+
+zone file
+---------
+一个 name server 用于存储各种 DNS 相关记录的 text file (可理解为 DNS
+数据库). zone file 中包含一系列 resource records (RR). 每个 RR 一行, 各列即
+name, ttl, record class, record type, record data.
+
+在一些 DNS implementation 中, zone file 只是实际的 DNS 数据库的 textual
+representation.
+
+The name field may be left blank. If so, the record inherits the field from the
+previous record.
+
+Resource records may occur in any order in a zone file, with some exceptions.
+For formatting convenience, resource records may span several lines by
+enclosing in parentheses a set of parameters that spans several lines, but
+belongs to the same record.
+
+The file may contain line comment preceded by ``;``.
+
+The zone file may also contain directives that are marked with a keyword
+starting with the dollar sign character.
+
+As a minimum, the zone file must specify the Start of Authority (SOA) record
+with the name of the authoritative master name server for the zone and the
+email address of someone responsible for management of the name server.
+The parameters of the SOA record also specify a list of timing and expiration
+parameters.
+
+In the zone file, host names that do not end in a period are relative to the
+origin. Names ending with a full stop (or point) are said to be fully qualified
+domain names.
+
+The zone files for the DNS root zone and for the set of top-level domains
+contain resource records only for the authoritative domain name servers for
+each domain name.
+
+``dig``, ``drill`` 等命令给出的结果就是按照 zone file 的格式.
+record
+------
+zone file 中的一条记录.
+
+类型包括:
+Start of Authority (SOA), IP addresses (A, AAAA), SMTP mail exchangers (MX),
+name servers (NS), pointers for reverse DNS lookups (PTR), domain name
+aliases (CNAME), responsible person (RP), DNSSEC records.
+
+IP & domain name relation
+-------------------------
+
 - 在 TCP/IP network 中, DNS protocol 负责 domain name hierarchy namespace;
   IP protocol 负责 address namespace.
-
-- name server: A DNS name server is a server that stores the DNS records for a
-  domain; a DNS name server responds with answers to queries against its
-  database.
-
-- authoritative name servers for each domain, is responsible for
-  assigning domain names and mapping those names to Internet resources.
-
-- 每个 domain 是一个 zone, 在 domain 内部对 sub-domains 具有自治权, 可将 DNS 解析
-  自由分配给更低层的 name servers.
-
-- zone file. 一个 name server 用于存储各种 DNS 相关记录的数据库.
-
-- record. zone file 中的一条记录.
-  包括: Start of Authority (SOA), IP addresses (A, AAAA), SMTP mail exchangers (MX),
-  name servers (NS), pointers for reverse DNS lookups (PTR), domain name
-  aliases (CNAME), responsible person (RP), DNSSEC records.
 
 - 一个 domain name 可能对应多个 IP 甚至 IPv4 和 v6. DNS 的一个好处是可以根据
   与客户端最合适的 IP 协议、最近的距离给出最恰当的 IP 地址结果, 以及负载均衡.
@@ -218,6 +265,7 @@ additional section of the DNS response, and provides the delegation in the
 authority section of the response. A glue record is a combination of the name
 server and IP address.
 
+
 record caching
 --------------
 A standard practice in implementing name resolution in applications is to
@@ -284,8 +332,7 @@ message format
     
   * Number of answers.
     
-  * Number of authority resource records (RRs). 指的是 authoritative name server
-    的 SOA record.
+  * Number of authority resource records (RRs).
    
   * Number of additional RRs.
 
@@ -296,6 +343,11 @@ message format
   name may occur in multiple records if it has multiple IP addresses
   associated. 每次返回的多个 IP 顺序可能不同, 用于负载均衡.
 
+- The authority RR section 根据具体情况可能提供 authoritative name server 的
+  SOA record, 或者 delegation 时的下一层 name server NS record.
+
+- The additional RR section 在 delegation 时可能包含各个 name servers 的 IP
+  (若出现 circular dependency 时).
 resource records (RR)
 =====================
 
