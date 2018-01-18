@@ -1149,6 +1149,14 @@
             self.fset = fset
             return self
 
+- 需要缓存结果时的几种方式:
+
+  * property + private attribute
+
+  * cached_property, 优点是比上个方法干净, 缺点是可以直接写. 起不到一点防范的作用.
+
+  * lru_cache, 当只是缓存函数执行结果时, 而不是 object method 时使用.
+
 - 注意大部分情况下可以使用 function 的地方都可以一般化地使用 callable. 定义
   callable class 有助于优化代码组织方式和重用等可能性 (应用所有 class 的优点
   来定义 function).
