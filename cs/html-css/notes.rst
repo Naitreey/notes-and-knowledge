@@ -1371,6 +1371,12 @@ embedded content
     用户必须重复很多操作才能恢复到之前的状态, 不能靠 url + cookies 简单地
     保存状态.
 
+  * iframe 提高了 debug 难度. 在 browser devtools 中很容易因为 iframe
+    导致的 context 不同造成困惑, 浪费调试时间.
+
+  * 将网站主要部分以 iframe 方式实现可能具有 clickjacking attack 风险.
+    因时必须设置 ``X-Frame-Options: SAMEORIGIN`` 或不限制.
+
   * 一个常见的 iframe abuse 原因是为了在页面分栏的情况下提高加载效率, 只需
     加载一次的部分放在 iframe 外边, 需重复加载的部分放在 iframe 中. 但问题是
     这并没有很大的效率提高 (以至于能抵消它带来的麻烦). 因为 browser 的 local
