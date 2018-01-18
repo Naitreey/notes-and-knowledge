@@ -19,8 +19,15 @@ assigning domain names and mapping those names to Internet resources.
 
 zone
 ----
-每个 domain 是一个 zone, name server 在 domain 内部对 sub-domains 具有
-自治权, 可将 DNS 解析自由分配给更低层的 name servers.
+每个 domain 是一个 zone, authoritative name server 在 domain 内部对 sub-domains
+具有自治权, 可将 DNS 解析自由分配给更低层的 name servers.
+
+A zone starts at a domain and extends downward in the tree to the leaf nodes or
+to the top-level of subdomains where other zones start.
+
+root zone. 对应 domain name 中最右边 null label. 在 zone file 中, FQDN 最右边
+以 ``.`` 的形式表示 root zone, 即 ``www.example.com.``. 注意这种包含 null label
+的 FQDN 仅限于 DNS 领域内使用. 平时使用时必须去掉 trailing dot.
 
 zone file
 ---------
@@ -158,6 +165,16 @@ name servers
   deemed authoritative, by setting a protocol flag, called the "Authoritative
   Answer" (AA) bit in its responses.
 
+- root name server. serve DNS root zone. 由于 DNS & UDP 的综合限制, query
+  response 中最多能包含 13 条 root name server. There are 13 logical root name
+  servers specified, with logical names in the form letter.root-servers.net,
+  where letter ranges from a to m. This does not mean that there are only 13
+  physical servers. All operate in multiple geographical locations using a
+  routing technique called anycast addressing, providing increased performance
+  and even more fault tolerance. With anycast, most of the physical root
+  servers are now outside the United States, allowing for high performance
+  worldwide.
+
 operations
 ==========
 
@@ -285,7 +302,8 @@ known. Multiple domain names may be associated with an IP address.
 
 为支持反向查询时, IP 以 domain name 的形式存储在 pointer record 中 (PTR).
 The IP address is represented as a name in reverse-ordered octet representation
-for IPv4, and reverse-ordered nibble representation for IPv6.
+for IPv4 suffixed by domain ``in-addr.arpa``, and reverse-ordered nibble
+representation for IPv6 suffixed by domain ``ip6.arpa``.
 
 例如, 8.8.4.4 -> 4.4.8.8.in-addr.arpa.
 2001:db8::567:89ab -> b.a.9.8.7.6.5.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.8.b.d.0.1.0.0.2.ip6.arpa.
@@ -293,11 +311,8 @@ for IPv4, and reverse-ordered nibble representation for IPv6.
 需要把 ip 反过来写是因为, 在 domain name 中, 从右至左是 zone 范围右大至小的过程.
 这样每个反向的 ip 段都是嵌套的 domain, 完全符合正常的 DNS iterative query method
 流程. 可以像正常的 domain 一样, 把 ip 的 PTR record 也分配给不同层的 name server,
-然后 iterative query.
-
-`arpa` TLD 的存在仅用于 reverse DNS lookup. 准确地讲, 该 TLD 下包含
-``in-addr.arpa`` 和 ``ip6.arpa`` 两个 domain 用于 reverse DNS lookup.
-(历史原因. arpa 即 ARPAnet 主机在 DNS 系统中的初始 TLD.)
+然后 iterative query. 此时, 各层 name server 是分配 IP 地址的 IANA 下属机构或
+各级 ISP.
 
 进行反向查询时, client 将 IP 转换成上述的 domain name 形式, 然后按照与正常
 DNS 相同的流程进行查询.
@@ -408,3 +423,36 @@ domain name
 
 registration
 ------------
+
+TLDs
+----
+分类.
+
+- country-code top-level domains (ccTLD)
+
+  * internationalized country code top-level domains (IDN ccTLD)
+
+- generic top-level domains (gTLD)
+
+- infrastructure top-level domain (ARPA)
+
+- test top-level domains (tTLD)
+
+gTLD
+~~~~
+
+ccTLD
+~~~~~
+
+ARPA
+~~~~
+- arpa.
+
+  历史原因. arpa 即 ARPAnet 主机在 DNS 系统中的初始 TLD.
+  `arpa` TLD 的还留着主要用于 reverse DNS lookup. 该 TLD 下包含:
+
+  * ``in-addr.arpa`` 和 ``ip6.arpa`` 两个 domain 用于 reverse DNS lookup.
+
+  * ``e164.arpa``, telephone number mapping.
+
+  * ``uri.arpa``, ``urn.arpa``, uniform resource identifier resolution.
