@@ -402,6 +402,24 @@ Headers
 
   * ALLOW-FROM <uri>. 只允许匹配的 domain 来源时嵌入.
 
+- ``X-Content-Type-Options``. 防止浏览器根据自己 sniff 到的 (即自己认为的)
+  content type 而 override 服务端设置的 Content-Type header.
+
+  directives.
+
+  * nosniff.
+
+- ``X-XSS-Protection``.
+
+  directives.
+
+  * 0. disable xss filtering.
+
+  * 1. enable. If a cross-site scripting attack is detected, the browser will
+    sanitize the page (remove the unsafe parts).
+
+  * 1; mode=block. prevent rendering of the page if an attack is detected.
+
 Browser development tools
 =========================
 - 若从浏览器已经发出请求, 但尚未收到响应 (无论成功失败) 且请求本身没有或有

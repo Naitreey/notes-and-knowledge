@@ -1720,6 +1720,8 @@ session
   - ``SESSION_EXPIRE_AT_BROWSER_CLOSE``, 设置 session id cookie 是否是
     (browser-) session cookie, 即只持续当前浏览器 session.
 
+  - ``SESSION_COOKIE_SECURE``. session cookie 使用 secure cookie.
+
 * 只有用户明确 logout 时, 才会主动从 session store 中删除这条 session entry
   (通过 ``logout()``). 对于 persistent session store, session 从不自动删除,
   即使过期. 因此需要定期执行 ``clearsessions`` 命令删除过期 session.
@@ -4495,7 +4497,7 @@ settings
 
 - ``CSRF_COOKIE_PATH``
 
-- ``CSRF_COOKIE_SECURE``
+- ``CSRF_COOKIE_SECURE``. 使用 secure cookies.
 
 - ``CSRF_HEADER_NAME``
 
@@ -4541,6 +4543,45 @@ JSON
 - DjangoJSONEncoder 在 ``json.JSONEncoder`` 基础上, 额外支持:
   datetime.datetime, datetime.date, datetime.time, datetime.timedelta,
   decimal.Decimal, django.utils.functional.Promise, uuid.UUID.
+
+Security, SSL & HTTPS
+=====================
+- 很多 SSL 相关的检查和操作最好在前端服务器而不是在上游 django 处理.
+
+- csrf, session cookies 等使用 secure cookies.
+
+- 在前端服务器上使用 HSTS.
+
+- Make sure that your Python code is outside of the Web server’s root.
+
+middleware
+----------
+- ``django.middleware.security.SecurityMiddleware``. 默认有使用.
+
+settings
+--------
+- SECURE_PROXY_SSL_HEADER. 当 django 应用作为上游服务器时, 前端服务器与 django
+  通信时一般采用 http. https 止于前端服务器部分. 所以 scheme 永远是 http.
+  默认配置情况下, 此时 ``request.is_secure()`` 是 False. 为了检验客户端与
+  服务端通信是否 https, 可以前端服务器需要在转发时设置额外的 header 以示说明.
+  django 会根据这个配置去给出 ``is_secure()`` 的结果.
+
+- SECURE_SSL_REDIRECT, SECURE_REDIRECT_EXEMPT, SECURE_SSL_HOST. 不要使用.
+  要在前端服务器配置. 这样所有资源都有统一的 https 处理. 事实上, 在作为
+  上游服务器时, 若 ALLOWED_HOSTS 限制只允许本地访问, 在 django 中配置的
+  redirect 根本不会成功.
+
+
+- SECURE_HSTS_SECONDS, SECURE_HSTS_INCLUDE_SUBDOMAINS, SECURE_HSTS_PRELOAD.
+  HSTS 配置. 不要使用. 要在前端服务器配置.
+
+- SESSION_COOKIE_SECURE, CSRF_COOKIE_SECURE. secure cookies.
+
+- SECURE_BROWSER_XSS_FILTER. 不要使用, 在前端服务器设置 ``X-XSS-Protection``.
+
+- SECURE_CONTENT_TYPE_NOSNIFF. 不要使用, 在前端服务器设置 ``X-Content-Type-Options``.
+
+- ALLOWED_HOSTS. 限制 Host header 值.
 
 django-admin
 ============
