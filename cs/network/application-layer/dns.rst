@@ -3,7 +3,9 @@ general
 
 - hierarchical decentralized naming system for TCP/IP network.
 
-- 本质上是一个 directory service, 也是一个 distributed database system.
+- 本质上是一种 directory service. 即 *domain* name service.
+ 
+- 同时也是一个 distributed database system.
 
 concept
 =======

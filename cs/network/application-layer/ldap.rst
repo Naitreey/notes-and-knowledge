@@ -4,6 +4,8 @@ overview
 - A application layer protocol for accessing and maintaining distributed directory
   information services.
 
+- LDAP 是一种 directory service.
+
 - X.500 directory services were traditionally accessed via the X.500 Directory
   Access Protocol (DAP), which required the Open Systems Interconnection (OSI)
   protocol stack. LDAP was originally intended to be a lightweight alternative
