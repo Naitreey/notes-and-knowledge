@@ -384,3 +384,7 @@
 
   基于同样的原理, 使用 ``newgrp`` command 可以在不重新登录的情况下修改 group. 这本质
   上就是重新认证给新进程加新的组. 注意 newgrp is setuid-root.
+
+- NSS (Name Service Switch). NSS 整合了各种 name services 即 directory services,
+  相当于一个统一的 API. 这包括 DNS, LDAP, 等等.
+
