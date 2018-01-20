@@ -1225,49 +1225,6 @@
   所有修改和删除只操作 instance 的 ``__dict__``, 可以将 class attribute 设置为
   属性默认值. 在需要改动的 instance 上再做修改.
 
-builtin functions
-=================
-很多 builtin function 本质上应该看作是该 class 的 constructor.
-
-iteration
----------
-
-- ``enumerate()``, enumerate object constructor. ``start=`` 设置第一项的序号值.
-
-number
-------
-
-- ``float()``, float object constructor. 输入是 number, string 或 object.
-
-  对于 string:
-  可以包含 leading or trailing whitespace chars;
-  可以包含 +/- sign;
-  值的部分可以是 ``infinity|inf|nan`` (case-insensitive), 对应正负无穷和 NaN.
-
-  对于 object, ``object.__float__`` method is called.
-
-  无参数时返回 0.0.
-
-scope
------
-- ``vars()``, return ``__dict__`` of any object.
-  无参数时, 返回 local dictionary, 即当前 scope 中可以访问到的所有量. 等价于
-  ``locals()``.
-
-builtin types
-=============
-set types
----------
-
-operations
-~~~~~~~~~~
-- the non-operator versions of ``union()``, ``intersection()``,
-  ``difference()``, and ``symmetric_difference()``, ``issubset()``, and
-  ``issuperset()`` methods will accept any iterable as an argument. In
-  contrast, their operator based counterparts require their arguments to be
-  sets. 然而两种方式并没有效率上的区别, 因为虽然接受任何 iterable, 但是仍然
-  会在内部转换成 set 再进行比较.
-
 json
 ====
 

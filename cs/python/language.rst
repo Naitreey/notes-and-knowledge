@@ -94,3 +94,55 @@ Exception
 - instantiate exception 时, 它的 ``__traceback__``, ``__cause__``, ``__context__``
   还都是 None (因为在实例化处本来就没有这些). 之后 raise 之后, 解释器才会根据执行
   情况设置这三个属性.
+
+builtin functions
+=================
+注意很多 builtin function 本质上应该看作是该 class 的 constructor.
+
+iteration
+---------
+
+- ``enumerate()``, enumerate object constructor. ``start=`` 设置第一项的序号值.
+
+number
+------
+
+- ``float()``, float object constructor. 输入是 number, string 或 object.
+
+  对于 string:
+  可以包含 leading or trailing whitespace chars;
+  可以包含 +/- sign;
+  值的部分可以是 ``infinity|inf|nan`` (case-insensitive), 对应正负无穷和 NaN.
+
+  对于 object, ``object.__float__`` method is called.
+
+  无参数时返回 0.0.
+
+scope
+-----
+- ``vars()``, return ``__dict__`` of any object.
+  无参数时, 返回 local dictionary, 即当前 scope 中可以访问到的所有量. 等价于
+  ``locals()``.
+
+memory
+------
+
+- ``id()``. identity of object. 该值保证为整数, 且在 object 的生命周期中保持
+  不变. 在 CPython 中, 用对象的内存地址作为 id. id 值用于 ``is`` operator
+  的判断.
+
+builtin types
+=============
+
+set types
+---------
+
+operations
+~~~~~~~~~~
+- the non-operator versions of ``union()``, ``intersection()``,
+  ``difference()``, and ``symmetric_difference()``, ``issubset()``, and
+  ``issuperset()`` methods will accept any iterable as an argument. In
+  contrast, their operator based counterparts require their arguments to be
+  sets. 然而两种方式并没有效率上的区别, 因为虽然接受任何 iterable, 但是仍然
+  会在内部转换成 set 再进行比较.
+
