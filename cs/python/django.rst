@@ -1,3 +1,33 @@
+overview
+========
+
+concepts
+--------
+作为一个 web server or web framework, django 的各种主要功能和模块,
+都是在从 receive request 开始, 至 send out response 结束, 这个流程中
+做文章的.
+
+一个 django 应用, 或任何一个 web app, 一旦运行起来, 就只做一件事:
+接收请求 -- 处理请求 -- 返回响应.
+
+from request to response, full workflow
+---------------------------------------
+
+django release
+--------------
+
+- new feature release (A.B, A.B+1) every 8 months.
+  new LTS release (X.2) every 2 years, LTS is supported with security updates
+  for 3 years.
+  each version following an LTS will bump to the A+1 major version number.
+  patch release (A.B.C, A.B.C+1) will be issued as needed.
+
+- 1.11 LTS is the last version supporting python2.
+
+- Django 2.0 和 1.11 相比, 不是特别大的区别, 不充满 breaking changes,
+  而是连续的演进. 只是版本号规范的重新定义.
+
+
 project and app
 ===============
 
@@ -2912,6 +2942,68 @@ database definitions
 一般使用 ``default`` database 即可. Django uses the database with the alias of
 default when no other database has been selected.
 
+database connection
+-------------------
+- default connection: ``django.db.connection``.
+  这是与 ``settings.DATABASES['default']`` 配置的数据库相对应的连接.
+
+- all connections: ``django.db.connections``.
+  包含该 django project 配置的全部 databases 连接, 每一项与 ``settings.DATABASES``
+  对应.
+
+- Connection & cursor implement Python DB-API (PEP-249).
+  SQL statement 使用 ``%s`` placeholder.
+
+persistent connection
+~~~~~~~~~~~~~~~~~~~~~
+``settings.DATABASES.CONN_MAX_AGE`` 设置数据库连接的最大持续时间. 即
+persistent connection.
+
+默认值为 0. 效果是, 对每个请求开启一次连接, 即 nonpersistent connection.
+具体而言, 当处理请求中需要访问数据库时, 开启一个数据库连接; 然后在
+请求处理结束时把连接关掉.
+
+对每个数据库, 每个线程 (或进程, 取决于 server 的机制) 最多开一个连接即可.
+因线程已经是最小的并行处理单元, 每个线程中同时只能处理一个请求 (即使是
+使用 coroutine 进行异步处理). django 服务端最多同时保持的数据库连接数目
+取决于服务器线程数 (或进程数).
+
+persistent connection 的好处是, 在高并发 (大量客户端请求) 情况下, 避免每个
+请求重连数据库带来的效率损耗.
+
+persistent connection 的坏处是, 提高了数据库服务器的负担. 若数据库服务器
+需要同时去 serve 多个 web 应用. 某个应用建立了很多 persistent connection
+就意味着别的应用可用的资源少了. 所以如果: 1)该应用的流量并不太大, 2)或者
+由于 cache 等原因, 实际数据库访问并不很频繁, 3)数据库需要 serve 多个应用,
+则可以缩短 persistent connection 的时长, 或使用 nonpersistent connection.
+
+注意, 对于流量非常小的情况, persistent connection 可能长时间处于 wait 状态,
+db server 端可能连接等待超时断开. 此时 CONN_MAX_AGE 应该设置为小于 timeout
+时长. 对于大流量网站, 则没有这个问题.
+
+connection management
+~~~~~~~~~~~~~~~~~~~~~
+- 在处理请求中, 需要访问数据库时, 开启连接.
+
+- 在请求处理结束时, ``request_finished`` signal handler 检查连接是否达
+  max age 以及是否可用, 若达到或已经不可用则关闭.
+
+- 在下一次请求开始时, ``request_started`` signal handler 进行相同的检查.
+
+cursor
+------
+
+CursorWrapper
+~~~~~~~~~~~~~
+封装 database library 给出的 cursor object. 封装了或者传递了各种 cursor methods.
+
+BaseDatabaseWrapper
+~~~~~~~~~~~~~~~~~~~
+
+methods.
+
+- ``cursor()``. create a cursor.
+
 database transactions
 ---------------------
 
@@ -2993,32 +3085,6 @@ database transactions
   逻辑时, 就可以通过这个 hook 加入代码.
 
 * low-level APIs.
-
-database connection
--------------------
-- default connection: ``django.db.connection``.
-  这是与 ``settings.DATABASES['default']`` 配置的数据库相对应的连接.
-
-- all connections: ``django.db.connections``.
-  包含该 django project 配置的全部 databases 连接, 每一项与 ``settings.DATABASES``
-  对应.
-
-- Connection & cursor implement Python DB-API (PEP-249).
-  SQL statement 使用 ``%s`` placeholder.
-
-cursor
-------
-
-CursorWrapper
-~~~~~~~~~~~~~
-封装 database library 给出的 cursor object. 封装了或者传递了各种 cursor methods.
-
-BaseDatabaseWrapper
-~~~~~~~~~~~~~~~~~~~
-
-methods.
-
-- ``cursor()``. create a cursor.
 
 multiple databases
 ------------------
@@ -4705,20 +4771,6 @@ django-admin
 
     os.environ['DJANGO_SETTINGS_MODULE'] = "<project>.settings"
     import django; django.setup()
-
-django release
-==============
-
-- new feature release (A.B, A.B+1) every 8 months.
-  new LTS release (X.2) every 2 years, LTS is supported with security updates
-  for 3 years.
-  each version following an LTS will bump to the A+1 major version number.
-  patch release (A.B.C, A.B.C+1) will be issued as needed.
-
-- 1.11 LTS is the last version supporting python2.
-
-- Django 2.0 和 1.11 相比, 不是特别大的区别, 不充满 breaking changes,
-  而是连续的演进. 只是版本号规范的重新定义.
 
 plugins
 =======
