@@ -2060,6 +2060,8 @@ model meta options
 
 * ``db_table``
 
+* ``db_tablespace``. 该 table 所在的 tablespace. 默认为 settings.DEFAULT_TABLESPACE.
+
 * ``default_related_name``, 对于 relation field, ``related_name`` 的默认值.
   默认是 ``<model>_set``. 同时也是 ``related_query_name`` 的默认值.
 
@@ -2148,6 +2150,9 @@ model field
     positional 形式写出; 对于关系型 field 必须以 kwarg 形式写出.
 
   - ``db_index``, 是否创建 single field index.
+
+  - ``db_tablespace``, 若建立索引, 索引所在的 tablespace. 默认为
+    ``settings.DEFAULT_INDEX_TABLESPACE`` 或 ``Meta.db_tablespace``.
 
   - ``validators``, 指定 validators. 这些 validators 会在 form validation
     或 model instance validation 的时候生效.
@@ -2338,7 +2343,9 @@ index 通过 ``Model.Meta.indexes`` option 指定, a list of Index objects.
 
 * ``name``, index name.
 
-* ``db_tablespace``.
+* ``db_tablespace``. 指定该 index 所在的 tablespace. 对于 single field index,
+  fallback 至 field's db_tablespace; 若未指定或是复合索引, fallback 至
+  model ``Meta.db_tablespace``.
 
 model instance & form instance validations
 ------------------------------------------
@@ -3036,6 +3043,9 @@ Implementation.
 加载了 settings.DATABASE_ROUTERS 定义的 Router objects 对各操作进行 routing,
 或者 fallback 使用 default routing scheme.
 
+各种数据库操作, 都在恰当的阶段 (如选择数据库时) 会调用 router object 给出
+相应的判断和选择.
+
 manually using multiple databases
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -3056,6 +3066,16 @@ problems
 
 - bulitin app relational mess.
 
+tablespaces
+-----------
+tablespace 需要手动创建, django 不负责创建 tablespace, 只负责使用.
+
+settings
+~~~~~~~~
+- settings.DEFAULT_TABLESPACE. table 的 tablespace 默认值. 即 ``Meta.db_tablespace``
+  默认值. 默认为空. 此时依赖 backend 自己选择 tablespace 处理方式.
+
+- settings.DEFAULT_INDEX_TABLESPACE. index 的 tablespace 默认值.
 
 authentication and authorization
 ================================
