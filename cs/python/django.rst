@@ -2814,6 +2814,13 @@ attributes.
 
 * ``model``. The attached model class.
 
+* ``db``. 使用的数据库.
+
+methods.
+
+* ``db_manager()``. 生成一个使用指定数据库的 manager instance.
+
+
 Manager
 ~~~~~~~
 
@@ -2890,6 +2897,14 @@ in model inheritance
 
 database
 ========
+database definitions
+--------------------
+``settings.DATABASES`` 定义项目需要使用的数据库. 项目可以使用多个数据库.
+注意多个数据库可以使用相同或不同的 database engine.
+
+一般使用 ``default`` database 即可. Django uses the database with the alias of
+default when no other database has been selected.
+
 database transactions
 ---------------------
 
@@ -2997,6 +3012,50 @@ BaseDatabaseWrapper
 methods.
 
 - ``cursor()``. create a cursor.
+
+multiple databases
+------------------
+(什么场景下需要使用多个数据库呢??)
+
+即使使用多个数据库, 并且不想定义 default 数据库, 仍然要定义 ``default: {}``.
+此时需要配合定义 ``settings.DATABASE_ROUTERS``, 保证 model 与它所在的数据库
+的关联性.
+
+routing scheme
+~~~~~~~~~~~~~~
+The default routing scheme ensures that if a database isn’t specified, all
+queries fall back to the default database.
+
+自定义 routing scheme 通过定义 Router objects, 然后填入 ``settings.DATABASE_ROUTERS``.
+
+Implementation.
+
+``django.db.utils.ConnectionRouter``, 即 ``django.db.router``.
+
+它封装了各种操作对应的 routing method, 例如 db_for_write, db_for_read 等.
+加载了 settings.DATABASE_ROUTERS 定义的 Router objects 对各操作进行 routing,
+或者 fallback 使用 default routing scheme.
+
+manually using multiple databases
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- queryset chaining 过程中可以在任意位置加上 ``.using()``. 整个就对于该数据库操作.
+
+- model instance methods 有 ``using=`` kwarg.
+
+- manager instance 有 ``.db_manager(using=)`` method.
+
+problems
+~~~~~~~~
+- unnecessary messy complexity when CRUD with multiple dbs.
+
+- no builtin admin integration
+
+- referential integrity forbids cross-database relations.
+  meaning related models must reside in the same database.
+
+- bulitin app relational mess.
+
 
 authentication and authorization
 ================================
@@ -4594,8 +4653,13 @@ django-admin
       os.environ['DJANGO_SETTINGS_MODULE'] = "<project>.settings"
       import django; django.setup()
 
-* ``makemigrations --dry-run`` 可用来检查当前记录的数据库结构 (通过
-  migration files 来体现) 是否和 models 里的模型代码保持一致.
+* ``makemigrations``
+
+  首先检查数据库中的 migration history 是否与 migration files 中的一致.
+  一般只检查 default database, 但会考虑 ``Router.allow_migrate``.
+  
+  - ``--dry-run`` 可用来检查当前记录的数据库结构 (通过 migration files 来体现)
+    是否和 models 里的模型代码保持一致.
 
 * ``clearsessions`` 清除过期的 session data. django 不提供自动清理
   session 的机制. 可以定期执行这个命令手动清除过期的 session.
@@ -4608,6 +4672,10 @@ django-admin
 * ``dbshell``
 
   似乎不会使用平时 django 运行时传入的 OPTIONS 参数.
+
+* ``migrate``
+
+  - ``--database``. 在多数据库情况下, 指定使用的数据库.
 
 在独立的程序或脚本中使用 django
 ===============================
