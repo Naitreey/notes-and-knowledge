@@ -1833,6 +1833,7 @@ pseudo-classes
 
   当指定 anchor 的不同状态的样式时, 按照 LVHFA 顺序可获得正确的结果, 即
   ``:link``, ``:visited``, ``:hover``, ``:focus``, ``:active``.
+  LVHFA -- Lord Vader's Handler Former Anakin.
 
 - ``:visited``, match links that are visited.
 
