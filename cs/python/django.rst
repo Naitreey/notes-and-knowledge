@@ -1797,6 +1797,8 @@ form
 
     * ``CharField``
 
+      mysql note: VARCHAR column 若设置 unique constraint, 要求 max_length <= 255.
+
     * ``FileField``, bound 之后的值 ``.value()`` 是 ``UploadedFile`` instance.
 
   - form field options.
@@ -2237,6 +2239,9 @@ model field
       设置这两个参数, 意味着该列不能手动修改, 并且即使包含在了 form 中,
       也不是必须输入的项 (即不是 required). 因此, django 自动设置
       ``editable=False`` 和 ``blank=True``.
+
+    * mysql note: 只有 5.6.4+ 版本支持毫秒精度的时间, 使用 DATETIME(6).
+      对于 legacy 数据库, 需要手动更新 column data type.
 
   - 若要允许在 ``BooleanField`` 中存 NULL, 使用 ``NullBooleanField``.
 
@@ -2934,6 +2939,7 @@ in model inheritance
 
 database
 ========
+
 database definitions
 --------------------
 ``settings.DATABASES`` 定义项目需要使用的数据库. 项目可以使用多个数据库.
@@ -2941,6 +2947,25 @@ database definitions
 
 一般使用 ``default`` database 即可. Django uses the database with the alias of
 default when no other database has been selected.
+
+connection settings
+~~~~~~~~~~~~~~~~~~~
+- mysql
+
+  * 配置项优先级从高至低.
+
+    1. OPTIONS. 里面直接写 ``mysqlclient.connect`` 允许的各种连接参数.
+
+    2. NAME, USER, PASSWORD, HOST, PORT. 转换成连接参数.
+
+    3. MySQL option files. 因为 mysqlclient 调用 libmysqlclient C API,
+       后者会加载各种 mysql 配置文件. 这里关注的是配置文件中 client
+       部分的配置.
+
+  * 保证服务端 ``sql_mode`` 开启了 STRICT_TRANS_TABLES.
+
+  * isolation level. django 推荐使用并且默认使用 ``read committed``,
+    而不是 mysql default ``repeatable read``.
 
 database connection
 -------------------
@@ -4762,6 +4787,9 @@ django-admin
 * ``migrate``
 
   - ``--database``. 在多数据库情况下, 指定使用的数据库.
+
+* ``inspectdb``. 根据数据库 schema 反向推导生成与之匹配的 model code.
+  通过分析 mysql's builtin ``information_schema`` database.
 
 在独立的程序或脚本中使用 django
 ===============================

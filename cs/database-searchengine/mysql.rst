@@ -241,3 +241,31 @@ Design
   engine code. Like JavaScript, they don't even have objects - just very fancy
   hash tables. The C programmer's view of "a huge array of chars? How
   inefficient!" is outdated.
+
+MyISAM
+======
+MyISAM is shit.
+
+MYISAM doesn't support transactions or enforce foreign-key constraints
+(inferential integrity).
+
+InnoDB
+======
+
+InnoDB is fully transactional and supports foreign key references.
+
+mysql vs postgresql
+===================
+
+- encoding.
+
+  mysql 5.7 仍然不是默认 utf-8 编码. 而且要在 mysql 中使用真正的 utf-8
+  编码需要使用奇葩的 utf8mb4.
+ 
+  postgresql 默认是 utf-8.
+
+- select ... for update.
+
+  mysql 不支持 ``NOWAIT``, ``SKIP LOCKED``, which is VERY IMPORTANT features!
+
+  postgresql 支持得很好.
