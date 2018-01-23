@@ -2506,6 +2506,11 @@ CRUD
     而是在 python 中检查返回的是否为一行, 若不是则 raise DoesNotExist
     或者 MultipleObjectsReturned.
 
+  - ``.get_or_create()``. lookup params 应注意保证筛选条件的唯一性. 这不但是 get
+    部分的要求, 也是保证 create 部分创建实例时唯一性的要求. 例如, 在多个线程中同时
+    使用该方法时, 若一开始 get 失败, 同时进入 create 阶段, 但由于条件的唯一性,
+    只有一个 create 可以成功. 若条件不唯一, 将导致生成多个实例.
+
   - ``.distinct()``, 相当于 ``SELECT DISTINCT`` statement.
 
   - ``.order_by()``, ``-<field>`` 表示逆序, ``?`` 表示随机, 可使用 field
@@ -2964,8 +2969,10 @@ connection settings
 
   * 保证服务端 ``sql_mode`` 开启了 STRICT_TRANS_TABLES.
 
-  * isolation level. django 推荐使用并且默认使用 ``read committed``,
-    而不是 mysql default ``repeatable read``.
+  * isolation level. django is designed for ``read committed`` isolation level,
+    it won't work *correctly* under another isolation level.
+    所以不能用 mysql default ``repeatable read``. 在 django 2.0+, 连接时默认会
+    设置 mysql isolation level 为 read committed.
 
 database connection
 -------------------

@@ -269,3 +269,10 @@ mysql vs postgresql
   mysql 不支持 ``NOWAIT``, ``SKIP LOCKED``, which is VERY IMPORTANT features!
 
   postgresql 支持得很好.
+
+- default isolation level.
+
+  mysql 使用 repeatable read. postgresql 使用 read committed.
+
+  后者才是一般预期的行为, 是除了 mysql 之外所有其他数据库的默认行为.
+  这两个 isolation level 的差异, 会导致应用程序的一些 subtle bugs.
