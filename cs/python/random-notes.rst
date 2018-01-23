@@ -895,6 +895,10 @@
 
 - 如何创建 read-only class attribute?
 
+  目前没找到很好的解决办法. 在 metaclass 上设置 property 确实管用.
+  但 1) 对于每次 readonly property 需要写一个 metaclcass, 不实用;
+  2) 根据 attribute lookup 规则, 这样的 readonly property 在 instance 中不可见. 
+
 - django extension packages can be found on https://djangopackages.org/
   and downloaded from PyPI.
 
