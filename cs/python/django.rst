@@ -2971,6 +2971,13 @@ connection settings
 
   * isolation level. django is designed for ``read committed`` isolation level,
     it won't work *correctly* under another isolation level.
+    
+    例如, 当使用 atomic request 时, 若多个线程中同时 get 一个 entry,
+    即使其中一个 create 已经 commit, 在别的中也不可见, 仍然会 create,
+    等到 request 处理结束 commit 时才报错, 返回 500 internal error.
+    也就是说, atomic request 与 repeatable read isolation level 一起,
+    更容易做无用功, 并返回 500.
+
     所以不能用 mysql default ``repeatable read``. 在 django 2.0+, 连接时默认会
     设置 mysql isolation level 为 read committed.
 
