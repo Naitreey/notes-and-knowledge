@@ -1203,6 +1203,27 @@
   所有修改和删除只操作 instance 的 ``__dict__``, 可以将 class attribute 设置为
   属性默认值. 在需要改动的 instance 上再做修改.
 
+- object cleanup.
+
+  cleanup 应该在以下情况下生效:
+
+  * explicit cleanup. 例如 direct cleanup call, or via context manager methods.
+
+  * cleanup during GC.
+
+  * cleanup before interpreter exit.
+
+  通过 ``__del__`` or ``weakref.finalize``. 两者优缺点:
+
+  - 注册 finalize callback 是比实现 ``__del__`` method 更通用的 cleanup 方式.
+
+  - 只有部分对象可以 weak reference, 所以适用性又有限.
+
+  - ``__del__`` method 在 cpython 中使用没有任何问题. 但由于它依赖于解释器的
+    GC 机制, 所以不如 finalize callback 通用.
+
+  - ``__del__`` 在实现时比 weakref 容易很多.
+
 json
 ====
 
