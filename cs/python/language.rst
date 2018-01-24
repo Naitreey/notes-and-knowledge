@@ -27,7 +27,13 @@ class instance
 * attribute reference.
   
   搜索顺序. 首先搜索 instance ``__dict__``, 然后搜索 class & parent
-  classes attributes, in MRO order.
+  classes attributes, in MRO order. 注意不会去搜索 metaclass 的 attributes.
+  
+  即对于 class instance, 搜索是
+  ``instance -> class -> parent class -> ... -> object``
+  对于 class object (metaclass instance), 搜索是
+  ``class -> metaclass -> parent metaclass -> ... -> type -> object``
+  这两条线是平行的.
 
   若属性是一个 function object, 转变成 bound instance method, 它的
   ``__self__`` attribute is the instance.
@@ -112,6 +118,24 @@ container protocol
 - ``object.__reversed__()``, optional.
 
 - ``object.__contains__()``, optional.
+
+attribute access
+----------------
+
+descriptor protocol
+~~~~~~~~~~~~~~~~~~~
+Descriptors are a powerful, general purpose protocol. They are the mechanism
+behind properties, methods, static methods, class methods, and super(). They
+are used throughout Python itself to implement the new style classes introduced
+in version 2.2. Descriptors simplify the underlying C-code and offer a flexible
+set of new tools for everyday Python programs.
+
+descriptor 的效果是一个对象以不同的方式去访问它, 得到的是不同的结果.
+descriptor object ``x`` 出现在某个 owner class ``A`` 的定义中, 成为这个类的
+attribute. 当获取这个 attribute 时 (``a.x``, ``A.x``, ``super().x``, or whatever)
+python 发现这个 attribute 实际上是 descriptor, 不会直接返回这个 descriptor,
+而是进一步执行 descriptor 的 ``__get__``, ``__set__`` 或 ``__delete__`` method
+来完成操作.
 
 class creation
 --------------

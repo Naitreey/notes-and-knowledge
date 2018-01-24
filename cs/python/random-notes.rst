@@ -584,20 +584,6 @@
 
     - potential memory savings
 
-- descriptor protocol
-
-  descriptor 的效果是一个对象以不同的方式去访问它, 得到的是不同的结果.
-  descriptor object ``x`` 出现在某个 owner class ``A`` 的定义中, 成为这个类的
-  attribute. 当获取这个 attribute 时 (``a.x``, ``A.x``, ``super().x``, or whatever)
-  python 发现这个 attribute 实际上是 descriptor, 不会直接返回这个 descriptor,
-  而是进一步执行 descriptor 的 ``__get__``, ``__set__`` 或 ``__delete__`` method
-  来完成操作.
-
-  python 中很多东西实际上都是某种 descriptor class 的实例. 例如, 所有函数都是
-  non-data descriptor, 它们在单独使用和通过类访问是表现为函数自身, 通过实例访问时表现为
-  bound method. ``property`` object 都是 data descriptor, 是 ``property`` descriptor
-  class 的实例.
-
 - ``\b`` backspace char 只是把光标向左移动 1 格, 并不删除涉及的字符;
   ``\r`` carriage return 只是把光标移至当前行首, 并不删除本行内容.
 
