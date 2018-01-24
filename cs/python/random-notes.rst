@@ -855,49 +855,23 @@
   * 对于 user-defined class, 若没有实现 ``__contains__``, 但实现了 ``__iter__``
     则通过 iterate 生成的 iterator 来找相等的元素.
 
-- 一些 special attributes & methods:
-
-  * ``object.__dict__`` 对象自身定义的所有 attrs.
-
-  * ``instance.__class__`` 实例的类.
-
-  * ``definition.__name__`` 对象的名字.
-
-  * ``definition.__qualname__`` qualified name of module, class, function,
-    method, descriptor, or generator instance. 对于 module, 这是 entire dotted
-    path to the module; 对于其他对象, 这是 the “path” from a module’s global
-    scope to the object.
-
-  * ``class.__bases__`` 一个类的基类们.
-
-  * ``class.mro()`` 一个类 MRO 顺序. 该方法在 class instantiation 时调用, 结果存储
-    在 ``class.__mro__`` 中. 注意 instance 上不能访问这个 method.
-
-  * ``class.__mro__`` 同上, 只计算一次.
-
-  * ``class.__subclasses__()`` 一个类的所有直接子类. 使用 weakref 来保存这些子类的
-    列表.
-
-  * ``instance_method.__self__``, instance reference, readonly.
-
-  * ``instance_method.__func__``, underlying function defined in class, readonly.
-
-  * ``instance_method.__doc__``, same as ``__func__.__doc__``, readonly.
-
-  * ``instance_method.__name__``, same as ``__func__.__name__``, unqualified name,
-    readonly.
-
-  * ``instance_method.__module__``, same as ``__func__.__module__``, readonly.
-
-  * ``object.__len__()``, 必须有这个 special method 才能获取长度. 不会 fallback
-    至其他方式, 例如不会使用 ``iterator.__next__``. 因为仅仅为了获取长度而 exhaust
-    iterator 是不合理的.
-
 - 如何创建 read-only class attribute?
 
-  目前没找到很好的解决办法. 在 metaclass 上设置 property 确实管用.
-  但 1) 对于每次 readonly property 需要写一个 metaclcass, 不实用;
+  在 metaclass 上设置 property 确实管用.
+  但 1) 对于每个需要 readonly property 的类需要写一个单独的 metaclass, 当需要
+  功能合并时还需要不同的 metaclass 继承出一个综合的 metaclass. 太麻烦了.
   2) 根据 attribute lookup 规则, 这样的 readonly property 在 instance 中不可见. 
+  .. code:: python
+    class Meta(type):
+        @property
+        def x(cls):
+            return 1
+
+    class A(metaclass=Meta):
+        pass
+
+  其实在 python 中, 由于没有真正的访问限制, 没有真正能做到的 readonly class
+  attribute.
 
 - django extension packages can be found on https://djangopackages.org/
   and downloaded from PyPI.

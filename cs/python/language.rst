@@ -146,3 +146,53 @@ operations
   sets. 然而两种方式并没有效率上的区别, 因为虽然接受任何 iterable, 但是仍然
   会在内部转换成 set 再进行比较.
 
+special attributes
+------------------
+
+general objects:
+
+- ``object.__dict__``. 一个对象自身存储的属性.
+
+class instances:
+
+- ``instance.__class__``. the class of the instance.
+
+class, function-like definitions, generator instance (including those from
+generator functions and generator expressions), and module:
+
+- ``definition.__name__``. the name of definition. for module, the qualified
+  import path of module.
+
+- ``definition.__qualname__``. the qualified name of definition.
+  这是 the “path” from a module’s global scope to the object. module object
+  没有这个属性.
+
+class:
+
+- ``class.__bases__``. 一个类定义时使用的直接父类. 不包含 MRO resolved result.
+
+- ``class.__mro__``. class 的 MRO order. It is considered when looking for base
+  classes during MRO.
+
+- ``class.mro()`` 该方法不是定义在 class 上的, 而是定义在 metaclass 上的. 所以
+  在 class 中是作为 instance method 方式调用. 在生成 class object 时, 计算
+  MRO order 并存储在 ``class.__mro__`` 中. 由于在 metaclass 上定义, 在 instance
+  中不可见.
+
+- ``class.__subclasses__()``. 一个类的所有现存子类. 通过 weakref 保存关系.
+
+instance methods:
+
+- ``instance_method.__self__``, instance reference, readonly.
+
+- ``instance_method.__func__``, underlying function defined in class, readonly.
+
+- ``instance_method.__doc__``, same as ``__func__.__doc__``, readonly.
+
+- ``instance_method.__module__``, same as ``__func__.__module__``, readonly.
+
+containers:
+
+- ``container.__len__()``, 必须有这个 special method 才能获取长度. 不会 fallback
+  至其他方式, 例如不会使用 ``iterator.__next__``. 因为仅仅为了获取长度而 exhaust
+  iterator 是不合理的.
