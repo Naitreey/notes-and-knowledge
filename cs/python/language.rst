@@ -46,22 +46,31 @@ class instance
 special attributes & methods
 ----------------------------
 
-general objects:
+instantiation
+~~~~~~~~~~~~~
+以下属性在 class & metaclass 上有.
 
-- ``object.__dict__``. 一个对象自身存储的属性.
-
-- ``object.__new__(cls, ...)``. static method. 实例化时
+- ``class.__new__(cls, ...)``. static method. 实例化时
   调用该方法创建 ``cls`` 的新实例. 剩下的参数定义就是 constructor 的参数
   signature. 返回 new object instance.
 
-- ``object.__init__(self, ...)``. Must return None.
+- ``class.__init__(self, ...)``. Must return None.
 
-class instances:
+以下属性在 class instances 上有.
 
 - ``instance.__class__``. the class of the instance.
 
+attribute store
+~~~~~~~~~~~~~~~
+以下属性在非 ``__slots__`` objects 上有.
+
+- ``object.__dict__``. 一个对象自身存储的属性.
+
+object identification
+~~~~~~~~~~~~~~~~~~~~~
+
 class, function-like definitions, generator instance (including those from
-generator functions and generator expressions), and module:
+generator functions and generator expressions), and module.
 
 - ``definition.__name__``. the name of definition. for module, the qualified
   import path of module.
@@ -70,7 +79,9 @@ generator functions and generator expressions), and module:
   这是 the “path” from a module’s global scope to the object. module object
   没有这个属性.
 
-class:
+class relations
+~~~~~~~~~~~~~~~
+以下属性在 class objects 上有.
 
 - ``class.__bases__``. 一个类定义时使用的直接父类. 不包含 MRO resolved result.
 
@@ -84,7 +95,8 @@ class:
 
 - ``class.__subclasses__()``. 一个类的所有现存子类. 通过 weakref 保存关系.
 
-instance methods:
+instance method attributes
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 - ``instance_method.__self__``, instance reference, readonly.
 
@@ -120,22 +132,105 @@ container protocol
 - ``object.__contains__()``, optional.
 
 attribute access
-----------------
+~~~~~~~~~~~~~~~~
+
+- ``object.__getattribute__(self, name)``. 负责一个对象上的所有属性访问.
+  In order to avoid infinite recursion in this method, its implementation
+  should always call the base class method with the same name to access any
+  attributes it needs.
+
+  ``object`` base class 实现了基础的 ``__getattribute__``, 即默认情况下, 所有
+  ``instance.attr`` 使用以下属性访问逻辑:
+
+  1. 尝试 data descriptor. 若有, 调用::
+       descriptor.__get__(self, instance, type(instance))
+
+  2. 尝试 instance attribute (``__dict__``). 若有, 直接返回.
+
+  3. 尝试 non-data descriptor 和 class attribute. 若有, 且是 non-data descriptor,
+     调用::
+       descriptor.__get__(self, instance, type(instance))
+     若是 class attribute, 直接返回.
+
+  4. 若以上全败, 调用 ``__getattr__``.
+
+  5. raise AttributeError.
+
+  ``type.__getattribute__`` 适用于所有 ``class.attr`` 的访问. 它在此基础上,
+  对第二步做了修改:
+
+  2. 尝试 instance attribute (``__dict__``). 若有, 且是 descriptor, 调用::
+       descriptor.__get__(self, None, class)
+     若不是 descriptor, 直接返回.
+
+  由于 ``__getattribute__`` 完全决定属性访问, 并且具有以上复杂的逻辑, 所以
+  subclass/submetaclass 一般不该完全自定义该方法, 而是在调用父类的方法基础上
+  进行适当的自定义.
 
 descriptor protocol
-~~~~~~~~~~~~~~~~~~~
+-------------------
 Descriptors are a powerful, general purpose protocol. They are the mechanism
 behind properties, methods, static methods, class methods, and super(). They
 are used throughout Python itself to implement the new style classes introduced
 in version 2.2. Descriptors simplify the underlying C-code and offer a flexible
 set of new tools for everyday Python programs.
 
-descriptor 的效果是一个对象以不同的方式去访问它, 得到的是不同的结果.
-descriptor object ``x`` 出现在某个 owner class ``A`` 的定义中, 成为这个类的
-attribute. 当获取这个 attribute 时 (``a.x``, ``A.x``, ``super().x``, or whatever)
-python 发现这个 attribute 实际上是 descriptor, 不会直接返回这个 descriptor,
-而是进一步执行 descriptor 的 ``__get__``, ``__set__`` 或 ``__delete__`` method
-来完成操作.
+一个 descriptor 实例作为类的成员时, 才能发挥它的作用. 当通过不同的方式 (从 owner
+class 访问, 从 instance of owner class 访问, 直接访问), 进行不同的操作 (get, set,
+delete) 时, 表现为不同的行为.
+
+descriptor 的这种设计, 让它非常适合封装具有适应性的逻辑, 即以不同的方式访问, 执行
+不同的逻辑.
+
+the mechanism for descriptors is embedded in the ``__getattribute__()`` methods
+for ``object``, ``type``, and ``super()``.
+
+descriptor class definition
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- ``descriptor.__get__(self, instance, owner)``. ``obj.descr`` 获取时调用.
+  当 obj 为 instance of owner class 时, ``instance = obj``, ``owner = type(obj)``;
+  当 obj 为 owner class 时, ``instance = None``, ``owner = obj``.
+
+- ``descriptor.__set__(self, instance, value)``. ``obj.descr = ...`` 赋值时
+  调用. 对 descriptor 赋值只能在 instance of owner class 中生效.
+
+- ``descriptor.__delete__(self, instance)``. ``del obj.descr`` 删除时调用.
+  删除 descriptor 只能在 instance of owner class 中生效.
+
+定义以上任意方法, 则 class 成为 descriptor.
+
+分类和调用优先级
+~~~~~~~~~~~~~~~~
+- data descriptor: 定义 ``__get__`` 和 ``__set__``. 若定义 readonly descriptor,
+  让 ``__set__`` raise AttributeError 即可.
+  
+- non-data descriptor: 只定义 ``__get__``.
+
+在 ``obj`` instance 上进行 attribute lookup  ``obj.attr`` 时, attr 的搜索优先级
+为:
+
+- data descriptor.
+ 
+- instance attribute.
+ 
+- non-data descriptor and class attribute. (注意 method 实际是 non-data descriptor.)
+
+- ``__getattr__``. 
+
+typical use cases
+~~~~~~~~~~~~~~~~~
+
+- property: properties are data descriptors.
+
+- function: all functions are non-data descriptors which return bound methods
+  when they are invoked from an object.
+
+  bound method 是在 instance 上访问时才从 ``__get__`` 中生成的. 每次访问都会
+  生成一个全新的 bound method 实例 (内存地址不同). 在它上面添加了 ``__self__``
+  ``__func__`` ``__class__`` 等属性.
+
+- static method, class method.
 
 class creation
 --------------
