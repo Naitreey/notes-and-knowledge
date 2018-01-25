@@ -688,9 +688,6 @@
   * ``exists`` & ``lexists`` 都是检查路径是否存在, 但前者会认为 broken symlink 属于
     路径不存在, 所以还是要根据自己的需求进行选择.
 
-- haskell 中的 ``fold*`` 和 ``scan*`` 对应于 python 中的 ``functools.reduce`` 和
-  ``itertools.accumulate``.
-
 - python 中, 各种 protocol 实际上是各种 interface 的规定. 满足这些协议 (interface)
   就可以按照相应的方式去使用. 这是 duck typing 的一种体现.
 
@@ -1003,10 +1000,6 @@
   就好了, 这样比较可读和方便. 或者在 python3.6+ 可以一概都使用 ``pathlib.Path``,
   即跨平台, 又方便使用. (py3.6+ 是因为 ``os.PathLike`` 是在 py3.6 引入的.)
 
-- ``functools.lru_cache`` 的原理是在它 wrap 函数的 wrapper 里放一个 cache dict,
-  通过匹配 args, kwargs, type 来获取 cached value. 对每个这样的函数, 都新
-  创建了一个 dict cache, 注意这带来的内存影响.
-
 - ``django.utils.functional.cached_property`` 是将调用 class 上 property 函数的
   访问结果 cache 到 instance 的同名 attr 上. 代价是这个 attr 是可写的. 使用与之
   类似的方式, 我们之后写涉及复杂计算的 property 时, 不需要手动设置一个 private
@@ -1186,13 +1179,6 @@ enum
 - 对于已经定义了 members 的 enum class 不能再被 subclass. 但若一个 enum
   仅仅定义了 methods, 没定义任何 member, 可以被继承. 这是为了方便在不同
   enum class 之间共用相同的 methods, behaviors, etc.
-
-functools
-=========
-
-- 由于 ``update_wrapper()`` 需要 wrapper, wrapped 两个参数, 别忘了相应的
-  ``wraps()`` 函数需要以 wrapped 为参数, 返回一个 decorator 作用在 wrapper
-  function 上.
 
 Jinja template
 ==============

@@ -2203,6 +2203,46 @@ attributes
   description 的值可以包含 ``__dict__`` interpolation placeholder. 但
   注意它本身不去 interpolate.
 
+field property introspection.
+
+- ``auto_created``.
+  该 field 是否自动创建. 自动创建的 field 例如 AutoField, 用于继承的 parent
+  link OneToOneField.
+
+- ``concrete``.
+  Whether the field has a database column associated with it.
+  non-concrete fields 例如 GenericForeignKey, 反向的关系列 ForeignObjectRel.
+
+- ``hidden``.
+  Whether a field is used to back another non-hidden field’s functionality.
+  这用于区分 public fields and private fields.
+
+- ``is_relation``.
+  Whether the field is a relation, i.e. a reference to other model instances.
+  对于 Field subclass, 有 remote_field 就认为是关系列.
+
+- ``model``.
+  the model on which the field is defined.
+
+property introspection for relational fields. 以下属性在所有 field 中都有.
+但是只有当 ``is_relation == True`` 时, 它们才不是 None. 自定义的 relation
+fields 需要设置这些 flags.
+
+- ``many_to_many``.
+  many-to-many relation. e.g., ManyToManyField.
+
+- ``many_to_one``.
+  many-to-one relation. e.g., ForeignKey.
+
+- ``one_to_many``.
+  one-to-many relation. e.g., GenericRelation.
+
+- ``one_to_one``.
+  one-to-one relation. e.g., OneToOneField.
+
+- ``related_model``.
+  the model the field relates to. 通过 ``remote_field.model`` 获得.
+
 methods
 ~~~~~~~
 db data type related APIs.
@@ -2273,8 +2313,22 @@ form field.
 
 - ``formfield(form_class=None, choices_form_class=None, **kwargs)``.
   Returns the default django.forms.Field of this field for ModelForm.
+  ``kwargs`` are passed to form class constructor.
 
-- Field deconstruction: ``Field.deconstruct()``
+deconstruction.
+ 
+- ``deconstruct()``.
+  Returns a 4-tuple with enough information to recreate the field.
+
+  * The name of the field on the model.
+
+  * The import path of the field.
+
+  * A list of positional arguments.
+
+  * A dict of keyword arguments.
+
+  这在 migration 中使用.
 
 field types
 ~~~~~~~~~~~
