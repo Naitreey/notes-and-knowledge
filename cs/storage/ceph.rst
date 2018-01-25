@@ -141,3 +141,16 @@ able to prove to each other they have a copy of the key without actually
 revealing it. This provides mutual authentication, which means the cluster is
 sure the user possesses the secret key, and the user is sure that the cluster
 has a copy of the secret key.
+
+A user/actor invokes a Ceph client to contact a monitor. Each monitor can
+authenticate users and distribute keys, so there is no single point of failure
+or bottleneck when using cephx. The monitor returns a data structure that
+contains a session key for use in obtaining Ceph services. This session key is
+itself encrypted with the user’s permanent secret key, so that only the user
+can request services from the Ceph Monitor(s). The client then uses the session
+key to request its desired services from the monitor, and the monitor provides
+the client with a ticket that will authenticate the client to the OSDs that
+actually handle data. Ceph Monitors and OSDs share a secret, so the client can
+use the ticket provided by the monitor with any OSD or metadata server in the
+cluster. cephx tickets expire, so an attacker cannot use an expired ticket or
+session key obtained surreptitiously.
