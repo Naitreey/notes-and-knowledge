@@ -2132,129 +2132,191 @@ model meta options
 model field
 -----------
 
-* options.
+``django.db.models.Field``. field base class.
+Field 是 ``RegisterLookupMixin`` 的子类.
 
-  Many of Django’s model fields accept options that they don’t do anything with.
-  This behavior simplifies the field classes, because they don’t need to
-  check for options that aren’t necessary. They just pass all the options
-  to the parent class and then don’t use them later on.
+options
+~~~~~~~
 
-  - primary key:
+Many of Django’s model fields accept options that they don’t do anything with.
+This behavior simplifies the field classes, because they don’t need to
+check for options that aren’t necessary. They just pass all the options
+to the parent class and then don’t use them later on.
 
-    可以用 ``primary_key=True`` 设置某个 field 为 primary key, 否则 django 自动
-    给 model 添加 id field 作为 primary key
+这些 options 作为 constructor kwargs, 实例化后成为 field instance attributes.
 
-    .. code:: python
-      id = models.AutoField(primary_key=True)
+- ``primary_key=True`` 设置某个 field 为 primary key, 否则 django 自动
+  给 model 添加 id field 作为 primary key.
 
-    The primary key field is read-only. If you change the value of the primary key
-    on an existing object and then save it, a new object will be created alongside
-    the old one.
+  .. code:: python
+    id = models.AutoField(primary_key=True)
 
-  - ``default`` 仅在 SQL 中创建 entry 时该列的值未指定时生效, 而不是
-    ``field=None`` 时. 后者情况是指定了该列, 但值是 null. 默认情况下
-    ``default=None``, 但是否能顺利使用该 default value, 还要看该列是否允许
-    null, 即 ``null=`` 的配置.
+  The primary key field is read-only. If you change the value of the primary key
+  on an existing object and then save it, a new object will be created alongside
+  the old one.
 
-  - ``blank`` 若为 True, form 中允许该项为空
+- ``default`` 仅在 SQL 中创建 entry 时该列的值未指定时生效, 而不是
+  ``field=None`` 时. 后者情况是指定了该列, 但值是 null. 默认情况下
+  ``default=None``, 但是否能顺利使用该 default value, 还要看该列是否允许
+  null, 即 ``null=`` 的配置.
 
-  - ``null`` 默认是 False, 此时 create table 时有 ``NOT NULL``, 且不允许
-    field 值为 None; 若 True, create table 时有 ``NULL``, 且允许 field 值
-    为 None.
+- ``blank`` 若为 True, form 中允许该项为空
 
-    ``blank`` 是规定 form validation 时是否允许空值.
-    两者的意义是不同的.
-    ``null`` 和 ``blank`` 的默认值都是 ``False``.
+- ``null`` 默认是 False, 此时 create table 时有 ``NOT NULL``, 且不允许
+  field 值为 None; 若 True, create table 时有 ``NULL``, 且允许 field 值
+  为 None.
 
-  - ``choices`` 设置 field 的可选值, 其值是 a iterable of ``(value, description)``
-    pairs. 每个选项的值的 symbolic enum 形式和整个选项 列表应设置在 model
-    class 中. 这是为了方便后续在查询等操作中使用. 设置该选项后, 默认的 form
-    形式会变成 (multiple) select box. Given a model instance, the display
-    value for a choices field can be accessed using the ``get_FOO_display()``
-    method.
+  ``blank`` 是规定 form validation 时是否允许空值.
+  两者的意义是不同的.
+  ``null`` 和 ``blank`` 的默认值都是 ``False``.
 
-  - ``help_text`` 设置该列值的更详细的帮助信息. ModelForm 会使用它.
-    其字符串值在 form 中直接显示, 不会被 escape. 因此可以加入 html 语法.
+- ``choices`` 设置 field 的可选值, 其值是 a iterable of ``(value, description)``
+  pairs. 每个选项的值的 symbolic enum 形式和整个选项 列表应设置在 model
+  class 中. 这是为了方便后续在查询等操作中使用. 设置该选项后, 默认的 form
+  形式会变成 (multiple) select box. Given a model instance, the display
+  value for a choices field can be accessed using the ``get_FOO_display()``
+  method.
 
-  - ``error_messages`` overrides default validation error messages.
+- ``help_text`` 设置该列值的更详细的帮助信息. ModelForm 会使用它.
+  其字符串值在 form 中直接显示, 不会被 escape. 因此可以加入 html 语法.
 
-  - ``verbose_name``, 对于非关系型 field, 该参数是第一个 kwarg, 因此经常以
-    positional 形式写出; 对于关系型 field 必须以 kwarg 形式写出.
+- ``error_messages`` overrides default validation error messages.
 
-  - ``db_index``, 是否创建 single field index.
+- ``verbose_name``, 对于非关系型 field, 该参数是第一个 kwarg, 因此经常以
+  positional 形式写出; 对于关系型 field 必须以 kwarg 形式写出.
 
-  - ``db_tablespace``, 若建立索引, 索引所在的 tablespace. 默认为
-    ``settings.DEFAULT_INDEX_TABLESPACE`` 或 ``Meta.db_tablespace``.
+- ``db_index``, 是否创建 single field index.
 
-  - ``validators``, 指定 validators. 这些 validators 会在 form validation
-    或 model instance validation 的时候生效.
+- ``db_tablespace``, 若建立索引, 索引所在的 tablespace. 默认为
+  ``settings.DEFAULT_INDEX_TABLESPACE`` 或 ``Meta.db_tablespace``.
 
-* ``Field`` methods.
+- ``validators``, 指定 validators. 这些 validators 会在 form validation
+  或 model instance validation 的时候生效.
 
-  - Field deconstruction: ``Field.deconstruct()``
+attributes
+~~~~~~~~~~
 
-  - ``db_type()`` 给出底层数据库对应的实际 field type.
-    若这个方法返回 None, 则生成的 SQL 会直接跳过这个 Field.
+- ``description``. description of the field. 这与 help_text 的区别是,
+  这个使用来描述列的 implementation 的, 即适合于用在代码文档中. 而
+  help text 是描述列该填什么内容的, 即适合于界面输入提示.
 
-  - ``rel_db_type()`` 决定指向这个 Field 的 Field 的数据库类型.
-    这被 ForeignKey, OneToOneField 等使用. 也就是说, 当创建一个 field A reference
-    另一个 field B 时, B 的 ``rel_db_type()`` 决定 A 的数据库类型.
+  description 的值可以包含 ``__dict__`` interpolation placeholder. 但
+  注意它本身不去 interpolate.
 
-  - ``from_db_value()``
+methods
+~~~~~~~
+db data type related APIs.
 
-  - ``to_python()``
+- ``get_internal_type()``.
+  给出这个 Field class 对应的 django builtin field type name.
 
-  - ``get_prep_value()``
+  对于每种 db connection backend, 定义了一组从 internal type name 至
+  db-specific 的参数或类型映射. 它们的 key 即 internal type names.
 
-  - ``get_db_prep_value()``
+  定义这个方法, 意思是告知 Field API 这个列在数据库层与哪个 builtin field
+  是相同的.
 
-* custom field type.
+  对于 builtin fields, 直接返回自身名字. 因为它们就是定义在映射中的 key.
 
-  - You can’t change the base class of a custom field because Django won’t
-    detect the change and make a migration for it. Instead, you must create a
-    new custom field class and update your models to reference it.
+- ``db_type(connection)``.
+  给出数据库中实际使用的 field type.
+  
+  对于 builtin fields, 根据 ``BaseDatabaseWrapper.datatypes`` 和 field options
+  生成 field type.
 
-* field types. 所有 field types 都是 ``Field`` 子类.
+  若这个方法返回 None, 则生成的 SQL 会直接跳过这个 Field.
 
-  - IP address 用 ``GenericIPAddressField``.
+- ``rel_db_type(connection)``.
+  当这个 Field 成为 ForeignKey, OneToOneField 等 many-to-one field 所指向
+  的列时, 给出相应的 many-to-one field 所应使用的 ``db_type()``.
 
-  - 实数一般用 ``FloatField``, 精确要求时考虑 ``DecimalField``.
+db field value related APIs. 它们的作用还不完全清楚.
 
-  - 整数有 ``IntegerField``, ``PositiveIntegerField``, ``BigIntegerField``,
-    ``SmallIntegerField``, ``PositiveSmallIntegerField``.
+- ``get_prep_value(value)``.
+  将 field value 转换成这个列的值合法的数据类型.
 
-  - ``DateField`` ``DateTimeField``
+- ``get_db_prep_value(value, connection, prepared=False)``
+  将 field value 转换成 db-specific 的列值.
 
-    * 在 python 中以 datetime.date, datetime.datetime 分别表示.
+- ``get_db_prep_save(value, connection)``.
+  用于在访问数据库保存数据之前, 将 field value 转换成 db-specific
+  的列值. 默认直接使用 ``get_db_prep_value()``.
 
-    * ``auto_now_add`` 适合做 create time;
-      ``auto_now`` 适合做 update time.
-      这些参数在调用 ``Model.save()`` 来保存时才有效, 通过其他途径修改数据
-      时不会生效.
+- ``pre_save(model_instance, add)``. 在 ``get_db_prep_save()`` 之前,
+  给出要使用的列值. 返回要使用的列值.  需要对 ``model_instance``
+  上的列属性做相应的设置.
 
-      若只是想设置默认值, 那就用 ``default=``, 别用这两个选项.
+- ``from_db_value(value, expression, connection)``.
+  将 db-specific 的 value 转换成合法的 python 列值.
 
-      ``auto_now``, ``auto_now_add`` 和 ``default`` 是互斥的.
+Deserialization.
 
-      设置这两个参数, 意味着该列不能手动修改, 并且即使包含在了 form 中,
-      也不是必须输入的项 (即不是 required). 因此, django 自动设置
-      ``editable=False`` 和 ``blank=True``.
+- ``to_python(value)``.
+  called by deserialization and during the clean() method used from forms.
+  Return valid field value as python object.
 
-    * mysql note: 只有 5.6.4+ 版本支持毫秒精度的时间, 使用 DATETIME(6).
-      对于 legacy 数据库, 需要手动更新 column data type.
+  The method should deal gracefully with any of the following arguments:
 
-  - 若要允许在 ``BooleanField`` 中存 NULL, 使用 ``NullBooleanField``.
+  * An instance of the correct type.
 
-  - ``SlugField`` 要配合 ``slugify`` 函数使用, 只应该在创建 instance 时保存该列值.
+  * A string.
 
-  - ``FilePathField`` 要求值必须是满足路径匹配条件的文件路径.
+  * None.
 
-  - ``JSONField``. postgresql 可以使用 native JSONField, 对于 mysql 可以使用
-    django-jsonfield module 用 TextField/CharField 模拟.
+Serialization.
 
-* relation field: many-to-one.
+- ``value_to_string(obj)``.
+  convert field value, which is attribute of ``obj``, to string form.
+  使用 ``value_from_object(obj)`` 获取列的值, 然后再 serialize.
 
-  - 多对一的映射关系用 ``django.db.models.ForeignKey`` 实现.
+form field.
+
+- ``formfield(form_class=None, choices_form_class=None, **kwargs)``.
+  Returns the default django.forms.Field of this field for ModelForm.
+
+- Field deconstruction: ``Field.deconstruct()``
+
+field types
+~~~~~~~~~~~
+所有 field types 都是 ``Field`` 子类.
+
+- IP address 用 ``GenericIPAddressField``.
+
+- 实数一般用 ``FloatField``, 精确要求时考虑 ``DecimalField``.
+
+- 整数有 ``IntegerField``, ``PositiveIntegerField``, ``BigIntegerField``,
+  ``SmallIntegerField``, ``PositiveSmallIntegerField``.
+
+- ``DateField`` ``DateTimeField``
+
+  * 在 python 中以 datetime.date, datetime.datetime 分别表示.
+
+  * ``auto_now_add`` 适合做 create time;
+    ``auto_now`` 适合做 update time.
+    这些参数在调用 ``Model.save()`` 来保存时才有效, 通过其他途径修改数据
+    时不会生效.
+
+    若只是想设置默认值, 那就用 ``default=``, 别用这两个选项.
+
+    ``auto_now``, ``auto_now_add`` 和 ``default`` 是互斥的.
+
+    设置这两个参数, 意味着该列不能手动修改, 并且即使包含在了 form 中,
+    也不是必须输入的项 (即不是 required). 因此, django 自动设置
+    ``editable=False`` 和 ``blank=True``.
+
+  * mysql note: 只有 5.6.4+ 版本支持毫秒精度的时间, 使用 DATETIME(6).
+    对于 legacy 数据库, 需要手动更新 column data type.
+
+- 若要允许在 ``BooleanField`` 中存 NULL, 使用 ``NullBooleanField``.
+
+- ``SlugField`` 要配合 ``slugify`` 函数使用, 只应该在创建 instance 时保存该列值.
+
+- ``FilePathField`` 要求值必须是满足路径匹配条件的文件路径.
+
+- ``JSONField``. postgresql 可以使用 native JSONField, 对于 mysql 可以使用
+  django-jsonfield module 用 TextField/CharField 模拟.
+
+* relation field ``ForeignKey``. many-to-one relation.
 
   - foreign key field 的名字应该是所指向的 model 的名字的全小写版本.
 
@@ -2306,7 +2368,7 @@ model field
     * ``swappable``, 默认 True 即可. 与 swappable AUTH_USER_MODEL 相关, 为了
       支持 custom user model.
 
-* relation field: one-to-one.
+* relation field ``OneToOneField``: one-to-one relation.
 
   - 一对一关系一般用于一个模型作为另一个模型的延伸、扩展、附加属性等.
     ``OneToOneField`` 在 model 继承时用于定义父表和子表通过哪一列来关联.
@@ -2320,7 +2382,7 @@ model field
   - OTO field 的 ``parent_link`` 结合 conrete model inheritance 时有特殊作用,
     它让父类的 field 可在子类即 OTO field 所在 model 中直接访问.
 
-* relation field: many-to-many.
+* relation field ``ManyToManyField``: many-to-many relation.
 
   - 由于一个列无法体现多对多的关系, ``ManyToManyField`` 在实现时, 不是构成了一个列,
     而是一个单独的 table. table 的命名根据 ``<app>_<model>_<m2mfield>`` 全小写命名.
