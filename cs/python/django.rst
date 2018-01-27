@@ -2145,9 +2145,9 @@ to the parent class and then don’t use them later on.
 
 这些 options 作为 constructor kwargs, 实例化后成为 field instance attributes.
 
-- ``primary_key=True`` 设置某个 field 为 primary key, 否则 django 自动
-  给 model 添加 id field 作为 primary key.
-
+- ``primary_key=True``.
+  设置某个 field 为 primary key, 否则 django 自动给 model 添加 id field
+  作为 primary key.
   .. code:: python
     id = models.AutoField(primary_key=True)
 
@@ -2155,12 +2155,37 @@ to the parent class and then don’t use them later on.
   on an existing object and then save it, a new object will be created alongside
   the old one.
 
-- ``default`` 仅在 SQL 中创建 entry 时该列的值未指定时生效, 而不是
+  primary key field 自动设置 null=False 和 unique=True, 若明确设置了 null=True 
+  检查时会报错.
+
+- ``unique``.
+  unique constraint 显然自动生成 index, 所以不用设置 ``db_index``.
+  OneToOneField 一定是 unqiue 的, 设不设都行.
+  ManyToManyField 由于本身不是一个列, 不支持 unique option.
+
+  unique constraint is checked during model instance validation, and enforced
+  in db.
+
+- ``unique_for_date``, ``unqiue_for_month``, ``unique_for_year``.
+  this field is unqiue with respect to the specified period of time.
+  该选项的值为所参考的时间列.
+
+  在 model instance validation 时检查. 
+
+- ``default``.
+  a value or callable. lambda 不能做 default, 因为不能 serialized in migration.
+  对于 relational fields, default 设置为 remote_field 值, 而不是 model instance.
+
+  仅在 SQL 中创建 entry 时该列的值未指定时生效, 而不是
   ``field=None`` 时. 后者情况是指定了该列, 但值是 null. 默认情况下
   ``default=None``, 但是否能顺利使用该 default value, 还要看该列是否允许
   null, 即 ``null=`` 的配置.
 
-- ``blank`` 若为 True, form 中允许该项为空
+  .. TODO read with form
+
+- ``blank`` 若为 True, form 中允许该项为空.
+
+  .. TODO read with form
 
 - ``null`` 默认是 False, 此时 create table 时有 ``NOT NULL``, 且不允许
   field 值为 None; 若 True, create table 时有 ``NULL``, 且允许 field 值
@@ -2170,28 +2195,52 @@ to the parent class and then don’t use them later on.
   两者的意义是不同的.
   ``null`` 和 ``blank`` 的默认值都是 ``False``.
 
-- ``choices`` 设置 field 的可选值, 其值是 a iterable of ``(value, description)``
-  pairs. 每个选项的值的 symbolic enum 形式和整个选项 列表应设置在 model
-  class 中. 这是为了方便后续在查询等操作中使用. 设置该选项后, 默认的 form
-  形式会变成 (multiple) select box. Given a model instance, the display
-  value for a choices field can be accessed using the ``get_FOO_display()``
-  method.
+  .. TODO read with form
 
-- ``help_text`` 设置该列值的更详细的帮助信息. ModelForm 会使用它.
-  其字符串值在 form 中直接显示, 不会被 escape. 因此可以加入 html 语法.
+- ``choices``.
+  设置 field 的可选值, 其值是 a iterable of ``(value, description)``
+  pairs 或者设置 optgroups ``(label, ((value, description), ...), ...)``.
+  choices 只需是 iterable 即可, 从而允许动态生成.
+  
+  选项值的 symbolic enum 以及 choices list 本身, 应设置在 model class 中.
+  这是为了方便后续在查询等操作中使用.
+  
+  设置该选项后, 默认的 form field 使用 TypedChoiceField, form widget 是
+  (multiple) select box.
+  
+  Given a model instance, the display value for a choices field can be accessed
+  using the ``get_FOO_display()`` method.
 
-- ``error_messages`` overrides default validation error messages.
+  .. TODO read with form
 
-- ``verbose_name``, 对于非关系型 field, 该参数是第一个 kwarg, 因此经常以
+- ``editable``.
+  若 False, 不在 model form 中出现, 并且 skipped during model validation.
+
+  .. TODO read with form
+
+- ``help_text``.
+  设置该列值的详细的帮助信息, 以协助用户输入. ModelForm 会使用它. 其字符串值在
+  模板中直接显示, 不会被 escape. 可以直接嵌入 html 语法.
+
+- ``error_messages``.
+  A dict that overrides ``default_error_messages`` class attribute.
+  Valid keys are defined in ``default_error_messages`` of each field types
+  and their parent classes.
+
+- ``verbose_name``.
+  对于非关系型 field, 该参数是第一个 kwarg, 因此经常以
   positional 形式写出; 对于关系型 field 必须以 kwarg 形式写出.
+
+- ``db_column``. 指定 db column name. 默认为 field name.
 
 - ``db_index``, 是否创建 single field index.
 
 - ``db_tablespace``, 若建立索引, 索引所在的 tablespace. 默认为
   ``settings.DEFAULT_INDEX_TABLESPACE`` 或 ``Meta.db_tablespace``.
 
-- ``validators``, 指定 validators. 这些 validators 会在 form validation
-  或 model instance validation 的时候生效.
+- ``validators``.
+  指定 validators. 这些 validators 会在 form validation 或 model instance
+  validation 的时候生效.
 
 attributes
 ~~~~~~~~~~
@@ -2202,6 +2251,15 @@ attributes
 
   description 的值可以包含 ``__dict__`` interpolation placeholder. 但
   注意它本身不去 interpolate.
+
+- ``empty_strings_allowed``.
+  Designates whether empty strings fundamentally are allowed at the
+  database level for this field. 影响 (但不决定) 该列的默认值.
+
+- ``default_error_messages``.
+  该列的设置的默认 error message template. 只需设置 override parent class
+  的部分即可. 所有 ``default_error_messages`` 和 ``error_messages`` option
+  构成该列的 error messages.
 
 field property introspection.
 
@@ -2334,12 +2392,31 @@ field types
 ~~~~~~~~~~~
 所有 field types 都是 ``Field`` 子类.
 
+- AutoField.
+  当 model 没有指定 primary key field 时, 自动添加的 id field. 一般不手动指定.
+  自动设置 blank=True.  model form 不会生成相应 field.
+
+  checkings.
+
+  * must set primary key.
+
+- BigAutoField.  64-bit AutoField subclass.
+
 - IP address 用 ``GenericIPAddressField``.
 
 - 实数一般用 ``FloatField``, 精确要求时考虑 ``DecimalField``.
 
-- 整数有 ``IntegerField``, ``PositiveIntegerField``, ``BigIntegerField``,
+- ``IntegerField``, ``PositiveIntegerField``, ``BigIntegerField``,
   ``SmallIntegerField``, ``PositiveSmallIntegerField``.
+  各种整数.
+
+  checkings.
+
+  * 不能设置 ``max_length`` option.
+
+  validations.
+  
+  * 数值是否在 backend 允许的范围内.
 
 - ``DateField`` ``DateTimeField``
 
@@ -2354,9 +2431,8 @@ field types
 
     ``auto_now``, ``auto_now_add`` 和 ``default`` 是互斥的.
 
-    设置这两个参数, 意味着该列不能手动修改, 并且即使包含在了 form 中,
-    也不是必须输入的项 (即不是 required). 因此, django 自动设置
-    ``editable=False`` 和 ``blank=True``.
+    设置这两个参数, 意味着该列不能手动修改.
+    django 自动设置 ``editable=False`` 和 ``blank=True``.
 
   * mysql note: 只有 5.6.4+ 版本支持毫秒精度的时间, 使用 DATETIME(6).
     对于 legacy 数据库, 需要手动更新 column data type.
