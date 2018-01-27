@@ -163,6 +163,14 @@ attribute access
        descriptor.__get__(self, None, class)
      若不是 descriptor, 直接返回.
 
+  ``super.__getattribute__`` 对 super object 的属性访问也不同于 object 基类的实现.
+  它实现了 super object 的属性访问逻辑, 对于 ``super(B, type_or_object_or_none)``
+
+  1. 从 ``B.__mro__`` B 后面一个类开始, 尝试 descriptor 和 class attribute.
+     若是 descriptor, 调用::
+       descriptor.__get__(type_or_object_or_none, B)
+     若不是 descriptor, 直接返回.
+
   由于 ``__getattribute__`` 完全决定属性访问, 并且具有以上复杂的逻辑, 所以
   subclass/submetaclass 一般不该完全自定义该方法, 而是在调用父类的方法基础上
   进行适当的自定义.
@@ -413,6 +421,35 @@ memory
 - ``id()``. identity of object. 该值保证为整数, 且在 object 的生命周期中保持
   不变. 在 CPython 中, 用对象的内存地址作为 id. id 值用于 ``is`` operator
   的判断.
+
+inheritance
+-----------
+
+- ``super(type, object_or_type=None)``. super object constructor.
+
+  Return a proxy object that delegates attributes access to a parent or sibling
+  class of type. 尽管一般用于获取 overrided method, 但必须清楚, super 的作用是
+  将 ``getattr`` 的起点拉高到了 parent class 中, 所以 class attribute & method
+  都可以获取.
+
+  注意 super class 有自定义的 ``__getattribute__``, 决定属性行为.
+
+  若两个参数都省略, 相当于 ``super(__class__, self)``. 其中 ``__class__``
+  是解释器在编译过程中加入的 implicit reference to lexically current class.
+
+  若 second argument is:
+
+  * omitted (None), the super object is unbound. This is
+    actually historical and **USELESS**.
+    http://www.artima.com/weblogs/viewpost.jsp?thread=236278
+
+  * a subclass ``type2`` of ``type``. 此时, 访问 ``super(type, type2).x``
+    给出的是定义在父类中的 function ``x``, 或者说 unbound method ``x``.
+    ``type2`` 除了告诉 super object 要返回 unbound function 本身之外,
+    没别的作用.
+
+  * a instance ``instance`` of ``type``. 此时, ``super(type, instance).x``
+    给出的是 bound method ``x``, bound to ``instance``, i.e. ``self=instance``.
 
 builtin types
 =============
