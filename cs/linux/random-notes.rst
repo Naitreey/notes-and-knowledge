@@ -388,3 +388,20 @@
 - NSS (Name Service Switch). NSS 整合了各种 name services 即 directory services,
   相当于一个统一的 API. 这包括 DNS, LDAP, 等等.
 
+distributions
+=============
+Arch Linux
+----------
+
+Debian, Ubuntu
+--------------
+
+RHEL, CentOS, Fedora
+--------------------
+
+Alpine Linux
+------------
+
+- alpine linux features small, simple and secure.
+
+- alpine 常用于作为容器基镜像, 或者其他需要 minimal linux environment 的情况.
