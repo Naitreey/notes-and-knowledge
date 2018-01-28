@@ -127,28 +127,20 @@ EE
 image
 =====
 
-- image. 在 docker 语境下, image 指的是程序文件以及它的一整套运行环境,
+concepts and best practices
+---------------------------
+- 在 docker 语境下, image 指的是程序文件以及它的一整套运行环境,
   包括文件系统, 依赖项, 环境变量, 配置等等. 注意, 镜像本身不包含要在
   其中运行的进程. 它仅仅包含运行任何可能进程的环境.
-
-- image tag. 完整的 tag 由 registry domain, username, repository name, tag version
-  四部分组成. 完整格式是 ``[[<registry>/]<username>/]<repository>[:<tag>]``.
-  若省略 registry, 默认是 docker.io. 若省略 username, 默认是 library.
-  若省略 tag, 默认是 latest.
-
-  若要把 image 上传到某个 registry, 或从某个 registry 下载镜像, 必须指定相应
-  的 tag.
-
-  tag 应该尽量详细, 包含 version, release stage, purpose (test/production) 等.
-
-
-- Each instruction in a Dockerfile creates a layer in the image. When you
-  change the Dockerfile and rebuild the image, only those layers which have
-  changed are rebuilt.
 
 - How to keep image small.
 
   * start with appropriate base image.
+
+  * avoid installing unnecessary packages.
+
+  * use ``.dockerignore`` file to exclude files which are not relevant to the
+    build, syntax similar to ``.gitignore``.
 
   * use multistage builds. Your final image shouldn't include dependencies
     needed for building your app, just for running.
@@ -160,6 +152,71 @@ image
     和减少重复的 base image. 然后各个镜像再基于它来制作. 除了显而易见的好处
     之外, 这样做还可以减少内存用量和提高加载速度. 因相同的 readonly layers
     docker 只加载一份至内存.
+
+- 基镜像的选择.
+  
+  * Whenever possible, use current official repositories as the basis for your
+    image.
+
+  * 若需要 start from scratch, 可以选择 alpine linux 作为基镜像.
+
+image tag
+---------
+完整的 tag 由 registry domain, username, repository name, tag version
+四部分组成. 完整格式是 ``[[<registry>/]<username>/]<repository>[:<tag>]``.
+若省略 registry, 默认是 docker.io. 若省略 username, 默认是 library.
+若省略 tag, 默认是 latest.
+
+若要把 image 上传到某个 registry, 或从某个 registry 下载镜像, 必须指定相应
+的 tag.
+
+tag 应该尽量详细, 包含 version, release stage, purpose (test/production) 等.
+
+image layers
+------------
+- Each RUN, COPY, ADD instructions in a Dockerfile creates a layer in the
+  image. When you change the Dockerfile and rebuild the image, only those
+  layers which have changed are rebuilt.
+
+multi-stage build
+-----------------
+Multi-stage build allow you to copy only the artifacts you need into the final
+image. This allows you to include tools and debug information in your
+intermediate build stages without increasing the size of the final image.
+
+build cache
+-----------
+During an image, as each instruction in dockerfile is examined, Docker looks
+for an existing image in its cache that it can reuse (like all existing local
+images).  I.e., layers of existing images are reused when appropriate.  This is
+the default behavior.
+
+- Starting with a parent image that is already in the cache, the next
+  instruction is compared against all child images derived from that base image
+  to see if one of them was built using the exact same instruction. If not, the
+  cache is invalidated.
+
+- In most cases simply comparing the instruction in the Dockerfile with one of
+  the child images is sufficient. However, certain instructions require a
+  little more examination and explanation.
+
+- For the ADD and COPY instructions, the contents of the file(s) in the image
+  are examined and a checksum is calculated for each file. The last-modified
+  and last-accessed times of the file(s) are not considered in these checksums.
+  During the cache lookup, the checksum is compared against the checksum in the
+  existing images. If anything has changed in the file(s), such as the contents
+  and metadata, then the cache is invalidated.
+
+- Aside from the ADD and COPY commands, cache checking does not look at the
+  files in the container to determine a cache match. Just the command string
+  itself is used to find a match.
+
+- Once the cache is invalidated, all subsequent Dockerfile commands generate
+  new images and the cache is not used.
+
+由于更多的 dockerfile instruction 只检查命令本身是否一致,
+而不考虑文件内容是否一致, 如果需要重新执行相应命令, 使用 ``--no-cache`` option
+during ``docker build``.
 
 container
 =========
@@ -175,6 +232,31 @@ container
 
 - 可以控制容器的 isolation level, 即控制几个 namespace 的独立情况.
 
+concepts and best practices
+---------------------------
+- Containers should be as ephemeral as possible. By “ephemeral,” we mean that
+  it can be stopped and destroyed and a new one built and put in place with an
+  absolute minimum of set-up and configuration. 
+
+- 一个容器里只有一个功能 (functionality/service/concern).
+
+  单一功能的好处.
+
+  * Scaling containers horizontally is much easier if the container is isolated
+    to a single function. 由于一个功能的容器镜像是构建好的不变的, 在不同的机器
+    上起多个实例仅仅是 docker run 同一个 image 而已. 而且可以保证服务完全相同.
+
+  * Having a single function per container allows the container to be easily
+    re-used for other projects and purpose, and at different location.
+
+  * Changes (both the OS and the application) can be made in a more isolated
+    and controlled manner. CI/CD can push updates to any part of a distributed
+    application. 当以水平扩展为前提时, 我们可以一次只修改部分容器,
+    让剩下的继续工作, 从而维持整个系统 online 和高可用.
+
+  单一功能不是单一进程的意思. 例如一些服务自己会开子进程, 甚至有些时候需要在容器
+  中开 init system.
+
 configuration
 =============
 
@@ -185,8 +267,104 @@ configuration
 dockerfile
 ==========
 
+concepts and best practices
+---------------------------
+- RUN, COPY, and ADD instructions create layers. Other instructions create
+  temporary intermediate images, and not directly increase the size of the build.
+
+- When appropriate, break arguments into multi-lines, and sort them
+  alphanumerically.  This helps you avoid duplication of arguments and make the
+  list much easier to update.
+
+instructions
+------------
+
+RUN
+~~~
+
+- 避免对 packages 进行批量的版本升级, 例如 ``apt-get upgrade|dist-upgrade``.
+  若基镜像本身版本低了, 应该 pull 更新的版本. 若需要对某些软件更新, 单独对
+  这些软件操作.
+
+- Always combine ``RUN apt-get update`` with ``apt-get install`` in the same
+  RUN statement.
+  
+  这是为了在后续修改 install 的 packages 参数时, invalidate 整个命令的 cache,
+  从而 apt-get update 重新执行. This is called "cache busting".  必要时, 还可以
+  在 install 参数后面固定 package 的版本, 从而保证 apt cache 总是能及时更新, 
+  即使只是修改要安装的软件版本.
+  .. code:: dockerfile
+    RUN apt-get update && apt-get install -y \
+        abc=1.2.* \
+        def \
+        ghi \
+        ;
+
+  若将 update 和 install 分成两个 RUN instructions, 修改 install 命令后, 还是
+  用的旧的 apt cache, 从而不能安装新版本的 packages, 甚至找不到要安装的 packages
+  从而 install 命令失败.
+
+- 应当考虑设置常用的 shell options, 避免一些 pitfalls. 
+  例如, 对于 commands involving pipelines, 设置 ``pipefail`` option.
+
+CMD
+~~~
+
+- The main purpose of a CMD is to provide default command execution for an
+  executing container.  Don’t confuse RUN with CMD. RUN actually runs a command
+  and commits the result at build time; CMD does not execute anything at build
+  time, but specifies the intended command for the runtime container.
+
+- 根据镜像目的不同, 默认的 CMD 命令也有所不同. 对于 service 类型的镜像, 默认
+  执行的命令应该就是要执行的 service command, in foreground mode. 对于一些
+  无专属功能的, 或者说更加通用的镜像, 例如一个 distro image, python image, etc,
+  默认的 CMD 常常就是一个 interactive shell. 例如 bash, python.
+
+EXPOSE
+~~~~~~
+
+- The EXPOSE instruction does not actually publish the port. It functions as a
+  type of documentation between the person who builds the image and the person
+  who runs the container, about which ports are intended to be published.
+
+ENV
+~~~
+
+- 除了设置运行环境 environ 之外, 还可以把环境变量作为通用的变量赋值来使用.
+
+ADD
+~~~
+
+COPY
+~~~~
+
+
 networking
 ==========
+
+data
+====
+- 数据的存储方式:
+ 
+  * volume.
+    应用数据、日志等有价值的 persistent data 应使用 volume 存储在容器环境之外.
+
+  * bind mount.
+    一般只用于研发阶段. 即 bind mount 源代码进容器环境.
+    bind mount 也用于 production 时在容器之间进行一些文件共享, 例如配置.
+
+  * writeable layer.
+    直接写在 container writeable layer 上的内容, 只应该是体积不大的, 临时
+    性质的、可随时销毁的 runtime content.
+
+  * docker secret.
+    swarm service 需要使用的不该明文保存的敏感数据, 例如 password,
+    SSH private key, SSL certificate 等, 使用 docker secret 保存.
+
+  * docker config.
+    swarm service 使用的线上配置类型的数据, 例如配置文件, 使用 docker
+    config 保存. 将配置从 image 中抽离出来, 提高了容器镜像的通用性,
+    让一些必须在 runtime 进行配置的项修改起来方便很多 (避免了 bind mount).
 
 engine
 ======
@@ -226,6 +404,10 @@ dockerd
   跨机器协作. 通过几个简单的环境变量修改, 一个 docker (CLI) client 可以
   切换控制本地或远端等多个 daemon.
 
+object label
+------------
+每种 docker object 都可以添加自定义的 label, 即 metadata.
+
 CLI
 ===
 
@@ -259,8 +441,10 @@ image
 ~~~~~
 
 - docker image build, docker build.
+
   build context 可以是本地目录, tarball, URL 或 stdin. 但无论哪种方式,
-  最终的根目录下或指定的 ``--file`` 路径都要有 Dockerfile 文件.
+  最终的根目录下都要有 Dockerfile 文件, 或通过 ``--file`` 指定. 整个
+  build context 会传给 docker daemon.
 
   对于 local path, 该目录作为 build context 全部传输给 daemon;
 
@@ -298,7 +482,8 @@ node
 stack
 ~~~~~
 
-- docker stack deploy
+- docker stack deploy.
+  deploy 时会自动 docker pull 所需镜像.
 
 - docker stack rm.
 
@@ -428,6 +613,15 @@ tell any other machine what it can and cannot do.
 
 Swarm manager 执行的 docker commands 自动影响整个集群, 而不是仅仅影响本机.
 
+在设计应用时, 应该考虑到如何能够将应用以服务的方式扩展到多个实例, 水平扩展以及
+HA. 利用 docker stack/service etc. 提供的 scale functionality.
+
+即使只需运行一个应用实例, 也应该使用 docker swarm 方式部署. 因可以使用
+docker secret, config 等让很多方面更便捷, 更通用.
+
+swarm 中的各个 node 应该互为 ntp peer, 并设置相同的 upstream ntp server,
+以保证时间一致.
+
 strategies
 ----------
 Swarm managers can use several strategies to distribute containers in the
@@ -440,6 +634,9 @@ A stack is a group of interrelated services that share dependencies, and can be
 orchestrated and scaled together, these may be defined using a docker-compose.yml
 file.
 
+一个 stack 就是一个 app. 一个 stack/app 可以有多个 services, 每个 services
+可以有多个 tasks.
+
 docker stack 重用 docker-compose.yml 配置. 原因是两者在配置上是十分相似的.
 它在 docker-compose.yml 中可以配置多实例并行和负载均衡.
 
@@ -447,8 +644,7 @@ docker stack 重用 docker-compose.yml 配置. 原因是两者在配置上是十
 update. 其实这也容易理解, 因为有状态的存储部分和无状态的容器部分在 compose
 file 中区分和定义的是清晰的. 所以知道该如何更新.
 
-一个 stack 就是一个 app. 一个 stack/app 可以有多个 services, 每个 services
-可以有多个 tasks.
+docker re-deploys stack in non-disruptive way.
 
 service
 =======
