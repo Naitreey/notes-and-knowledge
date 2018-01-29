@@ -193,18 +193,11 @@ image layers
   image. When you change the Dockerfile and rebuild the image, only those
   layers which have changed are rebuilt.
 
-multi-stage build
------------------
-Multi-stage build allow you to copy only the artifacts you need into the final
-image. This allows you to include tools and debug information in your
-intermediate build stages without increasing the size of the final image.
-
 build cache
 -----------
-During an image, as each instruction in dockerfile is examined, Docker looks
-for an existing image in its cache that it can reuse (like all existing local
-images).  I.e., layers of existing images are reused when appropriate.  This is
-the default behavior.
+During an image, as each instruction in dockerfile is examined, Docker by default
+looks for existing local images that have a local parent chain. These images
+may come from previous builds, or loaded via ``docker image load``.
 
 - Starting with a parent image that is already in the cache, the next
   instruction is compared against all child images derived from that base image
@@ -232,6 +225,39 @@ the default behavior.
 由于更多的 dockerfile instruction 只检查命令本身是否一致,
 而不考虑文件内容是否一致, 如果需要重新执行相应命令, 使用 ``--no-cache`` option
 during ``docker build``.
+
+若要直接指定一个镜像作为 cache source, 跳过上述 image layer 搜索过程, 使用
+``--cache-from``. Images specified with ``--cache-from`` do not need to have a
+parent chain and may be pulled from other registries.
+
+builder pattern
+---------------
+Traditionally, it was often desirable to have two dockerfiles:
+
+- ``Dockerfile.build`` is used for development (which contained everything
+  needed to build your application),
+
+- ``Dockerfile`` is a slimmed-down one to use for production, which only
+  contained your application and exactly what was needed to run it.
+
+And a ``build.sh`` script to orchestrate the building process: build the first
+image, create a container from it to copy the artifact out, then build the
+second image.
+
+multi-stage build
+-----------------
+Multi-stage build made build pattern unnecessary.
+
+Multi-stage build allow you to copy only the artifacts you need into the final
+image. This allows you to include tools and debug information in your
+intermediate build stages without increasing the size of the final image.
+
+Every FROM instruction in dockerfile begins a new build stage.
+Stages are indexed from 0. Build stage can be named at FROM line
+``FROM ... as <name>``.
+
+Use ``COPY --from=<name|index>`` to copy artifacts from previous stages into
+current build stage.
 
 container
 =========
@@ -300,6 +326,9 @@ FROM
 
 RUN
 ~~~
+- Each RUN instruction in dockerfile is run independently. I.e., 前一个
+  RUN 对运行环境的修改对后一个是不可见的. 例如, ``cd``, ``shopt`` 只对当前
+  命令有效. 要修改运行环境, 必须使用相应的 dockerfile instruction.
 
 - 避免对 packages 进行批量的版本升级, 例如 ``apt-get upgrade|dist-upgrade``.
   若基镜像本身版本低了, 应该 pull 更新的版本. 若需要对某些软件更新, 单独对
@@ -560,13 +589,22 @@ image
 
   build context 可以是本地目录, tarball, URL 或 stdin. 但无论哪种方式,
   最终的根目录下都要有 Dockerfile 文件, 或通过 ``--file`` 指定. 整个
-  build context 会传给 docker daemon.
+  build context 会传给 docker daemon. build context & Dockerfile 是构建
+  镜像的两个必须元素.
 
   对于 local path, 该目录作为 build context 全部传输给 daemon;
 
   对于 tarball 等 url, daemon 先下载再解压作为 build context;
 
   若 url 指向一个 git repository, daemon 先 clone 再作为 build context.
+
+  ``--tag`` 可以指定多次, 设置多个 tag.
+
+  ``--cache-from``, 直接指定 cache source, 能用就用, 不能用拉倒, 别搜索.
+  可以指定 remote image, 会自动 pull 下来.
+
+  build 过程中每个 layer 构建完成后会输出该层的 sha256 hash.
+  若该层使用了 cache, 会输出 `Using cache`.
 
 - docker image pull, docker pull.
 
@@ -576,6 +614,13 @@ image
 
 - docker image import, docker import.
   Create base image from imported filesystem tarball.
+
+- docker image save, docker save.
+  将一个 repository 以 tarball 形式保存导出. 即一系列 images, 它们的所有 layers,
+  包含所有 parent layers, 以及所有的 image tags.
+
+- docker image load, docker load.
+  将 ``docker image save`` 导出的 repository tarball 导入 local registry.
 
 swarm
 ~~~~~
