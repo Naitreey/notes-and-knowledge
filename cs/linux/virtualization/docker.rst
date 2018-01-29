@@ -160,6 +160,21 @@ concepts and best practices
 
   * 若需要 start from scratch, 可以选择 alpine linux 作为基镜像.
 
+base image
+----------
+两种制作 base image 的方法.
+
+* ``docker image import``. 这种方式的问题是只有结果, 没有过程.
+
+* 为了将 base image 的制作与普通镜像统一起来, 使用 dockerfile 制作 (从而
+  可以清晰地记录构建步骤以及使用 cache 等好处), 使用 ``FROM scratch``.
+
+Using the scratch “image” signals to the build process that you want the next
+command in the Dockerfile to be the first filesystem layer in your image.
+
+While scratch appears in Docker’s repository on the hub, you can’t pull it or
+run it.
+
 image tag
 ---------
 完整的 tag 由 registry domain, username, repository name, tag version
@@ -279,6 +294,10 @@ concepts and best practices
 instructions
 ------------
 
+FROM
+~~~~
+- A valid Dockerfile must start with a FROM instruction.
+
 RUN
 ~~~
 
@@ -320,6 +339,39 @@ CMD
   无专属功能的, 或者说更加通用的镜像, 例如一个 distro image, python image, etc,
   默认的 CMD 常常就是一个 interactive shell. 例如 bash, python.
 
+- CMD 可被 ``docker run`` 的命令行执行的命令和/或参数覆盖.
+
+ENTRYPOINT
+~~~~~~~~~~
+
+- ENTRYPOINT 是提供镜像 (所生成的容器的) 要执行的命令.
+
+- 添加 ENTRYPOINT 的镜像, 一般是成型的服务类型的镜像.
+
+- CMD 和 ENTRYPOINT 的使用和关系.
+
+  * ENTRYPOINT 或 CMD 必须至少有一个.
+
+  * CMD 单独使用时, 一般是对一个 generic 的镜像提供 default command. 就是说该
+    镜像的主要目的是作为基镜像, 而不是作为服务镜像. 此时若执行基镜像, 提供一个
+    默认的 CMD 可执行. 例如 interactive interpreter, 或者输出使用说明之类的.
+
+  * ENTRYPOINT 和 CMD 配合使用时, CMD 提供 ENTRYPOINT 之外的默认参数. 注意 CMD
+    总是可以被命令行参数 override.
+
+- ENTRYPOINT 可进一步被 ``docker run --entrypoint`` override.
+
+- entrypoint script.
+
+  ENTRYPOINT 可以写成一个 script, 在里面可以进行任何设置、操作等等, 然后在
+  最后一步 exec 成为所需执行的命令或服务 (保证是 PID 1 以接受 docker 发的
+  signal).
+
+  若服务应该以 non-root user 运行, 在 entrypoint script 最后使用 ``gosu`` 执行命令.
+  gosu 比 su/sudo 更适合 container 使用, 因为它保证 PID1 是要执行的命令, 而
+  su/sudo 只是 fork 要执行的命令, 自己作为父进程, 导致它们在容器中是 PID1, 造成
+  不必要的麻烦.
+
 EXPOSE
 ~~~~~~
 
@@ -332,12 +384,76 @@ ENV
 
 - 除了设置运行环境 environ 之外, 还可以把环境变量作为通用的变量赋值来使用.
 
-ADD
-~~~
-
 COPY
 ~~~~
+- ``<src>`` may be file, directory.
 
+- Multiple ``<src>`` may be specified, but if they are files or directories,
+  their paths are interpreted as relative to the source of the context of the
+  build.
+
+- If ``<src>`` is a directory, the entire contents of the directory are copied,
+  including filesystem metadata. The directory itself is not copied, just its
+  contents.
+
+- ``<src>`` may contain Go wildcards, like shell glob.
+
+- ``<dest>`` ends with ``/`` 才会认为是 directory, 否则就认为是 regular file.
+
+- ``<dest>`` 所指 pathname 的所有缺失层级目录会自动创建, 对于 directory, 目录
+  本身也会自动创建.
+
+- ``--from=<name|index>`` flag, set source location as previous build stage
+  or an existing image.
+
+- 对 build 的每个步骤, 只 COPY 该步骤所需文件, 即每个步骤一个 COPY, 不要一次
+  把所有文件 COPY 进来. 这样可以保证只要相应步骤所需文件内容没有变化, 相应步骤的
+  cache 能够重用. Each step’s build cache is only invalidated if the
+  specifically required files change.
+
+ADD
+~~~
+- ADD 不支持 COPY 的 ``--from`` flag. 除此之外, 支持 COPY 的所有功能.
+
+- ``<src>`` 除了可以是 file, directory, 还可以是 url.
+
+- If ``<src>`` is a local tar archive in a recognized compression format then
+  it is unpacked as a directory. 注意这只针对 local tar, 若 url 下载结果是 tar,
+  不会被 unpack. 根据文件内容来判断文件是否是 tar archive, 而不是根据文件名后缀.
+
+- copy local files 应该使用 COPY. add tar archive or add remote url files 时使用
+  ADD.
+
+- Because image size matters, using ADD to fetch package source from remote URLs is
+  strongly discouraged. 使用 RUN 去下载、使用、删除一个命令完成.
+
+VOLUME
+~~~~~~
+
+USER
+~~~~
+
+WORKDIR
+~~~~~~~
+
+- For clarity and reliability, you should always use absolute paths for your
+  WORKDIR.
+
+- use WORKDIR instead of ``RUN cd … && do-something``.
+
+ONBUILD
+~~~~~~~
+- 当一个镜像本身的目的是作为 build 应用镜像的工具时, ONBUILD instruction 很有用.
+  例如用于 automating the build of your chosen software stack.
+  .. code:: dockerfile
+    FROM maven:3-jdk-8
+    
+    RUN mkdir -p /usr/src/app
+    WORKDIR /usr/src/app
+    
+    ONBUILD ADD . /usr/src/app
+    
+    ONBUILD RUN mvn install
 
 networking
 ==========
@@ -457,6 +573,9 @@ image
   ``docker pull <name>`` 命令后面的 image name 即标准的 image tag 形式.
 
   e.g., ``docker pull ubuntu`` 实际是 ``docker pull docker.io/library/ubuntu:latest``.
+
+- docker image import, docker import.
+  Create base image from imported filesystem tarball.
 
 swarm
 ~~~~~
