@@ -219,6 +219,17 @@ may come from previous builds, or loaded via ``docker image load``.
   files in the container to determine a cache match. Just the command string
   itself is used to find a match.
 
+- 环境变量的影响.
+  If a Dockerfile defines an ARG variable whose value is different from a
+  previous build, then a “cache miss” occurs upon its first usage, not its
+  definition. In particular, all RUN instructions following an ARG instruction
+  use the ARG variable implicitly (as an environment variable), thus can cause
+  a cache miss.
+
+  修改 pre-defined ARGs 值不会造成 cache miss. 因为 All predefined ARG
+  variables are exempt from caching unless there is a matching ARG statement in
+  the Dockerfile. 
+
 - Once the cache is invalidated, all subsequent Dockerfile commands generate
   new images and the cache is not used.
 
@@ -317,15 +328,69 @@ concepts and best practices
   alphanumerically.  This helps you avoid duplication of arguments and make the
   list much easier to update.
 
+format
+------
+.. code:: dockerfile
+  # Comment|directive=value
+  INSTRUCTION arguments
+
+A Dockerfile must start with zero or more ``ARG`` instructions followed by a
+``FROM`` instruction. 这个主要目的是为了将 FROM instruction 参数化.
+
+对于 array 形式的参数, 使用 valid JSON array syntax.
+
+instruction
+~~~~~~~~~~~
+INSTRUCTION is case-insensitive. Convention is to be uppercase to distinguish
+them from arguments easily.
+
+Instructions is executed in order. 
+
+comment
+~~~~~~~
+Line comments (and parser directives) must start at the beginning of lines.
+
+parser directive
+~~~~~~~~~~~~~~~~
+All parser directives must be at the very top of a Dockerfile.
+Each directive may only be used once.
+
+Parser directives are not case-sensitive. However, convention is for them to be
+lowercase. Convention is also to include a blank line following parser directives.
+
 instructions
 ------------
 
 FROM
 ~~~~
-- A valid Dockerfile must start with a FROM instruction.
+::
+  FROM <image>[:<tag>|@<digest>] [AS <name>]
+
+- ``<image>`` 可以是任何 image identifier, local or remote, with or without tag,
+  with or without hash, etc. 还可以是之前 build stage 生成镜像的名字.
+
+- An ARG declared before a FROM is outside of a build stage, so it can’t be
+  used in any instruction after a FROM. To use the default value of an ARG
+  declared before the first FROM use an ARG instruction without a value inside
+  of a build stage.
+
+SHELL
+~~~~~
+::
+  SHELL ["cmd", ...]
+
+- 指定默认的 shell. 这个 shell 用于执行所有使用 shell form 的 instructions.
+
+- 默认为 ``["/bin/sh", "-c"]``.
+
+- The SHELL instruction can appear multiple times.
 
 RUN
 ~~~
+::
+  RUN <command>
+  RUN ["cmd", ...]
+
 - Each RUN instruction in dockerfile is run independently. I.e., 前一个
   RUN 对运行环境的修改对后一个是不可见的. 例如, ``cd``, ``shopt`` 只对当前
   命令有效. 要修改运行环境, 必须使用相应的 dockerfile instruction.
@@ -355,25 +420,14 @@ RUN
 - 应当考虑设置常用的 shell options, 避免一些 pitfalls. 
   例如, 对于 commands involving pipelines, 设置 ``pipefail`` option.
 
-CMD
-~~~
-
-- The main purpose of a CMD is to provide default command execution for an
-  executing container.  Don’t confuse RUN with CMD. RUN actually runs a command
-  and commits the result at build time; CMD does not execute anything at build
-  time, but specifies the intended command for the runtime container.
-
-- 根据镜像目的不同, 默认的 CMD 命令也有所不同. 对于 service 类型的镜像, 默认
-  执行的命令应该就是要执行的 service command, in foreground mode. 对于一些
-  无专属功能的, 或者说更加通用的镜像, 例如一个 distro image, python image, etc,
-  默认的 CMD 常常就是一个 interactive shell. 例如 bash, python.
-
-- CMD 可被 ``docker run`` 的命令行执行的命令和/或参数覆盖.
-
 ENTRYPOINT
 ~~~~~~~~~~
+::
+  ENTRYPOINT ["cmd", ...]
 
 - ENTRYPOINT 是提供镜像 (所生成的容器的) 要执行的命令.
+
+- default entrypoint is ``["/bin/sh", "-c"]``.
 
 - 添加 ENTRYPOINT 的镜像, 一般是成型的服务类型的镜像.
 
@@ -388,6 +442,21 @@ ENTRYPOINT
   * ENTRYPOINT 和 CMD 配合使用时, CMD 提供 ENTRYPOINT 之外的默认参数. 注意 CMD
     总是可以被命令行参数 override.
 
+- 容器运行时, 执行的命令总是由两部分组成::
+    entrypoint + args
+  entrypoint 可以有两个来源:
+
+  * 使用镜像中保存的 entrypoint. 它来自 dockerfile 中指定的 ENTRYPOINT 或默认的
+    ``["/bin/sh", "-c"]``.
+
+  * 使用 ``docker run --entrypoint`` 指定的 entrypoint, override 镜像中的.
+
+  args 可以有两个来源:
+
+  * 使用镜像中保存的 args. 它来自 dockerfile 中 CMD 提供的参数或默认的 ``[]``.
+
+  * 使用 ``docker run ... args`` 提供的参数 override 镜像中的.
+
 - ENTRYPOINT 可进一步被 ``docker run --entrypoint`` override.
 
 - entrypoint script.
@@ -401,20 +470,97 @@ ENTRYPOINT
   su/sudo 只是 fork 要执行的命令, 自己作为父进程, 导致它们在容器中是 PID1, 造成
   不必要的麻烦.
 
+CMD
+~~~
+::
+  CMD ["cmd", ...]
+  CMD ["param", ...]
+  CMD <command>
+
+- Only one CMD instruction in a Dockerfile.
+
+- The main purpose of a CMD is to provide default command execution for an
+  executing container.  Don’t confuse RUN with CMD. RUN actually runs a command
+  and commits the result at build time; CMD does not execute anything at build
+  time, but specifies the intended command for the runtime container.
+
+- 根据镜像目的不同, 默认的 CMD 命令也有所不同. 对于 service 类型的镜像, 默认
+  执行的命令应该就是要执行的 service command, in foreground mode. 对于一些
+  无专属功能的, 或者说更加通用的镜像, 例如一个 distro image, python image, etc,
+  默认的 CMD 常常就是一个 interactive shell. 例如 bash, python.
+
+- CMD 可被 ``docker run`` 的命令行执行的命令和/或参数覆盖.
+
 EXPOSE
 ~~~~~~
+::
+  EXPOSE <port>[/<protocol>] ...
+
+- Expose one or more ports. expose port 指的是将容器的端口绑定到 host system
+  的指定端口上. 也就是做一次端口转发. 这是为了便于其他系统连接宿主机来访问容器
+  服务. 若容器之间通过 bridged network 或者 overlay network 连接, 内部通信
+  是不需要 expose 端口的. 这就是普通的同网段内机器通信.
 
 - The EXPOSE instruction does not actually publish the port. It functions as a
   type of documentation between the person who builds the image and the person
   who runs the container, about which ports are intended to be published.
 
+- To actually publish the exposed ports, use ``-p`` or ``-P`` during ``docker run``.
+
+- 镜像 exposed ports 可通过 ``docker inspect`` 看到.
+
+ARG
+~~~
+::
+  ARG <name>[=<default>]
+
+- 设置 current build stage 的环境变量.
+
+- scope. 从变量的定义处开始, 至当前 build stage 结束. To use an arg in multiple
+  stages, each stage must include the ARG instruction.
+
+- 注意 ARG 环境变量的目的是为 build time 的各个指令提供环境变量. 不会保存在镜像
+  中. 在 runtime, 即对于容器最终运行的进程不可见.
+
+- 在 build time, 对 ARG 变量赋值或 override dockerfile 中提供的默认值,
+  使用 ``docker build --build-arg``.
+
+- predefined ARGs::
+    HTTP_PROXY, http_proxy, HTTPS_PROXY, https_proxy, FTP_PROXY, ftp_proxy,
+    NO_PROXY, no_proxy
+  它们无需在 dockerfile 中声明可以直接赋值和引用.
+  为避免信息泄露, by default, these pre-defined variables are excluded from the
+  output of docker history. (注意在 docker history 中, ``ARG var=default`` 会
+  泄露, 但引用时不会泄露因为历史中显示为 ``... $var``.)
+
+- ARG 和 ENV 的关系.
+
+  * 两者都是设置环境变量的. 但是它们的生效范围不同.
+
+  * 两者的 override 方式不同.
+
+  * At build time, ENV variable always override ARG variable of the same name.
+
 ENV
 ~~~
+::
+  ENV <key>=<value> ...
 
-- 除了设置运行环境 environ 之外, 还可以把环境变量作为通用的变量赋值来使用.
+- 设置 build-time 和 runtime 环境变量.
+
+- ENV 变量在 build time 与 ARG 变量同时生效, 但只有 ENV 变量才最终保留在
+  镜像中, 在 container runtime 生效.
+
+- 在 runtime, override ENV 变量值是通过传入环境变量的方式, 即
+  ``docker run -e``.
+
+- ENV 环境变量可通过 ``docker inspect`` 查看.
 
 COPY
 ~~~~
+::
+  COPY [--chown=<user|id>:<group|id>] <src> ... <dest>
+
 - ``<src>`` may be file, directory.
 
 - Multiple ``<src>`` may be specified, but if they are files or directories,
@@ -442,6 +588,9 @@ COPY
 
 ADD
 ~~~
+::
+  ADD [--chown=<user|id>:<group|id>] <src> ... <dest>
+
 - ADD 不支持 COPY 的 ``--from`` flag. 除此之外, 支持 COPY 的所有功能.
 
 - ``<src>`` 除了可以是 file, directory, 还可以是 url.
@@ -458,20 +607,134 @@ ADD
 
 VOLUME
 ~~~~~~
+::
+  VOLUME ["mountpoint", ...]
+
+指定一系列 mountpoints, 在容器运行时, 会自动给每个 mountpoint 创建一个
+anonymous volume.
+
+The docker run command initializes the newly created volume with any data that
+exists at the specified location within the base image. If any build steps
+change the data within the volume mountpoint after it has been declared, those
+changes will be discarded.
 
 USER
 ~~~~
+::
+  USER <user|id>[:<group|id>]
+
+Specify user and/or group name/id used by any following RUN, CMD, ENTRYPOINT
+instructions.
 
 WORKDIR
 ~~~~~~~
+::
+  WORKDIR /path
+
+- Set working directory in image for any following RUN, CMD, ENTRYPOINT,
+  COPY, ADD instructions.
+
+- If the WORKDIR doesn’t exist, it will be created.
 
 - For clarity and reliability, you should always use absolute paths for your
   WORKDIR.
 
 - use WORKDIR instead of ``RUN cd … && do-something``.
 
+STOPSIGNAL
+~~~~~~~~~~
+::
+  STOPSIGNAL <signal|id>
+
+Set the signal to be sent to container when ``docker stop``.
+
+HEALTHCHECK
+~~~~~~~~~~~
+::
+  HEALTHCHECK [--interval=<duration>|--timeout=<duration>|
+               --retries=N|--start-period=<duration>]
+               (CMD <command>) | NONE
+
+指定应用层级的 health check 命令. 这非常有用, 甚至有必要.
+
+``<duration>`` is number + unit, like ``3s``, ``5m``.
+
+``NONE`` disable healthcheck from base image.
+
+选项默认值:
+
+- interval: 30s
+
+- timeout: 30s
+
+- start period: 0s
+
+- retries: 3
+
+设置 HEALTHCHECK 之后, 容器在运行时, ``docker container ps`` 的 STATUS 列输出
+会包含 health status 信息. This status is initially starting. Whenever a health
+check passes, it becomes healthy (whatever state it was previously in). After a
+certain number of consecutive failures, it becomes unhealthy.
+
+检查逻辑:
+
+- 当容器启动后, 首先等待 ``--interval`` time, 执行第一次检查. 此后每隔
+``--interval`` time 执行一次检查 (当前一次检查结束后开始计算).
+
+- If a single run of the check takes longer than ``--timeout`` then the
+  check is considered to have failed.
+
+- 若连续 ``--retries`` 次检查都失败, 则认为容器 unhealthy.
+
+- ``--start-period`` provides initialization time for containers that need time
+  to bootstrap. Probe failure during that period will not be counted towards
+  the maximum number of retries. However, if a health check succeeds during the
+  start period, the container is considered started and all consecutive
+  failures will be counted towards the maximum number of retries.
+
+命令 exit code 与状态的对应关系:
+
+- 0: healthy.
+
+- 1: unhealthy.
+
+- 2: 目前没用, reserved.
+
+不要返回其他的值.
+
+debug info. To help debug failing probes, any output text (UTF-8 encoded) that
+the command writes on stdout or stderr will be stored in the health status and
+can be queried with docker inspect. Such output should be kept short (only the
+first 4096 bytes are stored currently).
+
+event. When the health status of a container changes, a `health_status` event is
+generated with the new status.
+
+LABEL
+~~~~~
+::
+  LABEL <key>=<value> ...
+
+- add metadata to image.
+
+- Labels included in base or parent images (images in the FROM line) are
+  inherited by your image.
+
 ONBUILD
 ~~~~~~~
+::
+  ONBUILD <instruction>
+
+- The ONBUILD instruction adds to the image a trigger instruction to be
+  executed when the image is used as the base for another build.
+
+- ONBUILD instruction 会保存在当前镜像的 manifest 中, 可通过 inspect 查看.
+  除此之外, 它不影响当前镜像的 build result.
+
+- The trigger will be executed in the context of the downstream build, in the
+  same order they were registered, as if it had been inserted immediately after
+  the FROM instruction in the downstream Dockerfile.
+
 - 当一个镜像本身的目的是作为 build 应用镜像的工具时, ONBUILD instruction 很有用.
   例如用于 automating the build of your chosen software stack.
   .. code:: dockerfile
@@ -483,6 +746,68 @@ ONBUILD
     ONBUILD ADD . /usr/src/app
     
     ONBUILD RUN mvn install
+
+- ONBUILD triggers are not inherited by grand-children images.
+
+parser directives
+-----------------
+
+escape
+~~~~~~
+设置 dockerfile 中用于 escape 的 char. default is ``\``.
+
+parameter substitution
+----------------------
+dockerfile 中支持进行 bash-like parameter substitution syntax. 可以替换的
+变量是 ENV 设置的环境变量.
+
+支持的语法:
+
+- ``$var``
+
+- ``${var}``
+
+- ``${var:-default}``
+
+- ``${var:+default}``
+
+注意: Environment variable substitution will use the same value for each
+variable throughout the entire instruction.
+.. code:: dockerfile
+  ENV abc=hello
+  # the following "def" is "hello"
+  ENV abc=bye def=$abc
+  # the following "ghi" is "bye"
+  ENV ghi=$abc
+
+dockerignore
+============
+``.dockerignore`` 放在 root directory of build context.
+It is a newline-separated list of patterns similar to the file globs of Unix
+shells.
+Line comment ``#`` is allowed and must start at the beginning of lines.
+
+Allowed patterns:
+
+- ``*``
+
+- ``**``
+
+- ``?``
+
+- ``!<pattern>``. negate exclusion.
+
+Note: the last line of the .dockerignore that matches a particular file
+determines whether it is included or excluded.
+
+dockerignore file 中甚至可以或者应该包含 ``Dockerfile`` & ``.dockerignore``
+entries. 因为 dockerignore file 控制的是 build context 的组成. 进而影响
+例如 ``COPY .`` 等复制进镜像的文件有哪些.
+
+如果希望只在 build context 中包含指定文件, 排除所有其他文件::
+  *
+  !file-1
+  !file-2
 
 networking
 ==========
@@ -621,6 +946,10 @@ image
 
 - docker image load, docker load.
   将 ``docker image save`` 导出的 repository tarball 导入 local registry.
+
+- docker image history, docker history.
+  输出镜像各层的构建历史. 包含构建镜像各层的 instructions, 各层的体积,
+  时间, hash 等信息.
 
 swarm
 ~~~~~
