@@ -118,7 +118,23 @@ search); 但是当浏览器访问敏感信息时, 需要要求用户重登录, �
 已认证的 key).
 
 这么做 (认证当前用户确实是声称的用户) 一般化地讲, 是为了避免 session fixation attack.
-就是用户 B 使用 A 的合法 session id, 仿冒用户 A. 这种仿冒在重登录操作处被截断.
+
+session fixation attack 有以下实施方法:
+
+- 简单的物理攻击. 一台电脑上 A 用户未登出, B 用户使用该电脑, 使用 A 用户的合法
+  session, 仿冒用户 A.
+  
+  这种仿冒在敏感信息重登录处被截断.
+
+- attack with cross-subdomain cookie. 这在以下情况下发生:
+  一个正常 domain ``example.com`` 的 subdomain ``bad.example.com`` 由攻击者控制.
+  cookie 机制允许一个 subdomain 设置 cookie 的 domain 为 ``*.example.com``, 这样
+  攻击者可以给 client 设置一个对 ``good.example.com`` 来讲合法的 session, 等
+  用户访问后者网站时, 自动以攻击者控制的账户认证. 若用户输入自己的敏感信息, 攻击者
+  可以之后获取.
+  
+  这实际上是一种反向的仿冒, 诱导. 这也可以通过重登录处理. 此外, 还要注意的是,
+  不应该把子域名交给 untrusted user 去管理, 除非是 compromised.
 
 Clickjacking attack
 -------------------
