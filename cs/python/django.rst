@@ -2398,7 +2398,7 @@ field types
 
   checkings.
 
-  * must set primary key.
+  * must have ``primary_key=True``.
 
 - BigAutoField.  64-bit AutoField subclass.
 
@@ -2437,7 +2437,7 @@ field types
   * mysql note: 只有 5.6.4+ 版本支持毫秒精度的时间, 使用 DATETIME(6).
     对于 legacy 数据库, 需要手动更新 column data type.
 
-- 若要允许在 ``BooleanField`` 中存 NULL, 使用 ``NullBooleanField``.
+- ``BooleanField``, ``NullBooleanField``. 后者允许存 NULL.
 
 - ``SlugField`` 要配合 ``slugify`` 函数使用, 只应该在创建 instance 时保存该列值.
 
@@ -2446,7 +2446,17 @@ field types
 - ``JSONField``. postgresql 可以使用 native JSONField, 对于 mysql 可以使用
   django-jsonfield module 用 TextField/CharField 模拟.
 
-* relation field ``ForeignKey``. many-to-one relation.
+- ``BinaryField``. 其值必须是 bytes instance.
+  BinaryField 的 ``editable=False``, 它不会出现在 model form 中.
+
+  注意 binary field 不是用来保存静态文件的, 静态文件还是要在文件系统中保存.
+  这只是用于保存小量的只读只写的特殊用途的 binary data.
+
+  validations.
+
+  * 若设置了 ``max_length``, 检查数据长度.
+
+- relation field ``ForeignKey``. many-to-one relation.
 
   - foreign key field 的名字应该是所指向的 model 的名字的全小写版本.
 
@@ -2498,7 +2508,7 @@ field types
     * ``swappable``, 默认 True 即可. 与 swappable AUTH_USER_MODEL 相关, 为了
       支持 custom user model.
 
-* relation field ``OneToOneField``: one-to-one relation.
+- relation field ``OneToOneField``: one-to-one relation.
 
   - 一对一关系一般用于一个模型作为另一个模型的延伸、扩展、附加属性等.
     ``OneToOneField`` 在 model 继承时用于定义父表和子表通过哪一列来关联.
@@ -2512,7 +2522,7 @@ field types
   - OTO field 的 ``parent_link`` 结合 conrete model inheritance 时有特殊作用,
     它让父类的 field 可在子类即 OTO field 所在 model 中直接访问.
 
-* relation field ``ManyToManyField``: many-to-many relation.
+- relation field ``ManyToManyField``: many-to-many relation.
 
   - 由于一个列无法体现多对多的关系, ``ManyToManyField`` 在实现时, 不是构成了一个列,
     而是一个单独的 table. table 的命名根据 ``<app>_<model>_<m2mfield>`` 全小写命名.
@@ -2552,10 +2562,12 @@ field types
 
       ``.through`` 属性在 field instance 是一个 RelatedManager to through model.
 
-* recursive relationship: 若 relation field 需要与自身表建立关联, 使用
+relational field 的说明.
+
+- recursive relationship. 若 relation field 需要与自身表建立关联, 使用
   ``"self"`` 作为 ``to`` 参数值.
 
-  lazy relationship: 若 relation field 需与可能尚未建立的 model 建立关联,
+- lazy relationship. 若 relation field 需与可能尚未建立的 model 建立关联,
   使用 ``[<app_label>.]<model>``.
 
 model index
