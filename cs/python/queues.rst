@@ -1,3 +1,24 @@
+General
+=======
+
+- Asynchronous task queues 经常用在 web 后端架构中, 用于 delegrate
+  long-running tasks to a separate execution unit. 从而作为服务
+  响应主体的 web server 可以迅速返回响应给客户端, 完成 request-response
+  cycle.
+
+- 交给任务队列去执行的任务, 一般具有以下特征:
+
+  * long-running task.
+
+  * Calling external API, whose execution time is not under control of the
+    calling program.
+
+  一些例子:
+
+  * email user.
+
+  * spread really large bulk database operations over time.
+
 celery
 ======
 
@@ -59,8 +80,22 @@ Tasks
 
 - Task states: PENDING -> STARTED -> SUCCESS|FAILURE
 
+- task 参数注意事项:
+
+  * Don't pass complex objects as task paramters. Only pass JSON/msgpak, etc,
+    serializable simple objects.
+
+  * Don't pass database object as parameter. Only pass id, retrieve the object
+    from db at the receiving end. The database object you passed might change
+    in between the time you place the task and the time it gets executed.
+
 Calling
 -------
+
+Serialization
+-------------
+- 不要使用 pickle 作为 serializer, because of security vulnerability. By
+  allowing complex objects, you are increasing the chances of getting exposed.
 
 Result backend
 --------------
