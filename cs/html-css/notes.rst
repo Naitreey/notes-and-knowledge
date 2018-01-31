@@ -1725,14 +1725,14 @@ syntax
   * computed value. 根据 specified value 进行计算, 解析 inherit, initial,
     unset, revert 等特殊值至具体的值, 将所有 specified value 转换成属性定义
     允许的 computed value.
-    
+
     The computed value of a CSS property is the value that is transferred from
     parent to child during inheritance. 这是 computed value & specified value
     & used value 的重要区别.
 
   * used value. 这些值是从将 computed value 再解析成绝对数值可直接在页面中使用
     以确定各元素布局和位置等等绝对信息的值.
-    
+
     注意 used value 这里已经是绝对值, 由于绝对值很多时候不适合去继承, 所以有
     computed value & used value 的区分.
 
@@ -2039,7 +2039,7 @@ text
 
   Web fonts are subject to the Same-Origin restriction (font files must be on
   the same domain as the css file using them), unless CORS are used to relax this
-  restriction. 一个常见做法就是直接使用外部字体网站提供的 css file (通过 @import 
+  restriction. 一个常见做法就是直接使用外部字体网站提供的 css file (通过 @import
   at-rule 或者 link element), 里面包含 @font-face rules 加载所需字体. 绕过了
   same-origin 问题.
 
@@ -2201,7 +2201,7 @@ text
   justify-all 与 justify 的区别是前者会连最后一行也 justify 掉.
 
 - vertical-align. 两种用途:
- 
+
   1. 对于某个 inline element 相对于 line box 的 alignment.
      (平时用鼠标 select text 时, 高亮的部分大致就是 line box.)
 
@@ -2258,7 +2258,7 @@ text
   initial value: 0, 即没有缩进.
   value: 缩进量是从 containing block-level element 的 padding box 开始计算的.
   可以是负值. ``<length>``, ``<percentage>`` (containing block element 宽度).
-  
+
   除了以上值还可以附加 keyword:
   ``each-line``: 每个 forced line break 后的第一行都会缩进;
   ``hanging``: 除了第一行之外的所有行都会缩进.
@@ -2327,7 +2327,7 @@ pseudo-element
 
   initial: normal 或 none.
   values:
-  
+
   * none. 不生成元素.
 
   * normal. same as none.
@@ -2373,6 +2373,24 @@ A new instance of the counter is automatically created in child elements.
 
   initial: none. 不递增.
   values: ``[ <custom-ident> <integer>? ]+ | none``
+
+例子
+.. code:: css
+  ol {
+    counter-reset: section;                /* Creates a new instance of the
+                                              section counter with each ol
+                                              element */
+    list-style-type: none;
+  }
+
+  li::before {
+    counter-increment: section;            /* Increments only this instance
+                                              of the section counter */
+    content: counters(section, ".") " ";   /* Combines the values of all instances
+                                              of the section counter, separated
+                                              by a period */
+  }
+
 
 special
 ~~~~~~~
