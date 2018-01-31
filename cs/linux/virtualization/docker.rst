@@ -158,10 +158,14 @@ concepts and best practices
   * Whenever possible, use current official repositories as the basis for your
     image.
 
-  * 若需要 start from scratch, 可以选择 alpine linux 作为基镜像.
+  * 若需要 start from scratch, 可以谨慎选择 alpine linux 作为基镜像. 注意
+    musl libc 问题.
 
 base image
 ----------
+
+制作基镜像
+~~~~~~~~~~
 两种制作 base image 的方法.
 
 * ``docker image import``. 这种方式的问题是只有结果, 没有过程.
@@ -174,6 +178,11 @@ command in the Dockerfile to be the first filesystem layer in your image.
 
 While scratch appears in Docker’s repository on the hub, you can’t pull it or
 run it.
+
+选择基镜像
+~~~~~~~~~~
+- 当需要同时运行多个服务时, 尽量选择存在共同基镜像的镜像版本. 例如
+  基于 debian image 各个版本, alpine 等的镜像.
 
 image tag
 ---------
@@ -259,9 +268,16 @@ multi-stage build
 -----------------
 Multi-stage build made build pattern unnecessary.
 
-Multi-stage build allow you to copy only the artifacts you need into the final
-image. This allows you to include tools and debug information in your
-intermediate build stages without increasing the size of the final image.
+multi-stage build 的用处:
+
+- Multi-stage build allow you to copy only the artifacts you need into the final
+  image. This allows you to include tools and debug information in your
+  intermediate build stages without increasing the size of the final image.
+
+- 可以控制最终 build 到哪个 stage 结束. 这对从研发到部署的不同阶段生成不同
+  镜像非常方便. 即每个 build stage 生成一个镜像, 适合某个阶段来使用.
+  例如, 可以在 develop/test 镜像阶段添加所有需要的依赖和 debug 工具,
+  方便研发和调试; 在 production 镜像阶段仅添加构建结果和必要依赖.
 
 Every FROM instruction in dockerfile begins a new build stage.
 Stages are indexed from 0. Build stage can be named at FROM line
@@ -269,6 +285,8 @@ Stages are indexed from 0. Build stage can be named at FROM line
 
 Use ``COPY --from=<name|index>`` to copy artifacts from previous stages into
 current build stage.
+
+在 multi-stage build 中, production stage 的基镜像可以是 apline based images.
 
 container
 =========
@@ -928,6 +946,9 @@ image
   ``--cache-from``, 直接指定 cache source, 能用就用, 不能用拉倒, 别搜索.
   可以指定 remote image, 会自动 pull 下来.
 
+  ``--target``. 指定目标 build stage. 用于 multi-stage build 生成不同阶段的
+  镜像.
+
   build 过程中每个 layer 构建完成后会输出该层的 sha256 hash.
   若该层使用了 cache, 会输出 `Using cache`.
 
@@ -1263,6 +1284,92 @@ and DeviceMapper.
 container format
 ----------------
 - libcontainer.
+
+common images
+=============
+
+buildpack-deps
+--------------
+It includes a large number of "development header" packages needed by various
+things like Ruby Gems, PyPI modules, etc.
+
+The main tags of this image are the full batteries-included approach. With
+them, a majority of arbitrary gem install / npm install / pip install should be
+successful without additional header/development packages.
+
+buildpack-deps is designed for the average user of docker who has many images
+on their system. It, by design, has a large number of extremely common Debian
+packages. This reduces the number of packages that images that derive from it
+need to install, thus reducing the overall size of all images on your system.
+
+主要镜像分类:
+
+- ubuntu based releases
+
+- debian based releases
+
+- `curl` variants and `scm` variants
+
+python
+------
+主要镜像分类:
+
+- ``python:<version>``
+
+  based on buildpack-deps debian images. defacto images.
+
+- ``python:*slim*``
+
+  based on debian slim images, 而不是 buildpack-deps. This image does not
+  contain the common packages contained in the default tag and only contains
+  the minimal packages needed to run python.
+
+- ``python:*alpine*``
+
+  Based on alpine. Recommended when final image size being as small as possible
+  is desired. The main caveat to note is that it does use musl libc instead of
+  glibc and friends, so certain software might run into issues depending on the
+  depth of their libc requirements.
+
+nginx
+-----
+- ``nginx-debug`` binary produces verbose output when using higher log levels.
+
+- always run with ``nginx -g 'daemon off'``
+
+主要镜像分类:
+
+- ``nginx:<version>``
+ 
+  based on debian slim images. defacto images.
+
+- ``nginx:*alpine*``
+
+rabbitmq
+--------
+
+主要镜像分类:
+
+- ``rabbitmq:<version>``
+
+  based on debian slim images. defacto images.
+
+- ``rabbitmq:*management*``
+
+  ditto, with management plugin.
+
+- ``rabbitmq:*alpine*``
+
+mysql
+-----
+
+主要镜像分类:
+
+- ``mysql:<version>``
+
+  based on debian images.
+
+- alpine might be coming (sucks).
 
 misc
 ====
