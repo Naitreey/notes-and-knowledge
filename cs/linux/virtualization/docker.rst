@@ -1331,6 +1331,10 @@ python
   glibc and friends, so certain software might run into issues depending on the
   depth of their libc requirements.
 
+注意 python 应用为了能够稳定输出日志给 ``docker logs``, 需要设置解释器为 unbuffered
+mode::
+  ENV PYTHONUNBUFFERED=1
+
 nginx
 -----
 - ``nginx-debug`` binary produces verbose output when using higher log levels.
