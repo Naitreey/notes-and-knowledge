@@ -27,6 +27,30 @@ Questions
 
 - data striping.
 
+- cephfs non-root read/write.
+  目前知道可以 chown 来让 non-root 读写. 不知是否最优.
+
+Overview
+========
+- Ceph 以及对象存储的好处.
+
+  * 应用只需和抽象的 object storage 打交道, 很简单. 它背后的整个集群, 以及
+    所有复杂的 routing/replication 等等逻辑, 全部封装成简单的接口. 应用无需
+    关心存储细节.
+
+  * object/object group 这个抽象层, 让数据可以在集群中漂移, 让 replication
+    和 rebalancing 等自稳定操作更方便, 对上层应用是完全透明的.
+
+  * 一个文件可以使用位于不同 PG 的多组 objects 来存储, 类似于 RAID, 多台节点
+    同时 serve 读写, 大大提高存储效率.
+
+  * Replication 带来的 HA.
+
+- 分布式存储一般用于存储非常大量的 binary data, 例如虚拟机镜像, 图片, 任意类型的
+  文件 (Dropbox). 它与分布式数据库或搜索引擎的用处是不同的.
+
+- Object Storage Device 在 iSCSI 协议中有定义. SCSI command set 中有定义.
+
 Architecture
 ============
 
