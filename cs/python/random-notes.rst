@@ -151,16 +151,6 @@
 
 - Set and Change buffering mode
 
-  python3 不允许 text stream 的 buffering mode 为 unbuffering.
-  也就是说, 只能是 line buffering (``buffering=1``) 或 block buffering
-  (``buffering=<size>``). (也许因为 text 是 unicode, 因此没有真正的
-  unbuffered text IO?) 对于 interactive file (a.k.a. terminal device),
-  默认为 line buffering, 对于 regular file, 默认是 block buffering.
-  若要对 text stream 模拟 unbuffering mode, 只能在写入时强行 flush.
-  例如, ``print(..., flush=True)``, ``TextIOWrapper.flush``.
-
-  对于 binary stream, unbuffer, line buffer, block buffer 都可以.
-
   若要修改 stdout/err stream (text stream) 的 buffering mode, 可以 ``open``
   来 reopen underlying file descriptor in other buffering mode:
 
@@ -185,7 +175,7 @@
      根本没受影响. 根本的办法是调用 `os.dup2()` 直接将想要的目的文件 fd 复制到
      0,1,2 fd 上面. 例如:
 
-       .. code:: python
+     .. code:: python
        class _RedirectStream:
            """
            Redirect standard stream `_stream` at OS level, rather at python level.
@@ -704,6 +694,8 @@
   * descriptor protocol
 
   * buffer protocol
+
+  * file-like object protocol
 
 - ``range`` 实际上是一种 builtin immutable sequence type. 因此支持常见的 sequence
   interface. 严格地讲, 就是 ``collections.abc.Sequence`` ABC 所定义的 interface.
