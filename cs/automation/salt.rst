@@ -1,11 +1,16 @@
-- salt 支持多种 management models:
-  agent-server (agent-based), agent-only, agent-less.
+Questions
+=========
 
-  不同的方式仅在 Salt 的使用方式上有区别 (例如 ``salt``, ``salt-call`` 等),
-  salt 的所有 modules 可以在任何一种方式中使用.
+- 使用 salt 管理 salt-master.
+
+  两种方法:
+
+  * 在 salt-master 节点上安装 salt-minion, 配置 master 节点为自身即可.
+
+  * 使用 ``salt-call`` 本地执行 execution modules, 无需 minion.
 
 Salt Jinja extension
---------------------
+====================
 
 - 在 jinja2 模板中可访问的 salt 参数:
 
@@ -32,7 +37,7 @@ Salt Jinja extension
   * git file server, 可以使用这个直接从 git server 中取文件.
 
 target selection
-----------------
+================
 
 - target selection (``man salt(1)``).
 
@@ -51,7 +56,7 @@ target selection
   * all above combined.
 
 Grains
-------
+======
 
 - The static information SaltStack collects about the underlying managed system.
 
@@ -99,7 +104,7 @@ Grains
 - ``saltutil.sync_grains`` 同步 custom grains modules 至各个 minion.
 
 Execution
----------
+=========
 
 - 格式 ``salt <target> <module>.<function> [args]...``
   对于 positional args 一般就做普通的 positional 在命令行上,
@@ -152,7 +157,7 @@ Execution
   run each time they are called, which may or may not result in system changes.
 
 State
------
+=====
 
 - State.
 
@@ -294,7 +299,7 @@ State
     在某个其他系统产生修改时执行 posthook.
 
 Pillar
-------
+======
 
 - Pillar 实际上是一系列分配给各 minion 的数据或参数. 它根据 target selection
   机制 对数据进行分配. 将 salt state 模板化, 对各个 minion 传入自定义的
@@ -336,7 +341,7 @@ Pillar
 - 为了保密, pillar yaml file 可以放在一个 private git repo 中.
 
 Salt Mine
----------
+=========
 
 - The Salt mine is used to share data values among Salt minions.
 
@@ -346,7 +351,7 @@ Salt Mine
   where it needs to be manually updated.
 
 Event
------
+=====
 
 - 所有 salt 内部组件通过 sending/listening events 相互沟通.
 
@@ -372,7 +377,7 @@ Event
   * 使用 ``event.send`` 直接发送任意 event.
 
 beacon
-------
+======
 
 - 用于监控 salt 之外的系统状态, 当预设的状态、条件等满足时, 向 bus 发送
   该事件. 它应用 event system 实现.
@@ -384,7 +389,7 @@ beacon
 - 在 minion config 中的 ``beacons`` 部分或者单独的 ``beacons.conf`` 文件中配置.
 
 Reactor
--------
+=======
 
 - Reactor trigger reactions when events occur on event bus.
 
@@ -419,7 +424,7 @@ Reactor
           - arg: <arg_list>
 
 Runner
-------
+======
 
 - Runners are modules that execute on the Salt master to perform supporting tasks.
   这些操作可能是关于 master 自己的, 或者是整个 master/minion 系统的管理性质的操作,
@@ -436,7 +441,7 @@ Runner
   * ``jobs.active``
 
 Orchestrate Runner
-------------------
+==================
 
 - orchestrate runner 用于配置 salt master 所管理的各系统之间的的依赖关系状态.
   默认情况下, salt 并发地对所有 minion 发布任务, 并且各 minion 之间是相互独立的.
@@ -452,20 +457,20 @@ Orchestrate Runner
 
 
 Wheel
------
+=====
 
 
 Returner
---------
+========
 
 - 将执行结果 return 至某个数据库, 而不是返回至 master 端.
 
 
 Salt Cloud
-----------
+==========
 
 docker
-~~~~~~
+------
 docker 有两种使用模式, 这对应着 salt 与 docker 的搭配使用有两种模式:
 
 1. 如果 docker container 是看作一个独立的虚拟机运行环境, 在其中运行一整套或者
@@ -485,13 +490,13 @@ cloud privder, 所以只能手动做.
 对于第二种方式, 有 docker-ng state module.
 
 Configuration
--------------
+=============
 
 - 不同方面的配置项应放在 ``master.d`` 或 ``minion.d`` 中的单独文件中.
   而不该直接修改 ``master`` ``minion`` 配置文件.
 
 Salt SSH
---------
+========
 
 - Salt commands can be executed on remote systems using SSH instead of the Salt agent.
   这适用于以 agent-less 方式使用 salt.
@@ -510,7 +515,7 @@ Salt SSH
 - salt ssh 开多个进程并行连接远端.
 
 Internals
----------
+=========
 
 - All Salt minions receive commands simultaneously.
 
@@ -543,6 +548,8 @@ Internals
 
   * configuration
 
+  * command interface
+
   每个 subsystem 都可以通过不同的 plug-ins (subsystem modules) 来实现,
   满足相同的 API 即可.
 
@@ -553,7 +560,11 @@ Internals
 
 - architecture model
 
-  * 主要是 server-agent, 同时支持 agent-less 和 agent-only.
+  * salt 支持多种 management models:
+    agent-server (agent-based), agent-only, agent-less.
+  
+    不同的方式仅在 Salt 的使用方式上有区别 (例如 ``salt``, ``salt-call`` 等),
+    salt 的所有 modules 可以在任何一种方式中使用.
 
   * 连接从 minion 发起, minion 上不需要允许 incoming connections.
 
@@ -605,10 +616,10 @@ Internals
     python 的 postional args 和 kwargs 两种参数形式.
 
 Configuration
--------------
+=============
 
 minion
-~~~~~~
+------
 
 - Primary configurations
 
@@ -633,14 +644,14 @@ minion
     - localhost
 
 Output
-------
+======
 
 - CLI 中默认使用的 output module 是 highstate.
 
 API
----
+===
 python
-~~~~~~
+------
 
 - python API 只有等到全面支持 python3 时才有用.
 
