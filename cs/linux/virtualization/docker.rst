@@ -161,6 +161,9 @@ concepts and best practices
   * 若需要 start from scratch, 可以谨慎选择 alpine linux 作为基镜像. 注意
     musl libc 问题.
 
+  * 研发时使用基于 debian 的镜像. 保证方便, 什么都有. 测试和部署时使用基于
+    alpine 的镜像. 保证轻量.
+
 base image
 ----------
 
@@ -495,7 +498,7 @@ CMD
   CMD ["param", ...]
   CMD <command>
 
-- Only one CMD instruction in a Dockerfile.
+- Only one CMD instruction in one build stage.
 
 - The main purpose of a CMD is to provide default command execution for an
   executing container.  Don’t confuse RUN with CMD. RUN actually runs a command
@@ -650,7 +653,7 @@ WORKDIR
   WORKDIR /path
 
 - Set working directory in image for any following RUN, CMD, ENTRYPOINT,
-  COPY, ADD instructions.
+  COPY, ADD instructions, for current build stage.
 
 - If the WORKDIR doesn’t exist, it will be created.
 
@@ -853,6 +856,9 @@ data
     swarm service 使用的线上配置类型的数据, 例如配置文件, 使用 docker
     config 保存. 将配置从 image 中抽离出来, 提高了容器镜像的通用性,
     让一些必须在 runtime 进行配置的项修改起来方便很多 (避免了 bind mount).
+
+docker config
+-------------
 
 engine
 ======
