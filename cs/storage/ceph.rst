@@ -1,6 +1,8 @@
 Questions
 =========
-- reliable and complete installation procedure?
+- reliable and complete installation/uninstallation steps?
+  steps to start/stop cluster?
+  steps to start/stop every services?
 
 - how to make configuration taking effect immediately? Must reboot?
 
@@ -25,10 +27,16 @@ Questions
 
 - WTF is epoch here?
 
+- how many monitors in cluster is needed?
+
+- what are bootstrap-... keyrings?
+
 - data striping.
 
 - cephfs non-root read/write.
   目前知道可以 chown 来让 non-root 读写. 不知是否最优.
+  一个 cephfs 在各个客户端使用时, 必须使用相同的用户或相同的组. 即需要保证
+  所要使用的用户都有 POSIX 形式的读写权限. 甚至是 chmod 0777.
 
 Overview
 ========
@@ -51,6 +59,136 @@ Overview
 
 - Object Storage Device 在 iSCSI 协议中有定义. SCSI command set 中有定义.
 
+Deployment
+==========
+
+steps to install
+----------------
+
+preparation
+~~~~~~~~~~~
+- 若是 ubuntu, 最好是 16.04 以上.
+
+- 首先保证 admin, cluster nodes 等所有节点之间可以两两相互通信, 通过 DNS 或 hosts
+  设置.
+
+- admin node 用于控制部署过程. 安装 ceph-deploy package::
+    wget -q -O- 'https://download.ceph.com/keys/release.asc' | sudo apt-key add -
+    echo deb https://download.ceph.com/debian-{ceph-release}/ {ubuntu-release} main | sudo tee /etc/apt/sources.list.d/ceph.list
+    sudo apt-get update && sudo apt-get install ceph-deploy
+  其中, ceph-release 为 `ceph release`_ code name; ubuntu-release 为恰当的
+  官方支持的 ubuntu release code name. 很不幸官方到底支持哪些 ubuntu 版本,
+  需要去 `download directory`_ 找. 例如, 17.10 系统也得使用 xenial.
+
+- cluster node 上安装 ssh server::
+    sudo apt-get install openssh-server
+
+- admin node 设置至所有 cluster node 某用户的 password-less ssh::
+    ssh-copy-id {username}@{node}
+  设置 ``~/.ssh/config`` 从而连接某个 host 时, 自动使用配置好的用户::
+    Host node1
+       Hostname node1
+       User {username}
+    Host node2
+       Hostname node2
+       User {username}
+    Host node3
+       Hostname node3
+       User {username}
+
+- 每个 cluster node 上的 ssh 用户需要有 passwordless sudo 权限::
+    echo "{username} ALL = (root) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/{username}
+    sudo chmod 0440 /etc/sudoers.d/{username}
+
+- cluster node 上安装 ntp server::
+    sudo apt install ntp
+  配置节点之间互为 ntp peer 并重启::
+    # /etc/ntp.conf
+    ...
+    peer {another-node-hostname}
+    peer ...
+
+- admin node 上创建目录保存部署过程中生成的所有文件. 运行 ceph-deploy 是保证
+  PWD 在这个目录. 不要使用 sudo.
+
+.. _ceph release: http://docs.ceph.com/docs/master/releases/
+.. _download directory: https://download.ceph.com/
+
+deploy RADOS cluster
+~~~~~~~~~~~~~~~~~~~~
+- install ceph packages on all cluster nodes::
+    ceph-deploy install --release {ceph-release} {node}...
+
+- create new cluster::
+    ceph-deploy new {monitor-node}...
+
+- 修改 ``ceph.conf`` 添加 ``public network`` setting 为节点 IP 所在子网.
+
+- deploy initial monitors::
+    ceph-deploy mon create-initial
+  创建 cluster 时, 同时会生成管理员 ``client.admin`` keyring 以及各种 bootstrap
+  keyrings, 每个 keyring (用户) 具有用于部署相应的服务的所需权限.
+
+- push configuration and admin.client keyrings to Ceph Nodes. 让
+  各个节点成为 admin node, 执行 ceph CLI 时自动以 client.admin 认证::
+    ceph-deploy admin {node}...
+
+- add/remove a monitor::
+    ceph-deploy mon add {node}
+    ceph-deploy mon destroy {node}...
+  Ensure that you add or remove monitors such that they may arrive at a consensus
+  among a majority of monitors according to Paxos algorithm.
+
+- deploy manager daemons on all monitor hosts::
+    ceph-deploy mgr create {monitor-node}...
+
+- deploy Ceph OSD::
+    ceph-deploy osd create {node}:{device} ...
+  若 OSD 设备本身有分区表信息, 创建会失败. 需要先破坏分区表信息::
+    ceph-deploy disk zap {node}:{device}
+
+- remove Ceph OSD::
+    ceph osd out {N}
+    systemctl stop ceph-osd@{N}.service
+    ceph osd purge {N} --yes-i-really-mean-it
+    umount /var/lib/ceph/osd/ceph-{N}
+
+- push/pull configuration to cluster nodes::
+    ceph config {push|pull} {node}...
+
+- 设置节点为 admin node::
+    ceph admin {node}...
+
+deploy CephFS
+~~~~~~~~~~~~~
+- create a MDS server::
+    ceph-deploy mds create {node}
+
+deploy RGW
+~~~~~~~~~~
+- deploy RGW server::
+    ceph-deploy rgw create {gateway-node}...
+
+steps to uninstall
+------------------
+- 各客户端停止使用 RGW, unmap RBD images, unmount CephFS.
+
+- 删除节点和客户端上的 ceph packages::
+    ceph-deploy purge <hostname>...
+
+- 删除节点上的 ceph data::
+    ceph-deploy purgedata <hostname>...
+
+- admin node 上删除 ceph-deploy package.
+
+- admin node 上删除 ceph keyrings, configurations, 等等所在目录.
+
+steps to start
+--------------
+
+steps to stop
+-------------
+
 Architecture
 ============
 
@@ -66,6 +204,8 @@ terms
 - MDS. The Ceph metadata software.
 
 - RBD. RADOS Block Device.
+
+- MGR. Ceph Manager.
 
 - Ceph Client. The collection of Ceph components which can access a Ceph
   Storage Cluster. These include the Ceph Object Gateway, the Ceph Block
@@ -418,6 +558,42 @@ availability.
 RADOS Cluster
 =============
 
+configuration
+-------------
+
+network settings
+~~~~~~~~~~~~~~~~
+- public network and cluster network.
+
+  A RADOS cluster should have two networks: a public (front-side) network and a
+  cluster (back-side) network. Thus each Ceph Node needs to have 2 NICs.
+
+  Unless you specify a cluster network, Ceph assumes a single “public” network.
+
+- cluster network is dedicated to Ceph OSD network traffics. Advantages:
+
+  * OSD replication and heartbeat performance. When Ceph OSD Daemons replicate
+    data more than once, the network load between Ceph OSD Daemons easily
+    dwarfs the network load between Ceph Clients and the Ceph Storage Cluster.
+    This can introduce latency and create a performance problem.
+
+  * Better security. 只要 cluster network 不连入公网, 就不受 public network
+    可能问题的影响. 如果 public network 受到 DDoS 攻击, 不影响 OSD 集群运行.
+    从而客户端数据读写不受影响.
+
+monitor settings
+~~~~~~~~~~~~~~~~
+- Filesystem ID (fsid): the unique identifier for current RADOS cluster,
+  Since you can run multiple clusters on the same hardware.
+
+- For high availability, you should run a production Ceph cluster with AT LEAST
+  three monitors. Ceph uses the Paxos algorithm, which requires a consensus
+  among the majority of monitors in a quorum. With Paxos, the monitors cannot
+  determine a majority for establishing a quorum with only two monitors. A
+  majority of monitors must be counted as such: 1:1, 2:3, 3:4, 3:5, 4:6, etc.
+
+- Monitors and OSDs should not run on same host.
+
 user management
 ---------------
 
@@ -435,5 +611,23 @@ client authentication
   各自单独赋权限. 通过 ``ceph fs authorize`` 赋目录权限时, 它会自动
   设置随 mon, osd, mds 的合适权限.
 
+configuration
+-------------
+- You must deploy at least one metadata server to use CephFS. 目前
+  对 multiple MDS 的支持还不稳定.
+
 RADOS block device
 ==================
+
+Ceph Manager
+============
+MGR provides additional monitoring and interfaces to external monitoring and
+management systems.
+
+configuration
+-------------
+- In general, you should set up a ceph-mgr on each of the hosts running a
+  ceph-mon daemon to achieve the same level of availability.
+
+- By default, whichever ceph-mgr instance comes up first will be made active by
+  the monitors, and the others will be standbys.
