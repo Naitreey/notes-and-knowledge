@@ -459,9 +459,19 @@ set types
 
 operations
 ~~~~~~~~~~
-- the non-operator versions of ``union()``, ``intersection()``,
-  ``difference()``, and ``symmetric_difference()``, ``issubset()``, and
-  ``issuperset()`` methods will accept any iterable as an argument. In
-  contrast, their operator based counterparts require their arguments to be
-  sets. 然而两种方式并没有效率上的区别, 因为虽然接受任何 iterable, 但是仍然
-  会在内部转换成 set 再进行比较.
+the non-operator versions methods will accept any iterable as an argument. In
+contrast, their operator based counterparts require their arguments to be
+sets. 然而两种方式并没有效率上的区别, 因为虽然接受任何 iterable, 但是仍然
+会在内部转换成 set 再进行比较.
+
+- ``issubset()``, ``<=``
+
+- ``issuperset()``, ``>=``
+
+- ``union()``, ``set | other | ...``
+
+- ``intersection()``, ``set & other & ...``
+
+- ``difference()``, ``set - other - ...``
+
+- ``symmetric_difference()``, ``set ^ other``
