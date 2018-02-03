@@ -2230,6 +2230,7 @@ to the parent class and then don’t use them later on.
 - ``verbose_name``.
   对于非关系型 field, 该参数是第一个 kwarg, 因此经常以
   positional 形式写出; 对于关系型 field 必须以 kwarg 形式写出.
+  默认根据 field name 生成.
 
 - ``db_column``. 指定 db column name. 默认为 field name.
 
@@ -2330,6 +2331,8 @@ db data type related APIs.
 
 db field value related APIs. 它们的作用还不完全清楚.
 
+.. TODO 弄清作用和区别
+
 - ``get_prep_value(value)``.
   将 field value 转换成这个列的值合法的数据类型.
 
@@ -2372,6 +2375,25 @@ form field.
 - ``formfield(form_class=None, choices_form_class=None, **kwargs)``.
   Returns the default django.forms.Field of this field for ModelForm.
   ``kwargs`` are passed to form class constructor.
+
+form validation.
+
+- ``clean(value, model_instance)``.
+  1. 调用 to_python() 转换 value 为合法列值(或报错).
+
+  2. 调用 validate() 做基本校验.
+
+  3. 调用 validators.
+
+- ``validate(value, model_instance)``
+
+  * 若不可编辑, 不校验.
+    
+  * 若有选项, 校验值是否属于选项.
+    
+  * 校验是否允许 NULL.
+
+  * 校验是否允许空值.
 
 deconstruction.
  
@@ -2438,6 +2460,25 @@ field types
     对于 legacy 数据库, 需要手动更新 column data type.
 
 - ``BooleanField``, ``NullBooleanField``. 后者允许存 NULL.
+
+  BooleanField 总是 null=False. 在未设 default 值时, form validate 不接受 None.
+  若直接保存而不经 form 校验, None 会被数据库拒绝.
+
+  checkings.
+
+  * 不能设置 null=True.
+
+  NullBooleanField 总是 null=True, blank=True. 会区别对待不同值.
+
+- ``CharField``.
+
+  checkings.
+
+  * max_length must be defined.
+
+  validations.
+
+  * value length match max_length constraint.
 
 - ``SlugField`` 要配合 ``slugify`` 函数使用, 只应该在创建 instance 时保存该列值.
 
