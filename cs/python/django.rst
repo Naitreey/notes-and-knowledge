@@ -1797,8 +1797,6 @@ form
 
     * ``CharField``
 
-      mysql note: VARCHAR column 若设置 unique constraint, 要求 max_length <= 255.
-
     * ``FileField``, bound 之后的值 ``.value()`` 是 ``UploadedFile`` instance.
 
   - form field options.
@@ -2426,7 +2424,20 @@ field types
 
 - IP address 用 ``GenericIPAddressField``.
 
-- 实数一般用 ``FloatField``, 精确要求时考虑 ``DecimalField``.
+- 实数一般用 ``FloatField``.
+  
+- 若 float 不能满足需要, 需要 mathematically correct 时考虑 ``DecimalField``.
+
+  ``max_digits`` and ``decimal_places`` are required.
+
+  checkings.
+
+  * 检查 ``max_digits`` 和 ``decimal_places`` 是否定义, 是否合法.
+    max_digits 须大于 decimal_places.
+
+  validations.
+
+  * 检查值是否满足 decimal 定义要求.
 
 - ``IntegerField``, ``PositiveIntegerField``, ``BigIntegerField``,
   ``SmallIntegerField``, ``PositiveSmallIntegerField``.
@@ -2444,8 +2455,7 @@ field types
 
   * 在 python 中以 datetime.date, datetime.datetime 分别表示.
 
-  * ``auto_now_add`` 适合做 create time;
-    ``auto_now`` 适合做 update time.
+  * ``auto_now_add`` 适合做 create time; ``auto_now`` 适合做 modified time.
     这些参数在调用 ``Model.save()`` 来保存时才有效, 通过其他途径修改数据
     时不会生效.
 
@@ -2453,11 +2463,26 @@ field types
 
     ``auto_now``, ``auto_now_add`` 和 ``default`` 是互斥的.
 
-    设置这两个参数, 意味着该列不能手动修改.
-    django 自动设置 ``editable=False`` 和 ``blank=True``.
+    设置这两个参数, 意味着该列不能手动修改. 即自动设置
+    ``editable=False`` 和 ``blank=True``.
+
+  * 所在的 model class 会添加 ``get_previous_by_<name>`` 和 ``get_next_by_<name>``
+    两个 method.
 
   * mysql note: 只有 5.6.4+ 版本支持毫秒精度的时间, 使用 DATETIME(6).
     对于 legacy 数据库, 需要手动更新 column data type.
+
+  checkings.
+
+  * 检查 ``auto_now``, ``auto_now_add``, ``default`` 是否设置了多个.
+
+  * 检查 user 是否错将 ``datetime.date``, ``timezone.now`` 等 动态
+    默认时间值写成了固定时间 ``datetime.date()``, ``timezone.now()`` 之类的.
+    这不涉及一般的静态默认时间值. 仅仅是检查是否写错了.
+
+- ``DurationField``. 保存时间区间数据. 赋值 ``datetime.timedelta``
+
+  除了 postgresql 和 oracle 之外, 该数据以 microseconds 单位保存 (``10**6 μs = 1s``).
 
 - ``BooleanField``, ``NullBooleanField``. 后者允许存 NULL.
 
@@ -2471,6 +2496,8 @@ field types
   NullBooleanField 总是 null=True, blank=True. 会区别对待不同值.
 
 - ``CharField``.
+  若设置 null=True, 则 char field 存在两种空值, ``""`` 和 ``NULL``. 根据具体
+  场景考虑这是否合适.
 
   checkings.
 
@@ -2480,9 +2507,43 @@ field types
 
   * value length match max_length constraint.
 
+  mysql note: VARCHAR column 若设置 unique constraint, 要求 max_length <= 255.
+
+- ``EmailField``
+
+  validations.
+
+  * string is valid email.
+
 - ``SlugField`` 要配合 ``slugify`` 函数使用, 只应该在创建 instance 时保存该列值.
 
 - ``FilePathField`` 要求值必须是满足路径匹配条件的文件路径.
+
+- ``FileField``. 文件列.
+  
+  这是文件体的抽象. 而不仅仅是文件路径, 后者是 FilePathField 的事.
+  虽然它对应的数据库列是 file path, 但它对应的 model instance attribute
+  是文件体 (使用 file path 获取).
+
+  .. TODO how file path is saved to db?
+
+  options.
+
+  * ``upload_to``.
+    
+    若是 string, a relative directory string, with ``time.strftime()``
+    format specifiers. 文件体会保存在该目录下.
+    若是 callable, 直接生成文件体的最终保存路径. 接受提供的参数.
+
+  * ``storage``. file storage object.
+
+  * ``max_length`` is default to 100.
+
+  checkings.
+
+  * 检查不能设置 primary_key 参数.
+
+  * 检查 upload_to 必须是相对路径.
 
 - ``JSONField``. postgresql 可以使用 native JSONField, 对于 mysql 可以使用
   django-jsonfield module 用 TextField/CharField 模拟.
