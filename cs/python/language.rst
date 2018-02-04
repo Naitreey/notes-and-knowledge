@@ -21,6 +21,16 @@ class
 
   最后返回 ``instance`` 给 caller.
 
+- attribute reference.
+
+  搜索顺序. 首先搜索 class ``__dict__``, 然后搜索 parent class ``__dict__``
+  in MRO order. 最后搜索 metaclass 的 attributes.
+  即 (不考虑 descriptor)::
+    class -> parent class -> ... -> metaclass -> parent metaclass -> ... -> type -> object
+
+- MRO. python2.3+ uses C3 method resolution order. 若对于一个类, 无法根据 C3 MRO
+  算法给出 ``__mro__`` attribute, 则无法创建这个类. 此时会 raise TypeError.
+
 class instance
 ~~~~~~~~~~~~~~
 
@@ -28,13 +38,8 @@ class instance
   
   搜索顺序. 首先搜索 instance ``__dict__``, 然后搜索 class & parent
   classes attributes, in MRO order. 注意不会去搜索 metaclass 的 attributes.
-  
-  即对于 class instance, 搜索是
-  ``instance -> class -> parent class -> ... -> object``
-  对于 class object (metaclass instance), 搜索是
-  ``class -> metaclass -> parent metaclass -> ... -> type -> object``
-  这两条线是平行的.
-
+  即 (不考虑 descriptor)::
+    instance -> class -> parent class -> ... -> object
   若属性是一个 function object, 转变成 bound instance method, 它的
   ``__self__`` attribute is the instance.
 
@@ -159,7 +164,8 @@ attribute access
   ``type.__getattribute__`` 适用于所有 ``class.attr`` 的访问. 它在此基础上,
   对第二步做了修改:
 
-  2. 尝试 instance attribute (``__dict__``). 若有, 且是 descriptor, 调用::
+  2. 尝试 instance (此时是 class object) 以及它的所有基类的 ``__dict__``. 若有,
+     且是 descriptor, 调用::
        descriptor.__get__(self, None, class)
      若不是 descriptor, 直接返回.
 
