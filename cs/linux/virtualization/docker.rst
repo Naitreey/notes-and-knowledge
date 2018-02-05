@@ -446,6 +446,9 @@ ENTRYPOINT
 ::
   ENTRYPOINT ["cmd", ...]
 
+- 不建议使用 shell form entrypoint, 因进程不是 PID1, 而是 sh -c 的子进程,
+  pass signal 可能有问题.
+
 - ENTRYPOINT 是提供镜像 (所生成的容器的) 要执行的命令.
 
 - default entrypoint is ``["/bin/sh", "-c"]``.
@@ -1380,6 +1383,42 @@ mysql
   based on debian images.
 
 - alpine might be coming (sucks).
+
+- 为了默认情况下可以远程连接,
+
+  * bind address 使用了默认的 ``*``.
+
+  * root user 已经设置为 ``root@%``. 所以接受从任何 host 访问.
+
+- 配置文件. 设置完整的 my.cnf 放在 ``/etc/mysql.conf.d``. 因为
+  容器的配置应该统一. 一个配置文件已经足够, 所有配置放在里面.
+
+- 为了配置方便, 预设了一系列环境变量.
+
+  * MYSQL_ROOT_PASSWORD. mandatory.
+
+  * MYSQL_DATABASE. db to create on startup.
+
+  * MYSQL_USER, MYSQL_PASSWORD. user to create. will be granted all
+    perms on MYSQL_DATABASE.
+
+  * ...
+
+  Note that none of the variables will have any effect if you start the
+  container with a data directory that already contains a database: any
+  pre-existing database will always be left untouched on container startup.
+
+  MYSQL_ROOT_PASSWORD, MYSQL_ROOT_HOST, MYSQL_DATABASE, MYSQL_USER, and
+  MYSQL_PASSWORD 支持 ``_FILE`` suffix to load value from file. 这样就支持
+  docker secret & docker config.
+
+- initialization scripts.
+
+  When a container is started for the first time, it will execute files with
+  extensions .sh, .sql and .sql.gz that are found in /docker-entrypoint-initdb.d.
+  Files will be executed in alphabetical order. 这可以用于与应用相关的初始化
+  配置, 以及数据恢复. SQL files will be imported by default to the database
+  specified by the MYSQL_DATABASE variable.
 
 misc
 ====
