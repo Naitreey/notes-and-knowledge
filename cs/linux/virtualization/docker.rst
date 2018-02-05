@@ -635,8 +635,8 @@ VOLUME
   VOLUME ["mountpoint", ...]
 
 指定一系列 mountpoints, 在容器运行时, 会自动创建一个 anonymous volume 挂载在
-mountpoint.  docker run 可以通过 ``-v`` 参数明确指定 volume 或 bind mount,
-override 默认创建 的 anonymous volume.
+mountpoint.  docker run 可以通过 ``-v``, ``--mount`` 参数明确指定 volume 或
+bind mount, override 默认创建 的 anonymous volume.
 
 The docker run command initializes the newly created volume with any data that
 exists at the specified location within the base image. If any build steps
@@ -839,27 +839,97 @@ networking
 
 data
 ====
-- 数据的存储方式:
- 
-  * volume.
-    应用数据、日志等有价值的 persistent data 应使用 volume 存储在容器环境之外.
+数据的存储方式
+--------------
 
-  * bind mount.
-    一般只用于研发阶段. 即 bind mount 源代码进容器环境.
-    bind mount 也用于 production 时在容器之间进行一些文件共享, 例如配置.
+四种方式.
 
-  * writeable layer.
-    直接写在 container writeable layer 上的内容, 只应该是体积不大的, 临时
-    性质的、可随时销毁的 runtime content.
+* volume.
+  应用数据、日志等有价值的 persistent data 应使用 volume 存储在容器环境之外.
 
-  * docker secret.
-    swarm service 需要使用的不该明文保存的敏感数据, 例如 password,
-    SSH private key, SSL certificate 等, 使用 docker secret 保存.
+* bind mount.
+  在研发阶段, bind mount 用于共享源代码进容器环境.
+  bind mount 也用于 production 时在容器之间、容器和 host 之间等进行文件和配置
+  共享.
 
-  * docker config.
+  - docker config.
     swarm service 使用的线上配置类型的数据, 例如配置文件, 使用 docker
     config 保存. 将配置从 image 中抽离出来, 提高了容器镜像的通用性,
     让一些必须在 runtime 进行配置的项修改起来方便很多 (避免了 bind mount).
+
+* tmpfs mount.
+
+  适合放置 non-persistent state data. 例如敏感信息密码、证书, 或者为了某些情况下
+  需要高速读写.
+
+  - docker secret.
+    swarm service 需要使用的不该明文保存的敏感数据, 例如 password,
+    SSH private key, SSL certificate 等, 使用 docker secret 保存.
+  
+* writeable layer.
+  直接写在 container writeable layer 上的内容, 只应该是体积不大的, 临时
+  性质的、可随时销毁的 runtime content.
+
+
+- 在 writable layer of container 保存数据的问题:
+
+  * 难以将数据从容器中取出来. 即 persistent content (data) 和 disposable content
+    (container + runtime products) 的耦合关系太密切.
+
+  * writable layer 通过 union filesystem 工作, 是多层的叠加. 因此它的效率
+    是低于直接读写 host filesystem 的 (data volume).
+
+  * increase the size of container.
+
+data volume
+-----------
+Volumes are stored in a part of the host filesystem which is managed by Docker,
+under ``/var/lib/docker/volumes/``.
+Non-Docker processes should not modify this part of the filesystem.
+
+Multiple containers can use the same volume in the same time period. This is
+useful if two containers need access to shared data. For example, if one
+container writes and the other reads the data.
+
+By default, when a container stops or is removed, the volume still exists.
+Volumes are only removed when you explicitly remove them.
+
+copy
+~~~~
+对于 mountpoint 位置本身有数据时, empty volume, non-empty volume 和 bind mount
+的处理是不同的:
+
+- empty volume: 容器内挂载点的数据会复制到 volume 中.
+
+- non-empty volume & bind mount: Linux 正常方式, 直接挂载.
+
+swarm mode notice
+~~~~~~~~~~~~~~~~~
+swarm mode 与 named volume 注意事项.
+Swarm does not currently orchestrate volumes. The syntax
+is very purposefully ``--mount`` and not ``--volume`` for this reason.
+对于一个 service 的多个 replicas, 是 "mount" 这个 volume, 创建 volume 只是
+副作用. 注意若一个节点上有多个 replicas, named volume 只创建一个, 而多次
+bind mount. 这可能不是想要的结果. 此时, 应使用 anonymous volume.
+
+volume drivers
+~~~~~~~~~~~~~~
+除了 local driver 之外, volume drivers 可以是别的形式, 例如 remote hosts, cloud
+storage. volume drivers 是 docker plugins.
+
+- local.
+  默认的 volume driver 是 ``local``. local data volume (with ``local`` driver),
+  本质上和 bind mount 是类似的, 只不过 source 目录在 docker 自己控制下.
+
+
+bind mount
+----------
+just bind mount. 读写效率高. data volume & bind mount 各有用途.
+
+tmpfs mount
+------------
+mount tmpfs into container, i.e. memory only, non-persistent.
+在容器启动时生成, 停止时销毁.
 
 docker config
 -------------
@@ -919,6 +989,46 @@ container
 
   ``--hostname``. 默认情况下容器的 hostname 是它的 short UUID, 该选项
   指定 hostname.
+
+  ``--volume=[HOST-SPEC:]MOUNTPOINT[:OPTIONS]``.
+  支持 bind mount data volume 或 host dir.
+  HOST-SPEC can be:
+
+  * absolute path on host. bind mount.
+
+  * a name. use the specified data volume. if not pre-exist, create one.
+
+  * omitted. create a anonymous data volume.
+
+  MOUNTPOINT must be a absolute path in container.
+
+  OPTIONS can be a combination of:
+
+  * ro, rw. access mode.
+
+  * consistent, cached, delegated. consistency requirement.
+
+  * nocopy. disable automatic copying of data from the container path to the volume.
+
+  * [r]shared, [r]slave, [r]private.
+
+  * z, Z. selinux.
+
+  ``--tmpfs=MOUNTPOINT[:OPTIONS]``.
+
+  ``--mount=type=TYPE[,OPTIONS]``.
+  combine ``--volume`` 和 ``--tmpfs``.
+
+  TYPE can be bind, volume, tmpfs.
+  OPTIONS can be a combination of:
+
+  * src, source. mount source.
+
+  * dst, destination, target. mountpoint.
+
+  * readonly.
+
+  以及 type-specific options.
 
 - docker container stop, docker stop.
   ``docker stop`` 的效果不受 ``docker run --restart=`` 参数影响. 即使
@@ -1017,6 +1127,8 @@ stack
 
 service
 ~~~~~~~
+- docker service create. create a service.
+  支持一些类似 docker run 的参数以及 compose file 的内容.
 
 - docker service ls. list services in swarm.
 
@@ -1053,6 +1165,28 @@ network
 - docker network disconnect.
   disconnect container from network. 断掉后容器内的相应虚拟网卡直接消失.
   注意这个操作是在修改容器的网络连接配置, 所以是持久的 (make sense).
+
+volume
+~~~~~~
+
+- docker volume create.
+  create named or anonymous volume.
+  默认使用 local driver, 可以指定别的 driver.
+
+  ``--opt, -o``. driver options. The built-in local driver on Linux accepts
+  options similar to the linux mount command.
+
+- docker volume ls.
+
+- docker volume inspect.
+
+- docker volume prune.
+  remove unused volumes.
+
+- docker volume rm.
+
+plugin
+~~~~~~
 
 compose
 -------
