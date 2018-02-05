@@ -10,8 +10,6 @@ Questions
 
 - wtf is CRUSH?
 
-- mount cephfs using default tunables requires kernel 4.5+.
-
 - RADOS paper. https://ceph.com/wp-content/uploads/2016/08/weil-rados-pdsw07.pdf
 
 - CRUSH algorithm paper. https://ceph.com/wp-content/uploads/2016/08/weil-crush-sc06.pdf
@@ -32,6 +30,8 @@ Questions
 - what are bootstrap-... keyrings?
 
 - data striping.
+
+- mount cephfs using default tunables requires kernel 4.5+.
 
 - cephfs non-root read/write.
   目前知道可以 chown 来让 non-root 读写. 不知是否最优.
@@ -163,6 +163,28 @@ deploy CephFS
 ~~~~~~~~~~~~~
 - create a MDS server::
     ceph-deploy mds create {node}
+  目前建议只部署一台 MDS server.
+
+- create a cephfs filesystem and pools for its data::
+    ceph osd pool create <fs>_data <pg_num>
+    ceph osd pool create <fs>_metadata <pg_num>
+    ceph fs new <fs> <fs>_metadata <fs>_data 
+
+- 创建文件系统的 ceph user, 进行访问控制::
+    ceph fs authorize <fs> client.<user> [<directory> <permission>]+
+  输出的 key 即是 mount 时需要使用的密码.
+
+- 若客户端 kernel <4.5, 需要关闭 tunables5::
+    
+
+- cephfs user node 安装 ceph packages::
+    ceph-deploy install --release {ceph-release} {client-node}...
+  客户端系统需要是 ceph 支持的版本.
+
+- 客户端 mount cephfs::
+    mount -t ceph -o name=<user>,secretfile=<secret-file>,mds_namespace=<fs> \
+          <monitor-1>:6789,<monitor-2>:6789,...:<dir-in-fs> <mountpoint>
+  secret-file 应保证只有相关用户可读.
 
 deploy RGW
 ~~~~~~~~~~
@@ -213,6 +235,9 @@ terms
   modules, and FUSEs.
 
   Note Ceph Client differs from Ceph client node.
+
+  Irrespective of the type of Ceph client (e.g., Block Device, Object Storage,
+  Filesystem, native API, etc.), Ceph stores all data as objects within pools.
 
 functionalities
 ---------------
@@ -594,22 +619,75 @@ monitor settings
 
 - Monitors and OSDs should not run on same host.
 
-user management
----------------
+authentication
+--------------
 
-- user capability format::
+authentication
+~~~~~~~~~~~~~~
+
+- 默认开启用户认证. 认证机制为 cephx.
+
+- cephx 在认证时, 需要提供 username 和 keyring file. 若省略用户名,
+  默认使用 client.admin; 若省略 keyring,
+  Ceph will look for a keyring via the keyring setting in the Ceph
+  configuration (一般为 ``/etc/ceph/$cluster.$name.keyring`` 等文件).
+
+authorization
+~~~~~~~~~~~~~
+- Ceph has the notion of a type of user.
+  Ceph identifies users in period (.) delimited form consisting of the user
+  type and the user ID ``TYPE.ID``. types are: client, osd, mgr, mds.
+
+- A user capability has following format::
     <daemon-type> '<cap-list>'
-  其中 ``cap-list`` is a comma separated list of capabilities.
+  其中 ``cap-list`` is a comma separated list of capabilities::
+    cap-list := <cap>, <cap>*
+  ``cap`` 的具体格式为::
+    cap := allow <access-spec> <match-spec>?
+    cap := profile <name>
+  ``access-spec`` 限制可以进行的操作, profile 指的是使用预设的某个权限 profile::
+    access-spec := * | all | [ r || w || x ]
+    access-spec := class <class-name> <method-name>?
+  ``match-spec`` 进一步限制允许的 pool 或 namespace::
+    match-sepc := pool=<pool-name> [namespace=<namespace-name>]? [object_prefix <prefix>]?
+    match-spec := [namespace=<namespace-name>]? tag <application> <key>=<value>
+
+- 对 RBD user 的权限限制.
+
+  useful profiles.
+
+  * profile rbd (for mon and osd daemon type).
+
+    Gives a user permissions to manipulate RBD images. When used as a Monitor
+    cap, it provides the minimal privileges required by an RBD client
+    application. When used as an OSD cap, it provides read-write access to an
+    RBD client application.
+
+  * profile rbd-read-only (for osd daemon type).
+
+    Gives a user read-only permissions to RBD images.
+
+  还应该进一步限制可访问的 pools.
 
 CephFS
 ======
 
-client authentication
----------------------
+client authorization
+--------------------
 
 - 访问 cephfs 的用户不需要使用 ``ceph auth caps`` 对 mon, osd, mds
   各自单独赋权限. 通过 ``ceph fs authorize`` 赋目录权限时, 它会自动
   设置随 mon, osd, mds 的合适权限.
+
+- 可以给一个 cephfs 里的不同层目录单独分配权限 (r and/or w).
+  可以指定 all/``*`` 为 fs name, grant access to every file system.
+
+- 可以指定 client 是否可以修改 layout and quota.
+
+- 可以指定 free space reporting 是 subdirectory or the entire fs.
+  If quotas are not enabled, or no quota is set on the sub-directory mounted,
+  then the overall usage of the filesystem will be reported irrespective of the
+  value of this setting.
 
 configuration
 -------------
