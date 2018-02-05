@@ -483,9 +483,9 @@ ENTRYPOINT
 
 - ENTRYPOINT 可进一步被 ``docker run --entrypoint`` override.
 
-- entrypoint script.
+- entrypoint script ``entrypoint.sh``.
 
-  ENTRYPOINT 可以写成一个 script, 在里面可以进行任何设置、操作等等, 然后在
+  ENTRYPOINT 经常写成一个 script, 在里面可以进行任何设置、操作等等, 然后在
   最后一步 exec 成为所需执行的命令或服务 (保证是 PID 1 以接受 docker 发的
   signal).
 
@@ -634,8 +634,9 @@ VOLUME
 ::
   VOLUME ["mountpoint", ...]
 
-指定一系列 mountpoints, 在容器运行时, 会自动给每个 mountpoint 创建一个
-anonymous volume.
+指定一系列 mountpoints, 在容器运行时, 会自动创建一个 anonymous volume 挂载在
+mountpoint.  docker run 可以通过 ``-v`` 参数明确指定 volume 或 bind mount,
+override 默认创建 的 anonymous volume.
 
 The docker run command initializes the newly created volume with any data that
 exists at the specified location within the base image. If any build steps
