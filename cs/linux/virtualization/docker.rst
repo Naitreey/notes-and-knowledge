@@ -931,6 +931,9 @@ tmpfs mount
 mount tmpfs into container, i.e. memory only, non-persistent.
 在容器启动时生成, 停止时销毁.
 
+tmpfs mounts cannot be shared among containers. 每次指定 tmpfs mount,
+都会新生成一个内存区域挂载.
+
 docker config
 -------------
 
@@ -1006,11 +1009,11 @@ container
 
   * ro, rw. access mode.
 
-  * consistent, cached, delegated. consistency requirement.
+  * consistent, cached, delegated. consistency requirement (macOS).
 
   * nocopy. disable automatic copying of data from the container path to the volume.
 
-  * [r]shared, [r]slave, [r]private.
+  * [r]shared, [r]slave, [r]private. bind propagation.
 
   * z, Z. selinux.
 
@@ -1029,6 +1032,9 @@ container
   * readonly.
 
   以及 type-specific options.
+
+  For bind mount, ``--volume`` will create source directory if not already
+  exist, whereas ``--mount`` will throw error in that case.
 
 - docker container stop, docker stop.
   ``docker stop`` 的效果不受 ``docker run --restart=`` 参数影响. 即使
