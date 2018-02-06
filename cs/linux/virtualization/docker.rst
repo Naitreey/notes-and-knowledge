@@ -1136,6 +1136,9 @@ image
 
   若 url 指向一个 git repository, daemon 先 clone 再作为 build context.
 
+  build 过程中每个 layer 构建完成后会输出该层的 sha256 hash.
+  若该层使用了 cache, 会输出 `Using cache`.
+
   ``--tag`` 可以指定多次, 设置多个 tag.
 
   ``--cache-from``, 直接指定 cache source, 能用就用, 不能用拉倒, 别搜索.
@@ -1144,8 +1147,7 @@ image
   ``--target``. 指定目标 build stage. 用于 multi-stage build 生成不同阶段的
   镜像.
 
-  build 过程中每个 layer 构建完成后会输出该层的 sha256 hash.
-  若该层使用了 cache, 会输出 `Using cache`.
+  ``--file``. 指定 dockerfile.
 
 - docker image pull, docker pull.
 
@@ -1611,13 +1613,39 @@ nginx
 
 - always run with ``nginx -g 'daemon off'``
 
-主要镜像分类:
+- 主要镜像分类:
 
-- ``nginx:<version>``
+  - ``nginx:<version>``
+   
+    based on debian slim images. defacto images.
+  
+  - ``nginx:*alpine*``
+
+- 根据 nginx 的使用方法不同, nginx container 的部署方式也不同.
+  
+  在 swarm 中, 如果 nginx 就是为某一个服务的前端服务器, 提供请求转发和
+  静态文件服务等, 即容器化的 nginx 是专门为单一应用服务的,  则可以部署一组
+  nginx tasks 作为一组应用 tasks 的前端服务器. 不同应用创建不同的
+  nginx service.
+
+  如果是为多个服务做 proxy 或者别的, 则应该部署一个公用的 nginx service.
+
+- logging.
+  
+  简单的 logging 配置使用默认的 ``/var/log/nginx/{access,error}.log`` 即可.
+  它们 link 至 ``/dev/{stdout,stderr}`` 了. 从而默认就输出 main log 至 docker
+  logs.
+
+  复杂的 logging 需要配置 volume for logs.
+
+- 配置文件.
  
-  based on debian slim images. defacto images.
+  专门服务一个应用时, 覆盖 ``/etc/nginx/conf.d/default.conf`` 即可.
+  服务多个应用时, 每个应用配置放在 ``/etc/nginx/conf.d`` 下面, 和平时一样.
 
-- ``nginx:*alpine*``
+- 静态文件应该放在 ``/usr/share/nginx/html`` 下面.
+
+- expose 80, 443.
 
 rabbitmq
 --------
@@ -1637,13 +1665,15 @@ rabbitmq
 mysql
 -----
 
-主要镜像分类:
+- 主要镜像分类:
 
-- ``mysql:<version>``
+  - ``mysql:<version>``
+  
+    based on debian images.
+  
+  - alpine might be coming (sucks).
 
-  based on debian images.
-
-- alpine might be coming (sucks).
+- expose 3306.
 
 - 为了默认情况下可以远程连接,
 
