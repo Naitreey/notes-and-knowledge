@@ -164,6 +164,13 @@ concepts and best practices
   * 研发时使用基于 debian 的镜像. 保证方便, 什么都有. 测试和部署时使用基于
     alpine 的镜像. 保证轻量.
 
+- 构建镜像时, 如果设置了可以通过在 runtime 传入环境变量改变设置, 应该同时
+  支持通过读取相应文件的方式修改设置. 例如 mysql, MYSQL_PASSWORD 环境变量
+  同时可以从 MYSQL_PASSWORD_FILE 环境变量指向的文件读取. 这样可以更好地利用
+  docker config & docker secret.
+
+  这些逻辑一般在 dockerfile + docker-entrypoint.sh 中设置.
+
 base image
 ----------
 
@@ -483,7 +490,7 @@ ENTRYPOINT
 
 - ENTRYPOINT 可进一步被 ``docker run --entrypoint`` override.
 
-- entrypoint script ``entrypoint.sh``.
+- entrypoint script ``docker-entrypoint.sh``.
 
   ENTRYPOINT 经常写成一个 script, 在里面可以进行任何设置、操作等等, 然后在
   最后一步 exec 成为所需执行的命令或服务 (保证是 PID 1 以接受 docker 发的
@@ -863,8 +870,8 @@ data
   需要高速读写.
 
   - docker secret.
-    swarm service 需要使用的不该明文保存的敏感数据, 例如 password,
-    SSH private key, SSL certificate 等, 使用 docker secret 保存.
+    You can use secrets to manage any sensitive data which a container needs at
+    runtime but you don’t want to store in the image or in source control.
   
 * writeable layer.
   直接写在 container writeable layer 上的内容, 只应该是体积不大的, 临时
@@ -936,6 +943,68 @@ tmpfs mounts cannot be shared among containers. 每次指定 tmpfs mount,
 
 docker config
 -------------
+configs are not encrypted. they are mounted directly into container,
+without using RAM disk.
+
+A node only has access to configs if the node is a swarm manager or if it is
+running service tasks which have been granted access to the config.
+
+config file 以 base64 编码存储在 docker config 中.
+
+A config that is being used by any tasks can not be deleted.
+
+configurations are immutable, so you can’t change the file for an existing
+service. 只能先删除再创建, 或换个名字. 若使用 docker service update 进行
+rolling update, 只能换个名字然后使用 ``--config-add`` & ``--config-rm``
+更换配置.
+
+若 config 在 stack 中定义 (通过 compose file), 在 remove stack 时, 所有相关
+configs 跟着删除.
+
+mechanism
+~~~~~~~~~
+docker config 基本上和 bind mount 机制差不多. 但它是作用在 service 
+上的, 因此自动分布式应用在所有相关 tasks 上而无论节点. 没有重复操作.
+这是它相比与 bind mount config 的主要好处.
+
+When you add a config to the swarm, Docker sends the config to the swarm
+manager over a mutual TLS connection. The config is stored in the Raft log,
+which is encrypted. The entire Raft log is replicated across the other
+managers, ensuring the same high availability guarantees for configs as for the
+rest of the swarm management data.
+
+rotate a config
+~~~~~~~~~~~~~~~
+在服务运行过程中更新 docker config, you first save a new config with a
+different name than the one that is currently in use. You then redeploy the
+service (via ``docker service update`` or ``docker stack deploy``), removing
+the old config and adding the new config at the same mount point within the
+container.
+
+docker secret
+-------------
+docker secret & docker config 在很多方面是相同的, 故不再重复.
+除了 tmpfs mount & 加密等方面不同.
+
+Secrets must be under 500KB in size.
+
+A node only has access to (encrypted) secrets if the node is a swarm manager or
+if it is running service tasks which have been granted access to the secret.
+When a container task stops running, the decrypted secrets shared to it are
+unmounted from the in-memory filesystem for that container and flushed from the
+node’s memory.
+
+mechanism
+~~~~~~~~~
+docker secret 使用 tmpfs mount, 并且加密保存和传输. 单独使用 tmpfs mount
+在安全性和便利性上不如 docker secret.
+
+When you grant a newly-created or running service access to a secret, the
+decrypted secret is mounted into the container in an in-memory filesystem.
+
+rotate secret
+~~~~~~~~~~~~~
+使用 ``--secret-add``, ``--secret-rm``. 其他类似 docker config.
 
 engine
 ======
@@ -1136,12 +1205,63 @@ service
 - docker service create. create a service.
   支持一些类似 docker run 的参数以及 compose file 的内容.
 
+  ``--config=[NAME|OPTIONS]``. 给 service 分配 docker config.
+
+  NAME 即 config name. 此时其他参数全默认值.
+
+  OPTIONS can be a combination of:
+
+  * src, source.
+
+  * target. 默认为 ``/<source>``
+
+  * mode.
+
+  ``--secret=[NAME|OPTIONS]``. 分配 docker secret.
+
+  NAME 即 secret name. 此时其他参数全默认值.
+
+  OPTIONS can be a combination of:
+
+  * src, source.
+
+  * target. 默认为 ``/run/secrets/<source>``.
+
+  * mode.
+
 - docker service ls. list services in swarm.
 
 - docker service ps. list tasks of the specified services.
 
-inspect
-~~~~~~~
+- docker service update. update a running service.
+  更新服务还可以通过修改 compose file, 然后 re-deploy stack.
+
+config
+~~~~~~
+- docker config create.
+  支持从 stdin 创建配置. config name 必须唯一, 不能重复.
+
+- docker config ls.
+
+- docker config inspect.
+
+  ``--pretty``. use yaml-like format output.
+
+- docker config rm.
+
+secret
+~~~~~~
+
+- docker secret create.
+
+- docker secret ls.
+
+- docker secret inspect.
+
+- docker secret rm.
+
+object
+~~~~~~
 
 - docker inspect. insepct any docker objects.
   实际上各个主要 docker object 的子命令中还有 inspect 命令专门查看该类型对象.
