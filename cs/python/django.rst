@@ -2522,10 +2522,11 @@ field types
 - ``FileField``. 文件列.
   
   这是文件体的抽象. 而不仅仅是文件路径, 后者是 FilePathField 的事.
-  虽然它对应的数据库列是 file path, 但它对应的 model instance attribute
-  是文件体 (使用 file path 获取).
+  虽然它对应的数据库列是 file path string, 但它对应的 model instance attribute
+  是 FieldFile 文件体 object.
 
-  .. TODO how file path is saved to db?
+  数据库中保存的是文件的相对路径, 由 ``upload_to`` + filename 组成, 或者
+  根据 ``upload_to`` callable 生成.
 
   options.
 
@@ -2535,7 +2536,7 @@ field types
     format specifiers. 文件体会保存在该目录下.
     若是 callable, 直接生成文件体的最终保存路径. 接受提供的参数.
 
-  * ``storage``. file storage object.
+  * ``storage``. file storage object for handling file storage.
 
   * ``max_length`` is default to 100.
 
@@ -2544,6 +2545,37 @@ field types
   * 检查不能设置 primary_key 参数.
 
   * 检查 upload_to 必须是相对路径.
+
+  在 model instance 上, get 该列属性得到的是 FieldFile object, 可以 set
+  path string 或者 File object. 这是通过一个特殊的 descriptor 实现的.
+  这样提供了对文件体和属性的方便访问.
+
+  在 model instance 保存至数据库时, 该列包含的 FieldFile 会通过 storage backend
+  存储.
+
+  ``FieldFile`` 文件体对象. FieldFile 是 File 的子类. 具有 file-like object API.
+  区别在于 FieldFile is a wrapper around the result of the Storage.open() method.
+
+  attributes.
+
+  * file-like object attributes.
+
+  * size.
+
+  * url.
+
+  * file. underlying file object.
+
+  methods.
+
+  * file-like object methods.
+
+  * open().
+
+  * save(). save file data to storage backend. 保存 model instance 时自动调用.
+
+  * delete(). delete file from storage backend. 注意删除 model instance 时
+    不会自动调用.
 
 - ``JSONField``. postgresql 可以使用 native JSONField, 对于 mysql 可以使用
   django-jsonfield module 用 TextField/CharField 模拟.
