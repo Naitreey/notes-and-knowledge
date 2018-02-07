@@ -31,7 +31,7 @@ Questions
 
 - data striping.
 
-- mount cephfs using default tunables requires kernel 4.5+.
+- how to: multiple mds, one active, other standby.
 
 - cephfs non-root read/write.
   目前知道可以 chown 来让 non-root 读写. 不知是否最优.
@@ -67,7 +67,8 @@ steps to install
 
 preparation
 ~~~~~~~~~~~
-- 若是 ubuntu, 最好是 16.04 以上.
+- cluster node 若是 ubuntu, 最好是 16.04 以上. 可以考虑升级至最新的内核.
+  client node 需要 4.x kernel. kernel 4.8+ 才支持多个 cephfs.
 
 - 首先保证 admin, cluster nodes 等所有节点之间可以两两相互通信, 通过 DNS 或 hosts
   设置.
@@ -161,35 +162,41 @@ deploy RADOS cluster
 
 deploy CephFS
 ~~~~~~~~~~~~~
-- create a MDS server::
-    ceph-deploy mds create {node}
-  目前建议只部署一台 MDS server.
+- create MDS servers::
+    ceph-deploy mds create {node}...
 
 - create a cephfs filesystem and pools for its data::
     ceph osd pool create <fs>_data <pg_num>
     ceph osd pool create <fs>_metadata <pg_num>
     ceph fs new <fs> <fs>_metadata <fs>_data 
+  只能创建一个, 目前创建多个 cephfs 还没有 production ready.
 
 - 创建文件系统的 ceph user, 进行访问控制::
     ceph fs authorize <fs> client.<user> [<directory> <permission>]+
   输出的 key 即是 mount 时需要使用的密码.
 
-- 若客户端 kernel <4.5, 需要关闭 tunables5::
-    
+- CephFS client kernel >=4.5 才能支持 jewel release 以上的 CRUSH tunables v5
+  配置. 否则需要切换至 hammer release 的 tunables v4 profile::
+    ceph osd crush tunables hammer
 
 - cephfs user node 安装 ceph packages::
     ceph-deploy install --release {ceph-release} {client-node}...
   客户端系统需要是 ceph 支持的版本.
 
-- 客户端 mount cephfs::
-    mount -t ceph -o name=<user>,secretfile=<secret-file>,mds_namespace=<fs> \
+- 客户端 mount cephfs. 需要 4.x kernel::
+    mount -t ceph -o name=<user>,secretfile=<secret-file> \
           <monitor-1>:6789,<monitor-2>:6789,...:<dir-in-fs> <mountpoint>
   secret-file 应保证只有相关用户可读.
 
+- 修改所需访问目录的 owner, group 以及读写权限让客户端 non-root 程序可以读写::
+    chown ...
+    chmod ...
+
 deploy RGW
 ~~~~~~~~~~
-- deploy RGW server::
+- 如果需要 RESTful API 访问 ceph cluster, deploy RGW server::
     ceph-deploy rgw create {gateway-node}...
+  可以部署在一个 client node 或 cluster node 上.
 
 steps to uninstall
 ------------------
@@ -524,6 +531,9 @@ files on a storage disk.
 ceph clients
 ------------
 
+librados
+~~~~~~~~
+
 RADOS gateway
 ~~~~~~~~~~~~~
 a FastCGI service that provides a RESTful HTTP API to store objects and
@@ -652,6 +662,10 @@ authorization
     match-sepc := pool=<pool-name> [namespace=<namespace-name>]? [object_prefix <prefix>]?
     match-spec := [namespace=<namespace-name>]? tag <application> <key>=<value>
 
+- A typical user has at least read capabilities on the Ceph monitor and read
+  and write capability on Ceph OSDs. Additionally, a user’s OSD permissions are
+  often restricted to accessing a particular pool.
+
 - 对 RBD user 的权限限制.
 
   useful profiles.
@@ -669,8 +683,102 @@ authorization
 
   还应该进一步限制可访问的 pools.
 
+common operations
+~~~~~~~~~~~~~~~~~
+ 
+* list users, keys and capabilities: ``ceph auth ls``
+
+* get a user's info: ``ceph auth get <name>``
+
+* create a user.
+  
+  - ``ceph auth add``
+   
+  - ``ceph auth get-or-create``. creat or get (if exists) a user, return
+    user keyring.
+
+  - ``ceph auth get-or-create-key``. same as get-or-create, return key
+    string only.
+
+* delete a user: ``ceph auth del``.
+
+* set capabilities: ``ceph auth caps``.
+  To remove a capability, you may reset the capability. If you want the user to
+  have no access to a particular daemon that was previously set, specify an
+  empty string.
+
+* print user's key. ``ceph auth print-key``
+
+* import user. ``ceph auth import``.
+  The ceph storage cluster will add new users or update existing users, with
+  their keys and their capabilities.
+
+commandline options
+~~~~~~~~~~~~~~~~~~~
+ceph commands 一般支持指定 user name & keyring 的选项:
+
+- ``--name``
+
+- ``--keyring``
+
+keyring
+~~~~~~~
+Ceph Client 在访问 Ceph Cluster 时, 需要用户的 keyring file. 若没有明确指定
+keyring, 自动到以下默认路径尝试:
+
+- ``/etc/ceph/$cluster.$name.keyring``
+
+- ``/etc/ceph/$cluster.keyring``
+
+- ``/etc/ceph/keyring``
+
+- ``/etc/ceph/keyring.bin``
+
+security
+~~~~~~~~
+The keys used to authenticate Ceph clients and servers are typically stored in
+a plain text file with appropriate permissions in a trusted host. 必须保证
+只有 trusted user 可以获取 keyfile.
+
+At the moment, none of the Ceph authentication protocols provide secrecy for
+messages in transit. Thus, an eavesdropper on the wire can hear and understand
+all data sent between clients and servers in Ceph, even if it cannot create or
+alter them.
+
+CRUSH map
+---------
+
+tunables
+~~~~~~~~
+Tunable options control what version of CRUSH algorithm is used by cluster.
+In order to use newer tunables, both clients and servers must support the new
+version of CRUSH.
+
+Tunable profiles are named after the Ceph version in which they were introduced.
+
+operations.
+
+- adjust tunable profile: ``ceph osd crush tunables {profile}``.
+
+- show current tunable values: ``ceph osd crush show-tunables``.
+
 CephFS
 ======
+
+notes
+-----
+multiple cephfs
+~~~~~~~~~~~~~~~
+multiple cephfs 还属于 experimental feature. 并且 kernel 4.8+ 的
+kernel client 才支持 mount multiple cephfs (通过 ``mds_namespace``
+option).
+
+kernel requirement
+~~~~~~~~~~~~~~~~~~
+若使用 kernel client mount cephfs, 对 kernel version 有要求.
+
+对于 jewel release 以上的 ceph, client kernel 应该是 4.0+.
+对运行 3.x kernel 的 client node, 最好使用 FUSE client.
 
 client authorization
 --------------------
