@@ -1568,8 +1568,6 @@ type of stylesheets
 syntax
 ------
 
-- 每个 html element 都是由一个 invisible box 包裹起来的.
-
 - CSS statement:
   a css statement begins with any non-space characters and ends at the first
   closing brace or semi-colon.
@@ -2005,6 +2003,62 @@ at-rule
 
 - 一些 at-rule 可以 nested, 即构成 nested at-rules.
 
+box model
+---------
+每个 html element 都是由一个 invisible box 包裹起来的.
+
+A box has 4 parts:
+
+- content area. bounded by content edges.
+  html 元素内的的所有内容全都在 content area 中.
+
+- padding area. between content edges and padding edges.
+  box background 覆盖 content area + padding area.
+
+- border area. between padding edges and border edges.
+
+- margin area. between border edges and margin edges.
+  元素之间的分隔区域. 实际效果与 margin collapsing 有关.
+
+当 ``box-sizing`` property 为 ``content-box`` 时, 各种 box width 和 height
+属性限制的都是 content area 的宽度和高度; ``border-box`` 时, 这些属性限制
+的是 content + padding + border 部分的宽度和高度.
+
+对于 non-replaced inline elements, 所占据的高度由 parent block-level
+element 的 line-height property 决定, 而不论元素本身的 height 以及 padding,
+border, margin 的高度部分设置的值是什么.
+
+margin collapsing
+~~~~~~~~~~~~~~~~~
+A behavior when the margin of adjacent blocks are combined into a single
+margin whose size the largest the two.
+
+three types of margin collapsing:
+
+- adjacent siblings. Margins of adjacent block-level elements are collapsed.
+
+- parent and first/last child. 如果 parent block element 的 top margin 和它
+  的第一个 child block element 的 top margin 之间, 或者 parent block element 的
+  bottom margin 和它的最后一个 child block element 的 bottom margin 之间, 没有
+  任何东西隔在中间, 则这两个元素的相应 margin 会 collapse 在一起. 合并的 margin
+  在 parent element 的外边.
+
+- empty element. 对于一个 empty block element, 如果它的 top margin 和 bottom
+  margin 之间没有任何东西隔在中间, 则它的 top/bottom margins 会合成一个.
+
+注意:
+
+- margin collapsing 只发生在 block elements 之间. inline elements 的 margins
+  从不 collapse, 按照指定的值放置.
+
+- floated elements & absolutely positioned elements 不参与 margin collapsing.
+  因此实际中 margin collapsing 只会发生在 top/bottom margin 之间.
+
+自动计算属性
+~~~~~~~~~~~~
+对于 non-float block element, margin edge 一定会覆盖整行. 它的 left, right 
+margin 根据 width, padding, border 等方面的属性值的设置综合计算得到.
+
 properties
 ----------
 
@@ -2290,13 +2344,45 @@ text
   ``[<string> <string>]+``, 设置一级或多级 quotes 使用的 open/close quote mark
   pairs.
 
-background
-~~~~~~~~~~
+box
+~~~
+- width.
+  width of element's context area (normally).
+
+  non-inherited property.
+
+  inline elements 和 table rows 不能修改 width 属性. 它们只能使用 auto. 即由
+  浏览器自动计算所需的值.
+
+  initial value: auto.
+
+  specified value.
+
+  * specified value 可以是 ``<length>`` 或 ``<percentage>`` 或 auto.
+    指定 percentage 时, 是相对于 containing block's width. 但如果 containing
+    block element 的宽度本身就依赖于它的 content, 则 result is undefined.
+
+  * auto. 由浏览器自动计算所需宽度.
+
+  computed value: percentage, length, or auto.
+
+- min-width.
+  prevents the used value of the width property from becoming smaller than the
+  value specified here.
+
+  non-inherited property.
+
+  initial value: 0.
+
+  可设置的值与 width property 一致.
+
+- max-width.
+
+  当决定元素宽度时, max-width overrides width, but min-width overrides
+  max-width.
 
 - background-color
 
-element
-~~~~~~~
 - opacity. opacity 指定的不透明性对一个元素和它所有 dom children nodes 一起生效.
 
   specified value 是 0~1.0 的 ``<number>``. computed value 是 0~1.0 的数字,
