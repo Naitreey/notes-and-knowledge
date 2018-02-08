@@ -852,6 +852,9 @@
     但是这不是 100% 可行的. 如果应用的 python 依赖与某些系统工具的 python 依赖
     冲突, 则应该引入 virtualenv.
 
+  * 容器使用 multi-stage build 时, 更应该使用 virtual env, 这样可以将构建后的
+    应用和依赖一起方便地复制到 production 镜像中.
+
 - 一个 package 中的 private module/subpackage 命名应该以 ``_`` 起始.
 
 - shutil
