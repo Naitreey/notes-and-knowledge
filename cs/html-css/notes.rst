@@ -116,6 +116,9 @@ elements
   我们可以定义 class 赋予 i, b, hr 不同的语义, 而不限于它们默认的表现
   形式. 可以理解为, i 是 em 的一般化; b 是 strong 的一般化等等.
 
+- html element tag 提供语义结构 (semantics). 浏览器给每个 html element
+  一组默认的 css 样式设置, 符合该元素的 conventional 表现形式.
+
 main root
 ~~~~~~~~~
 
@@ -292,7 +295,8 @@ text content
   成一个, 这是一个全局的效果, 而不论是什么 element 内部或外部. 可以认为,
   在 pre element 中, 只是屏蔽掉了这个 whitespace collapsing 算法而已.
   因此 pre 保证了它里面的 text 以及它里面任何元素的 text 部分的 whitespace
-  chars 都会被保留下来.
+  chars 都会被保留下来. (这个 whitespace collapsing 算法实际上由 css 的
+  ``white-space`` property 控制. 浏览器默认设置 pre element ``white-space: pre``.)
 
   对于 code block, 则一般使用
 
@@ -2378,8 +2382,97 @@ box
 
 - max-width.
 
+  initial value: none. i.e., unlimited.
+
   当决定元素宽度时, max-width overrides width, but min-width overrides
   max-width.
+
+- height.
+
+  类似于 width.
+
+  inline elements 和 table columns, column groups 不能修改 width 属性.
+  它们只能使用 auto. 即由浏览器自动计算所需的值.
+
+  The percentage is calculated with respect to the height of the generated
+  box's containing block. If the height of the containing block is not
+  specified explicitly (i.e., it depends on content height), and this element
+  is not absolutely positioned, the value computes to auto.
+
+- min-height.
+
+  类似于 min-width.
+
+  The percentage is calculated with respect to the height of the generated
+  box's containing block. If the height of the containing block is not
+  specified explicitly (i.e., it depends on content height), and this element
+  is not absolutely positioned, the percentage value is treated as 0.
+
+- max-height.
+
+  类似于 max-width.
+
+  max-height overrides height, but min-height overrides max-height.
+
+  The percentage is calculated with respect to the height of the generated
+  box's containing block. If the height of the containing block is not
+  specified explicitly (i.e., it depends on content height), and this element
+  is not absolutely positioned, the percentage value is treated as none.
+
+- overflow.
+  What to do when an element's content is too large to fit in its block
+  formatting context. shorthand for overflow-x and overflow-y.
+
+  non-inherited.
+
+  initial value: visible.
+
+  specified value:
+
+  * visible. content is show normally even if outside the padding edge.
+
+  * hidden. the part of content out side of the padding edge is clipped.
+    注意是 padding edge, 不是 content edge.
+
+  * scroll. add a scrollbar. 无论内容是否确实放不下, scrollbar 都会存在.
+    对于 overflow shorthand, 两个方向的 scrollbar 都会加上.
+
+  * auto. 如果能放下, 就不加 scrollbar, 否则加上.
+
+- overflow-x.
+  overflow settings at x axis only.
+
+  一般只有 ``white-space`` 设置以及无法合适地自动 line break 时, 水平
+  方向上才会超出 context edge.
+
+- overflow-y.
+
+  一般只有通过某种方式限制了 box height 时, 才会有纵向的 overflow.
+
+- white-space.
+  控制元素内的 whitespace collapsing algorithm.
+
+  inherited property.
+
+  可以设置在任何元素上, 影响内部的 whitespace 处理算法.
+
+  initial value: normal.
+
+  specified value:
+
+  * normal. whitespace chars are collapsed. Lines are broken as
+    necessary to fill line boxes.
+
+  * nowrap. 所有 whitespace chars collapse 成一个空格, 但不会在 line box
+    的边界 wrap line. 最终效果是只有一行.
+
+  * pre. 效果相当于 html pre element.
+
+  * pre-wrap. 效果和 pre 一样, 除了一点: 如果 verbatim 行太长, 会自动在 line
+    box 边界 wrap line.
+
+  * pre-line. 效果和 normal 一样, 除了一点: newline char 也会 wrap line, 而不会
+    collapse.
 
 - background-color
 
