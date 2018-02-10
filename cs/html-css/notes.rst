@@ -2350,6 +2350,8 @@ text
 
 box
 ~~~
+content box
+'''''''''''
 - width.
   width of element's context area (normally).
 
@@ -2419,6 +2421,97 @@ box
   specified explicitly (i.e., it depends on content height), and this element
   is not absolutely positioned, the percentage value is treated as none.
 
+border
+''''''
+- border-top-width.
+
+  non-inherited property.
+
+  initial value: medium.
+
+  specified value is one of the following:
+
+  * ``<length>``
+
+  * thin, medium, thick. The actual effect is implementation specific.
+
+- border-right-width.
+
+  ditto.
+
+- border-bottom-width.
+
+  ditto.
+
+- border-left-width.
+
+  ditto.
+
+- border-top-style.
+
+  non-inherited property.
+
+  initial value: none.
+
+  specified values:
+
+  * none. no border. In the case of table cell and border collapsing, the none
+    value has the lowest priority.
+
+  * hidden. no border. In the case of table cell and border collapsing, the
+    none value has the highest priority.
+
+  * dotted.
+
+  * dashed.
+
+  * solid.
+
+  * double.
+
+  * groove. 边框切割.
+
+  * ridge. 边框突起.
+
+  * inset. border 内容部分嵌入.
+
+  * outset. border 内容部分突起.
+
+- border-right-style.
+
+  ditto.
+
+- border-bottom-style.
+
+  ditto.
+
+- border-left-style.
+
+  ditto.
+
+- border-top-color.
+
+  non-inherited property.
+
+  initial value: currentColor.
+
+- border-right-color.
+
+- border-bottom-color.
+
+- border-left-color.
+
+- border-width.
+  shorthand for ``border-{top,right,bottom,left}-width``.
+
+- border-style.
+  shorthand for ``border-{top,right,bottom,left}-style``.
+
+- border-color.
+  shorthand for ``border-{top,right,bottom,left}-color``.
+
+overflow
+''''''''
 - overflow.
   What to do when an element's content is too large to fit in its block
   formatting context. shorthand for overflow-x and overflow-y.
@@ -2449,6 +2542,8 @@ box
 
   一般只有通过某种方式限制了 box height 时, 才会有纵向的 overflow.
 
+white space
+'''''''''''
 - white-space.
   控制元素内的 whitespace collapsing algorithm.
 
