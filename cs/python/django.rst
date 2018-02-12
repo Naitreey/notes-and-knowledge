@@ -2374,6 +2374,24 @@ form field.
   Returns the default django.forms.Field of this field for ModelForm.
   ``kwargs`` are passed to form class constructor.
 
+field checkings.
+
+- ``check(**kwargs)``. 检查列定义是否合法.
+  检查项.
+
+  * field ``name`` does not end with underscore, does not contain field
+    lookup separator ``__``, and is not ``pk``.
+
+  * 检查 choices 格式和内容合法.
+
+  * 检查 db_index 参数值合法.
+
+  * 检查 primary_key field 没有设置 null=True.
+
+  * 检查 validators 都是 callable.
+
+  * backend-specific field checks.
+
 form validation.
 
 - ``clean(value, model_instance)``.
@@ -2423,6 +2441,19 @@ field types
 - BigAutoField.  64-bit AutoField subclass.
 
 - IP address 用 ``GenericIPAddressField``.
+  支持 IPv4, v6. 以 string form 存储.
+
+  max_length 固定在 39.
+
+  options.
+
+  * protocol. ``ipv4``, ``ipv6``, or ``both``.
+
+  * unpack_ipv4. unpack ipv4-embedded ipv6 into corresponding ipv4 address.
+
+  validations.
+
+  * 校验值是合法的 ip address of the specified protocol.
 
 - 实数一般用 ``FloatField``.
   
@@ -2451,7 +2482,7 @@ field types
   
   * 数值是否在 backend 允许的范围内.
 
-- ``DateField`` ``DateTimeField``
+- ``DateField``, ``TimeField``, ``DateTimeField``.
 
   * 在 python 中以 datetime.date, datetime.datetime 分别表示.
 
@@ -2509,15 +2540,45 @@ field types
 
   mysql note: VARCHAR column 若设置 unique constraint, 要求 max_length <= 255.
 
+- ``TextField``.
+
+  max_length attribute will be reflected in the Textarea widget of the
+  auto-generated form field. However it is not enforced at the model or
+  database level. 
+
 - ``EmailField``
 
   validations.
 
   * string is valid email.
 
-- ``SlugField`` 要配合 ``slugify`` 函数使用, 只应该在创建 instance 时保存该列值.
+- ``SlugField`` 只应该在创建 instance 时保存该列值.
 
-- ``FilePathField`` 要求值必须是满足路径匹配条件的文件路径.
+  配合 ``slugify()`` 函数使用. 
+
+  max_length by default is 50.
+
+  默认会给 SlugField 创建 index.
+
+  options.
+
+  * allow_unicode. allow unicode chars in slug.
+
+  validations.
+
+  * 检查值是否是合法的 slug.
+
+- ``FilePathField``.
+  这个列相当于 CharField with choices option. 其中, choices 为根据 constructor
+  参数搜索到的一组现有的文件和/或目录. 这个列不是用于保存任意路径的. 而是用于
+  路径选择.
+
+  注意该列本身不检查和限制保存的路径, 所有相关逻辑在对应的 forms.FilePathField
+  中实现.
+
+  checkings.
+
+  * ``allow_files`` ``allow_foleders`` 不能都是 False.
 
 - ``FileField``. 文件列.
   
@@ -2577,6 +2638,27 @@ field types
   * delete(). delete file from storage backend. 注意删除 model instance 时
     不会自动调用.
 
+- ``ImageField``.
+
+  subclass of FileField, 包含 FileField 的一切功能和相关处理逻辑. 它对应的
+  model instance 属性为 ImageFieldFile.
+
+  它对应的 forms.ImageField 会校验 binary data is valid image. 但 ImageField
+  本身不会校验. 文件处理逻辑和 FileField 相同.
+
+  使用该列的 model 可以设置保存图像宽度和高度的列. 这便于获取合适的分辨率图像.
+  例如 preview 和 full image 的区别. height/width fields 的值会根据 ImageFieldFile
+  属性自动设置.
+
+  options.
+
+  * ``height_field``, ``width_field``. name of field on model where to store
+    image height and width.
+
+  checkings.
+
+  * 检查 pillow library 已经安装.
+
 - ``JSONField``. postgresql 可以使用 native JSONField, 对于 mysql 可以使用
   django-jsonfield module 用 TextField/CharField 模拟.
 
@@ -2590,57 +2672,65 @@ field types
 
   * 若设置了 ``max_length``, 检查数据长度.
 
+- ``URLField``.
+  A CharField subclass for urls.
+
+  validations.
+
+  * 校验值是 valid url.
+
+- ``UUIDField``.
+  a field for ``uuid.UUID`` class instances.
+  一般用法是设置 ``default=uuid.uuid4`` callable.
+
 - relation field ``ForeignKey``. many-to-one relation.
 
-  - foreign key field 的名字应该是所指向的 model 的名字的全小写版本.
+  foreign key field 的名字应该是所指向的 model 的名字的全小写版本.
 
-  - ForeignKey field 默认设置 ``db_index=True``, 即默认建立该列的索引.
+  ForeignKey field 默认设置 ``db_index=True``, 即默认建立该列的索引.
 
-  - ``ForeignKey`` field 在数据库中命名为 ``<field>_id``, 除非用 ``db_column``
-    自定义.
+  ``ForeignKey`` field 在数据库中命名为 ``<field>_id``, 除非用 ``db_column``
+  自定义.
 
-  - 若 ``ForeignKey`` field 支持 ``null=True``, 则对这个属性赋值 None 即可去掉关联.
+  若 ``ForeignKey`` field 设置 ``null=True``, 则对这个属性赋值 None 即可
+  不设置关联.
 
-  - 对各种 relationship field, 若要指向可能尚未定义的列, 用字符串
-    ``[app_label.]model`` 代替 model object.
+  options.
 
-  - constructor parameters.
+  * ``on_delete``.
+    required parameter. django 目前 constraints 完全是在 django 层实现的.
+    没有使用数据库原生的 constraint.
 
-    * ``on_delete``
+    - 若该条数据必须随指向的数据共存亡, ``django.db.models.CASCADE``.
 
-      虽然默认是 ``CASCADE``, 但 django 2.0 之后将变成 required parameter.
-      如果对象之间的关系不是必须的, ``on_delete`` 应该设置成别的值:
+    - 若只要 FK 关系仍存在就禁止删除原数据, ``django.db.models.PROTECT``.
 
-      - 若该条数据必须随指向的数据共存亡, ``django.db.models.CASCADE``.
+    - 若需设置为 NULL 以表示不指向任何东西, ``django.db.models.SET_NULL``.
 
-      - 若只要 FK 关系仍存在就禁止删除原数据, ``django.db.models.PROTECT``.
+    - 若需设置为默认指向的东西, ``django.db.models.SET_DEFAULT``.
 
-      - 若需设置为 NULL 以表示不指向任何东西, ``django.db.models.SET_NULL``.
+    - 若需自定义设置逻辑, ``django.db.models.SET(value|callable)``.
 
-      - 若需设置为默认指向的东西, ``django.db.models.SET_DEFAULT``.
+    - 啥也不干, 由数据库决定该怎么办, ``django.db.models.DO_NOTHING``.
 
-      - 若需自定义设置逻辑, ``django.db.models.SET(value|callable)``.
+  * ``limit_choices_to``, 限制 ModelForm 中该列的赋值范围.
 
-      - 啥也不干, 由数据库决定该怎么办, ``django.db.models.DO_NOTHING``.
+  * ``related_name``, 自定义从 related object 反向获取时, related manager
+    的名字. 默认是 ``Meta.default_related_name``, 后者的默认值是
+    ``<model>_set``. 若不让 django 创建反向关系, set related_name to '+' or
+    end it with '+'.
 
-    * ``limit_choices_to``, 限制 ModelForm 中该列的赋值范围.
+  * ``related_query_name``, 在 field lookup syntax 中, 从 related model
+    向这个 model 反向查询时, 使用的名字. 若有设置 related_name 或
+    Meta.default_related_name, 默认使用它们中的一个, 否则默认为 model name.
 
-    * ``related_name``, 自定义从 related object 反向获取时, related manager
-      的名字. 默认是 ``Meta.default_related_name``, 后者的默认值是
-      ``<model>_set``. 若不让 django 创建反向关系, set related_name to '+' or
-      end it with '+'.
+  * ``to_field``, 关联的 model 的 field, 默认是 primary key. 关联的 field
+    必须有 unique constraint.
 
-    * ``related_query_name``, 在 field lookup syntax 中, 从 related model
-      向这个 model 反向查询时, 使用的名字. 若有设置 related_name 或
-      Meta.default_related_name, 默认使用它们中的一个, 否则默认为 model name.
+  * ``db_constraint``
 
-    * ``to_field``, 关联的 model 的 field, 默认是 primary key. 关联的 field
-      必须有 unique constraint.
-
-    * ``db_constraint``
-
-    * ``swappable``, 默认 True 即可. 与 swappable AUTH_USER_MODEL 相关, 为了
-      支持 custom user model.
+  * ``swappable``, 默认 True 即可. 与 swappable AUTH_USER_MODEL 相关, 为了
+    支持 custom user model.
 
 - relation field ``OneToOneField``: one-to-one relation.
 
@@ -2702,7 +2792,7 @@ relational field 的说明.
   ``"self"`` 作为 ``to`` 参数值.
 
 - lazy relationship. 若 relation field 需与可能尚未建立的 model 建立关联,
-  使用 ``[<app_label>.]<model>``.
+  使用 ``"[<app_label>.]<model>"``.
 
 model index
 -----------
