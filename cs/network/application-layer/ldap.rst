@@ -98,6 +98,10 @@ wildcard: ``*``
 
 Special characters can be escaped by ``\``.
 
+examples::
+    (&(ou=Marketing)(|(manager=cn=Julie Fulmer,ou=Marketing,dc=example,dc=com)
+         (manager=cn=Cindy Zwaska,ou=Marketing,dc=example,dc=com)))
+
 Modify
 ------
 Make changes to existing entries.

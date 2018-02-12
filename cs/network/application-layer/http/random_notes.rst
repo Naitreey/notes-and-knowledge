@@ -445,7 +445,7 @@ concept
 
   * 若连接的安全性不能保障, 例如 TLS 证书不可信, 则不允许访问该站点.
 
-- HSTS 能很大程度上解决 MITM attack.
+- HTTPS + HSTS 能很大程度上解决 MITM attack.
 
 - 主流浏览器都 pre-load 了默认启用 HSTS 机制的网站列表.
 
