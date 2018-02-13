@@ -2393,7 +2393,7 @@ content box
 
   类似于 width.
 
-  inline elements 和 table columns, column groups 不能修改 width 属性.
+  inline elements 和 table columns, column groups 不能修改 height 属性.
   它们只能使用 auto. 即由浏览器自动计算所需的值.
 
   The percentage is calculated with respect to the height of the generated
@@ -2420,6 +2420,31 @@ content box
   box's containing block. If the height of the containing block is not
   specified explicitly (i.e., it depends on content height), and this element
   is not absolutely positioned, the percentage value is treated as none.
+
+padding
+'''''''
+- padding-top.
+
+  non-inherited.
+
+  initial value: 0.
+
+  specified value:
+
+  * ``<length>``
+
+  * ``<percentage>``.
+    The size of the padding as a percentage, relative to the width of the
+    containing block.
+
+- padding-right.
+
+- padding-bottom.
+
+- padding-left.
+
+- padding.
+  shorthand for all above.
 
 border
 ''''''
@@ -2509,6 +2534,71 @@ border
 
 - border-color.
   shorthand for ``border-{top,right,bottom,left}-color``.
+
+- border.
+  shorthand for ``border-{width,style,color}``.
+  后者三个属性又是 shorthand, 依次展开.
+
+  border shorthand 适合当需要给四边设置相同的属性时使用.
+  border-top/right/bottom/left shorthands 适合分别给不同边设置不同属性时使用.
+
+  border cannot be used to specify a custom value for ``border-image``, but
+  instead sets it to its initial value, i.e., none.
+
+  The border will be invisible if its style is not defined. This is because the
+  style defaults to none.
+
+  non-inherited property.
+
+  specified value: ``<br-width> || <br-style> || <color>``
+
+- border-top.
+  shorthand for ``border-top-{width,style,color}``.
+
+- border-right.
+
+- border-bottom.
+
+- border-left.
+
+margin
+''''''
+- margin-top.
+
+  non-inherited.
+
+  initial value: 0.
+
+  specified value:
+
+  * ``<length>``
+
+  * ``<percentage>``
+    relative to the width of the containing block.
+
+  * auto.
+    The browser selects a suitable margin to use.
+
+- margin-right.
+
+- margin-bottom.
+
+- margin-left.
+
+- margin.
+  shorthand for all above.
+
+  对于 non-float block element, 为了将元素占满整行, 会自动设置合适的 margin
+  进行填充. 此时 margin-left, margin-right 只具有参考意义.
+
+  任意一个或多个方向的 margin 设置 auto 时, 由浏览器决定如何设置相应的 margin.
+  当相对的两个 margin 都是 auto 时, 会给这两个 margin 设置相等的数值. 这可以用于
+  将 block element 的 border area 在 containing block 中水平居中 (对于 inline
+  element, 不占据一整行, 没有所谓居中. 但可以 text-align 为 center).
+  在竖直方向, 由于 block element 没有占据尽可能多的 vertical space 的要求, 因此
+  margin-top/bottom 设置 auto 只会让相应 margin 为 0.
+
+  更方便的元素水平和竖直居中问题, 使用 flexbox 解决.
 
 overflow
 ''''''''
