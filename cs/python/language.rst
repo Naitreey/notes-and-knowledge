@@ -460,6 +460,15 @@ inheritance
 builtin types
 =============
 
+text sequence type - str
+------------------------
+
+methods
+~~~~~~~
+
+- ``isidentifier()``. 检查字符串是否是合法的 python identifier.
+  Use ``keyword.iskeyword()`` tests for reserved keywords.
+
 set types
 ---------
 
