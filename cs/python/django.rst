@@ -2262,12 +2262,23 @@ attributes
 
 field property introspection.
 
+- ``name``. field name as specified in model class definition.
+
+- ``attname``. 在 model instance 上, 列的值使用的属性名字. 注意对于 FK 类型的列,
+  attname 为 ``<name>_id``, 而 ``name`` 用于封装 get/set related model instance
+  logic.
+
+- ``column``. 该列在数据库中的列名字. 由 attname 或者 db_column option 决定.
+  对于 m2m field, 列不在 model table 中, 列名不由这个决定.
+
 - ``auto_created``.
   该 field 是否自动创建. 自动创建的 field 例如 AutoField, 用于继承的 parent
   link OneToOneField.
 
 - ``concrete``.
-  Whether the field has a database column associated with it.
+  Whether the field has a database column associated with it. 注意对于 m2m
+  field 这个 concrete column 在 through table 中, 这仍然是有数据库列的, 所以
+  是 concrete 的.
   non-concrete fields 例如 GenericForeignKey, 反向的关系列 ForeignObjectRel.
 
 - ``hidden``.
@@ -2283,22 +2294,25 @@ field property introspection.
 
 property introspection for relational fields. 以下属性在所有 field 中都有.
 但是只有当 ``is_relation == True`` 时, 它们才不是 None. 自定义的 relation
-fields 需要设置这些 flags.
+fields 需要设置这些属性.
 
 - ``many_to_many``.
-  many-to-many relation. e.g., ManyToManyField.
+  many-to-many relation flag. e.g., ManyToManyField.
 
 - ``many_to_one``.
-  many-to-one relation. e.g., ForeignKey.
+  many-to-one relation flag. e.g., ForeignKey.
 
 - ``one_to_many``.
-  one-to-many relation. e.g., GenericRelation.
+  one-to-many relation flag. e.g., GenericRelation.
 
 - ``one_to_one``.
-  one-to-one relation. e.g., OneToOneField.
+  one-to-one relation flag. e.g., OneToOneField.
 
 - ``related_model``.
-  the model the field relates to. 通过 ``remote_field.model`` 获得.
+  the model the field relates to.
+
+- ``remote_field``.
+  该列在 ``related_model`` 上的对应列 (实际存在或虚拟的列).
 
 methods
 ~~~~~~~
@@ -2683,7 +2697,60 @@ field types
   a field for ``uuid.UUID`` class instances.
   一般用法是设置 ``default=uuid.uuid4`` callable.
 
-- relation field ``ForeignKey``. many-to-one relation.
+relation fields
+'''''''''''''''
+
+relational fields 的说明.
+
+- recursive relationship. 若 relation field 需要与自身表建立关联, 使用
+  ``"self"`` 作为 ``to`` 参数值.
+
+- lazy relationship. 若 relation field 需与可能尚未建立的 model 建立关联,
+  使用 ``"[<app_label>.]<model>"``.
+
+concrete forward relations.
+
+- ``RelatedField``. Base class of relational fields.
+
+  attributes.
+
+  * opts. containing model's Meta options.
+
+  checkings.
+
+  * 检查 ``related_name`` 是合法的 python identifier (或 ends with "+").
+
+  * 检查 ``related_query_name`` 不包含 lookup separator ``__`` 且 not
+    ends with ``_``.
+
+  * 检查 ``to`` 设置的关联 model 是否存在. 例如不在 ``INSTALLED_APPS`` 中,
+    或者不存在的字符串形式.
+
+  * 检查 swapped model.
+    .. TODO understand swappable.
+
+  * 检查该列的 reverse accessor 和 reverse query name 是否在 related model
+    中引起冲突.
+
+- ``ForeignObject``. subclass of RelatedField, abstraction of ForeignKey
+  to provide multi-column foreign relations. 使用 ForeignObject 可以实现从多个列
+  至多个列的外键关系封装.
+
+  attributes.
+
+  * ``forward_related_accessor_class``. ForwardManyToOneDescriptor.
+    在 model instance 上 FK 列属性实际上是这个 descriptor. 在 get 时,
+    从数据库获取 related model instance 并返回; set 时, 直接赋值
+    related model instance 或 None, 并更新关系列值.
+
+  checkings.
+
+  * 检查指定的 ``to_fields`` 都存在.
+
+  * 检查 ``to_fields`` 中是否存在 unique constraint. 注意由于 ForeignObject
+    仍然是 many-to-one relation, 因此要求能够 uniquely identify.
+
+- ``ForeignKey``. many-to-one relation.
 
   foreign key field 的名字应该是所指向的 model 的名字的全小写版本.
 
@@ -2713,7 +2780,9 @@ field types
 
     - 啥也不干, 由数据库决定该怎么办, ``django.db.models.DO_NOTHING``.
 
-  * ``limit_choices_to``, 限制 ModelForm 中该列的赋值范围.
+  * ``limit_choices_to``, 限制生成的 ModelForm 中该列的关联范围. Either a
+    dictionary, a Q object, or a callable returning a dictionary or Q object
+    can be used.
 
   * ``related_name``, 自定义从 related object 反向获取时, related manager
     的名字. 默认是 ``Meta.default_related_name``, 后者的默认值是
@@ -2727,12 +2796,13 @@ field types
   * ``to_field``, 关联的 model 的 field, 默认是 primary key. 关联的 field
     必须有 unique constraint.
 
-  * ``db_constraint``
+  * ``db_constraint``. 默认 True 即可. 是否在数据库层建立 FK 关系.
 
   * ``swappable``, 默认 True 即可. 与 swappable AUTH_USER_MODEL 相关, 为了
     支持 custom user model.
+    .. TODO understand swappable.
 
-- relation field ``OneToOneField``: one-to-one relation.
+- ``OneToOneField``: one-to-one relation.
 
   - 一对一关系一般用于一个模型作为另一个模型的延伸、扩展、附加属性等.
     ``OneToOneField`` 在 model 继承时用于定义父表和子表通过哪一列来关联.
@@ -2746,7 +2816,7 @@ field types
   - OTO field 的 ``parent_link`` 结合 conrete model inheritance 时有特殊作用,
     它让父类的 field 可在子类即 OTO field 所在 model 中直接访问.
 
-- relation field ``ManyToManyField``: many-to-many relation.
+- ``ManyToManyField``: many-to-many relation.
 
   - 由于一个列无法体现多对多的关系, ``ManyToManyField`` 在实现时, 不是构成了一个列,
     而是一个单独的 table. table 的命名根据 ``<app>_<model>_<m2mfield>`` 全小写命名.
@@ -2786,13 +2856,7 @@ field types
 
       ``.through`` 属性在 field instance 是一个 RelatedManager to through model.
 
-relational field 的说明.
-
-- recursive relationship. 若 relation field 需要与自身表建立关联, 使用
-  ``"self"`` 作为 ``to`` 参数值.
-
-- lazy relationship. 若 relation field 需与可能尚未建立的 model 建立关联,
-  使用 ``"[<app_label>.]<model>"``.
+reverse virtual relation fields.
 
 model index
 -----------
