@@ -99,6 +99,9 @@ General & Concepts
   那么对于数据库而言, 仍需要使用容器的原因是, 至少在测试和部署、升级等方面, 容器
   化仍然相比于实体机要有很多如上述的便利之处.
 
+- 容器和容器之间、与各种非容器组件之间, 主要靠网络通信, 这样各组件之间的协作是
+  与 docker platform 无关的. 容器可以等价代换非容器组件, 反之亦然.
+
 versions
 ========
 
@@ -1280,19 +1283,41 @@ network
 
 - docker network create.
 
+  ``--driver``. 默认使用 bridge driver.
+  只有 swarm manager 可以创建 overlay network.
+
+  ``--subnet``. 指定 subnet.
+
+  ``--ip-range``. allocate container ip from this range.
+
+  ``--gateway``. gateway ip.
+
+  ``--ingress``. create swarm routing-mesh network.
+
+  ``--attachable``. 
+
+  ``--ipv6``. enable ipv6.
+
+  ``--opt``. 自定义网络参数.
+
 - docker network ls.
 
 - docker network inspect.
   输出还包括各个 attached container 的网络信息, 例如 ip.
 
 - docker network connect.
-  显然一个容器可以连接多个网络.
+  一个容器可以连接多个网络.
 
   ``--ip``, ``--ip6``, 连接时可以指定 ip. 对于自定义的网络.
 
 - docker network disconnect.
   disconnect container from network. 断掉后容器内的相应虚拟网卡直接消失.
   注意这个操作是在修改容器的网络连接配置, 所以是持久的 (make sense).
+
+- docker network rm.
+
+- docker network prune.
+  remove unused networks.
 
 volume
 ~~~~~~
@@ -1459,45 +1484,131 @@ service 属于整个 stack. 所以在整个 swarm 的所有节点上, 这个端�
 network
 =======
 
-- 三个默认网络: none, host, bridge.
-
-  docker container 默认使用 bridge network.
-
-  默认的 bridge network ``Options.com.docker.network.bridge.name`` 为 docker0.
-  默认的 bridge network 不能删除.
-
 - 网络内使用容器的名字可以 DNS 解析到 IP 地址.
 
-ingress routing mesh
---------------------
+- network drivers: bridge, host, overlay, macvlan, none.
 
-- Port 7946 TCP/UDP for container network discovery.
+bridge network
+--------------
+当需要把多个独立的容器通过一个网络在一起, 可以相互通信时, 一般使用 bridge
+network.
 
-- Port 4789 UDP for the container ingress network.
+bridge network 中, 各个容器以及 host 主机与一个 software bridge 通过 veth 连通.
+从而可以相互访问. 没有与该 bridge 连接的容器无法访问该网络内资源.
+The Docker bridge driver automatically installs rules in the host machine so
+that containers on different bridge networks cannot communicate directly with
+each other.
 
-drivers
--------
+由于 software bridge 由 host OS 实现, 位于 host 主机内部. 所以它构建的子网
+只能覆盖同一台机器上的容器 (以及主机自身). 子网不能跨机器. 若要访问外网,
+bridge 需要设置 NAT 和路由功能. 这样, 这个 software bridge 成为了 layer-3
+switch. 若还需要外界能主动访问容器, 需要手动配置路由规则.
 
-bridge
-~~~~~~
+由于这些麻烦的存在, 使用 bridge network 时, 不同机器上的容器不容易相互直接通信.
+这通过 overlay network 来解决. (或者使用 host network 来避免网络隔离.)
 
-bridge 指的是各个容器与一个网桥或交换机 (通过 veth) 连通. 从而可以相互访问.
-通过 ip_masquerade 等设置, 该交换机能够兼有 NAT 路由器功能, 即成为 layer-3 switch.
+default bridge
+~~~~~~~~~~~~~~
+bridge 是创建 docker network 时默认使用的 driver.
+It is considered a legacy detail of Docker and is not recommended for
+production use.
 
-根据网络原理, 一个 bridge network 显然只能独立于一台 docker host machine 上面.
-(指的是 bridge network 这个子网的范围. 里面的容器和外界或者其他机器上的容器是
-有办法互通的.)
+默认的 bridge network 名为 bridge, 它在 OS level 中名字为 docker0
+(``Options.com.docker.network.bridge.name``), 且不能删除. 新创建的
+容器自动连接到这个 bridge network.
 
-overlay
-~~~~~~~
+To configure the default bridge network, you specify options in daemon.json.
+Then restart docker daemon to take effect.
 
-overlay network 可以跨多个 docker hosts. 这指的是, 每个 host 上的容器所在的
-子网都是相通的, 或者说, 可以抽象地认为这些不同机器上的容器都位于同一个子网.
-不同机器上的容器之间可以通过名字或 IP 直接访问.
+default bridge vs user-defined bridge
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+User-defined bridge networks are superior to the default bridge network.
 
-overlay network 之所以可能, 不是仅仅依靠标准的网络原理和配置实现的. 要借助
-应用层的实现和转发. 即若访问不在一台机器上的容器时, 要靠 dockerd 保持的
-分布式的网络状态存储, 来知道该向哪个机器转发.
+- 对于 user-defined bridges, 容器运行时可以指定在 network 中的 alias.
+  可以自动 DNS 解析. 即在该网络中, alias 是该容器的 DNS A record.
+
+- default bridge can only be configured via daemon configuration file. And
+  daemon must be restarted to take effect. User-defined bridge can be
+  configured at will.
+
+overlay network
+---------------
+Overlay network lies over host-specific networks, 可以跨多个 docker hosts. 效果是
+每个 host 上的容器所在的子网都是相通的, 可以抽象地认为这些不同机器上的容器都位于
+同一个子网. 不同机器上的容器之间可以通过名字或 IP 直接访问.
+
+overlay network 不是仅仅依靠标准的网络原理和配置实现的. 要借助应用层的实现和流量
+转发. Docker daemons on multiple machines connect together to form the overlay
+network, 并使用一个分布式存储维护网络状态. Docker transparently handles routing
+of each packet to and from the correct Docker daemon host and the correct
+destination container.
+
+overlay network 一般用于 docker swarm mode, 但也可以用于独立容器的跨机器通信.
+
+When you initialize a swarm or join a Docker host to an existing swarm, two new
+networks are created on that Docker host:
+
+- an overlay network called ``ingress``, which handles control and data traffic
+  related to swarm services. When you create a swarm service and do not connect
+  it to a user-defined overlay network, it connects to the ingress network by
+  default.
+
+  Customizing the ingress network involves removing and recreating it.
+
+- a bridge network called ``docker_gwbridge`` that connects the overlay
+  networks (including the ``ingress`` network) to an individual Docker daemon’s
+  network.
+
+  If you need to customize its settings, you must do so before joining the
+  Docker host to the swarm.
+
+使用 ``--attachable`` flag 创建的 overlay 支持独立容器使用, 从而 swarm 可以与
+独立容器 (以及独立容器之间) 相互跨机器直接通信. (注意不是只有 swarm service
+才可以直接跨机器通信的. 独立容器连入 overlay network 照样可以.)
+
+ingress overlay network 不支持 attach standalone container.  You can name your
+ingress network something other than ingress, but you can only have one ingress
+network.
+
+ports
+~~~~~
+
+- TCP port 2377 for cluster management communications.
+
+- TCP/UDP port 7946 for container network discovery.
+
+- UDP port 4789 for the container ingress network.
+
+routing mesh
+~~~~~~~~~~~~
+By default, swarm services which publish ports do so using the routing mesh.
+When you connect to a published port on any swarm node (whether it is running a
+given service or not), you are redirected to a worker which is running that
+service, transparently. Effectively, Docker acts as a load balancer for your
+swarm services. Services using the routing mesh are running in virtual IP (VIP)
+mode. Even a service running on each node (by means of the --global flag) uses
+the routing mesh. When using the routing mesh, there is no guarantee about
+which Docker node services client requests.
+
+encryption
+~~~~~~~~~~
+All swarm service management traffic is encrypted by default.
+To encrypt application data as well, add ``--opt encrypted`` when creating the
+overlay network. This enables IPSEC encryption at the level of the vxlan.
+
+host network
+------------
+不使用网络隔离, 直接使用 host OS 的网络. 即从网络角度看, 容器内部的进程是直接
+运行在 host 环境下的.
+
+macvlan network
+---------------
+Macvlan networks allow you to assign a MAC address to a container, making it
+appear as a physical device on your network. The Docker daemon routes traffic
+to containers by their MAC addresses. Using the macvlan driver is sometimes the
+best choice when dealing with legacy applications that expect to be directly
+connected to the physical network, rather than routed through the Docker host’s
+network stack.
 
 machine
 =======
