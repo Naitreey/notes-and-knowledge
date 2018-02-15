@@ -217,7 +217,7 @@ recursive and caching name server
 the Domain Name System supports DNS cache servers which store DNS query results
 for a period of time determined in the configuration (time-to-live) of the
 domain name record in question. Typically, such caching DNS servers also
-implement the recursive algorithm necessary to resolve a given name starting
+implement the iterative algorithm necessary to resolve a given name starting
 with the DNS root through to the authoritative name servers of the queried
 domain. With this function implemented in the name server, user applications
 gain efficiency in design and operation.
