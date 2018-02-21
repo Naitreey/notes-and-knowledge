@@ -1,0 +1,802 @@
+tiling window manager
+=====================
+- a tiling window manager is a window manager with an organization of the
+  screen into mutually non-overlapping frames, as opposed to the more popular
+  approach of coordinate-based stacking of overlapping objects (windows) that
+  tries to fully emulate the desktop metaphor.
+
+- popular tiling window managers: awesome wm, i3, i3-gaps, xmonad.
+
+i3 wm
+=====
+- i3 is a tiling window manager.
+
+questions
+---------
+
+- prevent kdewallet popup
+
+- adjust color of status bar elements.
+
+- make i3bar beautiful. like they are on REDDIT.
+
+- volume on status bar.
+  volume control on status bar or just a value display?
+  maybe scroll on status bar to adjust volume?
+
+- goto the specified window, swap the specified windows, EASILY.
+
+- consider change titlebar, border, and indicator color. or hide some of them.
+  consider match those colors with gtk or kde theme colors.
+  consider even install some other more exotic gtk/kde theme and icon theme.
+
+concepts
+--------
+
+tree structure
+~~~~~~~~~~~~~~
+
+i3 stores all information about the X11 outputs, workspaces and layout of the
+windows on them in a tree. The root node is the X11 root window, followed by
+the X11 outputs, then dock areas and a content container, then workspaces and
+finally the windows themselves.
+
+The tree consists of Containers.
+
+Containers
+~~~~~~~~~~
+A Container can host a window (meaning an X11 window, one that you can actually
+see and use, like a browser). Alternatively, it could contain one or more
+Containers.
+
+Container layouts:
+
+* splith/splitv
+
+* stacking
+
+* tabbed
+
+Containers are tiled by default, but can be set to tabbed or stacked layouts,
+as well as made floating (such as for dialog windows). Floating windows are
+always on top.
+
+Every Container has an orientation (horizontal, vertical or unspecified) and
+the orientation depends on the layout the container is in (splitv and stacking
+for vertical, splith and tabbed for horizontal). For workspace, the default
+layout is splith.
+
+How does tree, workspace, parent/child containers, and multiple layout work together?
+
+- 每个 container 可以设置 layout: splith, splitv, stacking, tabbed.
+
+- workspace 也是一个 container. 所以对着一个 empty workspace hit ``$mod+v``,
+  ``$mod+s`` 等就会改变之后打开窗口时使用的 layout.
+
+- 新开的 container 与当前 focus 的 container 是同一级别的. 所以如果要在更高的
+  级别新开窗口, 需要先 focus parent container.
+
+- splith/splitv 操作是新建一个 split container 替代当前 container, 并将当前
+  container 挪 入 split container. 但 stacking/tabbed/toggle 操作是修改该
+  container 的 parent container 的 layout.
+
+workspace
+~~~~~~~~~
+
+When switching workspaces, if the specified workspace does not exist, it'll
+be created.
+
+在 multi-screen setup 中, 每个屏都可以设置 workspaces. 这样, 在 workspace 之间的
+切换自动 focus 相应的屏幕.
+
+When creating a workspace with name ``<number>:<name>``, note that the
+workspace will really be named ``<number>:<name>``. i3 treats workspace names
+beginning with a number in a slightly special way. Normally, named workspaces
+are ordered the way they appeared. When they start with a number, i3 will order
+them numerically. Also, you will be able to use workspace number 1 to switch to
+the workspace which begins with number 1, regardless of which name it has.
+
+configurations
+--------------
+- line comments start with ``#``.
+
+- backslash ``\`` indicates line continuation.
+
+- font can be specified as comma separated list with font size at the end.
+
+- Config file supports defining variables. Variables are directly replaced in
+  the file when parsing. Variables expansion is not recursive so it is not
+  possible to define a variable with a value containing another variable.
+
+  Variables can be read from X resource database.
+
+- keyboard/mouse bindings.
+
+  * If you often switch keyboard layouts but you want to keep your bindings in
+    the same physical location on the keyboard, use keycodes. If you don’t
+    switch layouts, and want a clean and simple config file, use keysyms.
+
+  * modifiers: mod1-mod5, Shift, Control. (see xmodmap(1).)
+
+  * key symbol, key code, mouse buttons 都可以 bind.
+
+- binding modes.
+
+  * When you switch to another binding mode, all bindings from the current mode
+    are released and only the bindings defined in the new mode are valid for as
+    long as you stay in that binding mode.
+
+  * The only predefined binding mode is `default`, which is the mode i3 starts
+    out with and to which all bindings not defined in a specific binding mode
+    belong.
+
+  * It is recommended to use binding modes in combination with variables in
+    order to make maintenance easier. Below is an example of how to use a
+    binding mode.
+
+  * Note that it is advisable to define bindings for switching back to the
+    default mode.
+
+- floating modifier. pressing it along with left/right mouse button to drag
+  or resize float.
+
+- you can let i3 execute any command when it encounters a window matching
+  criteria.
+
+- you can let i3 do not automatically focus on new window matching criteria.
+
+- Windows matching criteria can be gathered automatically into the assigned
+  workspaces. Assignments are processed by i3 in the order in which they appear
+  in the config file. The first one which matches the window wins and later
+  assignments are not considered.
+
+- Workspaces can be assigned to specific screens.
+
+- you can define applications to start automatically on i3 startup or on i3
+  restart.
+
+- color of various aspects of window decorations can be customized.
+  ``border`` 是 window 的外边沿, ``child_border`` 是内边沿, ``background``
+  是 window 外边沿与内边沿之间的 background.
+
+  * ``client.focused_inactive`` 指的是 window that is not actually focused,
+    but will receive focus automatically when focus is moved its parent
+    container, 但同时又不是明确要求选择 focus 整体 parent container.
+
+- configure focus following mouse.
+
+my key mappings
+---------------
+
+- Mod key ``$mod``: win.
+
+- restart i3 inplace: ``$mod+Shift+r``
+
+- reload i3 configuration: ``$mod+Shift+c``
+
+- exit i3 and current x session without killing X server: ``$mod+Shift+e``
+
+open app
+~~~~~~~~
+- open terminal: ``$mod+t``
+
+- open desktop application: ``$mod+d``
+
+container
+~~~~~~~~~
+- change split container layout:
+ 
+  * tabbed: ``$mod+w``
+
+  * stacking: ``$mod+s``
+
+  * toggle splith/splitv, 以及从 tabbed, stacking 恢复至 default: ``$mod+e``
+
+- create split container:
+
+  * create vertical split container: ``$mod+v``
+
+  * create horizontal split container: ``$mod+;``
+
+- toggle fullscreen mode: ``$mod+f``
+
+- resize container:
+
+  * grab border by mouse.
+
+  * resize mode ``$mod+r``, 然后使用常用方向键调整大小, ``Enter/Escape`` 回到
+    default mode.
+
+- focus container.
+ 
+  * focus parent container: ``$mod+p``
+
+  * focus child container: ``$mod+n``
+
+window
+~~~~~~
+- move focus between windows:
+
+  * ``$mod+h/j/k/l``
+   
+  * 移动鼠标自动 focus 所在窗口
+
+- close a window: ``$mod+Shift+q``
+
+- floating mode.
+  
+  * toggle tiling/floating mode of window: ``$mod+Shift+space``
+
+  * move float:
+    
+    - By dragging the window’s titlebar with your mouse you can move
+      the window around.
+
+    - press ``floating_modifier`` and drag it
+
+  * resize float:
+    
+    - right-click on the titlebar and drag to resize float window
+     
+    - or by grabbing the borders and moving them
+
+    - or using resize mode.
+
+    - press ``floating_modifier`` and drag it by right mouse button.
+      press ``Shift`` additionally to preserve window aspect ratio.
+
+- toggle focus between floating and tiling windows: ``$mod+space``
+
+- sticky float: ``$mod+y``
+
+- workspace default orientation:
+
+  * by default: Wide-screen monitors (anything wider than high) get horizontal
+    orientation, rotated monitors (anything higher than wide) get vertical
+    orientation.
+
+workspaces
+~~~~~~~~~~
+ 
+* switch workspace: ``$mod+<n>``
+
+* move window to workspace: ``$mod+Shift+<n>``
+
+* cycle throught workspaces: ``$mod+Left/Right``
+
+* switch between 2 recently used workspaces: ``$mod+grave``
+
+multimedia
+~~~~~~~~~~
+
+- volume control:
+
+  * up: ``Fn+PageUp==XF86AudioRaiseVolume``
+
+  * down: ``Fn+PageDown==XF86AudioLowerVolume``
+
+  * toggle mute: ``Fn+Pause==XF86AudioMute``
+           
+- media control:
+
+  * toggle play/pause: ``Fn+Insert==XF86AudioPlay``
+
+  * next: ``Fn+End==XF86AudioNext``
+
+  * previous: ``Fn+Home==XF86AudioPrev``
+
+system mode
+~~~~~~~~~~~
+- lock: l, logout: e, suspend: s, hibernate: h, reboot: r, poweroff: p
+
+command list
+------------
+- Command list can be chained by using ; (a semicolon). A command list
+  is composed of a list of commands separated by , (a comma).
+
+- The scope of a command list is specified via criteria, which come before any
+  command list in a pair of square brackets and are separated by space.
+
+criteria
+~~~~~~~~
+- 每个命令可以 prefix criteria, 限制或指定操作对象.
+  对于很多命令, 若不指定 criteria, 则默认使用 current container/window.
+
+- format in DNF::
+    "["[<key>=<value>]+"]"
+
+- criterion keys:
+
+  * class. window class, the second part of ``WM_CLASS``.
+
+  * instance. window instance, the first part of ``WM_CLASS``.
+
+  * window_role. ``WM_WINDOW_ROLE``.
+
+  * window_type. ``_NET_WM_WINDOW_TYPE``. Possible values are normal, dialog,
+    utility, toolbar, splash, menu, dropdown_menu, popup_menu, tooltip and
+    notification.
+
+  * id. X11 window ID.
+
+  * title. X11 window title. ``_NET_WM_NAME`` or ``WM_NAME``.
+
+  * urgent. urgent state. Can be "latest" or "oldest".
+
+  * workspace. workspace name.
+
+  * con_mark. container mark.
+
+  * con_id. container id.
+
+  * floating. match floating window. no value.
+
+  * tiling. match tiling window. no value.
+
+  The value of class, instance, window_role, title, workspace and con_mark are PCRE.
+
+commands
+~~~~~~~~
+- execute command::
+    exec
+  ``--no-startup-id``. 基本上如果不需要等待程序的 window 出现, 则应该加上这个 flag.
+
+  If the command to be executed contains a ; (semicolon) and/or a , (comma),
+  the entire command must be double quoted. If however a command with a comma and/or
+  semicolon itself requires double quotes, you must escape the internal quotation
+  marks with double backslashes. e.g., ::
+    bindsym $mod+Shift+apostrophe exec \
+        "i3-input -F 'move container to mark %s; [con_mark=\\"%s\\"] focus' -l 1 -P 'Move to mark: '"
+
+- create split container::
+    split vertical|horizontal|toggle
+
+  * ``split vertical|horizontal`` 总是新建一个 split container, 替代当前 container,
+    并将当前 container 挪入 split container.
+
+  * ``split toggle`` is so weird and not very useful, IMO.
+
+- change layout of current container.
+
+  * change container to a specific layout::
+      layout default|tabbed|stacking|splitv|splith
+
+  * cycle through layouts. Every time the command is executed, the layout specified after the
+    currently active one will be applied. If the currently active layout is not
+    in the list, the first layout in the list will be activated.
+
+    - cycle through stacking/tabbed/last-used-split::
+        layout toggle
+
+    - cycle through splitv/splith::
+        layout toggle split
+
+    - cycle through stacking/tabbed/splith/splitv::
+        layout toggle all
+
+    - cycle through the specified layouts, 其中 ``split`` 代表 last-used-split::
+        layout toggle [split|tabbed|stacking|splitv|splith]{1,4}
+
+  * make current window fullscreen::
+      fullscreen [enable|disable|toggle]
+
+  * make current window float::
+      floating [enable|disable|toggle]
+
+- focus containers.
+
+  * in the given direction::
+      focus left|right|up|down
+
+  * traverse hierarchy::
+      focus parent|child
+
+  * to different windowing mode::
+      focus floating|tiling|mode_toggle
+    focus 会设置到 last focused container of the specified mode.
+
+  * across screens::
+      focus output left|right|up|down|primary|<output>
+
+  * focus container matching criteria, a.k.a., jumping to container::
+      <criteria> focus
+
+- move container. 注意 floating container 也可以用这个命令移动.
+
+  * move directionally. 对于 float, 默认移动 10px, customizable::
+      move {left|right|up|down} [<px> px]
+
+  * move to the specific postion, might be useful for float.
+
+- swap containers::
+    [<criteria>] swap container with id|con_id|mark <arg>
+  The first container to participate in the swapping can be selected through
+  the normal command criteria process with the focused window being the usual
+  fallback if no criteria are specified.
+
+- sticky floating window, stay on screen even if you switch to another workspace::
+    sticky enable|disable|toggle
+
+- change to the specified workspaces. The specified workspace will be created if not
+  already exist.
+
+  * cycle through workspaces::
+      workspace next|prev|next_on_output|prev_on_output
+    the ``_on_output`` suffix restricts on current output.
+
+  * To switch back-and-forth between the previously focused workspace::
+      workspace back_and_forth
+
+  * to switch to the numbered and/or named workspace::
+      workspace <number>|<name>|<number>:<name>
+
+- move container to the specified workspace. The specified workspace will be
+  created if not already exist.
+  
+  * move container to previous/next/current workspace::
+      move container to workspace prev|next|current
+
+  * move container to the numbered and/or named workspace::
+      move container to workspace <number>|<name>|<number>:<name>
+
+- rename workspaces::
+    rename workspace <old> to <new>
+    rename workspace to <new>
+
+- move container/workspace to the specified output::
+    move container to output left|right|down|up|current|primary|<output>
+    move workspace to output left|right|down|up|current|primary|<output>
+
+- move container to mark::
+    move container to mark <arg>
+  移动到 mark container 所在的 container 中. 而不会新创建 container.
+
+- move window to mark::
+    for_window <criteria> move window to mark <arg>
+
+- resize container/window::
+    resize {grow|shrink} {left|right|up|down|width|height} [<px> px [or <ppt> ppt]]
+    resize set <width> [px] <height> [px]
+  For ``width`` or ``height``, in which case i3 will take/give space from all the
+  other containers. px is for floating container, ppt is for tiling container.
+  All defaults to 10. ``resize set`` only works for float.
+
+- mark/unmark window.
+  
+  * mark the focused container::
+      mark [--add|--replace] [--toggle] <arg>
+    By default, a window can only have one mark. mark 会在 title bar 上显示.
+
+  * remove mark from whichever container has it::
+      unmark [<arg>]
+    If you don’t specify a mark, unmark removes all marks.
+
+- change title format::
+    title_format <format>
+  注意这是一个命令, 不是配置.
+
+- change border. 默认相当于 ``border normal 2``.
+
+  * change border width, use window title::
+      border normal <n>
+
+  * change border width, use no window title::
+      border pixel <n>
+
+  * no border nor title::
+      border none
+
+  * cycle border styles::
+      border toggle
+
+- toggle shmlog::
+    shmlog <size_in_bytes>|on|off|toggle
+  默认使用 1% RAM 或 25MB max, 除非指定了大小.
+
+- toggle debuglog::
+    debuglog on|off|toggle
+  需要首先开启 shmlog, debug log 会输出到 shmlog 中.
+
+- reload/restart i3::
+    reload
+    restart
+  reload will reload i3 configuration. restart is restart i3 inplace, useful
+  for getting out of weird state or inplace upgrade.
+
+- scratchpad window. (Not very useful?)
+
+  * move a window to scratchpad workspace::
+      move scratchpad
+
+  * toggle a window from scratchpad workspace, as float::
+      scratchpad show
+
+- nop placeholder command. This can be useful for disable default behavior for
+  a keybinding, e.g., disabling a focus change on clicks with the middle mouse
+  button::
+    nop [<comment>]
+
+- control i3bar at runtime::
+    bar hidden_state hide|show|toggle [<bar_id>]
+    bar mode dock|hide|invisible|toggle [<bar_id>]
+
+- append saved layout to current workspace::
+    append_layout <path>
+
+debugging
+---------
+
+- shm log.
+ 
+  开启方式: 使用 i3-with-shmlog session; 或 shmlog command.  i3-dump-log(1)
+  读取日志.
+
+- debug log. more verbose.
+
+save/restore layout
+-------------------
+i3 只能 store layout, 不能 store session. 程序还是要手动重新打开. 只是省了
+重新布局的麻烦. 其实用处不大.
+
+i3-save-tree(1) is a tool to save the layout. It will print a JSON
+representation of i3’s internal layout data structures to stdout. 
+
+Please note that the output of i3-save-tree(1) is NOT useful until you manually
+modify it.
+
+After restoring the example layout, i3 will open placeholder windows for all
+the windows that were specified in the layout file. When an application opens a
+window that matches the specified swallow criteria, it will be placed in the
+corresponding placeholder window. We say it gets swallowed by the placeholder
+container, hence the term.
+
+Note: Swallowing windows into unsatisfied placeholder windows takes precedence
+over container-to-workspace assignment rules.
+
+layout file is not strictly JSON-compliant. It contain comments which are not
+standardized, but understood by many parsers. Also it contains multiple JSON
+document on the top level.
+
+edit layout file
+~~~~~~~~~~~~~~~~
+look at the "swallows" section of each window. This is where you need to be
+more or less specific.  You can match on "class", "instance", "window_role" and
+"title". All values are case-sensitive regular expressions (PCRE). 
+
+In general, you should try to be as specific as possible in your swallow
+criteria. Try to use criteria that match one window and only one window, to
+have a reliable startup procedure.
+
+If you specify multiple swallow criteria, the placeholder will be replaced by
+the window which matches any of the criteria. As an example
+
+i3bar
+-----
+i3bar program draws the bar at the bottom of the screen.
+
+Having this part of "the i3 user interface" in a separate process has several
+advantages:
+
+- It is a modular approach. If you don’t need a workspace bar at all, or if you
+  prefer a different one, you can just remove the i3bar configuration and start
+  your favorite bar instead.
+
+i3bar 只提供 bar 的布局和相关配置. bar 的内容由 ``status_comand`` 提供.
+
+configuration
+~~~~~~~~~~~~~
+i3bar is configured in the same configuration file as i3.
+Configuring your workspace bar starts with opening a ``bar`` block. You can have
+multiple bar blocks to use different settings for different outputs (monitors).
+
+- specify bar command.
+
+- specify status line command. i3bar can run a program and display every line
+  of its stdout output on the right hand side of the bar.
+
+- i3bar can be docked at edge of screen or only show when needed.
+
+- Specifies a command to run when a button was pressed on i3bar to override the
+  default behavior, 默认是 scroll up/down 切换 workspace.
+
+- bar position: top or bottom.
+
+- specify the current bar to be outputed to the specified screen.
+
+- specify on which output (monitor) the tray icons should be displayed or you
+  can turn off the functionality entirely.
+
+- adjust padding between tray icons.
+
+- specify font used for the bar.
+
+- specify separator symbol between blocks.
+
+- control whether workspace buttons should be shown or not. 
+
+- Specifies whether workspace numbers should be displayed within the workspace buttons.
+
+- control colors of various aspects. 包含 bar background, separator,
+  status line text color, workspace button 的 border, background, text
+  颜色. 对于 workspace, 还区分 focused, urgent, active, inactive (active
+  inactive 是对于 multi-monitor 有意义. active 是指 focus 在别的屏幕上,
+  在当前屏幕这个 workspace 是 visible 的.)
+
+i3bar protocol
+~~~~~~~~~~~~~~
+- Each section of the protocol is a JSON document.
+
+- from status command to i3bar.
+
+  - header block. A JSON dict contains the following keys:
+  
+    * version. required. integer. version number of i3bar protocol to be used.
+  
+    * stop_signal.
+  
+    * cont_signal.
+  
+    * click_events.
+  
+  - body block. A JSON array consists of one array per status line.
+    A status line is one unit of information which should be displayed at a time.
+    i3bar will not display any input until the status line is complete.
+  
+    A status line is a array of blocklet dicts. A blocklet contains the following
+    keys:
+  
+    * full_text. required. text to be displayed on i3bar.
+  
+    * short_text. It will be used in case the status line needs to be shortened
+      because it uses more space than your screen provides.
+  
+    * color. specified in hex format.
+  
+    * background. background color.
+  
+    * border. border color.
+  
+    * min_width. This is useful when you want to prevent the whole status line to
+      shift when value take more or less space between each iteration.
+  
+    * align.
+  
+    * name. Every block should have a unique name (string) entry so that it can
+      be easily identified in scripts which process the output.
+  
+    * instance. also specify an instance (string) entry where appropriate. For
+      example, the user can have multiple disk space blocks for multiple mount
+      points.
+  
+    * urgent.
+  
+    * separator. A boolean which specifies whether a separator line should be
+      drawn after this block.
+  
+    * separator_block_width.
+  
+    * markup.
+
+- from i3bar to status command.
+  on click event.
+
+  * name
+
+  * instance
+
+  * x,y
+
+  * button. 1,2,3,4,5: left/middle/right/scroll up/scroll down.
+
+i3status
+--------
+i3status 提供 status 数据输出, 可以配合 i3bar 或其他 bar command 使用.
+
+太粗糙, 没什么用. 至少使用 i3blocks.
+
+i3lock
+------
+
+i3lock forks, so you can combine it with a command to suspend to RAM , then
+getting a locked screen after waking up your computer from suspend to RAM.
+
+i3-msg
+------
+interactive with i3 via unix domain socket. send command to execute or get
+various types of information.
+
+i3-input
+--------
+使用 i3-input 可以让一些需要输入文字, 从而本来不太方便直接 bind shortcuts 的命令
+能够通过 shortcuts 执行.
+
+You can press Escape to close i3-input without sending any commands.
+
+i3blocks
+--------
+It handles clicks, signals and language-agnostic user scripts.
+The content of each block (e.g. time, battery status, network state, ...) is
+the output of a command provided by the user. 
+
+Blocks can update on click, at a given interval of time or on a given signal.
+
+By default, i3blocks looks for configuration files in the following order:
+
+- ~/.config/i3blocks/config
+
+- ~/.i3blocks.conf
+
+- /etc/xdg/i3blocks/config
+
+- /etc/i3blocks.conf
+
+configuration
+~~~~~~~~~~~~~
+
+Config file is INI format. Each section is a blocklet config.
+Properties declared outside of any sections are global properties that are
+inherited by each sections.
+
+Section properties are block keys in i3bar protocol plus the following:
+
+- command. a shell commandline, used to update the block.
+  Each non-empty line of the  output  will overwrite the corresponding property
+  in order: full_text, short_text, color.  If  the  command line returns 0 or
+  33, the block is updated. Otherwise, it is considered a failure and the first
+  line (if any) is still displayed. Note that stderr is ignored. A return code
+  of 33 will set the urgent flag to true.
+
+  special environ available to command: BLOCK_NAME, BLOCK_INSTANCE, BLOCK_BUTTON,
+  BLOCK_X, BLOCK_Y.
+
+- interval. N, 0, once, repeat, persist.
+
+- signal. specify real-time signals to update the block. N means SIGRTMIN+N.
+
+- label. label to prepend to full_text in output.
+
+- format.
+
+i3-gaps
+-------
+
+Gaps will only work correctly if you disable window titlebars entirely. You can
+also use any non-zero value as long as you only use pixel-style borders.
+
+configurations
+~~~~~~~~~~~~~~
+``for_window [class="^.*"] border pixel 0``
+
+set a global gap size, This is the default value that will be used for all workspaces::
+  gaps inner <px>
+  gaps outer <px>
+
+Additionally, gaps can be specified on a per-workspace level by using the
+syntax known from assigning a workspace to a certain output::
+  workspace <ws> gaps inner <px>
+  workspace <ws> gaps outer <px>
+
+Here is one possible idea on how you can use this feature within your i3
+config. Simply press $mod+Shift+g to enter the gaps mode. Then choose between o
+and i to modes for modifying outer / inner gaps.
+
+smart gaps: If you want gaps to only be used if there is more than one
+container on the workspace::
+  smart_gaps on
+
+smart borders: If activated, this patch will draw borders around a container
+only if it is not the only container in this workspace::
+  smart_borders on|no_gaps
+
+i3bar now supports setting a background and border color for the individual
+blocks. Additionally, the border width for each of the four sides can be
+specified.  The height of any bar can be configured to have an arbitrary value.
+
+commands
+~~~~~~~~
+change gaps::
+  gaps inner|outer current|all set|plus|minus <px>
+Note that outer gaps are an addition to inner gaps, so gaps outer all set 0
+will eliminate outer gaps, but if inner gaps are set, there will still be gaps
+on the edge of the screen.
+
