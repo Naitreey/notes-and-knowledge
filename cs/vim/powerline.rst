@@ -1,0 +1,1 @@
+- powerline 支持 vim, zsh, bash, tmux, ipython, awesome wm, i3 wm, qtile.
