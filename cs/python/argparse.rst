@@ -213,7 +213,19 @@ default
 对于 positional argument, 当 nargs 的设定允许参数省略时, 即: ``nargs="?", nargs="*"``
 时使用.
 
-- default: None.
+- default:
+
+  * ``store``, ``store_const`` action, None.
+
+  * ``store_true`` action, False.
+
+  * ``store_false`` action, True.
+
+  * ``append``, ``append_const`` action, 相当于 [].
+
+  * ``count`` action, 相当于 0.
+
+  .. TODO 待确认各种情况无遗漏.
 
 - default value 的 fallback 顺序:
 
