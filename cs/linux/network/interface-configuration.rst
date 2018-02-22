@@ -1,3 +1,28 @@
+CLI
+===
+
+tools
+-----
+
+ip
+~~
+
+- ip link show 中::
+    <BROADCAST,MULTICAST,UP,LOWER_UP>
+  各项含义:
+
+  * UP. device is running, 即 enabled. 这完全由本机控制, 例如通过
+    ``ip link set dev up``, 而不一定要连入网络.
+
+  * LOWER_UP. 指的是 link layer up. 对于 802.3 ethernet, 是插入网线, 并且
+    网络连通时; 对于 802.11 wireless, 即加入 BSS, 网络连通.
+
+commonm operations
+------------------
+
+- 网卡设备在使用之前, 可能没有启用. 启用::
+    ip link set <dev> up
+
 systemd-based system
 ====================
 
