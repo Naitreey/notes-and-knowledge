@@ -1,3 +1,9 @@
+- why do you love linux?
+
+  * so simple, yet so powerful. unix 思想有很好的一般性.
+
+  * 小身材, 大有不同.
+
 - 线程的目的不仅仅是为了 *同时的* 并行计算, 而是为了构建多个独立的运算单元.
   将这些运算单元分配到不同的 CPU 核上才具有 "同时并行" (parallel computing) 的意义.
   python 虽然有 GIL, 但这影响的是单 python 进程进行 parallel computing 的能力,

@@ -1065,6 +1065,8 @@ container
   ``--hostname``. 默认情况下容器的 hostname 是它的 short UUID, 该选项
   指定 hostname.
 
+  ``--network-alias``. 在网络中, 该容器的 dns label. 默认为 ``--name``.
+
   ``--volume=[HOST-SPEC:]MOUNTPOINT[:OPTIONS]``.
   支持 bind mount data volume 或 host dir.
   HOST-SPEC can be:
@@ -1108,6 +1110,31 @@ container
   For bind mount, ``--volume`` will create source directory if not already
   exist, whereas ``--mount`` will throw error in that case.
 
+  ``--network={bridge|host|none|container:<name|id>|<network-name|id>}``
+  连接的网络.
+
+  ``--attach``. 决定 PID1 的相应 stream 是连接到 docker logs 还是容器外的
+  console 的对应 stream 上. 不 attach 相应 stream 则与 docker logs 连接.
+  若不设置, 默认 attach stdout/stderr.
+
+  .. TODO WTF???????????????????????????? 乱七八糟, 看系统编程, 看源代码!!!!!!!!!
+
+  ``--interactive``. 控制是否 keep stdin open. 设置这个 flag 后同时会 attach
+  stdin. 若要保证 PID1 能从外界获取输入, 必须设置这个 flag. 若不设置这个 flag,
+  则 stdin 会被 close (除非设置了 -t flag, 此时 stdin 连着一个 char device).
+  若是 shell 等 interactive 程序, 读不到东西就自动退出了.
+
+  .. TODO WTF???????????????????????????? 乱七八糟, 看系统编程, 看源代码!!!!!!!!!
+
+  ``--tty``. 分配 pseudio terminal. 一些程序会根据自己连接的 stdin/stdout/stderr
+  streams 是否是 tty 作出不同的响应. 例如 shell 是否输出 prompt. 以及连接 tty
+  则会 pass through signal to PID1. 此时, 连接 PID1 的 3 个 streams 都是 tty
+  character device, 若没有 tty flag, 三个 stream 都是 pipe. 无论
+  stdin/stdout/stderr 是否 attach. 若 attach 则输出到 容器外的 console 上,
+  否则就输出到 docker logs 中.
+
+  .. TODO WTF???????????????????????????? 乱七八糟, 看系统编程, 看源代码!!!!!!!!!
+
 - docker container stop, docker stop.
   ``docker stop`` 的效果不受 ``docker run --restart=`` 参数影响. 即使
   ``--restart=always``, docker stop 也能把容器停下来.
@@ -1122,6 +1149,13 @@ container
 
   ``-t, --timestamps`` 显示日志的时间. 这是 docker 给记录的. 也就是说, docker
   化的应用, 即使是异常崩溃等本身并无时间记录的输出信息, 也会有时间信息. 这很有用.
+
+- docker container attach, docker attach.
+  attach container 实际上就是将 PID1 的 stdin/out/err 与 local console 的相应
+  流连接起来. 从而可以看进程输出或者进行交互. 可以 *同时* 对一个容器 attach 多次.
+
+  .. TODO attach 之后如何 detach, 根据不同的 docker run 模式和 docker attach
+  选项有不同的结果!!!!! 看源代码解决.
 
 image
 ~~~~~
@@ -1211,6 +1245,10 @@ service
   支持一些类似 docker run 的参数以及 compose file 的内容.
 
   ``--config=[NAME|OPTIONS]``. 给 service 分配 docker config.
+
+  ``--endpoint-mode={vip|dnsrr}``. 访问 service 时如何 load balance 各个 tasks.
+
+  ``--network={NAME|host}`` NAME 为 overlay network name, 或者使用 host network.
 
   NAME 即 config name. 此时其他参数全默认值.
 
@@ -1500,9 +1538,9 @@ that containers on different bridge networks cannot communicate directly with
 each other.
 
 由于 software bridge 由 host OS 实现, 位于 host 主机内部. 所以它构建的子网
-只能覆盖同一台机器上的容器 (以及主机自身). 子网不能跨机器. 若要访问外网,
-bridge 需要设置 NAT 和路由功能. 这样, 这个 software bridge 成为了 layer-3
-switch. 若还需要外界能主动访问容器, 需要手动配置路由规则.
+只能覆盖同一台机器上的容器 (以及主机自身). 子网不能跨机器. 
+bridge 默认设置了 NAT 和路由, 可以访问外网. 这样, software bridge 成为了
+layer-3 switch. 若还需要外界能主动访问容器, 需要手动配置路由规则.
 
 由于这些麻烦的存在, 使用 bridge network 时, 不同机器上的容器不容易相互直接通信.
 这通过 overlay network 来解决. (或者使用 host network 来避免网络隔离.)
@@ -1524,8 +1562,8 @@ default bridge vs user-defined bridge
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 User-defined bridge networks are superior to the default bridge network.
 
-- 对于 user-defined bridges, 容器运行时可以指定在 network 中的 alias.
-  可以自动 DNS 解析. 即在该网络中, alias 是该容器的 DNS A record.
+- 对于 user-defined bridges, 容器运行时自动设置它在 network 中的 alias, 默认为
+  container name. 自动 DNS 解析. 即在该网络中, alias 是该容器的 DNS A record.
 
 - default bridge can only be configured via daemon configuration file. And
   daemon must be restarted to take effect. User-defined bridge can be
@@ -1543,7 +1581,12 @@ network, 并使用一个分布式存储维护网络状态. Docker transparently 
 of each packet to and from the correct Docker daemon host and the correct
 destination container.
 
-overlay network 一般用于 docker swarm mode, 但也可以用于独立容器的跨机器通信.
+overlay network 一般用于 docker swarm mode.
+使用 ``--attachable`` flag 创建的 overlay 支持独立容器使用, 从而 swarm 可以与
+独立容器 (以及独立容器之间) 相互跨机器直接通信. (注意不是只有 swarm service
+才可以直接跨机器通信的. 独立容器连入 overlay network 照样可以.) swarm service
+和 standalone container 连入 overlay network 时, 都通过 --publish 实现整个集群
+可见.
 
 When you initialize a swarm or join a Docker host to an existing swarm, two new
 networks are created on that Docker host:
@@ -1553,22 +1596,21 @@ networks are created on that Docker host:
   it to a user-defined overlay network, it connects to the ingress network by
   default.
 
-  Customizing the ingress network involves removing and recreating it.
+  Customizing the ingress network involves removing and recreating it. Creating
+  an ingress overlay network uses ``--ingress`` flag.
+
+  ingress overlay network 不支持 attach standalone container.  You can name your
+  ingress network something other than ingress, but you can only have one ingress
+  network.
 
 - a bridge network called ``docker_gwbridge`` that connects the overlay
   networks (including the ``ingress`` network) to an individual Docker daemon’s
   network.
 
-  If you need to customize its settings, you must do so before joining the
-  Docker host to the swarm.
-
-使用 ``--attachable`` flag 创建的 overlay 支持独立容器使用, 从而 swarm 可以与
-独立容器 (以及独立容器之间) 相互跨机器直接通信. (注意不是只有 swarm service
-才可以直接跨机器通信的. 独立容器连入 overlay network 照样可以.)
-
-ingress overlay network 不支持 attach standalone container.  You can name your
-ingress network something other than ingress, but you can only have one ingress
-network.
+  If you need to customize its settings, you must do so before initializing swarm
+  or joining the Docker host to the swarm. By recreating the bridge network with
+  custom settings. When entering swarm mode, Docker does not create it with
+  automatic settings since it already exists.
 
 ports
 ~~~~~
@@ -1590,16 +1632,39 @@ mode. Even a service running on each node (by means of the --global flag) uses
 the routing mesh. When using the routing mesh, there is no guarantee about
 which Docker node services client requests.
 
+To bypass the routing mesh, you can start a service using DNS Round Robin
+(DNSRR) mode, by setting the --endpoint-mode flag to dnsrr. You must run your
+own load balancer in front of the service. A DNS query for the service name on
+the Docker host returns a list of IP addresses for the nodes running the
+service. Configure your load balancer to consume this list and balance the
+traffic across the nodes.
+
 encryption
 ~~~~~~~~~~
 All swarm service management traffic is encrypted by default.
 To encrypt application data as well, add ``--opt encrypted`` when creating the
 overlay network. This enables IPSEC encryption at the level of the vxlan.
 
+management and data traffic
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+swarm management traffic is encrypted by default. And by default, management
+and data traffic run on the same network. The two traffic can be separated
+to different network, if your nodes have two NICs. For each node joining the
+swarm, specify --advertise-addr and --datapath-addr to separate management
+and data traffic.
+
 host network
 ------------
-不使用网络隔离, 直接使用 host OS 的网络. 即从网络角度看, 容器内部的进程是直接
-运行在 host 环境下的.
+不使用网络隔离, 直接使用 host OS 的网络. 即在网络方面, 容器内部和 host OS 是
+完全相同的. 例如, interface 相同, ip 相同, hostname 相同, 端口使用相同等等.
+
+默认存在名为 host 的 network, 使用的就是 host driver.
+
+none network
+------------
+不使用任何网络.
+
+默认存在名为 none 的 network, driver 为 null.
 
 macvlan network
 ---------------
@@ -1609,6 +1674,19 @@ to containers by their MAC addresses. Using the macvlan driver is sometimes the
 best choice when dealing with legacy applications that expect to be directly
 connected to the physical network, rather than routed through the Docker host’s
 network stack.
+
+caveats:
+
+- It is very easy to unintentionally damage your network due IP address
+  exhaustion or to “VLAN spread”, which is a situation in which you have an
+  inappropriately large number of unique MAC addresses in your network.
+
+- Your networking equipment needs to be able to handle “promiscuous mode”,
+  where one physical interface can be assigned multiple MAC addresses.
+
+- If your application can work using a bridge (on a single Docker host) or
+  overlay (to communicate across multiple Docker hosts), these solutions may be
+  better in the long term.
 
 machine
 =======
@@ -1692,6 +1770,10 @@ need to install, thus reducing the overall size of all images on your system.
 - debian based releases
 
 - `curl` variants and `scm` variants
+
+alpine
+------
+那么小的 alpine 镜像里面居然有 ip, ping etc.
 
 python
 ------
