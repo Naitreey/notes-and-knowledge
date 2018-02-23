@@ -17,68 +17,6 @@
   却 merge 进入了其他 branch 所造成的信息缺失. 因此, 若一个 topic branch
   中包含一些相对独立的修改, 应拆成多个 topic branch, 以加快 merge back 的进度.
 
-- git submodule vs git subtree
-
-  * git subtree 是基于一些复杂、繁琐的命令, 例如 ``git read-tree --prefix=<prefix>``,
-    ``git merge -s subtree``, 实现的 subtree 相关操作封装.
-    从 ``git log --graph`` 可以看出 ``git subtree (add|merge) -P <prefix>``
-    大致上就是将完全不同历史的 commit tree 通过 shift root 至指定的 `prefix`
-    之后做 merge.
-
-  * git subtree 提供了方便的 split 操作, 以重建独立的 subtree 的 commit tree.
-
-  * 以 subtree 方式加入的 subproject 从各个方面都实实在在成为了 superproject
-    的一部分. (因为是 `read-tree`.) 不存在 submodule 那样的完全独立的父子关系.
-    subtree 仅有与引入 `commit` 相关的历史.
-
-  * 由于 subtree 实际上是 superproject 的一部分, 所以对 subtree 的修改就是对
-    superproject 自身的修改, 不存在 submodule 那样繁琐的双重 commit 操作 (在
-    submodule 中 commit, 再在 superproject 中更新 submodule 的 commit).
-
-  * git submodule 的很多操作步骤都很繁琐. 例如, 删除 submodule, 修改 submodule
-    的默认 remote, submodule 中 commit 与 superproject 中的同步更新, etc. 相比
-    之下, git subtree 由于只是一个目录, 就是在 superproject 中进行的操作, 没有
-    增加复杂度.
-
-  * 递归存在的 submodules (e.g., C 是 B 的子项目, B 是 A 的子项目) 极其难以忍受.
-    在最内层的修改需要在每个外层进行十分机械的 add + commit 操作, 根本无法忍受.
-
-  * ``git mv`` (2.13+) 一个 nested submodule 会出问题, 这是 ``git mv`` 的 bug.
-    最外层 submodule 的 ``.git`` 文件指向的 gitdir 路径会正确地修改, 但嵌套的
-    submodules 的 gitdir 路径并不会相应修改. 导致子仓库找不到自己的 database.
-
-    解决办法是, ``git mv`` 后, 把有问题的子仓库的 ``.git`` 文件删掉, 然后
-    ``git submodule update``, 重新添加 ``.git`` 文件.
-
-  * git subtree 将 dependency 的代码十分透明地合并成为 superproject 自身的代码,
-    这要求 developer 十分清楚某个 subtree 实际上属于其他 repo. 否则, git subtree
-    带来的代码重复可能导致 code inconsistency.
-
-  * 由于 submodule 使用起来的各种不便利, 要高效的使用 submodule 必须将所有常用
-    操作脚本化.
-
-  * Oh my god, 实际上在包含 submodule 的 repo 里, commit & merge 还有一个反常的
-    操作, 那就是如果手动进入 submodule repo 中 fetch & merge 至最新, 然后在
-    parent 中 submodule 的路径显示为 modified. 正常情况下应该 add & commit 这个
-    modified path, 然后再 fetch remote & merge. 但是对于 submodule, 需要在 modified
-    时就 fetch & merge, 这样 modified 会消失, 因记录的 commit 值已经更新到最新,
-    与 submodule repo 中 checkout 的值一致. 如果按照正常的 add & commit & fetch & merge,
-    反而会造成 git log 中出现两个十分类似的修改 (在本地分支和被合并的 remote
-    tracking 分支).
-    这对 submodule 操作脚本化也造成了进一步的麻烦和特殊处理.
-
-  ref: https://www.atlassian.com/blog/git/alternatives-to-git-submodule-git-subtree
-
-- Which to use `git submodule` or `git subtree`
-
-  * 对于非 deps, submodule/subtree 都仅适用于有必要将代码分散到不同 repo 中的情况.
-
-  * 对于 deps, 则需要使用 submodule/subtree. (前提是有必要集成 deps 的源代码, 而不是
-    通过 package manager 安装 deps.)
-
-  * 我不知道 submodule subtree 哪个更好. 但目前看来, submodule 能干的 subtree 都能干,
-    而且流程更简单无痛. 所以我更愿意用 subtree.
-
 - show tracking branch
 
   * ``git branch -vv``
@@ -155,3 +93,75 @@
     - attr
 
     - exclude (``!``)
+
+submodule
+=========
+
+- how to remove submodule::
+    git submodule deinit <submodule>
+    git rm <submodule>
+
+submodule vs subtree
+--------------------
+
+- comparison
+
+  * git subtree 是基于一些复杂、繁琐的命令, 例如 ``git read-tree --prefix=<prefix>``,
+    ``git merge -s subtree``, 实现的 subtree 相关操作封装.
+    从 ``git log --graph`` 可以看出 ``git subtree (add|merge) -P <prefix>``
+    大致上就是将完全不同历史的 commit tree 通过 shift root 至指定的 `prefix`
+    之后做 merge.
+
+  * git subtree 提供了方便的 split 操作, 以重建独立的 subtree 的 commit tree.
+
+  * 以 subtree 方式加入的 subproject 从各个方面都实实在在成为了 superproject
+    的一部分. (因为是 `read-tree`.) 不存在 submodule 那样的完全独立的父子关系.
+    subtree 仅有与引入 `commit` 相关的历史.
+
+  * 由于 subtree 实际上是 superproject 的一部分, 所以对 subtree 的修改就是对
+    superproject 自身的修改, 不存在 submodule 那样繁琐的双重 commit 操作 (在
+    submodule 中 commit, 再在 superproject 中更新 submodule 的 commit).
+
+  * git submodule 的很多操作步骤都很繁琐. 例如, 删除 submodule, 修改 submodule
+    的默认 remote, submodule 中 commit 与 superproject 中的同步更新, etc. 相比
+    之下, git subtree 由于只是一个目录, 就是在 superproject 中进行的操作, 没有
+    增加复杂度.
+
+  * 递归存在的 submodules (e.g., C 是 B 的子项目, B 是 A 的子项目) 极其难以忍受.
+    在最内层的修改需要在每个外层进行十分机械的 add + commit 操作, 根本无法忍受.
+
+  * ``git mv`` (2.13+) 一个 nested submodule 会出问题, 这是 ``git mv`` 的 bug.
+    最外层 submodule 的 ``.git`` 文件指向的 gitdir 路径会正确地修改, 但嵌套的
+    submodules 的 gitdir 路径并不会相应修改. 导致子仓库找不到自己的 database.
+
+    解决办法是, ``git mv`` 后, 把有问题的子仓库的 ``.git`` 文件删掉, 然后
+    ``git submodule update``, 重新添加 ``.git`` 文件.
+
+  * git subtree 将 dependency 的代码十分透明地合并成为 superproject 自身的代码,
+    这要求 developer 十分清楚某个 subtree 实际上属于其他 repo. 否则, git subtree
+    带来的代码重复可能导致 code inconsistency.
+
+  * 由于 submodule 使用起来的各种不便利, 要高效的使用 submodule 必须将所有常用
+    操作脚本化.
+
+  * Oh my god, 实际上在包含 submodule 的 repo 里, commit & merge 还有一个反常的
+    操作, 那就是如果手动进入 submodule repo 中 fetch & merge 至最新, 然后在
+    parent 中 submodule 的路径显示为 modified. 正常情况下应该 add & commit 这个
+    modified path, 然后再 fetch remote & merge. 但是对于 submodule, 需要在 modified
+    时就 fetch & merge, 这样 modified 会消失, 因记录的 commit 值已经更新到最新,
+    与 submodule repo 中 checkout 的值一致. 如果按照正常的 add & commit & fetch & merge,
+    反而会造成 git log 中出现两个十分类似的修改 (在本地分支和被合并的 remote
+    tracking 分支).
+    这对 submodule 操作脚本化也造成了进一步的麻烦和特殊处理.
+
+  ref: https://www.atlassian.com/blog/git/alternatives-to-git-submodule-git-subtree
+
+- Which to use `git submodule` or `git subtree`
+
+  * 对于非 deps, submodule/subtree 都仅适用于有必要将代码分散到不同 repo 中的情况.
+
+  * 对于 deps, 则需要使用 submodule/subtree. (前提是有必要集成 deps 的源代码, 而不是
+    通过 package manager 安装 deps.)
+
+  * 我不知道 submodule subtree 哪个更好. 但目前看来, submodule 能干的 subtree 都能干,
+    而且流程更简单无痛. 所以我更愿意用 subtree.
