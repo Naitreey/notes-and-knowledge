@@ -1212,6 +1212,10 @@ swarm
 - docker swarm init. initialize a swarm.
   并自动让当前节点成为 swarm manager.
 
+  ``--advertise-addr`` 若 node 有不止一个 NIC, 则需要指定这个参数.
+
+  ``--datapath-addr``
+
 - docker swarm join.
 
 - docker swarm leave. leave the swarm.
