@@ -844,9 +844,6 @@ entries. 因为 dockerignore file 控制的是 build context 的组成. 进而�
   !file-1
   !file-2
 
-networking
-==========
-
 data
 ====
 数据的存储方式
@@ -1063,9 +1060,12 @@ container
 - docker container run, docker run.
 
   ``--hostname``. 默认情况下容器的 hostname 是它的 short UUID, 该选项
-  指定 hostname.
+  指定 hostname. 设置 ``/etc/hostname``.
 
   ``--network-alias``. 在网络中, 该容器的 dns label. 默认为 ``--name``.
+
+  ``--dns``, ``--dns-search``, ``--dns-option``. DNS 相关参数, 通过这些
+  参数设置 ``/etc/resolv.conf``.
 
   ``--volume=[HOST-SPEC:]MOUNTPOINT[:OPTIONS]``.
   支持 bind mount data volume 或 host dir.
@@ -1213,10 +1213,13 @@ swarm
   并自动让当前节点成为 swarm manager.
 
   ``--advertise-addr`` 若 node 有不止一个 NIC, 则需要指定这个参数.
+  否则可能造成服务之间无法通信.
 
   ``--datapath-addr``
 
 - docker swarm join.
+
+  ``--advertise-addr`` 若 node 有不止一个 NIC, 则需要指定这个参数.
 
 - docker swarm leave. leave the swarm.
 
@@ -1526,8 +1529,6 @@ service 属于整个 stack. 所以在整个 swarm 的所有节点上, 这个端�
 network
 =======
 
-- 网络内使用容器的名字可以 DNS 解析到 IP 地址.
-
 - network drivers: bridge, host, overlay, macvlan, none.
 
 bridge network
@@ -1592,6 +1593,11 @@ overlay network 一般用于 docker swarm mode.
 和 standalone container 连入 overlay network 时, 都通过 --publish 实现整个集群
 可见.
 
+一个应用或者一组应用应该使用一个独立的 overlay network, 从而相互隔离.
+
+
+default ingress & docker_gwbridge networks
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 When you initialize a swarm or join a Docker host to an existing swarm, two new
 networks are created on that Docker host:
 
@@ -1643,6 +1649,14 @@ the Docker host returns a list of IP addresses for the nodes running the
 service. Configure your load balancer to consume this list and balance the
 traffic across the nodes.
 
+在 overlay network 中, standalone container 也有 DNS entry. 这与在 bridge
+network 中相同.
+
+published ports 只在从外部向 overlay network 连接时使用. 即这些端口是 publish
+至 network 上的 (把整个 overlay network 看成一个整体.). 在网络内部, 服务之间
+仍然使用本来的端口直接连接. 对于 user-defined overlay network, virtual IP
+在网络内部服务之间相互访问, 以及从外部向网络访问, 都可用.
+
 encryption
 ~~~~~~~~~~
 All swarm service management traffic is encrypted by default.
@@ -1656,6 +1670,15 @@ and data traffic run on the same network. The two traffic can be separated
 to different network, if your nodes have two NICs. For each node joining the
 swarm, specify --advertise-addr and --datapath-addr to separate management
 and data traffic.
+
+ingress overlay network vs user-defined overlay network
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- The ingress network is special-purpose and only for handling publishing.
+
+- Ingress network is not for production use.
+
+- VIP 在 user-defined overlay network 内部服务之间也可以使用, 对于 ingress
+  不能, 只能从外部访问时使用.
 
 host network
 ------------
@@ -1691,6 +1714,16 @@ caveats:
 - If your application can work using a bridge (on a single Docker host) or
   overlay (to communicate across multiple Docker hosts), these solutions may be
   better in the long term.
+
+networking configs
+------------------
+- ``/etc/hostname`` ``/etc/hosts`` ``/etc/resolv.conf``
+
+  三个文件都是由 docker 生成后 mount 至 container 文件系统相应位置的.
+  所以在容器内部的修改不会持久, 需要在命令行 ``docker run`` 中修改.
+
+  docker 会自动在 hosts 中添加容器 hostname 和 IP 之间的映射; 指定
+  DNS server 为 daemon 自己的 DNS.
 
 machine
 =======
@@ -1910,6 +1943,3 @@ mysql
 
 misc
 ====
-- ``/etc/hostname`` ``/etc/hosts`` ``/etc/resolv.conf`` 三个文件都是由 docker 生成后
-  mount 至 container 文件系统相应位置的. 所以在容器内部的修改不会持久, 需要在命令行
-  ``docker run|create`` 中修改或在 dockerfile 中修改.
