@@ -439,6 +439,9 @@ commands
   * move container to the numbered and/or named workspace::
       move container to workspace <number>|<name>|<number>:<name>
 
+- move window to the specified workspace::
+    for_window <criteria> move to workspace <ws>
+
 - rename workspaces::
     rename workspace <old> to <new>
     rename workspace to <new>
