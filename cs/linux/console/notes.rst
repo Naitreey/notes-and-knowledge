@@ -31,3 +31,13 @@ common operations
 
 - show key codes sent by each keyboard keys::
     showkey
+
+config file
+===========
+- vconsole.conf(5)
+
+  * 设置 key maps and font.
+
+  * 由 udev 在 boot 时调用对 virtual console 进行设置.
+
+  * 手动修改或使用 localectl(1) 修改.
