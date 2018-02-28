@@ -1099,7 +1099,7 @@ container
   TYPE can be bind, volume, tmpfs.
   OPTIONS can be a combination of:
 
-  * src, source. mount source.
+  * src, source. mount source. for bind mount, still needs to be absolute path.
 
   * dst, destination, target. mountpoint.
 
@@ -1265,6 +1265,10 @@ service
 
   * target. 默认为 ``/<source>``
 
+  * uid. 可以是 uid or username.
+
+  * gid. 可以是 gid or group name.
+
   * mode.
 
   ``--secret=[NAME|OPTIONS]``. 分配 docker secret.
@@ -1285,6 +1289,8 @@ service
 
 - docker service update. update a running service.
   更新服务还可以通过修改 compose file, 然后 re-deploy stack.
+
+- docker service logs. 可以查看一个服务的整体日志, 按照 task 分开显示.
 
 config
 ~~~~~~
