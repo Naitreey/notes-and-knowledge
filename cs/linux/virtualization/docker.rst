@@ -478,16 +478,18 @@ ENTRYPOINT
 
 - 容器运行时, 执行的命令总是由两部分组成::
     entrypoint + args
-  entrypoint 可以有两个来源:
+  两部分都可以使用默认值或在 docker run 时 override 默认值.
 
-  * 使用镜像中保存的 entrypoint. 它来自 dockerfile 中指定的 ENTRYPOINT 或默认的
-    ``["/bin/sh", "-c"]``.
+  entrypoint:
 
-  * 使用 ``docker run --entrypoint`` 指定的 entrypoint, override 镜像中的.
+  * 默认值来自 dockerfile 中指定的 ENTRYPOINT 或默认 ``["/bin/sh", "-c"]``.
+    这保存在镜像中.
 
-  args 可以有两个来源:
+  * 使用 ``docker run --entrypoint`` 指定 entrypoint override 镜像中的.
 
-  * 使用镜像中保存的 args. 它来自 dockerfile 中 CMD 提供的参数或默认的 ``[]``.
+  args:
+
+  * 默认值来自 dockerfile 中 CMD 提供的参数或默认 ``[]``. 这保存在镜像中.
 
   * 使用 ``docker run ... args`` 提供的参数 override 镜像中的.
 
@@ -1459,6 +1461,132 @@ it's behavior with usual docker commands.
 docker-compose vs docker-swarm. 两者的适用场景不同, 并不存在取代关系.
 docker-compose is needed to manage multiple containers as a service outside of
 swarm mode, on a single docker engine.
+
+compose file
+============
+
+overview
+--------
+
+- Format: yaml.
+
+- content: defining services, network, volumes, configs, secrets, etc.
+  for a docker stack (in swarm mode) or a composed container set (in
+  standalone mode).
+
+- compose file 内支持 shell parameter substitution syntax 使用环境变量的值.
+
+version info
+------------
+
+version
+~~~~~~~
+String. Required. Compose file format is versioned.
+
+build configs
+-------------
+
+build
+~~~~~
+one of the either:
+
+- A string to build context.
+
+- A mapping with keys:
+  
+  * context
+   
+  * dockerfile
+   
+  * args. build args. A mapping of key-vals or a list of ``key=val``.
+    You can omit the value when specifying a build argument, in which case its
+    value at build time is the value in the environment where Compose is
+    running
+
+  * cache_from. a list of images.
+
+  * labels. a mapping of labels.
+
+  * shm_size.
+
+  * target.
+
+若该服务下还有 image key, build result image 会被 tag 为相应镜像和 tag.
+
+注意: docker stack 只接受 pre-built images, 在 swarm mode 中不能使用 build
+option.
+
+cap_add, cap_drop
+~~~~~~~~~~~~~~~~~
+注意 not usable in docker stack.
+
+command
+~~~~~~~
+override ``CMD`` in dockerfile. string or list.
+
+configs
+~~~~~~~
+- as a key in service definition:
+  a list of docker configs applied to this service.
+
+  对于每个 config, 可以:
+  
+  * 使用 short syntax, 此时只需指定 config name as string.
+
+  * 使用 long syntax, 此时每项是 mapping. 包含: source, target, uid, gid, mode.
+
+- as top-level key:
+  declare docker configs. a mapping.
+
+  对每个 config:
+
+  * file. 配置源文件.
+
+  * external. 使用已经定义好的 docker config.
+
+cgroup_parent
+~~~~~~~~~~~~~
+note: ignored in docker swarm.
+
+container_name
+~~~~~~~~~~~~~~
+note: ignored in docker swarm.
+
+deploy
+~~~~~~
+only usable in docker swarm. define docker service parameters.
+
+keys:
+
+* endpoint_mode.
+
+* labels.
+
+* mode
+
+* placement
+
+  keys:
+  
+  - constraints.
+  
+  - preferences.
+
+* replicas.
+
+* resources.
+
+* restart_policy.
+
+* update_config.
+
+labels
+~~~~~~
+container labels.
+
+devices
+~~~~~~~
+
 
 swarm
 =====
