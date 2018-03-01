@@ -1255,11 +1255,15 @@ stack
 - docker stack deploy.
   deploy 时会自动 docker pull 所需镜像.
 
+  * ``--compose-file``
+
 - docker stack rm.
 
 - docker stack ls. list stacks in swarm.
 
 - docker stack ps. list tasks in the specified stack.
+
+- docker stack services. list services in the stack.
 
 service
 ~~~~~~~
@@ -1518,12 +1522,31 @@ parameter substitution
 
 - ``$$``
 
+extension fields and merge
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+top-level keys can be named starting with ``x-``, where the entire
+tree is ignored by parser. This is useful to construct yaml anchor nodes,
+for collecting common configs into one place.
+
+yaml ``<<`` merge indicator is also supported.
+
+使用 yaml 的这些语法, 相当于 compose file 具有了变量抽象、赋值和引用能力.
+
 version info
 ------------
 
 version
 ~~~~~~~
-String. Required. Compose file format is versioned.
+String. Compose file format is versioned.
+
+compose file versions:
+
+- Version 1, the legacy format. This is specified by omitting the version key.
+
+- Version 2, specified with ``version: '2'`` ``version: '2.1'`` etc.
+
+- Version 3, designed to be cross-compatible between Compose and the swarm mode,
+  ``version: '3'`` ``version: '3.1'`` etc.
 
 build configs
 -------------
