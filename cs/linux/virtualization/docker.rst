@@ -486,14 +486,14 @@ ENTRYPOINT
     这保存在镜像中.
 
   * 使用 ``docker run --entrypoint`` 指定 entrypoint override 镜像中的.
+    注意此时 CMD 也会被 override, 完全使用 docker run 后面跟的参数作为
+    命令参数. (This makes sense, since original command has been overridden.)
 
   args:
 
   * 默认值来自 dockerfile 中 CMD 提供的参数或默认 ``[]``. 这保存在镜像中.
 
   * 使用 ``docker run ... args`` 提供的参数 override 镜像中的.
-
-- ENTRYPOINT 可进一步被 ``docker run --entrypoint`` override.
 
 - entrypoint script ``docker-entrypoint.sh``.
 
@@ -921,6 +921,19 @@ is very purposefully ``--mount`` and not ``--volume`` for this reason.
 副作用. 注意若一个节点上有多个 replicas, named volume 只创建一个, 而多次
 bind mount. 这可能不是想要的结果. 此时, 应使用 anonymous volume.
 
+keep in mind that the tasks (containers) backing a service can be deployed on
+any node in a swarm, and this may be a different node each time the service is
+updated.
+
+In the absence of having named volumes with specified sources, Docker creates
+an anonymous volume for each task backing a service. Anonymous volumes do not
+persist after the associated containers are removed.
+
+**If you want your data to persist, use a named volume and a volume driver that
+is multi-host aware, so that the data is accessible from any node**. Or, set
+constraints on the service so that its tasks are deployed on a node that has
+the volume present.
+
 volume drivers
 ~~~~~~~~~~~~~~
 除了 local driver 之外, volume drivers 可以是别的形式, 例如 remote hosts, cloud
@@ -1253,37 +1266,47 @@ service
 - docker service create. create a service.
   支持一些类似 docker run 的参数以及 compose file 的内容.
 
-  ``--config=[NAME|OPTIONS]``. 给 service 分配 docker config.
+  * ``--config=[NAME|OPTIONS]``. 给 service 分配 docker config.
 
-  ``--endpoint-mode={vip|dnsrr}``. 访问 service 时如何 load balance 各个 tasks.
+    NAME 即 config name. 此时其他参数全默认值.
 
-  ``--network={NAME|host}`` NAME 为 overlay network name, 或者使用 host network.
+    OPTIONS can be a combination of:
 
-  NAME 即 config name. 此时其他参数全默认值.
+    - src, source.
 
-  OPTIONS can be a combination of:
+    - target. 默认为 ``/<source>``
 
-  * src, source.
+    - uid. 可以是 uid or username.
 
-  * target. 默认为 ``/<source>``
+    - gid. 可以是 gid or group name.
 
-  * uid. 可以是 uid or username.
+    - mode.
 
-  * gid. 可以是 gid or group name.
+  * ``--secret=[NAME|OPTIONS]``. 分配 docker secret.
 
-  * mode.
+    NAME 即 secret name. 此时其他参数全默认值.
 
-  ``--secret=[NAME|OPTIONS]``. 分配 docker secret.
+    OPTIONS can be a combination of:
 
-  NAME 即 secret name. 此时其他参数全默认值.
+    - src, source.
 
-  OPTIONS can be a combination of:
+    - target. 默认为 ``/run/secrets/<source>``.
 
-  * src, source.
+    - mode.
 
-  * target. 默认为 ``/run/secrets/<source>``.
+  * ``--endpoint-mode={vip|dnsrr}``. 访问 service 时如何 load balance 各个 tasks.
 
-  * mode.
+  * ``--network={NAME|host}`` NAME 为 overlay network name, 或者使用 host network.
+
+  * ``--publish={<published:target>|OPTIONS}``. OPTIONS can be:
+
+    - published.
+
+    - target.
+
+    - protocol.
+
+    - mode.
 
 - docker service ls. list services in swarm.
 
@@ -1474,7 +1497,26 @@ overview
   for a docker stack (in swarm mode) or a composed container set (in
   standalone mode).
 
+parameter substitution
+~~~~~~~~~~~~~~~~~~~~~~
 - compose file 内支持 shell parameter substitution syntax 使用环境变量的值.
+  这可用于将某些 flag 或量参数化. 避免每次修改都要该 compose file.
+
+支持的语法:
+
+- ``$var``
+
+- ``${var}``
+
+- ``${var:-default}``
+
+- ``${var-default}``
+
+- ``${var:?err}``
+
+- ``${var?err}``
+
+- ``$$``
 
 version info
 ------------
@@ -1516,6 +1558,9 @@ one of the either:
 注意: docker stack 只接受 pre-built images, 在 swarm mode 中不能使用 build
 option.
 
+service configs
+---------------
+
 cap_add, cap_drop
 ~~~~~~~~~~~~~~~~~
 注意 not usable in docker stack.
@@ -1526,35 +1571,30 @@ override ``CMD`` in dockerfile. string or list.
 
 configs
 ~~~~~~~
-- as a key in service definition:
-  a list of docker configs applied to this service.
+a list of docker configs applied to this service.
 
-  对于每个 config, 可以:
-  
-  * 使用 short syntax, 此时只需指定 config name as string.
+对于每个 config, 可以:
 
-  * 使用 long syntax, 此时每项是 mapping. 包含: source, target, uid, gid, mode.
+* 使用 short syntax, 此时只需指定 config name as string.
 
-- as top-level key:
-  declare docker configs. a mapping.
+* 使用 long syntax, 此时每项是 mapping. 包含: source, target, uid, gid, mode.
 
-  对每个 config:
-
-  * file. 配置源文件.
-
-  * external. 使用已经定义好的 docker config.
+secrets
+~~~~~~~
+a list of secret names, or a list of mappings with keys source, target, uid,
+gid, mode.
 
 cgroup_parent
 ~~~~~~~~~~~~~
-note: ignored in docker swarm.
+ignored in swarm mode.
 
 container_name
 ~~~~~~~~~~~~~~
-note: ignored in docker swarm.
+ignored in swarm mode.
 
 deploy
 ~~~~~~
-only usable in docker swarm. define docker service parameters.
+only usable in docker swarm, otherwise ignored. define docker service parameters.
 
 keys:
 
@@ -1586,7 +1626,230 @@ container labels.
 
 devices
 ~~~~~~~
+ignored in swarm mode.
 
+depends_on
+~~~~~~~~~~
+ignored in swarm mode.
+
+dns
+~~~
+a string or list.
+
+dns_search
+~~~~~~~~~~
+a string or list.
+
+tmpfs
+~~~~~
+ignored in swarm mode.
+
+entrypoint
+~~~~~~~~~~
+a string or list.
+
+env_file
+~~~~~~~~
+a string or list.
+
+environment
+~~~~~~~~~~~
+a mapping or list of ``key=val``.
+
+expose
+~~~~~~
+expose ports to other containers in the composed network.
+.. TODO why needed? all ports are available from beginning.
+
+external_links
+~~~~~~~~~~~~~~
+ignored in swarm mode.
+
+extra_hosts
+~~~~~~~~~~~
+a list of "<host>:<ip>" strings
+
+healthcheck
+~~~~~~~~~~~
+like HEALTHCHECK.
+
+image
+~~~~~
+image:tag or id.
+
+isolation
+~~~~~~~~~
+
+logging
+~~~~~~~
+keys:
+
+* driver.
+
+* options. a mapping.
+
+networks
+~~~~~~~~
+a list of networks. a network can be a string or a mapping of options.
+
+keys:
+
+- aliases. a list of strings.
+
+- ipv4_address, ipv6_address.
+
+pid
+~~~
+pid namespace.
+
+ports
+~~~~~
+a list of port mapping strings in form of ``docker run --publish`` option,
+or a list of mapping in form of ``docker service create --publish`` option.
+
+security_opt
+~~~~~~~~~~~~
+ignored in swarm mode.
+
+stop_grace_period
+~~~~~~~~~~~~~~~~~
+how long to wait for container stop before SIGKILL.
+``[<n><unit>]+``
+
+stop_signal
+~~~~~~~~~~~
+ignored in swarm mode.
+
+sysctls
+~~~~~~~
+kernel parameters to set in the container.
+ignored in swarm mode.
+
+ulimits
+~~~~~~~
+a mapping of ulimit keys and values.
+value can be a number or a mapping of soft and hard values.
+
+userns_mode
+~~~~~~~~~~~
+ignored in swarm mode.
+
+volumes
+~~~~~~~
+short syntax: a list of strings conforming to ``docker run --volume`` option
+syntax.
+
+long syntax: a list of mappings conforming to ``docker run --mount`` option
+syntax. 对于每种类型, 支持 bind, volume, tmpfs 三个 key 指定 type-specific
+options.
+
+restart
+~~~~~~~
+ignored in swarm mode.
+
+hostname
+~~~~~~~~
+
+ipc
+~~~
+ipc namespace
+
+mac_address
+~~~~~~~~~~~
+
+privileged
+~~~~~~~~~~
+boolean.
+
+read_only
+~~~~~~~~~
+boolean.
+
+shm_size
+~~~~~~~~
+
+stdin_open
+~~~~~~~~~~
+keep stdin open. like ``docker run --interactive``
+
+tty
+~~~
+boolean
+
+user
+~~~~
+like ``docker run --user``
+
+working_dir
+~~~~~~~~~~~
+
+
+docker config configs
+---------------------
+
+configs
+~~~~~~~
+declare docker configs. a mapping.
+
+对每个 config:
+
+* file. 配置源文件.
+
+* external. 使用已经定义好的 docker config.
+
+* name.
+
+docker secret configs
+---------------------
+
+secrets
+~~~~~~~
+
+similar to configs key.
+
+volume configs
+--------------
+
+volumes
+~~~~~~~
+
+volume mapping can be key-only. all options fallbacks to default.
+
+keys:
+
+* driver.
+
+* driver_opts.
+
+* external.
+
+* labels.
+
+* name.
+
+network configs
+---------------
+
+networks
+~~~~~~~~
+
+keys:
+
+* driver.
+
+* driver_opts.
+
+* attachable.
+
+* ipam.
+
+* internal.
+
+* labels.
+
+* external.
+
+* name.
 
 swarm
 =====
@@ -2074,6 +2337,3 @@ mysql
   Files will be executed in alphabetical order. 这可以用于与应用相关的初始化
   配置, 以及数据恢复. SQL files will be imported by default to the database
   specified by the MYSQL_DATABASE variable.
-
-misc
-====
