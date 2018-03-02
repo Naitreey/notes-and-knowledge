@@ -359,6 +359,15 @@ concepts and best practices
   alphanumerically.  This helps you avoid duplication of arguments and make the
   list much easier to update.
 
+- 当一个项目中需要构建多个相互关联的镜像时, 各自的 dockerfile 中可能存在很多完全
+  相同的部分. 那么如何避免重复, 提高重用性? 由于目前 dockerfile 还不支持 INCLUDE
+  instruction, 可以尝试以下几个解决办法:
+
+  * 重用镜像: 使用 multi-stage build 和 intermediate image, 来封装需要重用的部分.
+
+  * 使用 cpp/m4 等 macro processor 将模块化的 dockerfile snippets 拼成一个
+    dockerfile.
+
 format
 ------
 .. code:: dockerfile
@@ -1311,6 +1320,10 @@ service
     - protocol.
 
     - mode.
+
+  * ``--hostname``.
+    
+  对于 ``--hostname``, ``--mount``, ``--env`` 支持参数化 template.
 
 - docker service ls. list services in swarm.
 
@@ -2300,17 +2313,40 @@ nginx
 rabbitmq
 --------
 
-主要镜像分类:
+* 主要镜像分类:
 
-- ``rabbitmq:<version>``
+  - ``rabbitmq:<version>``
+  
+    based on debian slim images. defacto images.
+  
+  - ``rabbitmq:*management*``
+  
+    ditto, with management plugin.
+  
+  - ``rabbitmq:*alpine*``
 
-  based on debian slim images. defacto images.
+- 注意需要设置容器 hostname, 因为 rabbitmq stores data based on what it calls the
+  "Node Name", which defaults to the hostname.
 
-- ``rabbitmq:*management*``
+- ``/var/lib/rabbitmq`` 默认是一个 volume.
 
-  ditto, with management plugin.
+- environs:
 
-- ``rabbitmq:*alpine*``
+  * RABBITMQ_VM_MEMORY_HIGH_WATERMARK
+
+  * RABBITMQ_ERLANG_COOKIE
+
+  * RABBITMQ_NODENAME
+
+  * RABBITMQ_DEFAULT_VHOST
+
+  * RABBITMQ_DEFAULT_USER 
+    
+  * RABBITMQ_DEFAULT_PASS
+
+  * RABBITMQ_HIPE_COMPILE
+
+  * RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS
 
 mysql
 -----
@@ -2360,3 +2396,5 @@ mysql
   Files will be executed in alphabetical order. 这可以用于与应用相关的初始化
   配置, 以及数据恢复. SQL files will be imported by default to the database
   specified by the MYSQL_DATABASE variable.
+
+- volume: /var/lib/mysql
