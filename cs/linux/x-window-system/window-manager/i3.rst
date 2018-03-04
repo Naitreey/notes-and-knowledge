@@ -1,34 +1,13 @@
-tiling window manager
-=====================
-- a tiling window manager is a window manager with an organization of the
-  screen into mutually non-overlapping frames, as opposed to the more popular
-  approach of coordinate-based stacking of overlapping objects (windows) that
-  tries to fully emulate the desktop metaphor.
-
-- popular tiling window managers: awesome wm, i3, i3-gaps, xmonad.
-
 i3 wm
 =====
 - i3 is a tiling window manager.
 
-questions
----------
+installation
+------------
 
-- prevent kdewallet popup
-
-- adjust color of status bar elements.
-
-- make i3bar beautiful. like they are on REDDIT.
-
-- volume on status bar.
-  volume control on status bar or just a value display?
-  maybe scroll on status bar to adjust volume?
-
-- goto the specified window, swap the specified windows, EASILY.
-
-- consider change titlebar, border, and indicator color. or hide some of them.
-  consider match those colors with gtk or kde theme colors.
-  consider even install some other more exotic gtk/kde theme and icon theme.
+- i3 package group. choose i3-wm or i3-gaps. 两者都提供 i3.desktop,
+  i3-with-shmlog.desktop 两个 Xsession file, 供 display manager 选择
+  session 使用.
 
 concepts
 --------
@@ -103,6 +82,7 @@ configurations
 - backslash ``\`` indicates line continuation.
 
 - font can be specified as comma separated list with font size at the end.
+  Fonts in the list defines a fallback sequence.
 
 - Config file supports defining variables. Variables are directly replaced in
   the file when parsing. Variables expansion is not recursive so it is not
