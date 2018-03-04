@@ -409,3 +409,12 @@
   that the other end is capable of doing the more advanced operation; CPU
   starts off in real mode then gets switched to protected mode or long mode
   when firmware (needs and) finds that CPU is capable of advanced modes.
+
+- 如何优化递归算法, 防止 stack overflow:
+
+  * 使用 tail recursion. 注意前提是解释器、编译器等本身可以识别和优化 tail recursion.
+
+  * 通过 recursion counter 来检测递归层数, 避免 overflow or OOM. 很多语言自己就有
+    recursion level limit, 所以这个不一定需要.
+
+  * Use right algorithm for right problem. In many times, iteration solutions are better.
