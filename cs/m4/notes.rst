@@ -1,7 +1,7 @@
 overview
 ========
 
-- m4 is a macro language and a filter program.
+- m4 is a macro/template language and a filter program.
 
 - typical usage:
 
@@ -11,13 +11,23 @@ overview
 
   * SELinux
 
+- **NOTE**: m4 在功能上与 python 的 jinja2 等 template language 是类似的.
+  在可能的情况下, 尽可能选择使用 jinja2 而不是 m4 这种语法极其晦涩的工具.
+
+  其实从这里我们可以看出, 如今 m4 的处境实际上和 awk/sed 之类的工具有些
+  类似. 如果我们只是想快速地解决某些文本处理工作, 或者是主要和 shell 结合
+  使用, 则 awk/sed 是很合适的; 但凡是其他情况, 使用 python 来处理都是更加
+  合适的选择. m4 也是如此, 如果是快速地解决某些 macro/template 相关的问题,
+  或是和 shell 结合使用, m4 很合适; 但其他情况下, python/jinja2 组合都会
+  是更合适的选择.
+
 syntax
 ======
 
 parentheses
 -----------
 
-- ``(), [], {}`` 等本身在 m4 中是语法元素, 若要作为文本使用, 应该 quoted.
+- ``(), [], {}`` 等若要作为文本使用, 应该 quoted, 避免出错.
 
 whitespace handling
 -------------------
@@ -170,9 +180,8 @@ buitlin macros
         `reverse',
         `ifelse($#, 0, ``$0'', $1, , , `reverse(substr($1, 1))`'substr($1, 0, 1)')')dnl
 
-- 所有 builtin macros 支持 ``m4_`` prefix 另外形式.  这用于避免 macros
-  和输入文字冲突, 进行了不该进行的 macro expansion. 注意若开启了 ``-P`` flag,
-  普通的不含 prefix 的形式将不再识别.
+- 所有 builtin macros 可通过 ``-P`` flag 转换成 ``m4_`` prefix 的另外形式.
+  这用于避免 macros 和输入文字冲突, 进行了不该进行的 macro expansion.
 
 macro definition
 ----------------
