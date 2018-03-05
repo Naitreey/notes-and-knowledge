@@ -418,3 +418,7 @@
     recursion level limit, 所以这个不一定需要.
 
   * Use right algorithm for right problem. In many times, iteration solutions are better.
+
+- 代码文档、设计文档一定要保存在源代码仓库或者单独的文档仓库中, 或者是 wiki 形式
+  保存, 并随着代码及时更新. 决不能把所有详细信息放在 issue 中, 然后一个 close 就
+  淹没在了历史中, 变得难以查询和关联.
