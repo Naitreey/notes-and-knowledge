@@ -365,8 +365,8 @@ concepts and best practices
 
   * 重用镜像: 使用 multi-stage build 和 intermediate image, 来封装需要重用的部分.
 
-  * 使用 cpp/m4 等 macro processor 将模块化的 dockerfile snippets 拼成一个
-    dockerfile.
+  * 使用 m4/jinja2 等 macro/template processor 将模块化的 dockerfile snippets
+    拼成一个 dockerfile.
 
 format
 ------
