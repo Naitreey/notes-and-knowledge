@@ -1,4 +1,4 @@
-# Design pattern for shell script
+# Design pattern
 * 将要实现的功能分类, 提炼出功能模块.
 * 从各种要实现的功能中抽象出一般化的辅助组件.
 * 将各个功能模块分别在独立的脚本中实现.
@@ -113,21 +113,37 @@
 
 # Notes
 
-- PS0: Expanded and displayed by interactive shells after
-       reading a complete command but before executing it.
-  PS1: normal prompt.
-  PS2: line continuation prompt.
-  PS3: prompt for `select`.
-  PS4: prompt for debug output.
+-   PS0: Expanded and displayed by interactive shells after
+         reading a complete command but before executing it.
+    PS1: normal prompt.
+    PS2: line continuation prompt.
+    PS3: prompt for `select`.
+    PS4: prompt for debug output.
+    
+-   在 double quote 内部以及在赋值右端, 不会进行 word splitting. 因此字符串会 verbatim
+    保存下来. 没有任何 $IFS 相关的转换等. 例如多行 (包含 newline) 仍是多行.
+    
+-   必须要明确, 在 shell 中, 所有内容本身就是字符串, 不同的 quoting 本质上都是为了附加
+    别的作用的 (而不是表示 XXX 是字符串).
+    
+-   在 double quoting 中, 只有 $, `, \, !, 字符有特殊含义. 注意没有 ', 所以 $'\n' 形式的
+    ANSI-C quoting 不能在 double quoting 中使用.
 
-- 在 double quote 内部以及在赋值右端, 不会进行 word splitting. 因此字符串会 verbatim
-  保存下来. 没有任何 $IFS 相关的转换等. 例如多行 (包含 newline) 仍是多行.
+-   command grouping: `()` vs `{}`, 各自在什么时候使用?
 
-- 必须要明确, 在 shell 中, 所有内容本身就是字符串, 不同的 quoting 本质上都是为了附加
-  别的作用的 (而不是表示 XXX 是字符串).
+    *   `()` 和 `{}` 都是 command grouping. 即将多个 command list 组成一个整体去执行.
+        这个整体相当于一个 simple command.
 
-- 在 double quoting 中, 只有 $, `, \, !, 字符有特殊含义. 注意没有 ', 所以 $'\n' 形式的
-  ANSI-C quoting 不能在 double quoting 中使用.
+    *   `(cmdlist)` 中的命令在 subshell environment 中执行. 即 bash 会 fork 一个 subshell 去执行
+        里面的命令. 因此 subshell 中的 side effects 不会影响当前 shell 环境. 因此这适用于
+        需要执行一些操作, 但不想影响、不想手动恢复当前 shell 环境的时候. 比如, cd dir 执行
+        一个命令然后再回来.
+
+    *   `{ cmdlist; }` 中的命令在当前 shell environment 中执行. 因此 side effects 影响当前
+        shell 环境. 注意两侧的空格和 `;` 或者 newline 是必须的. This is historical.
+
+    *   两者都可以在定义函数时使用. (函数不过是给一个 command group 加了一个名字) 相应函数
+        在执行时具有上述各自的特点.
 
 ## shell 初始化文件的执行流程
 
