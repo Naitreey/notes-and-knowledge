@@ -650,6 +650,7 @@ Output
 
 API
 ===
+
 python
 ------
 
@@ -701,3 +702,7 @@ python
 - ``salt.client.ssh.client.SSHClient``
 
   * 对应 ``salt-ssh``
+
+netapi
+------
+- 提供 REST API 方式访问 salt.
