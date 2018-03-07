@@ -111,7 +111,21 @@ Execution
   对于 keyword args 使用 ``key=value`` 形式作为命令行参数.
   对于 list 和 dict 类型参数, 直接写 json 在命令行上.
 
-- Execution functions.
+- Execution functions vs State functions
+
+  Salt state functions are designed to make only the changes necessary to apply
+  a configuration, and to not make changes otherwise. Salt execution functions
+  run each time they are called, which may or may not result in system changes.
+
+以下是各种 execution module and functions.
+
+service
+-------
+a virtual module that is fulfilled by a concrete module depending on environment.
+
+available
+~~~~~~~~~
+
 
   * ``state.apply``
 
@@ -148,13 +162,6 @@ Execution
 
   * ``saltutil.sync_all`` 同步各种 custom modules 至 minion.
 
-  * ``service.available``
-
-- Execution functions vs State functions
-
-  Salt state functions are designed to make only the changes necessary to apply
-  a configuration, and to not make changes otherwise. Salt execution functions
-  run each time they are called, which may or may not result in system changes.
 
 State
 =====
@@ -706,3 +713,219 @@ python
 netapi
 ------
 - 提供 REST API 方式访问 salt.
+
+rest cherrypy
+~~~~~~~~~~~~~
+
+- installation. 安装 salt-api 时自动作为依赖安装了 cherrypy.
+
+- SSL 配置.
+
+  * generate self-signed certificate.
+
+  * edit master config to create external auth user/group with proper
+    permissions.
+
+  * edit master config for ``rest_cherrypy`` module, with appropriate
+    configurations.
+
+  * restart salt-master.
+
+- salt-api cherrypy server configurations. see salt doc.
+
+- authentication.
+  首先通过 ``/login`` endpoint 认证, 获得 session. session 通过一个
+  session token 维持, session token 同时出现在 login response 的 json body
+  和 response ``Set-Cookie`` header 中. 在后续的请求中, session token
+  可以通过 ``Cookie`` header 传递或者手动添加一个 ``X-Auth-Token`` 来传递.
+
+- request/response format.
+
+  * request body 包含要执行的 salt 操作. 其抽象形式是 an array of commands. A
+    command is mapping of the following fields:
+
+    - ``client``. a client interface. main Python classes in Python API.
+
+    - ``fun``. a function.
+
+    - remaining parameters for the function.
+
+    具体的 request body 可以是以上数据结构的 JSON, YAML, urlencoded 形式.
+    只需设置相应的 Content-Type 即可.
+
+  * response body 为操作结果. 抽象形式如下::
+
+    {
+        "return": [
+            //command-1-result
+            //command-2-result
+            ...
+        ]
+    }
+
+  * request/response 的实际形式可分别通过 ``Content-Type`` & ``Accept``
+    headers 指定. 支持 JSON, YAML, urlencoded.
+
+- url endpoints.
+
+  * /. primary endpoint.
+
+    - GET. return available clients.
+
+    - POST. salt primary operations.
+
+  * /login.
+
+    - GET. basic message, boring.
+
+    - POST. authenticate. return session token, permissions, etc.
+
+  * /logout.
+
+    - POST. logout, destroy session.
+
+  * /minions[/<minion-id>].
+
+    - GET. getting a list of minions and their grains, etc.
+
+    - POST. Start an execution command and immediately return the job id.
+
+  * /jobs[/<jid>].
+
+    - GET. List jobs or show a single job from the job cache.
+
+  * /run.
+
+    - POST. Run commands bypassing the normal session handling Other than that
+      this URL is identical to /.
+
+      This endpoint accepts either a username, password, eauth trio, or a token
+      kwarg and does not make use of sessions at all.
+
+  * /events.
+    
+    - GET. access to Salt master event bus in http stream.
+
+  * /hook.
+    
+    - POST. fire event on salt's event bus.
+
+  * /keys[/<minion-id].
+
+    - GET. List all keys or show a specific key.
+
+    - POST. Generate a public and private key for minion and return both as a
+      tarball.
+
+  * /ws.
+
+    - GET. Open a WebSocket connection to Salt's event bus.
+
+  * /stats.
+
+    - GET. statistics on cherrypy server.
+
+pepper client module
+~~~~~~~~~~~~~~~~~~~~
+- use ``libpepper`` in python for remote salt access.
+
+- use ``pepper`` CLI script to execute salt commands at remote command line
+  as if the specified command was run locally.
+
+access control
+==============
+access control system includes the peer system, the external auth system and
+the publisher acl system.
+
+general syntax
+--------------
+这三个系统的配置, 在 master config file 中, 在指定权限时, 具有相同的语法.
+某个用户或实体的权限形式如下::
+
+  - <function-pattern>
+  ...
+  - <target-pattern>:
+      - <function-pattern>
+      - <function-pattern>:
+          args:
+            - <arg1-pattern>
+            ...
+          kwargs:
+            kw1: <kw1-pattern>
+            ...
+      ...
+
+- 若 list element 是字符串则是 function pattern.
+  此时, 对所有 minion 赋权限, 可以执行匹配的 functions.
+
+- 若 list element 是 mapping, 则是对具体的某些 minion 赋权限. 其下
+  是 a list of 可执行的 function patterns.
+
+- function pattern 可以进一步限制允许的参数情况. If an kwarg isn't specified
+  any value is allowed. To skip an positional arg use "everything" regexp ``.*``.
+
+- all patterns can be specified by exact match, shell glob or regular
+  expression.
+
+- 对于允许在 master 上执行的 wheel, runner, jobs modules, 必须使用::
+    - '@wheel'
+    - '@runner'
+    - '@jobs'
+  globs does not work on this.
+
+publisher acl system
+--------------------
+``publisher_acl`` is useful for allowing local system users to run Salt
+commands without giving them root access.
+
+publisher acl 还支持 whitelist/blacklist.
+
+为了让 non-root user 可以确实执行命令, 访问所需的目录等, 需要修改 salt
+各目录的 unix permissions::
+
+  chmod 755 /var/cache/salt \
+            /var/cache/salt/master \
+            /var/cache/salt/master/jobs \
+            /var/run/salt \
+            /var/run/salt/master \
+            /var/log/salt
+
+configuration
+~~~~~~~~~~~~~
+``publisher_acl`` key in master config file.
+
+其值是 a mapping from username patterns to permissions.
+username patterns can be exact match, shell glob, regex, 与 unix username
+匹配.
+
+external authentication
+-----------------------
+``external_auth`` is useful for salt-api or for making your own scripts that
+use Salt's Python API.
+
+目前 eauth 支持 PAM 和 LDAP.
+
+configuration
+~~~~~~~~~~~~~
+``external_auth`` key in master config file. 结构如下::
+
+  <eauth-backend>:
+    <user>|<group>%:
+      <permissions>
+
+usage
+~~~~~
+- CLI::
+
+    salt -a <eauth> ...
+
+  * generate a token to avoid re-auth each time::
+
+      salt -T -a <eauth> ...
+
+    Now a token will be created that has an expiration of 12 hours (by
+    default). This token is stored in a file named salt_token in the active
+    user's home directory.
+    Once the token is created, it is sent with all subsequent communications.
+    User authentication does not need to be entered again until the token
+    expires.
