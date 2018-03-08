@@ -1,0 +1,1 @@
+- context manager, fileobj, when file is closed?
