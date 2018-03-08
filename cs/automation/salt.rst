@@ -126,6 +126,27 @@ a virtual module that is fulfilled by a concrete module depending on environment
 available
 ~~~~~~~~~
 
+restart
+~~~~~~~
+
+file
+----
+
+write
+~~~~~
+
+rename
+~~~~~~
+
+remove
+~~~~~~
+if path is directory, it will be recursively deleted.
+
+archive
+-------
+
+
+
 
   * ``state.apply``
 
@@ -496,12 +517,6 @@ cloud privder, 所以只能手动做.
 
 对于第二种方式, 有 docker-ng state module.
 
-Configuration
-=============
-
-- 不同方面的配置项应放在 ``master.d`` 或 ``minion.d`` 中的单独文件中.
-  而不该直接修改 ``master`` ``minion`` 配置文件.
-
 Salt SSH
 ========
 
@@ -624,6 +639,9 @@ Internals
 
 Configuration
 =============
+
+- 不同方面的配置项应放在 ``master.d`` 或 ``minion.d`` 中的单独文件中.
+  而不该直接修改 ``master`` ``minion`` 配置文件.
 
 minion
 ------
