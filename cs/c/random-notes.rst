@@ -200,6 +200,24 @@
 - struct, union, enum 等定义都是 compiler construct, 编译完就没了, 它们在运行时不存在,
   所以没有 scope 概念, 不受 scope 对变量作用域的限制等.
 
+- conversion from signed to unsigned: ``x % 2^N``, where N is type bit width.
+
+- uniary operator ``-`` 作用在 unsigned number ``x`` 上的效果是 ``2^N - x``.
+
+- ``INT_MIN`` 的绝对值. 由于
+
+  1. abs 的 signature 是 ``int abs(int)``, 即返回值仍是 int.
+ 
+  2. two's complement 数字系统可表达的数字范围是 ``[-2^(N-1), 2^(N-1) -1 ]``,
+     故 ``abs(INT_MIN)`` is undefined.
+
+  所以不能通过 ``abs()`` 可靠地计算 int 范围所有数字的绝对值. 更可靠的实现可以
+  通过 typecast 至 unsigned 来解决
+  .. code:: cpp
+    unsigned int abs(int n) {
+        return n < 0 ? -((unsigned int)(n)) : (unsigned int)(n);
+    }
+
 - scope, linkage, storage duration
 
   * Scope
