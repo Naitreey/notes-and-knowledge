@@ -1,0 +1,109 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 10.0' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       158,          7]
+NotebookDataLength[      3174,        101]
+NotebookOptionsPosition[      2777,         85]
+NotebookOutlinePosition[      3114,        100]
+CellTagsIndexPosition[      3071,         97]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell[BoxData[
+ RowBox[{"Graphics3D", "@", 
+  RowBox[{"Sphere", "[", 
+   RowBox[{
+    RowBox[{"Thread", "[", 
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"Range", "[", 
+        RowBox[{"1", ",", "16", ",", "2"}], "]"}], ",", "0", ",", 
+       RowBox[{"(", 
+        RowBox[{"rS", "=", 
+         RowBox[{
+          RowBox[{"(", 
+           RowBox[{"r", "=", 
+            RowBox[{"PlanetData", "[", 
+             RowBox[{
+              RowBox[{"PlanetData", "[", "]"}], ",", "\"\<Radius\>\""}], 
+             "]"}]}], ")"}], "/", 
+          RowBox[{"Max", "[", "r", "]"}]}]}], ")"}]}], "}"}], "]"}], ",", 
+    "rS"}], "]"}]}]], "Input",
+ CellChangeTimes->{{3.6233683863518343`*^9, 3.6233684170682187`*^9}, {
+  3.623368448361988*^9, 3.6233684594138627`*^9}, {3.6233686372049227`*^9, 
+  3.623368675481326*^9}, {3.623368713686681*^9, 3.6233688040516543`*^9}, {
+  3.623368875027996*^9, 3.6233688793178425`*^9}, {3.623368997824196*^9, 
+  3.623369000643592*^9}, {3.623369094472864*^9, 
+  3.623369106801045*^9}},ExpressionUUID->"fe789ff0-32ff-43a1-ad8e-\
+f7c69be8a835"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"p", "=", "PlanetData"}], ";", 
+  RowBox[{"Grid", "@", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"MapIndexed", "[", 
+      RowBox[{
+       RowBox[{
+        RowBox[{"Magnify", "[", 
+         RowBox[{"#1", ",", 
+          RowBox[{
+           RowBox[{"(", 
+            RowBox[{
+             RowBox[{"(", 
+              RowBox[{"r", "=", 
+               RowBox[{"p", "[", 
+                RowBox[{
+                 RowBox[{"p", "[", "]"}], ",", "\"\<Radius\>\""}], "]"}]}], 
+              ")"}], "/", 
+             RowBox[{"Max", "[", "r", "]"}]}], ")"}], "[", 
+           RowBox[{"[", 
+            RowBox[{"#2", "[", 
+             RowBox[{"[", "1", "]"}], "]"}], "]"}], "]"}]}], "]"}], "&"}], 
+       ",", 
+       RowBox[{"p", "[", 
+        RowBox[{
+         RowBox[{"p", "[", "]"}], ",", "\"\<TexturedSurface\>\""}], "]"}]}], 
+      "]"}], ",", 
+     RowBox[{
+      RowBox[{"p", "[", "]"}], "[", 
+      RowBox[{"[", 
+       RowBox[{"All", ",", "2"}], "]"}], "]"}]}], "}"}]}]}]], "Input",
+ CellChangeTimes->{{3.6233745177024837`*^9, 
+  3.623374517704486*^9}},ExpressionUUID->"e5dd680a-ae26-4584-9ff3-\
+ad1ab6a9162b"]
+},
+WindowSize->{1366, 725},
+WindowMargins->{{827, Automatic}, {Automatic, 10}},
+FrontEndVersion->"11.1 for Linux x86 (64-bit) (April 18, 2017)",
+StyleDefinitions->"Default.nb"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[558, 20, 1063, 26, 34, "Input", "ExpressionUUID" -> \
+"fe789ff0-32ff-43a1-ad8e-f7c69be8a835"],
+Cell[1624, 48, 1149, 35, 57, "Input", "ExpressionUUID" -> \
+"e5dd680a-ae26-4584-9ff3-ad1ab6a9162b"]
+}
+]
+*)
+
