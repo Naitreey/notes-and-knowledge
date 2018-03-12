@@ -16,3 +16,17 @@ sddm.
 
 若不是通过 display manager 而是通过 CLI (startx/initx) 启动, 需要在 xinitrc
 中手动添加 source 这些文件.
+
+xinitrc
+=======
+
+Xresources
+==========
+- ``~/.Xresources`` is used to set custom X resources at login, by display
+  managers.
+
+- default settings: ``/usr/share/X11/app-defaults``
+
+Xdefaults
+=========
+obsolete.
