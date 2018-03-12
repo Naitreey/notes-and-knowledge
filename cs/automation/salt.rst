@@ -123,27 +123,33 @@ service
 -------
 a virtual module that is fulfilled by a concrete module depending on environment.
 
-available
-~~~~~~~~~
+- service.available
 
-restart
-~~~~~~~
+- service.restart
 
 file
 ----
 
-write
-~~~~~
+- file.write
 
-rename
-~~~~~~
+- file.rename
 
-remove
-~~~~~~
+- file.remove
 if path is directory, it will be recursively deleted.
+
+- file.stats
+
+- file.read
 
 archive
 -------
+
+minion
+------
+
+- minion.list
+
+
 
 
 
