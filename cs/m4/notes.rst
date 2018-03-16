@@ -447,12 +447,13 @@ syscmd
 ::
   syscmd(...)
 
-output of syscmd is not interpreted.
+The expansion of syscmd is void, not the output from shell-command! Output or
+error messages from shell-command are not read by m4.
 
 esyscmd
 ~~~~~~~
 
-output of esyscmd is executed.
+Expands to the standard output of the shell command shell-command.
 
 sysval
 ~~~~~~
