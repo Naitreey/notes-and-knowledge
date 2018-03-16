@@ -145,6 +145,11 @@
     *   两者都可以在定义函数时使用. (函数不过是给一个 command group 加了一个名字) 相应函数
         在执行时具有上述各自的特点.
 
+-   在 bash 中, `$0` 始终是 name of shell or shell script. 对于 interactive
+    login shell, `$0` 会以 `-` prefix. 
+
+    注意即使在函数中, `$0` 也不会重命名为函数名, 仍然是初始值.
+
 ## shell 初始化文件的执行流程
 
 * bash 初始化文件的执行.
