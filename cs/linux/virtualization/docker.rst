@@ -1502,6 +1502,19 @@ docker-compose vs docker-swarm. 两者的适用场景不同, 并不存在取代�
 docker-compose is needed to manage multiple containers as a service outside of
 swarm mode, on a single docker engine.
 
+同一个 compose file 在通过 docker-compose 和 docke stack deploy 使用时,
+在效果上具有一些不同之处. 但绝大部分参数具有共同之处.
+
+networking
+----------
+- By default Compose sets up a single network for your app. Each container for
+  a service joins the default network and is both reachable by other containers
+  on that network, and discoverable by them at a hostname identical to the
+  container name.
+
+- 可以通过 service-level 的 ``networks`` key 以及 top-level ``networks`` key
+  自定义每个服务要连接到的网络. compose 默认创建的那个网络叫做 ``default``.
+
 compose file
 ============
 
@@ -1703,7 +1716,7 @@ ignored in swarm mode.
 
 extra_hosts
 ~~~~~~~~~~~
-a list of "<host>:<ip>" strings
+a list of "<host>:<ip>" strings added to /etc/hosts
 
 healthcheck
 ~~~~~~~~~~~
