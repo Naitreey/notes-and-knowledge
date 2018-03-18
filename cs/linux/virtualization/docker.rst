@@ -909,8 +909,17 @@ Multiple containers can use the same volume in the same time period. This is
 useful if two containers need access to shared data. For example, if one
 container writes and the other reads the data.
 
-By default, when a container stops or is removed, the volume still exists.
-Volumes are only removed when you explicitly remove them.
+在非 swarm mode 时, when a container stops or is removed, the volume still exists.
+Volumes are only removed when you explicitly remove them. 对于同一个容器, 重新
+启动后仍然使用原来的容器.
+
+在 swarm mode, 由于 container 不是持久的, 只有 service 和 task 数目是持久的,
+一般重启服务面临着 re-deploy 相应的 tasks. 若容器的 volume 是 anonymous 的,
+就会被删除, 创建新的.
+
+在 docker-compose 中, 重新部署一个 service 同样包含 destroy/re-create 容器.
+原有的 volume 若是 anonymous, 不会被删除, 但重新创建容器时会新建 anonymous
+volume. 原来不被使用.
 
 copy
 ~~~~

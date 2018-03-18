@@ -54,9 +54,6 @@ Overview
 
   * Replication 带来的 HA.
 
-- 分布式存储一般用于存储非常大量的 binary data, 例如虚拟机镜像, 图片, 任意类型的
-  文件 (Dropbox). 它与分布式数据库或搜索引擎的用处是不同的.
-
 - Object Storage Device 在 iSCSI 协议中有定义. SCSI command set 中有定义.
 
 Deployment
@@ -546,9 +543,11 @@ Ceph Storage Cluster, where each object gets mapped to a placement group and
 distributed, and the placement groups are spread across separate ceph-osd
 daemons throughout the cluster.
 
-RBD image 是不能分布式访问的. 只能用在一个 client 上. Ceph stripes a
-block device across the cluster for high throughput (read/write) and
-replication.
+RBD image 是不能同时从多个客户端修改的. 某个 client 对一个 block image 的修改,
+不会在其他 client 处同时可见.
+
+Ceph stripes a block device across the cluster for high throughput (read/write)
+and replication.
 
 需要 RBD 这种功能是因为, thin-provisioned snapshottable Ceph Block Devices are
 an attractive option for virtualization and cloud computing.
