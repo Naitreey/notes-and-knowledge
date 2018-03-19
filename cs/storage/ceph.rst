@@ -29,14 +29,14 @@ Questions
 
 - what are bootstrap-... keyrings?
 
-- data striping.
-
 - how to: multiple mds, one active, other standby.
 
 - cephfs non-root read/write.
   目前知道可以 chown 来让 non-root 读写. 不知是否最优.
   一个 cephfs 在各个客户端使用时, 必须使用相同的用户或相同的组. 即需要保证
   所要使用的用户都有 POSIX 形式的读写权限. 甚至是 chmod 0777.
+
+- how to synchronize configs among cluster nodes?
 
 Overview
 ========
@@ -760,6 +760,26 @@ operations.
 - adjust tunable profile: ``ceph osd crush tunables {profile}``.
 
 - show current tunable values: ``ceph osd crush show-tunables``.
+
+API: librados
+-------------
+- librados 是底层的 ceph client library. 它实现了 Ceph Storage Cluster Protocol.
+  librbd & libcephfs 都基于这个库实现自己的功能.
+
+- 提供 C, C++, Python, Java bindings.
+
+- operation logics: see architecture for details. In short:
+
+  * connect to a Ceph Monitor, then retrieve Cluster Map automatically.
+
+  * create I/O context and bind to a pool.
+
+  * application provides object name to librados library, who then computes
+    placement group and OSDs based on object name and Cluster Map.
+
+python API
+~~~~~~~~~~
+- module: rados. install: python-rados, python3-rados
 
 CephFS
 ======
