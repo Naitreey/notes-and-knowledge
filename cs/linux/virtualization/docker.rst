@@ -919,7 +919,7 @@ Volumes are only removed when you explicitly remove them. 对于同一个容器,
 
 在 docker-compose 中, 重新部署一个 service 同样包含 destroy/re-create 容器.
 原有的 volume 若是 anonymous, 不会被删除, 但重新创建容器时会新建 anonymous
-volume. 原来不被使用.
+volume. 原来 anonymous volume 里的数据会迁移至新的 anonymous volume.
 
 copy
 ~~~~
