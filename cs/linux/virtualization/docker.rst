@@ -1275,6 +1275,9 @@ stack
 
   * ``--compose-file``
 
+  * ``--with-registry-auth``. 必须设置该 flag 才能让所有 worker
+    从 private registry 下载镜像.
+
 - docker stack rm.
 
 - docker stack ls. list stacks in swarm.
