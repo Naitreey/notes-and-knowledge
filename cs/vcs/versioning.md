@@ -2,42 +2,45 @@
 
 基于 semantic versioning.
 
-## 版本号的格式
+## 考虑
+version must be pre-defined before build, before we are sure
+app is ready for production. Therefore,
+-   cannot rely on git tag. tag is made only when app is ready.
+-   cannot be absolutely auto-generated. it must be able to
+    contain `major.minor.patch` info, not just branch and hash.
 
--   研发和测试阶段的版本号, 即非发行版:
-    ```sh
-    dev.<branch>+<build>[.dirty]
-    ```
-    其中,
-    *   `<branch>` 为功能分支;
-    *   `<build>` 为 commit hash 的前 10 位;
-    *   `.dirty` 指的是程序代码存在未提交修改.
--   正式发布阶段的版本号, 即发行版:
-    ```sh
-    <major>.<minor>.<patch>
-    ```
-    其中, major, minor, patch 都是非负整数.
-    *   `<patch>` 在程序引入 backwards compatible bug fixes 时递增, 注意
-        此时不该引入新功能.
-    *   `<minor>` 在程序引入 new, backwards compatible functionality 时递增.
-        minor version 递增时, patch level 须重置为 0.
-    *   `<major>` 在程序引入 backward-incompatible changes 时递增.
-        major version 递增时, minor & patch level 须重置为 0.
--   某个版本在正式发布之前, 若需要进行整体测试, 内测, 回归测试等, 使用
-    预发布版本:
-    ```sh
-    <major>.<minor>.<patch>-(alpha[.<N>]|beta[.<N>])
-    ```
+## 版本号的格式
+```sh
+<major>.<minor>.<patch>[-dev+<branch>.<build>][.dirty]
+```
+
+其中,
+*   `<patch>` 在程序引入 backwards compatible bug fixes 时递增, 注意
+    此时不该引入新功能.
+*   `<minor>` 在程序引入 new, backwards compatible functionality 时递增.
+    minor version 递增时, patch level 须重置为 0.
+*   `<major>` 在程序引入 backward-incompatible changes 时递增.
+    major version 递增时, minor & patch level 须重置为 0.
+*   major, minor, patch 都是非负整数.
+*   `.dirty` 指的是程序代码存在未提交修改.
+
+对于研发阶段, 存在 `-dev` 部分, 其中,
+*   `<branch>` 为功能分支;
+*   `<build>` 为 commit hash 的前 10 位;
 
 ## 版本号的生成
 
--   当 HEAD 没有 tag 时, 认为是研发或测试阶段. 此时根据环境自动生成版本号.
--   当 HEAD 有 tag 时, 直接使用 tag 作为版本号.
+-   确定新版本时, 给相应 commit 打 tag.
+-   每次发布一个版本后, 开始新版本开发. 设置 major, minor 为新版本号,
+    patch 重置 0, extra version 设置 `dev`.
+-   在一个版本结束开发, 进入回归测试阶段时, 去掉 extra version number.
 
 ## 版本号的保存
 
--   在 source repository 中使用时, 版本号不保存或临时保存.
--   生成安装包时, 版本号保存在配置文件中.
+major, minor, patch, extra 等版本号保存在单独的配置文件或代码文件中.
+与版本号生成逻辑配合使用.
+
+根据软件使用情况不同, 版本号字符串可以预先生成, 也可以 runtime 再生成.
 
 ## 说明
 

@@ -1,3 +1,5 @@
+GFW
+===
 - 使用的工具:
 
   * LEDE (OpenWRT)
@@ -32,3 +34,25 @@
   经过 ss 服务器转发. (ss 可能不能直接转发 udp 的 dns 请求, 因为
   一些 ss 提供商不允许 udp 转发.) 为能够将向 8.8.8.8 的 tcp dns 请求
   经过 ss-redir, 须首先在 ipset 中添加 8.8.8.8 ip.
+
+anonymity online
+================
+- test: whoer.net
+  .. FIXME
+  (how did it know my DNS?)
+
+settings
+--------
+- disable WebRTC. webrtc leaks your real IP address.
+
+- incognito mode
+
+- set "Send Do not track request" in chrome settings.
+
+- browser language settings
+
+- proxy all your traffic through proxy server.
+
+- ensure all DNS requests are proxyed as well.
+
+- system timezone should match your masked IP.
