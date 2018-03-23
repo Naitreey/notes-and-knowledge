@@ -74,42 +74,6 @@
   没有普遍适用的方案, 不是说大家都这样做, 你也就应该这么做. 你必须权衡, 考虑,
   从多种方法中选择一个, 更合适的.
 
-- About logging.
-
-  * 对于长期运行的进程, 该怎么记日志?
-
-    如果你能访问 production system, 并且能够实时 debug, 那就只在开发时记日志, 这些日志
-    只是便于开发; 放到生产系统之后, 则关掉 (绝大部分) 日志, 或者根本不记日志, 只依赖
-    exception handling 和 core dump 之类的.
-
-    如果不能访问, 就只能多记录一些日志.
-
-    无论哪种情况, 都需要仔细考虑任意一处日志是否必要, 只在绝对必要的地方写日志.
-    Resist the tendency to log everything.
-
-  * 日志该向哪里输出?
-
-    对于 long-running program: 比较完善的做法是, 日志单独开一个 stream
-    输出至一个文件或一个目录 (rolling periodically). 日志不占用 stdout, stderr.
-    这两个标准流用于输出需要在 terminal 中输出的信息. 例如, stderr 仅输
-    出那些完全意外的信息, 即不是写在程序里的日志, 而是 uncaught exception,
-    segfault 等不可控, 也不该控制的绝对错误. 对于具有 exception 机制的语言,
-    应该在最外层包含一个 "catch all, log error and reraise/print-to-stderr" 语句,
-    这样 uncaught exception 在输出至 stderr 的同时也输出在日志中, 方便理解发生错误
-    的 context. stdout 则平时可以空闲, 也可以输出比如 `--help`, `--version` 等信息.
-    当程序长期运行时, stdout 与 stderr 可以一起转至一个文件, 阅读起来方便.
-
-    对于 one-off program: 一般不具有日志, 但开启 verbose/debug mode 后,
-    相关信息也相当于日志, 应输出至 stderr (是否开启 verbose/debug, 可通过
-    handler 是否添加等方式实现). 特殊比如 make, 则单开 stream 写日志.
-
-  * 在哪里产生 log 就在哪里创造 Logger, 因为 Logger 包含位置信息, 没必要也不该传来传去.
-
-  * 日志信息的内容
-
-    日志信息应该是 verbose 的能描述清晰所记内容的完整英文句子. 不要怕太长, 不要嫌
-    写得多.
-
 - 多个进程或线程向同一个文件输出信息, 如果不谨慎处理, 很可能造成不同来源的输出相互
   覆盖, 残破不全. 所以最简单的办法是每一个来源 (进程或线程) 的输出先单独输出至一个
   文件, 后续如有合并的需要, 则根据 timestamp 等标志来将这些文件结合在一起.
