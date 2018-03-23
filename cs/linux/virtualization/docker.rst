@@ -1077,6 +1077,14 @@ dockerd
   跨机器协作. 通过几个简单的环境变量修改, 一个 docker (CLI) client 可以
   切换控制本地或远端等多个 daemon.
 
+configuration
+~~~~~~~~~~~~~
+- proxy settings. 在 ``/etc/systemd/system/docker.service.d/`` 中创建
+  配置文件修改 ``HTTP_PROXY``, ``NO_PROXY`` 环境变量. 注意若需要和
+  private registry 交互, 相应的 ``NO_PROXY`` 是必须的. 否则无法 docker
+  login 之类的操作.
+
+
 object label
 ------------
 每种 docker object 都可以添加自定义的 label, 即 metadata.
