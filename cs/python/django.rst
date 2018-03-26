@@ -5259,6 +5259,125 @@ settings
 
 - ALLOWED_HOSTS. 限制 Host header 值.
 
+Logging
+=======
+- django uses ``logging`` module.
+  logging configs 使用 dict config 方式加载.
+
+settings
+--------
+- ``settings.LOGGING``. a dict of ``logging.config.dictConfig()`` format
+  config. The settings are merged with django's default logging settings.
+
+  * Note: 一般情况下不需要重新配置 django 自己的 loggers, 使用默认配置即可.
+    因此, ``disable_existing_loggers=True`` is probably not what you want.
+    因为, 如果设置禁用, 则需要在 LOGGING 中重新配置 ``django`` hierarchy
+    下面的 loggers. 否则相关日志就没了.
+
+- ``settings.LOGGING_CONFIG``. a callable that is passed ``LOGGING``
+  as argument to configure logging. default ``logging.config.dictConfig``.
+  ``None`` 时 django 不进行日志配置.
+
+- logging is configured during ``setup()``.
+
+- 如需自定义配置 logging, 可以设置 ``LOGGING_CONFIG=None`` 再手动配置.
+  或者自定义两个参数的内容. 反正是相互调用的关系.
+
+django default logging config
+-----------------------------
+- 对 ``django`` 和 ``django.server`` 两个 logger 有明确配置.
+
+- ``django.server`` logger.
+
+  * level: INFO
+
+  * handlers:
+    
+    - StreamHandler to stderr. level: INFO. formatter: server time + message,
+      colored based on status code.
+
+- ``django`` logger.
+
+  * level: INFO
+
+  * handlers:
+
+    - ``DEBUG=True`` 时, INFO+ 级别日志输出到 stderr. 没有特殊 formatting,
+      只输出 message.
+
+    - ``DEBUG=False`` 时, ERROR+ 级别日志给 ADMINS 发邮件.
+  
+  注意这个默认配置导致 ``DEBUG=false`` 时发生 exception 不会输出
+  traceback 至 console.
+
+django builtin logger hierarchy
+-------------------------------
+
+- ``django``. catch-all logger for messages in the django hierarchy.
+
+- ``django.request``. 与处理请求相关的日志. 对于由 uncaught exception
+  导致的 5XX 错误会输出 exception traceback.
+
+  extra: ``status_code``, ``request`` object.
+
+  日志等级:
+  
+  * ERROR. 5XX status code.
+    
+  * WARNING. 4XX status code.
+
+- ``django.template``. template rendering infos.
+
+- ``django.db.backends``. 数据库交互日志. 其中 ``django.db.backends.schema``
+  包含 migration 过程中的 schema changes.
+
+  extra: ``duration``, ``sql``, ``params``
+
+  日志等级:
+
+  * DEBUG: 执行的 sql 语句和时间. 需要配合 ``settings.DEBUG``.
+
+- ``django.security.*`` security-related errors.
+
+  extra: 不一定.
+
+  日志等级: 主要是 WARNING, ERROR.
+
+- ``django.server`` logger 仅用于 ``runserver`` development server
+  输出请求和相应信息.
+
+  extra: ``status_code``, ``request`` object.
+
+  日志等级:
+  
+  * ERROR. 5XX status code.
+    
+  * WARNING. 4XX status code.
+
+  * INFO. 其他.
+
+django logging handlers
+-----------------------
+
+AdminEmailHandler
+~~~~~~~~~~~~~~~~~
+sends an email to the site ADMINS for each log message it receives.
+
+django logging filters
+----------------------
+
+CallbackFilter
+~~~~~~~~~~~~~~
+简化创建新的 filter, 直接传一个 filter function 即可.
+
+RequireDebugFalse
+~~~~~~~~~~~~~~~~~
+only pass on records when ``settings.DEBUG`` is False.
+
+RequireDebugTrue
+~~~~~~~~~~~~~~~~
+
+
 django-admin
 ============
 
@@ -5324,8 +5443,6 @@ django-auth-ldap
 
 添加一个 LDAPBackend 即可. 不需要单独的 middleware. 所以在 LDAP 认证之后,
 登录状态与平时一样, 通过 session + AuthenticationMiddleware 维持.
-
-
 
 authentication
 ~~~~~~~~~~~~~~
