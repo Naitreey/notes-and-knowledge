@@ -469,13 +469,92 @@ methods
 - ``isidentifier()``. 检查字符串是否是合法的 python identifier.
   Use ``keyword.iskeyword()`` tests for reserved keywords.
 
+- ``__mod__(arg)``. 字符串的 modulo operation 即 string formatting.
+  See `docs <https://docs.python.org/3/library/stdtypes.html#printf-style-string-formatting>`_. 对于 ``format % value``:
+
+  * 对于 positional 形式, format 要求的参数必须与 value 部分提供的值一一对应.
+    对于 keyword 形式, mapping object 的 keys 可以比 format 中多.
+
+  * If format requires a single argument, values may be a single non-tuple
+    object. Otherwise, values must be a tuple with exactly the number of items
+    specified by the format string, or a single mapping object.
+
+  * format specifier 形式:
+
+    - ``%``
+
+    - ``(key)`` optional
+
+    - conversion flags: ``#0- +``. optional.
+
+    - minimum field width. optional. can be ``*``.
+
+    - precision. optional. ``.`` + precision number or ``*``.
+
+    - length modifier. optional. ``hlL``, ignored by python.
+
+    - conversion type. ``diouxXeEfFgGcrsa%``.
+
+      * ``r``: ``repr()``
+
+      * ``a``: ``ascii()``
+
+- ``format()``.
+
+  * DNF notation. see
+    `docs <https://docs.python.org/3/library/string.html#format-string-syntax>`_.
+
+  * literal ``{}`` ``{{}}``
+
+  * field can be referenced by digit and key index. 对于顺序的 positionals,
+    可以 omit digit. 然后可以进一步指定 ``.`` attribute 或 ``[]`` element.
+
+    field name is not quoted.
+
+  * 获取到的值可进一步通过 ``!rsa`` 转换, 以及 ``:`` 进行 formatting.
+
+  * A ``format_spec`` field can also include one-level nested replacement
+    fields within it. 形式:
+
+    - DNF::
+        [[fill]align][sign][#][0][width][grouping_option][.precision][type]
+
+    - fill can be any char.
+
+    - align: ``<>=^``
+
+    - sign: ``+ -``
+
+    - ``0``. When no explicit alignment is given, preceding the width field by
+      a zero ('0') character enables sign-aware zero-padding for numeric types.
+      This is equivalent to a fill character of '0' with an alignment type of
+      '='.
+
+    - grouping: ``,_`` thousands separator.
+
+    - type: ``sbcdoxXneEfFgGn%gg``.
+
+
+string formattings
+~~~~~~~~~~~~~~~~~~
+几种 string interpolation 的方式:
+
+- ``%`` printf-style formatting. 即 modulo operation.
+  implemented in ``str.__mod__``.
+
+- ``str.format()``.
+
+- formatting string. ``f"..."``.
+
+- Shell-like string template: ``string.Template``.
+
 set types
 ---------
 
 operations
 ~~~~~~~~~~
-the non-operator versions methods will accept any iterable as an argument. In
-contrast, their operator based counterparts require their arguments to be
+the non-operator versions methods will accept any iterable as an argument.
+In contrast, their operator based counterparts require their arguments to be
 sets. 然而两种方式并没有效率上的区别, 因为虽然接受任何 iterable, 但是仍然
 会在内部转换成 set 再进行比较.
 
