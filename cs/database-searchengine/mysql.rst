@@ -6,8 +6,8 @@
 - 处于安全考虑, ``local_infile`` 默认是 OFF, 需要在 mysql client 和 mysqld
   同时开启.
 
-mysql client
-============
+MySQL shell
+===========
 
 - ``\g`` ``\G`` 可以执行语句, 相当于 ``;``. 后者将结果列以竖排的形式输出, 比较方便.
 
@@ -197,8 +197,112 @@ SQL language
 - 一个表必须有一个或者一组 unique key 可以唯一识别不同的资源实例, 否则无法完全
   避免多个 session 同时创建同一个实例时导致的重复 (race condition).
 
-Design
-======
+InnoDB storage engine
+=====================
+
+InnoDB is fully transactional and supports foreign key references.
+
+MyISAM storage engine
+=====================
+MyISAM is shit.
+
+MYISAM doesn't support transactions or enforce foreign-key constraints
+(inferential integrity).
+
+HA and scalability
+==================
+- MySQL 提供了多种 HA 方案.
+
+  * replication.
+
+  * group replication.
+
+  * NDB cluster.
+
+  * InnoDB cluster (??)
+  
+Replication
+-----------
+- Replication 是最简单的 HA 方案.
+
+- 模式:
+  
+  * one master, multiple slaves.
+    
+  * one-way replication: data is replicated from master to slaves.
+    
+  * master is write-only, slaves are read-only.
+
+  * 同步类型:
+
+    - asynchronous. 默认.
+
+    - semi-synchronous.
+
+- 特点:
+
+  * spread read access on multiple servers for scalability, while all write
+    must be performed on master. master 只用于写, 相对于同时又读又写的情况
+    写的效率肯定是提高了, 但由于仍然是单机写, 所以上限明显.
+
+  * failover.
+
+- 两种实现.
+
+  * binary log file position based replication.
+
+  * global transaction identifiers (GTIDs) based replication.
+
+- replication format.
+
+  * Statement Based Replication (SBR).
+
+  * Row Based Replication (RBR).
+
+  * Mixed Based Replication (MBR).
+
+binary log file position based replication
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+logic
+"""""
+- Master writes updates and changes as “events” to the binary log.
+
+- Slaves are configured to read the binary log from the master and to execute
+  the events in the binary log on the slave's local database.
+
+- You can configure the slave to process only events that apply to particular
+  databases or tables.
+
+- each slave keeps binary log coordinates which represents its replication
+  progress:
+  
+  * the binlog filename.
+
+  * position within the file.
+
+- each slave operates independently.
+
+configuration
+""""""""""""""
+- On the master, you must enable binary logging and configure a unique server ID.
+
+- On each slave that you want to connect to the master, you must configure a
+  unique server ID.
+
+- Optionally, create a separate user for your slaves to use during
+  authentication with the master when reading the binary log for replication.
+
+- Before creating a data snapshot or starting the replication process, on the
+  master you should record the current position in the binary log.
+
+- If you already have data on the master and want to use it to synchronize the
+  slave, you need to create a data snapshot to copy the data to the slave.
+
+- Configure the slave with settings for connecting to the master.
+
+Programming Designs
+===================
 
 - 在 RDBMS 里保存 JSON 合适么?
   
@@ -258,18 +362,6 @@ Design
   3. 使用文件系统保存文件, 也很容器迁移存储架构, 例如从硬盘存储迁移至分布式存储.
      
 
-MyISAM
-======
-MyISAM is shit.
-
-MYISAM doesn't support transactions or enforce foreign-key constraints
-(inferential integrity).
-
-InnoDB
-======
-
-InnoDB is fully transactional and supports foreign key references.
-
 mysql vs postgresql
 ===================
 
@@ -292,3 +384,6 @@ mysql vs postgresql
 
   后者才是一般预期的行为, 是除了 mysql 之外所有其他数据库的默认行为.
   这两个 isolation level 的差异, 会导致应用程序的一些 subtle bugs.
+
+References
+==========
