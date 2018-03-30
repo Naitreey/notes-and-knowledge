@@ -1037,8 +1037,19 @@
             else:
                 raise AttributeError("read-only attribute")
 
+        def __delete__(self, instance):
+            if self.fdel:
+                self.fdel(instance)
+                del instance.__dict__[self.name]
+            else:
+                raise AttributeError("can not be deleted")
+
         def setter(self, fset):
             self.fset = fset
+            return self
+
+        def deleter(self, fdel):
+            self.fdel = fdel
             return self
 
 - 需要缓存结果时的几种方式:
