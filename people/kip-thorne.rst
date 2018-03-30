@@ -9,3 +9,8 @@
 - 还有其他一些不知什么地位的宇宙学研究
  
 - 他首先提出虫洞可用于时间穿越
+
+references
+==========
+- wiki: Kip Thorne
+  https://en.wikipedia.org/wiki/Kip_Thorne

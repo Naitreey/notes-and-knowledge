@@ -73,3 +73,8 @@
   including ProPublica, The Intercept, The Guardian, and The Washington Post.
 
 - active contributor for wikipedia
+
+reference
+=========
+- wiki: Aaron Swartz
+  https://en.wikipedia.org/wiki/Aaron_Swartz
