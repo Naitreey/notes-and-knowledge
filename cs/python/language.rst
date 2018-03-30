@@ -1,3 +1,34 @@
+overview
+========
+- python is a dynamic and strongly typed language.
+
+  * strongly typed 与 statically typed. 这是两个互不相关概念, 没有必然联系.
+    In a dynamically typed language, a variable is simply a value bound to a
+    name; the value has a type -- like "integer" or "string" or "list" -- but
+    the variable itself doesn't. You could have a variable which, right now,
+    holds a number, and later assign a string to it if you need it to change.
+    In a statically typed language, the variable itself has a type; if you have
+    a variable that's an integer, you won't be able to assign any other type of
+    value to it later. Some statically typed languages require you to write out
+    the types of all your variables, while others will deduce many of them for
+    you automatically. A statically typed language can catch some errors in
+    your program before it even runs, by analyzing the types of your variables
+    and the ways they're being used. A dynamically language can't necessarily
+    do this, but generally you'll be writing unit tests for your code either
+    way (since type errors are a small fraction of all the things that might go
+    wrong in a program); as a result, programmers in dynamic languages rely on
+    their test suites to catch these and all other errors, rather than using a
+    dedicated type-checking compiler.
+
+  * weakly typed 与 strongly typed. In a weakly typed language, the compiler or
+    interpreter can perform behind-the-scenes conversions of variable types to
+    make certain types of operations work. Like in JS, you can add strings to
+    numbers 'x' + 3 becomes 'x3'. In a strongly typed language, you are simply
+    not allowed to do anything that's incompatible with the type of data you're
+    working with.
+
+  Refs: [PythonFAQ]_.
+
 Data model
 ==========
 
@@ -26,6 +57,7 @@ class
   搜索顺序. 首先搜索 class ``__dict__``, 然后搜索 parent class ``__dict__``
   in MRO order. 最后搜索 metaclass 的 attributes.
   即 (不考虑 descriptor)::
+
     class -> parent class -> ... -> metaclass -> parent metaclass -> ... -> type -> object
 
 - MRO. python2.3+ uses C3 method resolution order. 若对于一个类, 无法根据 C3 MRO
@@ -39,7 +71,9 @@ class instance
   搜索顺序. 首先搜索 instance ``__dict__``, 然后搜索 class & parent
   classes attributes, in MRO order. 注意不会去搜索 metaclass 的 attributes.
   即 (不考虑 descriptor)::
+
     instance -> class -> parent class -> ... -> object
+
   若属性是一个 function object, 转变成 bound instance method, 它的
   ``__self__`` attribute is the instance.
 
@@ -154,7 +188,9 @@ attribute access
 
   3. 尝试 non-data descriptor 和 class attribute. 若有, 且是 non-data descriptor,
      调用::
+
        descriptor.__get__(self, instance, type(instance))
+
      若是 class attribute, 直接返回.
 
   4. 若以上全败, 调用 ``__getattr__``.
@@ -166,7 +202,9 @@ attribute access
 
   2. 尝试 instance (此时是 class object) 以及它的所有基类的 ``__dict__``. 若有,
      且是 descriptor, 调用::
+
        descriptor.__get__(self, None, class)
+
      若不是 descriptor, 直接返回.
 
   ``super.__getattribute__`` 对 super object 的属性访问也不同于 object 基类的实现.
@@ -174,7 +212,9 @@ attribute access
 
   1. 从 ``B.__mro__`` B 后面一个类开始, 尝试 descriptor 和 class attribute.
      若是 descriptor, 调用::
+
        descriptor.__get__(type_or_object_or_none, B)
+
      若不是 descriptor, 直接返回.
 
   由于 ``__getattribute__`` 完全决定属性访问, 并且具有以上复杂的逻辑, 所以
@@ -252,6 +292,7 @@ class creation
   创建 class 本质相同.
 
   .. code:: python
+
     class A:
 
         x = 1
@@ -490,3 +531,7 @@ sets. 然而两种方式并没有效率上的区别, 因为虽然接受任何 it
 - ``difference()``, ``set - other - ...``
 
 - ``symmetric_difference()``, ``set ^ other``
+
+References
+==========
+.. [PythonFAQ] `Why is Python a dynamic language and also a strongly typed language? <https://wiki.python.org/moin/Why%20is%20Python%20a%20dynamic%20language%20and%20also%20a%20strongly%20typed%20language>`_.
