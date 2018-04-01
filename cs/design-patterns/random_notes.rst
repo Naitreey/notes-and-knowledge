@@ -93,13 +93,6 @@
   https://stackoverflow.com/questions/7842511/safe-to-have-multiple-processes-writing-to-the-same-file-at-the-same-time-cent
   https://stackoverflow.com/questions/12942915/understanding-concurrent-file-writes-from-multiple-processes
 
-- You should always write your code as if comments didn't exist. This forces you to
-  write your code in the simplest, plainest, most self-documenting way you can humanly
-  come up with.
-  when you can't possibly imagine any conceivable way your code could be changed to
-  become more straightforward and obvious -- then, and only then, should you feel
-  compelled to add a comment explaining what your code does.
-
 - 命令行参数的处理和 stdout/stderr.
   当用户指定参数 `--version`, `--help` 等, 不是 error condition, 因此输出应该在 stdout.
   只有出现参数错误时, 显示的 错误信息和 usage 信息才去 stderr.
