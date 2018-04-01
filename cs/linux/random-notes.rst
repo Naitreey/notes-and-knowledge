@@ -4,6 +4,26 @@
 
   * 小身材, 大有不同.
 
+- Linux 工作环境优化.
+
+  经过我长时间的不懈努力, 一些日常接触的、非开发直接相关的方面, 仍然
+  难以让我满意, 不断给我添麻烦. 难以解决的问题:
+
+  * 我使用 i3wm, gtk 应用和 qt5 应用难以风格一致. 即使用了 qt5ct 让主体
+    一致了, 也难以让 font 一致. 除非我花时间弄清除它们背后的所有机制.
+
+  * Linux wifi sucks. Support for 802.11ac is really unstable.
+
+  * 除非理解清除背后的各种机制 (CUPS, SAMBA, drivers, etc.), 在 i3 下
+    难以配置成功 windows 网络打印机.
+
+  * no decent pdf viewer AT ALL. okular 只是勉强能用, evince 就别提了.
+
+  方案.
+  
+  * mac 配合 Linux desktop VM. 也许还可以考虑 mac 下直接运行 x windows.
+
+
 - 线程的目的不仅仅是为了 *同时的* 并行计算, 而是为了构建多个独立的运算单元.
   将这些运算单元分配到不同的 CPU 核上才具有 "同时并行" (parallel computing) 的意义.
   python 虽然有 GIL, 但这影响的是单 python 进程进行 parallel computing 的能力,
