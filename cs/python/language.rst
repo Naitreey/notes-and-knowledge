@@ -29,6 +29,9 @@ overview
 
   Refs: [PythonFAQ]_.
 
+- interpreted language. CPython interpreter pre-compiles source to bytecode
+  then executed. cpython does not has JIT engine. But PyPy has.
+
 Data model
 ==========
 
