@@ -1,6 +1,18 @@
-- 前端页面使用 angularjs 可以有效把数据的构造与页面展示逻辑分开来,
-  避免了 jquery 那种混合了 js 代码和 html tags 的混乱配凑感觉.
+overview
+========
+- JavaScript, abbreviated JS.
 
+syntax
+======
+
+- statements. In js, statement normally ends with ``;``.
+
+- expressions.
+
+  * assignment is an expression, unlike python.
+
+security
+========
 - 在比较老的浏览器中, 存在 JSON array 带来的 vulnerability.
 
   原理是, 使用 ``<script src="">`` tag 获取一个 json response,

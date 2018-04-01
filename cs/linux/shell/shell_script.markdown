@@ -1,3 +1,11 @@
+# language
+## overview
+-   bash/shell script is an interpreted language.
+    并且不包含预编译阶段. 不仅如此, bash 是依次对每个 logical line 进行 read, parse, execute
+    操作的. 而不是对整个脚本进行这三个步骤. 所以只有执行到特定一行时才知道该行有没有语法错误.
+    (这也给调试带来了很多麻烦.) 这是与 Python, JavaScript 等 interpreted language 的一个区别.
+    [[interpreted]](#interpreted).
+
 # Design pattern
 * 将要实现的功能分类, 提炼出功能模块.
 * 从各种要实现的功能中抽象出一般化的辅助组件.
@@ -150,7 +158,7 @@
 
     注意即使在函数中, `$0` 也不会重命名为函数名, 仍然是初始值.
 
-## shell 初始化文件的执行流程
+# shell 初始化文件的执行流程
 
 * bash 初始化文件的执行.
 
@@ -250,3 +258,6 @@
 	- `local`
 	- `readonly`
 	- not at all
+
+# references
+<a id="interpreted">[interpreted]</a> [Is bash an interpreted language?](https://stackoverflow.com/a/30156987/1602266)
