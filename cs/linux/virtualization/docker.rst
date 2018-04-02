@@ -1333,13 +1333,13 @@ service
 
   * ``--publish={<published:target>|OPTIONS}``. OPTIONS can be:
 
-    - published.
+    - published. external port on host or overlay network.
 
-    - target.
+    - target. mapped port within container.
 
     - protocol.
 
-    - mode.
+    - mode. ingress or host.
 
   * ``--hostname``.
     
