@@ -1,0 +1,1 @@
+- constants are capitalized with words separated by ``_``.
