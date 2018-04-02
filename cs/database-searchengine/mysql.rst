@@ -199,8 +199,11 @@ SQL language
 
 InnoDB storage engine
 =====================
-
 InnoDB is fully transactional and supports foreign key references.
+
+options
+-------
+- ``--innodb-flush-log-at-trx-commit[=#]``, ``innodb_flush_log_at_trx_commit``.
 
 MyISAM storage engine
 =====================
@@ -208,6 +211,100 @@ MyISAM is shit.
 
 MYISAM doesn't support transactions or enforce foreign-key constraints
 (inferential integrity).
+
+Server mechanism
+================
+
+server logs
+-----------
+
+binary log
+^^^^^^^^^^
+overview
+""""""""
+- what is:
+  contains events for database changes, including structure changes and
+  data changes. Also contains time used for each changes.
+
+- usage:
+
+  * replication.
+
+  * additional data recovery. After a backup has been restored, the events in
+    the binary log that were recorded after the backup was made are
+    re-executed.
+
+- server performance slightly slower. But its benefits generally outweight
+  the introduced minor performance decrement.
+
+- binlog filename: ``log_bin_basename`` + numeric extension. The extension
+  increases for each new log file.
+
+- binlog size: no bigger than ``max_binlog_size`` except for during logging
+  a transaction, as a transaction is written to the file in one piece,
+  never split between files.
+
+- binlog index file: contains a list of used binlog files.
+
+- verification: the server logs the length or checksum of the event as well as
+  the event itself and uses this to verify that the event was written
+  correctly.
+
+operations
+""""""""""
+- reset binlog::
+
+    RESET MASTER;
+
+- delete binlog::
+
+    PURGE BINARY LOGS;
+
+  During replication, old binlogs can be deleted as soon as no slaves will use
+  them any longer.
+
+- show binlog content: ``mysqlbinlog``.
+
+formats
+"""""""
+
+options
+"""""""
+- ``--log-bin[=pathname]``, ``log_bin``, ``log_bin_basename``.
+  enable binary log. optionally with a pathname, default is ``<hostname>-bin``.
+  ``pathname`` can be absolute path or a basename. For the latter, binlog is
+  stored in data directory.
+
+  If you supply an extension in the log name, the extension is silently removed
+  and ignored.
+
+- ``--log-bin-index[=filename]``, ``log_bin_index``.
+  default to ``<log_bin_basename>.index``.
+
+- ``--sync-binlog=#``, ``sync_binlog``.
+  the number of binary log commit groups to collect before synchronizing the
+  binary log to disk. default 1.
+
+  For 0, never synchronized to disk. the server relies on the operating system
+  to flush the binary log's contents from time to time as for any other file. 
+
+  For 1, all transactions are synchronized to the binary log before they are
+  committed. This guarantees that no transaction is lost from the binary log,
+  and is the safest option.
+
+  When 0 or N>1, transactions are committed without having been synchronized to
+  disk. Therefore, in the event of a power failure or operating system crash,
+  it is possible that the server has committed some transactions that have not
+  been synchronized to the binary log. Therefore it is impossible for the
+  recovery routine to recover these transactions and they will be lost from the
+  binary log.
+
+- ``--max-binlog-size=#``, ``max_binlog_size``.
+  default 1G. A transaction is written in one chunk to the binary log, so it is
+  never split between several binary logs.
+
+- ``--master-verify-checksum={0|1}``, ``master_verify_checksum``.
+  save checksum when writing binlog, and use it to verify binlog when reading.
 
 HA and scalability
 ==================
@@ -264,14 +361,18 @@ Replication
 binary log file position based replication
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-logic
-"""""
+mechanism
+"""""""""
 - Master writes updates and changes as “events” to the binary log.
+  The binary log serves as a written record of all events that modify database
+  structure or content (data) from the moment the server was started.
 
-- Slaves are configured to read the binary log from the master and to execute
-  the events in the binary log on the slave's local database.
+- Slaves are configured to get binary logs from the master, replay
+  the original changes on local database just as they were made on the master.
 
-- You can configure the slave to process only events that apply to particular
+  Slaves verify the retrieved binlogs by length or checksum.
+
+- Slave can be configured to process only events that apply to particular
   databases or tables.
 
 - each slave keeps binary log coordinates which represents its replication
@@ -281,25 +382,106 @@ logic
 
   * position within the file.
 
-- each slave operates independently.
+- each slave operates independently. Each can operates on its own pace.
 
 configuration
 """"""""""""""
-- On the master, you must enable binary logging and configure a unique server ID.
+- On the master, you must enable binary logging and configure a non-zero
+  unique server ID::
+
+    [mysqld]
+    log-bin=log-bin
+    server-id=1
+    sync-binlog=1
 
 - On each slave that you want to connect to the master, you must configure a
   unique server ID.
 
-- Optionally, create a separate user for your slaves to use during
-  authentication with the master when reading the binary log for replication.
+- On master, use a user who's been granted ``REPLICATION SLAVE`` privilege
+  during replication, or create a separate user for your slaves to use during
+  authentication with the master when reading the binary log for replication::
+
+    CREATE USER 'replication'@'%' IDENTIFIED BY 'replication';
+    GRANT REPLICATION SLAVE ON *.* TO 'replication'@'%';
+    FLUSH PRIVILEGES;
 
 - Before creating a data snapshot or starting the replication process, on the
   master you should record the current position in the binary log.
 
+  * Start a session and flush all tables and block write statements::
+
+      FLUSH TABLES WITH READ LOCK;
+
+    leave the session open to keep global lock.
+
+  * get current binary log coordinates::
+
+      SHOW MASTER STATUS;
+
+    For a new master, this is empty, then use ``''`` and 4.
+  
 - If you already have data on the master and want to use it to synchronize the
   slave, you need to create a data snapshot to copy the data to the slave.
 
+  * use mysqldump::
+      
+      mysqldump --all-databases --master-data >dump.sql
+
+    release read lock::
+      
+      UNLOCK TABLES;
+      QUIT;
+
+  * copy raw data.
+
 - Configure the slave with settings for connecting to the master.
+
+  * set unique server id, relay log::
+
+      [mysqld]
+      server-id=2
+      relay-log=relay-bin
+
+  * apply master data snapshot.
+
+  * configure replication::
+
+      CHANGE MASTER TO
+          MASTER_HOST='master_host_name',
+          MASTER_USER='replication_user_name',
+          MASTER_PASSWORD='replication_password',
+          MASTER_LOG_FILE='recorded_log_file_name',
+          MASTER_LOG_POS=recorded_log_position;
+      
+  * start slave threads::
+
+      START SLAVE;
+
+  * check slave status::
+
+      SHOW SLAVE STATUS;
+
+replication options
+^^^^^^^^^^^^^^^^^^^
+- ``--server-id``, ``server_id``.
+  default: 0. If the server ID is set to 0, binary logging takes place (if
+  ``log_bin`` is set), but a master with a server ID of 0 refuses any
+  connections from slaves, and a slave with a server ID of 0 refuses to connect
+  to a master.
+
+- ``--relay-log=pathname``, ``relay_log``.
+  default: ``<hostname>-relay-bin`` for default channel, or
+  ``<hostname>-relay-bin-<channel>`` for the named channel.
+
+  It's recommended to set this option independent of hostname.
+
+- ``--slave-sql-verify-checksum={0|1}``, ``slave_sql_verify_checksum``.
+  let slave use checksum to verify binlog.
+
+CLI
+===
+
+- mysqlbinlog
 
 Programming Designs
 ===================
@@ -387,3 +569,4 @@ mysql vs postgresql
 
 References
 ==========
+.. [DOMysqlSlave] `How To Set Up Master Slave Replication in MySQL <https://www.digitalocean.com/community/tutorials/how-to-set-up-master-slave-replication-in-mysql>`_
