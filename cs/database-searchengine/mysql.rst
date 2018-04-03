@@ -250,6 +250,46 @@ overview
   the event itself and uses this to verify that the event was written
   correctly.
 
+logic
+""""""
+- Binary logging is done immediately after a statement or transaction completes
+  but before any locks are released or any commit is done. This ensures that
+  the log is logged in commit order.
+
+  For transactions: Within an uncommitted transaction, all updates (UPDATE,
+  DELETE, or INSERT) that change transactional tables such as InnoDB tables are
+  cached until a COMMIT statement is received by the server. At that point,
+  mysqld writes the entire transaction to the binary log before the COMMIT is
+  executed. Note: server handles binlog writing and commit together on receiving
+  COMMIT statement. Thus ensures binlog in commit order for several concurrent
+  transactions.
+
+- For a transactional storage engine, a binary log buffer (of
+  ``binlog_cache_size``) is allocated for each client to buffer statements
+  (from server point of view, a new thread is opened for each client
+  connection).  If a statement is bigger than this, the thread opens a
+  temporary file to store the transaction. The temporary file is deleted when
+  the thread ends.
+
+  The ``Binlog_cache_use`` and ``Binlog_cache_disk_use`` status variables can
+  be useful for tuning.
+
+- data safety. By default, the binary log is synchronized to disk at each write
+  (``sync_binlog=1``).
+ 
+  At restart after a crash, after doing a rollback of transactions, the MySQL
+  server scans the latest binary log file to collect transaction xid values and
+  calculate the last valid position in the binary log file. The MySQL server
+  then tells InnoDB to complete any prepared transactions that were
+  successfully written to the to the binary log, and truncates the binary log
+  to the last valid position.
+
+  If the MySQL server discovers at crash recovery that the binary log is
+  shorter than it should have been, it lacks at least one successfully
+  committed InnoDB transaction (``sync_binlog!=1``). In this case, this binary
+  log is not correct and replication should be restarted from a fresh snapshot
+  of the master's data.
+
 operations
 """"""""""
 - reset binlog::
@@ -266,10 +306,63 @@ operations
 - show binlog content: ``mysqlbinlog``.
 
 formats
-"""""""
+""""""""
+- statement-based logging. actual SQL statement is logged.
+
+  With statement-based replication, there may be issues with replicating
+  nondeterministic statements.
+
+  * advantages:
+
+    - less data written to log. taking and restoring from backups, make
+      replications can be accomplished more quickly.
+
+    - can be used to audit database.
+
+  * disadvantages:
+
+    - nondeterministic statements are unsafe for statement-based logging.
+      including:
+      
+      * A statement that depends on a UDF or stored program;
+
+      * DELETE and UPDATE statements that use a LIMIT clause without an ORDER BY.
+
+    - more row locks than row-based logging.
+
+    - ...
+
+- row-based logging. writes events to the binary log that indicate how
+  individual table rows are affected.
+
+  If you are using InnoDB tables and the transaction isolation level is
+  ``READ COMMITTED`` or ``READ UNCOMMITTED``, only row-based logging can be
+  used.
+
+  With the binary log format set to ROW, many changes are written to the binary
+  log using the row-based format. Some changes, however, still use the
+  statement-based format. Examples include all DDL statements such as
+  ``CREATE TABLE``, ``ALTER TABLE``, or ``DROP TABLE``.
+
+  * advantages:
+
+    - all changes can be logged, thus backup and replication. This is the 
+      safest form of replication.
+
+    - Fewer row locks are required, which thus achieves higher concurrency.
+
+  * disadvantages:
+
+    - more data. takes more time to log. longer backup, recover, replication
+      time.
+
+- mixed logging. statement-based logging is used by default, but the logging
+  mode switches automatically to row-based in certain cases.
 
 options
 """""""
+basic binlog options.
+
 - ``--log-bin[=pathname]``, ``log_bin``, ``log_bin_basename``.
   enable binary log. optionally with a pathname, default is ``<hostname>-bin``.
   ``pathname`` can be absolute path or a basename. For the latter, binlog is
@@ -281,6 +374,9 @@ options
 - ``--log-bin-index[=filename]``, ``log_bin_index``.
   default to ``<log_bin_basename>.index``.
 
+- ``--binlog-format={ROW|STATEMENT|MIXED}``, ``binlog_format``.
+  default ROW.
+
 - ``--sync-binlog=#``, ``sync_binlog``.
   the number of binary log commit groups to collect before synchronizing the
   binary log to disk. default 1.
@@ -290,7 +386,7 @@ options
 
   For 1, all transactions are synchronized to the binary log before they are
   committed. This guarantees that no transaction is lost from the binary log,
-  and is the safest option.
+  and is the safest option.  
 
   When 0 or N>1, transactions are committed without having been synchronized to
   disk. Therefore, in the event of a power failure or operating system crash,
@@ -303,8 +399,24 @@ options
   default 1G. A transaction is written in one chunk to the binary log, so it is
   never split between several binary logs.
 
+binlog checksum.
+
+- ``--binlog-checksum={NONE|CRC32}``
+  default CRC32. causes the master to write checksums for events written to the
+  binary log.
+
 - ``--master-verify-checksum={0|1}``, ``master_verify_checksum``.
-  save checksum when writing binlog, and use it to verify binlog when reading.
+  master uses checksum to verify binlog when reading.
+
+binlog buffer.
+
+- ``--binlog-cache-size=#``, ``binlog_cache_size``.
+  default 32768. The size of the in-memory buffer to hold changes to the binary
+  log during a transaction.
+
+- ``--max-binlog-cache-size=#``, ``max_binlog_cache_size``.
+  max size of buffer for a transaction. including in-memory buffer and on-disk
+  temporary file.
 
 HA and scalability
 ==================
@@ -367,10 +479,23 @@ mechanism
   The binary log serves as a written record of all events that modify database
   structure or content (data) from the moment the server was started.
 
-- Slaves are configured to get binary logs from the master, replay
-  the original changes on local database just as they were made on the master.
+  When a slave connects, master creates a thread to send binlog contents to the
+  slave (binlog dump thread is created for each slave connection). The binary
+  log dump thread acquires a lock on the master's binary log for reading each
+  event that is to be sent to the slave. As soon as the event has been read,
+  the lock is released, even before the event is sent to the slave.
 
+- Slaves are configured to get binary logs from the master. When a ``START SLAVE``
+  statement is issued on a slave server, the slave creates an I/O thread, which
+  connects to the master and asks it to send the updates recorded in its binary
+  logs.
+
+  The slave I/O thread reads the updates that the master's Binlog Dump thread
+  sends and copies them to local files that comprise the slave's relay log.
   Slaves verify the retrieved binlogs by length or checksum.
+
+  Slave create a SQL thread to read the relay log that is written by the slave
+  I/O thread and execute the events contained therein.
 
 - Slave can be configured to process only events that apply to particular
   databases or tables.
@@ -384,6 +509,15 @@ mechanism
 
 - each slave operates independently. Each can operates on its own pace.
 
+replication formats
+""""""""""""""""""""
+- SBR. executing the SQL statements on the slave.
+
+- RBR. copying the events representing the changes to the table rows to the
+  slave.
+
+- MBR. 
+
 configuration
 """"""""""""""
 - On the master, you must enable binary logging and configure a non-zero
@@ -392,7 +526,9 @@ configuration
     [mysqld]
     log-bin=log-bin
     server-id=1
+    binlog-format=ROW
     sync-binlog=1
+    innodb-flush-log-at-trx-commit=1
 
 - On each slave that you want to connect to the master, you must configure a
   unique server ID.
@@ -460,6 +596,26 @@ configuration
   * check slave status::
 
       SHOW SLAVE STATUS;
+
+    ``Slave_IO_running`` and ``Slave_SQL_Running`` should be yes.
+
+  * show binlog threads::
+
+      SHOW PROCESSLIST;
+
+    on master, ``Binlog Dump`` thread should be running, indicating that
+    a slave is connected.
+
+    on slave, I/O thread and SQL thread should be running with correct state.
+
+checking replication status
+""""""""""""""""""""""""""""
+
+- SHOW PROCESSLIST;
+
+- SHOW SLAVE STATUS;
+
+- performance_schema database, replication tables.
 
 replication options
 ^^^^^^^^^^^^^^^^^^^
