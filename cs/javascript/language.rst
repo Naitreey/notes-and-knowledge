@@ -5,7 +5,13 @@ overview
 - interpreted language. V8 implementation has JIT engine, JS code is
   pre-compiled to machine code then executed.
 
-- weakly typed. type conversion may happen implicitly.
+- weakly typed. type coercion may happen implicitly.
+
+definitions
+===========
+
+- host object: object supplied by the host environment. e.g.,
+  window, document, XMLHttpRequest, etc.
 
 lexical grammer
 ===============
@@ -23,6 +29,16 @@ data types
 
 undefined
 ---------
+
+Some cases when undefined is resultant:
+
+- an undefined variable's type is ``"undefined"``. But it results in
+  ``ReferenceError`` if used directly.
+
+- an declared variable's default value is ``undefined``.
+
+- A function returns ``undefined`` if nothing is returned explicitly via
+  ``return`` statement.
 
 null
 ----
@@ -46,13 +62,74 @@ methods
 
 object
 ------
+a dict, a hash map. like a python object and dict combination.
+
+- properties can be accessed as attributes (dot notation) or
+  keys (bracket notation).
+
+- dot notation can be used only when property name is a valid identifier,
+  and is a known literal.
+
+- object keys can only be string.
+
+Array
+^^^^^
+``Array`` is a subtype of ``object``.
+
+- Because array is object, it is theoretically possible to use array like
+  an object, i.e., save named property in an array object::
+
+    > var x = [];
+    undefined
+    > x.sef = "xxx";
+    'xxx'
+    > x
+    [ sef: 'xxx' ]
+    > x[0]='rrr';
+    'rrr'
+    > x
+    [ 'rrr', sef: 'xxx' ]
+    > x[2]='yyy';
+    'yyy'
+    > x
+    [ 'rrr', <1 empty item>, 'yyy', sef: 'xxx' ]
+    > x['bbb'] = 'aaa';
+    'aaa'
+    > x
+    [ 'rrr', <1 empty item>, 'yyy', sef: 'xxx', bbb: 'aaa' ]
+
+  However, this would generally be considered improper usage of the respective
+  types.
+
+Function
+^^^^^^^^
+
+``Function`` is a subtype of object.
+
+- function object can store properties like normal object. This is sometimes
+  useful::
+
+    > function x() {}
+    undefined
+    > x
+    [Function: x]
+    > x.r
+    undefined
+    > x.r=1
+    1
+    > x
+    { [Function: x] r: 1 }
+    > x.p=2
+    2
+    > x
+    { [Function: x] r: 1, p: 2 }
 
 abstract operations
 ===================
 
-type conversion
----------------
-- implicit type conversion is designed to help you!!! (OK.) But it can create
+type coercion
+-------------
+- implicit type coercion is designed to help you!!! (OK.) But it can create
   confusion if you haven't taken the time to learn the rules that govern its
   behavior.
 
@@ -87,13 +164,13 @@ equality comparison
 ^^^^^^^^^^^^^^^^^^^
 - loose equality.
 
-- type conversion may be performed under the hood.
+- type coercion may be performed under the hood.
 
 strict equality comparison
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 - strict equality.
 
-- type conversion is not performed.
+- type coercion is not performed.
 
 statements
 ==========
@@ -191,6 +268,42 @@ expressions
     == === != !==
     < > <= >=
     && ||
+
+unary operators
+---------------
+
+typeof
+^^^^^^
+return string name of the type of the operand.
+
+- Undefined: "undefined"
+
+- Null: "object". **Note** it's not "null"[1]_.
+
+- Boolean: "boolean".
+
+- Number: "number"
+
+- String: "string"
+
+- Symbol: "symbol"
+
+- Object:
+
+  * host object: implementation-dependent
+
+  * object that implements Call: "function"
+
+  * otherwise: "object"
+
+.. [1] In the first implementation of JavaScript, JavaScript values were
+       represented as a type tag and a value, with the type tag for objects being 0,
+       and null was represented as the NULL pointer (0x00 on most platforms). As a
+       result, null had 0 as a type tag, hence the bogus typeof return value.
+
+void
+^^^^
+evaluates the given expression and then returns ``undefined``.
 
 assignment opoerators
 ---------------------
