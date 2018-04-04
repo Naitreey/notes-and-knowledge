@@ -509,6 +509,33 @@ mechanism
 
 - each slave operates independently. Each can operates on its own pace.
 
+- slave logs.
+
+  * master info log. contains status and current configuration information for
+    the slave's connection to the master. It is required for the recovery of
+    the slave's I/O thread.
+
+  * relay log. the events read from the binary log of the master and written by
+    the slave I/O thread. Events in the relay log are executed on the slave as
+    part of the SQL thread. The SQL thread automatically deletes each relay log
+    file after it has executed all events in the file and no longer needs it. 
+
+    consists of a set of numbered files containing events that describe
+    database changes, and an index file that contains the names of all used
+    relay log files.
+
+    Relay log files have the same format as binary log files and can be read
+    using mysqlbinlog.
+
+  * relay log info log. status information about the execution point within the
+    slave's relay log. It is required for the recovery of the SQL thread.
+
+  master info log and relay log info log can be saved to database, which
+  improves resilience to unexpected halts. The updates to the tables are
+  committed together with the transaction, meaning that the information in them
+  is always consistent with what has been applied to the database, even in the
+  event of a server halt.
+
 replication formats
 """"""""""""""""""""
 - SBR. executing the SQL statements on the slave.
@@ -577,6 +604,10 @@ configuration
       [mysqld]
       server-id=2
       relay-log=relay-bin
+      master-info-repository=TABLE
+      relay-log-info-repository=TABLE
+      relay-log-purge=1
+      relay-log-recovery=1
 
   * apply master data snapshot.
 
@@ -625,11 +656,43 @@ replication options
   connections from slaves, and a slave with a server ID of 0 refuses to connect
   to a master.
 
+master info log and relay log options.
+
+- ``--master-info-file=<filename>``.
+  default: master.info.
+
+- ``--master-info-repository={FILE|TABLE}``, ``master_info_repository``.
+  default: FILE.
+  whether the slave logs master status and connection information to a FILE or
+  TABLE.
+
 - ``--relay-log=pathname``, ``relay_log``.
   default: ``<hostname>-relay-bin`` for default channel, or
   ``<hostname>-relay-bin-<channel>`` for the named channel.
 
-  It's recommended to set this option independent of hostname.
+  It's recommended to set this option independent of hostname to avoid
+  issues casued by changed hostname or to ease cloning slave.
+
+- ``--relay-log-info-file=<filename>``, ``relay_log_info_file``.
+  default: relay-log.info.
+
+- ``--relay-log-info-repository={FILE|TABLE}``, ``relay_log_info_repository``.
+  default: FILE.
+  whether the slave's position in the relay logs is written to a FILE or TABLE.
+
+- ``--relay-log-purge={0|1}``, ``relay_log_purge``.
+  default: 1.
+  automatic purging of relay logs as soon as they are no longer needed.
+
+- ``--relay-log-recovery={0|1}``, ``relay_log_recovery``.
+  default 0.
+  Enables automatic relay log recovery immediately following server startup.
+  This makes a slave resilient to unexpected halts.
+
+- ``--max-relay-log-size=#``, ``max_relay_log_size``.
+  default 0, which falls back to ``max_binlog_size``.
+
+binlog checksum.
 
 - ``--slave-sql-verify-checksum={0|1}``, ``slave_sql_verify_checksum``.
   let slave use checksum to verify binlog.
