@@ -52,3 +52,21 @@ common operations
 
 - IP 地址. 静态或 DHCP. 对于 DHCP::
     dhcpcd <dev>
+
+- Find out which 802.11 protocol the wifi connection is using [UnixSE80211]_::
+
+    iw dev <dev> scan
+
+  * 802.11b AP: there are ``Supported rates`` below 11Mbps.
+
+  * 802.11g AP: there are ``Supported rates`` or ``Extended supported rates``
+    above 11Mbps or 6Mbps.
+
+  * 802.11n AP: there is ``HT capabilities`` IE.
+
+  * 802.11ac AP: there is ``VHT`` IE (Very High Throughput).
+
+references
+==========
+
+.. [UnixSE80211] `Linux find WiFi Networks protocol(a/b/g/n) version of all available access points <https://unix.stackexchange.com/questions/62265/linux-find-wifi-networks-protocola-b-g-n-version-of-all-available-access-point>`_
