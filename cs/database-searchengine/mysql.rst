@@ -697,6 +697,55 @@ binlog checksum.
 - ``--slave-sql-verify-checksum={0|1}``, ``slave_sql_verify_checksum``.
   let slave use checksum to verify binlog.
 
+backup and recovery
+===================
+
+Percona XtraBackup
+------------------
+feature
+^^^^^^^
+
+- non-blocking hot backup for InnoDB.
+
+prerequisites
+^^^^^^^^^^^^^
+* full-backup permissions
+
+  - ``RELOAD``, ``LOCK TABLES``
+  
+  - ``REPLICATION CLIENT``
+  
+  - ``PROCESS``
+
+* need access to mysql data dir. thus can only be run locally.
+
+procedure
+^^^^^^^^^
+
+- create user with permissions::
+
+    CREATE USER '<user>'@'localhost' IDENTIFIED BY '<pass>';
+    GRANT RELOAD, LOCK TABLES, PROCESS, REPLICATION CLIENT ON *.* TO '<user>'@'localhost';
+    FLUSH PRIVILEGES;
+
+- full backup::
+
+    xtrabackup -u <user> -p<pass> --backup --target-dir=<dir>
+
+- prepare a backup::
+
+    xtrabackup -u <user> -p<pass> --prepare --target-dir=<dir>
+
+- restore backup::
+
+    cp <backup> /var/lib/mysql && chown -R mysql:mysql /var/lib/mysql
+
+replication info
+^^^^^^^^^^^^^^^^
+
+- ``xtrabackup_binlog_info`` file contains coordinate of the exact point in the
+  binary log to which the prepared backup corresponds.
+
 CLI
 ===
 
