@@ -197,6 +197,7 @@ view
 * trick: 给 view callable 设置默认参数可以做到让多个 url 指向一个 view callable.
 
   .. code:: python
+
     urlpatterns = [
         url(r'^blog/$', views.page),
         url(r'^blog/page(?P<num>[0-9]+)/$', views.page),
@@ -591,6 +592,7 @@ Class-based views
     generic view 结合.
 
     .. code:: python
+
       class JSONResponseMixin:
           def render_to_json_response(self, context, **response_kwargs):
               return JsonResponse(
@@ -1022,7 +1024,9 @@ tags
     因此, 不能通过某种 runtime 条件判断让 block 出现、消失或重定义.
 
   * 接上, 若要根据 runtime 条件判断是否重新定义一个 block, 可以用以下方法:
+
     .. code:: htmldjango
+
       {% block name %}
         {% if condition %}
           {# redefinition/extension of parent block... #}
@@ -1175,6 +1179,7 @@ request and response
       在函数中区别 method 来进行不同的逻辑:
 
       .. code:: python
+
         if request.method == "GET":
             pass
         elif request.method == "POST":
@@ -1494,6 +1499,7 @@ admin site
     * 设置某属性在新建时是需要输入的, 在修改时是只读的:
 
       .. code:: python
+
         def get_readonly_fields(self, request, obj=None):
             if obj is None:
                 return self.readonly_fields
@@ -2004,6 +2010,7 @@ inheritance
     关联:
 
     .. code:: python
+
       <parent>_ptr = models.OneToOneField(
         <parent-model>,
         on_delete=models.CASCADE,
@@ -2146,7 +2153,9 @@ to the parent class and then don’t use them later on.
 - ``primary_key=True``.
   设置某个 field 为 primary key, 否则 django 自动给 model 添加 id field
   作为 primary key.
+
   .. code:: python
+
     id = models.AutoField(primary_key=True)
 
   The primary key field is read-only. If you change the value of the primary key
@@ -5384,10 +5393,10 @@ django-admin
 * ``./manage.py shell`` 启动 shell 并加载项目相关 django 配置; 这相当于
   执行了:
 
-    .. code:: python
+  .. code:: python
 
-      os.environ['DJANGO_SETTINGS_MODULE'] = "<project>.settings"
-      import django; django.setup()
+    os.environ['DJANGO_SETTINGS_MODULE'] = "<project>.settings"
+    import django; django.setup()
 
 * ``makemigrations``
 
@@ -5420,6 +5429,7 @@ django-admin
 ===============================
 
 - 使用当前项目完整配置.
+
   .. code:: python
 
     os.environ['DJANGO_SETTINGS_MODULE'] = "<project>.settings"
