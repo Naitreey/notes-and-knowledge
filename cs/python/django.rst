@@ -5556,7 +5556,9 @@ options
 
 attributes
 
-- ``style``. output colorscheme definitions.
+- ``style``. output colorscheme ``Style`` definitions instance. attribute
+  names are uppercased palette role name. attribute values are corresponding
+  ``colorize()`` function.
 
 - ``stdout``, ``stderr``. command's stdout, stderr. 使用这个进行输出, 以保证
   符合 Command instance's redirection 配置, 并便于测试.
