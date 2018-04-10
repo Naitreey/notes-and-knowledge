@@ -2431,3 +2431,35 @@ mysql
   specified by the MYSQL_DATABASE variable.
 
 - volume: /var/lib/mysql
+
+APIs
+====
+
+APIs
+----
+
+- offical Go and Python SDK/client library.
+
+- Docker Engine API. RESTful HTTP interface.
+
+- third party language libraries.
+
+versions
+--------
+所有 client library 都是 Engine API 的封装.
+client & server 的 API 版本需要匹配. 
+
+一般而言, docker client 的 API 版本可以低于 daemon 支持的 API 版本.
+
+A given version of the Docker Engine SDK supports a specific version of the
+Docker Engine API.
+
+Docker Engine API
+-----------------
+- The Docker API is backward-compatible.
+
+- check server/client's highest supported API version: ``docker version``
+
+python
+------
+- ``docker`` module.
