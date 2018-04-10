@@ -638,7 +638,7 @@ general
 -------
 
 template backend
-~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^
 * django 支持同时配置多个模板 backend engine. 包含 django 自己的模板语言和 jinja2.
 
 * ``settings.TEMPLATES``, 对每种 template engine, 支持以下参数:
@@ -727,7 +727,7 @@ template backend
   体会 django 是如何将用变量填充模板这件事模块化成一个个环节和组件对象的.
 
 context processors
-~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^
 
 - callable object, 输入 HttpRequest, 输出需要添加进 template context 的
   dict 值. 它的目的是将通用的 context variables 的 添加过程通用化,
@@ -765,12 +765,12 @@ context processors
   ``messages``, ``DEFAULT_MESSAGE_LEVELS``
 
 template context
-~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^
 
 - Context object 在通用 API 中是纯粹的 dict.
 
 template loaders
-~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^
 
 - responsible for locating, loading, and returning Template objects.
 
@@ -870,7 +870,7 @@ django template system & language
 * 模板中 single quote 和 double quote 没有区别, 跟 python 一样.
 
 filters
-~~~~~~~
+^^^^^^^
 
 - ``add``
 
@@ -989,7 +989,7 @@ filters
 - ``pprint``
 
 tags
-~~~~
+^^^^
 
 - ``extends``, 必须是模板中的第一个 tag. extends 的值可以是 string
   从而是模板路径, 或者是 Template object 从而 extends 这个模板.
@@ -1107,7 +1107,7 @@ tags
   * compile-time: ``extends``, ``block``
 
 template inheritance
-~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^
 
 Template inheritance allows you to build a base “skeleton” template that
 contains all the common elements of your site and defines ``block``'s that
@@ -1125,7 +1125,7 @@ a fallback.
   * 每个功能部分的具体页面去实现所需功能.
 
 escaping
-~~~~~~~~
+^^^^^^^^
 django template 默认 escape output of every variable tag.
 template 中的 string literal 没有被 html escape, 而是原样包含在 html 中.
 
@@ -1142,7 +1142,7 @@ disable auto escaping:
 disable auto-escaping, 需小心谨慎.
 
 context objects
-~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^
 
 - ``Context`` 是一个 stack, 包含多层 context dicts (dict or ``ContextDict``
   instance).
@@ -2141,7 +2141,7 @@ model field
 Field 是 ``RegisterLookupMixin`` 的子类.
 
 options
-~~~~~~~
+^^^^^^^
 
 Many of Django’s model fields accept options that they don’t do anything with.
 This behavior simplifies the field classes, because they don’t need to
@@ -2251,7 +2251,7 @@ to the parent class and then don’t use them later on.
   validation 的时候生效.
 
 attributes
-~~~~~~~~~~
+^^^^^^^^^^
 
 - ``description``. description of the field. 这与 help_text 的区别是,
   这个使用来描述列的 implementation 的, 即适合于用在代码文档中. 而
@@ -2324,7 +2324,7 @@ fields 需要设置这些属性.
   该列在 ``related_model`` 上的对应列 (实际存在或虚拟的列).
 
 methods
-~~~~~~~
+^^^^^^^
 db data type related APIs.
 
 - ``get_internal_type()``.
@@ -2450,7 +2450,7 @@ deconstruction.
   这在 migration 中使用.
 
 field types
-~~~~~~~~~~~
+^^^^^^^^^^^
 所有 field types 都是 ``Field`` 子类.
 
 - AutoField.
@@ -2991,7 +2991,7 @@ QuerySet
   但 Manager 的没有的方法 (为了避免误删全部).
 
 CRUD
-~~~~
+^^^^
 * attributes & methods.
 
   - ``ordered``, QuerySet 是否有排序.
@@ -3131,7 +3131,7 @@ CRUD
   这可能导致 DISTINCT, GROUP BY, aggregation 等结果与预期不符. 需要小心对待.
 
 aggregation
-~~~~~~~~~~~
+^^^^^^^^^^^
 
 * 两种聚合方式: ``QuerySet.aggregate()``, ``QuerySet.annotate``.
 
@@ -3209,14 +3209,14 @@ aggregation
   - ``Sum``
 
 raw SQL
-~~~~~~~
+^^^^^^^
 ``QuerySet.raw()`` 和 ``Manager.raw()``.
 输入 SQL statements, 输出 ``RawQuerySet``.
 
 Should be used sparingly and carefully.
 
 Field lookups
-~~~~~~~~~~~~~
+^^^^^^^^^^^^^
 各种过滤和获取的方法的参数语法, 对应到 SQL ``WHERE`` clause.
 Syntax: ``<field>[__<field>...][__<lookuptype>]=value``.
 若省略 lookuptype, 默认是 ``exact``.
@@ -3275,7 +3275,7 @@ Syntax: ``<field>[__<field>...][__<lookuptype>]=value``.
   字符, 将自动在 SQL 层进行转义, 保证 django 的抽象与底层 SQL 实现无关.
 
 query expressions
-~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^
 
 * ``F()`` expression 在 CRUD 操作中代表一个列的值 (F for Field) 的 symbolic
   form. django 不会去访问数据库将值取出来, 与 F expression 进行的各种操作的
@@ -3355,7 +3355,7 @@ Manager
   ``clear()``, ``set()``. 这些操作都是立即在数据库生效的.
 
 BaseManager
-~~~~~~~~~~~
+^^^^^^^^^^^
 attributes.
 
 * ``auto_created``. 该 manager 是否是自动创建, 而不是在 model class 中明确定义的.
@@ -3370,7 +3370,7 @@ methods.
 
 
 Manager
-~~~~~~~
+^^^^^^^
 
 每个 model 都有至少一个 ``Manager`` instance, 用于进行 table-level operations.
 ``Manager`` instance is accessible only via model class, rather than from
@@ -3395,7 +3395,7 @@ methods.
   * ``queryset_only=False`` methods (even if private) are copied.
 
 specify manager in model
-~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^
 - 当定义 model 时, 若不明确指定 manager (无论是修改 manager name 还是 custom
   manager class), 则会自动生成 ``objects = Manager()`` manager. 若明确设置,
   可以设置任意个 managers. This is an easy way to define common “filters” for
@@ -3419,7 +3419,7 @@ specify manager in model
   base manager.
 
 custom manager
-~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^
 subclass ``django.db.models.Manager`` 以进行自定义.
 
 - 添加 custom manager method. 用处: 当需要对 models 添加 table-level 的功能
@@ -3435,7 +3435,7 @@ subclass ``django.db.models.Manager`` 以进行自定义.
 自定义的 manager class 必须能够 shallow copied by ``copy.copy()``.
 
 in model inheritance
-~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^
 - model 继承 parent model 定义的 managers. 标准的 python inheritance 机制.
 
 - 若 model 和 parents 都没定义 managers, 自动创建 ``objects`` manager.
@@ -3455,7 +3455,7 @@ database definitions
 default when no other database has been selected.
 
 connection settings
-~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^
 - mysql
 
   * 配置项优先级从高至低.
@@ -3495,7 +3495,7 @@ database connection
   SQL statement 使用 ``%s`` placeholder.
 
 persistent connection
-~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^
 ``settings.DATABASES.CONN_MAX_AGE`` 设置数据库连接的最大持续时间. 即
 persistent connection.
 
@@ -3522,7 +3522,7 @@ db server 端可能连接等待超时断开. 此时 CONN_MAX_AGE 应该设置为
 时长. 对于大流量网站, 则没有这个问题.
 
 connection management
-~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^
 - 在处理请求中, 需要访问数据库时, 开启连接.
 
 - 在请求处理结束时, ``request_finished`` signal handler 检查连接是否达
@@ -3534,11 +3534,11 @@ cursor
 ------
 
 CursorWrapper
-~~~~~~~~~~~~~
+^^^^^^^^^^^^^
 封装 database library 给出的 cursor object. 封装了或者传递了各种 cursor methods.
 
 BaseDatabaseWrapper
-~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^
 
 methods.
 
@@ -3635,7 +3635,7 @@ multiple databases
 的关联性.
 
 routing scheme
-~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^
 The default routing scheme ensures that if a database isn’t specified, all
 queries fall back to the default database.
 
@@ -3653,7 +3653,7 @@ Implementation.
 相应的判断和选择.
 
 manually using multiple databases
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - queryset chaining 过程中可以在任意位置加上 ``.using()``. 整个就对于该数据库操作.
 
@@ -3662,7 +3662,7 @@ manually using multiple databases
 - manager instance 有 ``.db_manager(using=)`` method.
 
 problems
-~~~~~~~~
+^^^^^^^^
 - unnecessary messy complexity when CRUD with multiple dbs.
 
 - no builtin admin integration
@@ -3677,7 +3677,7 @@ tablespaces
 tablespace 需要手动创建, django 不负责创建 tablespace, 只负责使用.
 
 settings
-~~~~~~~~
+^^^^^^^^
 - settings.DEFAULT_TABLESPACE. table 的 tablespace 默认值. 即 ``Meta.db_tablespace``
   默认值. 默认为空. 此时依赖 backend 自己选择 tablespace 处理方式.
 
@@ -3697,7 +3697,7 @@ user model
 创建超级管理员.
 
 managers
-~~~~~~~~
+^^^^^^^^
 If your user model defines ``username``, ``email``, ``is_staff``,
 ``is_active``, ``is_superuser``, ``last_login``, and ``date_joined`` fields the
 same as Django’s default user, you can just install Django’s UserManager;
@@ -3728,7 +3728,7 @@ managers.
   * ``create_superuser(...)``
 
 AbstractBaseUser
-~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^
 提供了最核心最必须的那些 user model 列和功能, 剩下的所有内容, 包括用户识别列
 (username, email 等) 都没有实现, 需要子类去实现. 它提供了 password 管理方法.
 
@@ -3801,7 +3801,7 @@ AbstractBaseUser
     change.
 
 PermissionMixin
-~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^
 PermissionsMixin 为 user model 提供 Group & Permission 即权限相关数据列
 和功能. 便于 custom user model 使用, giving you all the methods and database
 fields necessary to support Django’s permission model.
@@ -3838,7 +3838,7 @@ fields necessary to support Django’s permission model.
   * ``has_module_perms()``. 检查是否有对某个 app 的权限.
 
 AbstractUser
-~~~~~~~~~~~~
+^^^^^^^^^^^^
 AbstractUser 实际上完整地实现了 django 所使用的默认的 user model. 它之所以
 是抽象的, 是为了 project 在自定义 user model 时能直接利用现有的模型.
 
@@ -3873,7 +3873,7 @@ auth backend 应当检查用户是否被禁用. 对于 ModelBackend & RemoteUser
   * ``email_user()``. 为啥有这么个奇葩的方法放在这里?
 
 User
-~~~~
+^^^^
 User 只是将抽象的 AbstractUser 具体化成实际模型所建立的 placeholder class.
 它本身并不定义任何额外的内容, 除了 Meta.swappable. 这样便于 project 自己
 去自定义 User model. 即直接 subclass AbstractUser 即可.
@@ -3889,7 +3889,7 @@ User 只是将抽象的 AbstractUser 具体化成实际模型所建立的 placeh
   * ``has_module_perms(<app>)``, 判断用户是否在某个 app 中有至少一个权限.
 
 AnonymousUser
-~~~~~~~~~~~~~
+^^^^^^^^^^^^^
 AnonymousUser implements basic interface of AbstractUser.
 
 ``AnonymousUser`` 虽然不具备很多 ``User`` 的属性和方法, 但是可以进行
@@ -3902,7 +3902,7 @@ AnonymousUser implements basic interface of AbstractUser.
 只读的 False/True.
 
 扩展和自定义 user model
-~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^
 
 - proxy model to auth.User: purely behavioral extension, use proxy model.
 
@@ -4044,7 +4044,7 @@ Permission and Authorization
 - 一个用户或一个组可以有任意个权限 (many-to-many). 组具有的权限用户自动具有.
 
 Permission
-~~~~~~~~~~
+^^^^^^^^^^
 - auth package 提供的 Permission 对象一定是和某个 model 关联的 (通过
   ContentType). 这其实符合一般的权限限制要求.
 
@@ -4078,7 +4078,7 @@ Permission
   * codename.
 
 Group
-~~~~~
+^^^^^
 
 User 和 Group 是 many-to-many 的关系.
 
@@ -4118,7 +4118,7 @@ Authentication
     ``login()`` ``logout()`` 等.
 
 authenticate & login/logout
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - authentication.
 
@@ -4170,7 +4170,7 @@ authenticate & login/logout
   ``settings.LOGOUT_REDIRECT_URL``, 登出后的默认跳转路径.
 
 authentication views
-~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^
 auth views 不提供默认的 templates, 需要自己写模板.
 
 若不想直接使用默认的 auth.urls 设置, 可单独使用 views 以对参数进行自定义,
@@ -4373,7 +4373,7 @@ auth views 不提供默认的 templates, 需要自己写模板.
 - view helper: ``redirect_to_login()``.
 
 authentication forms
-~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^
 
 若不想使用 auth views, 可单独使用 auth forms.
 
@@ -4397,14 +4397,14 @@ authentication forms
   used in admin site.
 
 urls
-~~~~
+^^^^
 
 - ``auth.urls`` 提供了完整的 auth urls 和 view 实现. 这些 url 是没有
   namespace 的. 在使用时可以直接放在 url root path 上, 或者 ``include()``
   中设置 namespace.
 
 authentication signals
-~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^
 
 - ``user_logged_in``
 
@@ -4478,7 +4478,7 @@ authorization and authentication backends
   * ``has_module_perms()``
 
 ModelBackend
-~~~~~~~~~~~~
+^^^^^^^^^^^^
 默认的 auth backend. 通过 USERNAME_FIELD/password 进行认证.
 
 ModelBackend 会将取到的用户权限 cache 在 user instance 上. 对于组权限和用户权限
@@ -4516,13 +4516,13 @@ API.
   空权限集 ``set()`` 或者 False.
 
 AllowAllUsersModelBackend
-~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^
 允许 inactive user 认证. 但仍然没有任何权限.
 
 这是 ModelBackend 的子类.
 
 RemoteUserBackend
-~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^
 通过外部认证机制进行自动的用户认证和创建. 这用于与 LDAP 等统一认证机制结合使用.
 需要认证的用户名通过 ``REMOTE_USER`` header 传递至 django.
 
@@ -4544,7 +4544,7 @@ methods.
 - ``configure_user()``. 对于新创建的用户, 进行配置.
 
 AllowAllUsersRemoteUserBackend
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 允许 inactive user 认证. 但仍然没有任何权限.
 
 这是 RemoteUserBackend 的子类.
@@ -4553,7 +4553,7 @@ middlewares
 -----------
 
 AuthenticationMiddleware
-~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 根据 request 中 cookie 保存的 session 信息进行自动的用户识别和认证, 避免每次访问
 都要登录.
@@ -4567,7 +4567,7 @@ AuthenticationMiddleware
 无论认证的结果是什么用户, 都保存在 ``request.user`` 上.
 
 RemoteUserMiddleware
-~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^
 在 AuthenticationMiddleware 的基础上, 进行检查和认证.
 所以是在 ``settings.MIDDLEWARE`` 中, AuthenticationMiddleware 后面添加
 这个 middleware.
@@ -4587,7 +4587,7 @@ attributes.
 - force_logout_if_no_header. 没有 header 时, 是否 logout user.
 
 PersistentRemoteUserMiddleware
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 没有 header 时也不 logout user. 它是 RemoteUserMiddleware 的子类.
 
@@ -4600,7 +4600,7 @@ view mixins & decorators
 以下 decorators and mixins 提供在各个 app 的 view 中提供用户认证和权限管理.
 
 decorators
-~~~~~~~~~~
+^^^^^^^^^^
 
 - ``login_required``.
 
@@ -4622,7 +4622,7 @@ decorators
   所以不能说所有条件判断时都可以使用.
 
 mixins
-~~~~~~
+^^^^^^
 ``AccessMixin`` 共同父类. AccessMixin 不会 override ``.dispatch()`` method.
 由于它提供了一系列参数和 ``handle_no_permission`` 方法, 除了可以作为以下的
 共同父类之外, 还可以作为比较一般化的 mixin class, 在 view 中按需求使用它提供
@@ -4659,7 +4659,7 @@ context processors
 ------------------
 
 django.contrib.auth.context_processors.auth
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 为 template context 自动添加一系列用户、权限相关量.
 
@@ -4683,7 +4683,7 @@ token generator
 ---------------
 
 django.contrib.auth.tokens.PasswordResetTokenGenerator
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 必要特性.
 
 - 安全性. 合法的 token 依赖于用户当前密码的 hash 和服务器配置的 secret key,
@@ -4709,7 +4709,7 @@ password management
 Recommended by NIST, sufficient for most uses.
 
 password hashing
-~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^
 
 - ``PASSWORD_HASHERS``. a list of supported hashing algorithms.
   第一项用于加密密码. 其他所有项 (包含第一项) 都可用于检验密码.
@@ -4728,7 +4728,7 @@ independently from the User model.
 - ``is_password_usable()``
 
 password upgrading
-~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^
 使用 django 默认的认证机制 ModelBackend 时, 在用户在登录认证时, 若存储的密码的
 hash 算法、iterations 等参数与 PASSWORD_HASHERS 配置的不同时,
 ``user.check_password()`` 会根据当前配置自动更新密码.
@@ -4742,7 +4742,7 @@ PASSWORD_HASHERS, so as you upgrade to new systems you should make sure never
 to remove entries from this list.
 
 password strength validation
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 By default, validators are used in the forms to reset or change passwords and
 in the ``createsuperuser`` and ``changepassword`` management commands. Validators
 aren’t applied at the model level.
@@ -5114,11 +5114,11 @@ use CSRF token during POST
 任何种类的 POST 修改服务器状态时, 都要实现 CSRF protection.
 
 form post
-~~~~~~~~~
+^^^^^^^^^
 添加 ``csrf_token`` form input. 作为 form data 的一部分 POST 至服务端.
 
 ajax post
-~~~~~~~~~
+^^^^^^^^^
 添加 ``X-CSRFToken`` header. 随 body 一起 POST 至服务端.
 
 - 若 csrf token 存储在 cookie 中: 访问 ``CSRF_COOKIE_NAME`` cookie
@@ -5369,22 +5369,22 @@ django logging handlers
 -----------------------
 
 AdminEmailHandler
-~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^
 sends an email to the site ADMINS for each log message it receives.
 
 django logging filters
 ----------------------
 
 CallbackFilter
-~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^
 简化创建新的 filter, 直接传一个 filter function 即可.
 
 RequireDebugFalse
-~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^
 only pass on records when ``settings.DEBUG`` is False.
 
 RequireDebugTrue
-~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^
 
 
 django-admin
@@ -5492,7 +5492,7 @@ django-auth-ldap
 登录状态与平时一样, 通过 session + AuthenticationMiddleware 维持.
 
 authentication
-~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^
 authentication methods.
 
 1. Search/bind.
@@ -5505,7 +5505,7 @@ authentication methods.
    directly.
 
 user
-~~~~
+^^^^
 ``LDAPBackend.authenticate()`` 在认证成功后会建立对应的 django 用户. 然后,
 
 - 根据配置的 DN entry attributes 更新 user model fields.
@@ -5517,7 +5517,7 @@ user
 对应的 django user 会设置 unusable password.
 
 settings
-~~~~~~~~
+^^^^^^^^
 - config prefix. 默认为 ``AUTH_LDAP_``. LDAPBackend subclass can override this.
   When several LDAP backend co-exist and operate independently, each of them
   may need a different prefix.
