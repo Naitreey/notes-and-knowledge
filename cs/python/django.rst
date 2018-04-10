@@ -5390,7 +5390,23 @@ RequireDebugTrue
 django-admin
 ============
 
-* ``./manage.py shell`` 启动 shell 并加载项目相关 django 配置; 这相当于
+CLI usage
+---------
+::
+
+  {django-admin | ./manage.py} subcommand [options] [args]
+  
+- 对于 ``django-admin``, 若要加载 project-specific commands,
+  需要设置::
+
+    --settings=<import-path> --pythonpath=$PWD
+
+  否则 django 无法初始化 project.
+
+commands
+--------
+
+* ``shell`` 启动 shell 并加载项目相关 django 配置; 这相当于
   执行了:
 
   .. code:: python
@@ -5424,6 +5440,27 @@ django-admin
 
 * ``inspectdb``. 根据数据库 schema 反向推导生成与之匹配的 model code.
   通过分析 mysql's builtin ``information_schema`` database.
+
+execution logic
+----------------
+
+执行 management 命令时的基本步骤:
+
+- ``django-admin`` 和 ``manage.py`` 执行 ``execute_from_command_line()``,
+  实例化 ``ManagementUnity``.
+
+- ``ManagementUnity`` 配置项目, 加载所有 commands. 加载并实例化指定的
+  management ``BaseCommand`` subclass. 将命令行参数传递给它.
+
+- ``BaseCommand`` 构建 ArgumentParser 以及命令行. 解释传入的命令行参数.
+  最终调用 ``handle()`` 执行所需操作.
+
+API
+---
+
+Core functionality resides in ``django.core.management``.
+
+BaseCommand
 
 在独立的程序或脚本中使用 django
 ===============================
