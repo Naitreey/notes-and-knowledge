@@ -5395,7 +5395,9 @@ CLI usage
 ::
 
   {django-admin | ./manage.py} subcommand [options] [args]
-  
+
+- common options.
+
 - 对于 ``django-admin``, 若要加载 project-specific commands,
   需要设置::
 
@@ -5403,8 +5405,45 @@ CLI usage
 
   否则 django 无法初始化 project.
 
+execution logic
+----------------
+
+执行 management 命令时的基本步骤:
+
+- ``django-admin`` 和 ``manage.py`` 执行 ``execute_from_command_line()``,
+  实例化 ``ManagementUnity``.
+
+- ``ManagementUnity`` 配置项目, 加载所有 commands. 加载并实例化指定的
+  management ``BaseCommand`` subclass. 将命令行参数传递给它.
+
+- ``BaseCommand`` 构建 ArgumentParser 以及命令行. 解释传入的命令行参数.
+  最终调用 ``handle()`` 执行所需操作.
+
+对于某个 app, 创建 management commands 的方式:
+
+- 创建 ``<app>/management/commands`` 目录, 创建必要的 ``__init__.py``
+  各层成为 package.
+
+- 对每个 management command, 创建以命令名作为 module name 的 submodule.
+  ``commands/`` 目录下的 private module (starts with ``_``) 不会认为是
+  command module.
+
+- 每个 module 内包含一个 ``Command`` class, 它是 ``BaseCommand`` 的
+  subclass.
+  
+- 实现 ``handle()`` method 进行所需操作. 错误信息通过 ``CommandError`` raise
+  出来.
+
+- 实现 ``add_arguments()`` method 添加命令行参数.
+
 commands
 --------
+
+command loading prcedence.
+
+``INSTALLED_APPS`` + ``django.core.management``, 越靠前的优先级越高.
+
+``django.core.management``:
 
 * ``shell`` 启动 shell 并加载项目相关 django 配置; 这相当于
   执行了:
@@ -5422,14 +5461,6 @@ commands
   - ``--dry-run`` 可用来检查当前记录的数据库结构 (通过 migration files 来体现)
     是否和 models 里的模型代码保持一致.
 
-* ``clearsessions`` 清除过期的 session data. django 不提供自动清理
-  session 的机制. 可以定期执行这个命令手动清除过期的 session.
-
-* ``runserver``.
-
-  对于 runserver 输出的请求相应日志, 每一行是在该请求结束后才输出, 因此
-  才记录有 method, url, http version, status code 等信息.
-
 * ``dbshell``
 
   似乎不会使用平时 django 运行时传入的 OPTIONS 参数.
@@ -5441,26 +5472,137 @@ commands
 * ``inspectdb``. 根据数据库 schema 反向推导生成与之匹配的 model code.
   通过分析 mysql's builtin ``information_schema`` database.
 
-execution logic
-----------------
+``django.contrib.sessions``:
 
-执行 management 命令时的基本步骤:
+* ``clearsessions`` 清除过期的 session data. django 不提供自动清理
+  session 的机制. 可以定期执行这个命令手动清除过期的 session.
 
-- ``django-admin`` 和 ``manage.py`` 执行 ``execute_from_command_line()``,
-  实例化 ``ManagementUnity``.
+``django.contrib.staticfiles``:
 
-- ``ManagementUnity`` 配置项目, 加载所有 commands. 加载并实例化指定的
-  management ``BaseCommand`` subclass. 将命令行参数传递给它.
+* ``runserver``.
 
-- ``BaseCommand`` 构建 ArgumentParser 以及命令行. 解释传入的命令行参数.
-  最终调用 ``handle()`` 执行所需操作.
+  对于 runserver 输出的请求相应日志, 每一行是在该请求结束后才输出, 因此
+  才记录有 method, url, http version, status code 等信息.
+
+output colorscheme
+------------------
+
+palette
+^^^^^^^
+- pre-defined: dark, light, nocolor.
+
+- ``DJANGO_COLORS`` environ 设置 color palette. default is dark. format::
+
+    [<palette>][;role=<fg>[/<bg>][,<option>[,<option>,...]][;role=...]]
+
+  * if palette is omitted, use nocolor.
+
+  * every role spec after palette is a customization based on palette.
+
+- roles: see https://docs.djangoproject.com/en/2.0/ref/django-admin/#extra-niceties
+
+- fg, bg colors: black , red , green , yellow , blue , magenta , cyan , white 
+
+- options: bold , underscore , blink , reverse , conceal
+
 
 API
 ---
 
 Core functionality resides in ``django.core.management``.
 
+module-level functions
+^^^^^^^^^^^^^^^^^^^^^^
+
+- ``call_command(name, *args, **options)``. call management command
+  programmatically.
+  
+  * ``name`` of command.
+    
+  * arg is commadline argument list. 
+
+  * options is command line option and stealth_options in kwarg form.
+    这部分不通过 parser 解析, 应该符合 ``parse_args()`` 输出.
+    Send directly to ``BaseCommand.execute()``.
+
+    stdout/stderr options can be used for redirection.
+
+command class
+^^^^^^^^^^^^^
+
 BaseCommand
+""""""""""""
+``django.core.management.BaseCommand``: base class of all management commands.
+
+options
+
+- ``help``. command description.
+
+- ``missing_args_message``. 对于 subcommand 定义了 required positionals 时,
+  若未提供, 输出该信息, 而不是 argparse 默认的一般化信息.
+
+- ``output_transaction``. 若 ``handle()`` 返回一组 sql, 设置作为 transaction
+  自动添加 BEGIN/END.
+
+- ``require_migrations_checks``. 检查 migration files 是否与数据库中的历史一致.
+
+- ``require_system_checks``. django system checking.
+
+- ``leave_locale_alone``.
+
+- ``stealth_options``. 一组不在 management command line 定义的 options.
+  它们用于在 ``call_command()`` 时传递一些额外的参数. 例如 stdout/stderr
+  redirection.
+
+attributes
+
+- ``style``. output colorscheme definitions.
+
+- ``stdout``, ``stderr``. command's stdout, stderr. 使用这个进行输出, 以保证
+  符合 Command instance's redirection 配置, 并便于测试.
+
+  stdout/stderr is instance of ``OutputWrapper``. ``write()`` method 会自动
+  添加 line ending, 如果输入没有提供的话.
+
+methods
+
+- ``add_arguments(parser)``. 添加自定义的命令行参数. parse 是 ArgumentParser.
+
+- ``get_version()``. default return django version. can be overrided to provide
+  command version.
+
+- ``execute(*args, **options)``. execute command with parsed arguments. Raised
+  ``CommandError`` will be printed to stderr then exiting with status code 1.
+  ``args`` is mostly useless.
+
+  * ``stdout``, ``stderr`` options 可进行 redirection.
+
+- ``handle(*args, **options)``. main execution logic. return value is printed
+  to stdout.
+
+- ``check()``. system check.
+
+- ``check_migrations()``. migration check.
+
+- ``run_from_argv()``. cmdline execution entrypoint. create parser, parse args
+  and call ``execute()``.
+
+- ``create_parser()``.
+
+exceptions
+^^^^^^^^^^
+
+CommandError
+""""""""""""
+If this exception is raised during the execution of a management command from a
+command line console, it will be caught and turned into a nicely-printed error
+message to the appropriate output stream (i.e., stderr); as a result, raising
+this exception (with a sensible description of the error) is the preferred way
+to indicate that something has gone wrong in the execution of a command.
+
+bash completion
+---------------
+django source repo 里提供了 bash completion script.
 
 在独立的程序或脚本中使用 django
 ===============================
