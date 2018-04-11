@@ -458,8 +458,18 @@ function declaration statement
 - hoisting. Wherever a function declaration is inside a scope, that declaration
   is taken to belong to the entire scope and accessible everywhere throughout.
 
-- closure. A closure is the combination of a function and the lexical
-  environment within which that function was defined.
+- closure. A function is able to remember and access its lexical scope even
+  when that function is executing outside its lexical scope. The function's
+  reference to its defining lexical scope is called closure. In other words,
+  a function has closure over its lexical scope.
+
+  Here the aforementioned lexical scope might be some outer function scope, or
+  even global scope.  As long as when the function is executing outside of its
+  original defining scope, closure happens. For closure over global scope, it
+  happens when the function is executed outside of its defining module.
+
+  A function's reference to its outer lexical scope, prevents the scope's memory
+  and whatnot being GC-ed.
 
 - module pattern. I don't know. It looks like class, but why don't use class???
 

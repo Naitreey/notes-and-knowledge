@@ -24,6 +24,9 @@ WindowOrWorkerGlobalScope
 setInterval()
 -------------
 
+setTimeout()
+------------
+
 Console
 =======
 
