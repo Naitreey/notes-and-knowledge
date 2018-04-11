@@ -40,7 +40,16 @@ The standard type hierarchy
 包含对一系列类型概念的标准陈述.
 
 class
-~~~~~
+^^^^^
+- class 的分类.
+  
+  对于 CPython, 按照实现方式不同, class 可以分为:
+
+  * builtin types. implemented in C as part of CPython interpreter.
+
+  * extension class. implemented in C as part of C module extension.
+
+  * custom class. implemented in Python.
 
 - 实例化.
 
@@ -67,7 +76,7 @@ class
   算法给出 ``__mro__`` attribute, 则无法创建这个类. 此时会 raise TypeError.
 
 class instance
-~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^
 
 * attribute reference.
   
@@ -89,7 +98,7 @@ special attributes & methods
 ----------------------------
 
 instantiation
-~~~~~~~~~~~~~
+^^^^^^^^^^^^^
 以下属性在 class & metaclass 上有.
 
 - ``class.__new__(cls, ...)``. static method. 实例化时
@@ -103,13 +112,13 @@ instantiation
 - ``instance.__class__``. the class of the instance.
 
 attribute store
-~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^
 以下属性在非 ``__slots__`` objects 上有.
 
 - ``object.__dict__``. 一个对象自身存储的属性.
 
 object identification
-~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^
 
 class, function-like definitions, generator instance (including those from
 generator functions and generator expressions), and module.
@@ -122,7 +131,7 @@ generator functions and generator expressions), and module.
   没有这个属性.
 
 class relations
-~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^
 以下属性在 class objects 上有.
 
 - ``class.__bases__``. 一个类定义时使用的直接父类. 不包含 MRO resolved result.
@@ -138,7 +147,7 @@ class relations
 - ``class.__subclasses__()``. 一个类的所有现存子类. 通过 weakref 保存关系.
 
 instance method attributes
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - ``instance_method.__self__``, instance reference, readonly.
 
@@ -149,7 +158,7 @@ instance method attributes
 - ``instance_method.__module__``, same as ``__func__.__module__``, readonly.
 
 container protocol
-~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^
 
 - ``object.__len__()``
 
@@ -174,7 +183,7 @@ container protocol
 - ``object.__contains__()``, optional.
 
 attribute access
-~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^
 
 - ``object.__getattribute__(self, name)``. 负责一个对象上的所有属性访问.
   In order to avoid infinite recursion in this method, its implementation
@@ -243,7 +252,7 @@ the mechanism for descriptors is embedded in the ``__getattribute__()`` methods
 for ``object``, ``type``, and ``super()``.
 
 descriptor class definition
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - ``descriptor.__get__(self, instance, owner)``. ``obj.descr`` 获取时调用.
   当 obj 为 instance of owner class 时, ``instance = obj``, ``owner = type(obj)``;
@@ -258,7 +267,7 @@ descriptor class definition
 定义以上任意方法, 则 class 成为 descriptor.
 
 分类和调用优先级
-~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^
 - data descriptor: 定义 ``__get__`` 和 ``__set__``. 若定义 readonly descriptor,
   让 ``__set__`` raise AttributeError 即可.
   
@@ -276,7 +285,7 @@ descriptor class definition
 - ``__getattr__``. 
 
 typical use cases
-~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^
 
 - property: properties are data descriptors.
 
@@ -308,7 +317,7 @@ class creation
 - 默认的 metaclass 是 ``type()``.
 
 class creation procedure
-~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^
 - 确定 metaclass.
   The appropriate metaclass for a class definition is determined as follows:
 
@@ -363,7 +372,7 @@ class creation procedure
   指向创建的 class object. 这用于 ``super()``.
 
 metaclass
-~~~~~~~~~
+^^^^^^^^^
 指定自定义的 metaclass. 定义 class 时, 在 definition line 中, 使用
 ``metaclass`` keyword argument 指定 metaclass, 其他 kwargs 则传入
 后续一系列流程中.
@@ -396,7 +405,7 @@ Primaries
 ---------
 
 Subscriptions & slicing
-~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^
 
 - subscription
   
@@ -508,7 +517,7 @@ text sequence type - str
 ------------------------
 
 methods
-~~~~~~~
+^^^^^^^
 
 - ``isidentifier()``. 检查字符串是否是合法的 python identifier.
   Use ``keyword.iskeyword()`` tests for reserved keywords.
@@ -580,7 +589,7 @@ methods
 
 
 string formattings
-~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^
 几种 string interpolation 的方式:
 
 - ``%`` printf-style formatting. 即 modulo operation.
@@ -596,7 +605,7 @@ set types
 ---------
 
 operations
-~~~~~~~~~~
+^^^^^^^^^^
 the non-operator versions methods will accept any iterable as an argument.
 In contrast, their operator based counterparts require their arguments to be
 sets. 然而两种方式并没有效率上的区别, 因为虽然接受任何 iterable, 但是仍然
