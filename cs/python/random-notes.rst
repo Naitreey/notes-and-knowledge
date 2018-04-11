@@ -25,7 +25,8 @@
 - scheduler 的设置方式, 应该是在每次执行后, re-schedule self, 这样具有最大程度的
   调度灵活性, 也比较自然. 例如, 使用 `sched`:
 
-    .. code:: python
+  .. code:: python
+
     def periodic(scheduler, interval, action, actionargs=()):
         scheduler.enter(interval, 1, periodic,
                         (scheduler, interval, action, actionargs))
@@ -33,7 +34,8 @@
 
   使用 `asyncio`:
 
-    .. code:: python
+  .. code:: python
+
     def display_date(end_time, loop):
         print(datetime.datetime.now())
         if (loop.time() + 1.0) < end_time:
@@ -77,7 +79,8 @@
 
   因此, 对于以下两个文件
 
-    .. code:: python
+  .. code:: python
+
     # abcc.py
     from deff import xxx
     def yyy():
@@ -154,7 +157,8 @@
   若要修改 stdout/err stream (text stream) 的 buffering mode, 可以 ``open``
   来 reopen underlying file descriptor in other buffering mode:
 
-    .. code:: python
+  .. code:: python
+
     sys.stdout = open(sys.stdout.fileno(), mode="w", encoding="utf-8", buffering=1024)
     sys.stderr = open(sys.stderr.fileno(), mode="w", encoding="utf-8", buffering=1024)
 
@@ -176,6 +180,7 @@
      0,1,2 fd 上面. 例如:
 
      .. code:: python
+
        class _RedirectStream:
            """
            Redirect standard stream `_stream` at OS level, rather at python level.
@@ -271,6 +276,7 @@
   可以无参数, 不存在这个问题.
 
   .. code:: python
+
     def overwrite_class(cls):
         new_class = type(cls.__name__ + 'Dec', (cls,), {})
         return new_class
@@ -379,7 +385,7 @@
   中, 将极其少量的调用部分, 即 entrypoint 放在单独的可执行脚本中. 并且该 entrypoint
   具有明确的返回值, 如下所示:
 
-    .. code:: python
+  .. code:: python
 
     import sys
     from somemodule import main # main is the typical entrypoint name
@@ -437,7 +443,7 @@
   并无本质区别, 只是在 access key-value 时稍方便一点. 实际上, 可以用 `SimpleNamespace`
   来方便地实现可以同时以 attribute 和 key 两种方式访问的 mapping:
 
-    .. code:: python
+  .. code:: python
 
     class DictNamespace(SimpleNamespace):
         def __getitem__(self, k):
@@ -460,7 +466,7 @@
   in a way that makes the meaning dependent on the worth of a tab in spaces;
   a `TabError` is raised in that case.
 
-    .. code:: python
+  .. code:: python
 
     if __name__ == '__main__':
         print("b")
@@ -735,18 +741,19 @@
 
 - lambda 表达式中的变量是局域化在 Lambda 函数定义表达式中的:
 
-    .. code:: python
-      >>> [lambda x: x+1 for x in range(10)]
-      [<function __main__.<listcomp>.<lambda>>,
-      <function __main__.<listcomp>.<lambda>>,
-      <function __main__.<listcomp>.<lambda>>,
-      <function __main__.<listcomp>.<lambda>>,
-      <function __main__.<listcomp>.<lambda>>,
-      <function __main__.<listcomp>.<lambda>>,
-      <function __main__.<listcomp>.<lambda>>,
-      <function __main__.<listcomp>.<lambda>>,
-      <function __main__.<listcomp>.<lambda>>,
-      <function __main__.<listcomp>.<lambda>>]
+  .. code:: python
+
+    >>> [lambda x: x+1 for x in range(10)]
+    [<function __main__.<listcomp>.<lambda>>,
+    <function __main__.<listcomp>.<lambda>>,
+    <function __main__.<listcomp>.<lambda>>,
+    <function __main__.<listcomp>.<lambda>>,
+    <function __main__.<listcomp>.<lambda>>,
+    <function __main__.<listcomp>.<lambda>>,
+    <function __main__.<listcomp>.<lambda>>,
+    <function __main__.<listcomp>.<lambda>>,
+    <function __main__.<listcomp>.<lambda>>,
+    <function __main__.<listcomp>.<lambda>>]
 
   ``lambda :`` operator 的优先级是所有算符中最低的. 注意 ``lambda`` 和 ``:`` 是一体的,
   整个部分要作为一个整体.
@@ -757,8 +764,9 @@
   更加 messy). 若我们向 stdout 输出的信息可能包含无法编码的 binary data, 可以
   替换一个使用 backslashreplace handler 的对象:
 
-    .. code:: python
-      sys.stdout = open(sys.stdout.fileno(), mode="w", errors="backslashreplace")
+  .. code:: python
+
+    sys.stdout = open(sys.stdout.fileno(), mode="w", errors="backslashreplace")
 
 - time, datetime
 
@@ -789,7 +797,9 @@
   但 1) 对于每个需要 readonly property 的类需要写一个单独的 metaclass, 当需要
   功能合并时还需要不同的 metaclass 继承出一个综合的 metaclass. 太麻烦了.
   2) 根据 attribute lookup 规则, 这样的 readonly property 在 instance 中不可见. 
+
   .. code:: python
+
     class Meta(type):
         @property
         def x(cls):
@@ -913,6 +923,7 @@
 - 矩阵转置.
 
   .. code:: python
+
     orig = [(1,2,3,4), (5,6,7,8)]
     rotated = list(zip(*orig))
     orig = list(zip(*rotated))
@@ -944,6 +955,7 @@
 - 对于包含可选参数的 decorator, 应该按照如下方式去设计:
 
   .. code:: python
+
     def decorator(func=None, arg1=None, arg2=None):
         def actual_decorator():
             pass # decorator logic using arg1, arg2
@@ -955,6 +967,7 @@
   这样的 decorator 可以加参数或不加参数两种方式使用.
 
   .. code:: python
+
     @decorator
     def f():
         pass
@@ -985,6 +998,7 @@
   attr 作为 cache:
 
   .. code:: python
+
     class cached_property(object):
         """
         Decorator that converts a method with a single self argument into a
@@ -1004,53 +1018,8 @@
             res = instance.__dict__[self.name] = self.func(instance)
             return res
 
-  进一步, 我们可以扩展该代码让它不仅可读, 也可写.
-
-  .. code:: python
-    class cached_mutable_property(object):
-        """
-        Decorator that converts a method with a single self argument into a
-        property cached on the instance.
-
-        Optional ``name`` argument allows you to make cached properties of other
-        methods. (e.g.  url = cached_property(get_absolute_url, name='url') )
-        """
-        def __init__(self, fget, fset=None, name=None):
-            self.fget = fget
-            self.fset = fset
-            self.__doc__ = getattr(fget, '__doc__')
-            self.name = name or fget.__name__
-
-        def __get__(self, instance, cls=None):
-            if instance is None:
-                return self
-            if self.name in instance.__dict__:
-                return instance.__dict__[self.name]
-            else:
-                res = instance.__dict__[self.name] = self.fget(instance)
-                return res
-
-        def __set__(self, instance, value):
-            if self.fset:
-                self.fset(instance, value)
-                instance.__dict__[self.name] = value
-            else:
-                raise AttributeError("read-only attribute")
-
-        def __delete__(self, instance):
-            if self.fdel:
-                self.fdel(instance)
-                del instance.__dict__[self.name]
-            else:
-                raise AttributeError("can not be deleted")
-
-        def setter(self, fset):
-            self.fset = fset
-            return self
-
-        def deleter(self, fdel):
-            self.fdel = fdel
-            return self
+  进一步, 我们可以扩展该代码让它不仅可读, 也可写. 见
+  `snippet <snippets/mutable_cached_property.py>`_.
 
 - 需要缓存结果时的几种方式:
 
@@ -1067,6 +1036,7 @@
   反之亦然. 所以, 很多时候, 以下两种形式是效果类似的:
 
   .. code:: python
+
     def callable_factory(*args, **kwargs):
         def actual_callable(*args_, **kwargs_):
             # use args, kwargs, args_, kwargs_
@@ -1094,6 +1064,7 @@
   考虑以下代码:
 
   .. code:: python
+
     x = 10
     def foo():
         print(x)
