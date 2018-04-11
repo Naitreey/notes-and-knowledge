@@ -354,6 +354,10 @@ naming conventions
 - 对于 public attribute, 若有复杂的 set/get 操作需求, 最好使用 property.
   这保证了 API 简洁.
 
+  property 之类的特殊方法, 是作为 attributes 来使用, 因此应该放在 class 最
+  前面, ``__init__`` 后面. 与普通 instance attributes 靠得比较近, 这样意义
+  更清晰.
+
 - module 应该设置 ``__all__`` 来定义自己提供的公有 API. 注意此时非公有的部分仍然
   应该加上 ``_``.
 

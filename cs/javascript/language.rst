@@ -246,8 +246,7 @@ let
 
 - ``let`` declaration create variables that respect block scope.
 
-- Redeclaring the same variable using ``let`` within the same scope raises
-  ``SyntaxError``.
+- Within the same scope, duplicated ``let`` declarations raise ``SyntaxError``.
 
 - Temporal dead zone (TDZ). ``let``-declared variables are only visible from
   the point of declaration until the end of block scope. from the beginning of
@@ -317,8 +316,8 @@ var
 - variables declared by ``var`` have function scope or global scope, but not
   block scope.
 
-- ``var`` variables can be re-declared in the same scope. Based on hoisting,
-  nothing harmful should happen.
+- Within the same scope, duplicated ``var`` declarations are ignored. But note
+  the assignment is not ignored.
 
 - hoisting. Wherever a ``var`` appears inside a scope, that declaration is
   taken to belong to the entire scope and accessible everywhere throughout.
@@ -341,6 +340,9 @@ var
         x = 1;
         console.log(x);
     }
+
+  Note that only declaration is hoisted, assignment part is left in place.
+  Otherwise, program logic would be different.
 
   Var hoisting should NOT be relied upon.
 
@@ -457,6 +459,51 @@ function declaration statement
 
 - hoisting. Wherever a function declaration is inside a scope, that declaration
   is taken to belong to the entire scope and accessible everywhere throughout.
+
+  Function variable and function definition is hoisted together. This is
+  different from ``var`` hoisting.
+
+  Function declaration is hoisted before ``var`` declaration. For duplicate
+  function declarations, the latter override the former.
+
+  Note that function expression does not hoist of course. The following code
+  may trick you::
+
+    func(); // `TypeError`, NOT `ReferenceError`. As `func` is hoisted.
+    var func = function func() {
+        ...
+    }
+
+- Special note on block-level function declaration (ES6) [SOBLKFUNC]_.
+
+  * In strict mode, function declared in block scope is hoisted in the scope,
+    and only visible inside the block scope. Reference the same identifier
+    outside of defining scope raises ``ReferenceError``.::
+
+      "use strict";
+      foo(); //ReferenceError
+      if (true) {
+         function foo() { console.log( "a" ); }
+      }
+      else {
+         function foo() { console.log( "b" ); }
+      }
+      foo(); //ReferenceError
+
+  * In non-strict mode, function identifier is hoisted to the nearest function
+    or global scope, but function definition is not visible until declaration
+    statement is reached. After that, the definition is visible until the end
+    of nearst function or global scope.::
+
+      /* var foo; */ // implicit hoisting.
+      foo(); // TypeError
+      if (true) {
+         function foo() { console.log( "a" ); }
+      }
+      else {
+         function foo() { console.log( "b" ); }
+      }
+      foo(); // a
 
 - closure. A function is able to remember and access its lexical scope even
   when that function is executing outside its lexical scope. The function's
@@ -672,7 +719,15 @@ section.
 - function name. You should always provide a name to your function expression.
   [SOnamedFuncExp1]_ [SOnamedFuncExp2]_
 
-  * function name is local to function body.
+  * function name is local to function body::
+
+      let func = function func() {
+        ...
+      }
+      // equivalent to
+      let func = function () {
+        var func = // some kind of self reference
+      }
 
   * function name is required if function is recursive, i.e. it needs to call
     itself inside function body.
@@ -825,3 +880,4 @@ references
 ==========
 .. [SOnamedFuncExp1] `Why use named function expressions? <https://stackoverflow.com/a/15336541/1602266>`_
 .. [SOnamedFuncExp2] `What is the point of using a named function expression? <https://stackoverflow.com/questions/19303923/what-is-the-point-of-using-a-named-function-expression>`_
+.. [SOBLKFUNC] `What are the precise semantics of block-level functions in ES6? <https://stackoverflow.com/questions/31419897/what-are-the-precise-semantics-of-block-level-functions-in-es6>`_
