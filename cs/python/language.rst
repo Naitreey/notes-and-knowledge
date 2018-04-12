@@ -401,6 +401,26 @@ methods.
 Expressions
 ===========
 
+Atoms
+-----
+
+- General comprehension syntax. list, set, dict's comprehension and generator
+  expression use a common inline for-loop (with filtering) syntax.
+
+  scope rule. 与一般的 for loop 不同, comprehension 中的 loop variable is scoped
+  inside the expression itself, whereas for loop does not build a scope (python
+  does not have block scope).
+
+list, set, dict's display
+^^^^^^^^^^^^^^^^^^^^^^^^^
+- literal display form.
+
+- comprehension form.
+
+generator expression
+^^^^^^^^^^^^^^^^^^^^
+- comprehension.
+
 Primaries
 ---------
 
@@ -603,6 +623,9 @@ string formattings
 
 set types
 ---------
+- elements must be hashable.
+
+- ``set`` is mutable, unhashable. ``frozenset`` is immutable and hashable.
 
 operations
 ^^^^^^^^^^
@@ -611,9 +634,28 @@ In contrast, their operator based counterparts require their arguments to be
 sets. 然而两种方式并没有效率上的区别, 因为虽然接受任何 iterable, 但是仍然
 会在内部转换成 set 再进行比较.
 
-- ``issubset()``, ``<=``
+set & frozenset instances can be mixed for binary operations. The returned
+value is instance of first operand's type.
+
+Common operations
+""""""""""""""""""
+
+- ``__len__()``, ``len()``.
+
+- ``__contains__()``, ``in``.
+
+- ``issubset()``, ``<=``. 注意 subset 判断是 ``<=`` 而不是 ``<``. 后者是
+  subset proper, 严格子集.
+
+- ``__lt__()``, ``<``. subset proper.
 
 - ``issuperset()``, ``>=``
+
+- ``__gt__()``, ``>``. superset proper.
+
+- ``__eq__()``, ``=``. element-wise equality.
+
+- ``isdisjoint()``.
 
 - ``union()``, ``set | other | ...``
 
@@ -622,6 +664,29 @@ sets. 然而两种方式并没有效率上的区别, 因为虽然接受任何 it
 - ``difference()``, ``set - other - ...``
 
 - ``symmetric_difference()``, ``set ^ other``
+
+- ``copy()``. shallow copy.
+
+Set's mutable operations
+""""""""""""""""""""""""
+
+- ``update(*others)``, ``set |= other | ...``
+
+- ``intersection_update(*others)``, ``set &= other & ...``
+
+- ``difference_update(*others)``, ``set -= other | ...``
+
+- ``symmetric_difference_update(other)``, ``set ^= other``
+
+- ``add()``
+
+- ``remove()``
+
+- ``discard()``. remove if present.
+
+- ``pop()``. pop arbitrarily.
+
+- ``clear()``.
 
 References
 ==========
