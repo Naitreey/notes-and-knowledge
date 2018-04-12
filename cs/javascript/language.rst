@@ -7,6 +7,12 @@ overview
 
 - weakly typed. type coercion may happen implicitly.
 
+- JS 与 C/Python/Java 的一大区别是, JS 强调 async 概念. 异步思想和
+  编程范式深深嵌入 JS 的整个语言. 可以说, JS 最独特的思想就是单线程
+  异步并发思想. JavaScript has a concurrency model based on an 
+  "event loop". 常用的很多 builtin function 等都是异步的. JS engine
+  has builtin event loop.
+
 definitions
 ===========
 
@@ -296,8 +302,6 @@ let
 
   * to be more memory-efficient. out of scope stuffs are garbage-collected.
 
-- ``let`` loop is better than ``var`` loop.
-
 const
 ^^^^^
 - const is just like let, except that the const-declared variables are read-only.
@@ -397,6 +401,43 @@ do-while statement
 
 for statement
 ^^^^^^^^^^^^^
+- for loop 实际上创建了两个 block scope. header 位于 outer block,
+  loop body 是 inner block.::
+
+    for (<h1>; <h2>; <h3>) {
+        <body>
+    }
+    // conceptually similar to
+    {
+        <h1>
+        while (<h3>) {
+            <body>
+            <h2>
+        }
+    }
+
+  In other words, 在 header 中创建的变量, 只创建一次. 在各次循环中
+  可用.
+
+- ``let`` for loop vs ``var`` for loop.
+
+  * let confines loop variables in block scope, which is good.
+
+  * let for loop has a weird rebinding behavior, which should be avoided.
+    在每次循环进入 body block 时, 与 header variable 同名的变量被创建,
+    初始化为 loop variable 当前值. 在退出 body block 时, 该变量的当前值赋值
+    给 loop variable. [SOLetLoop]_::
+
+      for (let i = 0; i < 3; i++) {
+          console.log(i);
+      }
+      // prints 012
+      // equivalents to the following sanity version
+      for (let i = 0; i < 3; i++) {
+          let j = i;
+          console.log(j);
+          i = j;
+      }
 
 flow control statements
 -----------------------
@@ -504,19 +545,6 @@ function declaration statement
          function foo() { console.log( "b" ); }
       }
       foo(); // a
-
-- closure. A function is able to remember and access its lexical scope even
-  when that function is executing outside its lexical scope. The function's
-  reference to its defining lexical scope is called closure. In other words,
-  a function has closure over its lexical scope.
-
-  Here the aforementioned lexical scope might be some outer function scope, or
-  even global scope.  As long as when the function is executing outside of its
-  original defining scope, closure happens. For closure over global scope, it
-  happens when the function is executed outside of its defining module.
-
-  A function's reference to its outer lexical scope, prevents the scope's memory
-  and whatnot being GC-ed.
 
 - module pattern. I don't know. It looks like class, but why don't use class???
 
@@ -823,31 +851,76 @@ Execution model
 
 Scope
 -----
-js use lexical scope.
-rule: code in one scope can access identifiers of either that
-scope or any scope outside of it. This includes both lvalue & rvalue
-resolution.
+- JS use lexical scope.
+  lexical scope rule: code in one scope can access identifiers of either that
+  scope or any scope outside of it. This includes both lvalue & rvalue
+  resolution.
 
-- For rvalue, if an identifier is not found, ``ReferenceError`` exception is
-  raised, except when it is used as operand of ``typeof`` operator.
+  * For rvalue, if an identifier is not found, ``ReferenceError`` exception is
+    raised, except when it is used as operand of ``typeof`` operator.
+  
+  * For lvalue, if a variable could not be found by traversing nested scope until
+    global scope, it will be created in global scope. DON'T DO IT.
+  
+    Unless in strict mode, this will raise ``ReferenceError``.
+  
+- An identifier defined in inner scope shadows the identifier of the same name
+  defined in the outer scope.
 
-- For lvalue, if a variable could not be found by traversing nested scope until
-  global scope, it will be created in global scope. DON'T DO IT.
+- Global scope is represented by global object. In browser, it's ``window``. In
+  nodejs, it's ``global``.
 
-  Unless in strict mode, this will raise ``ReferenceError``.
+- lexical scope and iteration statements. Iteraction statements typically contains
+  a block scope (with block statement). The point is that for every loop iteration,
+  a different lexical block scope is created. 这对于 closure 非常重要, 当一个函数
+  的执行涉及 closure over loop-created lexical scope 时, 它只能访问函数定义时对应
+  的 iteration 的 block scope.
+  
+  Compare::
 
-An identifier defined in inner scope shadows the identifier of the same name defined
-in the outer scope.
+    for (var i=1; i<=5; i++) {
+        setTimeout( function timer(){
+            console.log( i );
+        }, i*1000 );
+    }
 
-Global scope is represented by global object. In browser, it's ``window``. In nodejs,
-it's ``global``.
+    for (var i=1; i<=5; i++) {
+        let j = i;
+        setTimeout( function timer(){
+            console.log( j );
+        }, j*1000 );
+    }
 
-There are two ways lexical scope can be modified at runtime:
+    for (var i=1; i<=5; i++) {
+        (function(j){
+            setTimeout( function timer(){
+                console.log( j );
+            }, j*1000 );
+        })( i );
+    } 
 
-- ``eval()``, ``setInterval()``, ``setTimeout()``, ``new Function()`` etc. that
-  can execute program text at runtime.
+- There are two ways lexical scope can be modified at runtime:
 
-- ``with`` statement, which is deprecated.
+  * ``eval()``, ``setInterval()``, ``setTimeout()``, ``new Function()`` etc.
+    that can execute program text at runtime.
+  
+  * ``with`` statement, which is deprecated.
+
+Closure
+^^^^^^^
+- definition.
+  A function is able to remember and access its lexical scope even
+  when that function is executing outside its lexical scope. The function's
+  reference to its defining lexical scope is called closure. In other words,
+  a function has closure over its lexical scope.
+
+- Here the aforementioned lexical scope might be some outer function scope, or
+  even global scope.  As long as when the function is executing outside of its
+  original defining scope, closure happens. For closure over global scope, it
+  happens when the function is executed outside of its defining module.
+
+  A function's reference to its outer lexical scope, prevents the scope's memory
+  and whatnot being GC-ed.
 
 strict mode
 ===========
@@ -881,3 +954,4 @@ references
 .. [SOnamedFuncExp1] `Why use named function expressions? <https://stackoverflow.com/a/15336541/1602266>`_
 .. [SOnamedFuncExp2] `What is the point of using a named function expression? <https://stackoverflow.com/questions/19303923/what-is-the-point-of-using-a-named-function-expression>`_
 .. [SOBLKFUNC] `What are the precise semantics of block-level functions in ES6? <https://stackoverflow.com/questions/31419897/what-are-the-precise-semantics-of-block-level-functions-in-es6>`_
+.. [SOLetLoop] `let keyword in the for loop <https://stackoverflow.com/questions/16473350/let-keyword-in-the-for-loop>`_
