@@ -5,7 +5,7 @@ overview
 - interpreted language. V8 implementation has JIT engine, JS code is
   pre-compiled to machine code then executed.
 
-- weakly typed. type coercion may happen implicitly.
+- weakly typed. type coercion may happen implicitly (WTFJS_).
 
 - JS 与 C/Python/Java 的一大区别是, JS 强调 async 概念. 异步思想和
   编程范式深深嵌入 JS 的整个语言. 可以说, JS 最独特的思想就是单线程
@@ -45,7 +45,8 @@ data types
 
 - Unlike python, object is just one of the basic builtin types.
   In other words, string, number, etc. are all distinct types
-  as basic as object type. object is not base type of all types.
+  as basic as object type. object is not base type of *all* types
+  (WTFJS_).
 
   Therefore, string, number, etc. does not have hash-map-like
   functionality.
@@ -58,7 +59,7 @@ data types
   * as type conversion function.
 
 - autoboxing. When accessing a primitive value's property, it is
-  automatically "boxed" by a wrapper object.
+  automatically "boxed" by a wrapper object (WTFJS_).
 
 
 undefined
@@ -66,7 +67,7 @@ undefined
 
 Some cases when undefined is resultant:
 
-- an undefined variable's type is ``"undefined"``. But it results in
+- an undefined variable's type is ``"undefined"`` (WTFJS_). But it results in
   ``ReferenceError`` if used directly.
 
 - an declared variable's default value is ``undefined``.
@@ -165,7 +166,7 @@ abstract operations
 
 type coercion
 -------------
-- implicit type coercion is designed to help you!!! (OK.) But it can create
+- implicit type coercion is designed to help you!!! (WTFJS_) But it can create
   confusion if you haven't taken the time to learn the rules that govern its
   behavior.
 
@@ -314,17 +315,17 @@ var
   var var1 [= value1] [, var2 [= value2]] ...;
 
 - **let is new var. Stop using var.** (ES6)
-
-- There is basically no use for ``var`` given ``let`` is available.
+  There is basically no use for ``var`` given ``let`` is available.
 
 - variables declared by ``var`` have function scope or global scope, but not
   block scope.
 
-- Within the same scope, duplicated ``var`` declarations are ignored. But note
-  the assignment is not ignored.
+- Within the same scope, duplicated ``var`` declarations are ignored (WTFJS_).
+  But note the assignment is not ignored.
 
 - hoisting. Wherever a ``var`` appears inside a scope, that declaration is
-  taken to belong to the entire scope and accessible everywhere throughout.
+  taken to belong to the entire scope and accessible everywhere throughout
+  (WTFJS_).
 
   It is effectively equivalent to say ``var`` declarations are displaced to
   the top of the current effective scope. If variable is initialized at
@@ -426,7 +427,7 @@ for statement
   * let for loop has a weird rebinding behavior, which should be avoided.
     在每次循环进入 body block 时, 与 header variable 同名的变量被创建,
     初始化为 loop variable 当前值. 在退出 body block 时, 该变量的当前值赋值
-    给 loop variable. [SOLetLoop]_::
+    给 loop variable. [SOLetLoop]_ (WTFJS_)::
 
       for (let i = 0; i < 3; i++) {
           console.log(i);
@@ -499,7 +500,8 @@ function declaration statement
   That's almost all we have in Python.
 
 - hoisting. Wherever a function declaration is inside a scope, that declaration
-  is taken to belong to the entire scope and accessible everywhere throughout.
+  is taken to belong to the entire scope and accessible everywhere throughout
+  (WTFJS_).
 
   Function variable and function definition is hoisted together. This is
   different from ``var`` hoisting.
@@ -515,7 +517,7 @@ function declaration statement
         ...
     }
 
-- Special note on block-level function declaration (ES6) [SOBLKFUNC]_.
+- Special note on block-level function declaration (ES6) [SOBLKFUNC]_ (WTFJS_).
 
   * In strict mode, function declared in block scope is hoisted in the scope,
     and only visible inside the block scope. Reference the same identifier
@@ -545,8 +547,6 @@ function declaration statement
          function foo() { console.log( "b" ); }
       }
       foo(); // a
-
-- module pattern. I don't know. It looks like class, but why don't use class???
 
 - When function is called, its formal parameters are set values sequentially
   corresponding to argument list. All remaining formal parameters fall back to
@@ -582,7 +582,9 @@ Primary expression
 
 this keyword
 ^^^^^^^^^^^^
-- ``this`` can not be assigned directly.
+- ``this`` can not be assigned directly. It is a special keyword, rather than
+  a variable (unlike ``self`` in python). Its value is assigned by JS engine,
+  and dependent on its current runtime environment.
 
 - the value of ``this``.
 
@@ -602,7 +604,9 @@ this keyword
 
     - as an object method. ``this`` is set to the object the method is called on.
       关键是通过 ``.`` 获取 method 以及 call 一起发生. 而无论 method 是如何定义的.
-      另一方面, 如果 method 和获取和 call 是分开进行的, ``this`` 也不会是 object::
+
+      然而, 注意如果 method retrieval 和 method call 是分开进行的, ``this`` 不会是
+      object (WTFJS_)::
 
         var x = {};
         var m = function () { console.log(this) };
@@ -618,6 +622,9 @@ this keyword
     - When ``this`` appears in an inline event handler, ``this`` is set to the DOM
       element on which the listener is placed. Note only the outer code has its
       ``this`` set this way.
+
+  * arrow function. In arrow functions, ``this`` retains the value of the enclosing
+    lexical scope's ``this``.
 
 left-hand-side expressions
 --------------------------
@@ -640,7 +647,7 @@ return string name of the type of the operand.
 
 - Undefined: "undefined"
 
-- Null: "object". **Note** it's not "null"[1]_.
+- Null: "object". **Note** it's not "null"[1]_ (WTFJS_).
 
 - Boolean: "boolean".
 
@@ -656,7 +663,7 @@ return string name of the type of the operand.
 
   * object that implements Call: "function"
 
-  * otherwise: "object"
+  * otherwise: "object" (WTFJS_)
 
 .. [1] In the first implementation of JavaScript, JavaScript values were
        represented as a type tag and a value, with the type tag for objects being 0,
@@ -686,7 +693,7 @@ equality comparison
 
 - loose equality.
 
-- type coercion is allowed under the hood.
+- type coercion is allowed under the hood (WTFJS_).
 
 - logic:
 
@@ -716,7 +723,7 @@ relational operators
  
   < > <= >=
 
-- type coercion is allowed.
+- type coercion is allowed (WTFJS_).
 
 - logic.
 
@@ -737,6 +744,9 @@ conditional operator
 
 function expressions
 --------------------
+
+function expression
+^^^^^^^^^^^^^^^^^^^
 only issues specific function expression is recorded here.
 For all other aspects and descriptions refer to `function declaration statement`_
 section.
@@ -803,6 +813,49 @@ section.
 
   IIFE is often used as a purely executed chunk of code, to prevent polluting
   global namespace. Many libraries use this trick.
+
+arrow function expression
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+modules
+=======
+
+historical notes
+----------------
+There are two kinds of JS modules:
+
+- ES5 module pattern: Before ES6, JS language has no builtin module mechanism
+  (WTFJS_).  Using function and closure to emulate lousy module/class
+  interface. These are standardized by AMD, CommonJS and UMD libraries. See
+  `modules <modules.rst>`_.
+
+- ES6 builtin module syntax.
+
+The most important difference between the two is that:
+
+* module pattern is a hack that works well. They are essentially normal objects,
+  functions with closures and so forth. They just looks like modules or
+  classes. They works like module/class (rather than normal objects/functions)
+  only at runtime. For compiler, they are not any special than other functions,
+  objects. In other words, the "module/class" semantics 是由程序员赋予的, 并且
+  只在 runtime 存在.
+
+* ES6 module syntax is defined at language level and implemented by interpreter.
+  The semantics is recognized by compiler at compile-time. Compiler is responsible
+  to perform necessary checks/optimizations and throw early errors if one exists.
+
+Here we focus on ES6 modules.
+
+overview
+--------
+
+- Each JS source file is a module.
+
+- Each module can import another module entirely or only individual members of it.
+
+- Each module can export a set of public APIs that is importable by other modules.
+
 
 built-in objects
 ================
@@ -948,6 +1001,12 @@ security
 
   注意这种执行行为在 ES5 中已经被禁止了, 这个漏洞和 workaround
   不再必要.
+
+weird designs
+=============
+.. _WTFJS:
+
+WTFJS-related weird language designs are labeled WTFJS.
 
 references
 ==========
