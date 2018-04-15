@@ -377,9 +377,30 @@
   保存, 并随着代码及时更新. 决不能把所有详细信息放在 issue 中, 然后一个 close 就
   淹没在了历史中, 变得难以查询和关联.
 
-- principle of least privilege/exposure.
+The principle of least privilege/exposure
+=========================================
+对于一个模块化的系统中, 任何一个组件按照设计功能工作, 只应对它提供绝对必须的资源,
+赋予最小可能的权限集合.
 
-  examples.
+意义:
 
-  * 在软件设计中, 程序中的对象实体应该定义在所允许的最小作用域 (scope) 内. 无论这些
-    实体是 variable, function, class, etc. 这才是好代码.
+* better system stability, 提高系统容错性. 因为 malfunction 被限制在了最小可能的影响范围.
+
+* better system security. vulnerability & exploitation is restricted.
+
+* 多个组件之间发生冲突或相互影响的可能性降低了, 非预期的行为更不易发生.
+
+* 组件更容易部署和相互协作.
+
+* 根据这个原理设计的组件往往功能更清晰, 更易用.
+
+例子:
+
+* 在代码实现时, 程序中的对象实体应该定义在所需的最小作用域 (scope) 内. 无论这些
+  实体是 variable, function, class, etc. 这才是好代码.
+
+* 在设计 API 时, 一个功能只应提供必须的参数. 功能本身也只返回必须的结果.
+
+* 在 Linux 中, 一个进程的正常运行, 应限制在最低可能的用户和 capabilities.
+
+* 用户的权限, 应该设置在他正常工作所需的最低权限.
