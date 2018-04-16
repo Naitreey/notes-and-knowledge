@@ -1,25 +1,33 @@
 C3 linearization
 ================
-concepts
+overview
 --------
-- linearization. The list of the ancestors of a class C, including the class
-  itself, ordered from the nearest ancestor to the furthest
 
-- local precedence. 在 linearization list 中, C 的各个直接父类具有最高的优先级,
-  并且按照从左至右的顺序, 优先级依次降低.
+* definition of linearization. The list of the ancestors of a class C,
+  including the class itself, ordered from the nearest ancestor to the furthest.
+  
+* C3 linearization is a superclass linearization algorithm that satisfies
+  3 criteria:
 
-  保证 local precedence, 则在 MRO 时是很符合直觉的, 即最近的优先级最高.
+  - a consistent extended precedence graph. (what's the definition of this?)
+  
+  - local precedence. 在 linearization list 中, C 的各个直接父类具有最高的优先级,
+    并且按照从左至右的顺序, 优先级依次降低.
+  
+    保证 local precedence, 则在 MRO 时是很符合直觉的, 即最近的优先级最高.
+  
+  - monotonicity. A MRO is monotonic when the following is true: if C1 precedes
+    C2 in the linearization of C, then C1 precedes C2 in the linearization of any
+    subclass of C.
+  
+    保证 MRO 的单调性, 就不会在子类 (D) 和父类 (C) 各自的 linearization 中, 出现
+    一个是 C1C2 另一个是 C2C1 之类的矛盾情况.
 
-- monotonicity. A MRO is monotonic when the following is true: if C1 precedes
-  C2 in the linearization of C, then C1 precedes C2 in the linearization of any
-  subclass of C.
+* 一个好的 linearization 应该保证 local precedence 和 monotonicity 两个准则.
+  因为这样的话, 给定一个子类, 它的继承顺序会比较符合直觉, 容易理解和掌握,
+  并且不会出现逻辑上相互矛盾的地方.
 
-  保证 MRO 的单调性, 就不会在子类 (D) 和父类 (C) 各自的 linearization 中, 出现
-  一个是 C1C2 另一个是 C2C1 之类的矛盾情况.
-
-一个好的 linearization 应该保证 local precedence 和 monotonicity 两个准则.
-因为这样的话, 给定一个子类, 它的继承顺序会比较符合直觉, 容易理解和掌握,
-并且不会出现逻辑上相互矛盾的地方.
+* Naming: C3 refers to the 3 criteria the linearization must satisfy.
 
 algorithm
 ---------
