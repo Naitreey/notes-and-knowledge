@@ -458,12 +458,191 @@ Subscriptions & slicing
 
 slicing (包含 subscription) 是通过 ``__getitem__`` 实现.
 
-Exception
-=========
+Statements
+==========
 
-- instantiate exception 时, 它的 ``__traceback__``, ``__cause__``, ``__context__``
-  还都是 None (因为在实例化处本来就没有这些). 之后 raise 之后, 解释器才会根据执行
-  情况设置这三个属性.
+exception handling
+------------------
+
+raise statement
+^^^^^^^^^^^^^^^
+::
+
+  raise [<exception> [from <original-exc>|None]]
+
+- Exception's context. When raising an exception in an ``except`` or
+  ``finally`` clause ``__context__`` is automatically set to the last exception
+  caught.
+
+- Exception's cause. When raising a new exception in an ``except`` or
+  ``finally`` clause, an exception that caused the raising exception can be
+  supplied by ``from exc`` syntax. The causing exception will be set as
+  ``__cause__`` attribute of raising exception, and ``__suppress_context__``
+  will be set to True automatically.
+
+- When exception is just instantiated, its ``__traceback__``, ``__cause__``,
+  ``__context__`` 还都是 None (因为在实例化处本来就没有这些). 只有 raise 之后,
+  解释器才会根据执行环境设置这三个属性.
+
+- When traceback is printed,
+  
+  * ``__cause__`` is shown when it's not None, with indication::
+   
+      During handling of the above exception, another exception occurred.
+
+  * ``__context__`` is shown if ``__cause__`` is not None. Otherwise it's shown
+    with indication::
+
+      The above exception was the direct cause of the following exception.
+
+  * ``raise ... from None`` can be used to suppress context exception.
+    
+  * In other words, 如果有 cause, 不会显示 context; 如果没有 cause
+    但是有 context, 会显示 context.
+
+  * the exception itself is always shown after any chained exceptions are
+    printed.
+
+try statement
+^^^^^^^^^^^^^
+
+- A bare except clause matches ``BaseException``::
+
+    try:
+        pass
+    except:
+        pass
+    # equivalent to
+    try:
+        pass
+    except BaseException:
+        pass
+ 
+  which is a very bad practice.
+
+
+built-in exception hierarchy
+============================
+::
+
+  BaseException
+   +-- SystemExit
+   +-- KeyboardInterrupt
+   +-- GeneratorExit
+   +-- Exception
+        +-- StopIteration
+        +-- StopAsyncIteration
+        +-- ArithmeticError
+        |    +-- FloatingPointError
+        |    +-- OverflowError
+        |    +-- ZeroDivisionError
+        +-- AssertionError
+        +-- AttributeError
+        +-- BufferError
+        +-- EOFError
+        +-- ImportError
+        |    +-- ModuleNotFoundError
+        +-- LookupError
+        |    +-- IndexError
+        |    +-- KeyError
+        +-- MemoryError
+        +-- NameError
+        |    +-- UnboundLocalError
+        +-- OSError
+        |    +-- BlockingIOError
+        |    +-- ChildProcessError
+        |    +-- ConnectionError
+        |    |    +-- BrokenPipeError
+        |    |    +-- ConnectionAbortedError
+        |    |    +-- ConnectionRefusedError
+        |    |    +-- ConnectionResetError
+        |    +-- FileExistsError
+        |    +-- FileNotFoundError
+        |    +-- InterruptedError
+        |    +-- IsADirectoryError
+        |    +-- NotADirectoryError
+        |    +-- PermissionError
+        |    +-- ProcessLookupError
+        |    +-- TimeoutError
+        +-- ReferenceError
+        +-- RuntimeError
+        |    +-- NotImplementedError
+        |    +-- RecursionError
+        +-- SyntaxError
+        |    +-- IndentationError
+        |         +-- TabError
+        +-- SystemError
+        +-- TypeError
+        +-- ValueError
+        |    +-- UnicodeError
+        |         +-- UnicodeDecodeError
+        |         +-- UnicodeEncodeError
+        |         +-- UnicodeTranslateError
+        +-- Warning
+             +-- DeprecationWarning
+             +-- PendingDeprecationWarning
+             +-- RuntimeWarning
+             +-- SyntaxWarning
+             +-- UserWarning
+             +-- FutureWarning
+             +-- ImportWarning
+             +-- UnicodeWarning
+             +-- BytesWarning
+             +-- ResourceWarning
+
+BaseException
+-------------
+
+attributes.
+
+- ``args``. constructor arguments.
+
+methods.
+
+- ``with_traceback(tb)``. raise exception with new ``__traceback__``.
+
+- ``__str__()``. By default, exception's string form is ``repr()`` of
+  its ``args`` attribute.
+
+LookupError
+-----------
+- When both IndexError and KeyError are expected, LookupError should be used
+  instead.
+
+ImportError
+-----------
+- 包含两种情况:
+
+  * a module can not be loaded.
+    
+    - For a more specific error where a module can not be found,
+      ModuleNotFoundError subclass is raised.
+
+  * a name in a module can not be loaded.
+
+OSError
+-------
+For a syscall returning a system-related error.
+
+constructor:
+
+- ``OSError(errno, strerror, [filename [, winerror [, filename2]]])``.
+  The constructor often actually returns a subclass of OSError, depending on
+  ``errno``. This behavior is not inherited by subclasses.
+
+attributes.
+
+- ``errno``. C errno.
+
+- ``strerror``. C strerror().
+
+- ``filename``, ``filename2``. For exceptions that involve a file system path.
+  For functions that involves two paths, ``filename2`` is set, like
+  ``os.rename``.
+
+Warning
+-------
+Warnings are all exceptions.
 
 builtin functions
 =================
