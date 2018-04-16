@@ -730,15 +730,45 @@ procedure
 
 - full backup::
 
-    xtrabackup -u <user> -p<pass> --backup --target-dir=<dir>
+    xtrabackup -u <user> -p<pass> --backup --parallel=# --target-dir=<dir>
+
+  它自动访问 mysql data directory, 复制数据. target dir 若已有数据, 会报错退出.
+  可以直接 stream 到 slave node, 而不是保存成文件::
+
+    xtrabackup -u <user> \
+            -p<pass> \
+            --backup \
+            --parallel=# \
+            --stream=xbstream \
+            --compress \
+            --compress-threads=# 2> backup-progress.log | \
+        ssh <user>@<host> xbstream -x --parallel=# -C <dir>
+
+  When performing a local backup or the streaming backup with xbstream option,
+  multiple files can be copied concurrently. ``--parallel`` option specifies
+  the number of threads created by xtrabackup to copy data files. [PerconaAcce]_
+
+  Parallel data compression is also performed. Data read by parallel I/O
+  threads will be piped to compression threads.
+
+  At receiving end, use ``xbstream`` to decompress and extract streamed data
+  into files. Parallel extraction is specified. [PerconaXbstream]_
 
 - prepare a backup::
 
-    xtrabackup -u <user> -p<pass> --prepare --target-dir=<dir>
+    xtrabackup --prepare --target-dir=<dir>
+
+  Because xtrabackup performs hot backup, data were copied at different times
+  as the program ran, and they might have been changed while this was
+  happening. Therefore Data files are not point-in-time consistent until
+  they’ve been prepared.
+
+  You can run the prepare operation on any machine; it does not need to be on
+  the originating server or the server to which you intend to restore.
 
 - restore backup::
 
-    cp <backup> /var/lib/mysql && chown -R mysql:mysql /var/lib/mysql
+    xtrabackup --move-back && chown -R mysql:mysql /var/lib/mysql
 
 replication info
 ^^^^^^^^^^^^^^^^
@@ -838,3 +868,5 @@ mysql vs postgresql
 References
 ==========
 .. [DOMysqlSlave] `How To Set Up Master Slave Replication in MySQL <https://www.digitalocean.com/community/tutorials/how-to-set-up-master-slave-replication-in-mysql>`_
+.. [PerconaAcce] `Accelerating the backup process <https://www.percona.com/doc/percona-xtrabackup/LATEST/innobackupex/parallel_copy_ibk.html>`_
+.. [PerconaXbstream] `The xbstream binary <https://www.percona.com/doc/percona-xtrabackup/LATEST/xbstream/xbstream.html>`_
