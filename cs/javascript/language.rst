@@ -556,6 +556,10 @@ function declaration statement
   is handled entirely by compiler: compiler handles both the function name
   declaration in scope and function body definition during code-generation.
 
+- JS 中, 由于 ``this`` 是根据调用情况自动赋值的, 一个函数本身可以既做单纯的
+  函数来使用, 也可以作为 object bound method 使用. 而如果要作为 class unbound
+  method 使用, 需要使用 ``Function.prototype.call()``, ``Function.prototype.apply()``.
+
 with statement
 --------------
 deprecated.
@@ -590,23 +594,28 @@ this keyword
 
   * global context. ``this`` refers to global object.
   
-  * function context. depends on how the function is called.
+  * function context. depends on how function is called (call-site and context
+    object).
 
     - simple call. ``this`` defaults to global object, except when its value is
       set by the call. In strict mode, ``this`` remains at whatever it was set
       to when entering the execution context, which defaults to undefined.
 
     - with ``Function.prototype.call()``, ``Function.prototype.apply()``. set
-      ``this`` value for function call.
+      ``this`` value for function call. 这个用法相当于在 python 中, 给 class
+      unbound method 传递 self 对象来直接调用. 假装对象有这个方法.
 
     - ``Function.prototype.bind()``. create a new function with ``this`` bound
       to the specified object, regardless how the new function is being used.
 
-    - as an object method. ``this`` is set to the object the method is called on.
-      关键是通过 ``.`` 获取 method 以及 call 一起发生. 而无论 method 是如何定义的.
+    - called via a context object's method reference. ``this`` is set to the
+      context object.
 
-      然而, 注意如果 method retrieval 和 method call 是分开进行的, ``this`` 不会是
-      object (WTFJS_)::
+      注意如果 method reference 之后没有直接 call function, 而是通过 simple
+      call 的方式去调用, 这是符合 simple call 的情况的. 此时 ``this`` 是 global
+      object. (WTFJS_) 这是因为无论函数在哪里定义 (单独声明, 还是在 object
+      attribute 赋值 function expression), 创建的结果都是相同的 function object.
+      只有调用的方式最终决定 ``this`` binding.::
 
         var x = {};
         var m = function () { console.log(this) };
@@ -977,17 +986,39 @@ Closure
 
 strict mode
 ===========
-- keeping the code to a safer and more appropriate set of guidelines.
-
-- generally more optimizable by the engine.
-
-- it should be used for all codes.
-
 - pragma::
 
     "use strict";
 
   can be used in a function scope or global scope.
+
+- ``"use strict";`` pragma must be the first statement in a specific
+  lexical scope, and it is effective until the end of the specified
+  scope.
+
+- The pragma conforms lexical scope rule. In other words, whether a
+  piece of code runs in strict mode depends on whether its lexical
+  scope is in strict mode.::
+
+    function foo() {
+        console.log( this.a ); // non-strict mode
+    }
+
+    var a = 2;
+
+    (function(){
+        "use strict";
+
+        foo(); // strict mode
+    })();
+    // prints: 2
+
+- keeping the code to a safer and more appropriate set of guidelines.
+
+- generally more optimizable by the engine.
+
+- it should be used for all your codes and declared at the top of source
+  file.
 
 security
 ========
