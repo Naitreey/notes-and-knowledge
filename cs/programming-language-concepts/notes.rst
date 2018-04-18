@@ -59,3 +59,25 @@ dynamic scope
   runs.
 
 - value resolution is performed by traversing down stack frames.
+
+evaluation
+==========
+
+- 两种运算类型: strict evaluation, lazy evaluation.
+
+strict evaluation
+-----------------
+- all parts of an evaluation will be evaluated completely before the value of
+  the expression as a whole is determined.
+
+lazy evaluation
+---------------
+- In order to evaluate an expression in the language, you only evaluate as much
+  of the expression as is needed to get the final result.
+
+typing
+======
+
+- static typing and dynamic typing
+
+- strong typing and weak typing
