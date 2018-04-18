@@ -39,6 +39,12 @@ The standard type hierarchy
 ---------------------------
 包含对一系列类型概念的标准陈述.
 
+module
+^^^^^^
+
+- module 中一般不该出现在 import 时会给出输出的 "裸代码". 它不该做奇怪
+  的事情, 应该 keep silent.
+
 class
 ^^^^^
 - class 的分类.
@@ -461,6 +467,9 @@ slicing (包含 subscription) 是通过 ``__getitem__`` 实现.
 Statements
 ==========
 
+import statement
+----------------
+
 exception handling
 ------------------
 
@@ -485,7 +494,7 @@ raise statement
   解释器才会根据执行环境设置这三个属性.
 
 - When traceback is printed,
-  
+
   * ``__cause__`` is shown when it's not None, with indication::
    
       During handling of the above exception, another exception occurred.
@@ -520,6 +529,50 @@ try statement
  
   which is a very bad practice.
 
+- 何时该创建各种 exception class 并在出错时 raise 出来, 何时该只返回操作的
+  true/false 结果?
+
+  如果是错误、异常情况, 则 raise exception;
+  如果是对命题是否成立的条件判断, 则给出 boolean result.
+
+  两者是不同的情况. 然而, 两个情况可能存在相互嵌套. 例如, 通过条件判断是否通过来决定
+  是否 raise exception; 通过是否 raise exception 来决定条件判断是否通过.
+
+function definitions
+--------------------
+
+- 避免使用递归逻辑. 这是因为 Python 中没有对 tail recursion 进行优化. 所以递归调用
+  都是实实在在地叠加 stack. 如果可能递归次数很多, 很快会触及 ``sys.getrecursionlimit()``
+  的上限, 导致 ``RecursionError``.
+   
+  解决办法:
+  
+  * 将递归逻辑转变成循环逻辑来实现.
+
+  * 使用一个修改的 Y combinator 将递归算法转变成非递归算法[SOPyRecur]_, 将运算结果以
+    函数返回, 再循环 unwrap 每层函数. See also tco module[TCO]_.
+
+
+class definitions
+-----------------
+
+- 什么时候应该规定使用 factory function 来获取类实例, 什么时候不需要这层封装
+  只简单地对类进行实例化就行?
+
+  factory function 相对于类的 constructor, 其根本特点是可以对返回实例的逻辑进行
+  自定义, 而 constructor 简单地每次调用生成一个新实例. 例如, 使用 factory function
+  可以做到:
+
+  * 条件性生成新实例, 例如依据 identifier 存储实例, match 时只返回原来生成的实例.
+
+    何时需要考虑条件性生成新实例呢? 当实例应该具有某种全局存在性质, 而不是某个
+    其他类的实例的属性, 或者局限于某个范围. 例如 Logger 就应该是全局的, 不属于某个
+    类, 对于一个 module 而言应该唯一, 因此以 module.__name__ 作为标识符来条件性
+    生成新实例. 相应地, 数据库连接等 client object (例如 MongoClient) 往往不需要
+    全局存在, 而是作为某个其他类对象的一部分, 在该类对象生成时创建连接状态, 析构
+    时消除状态.
+
+  * 需要对实例进行额外的修改, 且这些修改在逻辑上不是该类的一部分.
 
 built-in exception hierarchy
 ============================
@@ -789,16 +842,27 @@ methods
 
 string formattings
 ^^^^^^^^^^^^^^^^^^
-几种 string interpolation 的方式:
+python 中有 4 种 string interpolation 的方式:
 
 - ``%`` printf-style formatting. 即 modulo operation.
   implemented in ``str.__mod__``.
 
 - ``str.format()``.
 
-- formatting string. ``f"..."``.
+- formatted string literals. ``f"..."``.
 
 - Shell-like string template: ``string.Template``.
+
+第一种最常见最简单, 但不如第二种方便;
+
+第二种明显优点有 2 个, 1) 灵活方便, 功能丰富; 2) 实际上使用 `__format__` protocol,
+即可以自定义 format 逻辑, 实现多态性的封装 (duck typing), e.g., datetime;
+
+第三种克服了第二种的 verbosity 问题, 并且增加灵活性可以执行 python 表达式.
+所以, 对于 py3.6+, 应该用第三种, 之前的最好用第二种.
+
+第四种仅用在特殊场合, 例如为了填充使用了 shell syntax 的模板, 或者为了与常见的
+formatting 语法相区别.
 
 set types
 ---------
@@ -870,3 +934,5 @@ Set's mutable operations
 References
 ==========
 .. [PythonFAQ] `Why is Python a dynamic language and also a strongly typed language? <https://wiki.python.org/moin/Why%20is%20Python%20a%20dynamic%20language%20and%20also%20a%20strongly%20typed%20language>`_.
+.. [SOPyRecur] `Using Y combinator to optimize tail recursion in Python <https://stackoverflow.com/a/18506625/1602266>`_
+.. [TCO] `TCO module <https://github.com/baruchel/tco>`_

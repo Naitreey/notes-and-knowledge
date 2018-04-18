@@ -1,5 +1,5 @@
 general
--------
+=======
 - PEP8 or other style guide is important, but the most important is being
   consistent with sensible code around you.
 
@@ -8,7 +8,7 @@ general
   按照官方的来, 效果一定不会糟糕. 所以官方的风格规范实际上已经足够.)
 
 indentation and line continuation
----------------------------------
+=================================
 - 4-space per indentation level.
 
 - Always use space for indentation, avoid hard tab character.
@@ -53,6 +53,7 @@ indentation and line continuation
   因此应该酌情只 hanging 起始部分, 但结束部分不单独换行对齐.
 
   .. code:: python
+
     for name, mac, model in zip_longest(
             nic_names, macaddresses, nic_models):
         pass
@@ -61,6 +62,7 @@ indentation and line continuation
   就应该使用第一种方式, 因为参数列表应该对齐.
 
   .. code:: python
+
     def this_is_very_long_how_can_it_be_so_long(and_it_has, many_many_very_long,
                                                 parameters_like_this, yeah,
                                                 so_cool):
@@ -112,7 +114,7 @@ indentation and line continuation
   若现有的代码习惯了在 operator 后面去换行, 则继续这个风格也可.
 
 line length
------------
+===========
 - 代码部分每行最佳状态是 79 字符以内. 根据实际情况某些行允许多 2-3 个字符.
   但这样的行一定是极少数的.
 
@@ -122,7 +124,7 @@ line length
   但仍有一些必须使用 backslash line continuation 的地方, 例如 multi-with statement.
 
 blank lines
------------
+===========
 - Surround top-level function and class definitions with two blank lines.
 
 - Method definitions inside a class are surrounded by a single blank line.
@@ -130,13 +132,13 @@ blank lines
 - Use blank lines in functions, sparingly, to indicate logical sections.
 
 source file encoding
---------------------
+====================
 - 源代码使用 utf8 编码, 对于 py2, 必须在源代码中声明字符集.
 
 - 使用 unix LF line terminator, 不要出现 windows CRLF.
 
 import
-------
+======
 - 全局范围的 import 要尽量放在 module 的起始部分, 在 comment/docstring 以及
   ``__future__`` import 之后.
 
@@ -165,23 +167,24 @@ import
 
     .. code:: python
 
-    from somemodule import (
-        name1, name2,
-        name3, ...
-    )
+      from somemodule import (
+          name1, name2,
+          name3, ...
+      )
 
 - 有时候 import 的时候引入整个或部分 namespace 的名字, 而不是 namespace 下面的具体
   要使用的内容, 具有更好的代码可读性. 因此时调用任何所需量的时候, 需要 prefix
   namespace 的名字. 这样提供了 context:
 
   .. code:: python
+
     import liba
     liba.func(...)
 
   但这是一个细致的问题, 需要具体看情况选择不同的 import 方式, 没有绝对好坏之分.
 
 strings literal
----------------
+===============
 - For triple-quoted string, always use double quote character.
   即 ``"""abcdef"""``, 而不要用 ``'''abdef'''``.
 
@@ -189,7 +192,7 @@ strings literal
   dict literal 全部使用 double quote char, 与 json 对应.
 
 whitespace in expressions and statements
-----------------------------------------
+========================================
 - Opening parenthesis/bracket/brace 之后以及相应的 closing delimiter 之前,
   不要出现空格. 例如, 不要这样: ``spam( ham[ { 2, 3 } ] )``
 
@@ -235,7 +238,7 @@ whitespace in expressions and statements
 - 对 one-liner compound statement, 不要把那一行 body 跟 header 部分放在同一行.
 
 trailing commas
----------------
+===============
 - 当构建 one-tuple ``e,`` 时, 为了清晰并通用, 应该加上括号 ``(e,)``.
 
 - 在 parentheses/brackets/braces 中, 往往允许末尾加上一个 trailing comma.
@@ -250,7 +253,7 @@ trailing commas
     ]
 
 comments
---------
+========
 - 尽量 write code that explains itself, 而不是写一堆难以理解的代码然后靠边上的
   注释去解释.
 
@@ -271,7 +274,7 @@ comments
   有 docstring 的话, 放在它下面.
 
 docstrings
-----------
+==========
 - A docstring is a string literal that occurs as the first statement
   in a module, function, class, or method definition.
 
@@ -309,7 +312,7 @@ docstrings
 - Docstring should NOT be a "signature" reiterating the function/method parameters.
 
 naming conventions
-------------------
+==================
 - 所有的 identifier 应该使用 ASCII 字符集之内的字符.
   (注意 py3 中支持 unicode identifier.)
 
@@ -368,7 +371,7 @@ naming conventions
   it's imported to constitute part of API.
 
 Programming
------------
+===========
 - Singleton 类型的量之间的比较, 一定要用 ``is`` ``is not``.
 
 - ``if something is not None`` 不等价于 ``if something``.
@@ -406,11 +409,13 @@ Programming
   Yes:
 
   .. code:: python
+
     with conn.begin_transaction():
         do_stuff_in_transaction(conn)
   No:
 
   .. code:: python
+
     with conn:
         do_stuff_in_transaction(conn)
 
@@ -438,57 +443,3 @@ Programming
   问题.
 
 - For container types, use the fact that empty containers are false.
-
-- 如果只需要一个 logging level, 默认使用的应该是 INFO, 因为在 DEBUG level,
-  一些库可能输出很多没用的 debug 信息.
-
-- module 中一般不该出现在 import 时会给出输出的 "裸代码". 也就是说它不该做奇怪
-  的事情, 应该 keep silent.
-
-- python 中有 4 种 string formatting 方式:
-
-  * %-formatting
-
-  * ``str.format()``
-
-  * formatted string literal
-
-  * ``string.Template``
-
-  第一种最常见最简单, 但不如第二种方便;
-
-  第二种明显优点有 2 个, 1) 灵活方便, 功能丰富; 2) 实际上使用 `__format__` protocol,
-  即可以自定义 format 逻辑, 实现多态性的封装 (duck typing), e.g., datetime;
-
-  第三种克服了第二种的 verbosity 问题, 并且增加灵活性可以执行 python 表达式.
-  所以, 对于 py3.6+, 应该用第三种, 之前的最好用第二种.
-
-  第四种仅用在特殊场合, 例如为了填充使用了 shell syntax 的模板, 或者为了与常见的
-  formatting 语法相区别.
-
-- 什么时候应该规定使用 factory function 来获取类实例, 什么时候不需要这层封装
-  只简单地对类进行实例化就行?
-
-  factory function 相对于类的 constructor, 其根本特点是可以对返回实例的逻辑进行
-  自定义, 而 constructor 简单地每次调用生成一个新实例. 例如, 使用 factory function
-  可以做到:
-
-  * 条件性生成新实例, 例如依据 identifier 存储实例, match 时只返回原来生成的实例.
-
-    何时需要考虑条件性生成新实例呢? 当实例应该具有某种全局存在性质, 而不是某个
-    其他类的实例的属性, 或者局限于某个范围. 例如 Logger 就应该是全局的, 不属于某个
-    类, 对于一个 module 而言应该唯一, 因此以 module.__name__ 作为标识符来条件性
-    生成新实例. 相应地, 数据库连接等 client object (例如 MongoClient) 往往不需要
-    全局存在, 而是作为某个其他类对象的一部分, 在该类对象生成时创建连接状态, 析构
-    时消除状态.
-
-  * 需要对实例进行额外的修改, 且这些修改在逻辑上不是该类的一部分.
-
-- 何时该创建各种 exception class 并在出错时 raise 出来, 何时该只返回操作的
-  true/false 结果?
-
-  如果是错误、异常情况, 则 raise exception;
-  如果是对命题是否成立的条件判断, 则给出 boolean result.
-
-  两者是不同的情况. 然而, 两个情况可能存在相互嵌套. 例如, 通过条件判断是否通过来决定
-  是否 raise exception; 通过是否 raise exception 来决定条件判断是否通过.
