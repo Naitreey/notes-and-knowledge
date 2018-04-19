@@ -58,8 +58,12 @@ data types
 
   * as type conversion function.
 
-- autoboxing. When accessing a primitive value's property, it is
-  automatically "boxed" by a wrapper object (WTFJS_).
+- autoboxing (WTFJS_). Under certain conditions, primitive value
+  will be automatically wrapped in its object equivalent. For example,
+  
+  * When accessing a primitive value's property
+
+  * When passed as ``this`` binding target.
 
 
 undefined
@@ -159,7 +163,15 @@ function
     > x
     { [Function: x] r: 1, p: 2 }
 
-- constructor ``Function()``.
+constructor
+""""""""""""
+- ``Function()``.
+
+methods
+""""""""
+- ``bind()``.
+
+  the produced bound function's ``name`` attribute is ``bound <func>``.
 
 abstract operations
 ===================
@@ -601,13 +613,6 @@ this keyword
       set by the call. In strict mode, ``this`` remains at whatever it was set
       to when entering the execution context, which defaults to undefined.
 
-    - with ``Function.prototype.call()``, ``Function.prototype.apply()``. set
-      ``this`` value for function call. 这个用法相当于在 python 中, 给 class
-      unbound method 传递 self 对象来直接调用. 假装对象有这个方法.
-
-    - ``Function.prototype.bind()``. create a new function with ``this`` bound
-      to the specified object, regardless how the new function is being used.
-
     - called via a context object's method reference. ``this`` is set to the
       context object.
 
@@ -624,7 +629,17 @@ this keyword
         var y = x.m;
         y(); // global object or undefined.
 
-    - as a constructor. ``this`` is bound to the new object being created.
+    - with explicit binding,
+      ``Function.prototype.call()``, ``Function.prototype.apply()``. set
+      ``this`` value for function call. 这个用法相当于在 python 中, 给 class
+      unbound method 传递 self 对象来直接调用. 假装对象有这个方法.
+
+    - with hard binding,
+      ``Function.prototype.bind()``. create a new function with ``this`` bound
+      to the specified object, regardless how the new function is being used.
+
+    - with ``new`` binding, i.e., as a constructor. ``this`` is bound to the
+      new object being created.
         
     - as a DOM event handler. ``this`` is set to the element the event fired from.
 
@@ -646,6 +661,26 @@ function call expression
 
 ``(...)`` indicates ``<call-expression>`` should be executed, thus requires it callable.
 Otherwise, ``TypeError`` is raised.
+
+new operator
+^^^^^^^^^^^^
+
+- new operator instantiates a instance of constructor.
+
+- In JS, constructors are just normal functions that called after ``new`` operator. In
+  other words, ``new func()`` is just the ``func``'s constructor call.
+
+- During constructor call, the following happens,
+
+  * a new object is created
+
+  * the newly constructed object is prototype-linked
+
+  * constructor function is called to initialize the object, by its setting ``this`` to
+    the object.
+
+  * the newly constructed object is returned as value of the ``new`` expression, unless
+    the constructor returns alternative object itself.
 
 unary operators
 ---------------
