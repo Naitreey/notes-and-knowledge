@@ -103,7 +103,11 @@ Language driver
     - much slower than those written as C extension, also slower than PyMySQL.
       (see references above)
 
-  根据以上分析, 我会选择 mysqlclient 和 PyMySQL, 在同步和异步的情况下使用.
+  根据以上分析, 我会选择 mysqlclient 和 PyMySQL, 分别在同步和异步的情况下使用.
+
+mysqlclient
+-----------
+
 
 SQL language
 ============
