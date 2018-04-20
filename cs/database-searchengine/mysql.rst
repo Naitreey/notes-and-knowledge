@@ -646,11 +646,16 @@ configuration
 checking replication status
 """"""""""""""""""""""""""""
 
-- SHOW PROCESSLIST;
+- on master:
+  
+  * SHOW PROCESSLIST;
 
-- SHOW SLAVE STATUS;
+- on slave:
+  
+  * SHOW SLAVE STATUS; 重要列: ``Slave_IO_State``, ``Slave_IO_Running``,
+    ``Slave_SQL_Running``, ``Last_IO_Error``, ``Last_SQL_Error``.
 
-- performance_schema database, replication tables.
+  * ``performance_schema.replication_connection_status`` table.
 
 replication options
 ^^^^^^^^^^^^^^^^^^^
