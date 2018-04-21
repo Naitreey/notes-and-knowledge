@@ -9,7 +9,7 @@ overview
 
 - JS 与 C/Python/Java 的一大区别是, JS 强调 async 概念. 异步思想和
   编程范式深深嵌入 JS 的整个语言. 可以说, JS 最独特的思想就是单线程
-  异步并发思想. JavaScript has a concurrency model based on an 
+  异步并发思想. JavaScript has a concurrency model based on an
   "event loop". 常用的很多 builtin function 等都是异步的. JS engine
   has builtin event loop.
 
@@ -18,7 +18,7 @@ definitions
 
 - host object: object supplied by the host environment. e.g.,
   window, document, XMLHttpRequest, etc.
-  
+
   Host objects are not defined by spec. They are implemented and provided by
   host environment, which is browser, nodejs interpreter, etc. These objects
   are implemented as builtin part of host environment. So they may be
@@ -60,7 +60,7 @@ data types
 
 - autoboxing (WTFJS_). Under certain conditions, primitive value
   will be automatically wrapped in its object equivalent. For example,
-  
+
   * When accessing a primitive value's property
 
   * When passed as ``this`` binding target.
@@ -254,7 +254,7 @@ declarations and variable statements
     }
 
   It is only for ``var`` statement that the declared variable is made available
-  to entire scope; for ``let``, ``const`` statements, the declared variable is 
+  to entire scope; for ``let``, ``const`` statements, the declared variable is
   only available from the point of declaration until the end of scope.
 
 let
@@ -276,7 +276,7 @@ let
 
   * Because of TDZ, ``let`` does not do hoisting.
     ``let`` declaration don't do hoisting::
-  
+
       function foo() {
           console.log(x); // raise ReferenceError.
           let x = 1;
@@ -301,14 +301,14 @@ let
       function go(n) {
         // n here is defined!
         console.log(n); // Object {a: [1,2,3]}
-      
+
         for (let n of n.a) { // ReferenceError. this `n` is declared in an implicit block
           console.log(n);    // via ``let n = n.a;`` which makes rvalue `n.a` in TDZ.
         }
       }
-      
+
       go({a: [1, 2, 3]});
-      
+
 - advantages to declaring variables using block scope.
 
   * the principle of least privilege/exposure.
@@ -507,7 +507,7 @@ function declaration statement
 - function declaration creates a lexical scope. (a function scope.)
 
 - ``var`` declarations in function has function scope.
-  
+
   ``var`` + function scope is fine enough for normal programming requirements.
   That's almost all we have in Python.
 
@@ -605,7 +605,7 @@ this keyword
 - the value of ``this``.
 
   * global context. ``this`` refers to global object.
-  
+
   * function context. depends on how function is called (call-site and context
     object).
 
@@ -640,7 +640,7 @@ this keyword
 
     - with ``new`` binding, i.e., as a constructor. ``this`` is bound to the
       new object being created.
-        
+
     - as a DOM event handler. ``this`` is set to the element the event fired from.
 
     - When ``this`` appears in an inline event handler, ``this`` is set to the DOM
@@ -764,7 +764,7 @@ strict equality comparison
 relational operators
 --------------------
 ::
- 
+
   < > <= >=
 
 - type coercion is allowed (WTFJS_).
@@ -955,12 +955,12 @@ Scope
 
   * For rvalue, if an identifier is not found, ``ReferenceError`` exception is
     raised, except when it is used as operand of ``typeof`` operator.
-  
+
   * For lvalue, if a variable could not be found by traversing nested scope until
     global scope, it will be created in global scope. DON'T DO IT.
-  
+
     Unless in strict mode, this will raise ``ReferenceError``.
-  
+
 - An identifier defined in inner scope shadows the identifier of the same name
   defined in the outer scope.
 
@@ -972,7 +972,7 @@ Scope
   a different lexical block scope is created. 这对于 closure 非常重要, 当一个函数
   的执行涉及 closure over loop-created lexical scope 时, 它只能访问函数定义时对应
   的 iteration 的 block scope.
-  
+
   Compare::
 
     for (var i=1; i<=5; i++) {
@@ -994,13 +994,13 @@ Scope
                 console.log( j );
             }, j*1000 );
         })( i );
-    } 
+    }
 
 - There are two ways lexical scope can be modified at runtime:
 
   * ``eval()``, ``setInterval()``, ``setTimeout()``, ``new Function()`` etc.
     that can execute program text at runtime.
-  
+
   * ``with`` statement, which is deprecated.
 
 Closure
