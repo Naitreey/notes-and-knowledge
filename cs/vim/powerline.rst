@@ -39,7 +39,7 @@ main configuration file
 
   * common: 全局配置
 
-  * ext: 对每个 extension, 指定所使用的 colorscheme, theme, 在特定情况下
+  * ext: 对每个 extension, 指定所使用的 colorscheme, top_theme, theme, 在特定情况下
     使用的 local theme, 以及一些 extension-specific 的基础配置.
 
 具体 key 含义:
@@ -48,6 +48,9 @@ main configuration file
 
 - ``theme`` & ``top_theme`` keys 决定下述 theme 配置如何构建.
   ``local_themes`` & ``top_theme`` keys 决定在特定情况下的 theme 如何构建.
+
+  若对于特定的 extension, 未定义 ``<ext>.top_theme``, 使用
+  ``common.default_top_theme``, 后者默认为 ``powerline_terminus``.
 
 colorschemes
 ~~~~~~~~~~~~
