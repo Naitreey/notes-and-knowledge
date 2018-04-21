@@ -237,25 +237,6 @@
   接下来修改的. 相当于一个文件以 "r+" mode 打开. fd 指向 buffer 起始位置. `write()`
   会覆盖掉 `initial_value` 的部分.
 
-- Context manager 的 ``__exit__(self, type, value, tb)`` method 的返回值严格地讲应该是
-  ``True|False``. ``True`` 则在退出时 suppress 在 with block 中 raise 的 exception,
-  ``False`` 则任传入的 exc_info propogate 至外层.
-
-- `contextlib` 将 python 中的 context manager 概念和 protocol 封装成了一组具体的
-  context manager 类型, 即以 `AbstractContextManager` 为基础的一组 class.
-
-- context manager 和 decorator 的关系和区别.
-
-  * context manager 适用于当我们需要把某一操作置于一个特定的 context 下, 并封装有
-    方便的建立 context 和消除 context 的操作. 注意重点是操作, context manager
-    只是一个方便的工具, 为这个操作提供 context 服务.
-
-  * decorator 比 context manager 涵盖的范围宽泛许多. 它 decorate 下面的操作 (class/
-    function), 而这种含义的附加和修改不局限于 "prepare-cleanup" 的 context manager
-    使用场景, 而是任何的含义附加以及操纵. 简单的可以是 `classmethod` 等基本的含义
-    微调, 复杂的可以是将一定的操作 attach 至某个更大的完整的框架, 例如 `Flask.route`,
-    `unittest.skipIf`.
-
 - how does argument-less ``super()`` work?
 
   每个函数都保存一个隐性的不可外部访问的引用量 ``__cls__``, 它是对该函数定义所在的

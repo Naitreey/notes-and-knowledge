@@ -45,6 +45,25 @@ module
 - module 中一般不该出现在 import 时会给出输出的 "裸代码". 它不该做奇怪
   的事情, 应该 keep silent.
 
+- All global identifiers defined in a module are module's attributes.
+
+- implicit predefined attributes. 注意这些相当于只是 predefined global
+  identifier 而已.
+
+  * ``__name__``
+
+  * ``__file__``. pathname of the module file, can be a so file for C
+    extension modules.
+
+  * ``__path__``. For package. a iterable of strings specifying subpackage's
+    import paths.
+
+  * ``__doc__``. module doc.
+
+  * ``__annotations__``. module-level variable annotations storage.
+
+  * ``__dict__``. module's global namespace.
+
 class
 ^^^^^
 - class 的分类.
@@ -99,6 +118,33 @@ class instance
 
 * attribute modification. 修改和删除属性只更新 ``__dict__``. 若
   定义了 ``__setattr__``, ``__delattr__`` 则直接调用这两个方法.
+
+user-defined function
+^^^^^^^^^^^^^^^^^^^^^
+
+- special attributes. ``object``'s common attributes are not listed.
+
+  * ``__doc__``. docstring.
+
+  * ``__module__``. defining module.
+
+  * ``__defaults__``. argument's default value storage. A tuple containing
+    default argument values for those arguments that have defaults, or None.
+
+  * ``__code__``. The code object representing the compiled function body.
+
+  * ``__globals__``. function's lexical global scope.
+
+  * ``__closure__``. None or a tuple of cells that contain bindings for the
+    function’s free variables. 注意只有在函数中真正使用到的 free varialbes
+    才会 keep 在里面, 这样省内存. ``__globals__`` & ``__closure__`` 协助实现
+    lexical scope and closure.
+
+  * ``__dict__``. arbitrary storage.
+
+  * ``__annotations__``. function annotation storage.
+
+  * ``__kwdefaults__``. storage for defaults of keyword-only parameters.
 
 special attributes & methods
 ----------------------------
@@ -188,6 +234,12 @@ container protocol
 
 - ``object.__contains__()``, optional.
 
+make it callable
+^^^^^^^^^^^^^^^^
+
+- ``object.__call__(self, ...)``. make an object callable. Anything that
+  is supposed to be callable needs to define this method.
+
 attribute access
 ^^^^^^^^^^^^^^^^
 
@@ -238,6 +290,63 @@ attribute access
   由于 ``__getattribute__`` 完全决定属性访问, 并且具有以上复杂的逻辑, 所以
   subclass/submetaclass 一般不该完全自定义该方法, 而是在调用父类的方法基础上
   进行适当的自定义.
+
+context manager protocol
+------------------------
+A context manager manages some "context". They usually do some setup work
+before code entering its enclosed cotext; then do some cleanup work after
+code exiting from the context.
+
+使用 context manager 的意义在于省事. 它自动保证所需资源和环境等的获取和释放,
+而不用在业务逻辑代码周围添加 explict ``try...finally`` block 等. 使得代码更
+清晰.
+
+context manager 和 decorator 的关系和区别.
+
+* context manager 适用于当我们需要把某一操作置于一个特定的 context 下, 并封装有
+  方便的建立 context 和消除 context 的操作. 注意重点是操作, context manager
+  只是一个方便的工具, 为这个操作提供 context 服务.
+
+* decorator 比 context manager 涵盖的范围宽泛许多. 它 decorate 下面的操作 (class/
+  function), 而这种含义的附加和修改不局限于 "prepare-cleanup" 的 context manager
+  使用场景, 而是任何的含义附加以及操纵. 简单的可以是 `classmethod` 等基本的含义
+  微调, 复杂的可以是将一定的操作 attach 至某个更大的完整的框架, 例如 `Flask.route`,
+  `unittest.skipIf`.
+
+``contextlib`` 提供了很多有助于利用 context manager 的工具. See also:
+`contextlib <contextlib.rst>`_.
+
+API
+^^^
+- ``object.__enter__(self)``. 在 ``with obj [as a]:`` statement 中, 进入
+  context 时, call ``obj.__enter__`` to setup context. 若 ``as a`` clause
+  is present, ``__enter__()``'s return value is assigned to it, whatever it is.
+
+- ``object.__exit__(self, exc_type, exc_value, exc_tb)``.
+  退出 context 时, call ``__exit__`` to cleanup context. If exception is raised
+  in the context, its info will be passed in as arguments, otherwise they're
+  None.
+  
+  该方法的返回值决定 cpython 是否会 suppress exception. Truthy value
+  means to suppress, falsy value otherwise. 因此 cleanup 逻辑说了算.
+  建议返回值只使用 True/False/None (implicitly).
+  (一般情况下 cleanup logic 没有 suppress 的意愿, 而是直接写上 cleanup 逻辑,
+  这样返回的是 None. 这是很自然的方式.)
+
+  Exceptions that occur during execution of this method will replace any
+  exception that occurred in the context.
+
+  The exception passed in should never be reraised explicitly, it's caller's
+  responsibility.
+
+common context managers
+^^^^^^^^^^^^^^^^^^^^^^^
+- io objects, file-like objects, auto-close on finish, like ``TextIOWrapper``.
+
+- lock objects. automatic acquiring/releasing lock.
+
+- connection objects. auto-close on finish, like ``pymongo.MongoClient``.
+  auto-commit on finish. like ``MySQLdb.connections.Connection``.
 
 descriptor protocol
 -------------------
@@ -469,6 +578,17 @@ Statements
 
 import statement
 ----------------
+
+with statement
+--------------
+::
+
+  with expression [as target] [, expression [as target]]+ : suite
+
+注意若 expression 生成的 context manager 仅仅是为了 setup/cleanup context,
+并无 binding 需要, 没必要使用 binding to ``as`` target. 这也为一些情况下,
+context manager 的重用提供支持. 例如 RDBMS connection object 可以多次
+BEGIN/COMMIT/ROLLBACK.
 
 exception handling
 ------------------
