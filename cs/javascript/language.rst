@@ -43,6 +43,8 @@ a-z, A-Z, 0-9, $, or _. And it must not starts with number.
 data types
 ==========
 
+- 7 builtin primitive types.
+
 - Unlike python, object is just one of the basic builtin types.
   In other words, string, number, etc. are all distinct types
   as basic as object type. object is not base type of *all* types
@@ -82,6 +84,8 @@ Some cases when undefined is resultant:
 null
 ----
 
+- It is a bug in JS language definition that: ``typeof null === "object"``.
+
 boolean
 -------
 
@@ -101,7 +105,10 @@ methods
 
 object
 ------
-a dict, a hash map. like a python object and dict combination.
+
+- constructor: ``Object()``.
+
+- an object is simply a hash map.
 
 - properties can be accessed as attributes (dot notation) or
   keys (bracket notation).
@@ -111,9 +118,13 @@ a dict, a hash map. like a python object and dict combination.
 
 - object keys can only be string.
 
+
+Folloings are subtypes of object.
+
 array
 ^^^^^
-``array`` is a subtype of ``object``.
+
+- constructor: ``Array()``
 
 - Because array is object, it is theoretically possible to use array like
   an object, i.e., save named property in an array object::
@@ -143,7 +154,10 @@ array
 function
 ^^^^^^^^
 
-``function`` is a subtype of object. A function is a callable object.
+- constructor ``Function()``.
+
+- A function is a callable object. In JS, function is first-class entity like
+  normal objects.
 
 - function object can store properties like normal object. This is sometimes
   useful::
@@ -163,15 +177,44 @@ function
     > x
     { [Function: x] r: 1, p: 2 }
 
-constructor
-""""""""""""
-- ``Function()``.
-
 methods
 """"""""
-- ``bind()``.
+- ``call([<this>, arg1[, ...]])``.
+  call the function with specified ``this`` and args.
 
-  the produced bound function's ``name`` attribute is ``bound <func>``.
+  * In non-strict mode, if ``this`` is ``null`` or ``undefined``, it will
+    be replaced with the global object.
+
+  * primitive values will be autoboxed.
+
+- ``apply([<this>, [args-array]])``.
+  call function with specified ``this`` and array-like list of args.
+  Otherwise it's the same as ``call()``.
+
+  * ``apply()`` is useful when args are passed as an array-like object
+    rather than individual elements (或者使用 ``...`` operator.)
+
+- ``bind(<this> [, arg1[, ...]])``.
+  Create a bound function of original function, also optionally partially
+  applying arguments.
+
+  * In non-strict mode, if ``this`` is ``null`` or ``undefined``, it will
+    be replaced with the global object.
+
+    如果确实不需要 bind effect, 只需要 partial application, 可传一个 empty
+    object 作为 ``this``, 避免 side effect on global object.::
+
+      var ø = Object.create(null);
+
+  * The returned bound function cannot be re-bound.
+
+  * The bound ``this`` value is ignored if the bound function is used as
+    constructor following the ``new`` operator. While the partially applied
+    args are still used.
+
+  * the result bound function's ``name`` attribute is ``bound <func>``.
+
+  * the result function can not only be bound, but also partially applied.
 
 abstract operations
 ===================
@@ -634,12 +677,22 @@ this keyword
       ``this`` value for function call. 这个用法相当于在 python 中, 给 class
       unbound method 传递 self 对象来直接调用. 假装对象有这个方法.
 
+      Explicit binding takes precedence over context object's method reference.::
+
+        obj.foo.call(obj2) // this -> obj2
+
     - with hard binding,
       ``Function.prototype.bind()``. create a new function with ``this`` bound
       to the specified object, regardless how the new function is being used.
 
     - with ``new`` binding, i.e., as a constructor. ``this`` is bound to the
       new object being created.
+
+      New binding takes precedence over context object's method reference and hard
+      binding.::
+
+        let obj2 = new obj.foo() // this -> obj2
+        let obj3 = new (obj.foo.bind(obj))() // this -> obj3
 
     - as a DOM event handler. ``this`` is set to the element the event fired from.
 
@@ -681,6 +734,14 @@ new operator
 
   * the newly constructed object is returned as value of the ``new`` expression, unless
     the constructor returns alternative object itself.
+
+- a bound method's instance is also the original function's instance. the bound ``this``
+  is ignored, but other partial applied arguments are preserved.::
+
+    var f2 = func.bind(obj);
+    var ins = new f2();
+    ins instanceof f2; // true
+    ins instanceof func; // true
 
 unary operators
 ---------------
@@ -861,7 +922,28 @@ section.
 arrow function expression
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
+- In arrow functions, ``this`` retains the value of the enclosing
+  lexical scope's ``this``. No matter what happens.
+  
+  但是注意, 如果 enclosing lexical scope 的 ``this`` is dependent on call-site.
+  则 arrow function's ``this`` is fixed at enclosing function's call-site.::
 
+    function f() {
+        return () => {
+            console.log(this.a);
+        };
+    }
+
+    var x = {
+        a: 1
+    }, a = 2;
+
+    f.call(x)();
+    f()();
+
+- arrow function is very useful for callbacks. because of its succinctness and
+  lexical ``this`` behavior.
+        
 modules
 =======
 
