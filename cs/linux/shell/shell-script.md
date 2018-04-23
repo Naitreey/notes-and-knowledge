@@ -1,5 +1,6 @@
 # language
 ## overview
+
 -   bash/shell script is an interpreted language.
     并且不包含预编译阶段. 不仅如此, bash 是依次对每个 logical line 进行 read, parse, execute
     操作的. 而不是对整个脚本进行这三个步骤. 所以只有执行到特定一行时才知道该行有没有语法错误.
@@ -7,6 +8,7 @@
     [[interpreted]](#interpreted).
 
 ## scope
+
 bash script 使用的是 dynamic scope, 而不是 lexical scope. 因而在 name resolution 方面与常见
 现代语言不同.
 
@@ -179,6 +181,13 @@ declare x; x=1
     login shell, `$0` 会以 `-` prefix. 
 
     注意即使在函数中, `$0` 也不会重命名为函数名, 仍然是初始值.
+
+-   process substitution 中, `>()` stdin connection 的一个用处. sudo 时将 stdout/stderr
+    分别写到两个当前用户不可写的路径.
+
+    ```sh
+    sudo command > >(sudo tee /log.out >/dev/null) 2> >(sudo tee/log.err >/dev/null)
+    ```
 
 # shell 初始化文件的执行流程
 
