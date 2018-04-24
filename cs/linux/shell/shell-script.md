@@ -189,6 +189,10 @@ declare x; x=1
     sudo command > >(sudo tee /log.out >/dev/null) 2> >(sudo tee/log.err >/dev/null)
     ```
 
+-   setuid bit on bash does not have any effect. Bash detects that it has been
+    started SUID root (UID!=EUID) and uses its root power to throw this power
+    away, resetting EUID to UID.[[SEBashSuid]](#SEBashSuid)
+
 # shell 初始化文件的执行流程
 
 * bash 初始化文件的执行.
@@ -288,3 +292,4 @@ declare x; x=1
 
 # references
 <a id="interpreted">[interpreted]</a> [Is bash an interpreted language?](https://stackoverflow.com/a/30156987/1602266)
+<a id="SEBashSuid">[SEBashSuid]</a> [Setuid bit seems to have no effect on bash](https://unix.stackexchange.com/questions/74527/setuid-bit-seems-to-have-no-effect-on-bash)
