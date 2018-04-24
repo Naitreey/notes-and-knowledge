@@ -63,7 +63,7 @@ data types
 - autoboxing (WTFJS_). Under certain conditions, primitive value
   will be automatically wrapped in its object equivalent. For example,
 
-  * When accessing a primitive value's property
+  * When accessing a primitive value's property.
 
   * When passed as ``this`` binding target.
 
@@ -121,10 +121,25 @@ object
 
 Folloings are subtypes of object.
 
-array
+String
+^^^^^^
+
+- string primitive type's object counterpart.
+
+- Constructor function: ``String()``.
+
+Number
+^^^^^^
+
+Boolean
+^^^^^^^
+
+
+
+Array
 ^^^^^
 
-- constructor: ``Array()``
+- Constructor function: ``Array()``
 
 - Because array is object, it is theoretically possible to use array like
   an object, i.e., save named property in an array object::
@@ -151,7 +166,7 @@ array
   However, this would generally be considered improper usage of the respective
   types.
 
-function
+Function
 ^^^^^^^^
 
 - constructor ``Function()``.
@@ -178,7 +193,7 @@ function
     { [Function: x] r: 1, p: 2 }
 
 methods
-""""""""
+"""""""
 - ``call([<this>, arg1[, ...]])``.
   call the function with specified ``this`` and args.
 
