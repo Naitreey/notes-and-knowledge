@@ -216,8 +216,66 @@ MyISAM is shit.
 MYISAM doesn't support transactions or enforce foreign-key constraints
 (inferential integrity).
 
+Security
+========
+
+Account system
+--------------
+
+overview
+^^^^^^^^
+- User accounts consist of username and hostname.
+  
+- Client 连接时, 必须同时 保证 username & hostname 都与服务端 ``mysql.user``
+  table 中的记录匹配, 才能认证.
+
+  若创建用户时设置的是 hostname/FQDN 而不是 IP address, 服务端在验证客户端连接
+  时, 需要将 client IP address 做 reverse DNS 转换成 hostname, 再和 ``mysql.user``
+  中的记录去比较. 因此若要使用 hostname/FQDN 作为 user account's hostname, 必须
+  保证 reverse DNS 结果是正确的.
+
+  因此, 一般避免使用非 IP 地址的 user account hostname.
+
 Server mechanism
 ================
+
+Server Configurations
+---------------------
+
+server system variables
+^^^^^^^^^^^^^^^^^^^^^^^
+- storage: ``performance_schema.global_variables|session_variables``.
+
+- global variables and session variables.
+
+  * global variables. 
+
+  * session variables. Session variables are those ultimately in effect
+    for current session. They are initialized from global variables.
+
+management statements
+^^^^^^^^^^^^^^^^^^^^^
+
+SHOW VARIABLES
+""""""""""""""
+::
+
+  SHOW [GLOBAL | SESSION] VARIABLES
+     [LIKE 'pattern' | WHERE expr] 
+
+- no privileges are required.
+
+- variables can be filtered via two clauses:
+
+  * simple ``LIKE`` pattern filtering on variable name. Strictly speaking,
+    because ``_`` is a wildcard that matches any single character, you should
+    escape it as ``\_`` to match it literally.
+
+  * ``WHERE`` clause general filtering on resulting table's column names.
+
+- ``GLOBAL`` and ``SESSION`` modifiers.
+
+  * default is ``SESSION``.
 
 server logs
 -----------
