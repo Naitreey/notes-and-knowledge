@@ -252,6 +252,7 @@ attribute access
   ``instance.attr`` 使用以下属性访问逻辑:
 
   1. 尝试 data descriptor. 若有, 调用::
+
        descriptor.__get__(self, instance, type(instance))
 
   2. 尝试 instance attribute (``__dict__``). 若有, 直接返回.
@@ -526,11 +527,45 @@ Atoms
   inside the expression itself, whereas for loop does not build a scope (python
   does not have block scope).
 
-list, set, dict's display
-^^^^^^^^^^^^^^^^^^^^^^^^^
-- literal display form.
+tuple, list, set, dict's display
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-- comprehension form.
+literal display form
+""""""""""""""""""""
+- tuple, list, set use a common display form: a list of ``star_item``::
+
+    starred_list  ::=  starred_item ( "," starred_item )* [","]
+
+  * each ``stared_item`` is an expression or an iterable unpacking
+    operation.
+
+  * iterable unpacking: The iterable is expanded into a sequence of items,
+    which are included in the new tuple, list, or set, at the site of the
+    unpacking.
+
+  * The trailing comma is only required when creating a tuple singleton.
+
+  examples::
+
+    (1,)
+    {*(1,2,3), 3, 4, *{"a":1, "b":2}, 5, 6,}
+
+- dict display form: a list of ``key_datum``::
+
+    key_datum_list  ::=  key_datum ("," key_datum)* [","]
+
+  * each ``key_datum`` is a ``key: value`` pair, or a mapping unpacking.
+
+  * mapping unpacking: The mapping's key-value pairs are expanded and
+    added to the new dict.
+
+  examples::
+
+    {}
+    {"a":1, **dict(a=1, b=2), "c": 3, **OrderedDict(c=3, d=4),}
+
+comprehension form
+""""""""""""""""""
 
 generator expression
 ^^^^^^^^^^^^^^^^^^^^
@@ -545,18 +580,20 @@ Subscriptions & slicing
 - subscription
   
   BNF::
-      subscription ::= primary "[" expression_list "]"
+
+    subscription ::= primary "[" expression_list "]"
 
 - slicing
   
   BNF::
-      slicing      ::=  primary "[" slice_list "]"
-      slice_list   ::=  slice_item ("," slice_item)* [","]
-      slice_item   ::=  expression | proper_slice
-      proper_slice ::=  [lower_bound] ":" [upper_bound] [ ":" [stride] ]
-      lower_bound  ::=  expression
-      upper_bound  ::=  expression
-      stride       ::=  expression
+
+    slicing      ::=  primary "[" slice_list "]"
+    slice_list   ::=  slice_item ("," slice_item)* [","]
+    slice_item   ::=  expression | proper_slice
+    proper_slice ::=  [lower_bound] ":" [upper_bound] [ ":" [stride] ]
+    lower_bound  ::=  expression
+    upper_bound  ::=  expression
+    stride       ::=  expression
   
   这是最一般化最广义的 slicing expression 定义. 它是 subscription 的
   generalization. 即: 在 slicing syntax 中, 当 slice_list 中 的每一项 slice_item
@@ -567,9 +604,10 @@ Subscriptions & slicing
   当 slice_list 中包含 proper_slice 时, proper_slice 部分转化为 slice object.
 
   e.g.::
-      p[1,2,] => p[(1,2)]
-      p[1,2:,] => p[(1, slice(2, None, None))]
-      p[::2] => p[slice(None, None, 2)]
+
+    p[1,2,] => p[(1,2)]
+    p[1,2:,] => p[(1, slice(2, None, None))]
+    p[::2] => p[slice(None, None, 2)]
 
 slicing (包含 subscription) 是通过 ``__getitem__`` 实现.
 
@@ -942,6 +980,7 @@ methods
     fields within it. 形式:
 
     - DNF::
+
         [[fill]align][sign][#][0][width][grouping_option][.precision][type]
 
     - fill can be any char.
