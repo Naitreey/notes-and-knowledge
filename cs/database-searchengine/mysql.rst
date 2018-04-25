@@ -253,8 +253,8 @@ server system variables
   * session variables. Session variables are those ultimately in effect
     for current session. They are initialized from global variables.
 
-management statements
-^^^^^^^^^^^^^^^^^^^^^
+management SQL statements
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 SHOW VARIABLES
 """"""""""""""
@@ -490,7 +490,7 @@ HA and scalability
 
   * NDB cluster.
 
-  * InnoDB cluster (??)
+  * InnoDB cluster
   
 Replication
 -----------
@@ -703,17 +703,17 @@ configuration
 
 checking replication status
 """"""""""""""""""""""""""""
-
 - on master:
   
-  * SHOW PROCESSLIST;
+  * ``SHOW PROCESSLIST;``
 
 - on slave:
   
-  * SHOW SLAVE STATUS; 重要列: ``Slave_IO_State``, ``Slave_IO_Running``,
-    ``Slave_SQL_Running``, ``Last_IO_Error``, ``Last_SQL_Error``.
+  * ``SHOW SLAVE STATUS;``
+    重要列: ``Slave_IO_State``, ``Slave_IO_Running``, ``Slave_SQL_Running``,
+    ``Last_IO_Error``, ``Last_SQL_Error``.
 
-  * ``performance_schema.replication_connection_status`` table.
+  * ``performance_schema`` replication tables.
 
 replication options
 ^^^^^^^^^^^^^^^^^^^
@@ -763,6 +763,237 @@ binlog checksum.
 
 - ``--slave-sql-verify-checksum={0|1}``, ``slave_sql_verify_checksum``.
   let slave use checksum to verify binlog.
+
+performance schema replication tables
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- 这些表是 ``SHOW SLAVE STATUS;`` statement 的数据基础. 并且提供的信息
+  更加具体和详细.
+
+- table categories.
+
+  * info related to master-slave connections.
+    ``replication_connection_configuration``, ``replication_connection_status``.
+
+  * general info related to transaction applier.
+    ``replication_applier_configuration``, ``replication_applier_status``.
+
+  * transaction applier info by threads.
+    ``replication_applier_status_by_coordinator``,
+    ``replication_applier_status_by_worker``.
+
+  * info related to replication filers.
+    ``replication_applier_filters``, ``replication_applier_global_filters``.
+
+  * info related to group replication memebers.
+    ``replication_group_members``, ``replication_group_member_stats``.
+
+replication_connection_configuration table
+""""""""""""""""""""""""""""""""""""""""""
+- configuration parameters used by the slave server for connecting to the
+  master server.
+
+- Its content remains constant during the connection.
+
+- columns.
+
+  * CHANNEL_NAME. ``""`` for default channel.
+
+  * HOST.
+
+  * PORT.
+
+  * USER.
+
+  * NETWORK_INTERFACE.
+
+  * AUTO_POSITION. 0 if not using autopositioning.
+
+  * ssl options.
+
+  * CONNECTION_RETRY_INTERVAL.
+
+  * CONNECTION_RETRY_COUNT. max retry times.
+
+  * HEARTBEAT_INTERVAL.
+
+  * TLS_VERSION.
+
+  * PUBLIC_KEY_PATH.
+
+  * GET_PUBLIC_KEY.
+
+replication_connection_status Table
+""""""""""""""""""""""""""""""""""""
+- the current status of replication connection, including the I/O thread that
+  handles the slave server connection to the master server, transactions in
+  relay logs, etc.
+
+- columns.
+
+  * CHANNEL_NAME.
+
+  * GROUP_NAME.
+
+  * SOURCE_UUID. master server uuid.
+
+  * THREAD_ID.
+
+  * SERVICE_STATE. values: ON (IO thread running and connected), OFF (IO thread
+    not running), CONNECTING (IO thread running and connecting to master).
+
+  * RECEIVED_TRANSACTION_SET.
+
+  * LAST_ERROR_NUMBER, LAST_ERROR_MESSAGE, LAST_ERROR_TIMESTAMP.
+
+  * LAST_HEARTBEAT_TIMESTAMP.
+
+  * COUNT_RECEIVED_HEARTBEATS.
+
+  * LAST_QUEUED_TRANSACTION,
+    LAST_QUEUED_TRANSACTION_ORIGINAL_COMMIT_TIMESTAMP,
+    LAST_QUEUED_TRANSACTION_IMMEDIATE_COMMIT_TIMESTAMP,
+    LAST_QUEUED_TRANSACTION_START_QUEUE_TIMESTAMP,
+    LAST_QUEUED_TRANSACTION_END_QUEUE_TIMESTAMP.
+
+  * QUEUEING_TRANSACTION,
+    QUEUEING_TRANSACTION_ORIGINAL_COMMIT_TIMESTAMP,
+    QUEUEING_TRANSACTION_IMMEDIATE_COMMIT_TIMESTAMP,
+    QUEUEING_TRANSACTION_START_QUEUE_TIMESTAMP.
+
+replication_applier_status Table
+""""""""""""""""""""""""""""""""
+- general transaction execution status on the slave server that are not
+  specific to any thread involved.
+
+- columns.
+
+  * CHANNEL_NAME
+
+  * SERVICE_STATE
+
+  * REMAINING_DELAY
+
+  * COUNT_TRANSACTIONS_RETRIES
+
+replication_applier_global_filters Table
+""""""""""""""""""""""""""""""""""""""""
+- global replication filters configured on this slave.
+
+- columns.
+
+  * FILTER_NAME.
+
+  * FILTER_RULE.
+
+  * CONFIGURED_BY.
+
+  * ACTIVE_SINCE.
+
+replication SQL statements
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+SHOW SLAVE STATUS
+""""""""""""""""""
+::
+
+  SHOW SLAVE STATUS [FOR CHANNEL <channel>]
+
+- privileges required: REPLICATION CLIENT.
+
+- 显示的信息源于 performance schema replication tables.
+
+- output columns from tables.
+
+  * ``sys.processlist``:
+    Slave_IO_State,
+    Slave_SQL_Running_State
+
+  * ``performance_schema.replication_connection_status``:
+    Slave_IO_Running,
+    Master_UUID,
+    Last_IO_Errno,
+    Last_IO_Error,
+    Last_IO_Error_Timestamp,
+    Channel_name,
+
+  * ``performance_schema.replication_applier_status``:
+    Slave_SQL_Running,
+
+  * ``performance_schema.replication_applier_global_filters``:
+    Replicate_Do_DB,
+    Replicate_Ignore_DB,
+    Replicate_Do_Table,
+    Replicate_Ignore_Table,
+    Replicate_Wild_Do_Table,
+    Replicate_Wild_Ignore_Table,
+    Replicate_Rewrite_DB
+
+  * ``performance_schema.replication_connection_configuration``:
+    Master_Host,
+    Master_User, 
+    Master_Port, 
+    Master_Bind,
+    Connect_Retry,
+    Master_Retry_Count,
+    Master_SSL_Allowed,
+    Master_SSL_CA_File,
+    Master_SSL_CA_Path,
+    Master_SSL_Cert,
+    Master_SSL_Cipher,
+    Master_SSL_CRL_File,
+    Master_SSL_CRL_Path,
+    Master_SSL_Key,
+    Master_SSL_Verify_Server_Cert,
+    Auto_Position,
+    Master_TLS_Version,
+    Master_public_key_path,
+    Get_master_public_key
+
+  * ``mysql.slave_master_info``:
+    Master_Log_File, 
+    Read_Master_Log_Pos
+
+  * ``mysql.slave_relay_log_info``:
+    Relay_Log_File, 
+    Relay_Log_Pos, 
+    Relay_Master_Log_File,
+    SQL_Delay
+
+  * ``performance_schema.replication_applier_status_by_worker``:
+    Last_SQL_Errno,
+    Last_SQL_Error
+    Last_Errno,
+    Last_Error,
+    Last_SQL_Error_Timestamp,
+
+  * Skip_Counter
+
+  * Exec_Master_Log_Pos
+
+  * Relay_Log_Space
+
+  * Until_Condition, Until_Log_File, Until_Log_Pos
+
+  * Replicate_Ignore_Server_Ids
+
+  * Master_Server_Id
+
+  * Master_Info_File
+
+  * Seconds_Behind_Master
+
+  * SQL_Remaining_Delay
+
+  * Retrieved_Gtid_Set
+
+  * Executed_Gtid_Set
+
+CHANGE MASTER TO
+""""""""""""""""
+- 配置保存在 ``performance_schema.replication_connection_configuration``.
+
+CHANGE REPLICATION FILTER
+"""""""""""""""""""""""""
 
 backup and recovery
 ===================
