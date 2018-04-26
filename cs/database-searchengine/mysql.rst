@@ -880,6 +880,19 @@ replication_applier_global_filters Table
 replication SQL statements
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+SHOW SLAVE HOSTS
+""""""""""""""""
+:: 
+
+  SHOW SLAVE HOST
+
+- displays a list of replication slaves currently registered with the master.
+
+- each row corresponds to one slave.
+
+- basic columns: Server_id, Master_id, Slave_UUID.
+  extra columns (根据 slave 是否提供): Host, User, Password, Port.
+
 SHOW SLAVE STATUS
 """"""""""""""""""
 ::
