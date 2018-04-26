@@ -6,109 +6,6 @@
 - 处于安全考虑, ``local_infile`` 默认是 OFF, 需要在 mysql client 和 mysqld
   同时开启.
 
-MySQL shell
-===========
-
-- ``\g`` ``\G`` 可以执行语句, 相当于 ``;``. 后者将结果列以竖排的形式输出, 比较方便.
-
-- ctrl-c 和 ``\c`` 都可以终止当前语句.
-
-- mysql client 会给出执行时间, 这个时间是在客户端算出的从发出请求到收到结果的 wall
-  clock time.
-
-- 支持输入 mutiline 的 string 和 identifier. 直接加回车即可.
-
-- mysql client 对不同的 multiline 模式给出不同的 prompt string, 甚至包含 string,
-  identifier 和 block comment 的多行输入模式. ``">``, ``'>``, ``\`>``, ``/*>``.
-
-- 可以在连接时指定要使用的数据库, 或者用 ``USE`` 切换.
-
-- cmdline 参数 ``-p`` 指定密码时不能有空格, 否则会被认为后面的参数是数据库名.
-
-- In non-interactive mode, read input sql from stdin, print results to stdout.
-  For processing convenience, such output is tab-delimited for each column.
-
-Language driver
-===============
-- python driver 需要根据应用场景和需求来选择.
-
-  目前主要的 python driver 以及各自的特点:
-
-  * MySQL for Python (``MySQLdb``)
-
-    - popular, mature and stable
-
-    - not developed since 2013-06-28 (latest update date on sourceforge),
-      essentially dead.
-      https://github.com/PyMySQL/mysqlclient-python/issues/44
-
-    - no python3 support
-
-    - c extension, very fast
-      https://gist.github.com/methane/90ec97dda7fa9c7c4ef1
-      https://github.com/PyMySQL/PyMySQL/issues/342
-      https://wiki.openstack.org/wiki/PyMySQL_evaluation#Architecture_and_Performance
-
-  * mysqlclient
-
-    - popular (700+ stars on github), mature and stable
-
-    - a fork of MySQLdb, adding python3 support, new features and bugfixes.
-
-    - drop-in replacement of MySQLdb, 100% API compatiblity, even module names
-      are the same.
-
-    - recommended by django
-      https://docs.djangoproject.com/en/1.11/ref/databases/#mysql-db-api-drivers
-
-    - python3 support
-
-    - c extension, very fast (see reference above)
-
-    - developed and maintained by the same group of people behind PyMySQL.
-
-  * PyMySQL
-
-    - popular (~3000 stars on github), mature and stable
-
-    - pure python
-
-    - python3 support
-
-    - suitable for asynchronous applications (async, eventlet, gevent, etc.)
-
-    - recommended by openstack
-      https://wiki.openstack.org/wiki/PyMySQL_evaluation
-
-    - much slow than those written as C extension. (see reference above)
-
-      (Though MySQL Connector is a pure Python library, while MySQLdb is largely
-      written in C, and we could expect that the new module is a bit slower than
-      the current one, performance may actually be improved. This is because the
-      new module is eventlet aware, meaning threads will be able to switch while
-      waiting for I/O from a database server.
-      http://specs.openstack.org/openstack/oslo-specs/specs/juno/enable-mysql-connector.html
-      )
-
-  * MySQL Connector/Python (``mysql.connector``)
-
-    - officially supported and actively developed by Oracle
-
-    - pure python
-
-    - python3 support
-
-    - suitable for asynchronous applications (async, eventlet, gevent, etc.)
-
-    - much slower than those written as C extension, also slower than PyMySQL.
-      (see references above)
-
-  根据以上分析, 我会选择 mysqlclient 和 PyMySQL, 分别在同步和异步的情况下使用.
-
-mysqlclient
------------
-
-
 SQL language
 ============
 - In general, treat all identifiers (database names, table names, column names,
@@ -222,8 +119,10 @@ Security
 Account system
 --------------
 
-overview
-^^^^^^^^
+User account
+^^^^^^^^^^^^
+- User accounts and privileges are stored in ``mysql.user`` table.
+
 - User accounts consist of username and hostname.
   
 - Client 连接时, 必须同时 保证 username & hostname 都与服务端 ``mysql.user``
@@ -235,6 +134,95 @@ overview
   保证 reverse DNS 结果是正确的.
 
   因此, 一般避免使用非 IP 地址的 user account hostname.
+
+- Max length of username: 32 chars (the byte-length of one char depends on
+  character set in use).
+
+- Passwords stored in the user table are encrypted using plugin-specific
+  algorithms.
+
+- reserved user accounts.
+
+  * ``'root'@'localhost'``. superuser for administration.
+
+  * ``'mysql.sys'@'localhost'``. DEFINER for sys schema objects. This decouples
+    sys database from root account. locked and can not be used by client.
+
+  * ``'mysql.session'@'localhost'``. used by plugins to access the server.
+    locked and can not be used by client.
+
+  * ``'mysql.infoschema'@'localhost'``. DEFINER for information_schema views.
+    This decouples information_schema database from root account. locked and
+    can not be used by client.
+
+User privileges
+^^^^^^^^^^^^^^^
+
+
+Account SQL statements
+^^^^^^^^^^^^^^^^^^^^^^
+- Account management statements are atomic and crash safe.
+
+CREATE USER
+""""""""""""
+::
+
+  CREATE USER [IF NOT EXISTS]
+    <user> [auth_option] [, <user> [auth_option]] ...
+    DEFAULT ROLE <role> [, <role>] ...
+    [REQUIRE {NONE | tls_option [[AND] tls_option] ...}]
+    [WITH resource_option [resource_option] ...]
+    [password_option] ...
+    [lock_option] ...
+
+- For each account, CREATE USER creates a new row in the mysql.user system
+  table. Its columns corresponds to options specified in CREATE USER statement.
+
+- ``user`` form: ``<user>[@<host>]``. hostname can contain ``%`` wildcard.
+  If host is omitted, default is ``%``.
+
+- Type of options that can be specified and their defaults:
+  
+  * authentication: default authentication plugin 
+    (default_authentication_plugin system variable) and empty credentials.
+
+    In other words, if ``auth_option`` is not specified, user is passwordless.
+    
+  * role: NONE.
+    
+  * ssl/tls: NONE.
+
+  * resource limits: unlimited.
+  
+  * password management: PASSWORD EXPIRE DEFAULT PASSWORD HISTORY DEFAULT
+    PASSWORD REUSE INTERVAL DEFAULT.
+    
+  * account locking: ACCOUNT UNLOCK.
+
+- required privileges: CREATE USER, or the INSERT privilege for the mysql
+  database.
+
+- multiple users are created as an atomic operation -- all or none is
+  succeeded.
+
+SHOW CREATE USER
+""""""""""""""""
+- default options are filled. Stored password value is shown, avoiding
+  disclosing original user password.
+
+- The host name part of the account name, if omitted, defaults to '%'.
+
+SHOW GRANTS
+""""""""""""
+::
+
+  SHOW GRANTS [FOR <user-or-role> [USING role [, role] ...]]
+
+- requires the SELECT privilege for the mysql database, except for
+  current user.
+
+- ``USING`` clause enables you to examine the privileges associated with roles
+  for the user.
 
 Server mechanism
 ================
@@ -1077,7 +1065,117 @@ replication info
 CLI
 ===
 
-- mysqlbinlog
+Client Programs
+---------------
+
+mysql
+^^^^^
+
+- ``\g`` ``\G`` 可以执行语句, 相当于 ``;``. 后者将结果列以竖排的形式输出, 比较方便.
+
+- ctrl-c 和 ``\c`` 都可以终止当前语句.
+
+- mysql client 会给出执行时间, 这个时间是在客户端算出的从发出请求到收到结果的 wall
+  clock time.
+
+- 支持输入 mutiline 的 string 和 identifier. 直接加回车即可.
+
+- mysql client 对不同的 multiline 模式给出不同的 prompt string, 甚至包含 string,
+  identifier 和 block comment 的多行输入模式. ``">``, ``'>``, ``\`>``, ``/*>``.
+
+- 可以在连接时指定要使用的数据库, 或者用 ``USE`` 切换.
+
+- cmdline 参数 ``-p`` 指定密码时不能有空格. 或者使用 ``--password=<pass>``.
+
+- In non-interactive mode, read input sql from stdin, print results to stdout.
+  For processing convenience, such output is tab-delimited for each column.
+
+Utility Programs
+----------------
+
+mysqlbinlog
+^^^^^^^^^^^
+
+Language driver
+===============
+- python driver 需要根据应用场景和需求来选择.
+
+  目前主要的 python driver 以及各自的特点:
+
+  * MySQL for Python (``MySQLdb``)
+
+    - popular, mature and stable
+
+    - not developed since 2013-06-28 (latest update date on sourceforge),
+      essentially dead.
+      https://github.com/PyMySQL/mysqlclient-python/issues/44
+
+    - no python3 support
+
+    - c extension, very fast
+      https://gist.github.com/methane/90ec97dda7fa9c7c4ef1
+      https://github.com/PyMySQL/PyMySQL/issues/342
+      https://wiki.openstack.org/wiki/PyMySQL_evaluation#Architecture_and_Performance
+
+  * mysqlclient
+
+    - popular (700+ stars on github), mature and stable
+
+    - a fork of MySQLdb, adding python3 support, new features and bugfixes.
+
+    - drop-in replacement of MySQLdb, 100% API compatiblity, even module names
+      are the same.
+
+    - recommended by django
+      https://docs.djangoproject.com/en/1.11/ref/databases/#mysql-db-api-drivers
+
+    - python3 support
+
+    - c extension, very fast (see reference above)
+
+    - developed and maintained by the same group of people behind PyMySQL.
+
+  * PyMySQL
+
+    - popular (~3000 stars on github), mature and stable
+
+    - pure python
+
+    - python3 support
+
+    - suitable for asynchronous applications (async, eventlet, gevent, etc.)
+
+    - recommended by openstack
+      https://wiki.openstack.org/wiki/PyMySQL_evaluation
+
+    - much slow than those written as C extension. (see reference above)
+
+      (Though MySQL Connector is a pure Python library, while MySQLdb is largely
+      written in C, and we could expect that the new module is a bit slower than
+      the current one, performance may actually be improved. This is because the
+      new module is eventlet aware, meaning threads will be able to switch while
+      waiting for I/O from a database server.
+      http://specs.openstack.org/openstack/oslo-specs/specs/juno/enable-mysql-connector.html
+      )
+
+  * MySQL Connector/Python (``mysql.connector``)
+
+    - officially supported and actively developed by Oracle
+
+    - pure python
+
+    - python3 support
+
+    - suitable for asynchronous applications (async, eventlet, gevent, etc.)
+
+    - much slower than those written as C extension, also slower than PyMySQL.
+      (see references above)
+
+  根据以上分析, 我会选择 mysqlclient 和 PyMySQL, 分别在同步和异步的情况下使用.
+
+mysqlclient
+-----------
+
 
 Programming Designs
 ===================
