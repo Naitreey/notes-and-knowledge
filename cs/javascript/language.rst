@@ -106,20 +106,80 @@ methods
 object
 ------
 
+- literal form: ``{...}``.
+
+  * in literal form, property name string can be specified without quotes,
+    if it's a valid identifier.
+
+  * computed property names: an expression, surrounded by a ``[ ]`` pair, in
+    the key-name position of an object-literal declaration.::
+
+      let x = {
+          [{"s": 1}]: 2,
+          [true]: 3,
+          [Symbol.Something]: "sef"
+      };
+
 - constructor: ``Object()``.
 
-- an object is simply a hash map.
+- an object is simply a hash map. In JS, virtually every non-primitive instance
+  is a object. No matter what constructor it is created with.
 
-- properties can be accessed as attributes (dot notation) or
-  keys (bracket notation).
+object property
+^^^^^^^^^^^^^^^
 
-- dot notation can be used only when property name is a valid identifier,
-  and is a known literal.
+- object property names can only be string. If non-string values are specified as attribute
+  keys, they will firstly be coerced to string.
 
-- object keys can only be string.
+- property access:
+  
+  * ``.``. for keys that are valid identifiers.
+    
+  * ``[]``. for keys that are any strings.
 
+- property descriptor.
 
-Folloings are subtypes of object.
+  * In JS, a object property 本质上是由 property name string + property descriptor
+    组成的. property value 只是 property descriptor 的 ``value`` 部分.
+    
+    这种对 property 的封装, 给 property 赋予了 value 之外的各种性质. 这有些类似
+    python 中的 property 或者更一般化的 descriptor protocol.
+
+  * property's attributes.
+
+    - value.
+
+    - writable.
+
+    - configurable.
+
+    - enumerable.
+
+    - get.
+
+    - set.
+
+  * 当使用简单的 property assignment 形式, 生成的 property descriptor 具有默认的
+    attribute 值. Use ``Object.defineProperty()`` to explicitly define property
+    descriptor's attributes.
+
+static methods
+^^^^^^^^^^^^^^
+
+- ``assign(target, ...sources)``. shallow copy source objects into target object.
+  Return target object.
+
+  * only copies enumerable and own properties from a source object to a target object.
+
+  * It uses ``[[Get]]`` on the source and ``[[Set]]`` on the target, so it will
+    invoke getters and setters.
+
+- ``getOwnPropertyDescriptor(obj, prop)``. Returns a own property's property descriptor.
+
+- ``defineProperty(obj, prop, descriptor)``.
+
+object subtypes
+---------------
 
 String
 ^^^^^^
@@ -131,18 +191,40 @@ String
 Number
 ^^^^^^
 
+- number primitive type's object counterpart.
+
+- constructor function: ``Number()``.
+
 Boolean
 ^^^^^^^
 
+- boolean primitive type's object counterpart.
 
+- constructor function: ``Boolean()``.
 
 Array
 ^^^^^
 
+- literal form: ``[...]``
+
 - Constructor function: ``Array()``
 
+- array index.
+ 
+  * A valid array index is a non-negative integer.
+
+  * Formally, array indices are just array object's normal properties.
+    Therefore indices are actually strings. A integer index is firstly
+    coerced to string before used to access array element.::
+
+      var x = ['a', 'b', 'c'];
+      x[1]; // 'b'
+      x['2']; // 'c'
+
+    但是只有 numeric index 会影响 array length.
+
 - Because array is object, it is theoretically possible to use array like
-  an object, i.e., save named property in an array object::
+  an object, i.e., save named property in an array object.::
 
     > var x = [];
     undefined
@@ -164,10 +246,13 @@ Array
     [ 'rrr', <1 empty item>, 'yyy', sef: 'xxx', bbb: 'aaa' ]
 
   However, this would generally be considered improper usage of the respective
-  types.
+  types. Because arrays have behavior and optimizations specific to their
+  intended use.
 
 Function
 ^^^^^^^^
+
+- literal form: function declaration, function expression and arrow function expression.
 
 - constructor ``Function()``.
 
@@ -230,6 +315,25 @@ methods
   * the result bound function's ``name`` attribute is ``bound <func>``.
 
   * the result function can not only be bound, but also partially applied.
+
+Date
+^^^^
+
+- constructor function: ``Date()``
+
+RegExp
+^^^^^^
+
+- literal form: ``/.../``
+
+- constructor function: ``RegExp()``
+
+Error
+^^^^^
+
+- Base error class.
+
+- constructor function: ``Error()``
 
 abstract operations
 ===================
@@ -757,6 +861,9 @@ new operator
     var ins = new f2();
     ins instanceof f2; // true
     ins instanceof func; // true
+
+super keyword
+^^^^^^^^^^^^^
 
 unary operators
 ---------------
