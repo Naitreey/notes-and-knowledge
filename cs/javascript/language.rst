@@ -261,10 +261,18 @@ static methods
 
 - ``isFrozen(obj)``.
 
+- ``keys(obj)``. returns an array of object's enumerable property names, in the
+  same order as for...in loop would.
+
 instance methods
 ^^^^^^^^^^^^^^^^
 
 - ``hasOwnProperty(<prop>)``. Whether the object has this own property.
+
+- ``getOwnPropertyNames()``. returns an array of all own properties including
+  non-enumerable properties.
+
+- ``propertyIsEnumerable(<prop>)``. Whether the property is enumerable.
 
 object subtypes
 ---------------
@@ -712,8 +720,9 @@ for-in, for-of statements
 
   }
 
-- for...in iterates over the enumerable property's name of an object.
-  The properties of an object is iterated in an arbitrary order.
+- for...in iterates over the enumerable property's name of an object itself and
+  those the object inherits from its constructor's prototype.  The properties
+  of an object is iterated in an arbitrary order.
 
 - 对于 array, 注意由于 for...in 在 iterate array 时是把它当作 object
   去遍历, 因此 indices 不保证按顺序出现. 并且如果有其他不属于 index 的
