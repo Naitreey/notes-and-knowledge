@@ -108,8 +108,9 @@ object
 
 - literal form: ``{...}``.
 
-  * in literal form, property name string can be specified without quotes,
-    if it's a valid identifier.
+  * in literal form, property name must be a string, string can be specified
+    without quotes, if it's a valid identifier. 注意 property name 不能是
+    expression (Unlike python), 除非使用以下 ``[expression]`` 形式.
 
   * computed property names: an expression, surrounded by a ``[ ]`` pair, in
     the key-name position of an object-literal declaration.::
@@ -128,8 +129,8 @@ object
 object property
 ^^^^^^^^^^^^^^^
 
-- object property names can only be string. If non-string values are specified as attribute
-  keys, they will firstly be coerced to string.
+- object property names can only be string. If non-string values are specified
+  as attribute keys, they will firstly be coerced to string.
 
 - property access:
   
@@ -137,31 +138,91 @@ object property
     
   * ``[]``. for keys that are any strings.
 
-- property descriptor.
+- property descriptor. In JS, a object property 本质上是由 property name
+  string + property descriptor 组成的. property value 只是 property descriptor
+  的 ``value`` 部分.
+  
+  这种对 property 的封装, 给 property 赋予了 value 之外的各种性质. 这有些类似
+  python 中的 property 或者更一般化的 descriptor protocol.
 
-  * In JS, a object property 本质上是由 property name string + property descriptor
-    组成的. property value 只是 property descriptor 的 ``value`` 部分.
-    
-    这种对 property 的封装, 给 property 赋予了 value 之外的各种性质. 这有些类似
-    python 中的 property 或者更一般化的 descriptor protocol.
+- property's attributes.
 
-  * property's attributes.
+  * value (default: undefined).
 
-    - value.
+  * writable (default: false). true if the property's value may be changed. If
+    a property's value is not writable, in non-strict mode, assignment to it
+    will be silently ignored; in strict mode, a TypeError will be raised.
 
-    - writable.
+    ``writable: false`` 等价于设置一个 raise TypeError 的 setter.
 
-    - configurable.
+  * configurable (default: false). true if the property descriptor itself can
+    be modified.  In other words, the property name as a variable can change
+    its value (being assigned another property descriptor), and can be deleted.
 
-    - enumerable.
+    If a property is not configurable, it cannot be re-defined using a
+    different definition, which will raise TypeError. But re-define it
+    changing only value is ok. In non-strict mode, deleting a
+    non-configurable property will be silently ignored; in strict mode,
+    TypeError will be raised.
 
-    - get.
+  * enumerable (default: false). true if the property shows up during iteration
+    of object property.
 
-    - set.
+    A non-enumerable property does not show up in object's representation.
 
-  * 当使用简单的 property assignment 形式, 生成的 property descriptor 具有默认的
-    attribute 值. Use ``Object.defineProperty()`` to explicitly define property
-    descriptor's attributes.
+  * get (default: undefined). For access descriptor, getter is called to get
+    the property value.  Property getter can be defined via
+    ``defineProperty()`` or using ``get`` keyword in object literal
+    declaration::
+
+      var x = {
+          _a: 1,
+          get a() {
+              return this._a;
+          },
+          set a(value) {
+              this._a = value;
+          }
+      }
+
+  * set (default: undefined). ditto. If setter is not defined for a property,
+    in non-strict mode, property assignment will be ignored; in strict mode,
+    TypeError is raised.
+
+  当使用 property assignment 形式创建 property, 生成的 property descriptor 的
+  writable, enumerable, configurable 都是 true. Use ``Object.defineProperty()``
+  to explicitly define property descriptor's attributes.
+
+- property descriptor 的分类:
+
+  * data property descriptor.
+
+  * accessor property descriptor. has ``get`` and/or ``set`` attributes.
+    Accessor property descriptor cannot define ``writable`` or ``value``
+    attributes.
+
+- property immutability.
+
+  * constant property. Whether a property is writable.
+
+  * extensiblitiy. An object is extensible if new properties can be added to
+    it. If an object is not extensible, in non-strict mode, further property
+    addition operation will be silently ignored; in strict mode, TypeError will
+    be raised.
+
+  * seal. An object is sealed if it is not extensible and if all its properties
+    are non-configurable. In non-strict mode, further property addition or
+    configuration will be silently ignored; in strict mode, TypeError will be
+    raised.
+
+  * freeze. Seal an object and make all data property non-writable.
+
+prototype
+^^^^^^^^^
+
+- property reference (method resolution order). ``[[Get]]`` internal method.
+
+- property assignment. ``[[Set]]`` internal method.
 
 static methods
 ^^^^^^^^^^^^^^
@@ -174,9 +235,36 @@ static methods
   * It uses ``[[Get]]`` on the source and ``[[Set]]`` on the target, so it will
     invoke getters and setters.
 
-- ``getOwnPropertyDescriptor(obj, prop)``. Returns a own property's property descriptor.
+- ``getOwnPropertyDescriptor(obj, prop)``. Returns a own property's property
+  descriptor.
 
-- ``defineProperty(obj, prop, descriptor)``.
+- ``defineProperty(obj, prop, descriptor)``. ``descriptor`` object is used to
+  set property descriptor's attributes, 它并不是直接成为了 descriptor. 定义时,
+  ``descriptor`` 中未指定的 attributes 使用原有的值或默认值.
+
+  ``descriptor`` 部分是提供 property descriptor 的配置, 若原 property 不存在则
+  新建一个. 根据提供的配置项, 这可以是只修改 property 的值, 或者修改 property
+  的属性 (writable, configurable, enumerable 等), 或者将 data property descriptor
+  改成 accessor property descriptor 等等.
+
+- ``preventExtensions(obj)``. prevents new properties from ever being added to
+  an object. 
+
+- ``isExtensible(obj)``.
+
+- ``seal(obj)``. Seal an object, preventing new properties from being added to
+  it and marking all existing properties as non-configurable. 
+
+- ``isSealed(obj)``. 
+
+- ``freeze(obj)``.
+
+- ``isFrozen(obj)``.
+
+instance methods
+^^^^^^^^^^^^^^^^
+
+- ``hasOwnProperty(<prop>)``. Whether the object has this own property.
 
 object subtypes
 ---------------
@@ -248,6 +336,8 @@ Array
   However, this would generally be considered improper usage of the respective
   types. Because arrays have behavior and optimizations specific to their
   intended use.
+
+- When you delete an array element, the array length is not affected.
 
 Function
 ^^^^^^^^
@@ -614,6 +704,49 @@ for statement
           i = j;
       }
 
+for-in, for-of statements
+^^^^^^^^^^^^^^^^^^^^^^^^^
+::
+
+  for ([var|let|const] <var> in <obj>) {
+
+  }
+
+- for...in iterates over the enumerable property's name of an object.
+  The properties of an object is iterated in an arbitrary order.
+
+- 对于 array, 注意由于 for...in 在 iterate array 时是把它当作 object
+  去遍历, 因此 indices 不保证按顺序出现. 并且如果有其他不属于 index 的
+  enumerable property 则也会出现在 iteration 中.
+
+  因此对于 array, 应使用 normal for statement 配合 array.length, 或者使用
+  for...of statement.
+
+- For ``(var|let|const) <var>`` form, ``<var>`` is re-declared for each
+  iteration of loop. This is equivalent to::
+
+    let keys = Object.keys(<obj>);
+    for (let i = 0; i < keys.length; i++) {
+        (var|let|const) <var> = keys[i];
+        ...
+    }
+
+- ``const`` is useful to prevent loop variable getting modified in loop body.
+
+::
+
+  for ([var|let|const] <var> of <obj>) {
+
+  }
+
+- for...of statement creates a loop iterating over iterable objects.
+  It iterates over data that iterable object defines to be iterated over.
+
+- for...of statement is very useful for iterating elements of Array etc.
+
+- For ``(var|let|const) <var>`` form, ``<var>`` is re-declared for each
+  iteration of loop.
+
 flow control statements
 -----------------------
 
@@ -901,6 +1034,39 @@ void
 ^^^^
 evaluates the given expression and then returns ``undefined``.
 
+delete
+^^^^^^
+::
+
+  delete object.property
+  delete object['<property>']
+
+- delete operator removes a property from an object (including arrays).
+  Unlike in python, it can not be used to remove arbitrary local identifier.
+
+  Global identifiers are essentially properties of global object. But,
+  identifiers declared with ``var``, ``let``, ``const`` etc. become
+  non-configurable properties. Only implicitly global identifiers are
+  configurable. But since implicitly global identifiers are discouraged,
+  ``delete`` operator is essentially only useful for ``object.property``
+  form.::
+  
+    var x = 1;
+    Object.getOwnPropertyDescriptor(global, 'x'); // ... configurable: false
+    delete x; // false or TypeError
+    y = 1;
+    Object.getOwnPropertyDescriptor(global, 'y'); // ... configurable: true
+    delete y; // true but not even possible in strict mode.
+
+- Return true for all cases except when the property is an own non-configurable
+  property, in which case, false is returned in non-strict mode, as deletion
+  is unsuccessful.
+
+- delete only has an effect on own properties.
+
+- In strict mode, if delete is used on a direct reference to a variable, a
+  function argument or a function name, it will throw a SyntaxError.
+
 equality operators
 ------------------
 
@@ -958,6 +1124,15 @@ relational operators
 
   * if at least one of both is not string, they are coerced to numbers
     then compared.
+
+property membership test
+------------------------
+::
+
+  <prop> in <obj>
+
+- ``in`` operator tests whether a property name is reachable from an object.
+  This includes an object's own property and traversing its prototype chain.
 
 assignment operators
 ---------------------
@@ -1040,6 +1215,16 @@ section.
 
   IIFE is often used as a purely executed chunk of code, to prevent polluting
   global namespace. Many libraries use this trick.
+
+property accessor function
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+::
+
+  get <prop>() { ... }
+  get [<expression>]() { ... }
+
+  set <prop>(value) { ... }
+  set [<expression>](value) { ... }
 
 arrow function expression
 ^^^^^^^^^^^^^^^^^^^^^^^^^
