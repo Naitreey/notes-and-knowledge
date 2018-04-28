@@ -8,16 +8,140 @@
 
 SQL language
 ============
+
+Language Structure
+------------------
+
+literal values
+^^^^^^^^^^^^^^
+
+String literals
+""""""""""""""""
+::
+
+  [_<charset>] <string> [COLLATE <collation>]
+
+- string literal is enclosed in single or double quotes.
+
+  * A ' inside a string quoted with ' may be written as ''.
+
+  * A " inside a string quoted with " may be written as "".
+
+  * Or ' " can be escaped by backslash.
+
+- Quoted strings placed next to each other are concatenated to a single string.
+
+- A string literal can specify its charset and collation.
+
+- backslash escapes.
+  
+  * For unrecognized escape sequences, backslash is ignored.
+
+Numeric literals
+""""""""""""""""
+- exact-value literals. having integer part and/or fractional part,
+  may be signed.
+  
+- approximate-value literals. in scientific notation with a mantissa
+  and exponent.
+
+hex literals
+""""""""""""
+::
+
+  [_<charset>] X'<hex>' [COLLATE <collation>]
+  [_<charset>] 0x<hex> [COLLATE <collation>]
+    
+- ``0x`` can not be written as ``0X``. letter cases does not matter.
+
+- hex literal can be a binary string or number. To ensure numeric treatment of
+  a hexadecimal literal, use it in numeric context.
+
+bit-value literals
+""""""""""""""""""
+::
+
+  [_<charset>] B'<bin>' [COLLATE <collation>]
+  [_<charset>] 0b<bin> [COLLATE <collation>]
+  
+- By default, a bit-value literal is a binary string. In numeric contexts,
+  MySQL treats a bit literal like an integer.
+
+boolean literals
+""""""""""""""""
+::
+
+  TRUE
+  FALSE
+
+- in any letter case.
+
+null values
+""""""""""""
+::
+
+  NULL
+
+- in any letter case.
+
+- In collation order, NULL precedes any other values.
+
+Date and Time literals
+""""""""""""""""""""""
+::
+
+  [DATE|TIME|TIMESTAMP] 'timestr'
+  { d|t|ts 'timestr' }
+
+- format.
+
+  * DATE. 'YYYY-MM-DD', 'YY-MM-DD', YYYYMMDD or YYMMDD. Any punctuation
+    character may be used as the delimiter.
+
+  * TIMESTAMP. 'YYYY-MM-DD HH:MM:SS', 'YY-MM-DD HH:MM:SS', 'YYYYMMDDHHMMSS' or
+    'YYMMDDHHMMSS'. Any punctuation character may be used. The date and time
+    parts can be separated by T rather than a space. Value can include a
+    trailing fractional seconds part in up to microseconds (6 digits)
+    precision.
+
+  * TIME. 'D HH:MM:SS', 'HH:MM:SS', 'HH:MM', 'D HH:MM', 'D HH', or 'SS',
+    'HHMMSS'. A trailing fractional seconds part is recognized.
+
+- TIMESTAMP produces DATETIME value.
+
+identifiers
+^^^^^^^^^^^
+- An identifier may be quoted with backtick or unquoted. If an identifier
+  contains special characters or is a reserved word, you must quote it whenever
+  you refer to it.
+
+- To escape a backtick in quoted identifier: use double tick.
+
+- Identifiers are converted to Unicode internally. identifier length
+  以字符数目计算.
+
+- Valid identifier characters:
+
+  * U+0001 - U+FFFF (unicode point: 1-65535)
+
+  * NULL is not permitted in identifier.
+
+  * Database, table, and column names cannot end with space characters.
+
+- qualified identifiers: consisting of identifiers separated by ``.``
+  qualifier, indicating a namespace hierarchy.
+
+Data types
+==========
+
+String types
+------------
+
+.. -------------------------------
+
 - In general, treat all identifiers (database names, table names, column names,
   etc.) and strings as case sensitive; treat SQL keywords, mysql builtin commands,
   etc. as case insensitive.
-
-- ``SELECT`` statement
-
-  * mysql 不支持 ``SELECT DISTINCT ON (...)``, 聚合时若要根据某列的 distinct 来
-    选择行, 可以通过 ``COUNT(DISTINCT <colname>)`` 来迂回处理. 这很 hack.
-
-- 注意 ``SELECT`` 后面的部分是 case insensitive 的.
 
 - comment syntax: 三种注释语法
 
@@ -28,9 +152,26 @@ SQL language
   * ``/* */``, block comment. 还有特殊作用, ``/*! */`` 用于在 sql 中加入 non-portable
     的 mysql extension 语句, 这样注释之外的部分仍然是 portable 的语句.
 
-- column header 是 ``SELECT`` 的项, 它可以是表的列名字, 也可能是表达式.
-
 - backtick (``\```) wrap 的是 identifier, 当 identifier 中不包含特殊字符时, 可以省去.
+
+- SQL pattern
+
+  * ``_``: any single character, equivalent to ``?`` in shell.
+
+  * ``%``: any number of any character, equivalent to ``*`` in shell.
+
+
+.. -------------------------------
+
+
+- ``SELECT`` statement
+
+  * mysql 不支持 ``SELECT DISTINCT ON (...)``, 聚合时若要根据某列的 distinct 来
+    选择行, 可以通过 ``COUNT(DISTINCT <colname>)`` 来迂回处理. 这很 hack.
+
+- 注意 ``SELECT`` 后面的部分是 case insensitive 的.
+
+- column header 是 ``SELECT`` 的项, 它可以是表的列名字, 也可能是表达式.
 
 - 可以给用户分配不存在的数据库的权限. 然后这个用户可以创建这个数据库.
 
@@ -52,12 +193,6 @@ SQL language
 
 - In MySQL, 0 or NULL means false and anything else means true. The default truth
   value from a boolean operation is 1.
-
-- SQL pattern
-
-  * ``_``: any single character, equivalent to ``?`` in shell.
-
-  * ``%``: any number of any character, equivalent to ``*`` in shell.
 
 - ``LIKE`` 后面的 SQL pattern 必须匹配整个字符串, 才算匹配.
   ``RLIKE`` ``REGEXP`` 后面的正则 pattern 只需字符串的任何地方匹配即可, 类似 python
@@ -97,6 +232,49 @@ SQL language
 
 - 一个表必须有一个或者一组 unique key 可以唯一识别不同的资源实例, 否则无法完全
   避免多个 session 同时创建同一个实例时导致的重复 (race condition).
+
+transaction
+-----------
+- A transaction is an atomic operation that can be committed or rolled back.
+  All changes made in a transaction are applied atomically or none applied.
+
+- InnoDB transactions have ACID properties -- atomicity, consistency,
+  isolation, and durability.
+
+- autocommit: causes an implicit commit operation after each SQL statement.
+  Default on.
+ 
+  enable or disable autocommit for current session.::
+
+    SET autocommit = {0 | 1}
+
+START TRANSACTION, BEGIN
+^^^^^^^^^^^^^^^^^^^^^^^^
+:: 
+  
+  START TRANSACTION [WITH CONSISTENT SNAPSHOT | READ WRITE | READ ONLY] ...
+  BEGIN
+
+- start a new transaction.
+
+- START TRANSACTION is prefered as it's standarded and accept more options.
+
+- During a transaction, autocommit remains disabled until the end of
+  transaction with ``COMMIT`` or ``ROLLBACK``. Then it reverts to its
+  previous state.
+
+  注意这并不能从 session variable ``autocommit`` 看出来. 在 transaction
+  中, autocommit 变量值不会修改.
+
+- modifiers.
+
+  * 
+
+COMMIT
+^^^^^^
+
+ROLLBACK
+^^^^^^^^
 
 InnoDB storage engine
 =====================
