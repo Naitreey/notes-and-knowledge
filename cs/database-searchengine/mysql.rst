@@ -6,17 +6,14 @@
 - 处于安全考虑, ``local_infile`` 默认是 OFF, 需要在 mysql client 和 mysqld
   同时开启.
 
-SQL language
-============
-
-Language Structure
-------------------
+SQL Language Structure
+======================
 
 literal values
-^^^^^^^^^^^^^^
+--------------
 
 String literals
-""""""""""""""""
+^^^^^^^^^^^^^^^
 ::
 
   [_<charset>] <string> [COLLATE <collation>]
@@ -38,7 +35,7 @@ String literals
   * For unrecognized escape sequences, backslash is ignored.
 
 Numeric literals
-""""""""""""""""
+^^^^^^^^^^^^^^^^
 - exact-value literals. having integer part and/or fractional part,
   may be signed.
   
@@ -46,7 +43,7 @@ Numeric literals
   and exponent.
 
 hex literals
-""""""""""""
+^^^^^^^^^^^^
 ::
 
   [_<charset>] X'<hex>' [COLLATE <collation>]
@@ -58,7 +55,7 @@ hex literals
   a hexadecimal literal, use it in numeric context.
 
 bit-value literals
-""""""""""""""""""
+^^^^^^^^^^^^^^^^^^
 ::
 
   [_<charset>] B'<bin>' [COLLATE <collation>]
@@ -68,7 +65,7 @@ bit-value literals
   MySQL treats a bit literal like an integer.
 
 boolean literals
-""""""""""""""""
+^^^^^^^^^^^^^^^^
 ::
 
   TRUE
@@ -77,7 +74,7 @@ boolean literals
 - in any letter case.
 
 null values
-""""""""""""
+^^^^^^^^^^^
 ::
 
   NULL
@@ -87,7 +84,7 @@ null values
 - In collation order, NULL precedes any other values.
 
 Date and Time literals
-""""""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^^^^
 ::
 
   [DATE|TIME|TIMESTAMP] 'timestr'
@@ -110,7 +107,11 @@ Date and Time literals
 - TIMESTAMP produces DATETIME value.
 
 identifiers
-^^^^^^^^^^^
+-----------
+- Common uses of identifiers: variable name, the name of database, table,
+  index, column, alias, view, stored procedure, partition, tablespace, resource
+  group.
+
 - An identifier may be quoted with backtick or unquoted. If an identifier
   contains special characters or is a reserved word, you must quote it whenever
   you refer to it.
@@ -124,35 +125,383 @@ identifiers
 
   * U+0001 - U+FFFF (unicode point: 1-65535)
 
-  * NULL is not permitted in identifier.
+  * NULL (U+0000) is not permitted in identifier.
 
   * Database, table, and column names cannot end with space characters.
 
 - qualified identifiers: consisting of identifiers separated by ``.``
   qualifier, indicating a namespace hierarchy.
 
+- identifier case sensitivity.
+
+  * databases, tables, triggers corresponds to file in file system, therefore
+    case sensitivity is determined by its underlying file system.
+
+  * column, column alias, index, stored routine, event, resource group names
+    are not case-sensitive.
+
+  * table aliases are case-sensitive on Unix.
+
+- Nonreserved keywords are permitted as identifiers without quoting. Reserved
+  words are permitted as identifiers if quoted.
+
+- Special rules for builtin function names.
+  
+  * To use builtin function's name as a function call in an expression, there
+    must be no whitespce between the name and the argument list.
+
+  * To use the function name as an identifier, it must not be followed
+    immediately by a parenthesis.
+
+keywords and reserved words
+---------------------------
+- Keywords are words that have significance in SQL. Keywords may be reserved
+  or nonreserved.
+
+- ``information_schema.keywords`` table lists all keywords and their reservation
+  state.
+
+user variables
+--------------
+::
+
+  @<var>
+
+- If var name contains unusual characters, it must be quoted ``@'var'`` ``@"var"``
+  ``@`var```.
+
+- user vars are session-specific.
+
+- Var names are case-insensitive.
+
+- variable assignments:
+
+  * SET statement.
+
+  * ``:=`` operator in other statements.
+
+- only limited types of value can be assigned to user variables.
+
+- As a general rule, other than in SET statements, you should never assign a
+  value to a user variable and read the value within the same statement.
+  Because the order of evaluation is undefined.
+
+
+comment syntax
+--------------
+- 三种注释语法
+
+  * ``--``, 后面必须加上一个 whitespace char. line comment.
+
+  * ``#``, line comment.
+
+  * ``/* */``, block comment.
+    
+- MySQL extension code::
+
+    /*![mysql-version] <code> */
+    mysql-version := XYYZZ
+
+  These enable you to write code that includes MySQL extensions, but is still
+  portable.  Optional mysql version number specify the minimum version of mysql
+  on which the code is executed. 版本号符合上述格式: X, Y, Z 分别是 major,
+  minor, patch level. e.g., 5.1.10 == 50110.
+
+- optimizer hints::
+
+    /*+ <hints> */
+ 
 Data types
 ==========
+
+Numeric types
+-------------
+- mysql 支持给 integer types 添加 ``(M)`` attribute 以设置 "display width".
+  还有 ZEROFILL attribute. THIS IS CRAZY. DON'T DO THIS. SAVE YOUR FUCKING ASS.
+
+- data type attributes.
+
+  * UNSIGNED.
+    
+    - integer types: only nonnegative values are allowed. 所有 bytes 用 unsigned
+      binary arithmetics 存储, 最大值为 signed 情况的两倍.
+
+    - floating-point and fixed-point types: only nonnegative values are allowed.
+      但存储方式不变, 最大值不变.
+
+  * AUTO_INCREMENT. integer types and floating-point types can be
+    auto-incremented. AUTO_INCREMENT field 一般同时要求 NOT NULL.
+
+    插入 NULL, 0, DEFAULT 都会自动递增序列值.
+    
+    Sequence begins with 1. 若插入任何大于当前最大序数的数字,  the column is
+    set to that value and the sequence is reset so that the next automatically
+    generated value follows sequentially from the inserted value.
+
+    一个表里只能有一个列是 auto-incremented, 并且该列必须有 index.
+
+integer types
+^^^^^^^^^^^^^
+
+TINYINT
+"""""""
+
+- 1 byte.
+
+- BOOL, BOOLEAN are synonyms for TINYINT(1). 所以实际上 BOOL 可以存 0-255
+  的数据. FUCKED UP.
+
+SMALLINT
+""""""""
+
+- 2 byte.
+
+MEDIUMINT
+""""""""""
+
+- 3 byte.
+
+INT
+""""
+
+- 4 byte.
+
+- synonym: INTEGER.
+
+BIGINT
+""""""
+
+- 8 byte.
+
+- SERIAL is an alias for BIGINT UNSIGNED NOT NULL AUTO_INCREMENT UNIQUE.
+
+fixed-point types
+^^^^^^^^^^^^^^^^^
+- fixed-point data types are used when it is important to preserve exact
+  precision.
+
+DECIMAL
+""""""""
+- fixed-point exact number.
+
+- DECIMAL(M, D). M is precision, D is digits after decimal point.
+  M <= 65, D <= 30. default M is 10, D is 0.
+
+- synonyms: DEC, NUMERIC, FIXED.
+
+floating-point types
+^^^^^^^^^^^^^^^^^^^^
+
+FLOAT
+""""""
+- FLOAT(M, D). M is the total number of digits and D is the number of digits
+  following the decimal point. default is hardware-dependent.
+
+- 4 bytes.
+
+DOUBLE
+""""""
+
+- DOUBLE(M, D). default is hardware-dependent.
+
+- 8 bytes.
+
+- synonym: DOUBLE PRECISION.
+
+bit-value types
+^^^^^^^^^^^^^^^
+
+BIT
+""""
+- BIT(M). M-bit numbers.
+
+- 1 <= M <= 64.
 
 String types
 ------------
 
+- The length in data type definition specifies length in character units.
+
+- data type attributes.
+
+  * CHARACTER SET, CHARSET.
+
+  * COLLATE
+
+nonbinary and binary strings
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+CHAR
+""""
+::
+
+  [NATIONAL] CHAR[(M)] [CHARACTER SET charset_name] [COLLATE collation_name]
+
+- fixed-length string. length fixed to ``M``.
+  
+- 0 <= M <= 255. default is 1.
+
+- When stored, the string is always right-padded with spaces to the specified length.
+
+- When retrieve, trailing spaces are removed.
+
+- synonym: CHARACTER.
+
+VARCHAR
+""""""""
+::
+
+  [NATIONAL] VARCHAR(M) [CHARACTER SET charset_name] [COLLATE collation_name]
+
+- variable-length string. Max length is M.
+
+- 0 <= M <= 65535. 注意 row size 限制为 64KB, 所以有效上限还受这个影响.
+
+- string is prefixed by 1-2 byte length in bytes.
+
+- 存储时, string 只占用所需的空间 (+length), 不像 CHAR 那样会 padding 至 M 长度.
+  无论有无 trailing spaces, 都会按照实际情况存放.
+
+BINARY
+""""""
+
+- Similar to CHAR, for binary strings.
+
+- M specifies length in bytes.
+
+VARBINARY
+""""""""""
+
+- similar to VARCHAR.
+
+text and binary data
+^^^^^^^^^^^^^^^^^^^^
+
+TINYTEXT
+""""""""
+::
+
+  TINYTEXT [CHARACTER SET charset_name] [COLLATE collation_name]
+
+- A TEXT column, limited to 255 bytes.
+
+- stored with 1-byte length prefix.
+
+TEXT
+""""
+::
+
+  TEXT ...
+
+- text column, limited to 65535 bytes.
+
+- stored with 2-byte length prefix.
+
+MEDIUMTEXT
+""""""""""
+::
+
+  MEDIUMTEXT ...
+
+- text column, limited to 2^24-1 bytes.
+
+- stored with 3-byte length prefix.
+
+LONGTEXT
+""""""""
+::
+
+  LONGTEXT ...
+
+- text column, limited to 2^32-1 bytes.
+
+- stored with 4-byte length prefix.
+
+TINYBLOB
+""""""""
+
+BLOB
+""""
+
+MEDIUMBLOB
+""""""""""
+
+LONGBLOB
+""""""""
+
+ENUM
+^^^^
+::
+
+  ENUM('value1','value2',...) [CHARACTER SET charset_name] [COLLATE collation_name]
+
+- 从多个选项中选择一个保存.
+
+- 内部以 integer 方式保存.
+
+- 最多 65535 enumeration, 每个 element 的长度最多 255 chars.
+
+SET
+^^^
+::
+
+  SET('value1','value2',...) [CHARACTER SET charset_name] [COLLATE collation_name]
+
+- 从多个选项中选择 0 个或多个保存.
+
+- 内部以 integer 方式保存.
+
+- 最多 64 个元素. 每个元素最长 255 字符.
+
+Date and time types
+-------------------
+
+DATE
+^^^^
+- date only.
+
+- displayed in YYYY-MM-DD format.
+
+DATETIME
+^^^^^^^^
+
+- date and time.
+
+- display format: ``YYYY-MM-DD HH:MM:SS[.fraction]``
+
+TIMESTAMP
+^^^^^^^^^
+
+- stored as the number of seconds since the epoch.
+
+- range: 1970 - 2038.
+
+TIME
+^^^^
+
+- display format: ``HH:MM:SS[.fraction]``
+
+YEAR
+^^^^
+
+- A year in four-digit format.
+
+- display format: YYYY.
+
+SQL statements
+==============
+
+Data Manipulation Statements
+----------------------------
+
+SELECT
+^^^^^^
+
+- Each select expression is evaluated only when sent to the client. This means
+  that in a HAVING, GROUP BY, or ORDER BY clause, referring to a variable that
+  is assigned a value in the select expression list does not work.
+
 .. -------------------------------
-
-- In general, treat all identifiers (database names, table names, column names,
-  etc.) and strings as case sensitive; treat SQL keywords, mysql builtin commands,
-  etc. as case insensitive.
-
-- comment syntax: 三种注释语法
-
-  * ``--``, 后面必须加上一个空格, line comment
-
-  * ``#``, line comment
-
-  * ``/* */``, block comment. 还有特殊作用, ``/*! */`` 用于在 sql 中加入 non-portable
-    的 mysql extension 语句, 这样注释之外的部分仍然是 portable 的语句.
-
-- backtick (``\```) wrap 的是 identifier, 当 identifier 中不包含特殊字符时, 可以省去.
 
 - SQL pattern
 
@@ -163,8 +512,6 @@ String types
 
 .. -------------------------------
 
-
-- ``SELECT`` statement
 
   * mysql 不支持 ``SELECT DISTINCT ON (...)``, 聚合时若要根据某列的 distinct 来
     选择行, 可以通过 ``COUNT(DISTINCT <colname>)`` 来迂回处理. 这很 hack.
