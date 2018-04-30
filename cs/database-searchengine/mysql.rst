@@ -92,17 +92,20 @@ Date and Time literals
 
 - format.
 
-  * DATE. 'YYYY-MM-DD', 'YY-MM-DD', YYYYMMDD or YYMMDD. Any punctuation
-    character may be used as the delimiter.
+  * DATE. 'YYYY-MM-DD', 'YY-MM-DD', YYYYMMDD, YYMMDD or digits as integer. Any
+    punctuation character may be used as the delimiter.
 
-  * TIMESTAMP. 'YYYY-MM-DD HH:MM:SS', 'YY-MM-DD HH:MM:SS', 'YYYYMMDDHHMMSS' or
-    'YYMMDDHHMMSS'. Any punctuation character may be used. The date and time
-    parts can be separated by T rather than a space. Value can include a
-    trailing fractional seconds part in up to microseconds (6 digits)
-    precision.
+  * TIMESTAMP. 'YYYY-MM-DD HH:MM:SS', 'YY-MM-DD HH:MM:SS', 'YYYYMMDDHHMMSS',
+    'YYMMDDHHMMSS' or digits as integer. Any punctuation character may be used.
+    The date and time parts can be separated by T rather than a space. Value
+    can include a trailing fractional seconds part in up to microseconds (6
+    digits) precision.
 
-  * TIME. 'D HH:MM:SS', 'HH:MM:SS', 'HH:MM', 'D HH:MM', 'D HH', or 'SS',
-    'HHMMSS'. A trailing fractional seconds part is recognized.
+  * TIME. 'D HH:MM:SS', '[H]HH:MM:SS', '[H]HH:MM', 'D HH:MM', 'D HH', 'SS',
+    '[H]HHMMSS', or digits as integer. A trailing fractional seconds part is
+    recognized. The ``D`` and ``HHH`` part because the TIME type can be used
+    not only to represent a time of day (which must be less than 24 hours), but
+    also time interval.
 
 - TIMESTAMP produces DATETIME value.
 
@@ -239,6 +242,9 @@ Numeric types
     generated value follows sequentially from the inserted value.
 
     一个表里只能有一个列是 auto-incremented, 并且该列必须有 index.
+
+- In non-strict sql mode, out-of-range values are clipped to the appropriate
+  endpoint of the column data type range and the resulting value are stored.
 
 integer types
 ^^^^^^^^^^^^^
@@ -456,6 +462,47 @@ SET
 Date and time types
 -------------------
 
+- For input, date and time values can be in any date and time literal format;
+  for output, they are outputted in standard format.
+
+- Values are converted to number (integer or decimal as appropriate) in
+  numerical context. 别指望能转换回来. Oh fuck.
+
+- zero date or time values are dummy values. Invalid DATE, DATETIME, or
+  TIMESTAMP values are converted to the “zero” value of the appropriate type.
+  Zero values can not be used in NO_ZERO_DATE sql mode.
+
+- fractional seconds. 定义列时可指定 ``(M)`` 部分, M 为 0-6 位 fractional
+  seconds. M default 0.
+
+- conversion between date and time types.
+
+  * DATE -> DATETIME, TIMESTAMP. add '00:00:00'.
+
+  * DATE -> TIME. becomes '00:00:00'.
+
+  * DATETIME, TIMESTAMP -> DATE. keep date part, with rounding effect.
+
+  * DATETIME, TIMESTAMP -> TIME. cut out date part, keep time part.
+
+  * TIME -> DATETIME, TIMESTAMP. CURRENT_DATE is used for date part.
+    The TIME is interpreted as time interval.
+
+  * TIME -> DATE. ditto with time part cut off.
+
+- attributes.
+
+  * ``DEFAULT <value>`` . value 可以设置当前时间特殊值
+    CURRENT_TIMESTAMP[()]/NOW()/LOCALTIME[()]/LOCALTIMESTAMP[()]. 这个特殊值
+    可用于自动设置创建时间.
+
+  * ``ON UPDATE CURRENT_TIMESTAMP|...``. auto-update column value to current
+    time when the value of any other column in the row is changed from its
+    current value. 如果对该行的修改没有导致任何变化, 时间值不会更新, 此时若要
+    更新, 需手动更新.
+
+  以上 attributes 只有 DATETIME and TIMESTAMP 能用.
+
 DATE
 ^^^^
 - date only.
@@ -465,6 +512,8 @@ DATE
 DATETIME
 ^^^^^^^^
 
+- DATETIME 适合存储一个特定的、可能固定不变的时间.
+
 - date and time.
 
 - display format: ``YYYY-MM-DD HH:MM:SS[.fraction]``
@@ -472,14 +521,40 @@ DATETIME
 TIMESTAMP
 ^^^^^^^^^
 
+- TIMESTAMP 适合用于存储具有实时性的、可能经常变动的时间, 这是时间戳的目的.
+  例如 created time, modified time 等. 这是与 DATETIME 的区别.
+
+- TIMESTAMP column have no automatic properties unless they are specified
+  explicitly. with this exception: If the ``explicit_defaults_for_timestamp``
+  system variable is disabled, the first TIMESTAMP column has DEFAULT
+  CURRENT_TIMESTAMP and ON UPDATE CURRENT_TIMESTAMP if neither is specified
+  explicitly.
+
 - stored as the number of seconds since the epoch.
 
+- MySQL converts TIMESTAMP values from the current time zone (``time_zone``
+  system variable) to UTC for storage, and back from UTC to the current time
+  zone for retrieval. 这让 TIMESTAMP 具有绝对时间意义, 这是相对于 DATETIME
+  更适合做时间戳的另一个性质.
+
+- factional seconds part up to microseconds precision: 6 digits.
+
 - range: 1970 - 2038.
+
+- NULL value. If the ``explicit_defaults_for_timestamp`` system variable is
+  disabled (default), TIMESTAMP columns by default are NOT NULL, cannot contain
+  NULL values. You can initialize or update any TIMESTAMP (but not DATETIME)
+  column to the current date and time by assigning it a NULL value (这并不需要
+  设置 ON UPDATE CURRENT_TIMESTAMP). 这保证了 timestamp 一定会更新, 避免了 ON
+  UPDATE CURRENT_TIMESTAMP 的问题. 这又是一点比 DATETIME 适合做时间戳的性质.
+
+  To permit a TIMESTAMP column to contain NULL, explicitly declare it with the
+  NULL attribute.
 
 TIME
 ^^^^
 
-- display format: ``HH:MM:SS[.fraction]``
+- display format: ``[H]HH:MM:SS[.fraction]``
 
 YEAR
 ^^^^
@@ -488,11 +563,13 @@ YEAR
 
 - display format: YYYY.
 
+- stored in 1 byte. ranging 1901-2155, and 0000.
+
 SQL statements
 ==============
 
-Data Manipulation Statements
-----------------------------
+Data Manipulation Language (DML)
+--------------------------------
 
 SELECT
 ^^^^^^
@@ -765,6 +842,96 @@ server system variables
 
   * session variables. Session variables are those ultimately in effect
     for current session. They are initialized from global variables.
+
+server SQL mode
+^^^^^^^^^^^^^^^
+
+- Server SQL mode affects SQL syntax supported by server, and data validation
+  that is performed by server.
+
+- Server SQL mode depends on ``sql_mode`` system variable in current session.
+  Its value is a comma separated list of sql modes.
+
+  default on 8.0:
+  ONLY_FULL_GROUP_BY, STRICT_TRANS_TABLES, NO_ZERO_IN_DATE, NO_ZERO_DATE,
+  ERROR_FOR_DIVISION_BY_ZERO, NO_ENGINE_SUBSTITUTION.
+
+- cmdline option: ``--sql-mode``.
+
+- strict sql mode. controls how MySQL handles invalid or missing values in DML.
+  
+  Invalid value: the value has the wrong data type for the column or might be
+  out of range.
+
+  missing value: a new row to be inserted does not contain a value for a NOT
+  NULL column that has no explicit DEFAULT.
+
+  Effects of strict sql mode.
+
+  * For invalid or missing values. Non-strict sql mode: MySQL inserts adjusted
+    values and produces warnings. Strict sql mode: invalid and missing values
+    are errored out.
+
+  * For key exceeding the max key length. Non-strict sql mode: truncation of
+    key to max length and produces warning. Strict sql mode: error out.
+
+  * effects on division by zero, zero dates, zeros in dates.
+
+  * Several statements in MySQL support an optional IGNORE keyword.  This
+    keyword causes the server to downgrade certain types of errors and generate
+    warnings instead.
+
+SQL modes
+"""""""""
+only those useful are noted.
+
+- ERROR_FOR_DIVISION_BY_ZERO. If not enabled, division by zero inserts NULL and
+  produces no warning. If enabled, division by zero inserts NULL and produces a
+  warning. If enabled with strict mode, division by zero produces an error.
+
+  This mode deprecated and will be merged into strict mode.
+
+- NO_AUTO_VALUE_ON_ZERO. This mode can be useful if 0 has been unfortunately
+  stored in a table's AUTO_INCREMENT column.
+
+- NO_ENGINE_SUBSTITUTION. When enabled, an error occurs and the table is not
+  created or altered if the desired engine is unavailable.
+
+- NO_ZERO_DATE. If this mode and strict mode are enabled, '0000-00-00' is not
+  permitted and inserts produce an error.
+
+  This mode deprecated and will be merged into strict mode.
+
+- NO_ZERO_IN_DATE. whether the server permits dates in which the year part is
+  nonzero but the month or day part is 0. If this mode and strict mode are
+  enabled, dates with zero parts are not permitted and inserts produce an
+  error.
+
+  This mode deprecated and will be merged into strict mode.
+
+- ONLY_FULL_GROUP_BY. rejects queries for which the select list, HAVING
+  condition, or ORDER BY list refer to nonaggregated columns that are neither
+  named in the GROUP BY clause nor are functionally dependent on (uniquely
+  determined by) GROUP BY columns.
+
+  Disabling ONLY_FULL_GROUP_BY is useful primarily when you know that, due to
+  some property of the data, all values in each nonaggregated column not named
+  in the GROUP BY are the same for each group.
+
+- PAD_CHAR_TO_FULL_LENGTH. For CHAR columns, During retrieval, trimming does
+  not occur and retrieved CHAR values are padded to their full length.
+
+- PIPES_AS_CONCAT.
+
+- STRICT_TRANS_TABLES. Enable strict SQL mode for transactional storage
+  engines, and when possible for nontransactional storage engines.
+
+- STRICT_ALL_TABLES. Enable strict SQL mode for all storage engines.
+
+- TRADITIONAL. Basic principle is to give an error instead of a warning when
+  inserting an incorrect value into a column. equivalent to
+  STRICT_TRANS_TABLES, STRICT_ALL_TABLES, NO_ZERO_IN_DATE, NO_ZERO_DATE,
+  ERROR_FOR_DIVISION_BY_ZERO, and NO_ENGINE_SUBSTITUTION
 
 management SQL statements
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1044,6 +1211,10 @@ Replication
   * Row Based Replication (RBR).
 
   * Mixed Based Replication (MBR).
+
+- 注意事项.
+
+  * master, slave 应该设置相同的 sql mode.
 
 binary log file position based replication
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
