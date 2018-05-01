@@ -328,6 +328,10 @@ String types
 
 - The length in data type definition specifies length in character units.
 
+- In non-strict sql mode, for string exceeding the column's max length, it
+  is truncated to fit and warning is produced. In strict sql mode, the
+  operation errors out.
+
 - data type attributes.
 
   * CHARACTER SET, CHARSET.
@@ -368,20 +372,82 @@ VARCHAR
 - 存储时, string 只占用所需的空间 (+length), 不像 CHAR 那样会 padding 至 M 长度.
   无论有无 trailing spaces, 都会按照实际情况存放.
 
+- CHAR vs VARCHAR. When to use which?[SOCharVarchar]_
+
+  * You *can* use CHAR if all your strings are of *the same length*. 如果满足这个
+    前提条件, using CHAR can be more space efficient (no length prefix) and 
+    faster (optimization).
+
+  * 注意 CHAR's whitespace stripping behavior may cause problem.
+
+  * VARCHAR in general is more preferable, because usually strings are not of
+    the same length and may vary significantly. Therefore it can be more space
+    efficient in general cases.
+
 BINARY
 """"""
+::
+
+  BINARY(M)
 
 - Similar to CHAR, for binary strings.
 
 - M specifies length in bytes.
 
+- ``binary`` character set and collation, and comparison and sorting are based
+  on the numeric values of the bytes in the values.
+
+- The BINARY and VARBINARY data types are distinct from the CHAR BINARY and
+  VARCHAR BINARY data types. For the latter types, the BINARY attribute does
+  not cause the column to be treated as a binary string column. Instead, it
+  causes the binary (_bin) collation for the column character set to be used,
+  and the column itself contains nonbinary character strings rather than binary
+  byte strings.
+
+- Values are right-padded with 0x00 on insert, and no trailing bytes are
+  removed on select.
+  
+- BINARY vs VARBINARY. If the value retrieved must be the same as the value
+  specified for storage with no padding, it might be preferable to use
+  VARBINARY or one of the BLOB data types instead.
+
 VARBINARY
 """"""""""
 
-- similar to VARCHAR.
+- similar to VARCHAR for binary strings. See also BINARY_.
 
 text and binary data
 ^^^^^^^^^^^^^^^^^^^^
+
+- blob types use binary character set and collation.
+
+- Value exceeding max length is truncated or errored out based on sql mode.
+
+- no whitespace padding or stripping.
+
+- If a ``*TEXT`` column is indexed, index entry comparisons are space-padded at
+  the end. ``*BLOB`` columns does not do this.
+
+- Indexes on BLOB and TEXT columns must specify index prefix length.
+
+- BLOB and TEXT columns can not have DEFAULT values.
+
+- Only the first ``max_sort_length`` bytes of the column are used when sorting.
+
+- Instances of BLOB or TEXT columns in the result of a query that is processed
+  using a temporary table causes the server to use a table on disk rather than
+  in memory because the MEMORY storage engine does not support those data types.
+  Use of disk incurs a performance penalty, so *include BLOB or TEXT columns in
+  the query result only if they are really needed*.
+
+- Each BLOB or TEXT value is represented internally by a separately allocated
+  object (因为可能很大, 远大于 row size 64KB). This is in contrast to all other
+  data types, for which storage is allocated once per column when the table is
+  opened.
+
+- Use TEXT and BLOB types only when necessary, VARCHAR and VARBINARY are more
+  preferable if possible. 这主要是因为效率因素. 涉及 TEXT, BLOB 的列不能使用
+  内存临时表.
 
 TINYTEXT
 """"""""
@@ -441,11 +507,26 @@ ENUM
 
   ENUM('value1','value2',...) [CHARACTER SET charset_name] [COLLATE collation_name]
 
-- 从多个选项中选择一个保存.
+- 从多个选项中选择一个保存. 每个选项值必须是 string literal, 不能是 expression.
 
-- 内部以 integer 方式保存.
+- 元素字符串的 trailing whitespaces are stripped.
+
+- 内部以 integer 方式保存. enumeration 中的元素值从 1 开始递增.
 
 - 最多 65535 enumeration, 每个 element 的长度最多 255 chars.
+
+- enum values is cast to its internal number in numeric contexts.
+
+- 若给 enum 列插入 number, 会作为内部 integer 值保存.
+
+- If strict SQL mode is enabled, attempts to insert invalid ENUM values result
+  in an error. In non-strict sql mode, invalid value results the empty stirng is
+  inserted as a special error value, whose internal integer value is 0.
+
+- ENUM values are sorted based on their internal numbers, with the empty string
+  sorting before nonempty strings. 若希望数值与 enum value 值顺序一致, 可以通过
+  在定义时保证 ENUM list in alphabetic order, 或者在排序时按照 enum value 来排序
+  ORDER BY CAST(col AS CHAR).
 
 SET
 ^^^
@@ -455,9 +536,43 @@ SET
 
 - 从多个选项中选择 0 个或多个保存.
 
-- 内部以 integer 方式保存.
+- 元素字符串的 trailing whitespaces are stripped.
+
+- 若选择 0 个元素, 则输入值为空字符串 "".
+
+- SET column values that consist of multiple set members are specified as a
+  string with members separated by commas. 因此 set member itself should not
+  contain commas.
+
+- If strict SQL mode is enabled, attempts to insert invalid SET values result
+  in an error.
 
 - 最多 64 个元素. 每个元素最长 255 字符.
+
+- 内部以 integer 方式保存. 每个元素对应 integer 上的一个 bit. 选中则 set bit,
+  没选中则 clear bit.
+
+  * 元素的定义顺序对应着 bits 从低位至高位的顺序.
+  
+  * 最长 64 个元素对应 64 bit 即一个 long int.
+
+  * 若插入整数, 则相应的二进制形式的 bits 对应着选中了哪些元素.
+
+- For a value containing more than one SET element, it does not matter what
+  order the elements are listed in when you insert the value. It also does not
+  matter how many times a given element is listed in the value. When the value
+  is retrieved later, each element in the value appears once, with elements
+  listed according to the order in which they were specified at table creation
+  time.
+
+- SET values are sorted based on internal numerical value. NULL values sort
+  before non-NULL SET values.
+
+- test element in set:
+  
+  * ``FIND_IN_SET()``.
+
+  * bitwise ``&`` operator with proper numeric value.
 
 Date and time types
 -------------------
@@ -564,6 +679,131 @@ YEAR
 - display format: YYYY.
 
 - stored in 1 byte. ranging 1901-2155, and 0000.
+
+Geospatial types
+-----------------
+
+- geometry types. A geometry-valued SQL column is implemented as a column that
+  has a geometry type.
+
+- a geographic/geospatial feature. anything in the world that has a location.
+
+  * An entity.
+
+  * a space.
+
+  * a definable location.
+
+- SPATIAL indexes can be created on NOT NULL spatial columns. But the spatial
+  index can be used by optimizer only if the column definition contains SRID
+  attribute.
+
+- attributes.
+
+  * SRID. 指定该列 geometry value 所属的 spatial reference system (SRS).
+
+- OpenGIS Geometry Model.
+
+JSON type
+---------
+
+- Automatic JSON data validation.
+
+- Optimized binary storage format and manipulation.
+
+  * quick read access to individual subobjects or values.
+
+  * inplace update of JSON document. 
+
+- JSON column can not have default value.
+
+- index. JSON column can not be indexed directly. You can create an index on a
+  generated column that extracts a scalar value from the JSON column.
+
+- 构建 JSON 的方法.
+
+  * 字符串 JSON literal 在 JSON value context 下解析为 JSON value.
+
+  * 使用 JSON_ARRAY(), JSON_OBJECT() 等构建.
+
+- JSON 字符串形式输入. MySQL parses any string used in a context that
+  requires a JSON value, and produces an error if it is not valid as JSON.  In
+  JSON value context, string is converted to use ``utf8mb4`` character set and
+  ``utf8mb4_bin`` collation.
+
+- Normalization. JSON 输入值在解析时, 需要 normalized. 例如允许输入中包含重复
+  的 object keys, 但 normalizing object 时 last duplicate key wins.
+
+- JSON merge. 两种算法.
+
+  * JSON merge preserve. For duplicate keys, retain all values.
+
+  * JSON merge patch. For duplicate keys, retain the last value.
+
+  具体行为.
+
+  * merge arrays. preserve: arrays are concatenated. patch: select only the last
+    array.
+
+  * merge objects. preserve: values of dup keys are combined into an array.
+    patch: retain the last value.
+
+  * values that is neither array nor object is autowrapped in an array. For patch,
+    the array wrapper may be dropped during output.
+
+- JSON path expression. used for extraction and update.
+
+  * ``$`` representing the JSON doc.
+
+  * ``.<key>`` key reference. If key is not valid identifier, must be double-quoted.
+
+  * ``[N]`` index reference.
+
+  * ``[M to N]`` slice, M to N inclusive. ``last`` is rightmost index. relative
+    addressing is supported ``{+|-}offset``.
+
+  * ``.*`` gets value of all keys of a json object.
+
+  * ``[*]`` gets all elements of a json array.
+
+  * ``[prefix]**[suffix]`` get values of all matching paths, paths can be multilevel.
+
+  * nonexistent path evaluates to NULL.
+
+- inplace update 要求使用 JSON_SET, JSON_REPLACE, JSON_REMOVE functions. direct
+  column assignment does not use inplace update.
+
+  * JSON_SET replace value on existing paths and add new value on nonexisting paths.
+
+  * JSON_INSERT add new but not replace existing.
+
+  * JSON_REPLACE replace but not add.
+
+  * JSON_REPLACE remove paths.
+
+- JSON value comparison and ordering.
+
+- JSON functions.
+
+  * JSON_STORAGE_SIZE()
+
+  * JSON_SET(), JSON_INSERT(), JSON_REPLACE(), JSON_REMOVE()
+
+  * JSON_STORAGE_FREE()
+
+  * JSON_TYPE()
+
+  * JSON_ARRAY(), JSON_OBJECT()
+   
+  * JSON_MERGE_PRESERVE(), JSON_MERGE_PATCH()
+
+  * JSON_VALID()
+
+- JSON operators.
+
+  * extraction operator: ``->``.
+
+  * unquoting extraction operator: ``->>``.
 
 SQL statements
 ==============
@@ -1975,3 +2215,4 @@ References
 .. [DOMysqlSlave] `How To Set Up Master Slave Replication in MySQL <https://www.digitalocean.com/community/tutorials/how-to-set-up-master-slave-replication-in-mysql>`_
 .. [PerconaAcce] `Accelerating the backup process <https://www.percona.com/doc/percona-xtrabackup/LATEST/innobackupex/parallel_copy_ibk.html>`_
 .. [PerconaXbstream] `The xbstream binary <https://www.percona.com/doc/percona-xtrabackup/LATEST/xbstream/xbstream.html>`_
+.. [SOCharVarchar] `What are the use cases for selecting CHAR over VARCHAR in SQL? <https://stackoverflow.com/questions/59667/what-are-the-use-cases-for-selecting-char-over-varchar-in-sql>`_
