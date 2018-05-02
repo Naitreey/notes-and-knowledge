@@ -217,6 +217,33 @@ comment syntax
 Data types
 ==========
 
+- general attributes.
+
+  * DEFAULT.
+    
+    - default should normally be a constant. 但 CURRENT_TIMESTAMP for DATETIME,
+      TIMESTAMP 是个例外.
+
+    - 如果一个列在定义时没有指定 DEFAULT attribute. mysql 根据该列是否可以接受
+      NULL 来设置 DEFAULT NULL 或者不设置 DEFAULT. 但如果该列是 primary key,
+      会设置 NOT NULL.
+
+      因此, 一个列的定义中的默认值只会有三种情况: 明确指定的 non-NULL DEFAULT,
+      明确或非明确指定的 NULL DEFAULT, 没有 DEFAULT.
+
+    - 插入时对某列使用默认值的方法:
+      
+      * 不指定该列的值.
+
+      * 使用 ``DEFAULT[(col)]`` 明确指定插入当前列或指定列的默认值.
+
+      In strict sql mode, 对于没有 DEFAULT 的列, 会报错.
+
+- storage requirements.
+
+  * max row size: 64KB. Excluding BLOB, TEXT, JSON columns, 它们单独存储, 只
+    在行内添加必要信息.
+
 Numeric types
 -------------
 - mysql 支持给 integer types 添加 ``(M)`` attribute 以设置 "display width".
@@ -322,6 +349,8 @@ BIT
 - BIT(M). M-bit numbers.
 
 - 1 <= M <= 64.
+
+- storage. M bits 所需的整数个 bytes.
 
 String types
 ------------
@@ -430,7 +459,7 @@ text and binary data
 
 - Indexes on BLOB and TEXT columns must specify index prefix length.
 
-- BLOB and TEXT columns can not have DEFAULT values.
+- BLOB and TEXT columns can not have non-NULL DEFAULT value.
 
 - Only the first ``max_sort_length`` bytes of the column are used when sorting.
 
@@ -528,6 +557,8 @@ ENUM
   在定义时保证 ENUM list in alphabetic order, 或者在排序时按照 enum value 来排序
   ORDER BY CAST(col AS CHAR).
 
+- storage. 1-2 bytes.
+
 SET
 ^^^
 ::
@@ -573,6 +604,8 @@ SET
   * ``FIND_IN_SET()``.
 
   * bitwise ``&`` operator with proper numeric value.
+
+- storage. 1,2,3,4,8 bytes.
 
 Date and time types
 -------------------
@@ -702,6 +735,10 @@ Geospatial types
 
   * SRID. 指定该列 geometry value 所属的 spatial reference system (SRS).
 
+- GEOMETRY types can not have non-NULL DEFAULT.
+
+- storage. 4 bytes for SRID + WKB representation of geometry value.
+
 - OpenGIS Geometry Model.
 
 JSON type
@@ -715,7 +752,7 @@ JSON type
 
   * inplace update of JSON document. 
 
-- JSON column can not have default value.
+- JSON column can not have non-NULL DEFAULT value.
 
 - index. JSON column can not be indexed directly. You can create an index on a
   generated column that extracts a scalar value from the JSON column.
@@ -804,6 +841,9 @@ JSON type
   * extraction operator: ``->``.
 
   * unquoting extraction operator: ``->>``.
+
+- storage. 基本相当于 LONGBLOB. 即所需存储空间基本相当于把 JSON stringified
+  形式所需存储. 但有一些为了便于更新和查询等的额外 metadata 带来的 overhead.
 
 SQL statements
 ==============
