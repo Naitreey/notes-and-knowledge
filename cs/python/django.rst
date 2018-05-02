@@ -2137,8 +2137,8 @@ model meta options
 model field
 -----------
 
-``django.db.models.Field``. field base class.
-Field 是 ``RegisterLookupMixin`` 的子类.
+``django.db.models.Field``. field base class. Field 是 ``RegisterLookupMixin``
+的子类.
 
 options
 ^^^^^^^
@@ -2682,8 +2682,8 @@ field types
 
   * 检查 pillow library 已经安装.
 
-- ``JSONField``. postgresql 可以使用 native JSONField, 对于 mysql 可以使用
-  django-jsonfield module 用 TextField/CharField 模拟.
+- ``JSONField``. postgresql 可以使用 native JSONField, 对于 mysql 5.7+ 可以使用
+  django-mysql module 提供的 JSONField.
 
 - ``BinaryField``. 其值必须是 bytes instance.
   BinaryField 的 ``editable=False``, 它不会出现在 model form 中.
@@ -3904,9 +3904,12 @@ AnonymousUser implements basic interface of AbstractUser.
 扩展和自定义 user model
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-- proxy model to auth.User: purely behavioral extension, use proxy model.
+- proxy model to auth.User:
+  
+  purely behavioral extension, use proxy model.
 
 - one-to-one relation to user model:
+
   store additional information (profile-like infos) related to a user,
   but not auth-related, create new model with ``OneToOneField`` to user model.
 
@@ -3914,7 +3917,8 @@ AnonymousUser implements basic interface of AbstractUser.
   在 admin site 中使用 InlineModelAdmin 同时编辑 user model 和 profile model
   信息.
 
-- custom user model:
+- custom user model 配合各个 app 中的 app-specific profile models:
+
   default User model just does not fit your need, create custom user
   model as ``AUTH_USER_MODEL`` to override the default. AUTH_USER_MODEL
   的形式和 relationship field 中引用 field 的形式相同: ``[app_label.]model``.
@@ -3925,6 +3929,72 @@ AnonymousUser implements basic interface of AbstractUser.
   custom user model, even if the default User model is sufficient for you.
   This model behaves identically to the default user model, but you’ll be
   able to customize it in the future if the need arises.
+
+- 用户相关的信息的存储位置.
+
+  * 若这些信息是 app-specific 的, 而不是用户本身的属性、通用的信息或认证和权限
+  相关的信息, 则应该存在 app models 中, 添加对 user model 的 one-to-one
+  relation 或者 subclass user model, 这样是解耦合的.
+
+  理由: 1. 当多个 app 需要添加相似的 user model 关系, 若直接与 user model 建立
+  关系, 则可能出现冲突, 因此降低了 app 的重用价值. 若与 app 自己的 user profile
+  model 建立关系, 在由它统一与 user model建立关系, 则大大降低了冲突的可能.
+  2. 假如需要途中替换 user model, 若统一通过 profile model 间接建立关联, 则
+  每个 app 只需更新 profile model 与 user model 的关联; 若各 model 直接与 user
+  model 关联, 则需要更新所有关联.
+
+  * 若是属于用户本身, 甚至是用户认证相关的属性, 才应该放在 user model 中.
+
+  然而这涉及到在创建 user model instance 时需要创建 one-to-one relation
+  model instance. 尤其是调用 auth app 提供的各种 create_user, create_superuser
+  之类的方法时需要自动创建关联表中的实例, 这样才能保持解耦合效果 (若不能自动
+  创建, 而需要 override 用户创建方法加上 one-to-one field 的话, 则又耦合回来
+  了). 做到自动创建, 需要使用 signal framework.
+
+- Reusable apps shouldn’t implement a custom user model.
+  If you need to store per user information in your app, use a ForeignKey
+  or OneToOneField to ``settings.AUTH_USER_MODEL``.
+
+- 由于 ``AUTH_USER_MODEL`` 不一定是 ``django.contrib.auth.models.User``,
+  因此在某个 app 中使用 user model 时, 不能直接 import User 类, 而是要
+  在 runtime 使用 ``get_user_model()`` 或者 import-time 使用
+  ``settings.AUTH_USER_MODEL``. 例如,
+
+  * 需要动态获取 user model 时, 一般使用 ``get_user_model()``.
+
+  * model 定义中建立 user model 关系时, 使用 lazy binding, 即 AUTH_USER_MODEL.
+
+  * 在 connect handler to signal 时, 若需要 filter user model, 使用 AUTH_USER_MODEL.
+
+  ``get_user_model()`` 也可以在 import-time 使用. 例如在 app 中创建
+  user model subclass, 作为 app-specific user profile 时, 需要使用.
+
+  .. code:: python
+
+    class ProfileUser(get_user_model()):
+        pass
+
+- django custom user model requirements
+
+  * 对于 django builtin auth backends, user model 必须有某种 unique field
+    可唯一识别用户. 对于 custom backends, 当然随意.
+
+  * Your model must provide a way to address the user in a “short” and
+    “long” form.
+
+- ``AbstractBaseUser``, ``AbstractUser``:
+  AbstractBaseUser provides the core implementation of a user model,
+  including hashed passwords and tokenized password resets.
+  If you want to rethink some of Django's assumptions about
+  authentication, then AbstractBaseUser gives you the power to do so.
+  If you're just adding things to the existing user (i.e. profile data
+  with extra fields), then use AbstractUser because it's simpler and
+  easier.
+
+- 注意自定义的 user model 可能还需要搭配自定义的 user manager.
+
+- 自定义的 user model 还需考虑 builtin auth form, 以及在 admin site 对
+  user model 的额外要求.
 
 - Change to custom user model mid-project. **HORRIBLE**.
   迁移步骤参考 https://code.djangoproject.com/ticket/25313#comment:2
@@ -3972,66 +4042,6 @@ AnonymousUser implements basic interface of AbstractUser.
 
     2. 将所有对 `auth.User` 的直接引用转换为 `get_user_model()` 或
        `settings.AUTH_USER_MODEL`.
-
-- Reusable apps shouldn’t implement a custom user model.
-  If you need to store per user information in your app, use a ForeignKey
-  or OneToOneField to ``settings.AUTH_USER_MODEL``.
-
-- 由于 ``AUTH_USER_MODEL`` 不一定是 ``django.contrib.auth.models.User``,
-  因此在某个 app 中使用 user model 时, 不能直接 import User 类, 而是要
-  在 runtime 使用 ``get_user_model()`` 或者 import-time 使用
-  ``settings.AUTH_USER_MODEL``. 例如,
-
-  * 需要动态获取 user model 时, 一般使用 ``get_user_model()``.
-
-  * model 定义中建立 user model 关系时, 使用 lazy binding, 即 AUTH_USER_MODEL.
-
-  * 在 connect handler to signal 时, 若需要 filter user model, 使用 AUTH_USER_MODEL.
-
-  ``get_user_model()`` 也可以在 import-time 使用.
-
-- 用户相关的信息的存储位置.
-
-  * 若这些信息是 app-specific 的, 而不是用户本身的属性、通用的信息或认证和权限
-  相关的信息, 则应该存在 app models 中, 添加对 user model 的 one-to-one
-  relation, 这样是解耦合的.
-
-  理由: 1. 当多个 app 需要添加相似的 user model 关系, 若直接与 user model 建立
-  关系, 则可能出现冲突, 因此降低了 app 的重用价值. 若与 app 自己的 user profile
-  model 建立关系, 在由它统一与 user model建立关系, 则大大降低了冲突的可能.
-  2. 假如需要途中替换 user model, 若统一通过 profile model 间接建立关联, 则
-  每个 app 只需更新 profile model 与 user model 的关联; 若各 model 直接与 user
-  model 关联, 则需要更新所有关联.
-
-  * 若是属于用户本身, 甚至是用户认证相关的属性, 才应该放在 user model 中.
-
-  然而这涉及到在创建 user model instance 时需要创建 one-to-one relation
-  model instance. 尤其是调用 auth app 提供的各种 create_user, create_superuser
-  之类的方法时需要自动创建关联表中的实例, 这样才能保持解耦合效果 (若不能自动
-  创建, 而需要 override 用户创建方法加上 one-to-one field 的话, 则又耦合回来
-  了). 做到自动创建, 需要使用 signal framework.
-
-- django custom user model requirements
-
-  * 对于 django builtin auth backends, user model 必须有某种 unique field
-    可唯一识别用户. 对于 custom backends, 当然随意.
-
-  * Your model must provide a way to address the user in a “short” and
-    “long” form.
-
-- ``AbstractBaseUser``, ``AbstractUser``:
-  AbstractBaseUser provides the core implementation of a user model,
-  including hashed passwords and tokenized password resets.
-  If you want to rethink some of Django's assumptions about
-  authentication, then AbstractBaseUser gives you the power to do so.
-  If you're just adding things to the existing user (i.e. profile data
-  with extra fields), then use AbstractUser because it's simpler and
-  easier.
-
-- 注意自定义的 user model 可能还需要搭配自定义的 user manager.
-
-- 自定义的 user model 还需考虑 builtin auth form, 以及在 admin site 对
-  user model 的额外要求.
 
 Permission and Authorization
 ----------------------------
@@ -5626,8 +5636,8 @@ reusable django packages 可以从 django packages 网站查询. 这个网站的
 django-nested-admin
 -------------------
 
-django-jsonfield
-----------------
+django-mysql
+------------
 
 django-auth-ldap
 ----------------
