@@ -207,7 +207,12 @@ image tag
 若要把 image 上传到某个 registry, 或从某个 registry 下载镜像, 必须指定相应
 的 tag.
 
-tag 应该尽量详细, 包含 version, release stage, purpose (test/production) 等.
+``<tag>`` 应该尽量详细, 包含 version, release stage, purpose (test/production)
+等.
+
+The tag name must be valid ASCII and may contain lowercase and uppercase
+letters, digits, underscores, periods and hyphens.
+
 
 image layers
 ------------
@@ -1512,8 +1517,8 @@ registry
 compose
 =======
 docker compose is a tool for defining and running multi-container Docker
-applications. 就是说, 一个 project 需要同时使用多个 containers 时, 使用
-compose 可以方便地管理.
+applications. 一个 project 需要同时使用多个 containers 时, 使用 compose
+可以方便地管理.
 
 It is a frontend to the same api's used by the docker cli, so you can reproduce
 it's behavior with usual docker commands.
@@ -1534,6 +1539,25 @@ networking
 
 - 可以通过 service-level 的 ``networks`` key 以及 top-level ``networks`` key
   自定义每个服务要连接到的网络. compose 默认创建的那个网络叫做 ``default``.
+
+CLI
+---
+
+docker-compose run
+^^^^^^^^^^^^^^^^^^
+- start a new container and run the specified command. If command is not
+  specified, use service's default command defined in composefile (or CMD
+  defined in image).
+
+- Commands are started in new containers with configuration defined by that of
+  the service, including volumes, links, and other details.
+
+- docker-compose run command by default does not create any of the ports
+  specified in the service configuration. This prevents port collisions with
+  those opened by other container of the same running service.
+
+docker-compose exec
+^^^^^^^^^^^^^^^^^^^
 
 compose file
 ============
