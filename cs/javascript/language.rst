@@ -219,6 +219,11 @@ object property
 
 prototype
 ^^^^^^^^^
+- 必须要明确: 在 JS 中, 并不存在传统 OOP 语言中 class 与 instance 之间的区分.
+  在 JS 中, class 是 object, instance 还是 object. Instance object 可以任意
+  修改自己的 property 去构建自己的行为. Instance object 也可以修改自己的
+  prototype 反过来成为新的 class, 去创建自己的实例. class 也是某些 prototype
+  chain 上游 的 object 的实例.
 
 - property reference (method resolution order). ``[[Get]]`` internal method.
 
@@ -347,6 +352,37 @@ Array
 
 - When you delete an array element, the array length is not affected.
 
+methods
+""""""""
+- ``forEach(<callback>[, <this>])``. Run callback for each element. Returns
+  undefined. callback's signature: current element, current index, the array
+  itself. callback's ``this`` can be bound to ``<this>``, which defaults to
+  undefined.
+
+  * There is no way to stop or break a forEach() loop other than by throwing an
+    exception.
+
+  * holes in sparse array is skipped.
+
+  * behavior of array modification during iteration.
+
+    - The *range* of elements processed by forEach() is set before the first
+      invocation of callback.
+
+    - 遍历到某个 index 时, 取的是该 index 上的最新元素值, 所有之前的修改都可见.
+
+    - elements that are deleted before being visited are not visited.
+
+- ``some(<callback>[, <this>])``. tests whether at least one element in the
+  array passes the test. 参数意义 ditto. Returns true if the callback function
+  returns a truthy value for any array element; otherwise, false.
+
+  * Once a truthy return value is realized, ``some()`` immediately returns true.
+
+  * holes in sparse array is skipped.
+
+- ``every(...)``. whether all elements pass the test. All else ditto.
+
 Function
 ^^^^^^^^
 
@@ -465,6 +501,48 @@ to boolean
 - Symbol: true.
 
 - Object: true.
+
+protocols
+=========
+
+iterable protocol
+-----------------
+- iterable: an object that implements the @@iterator method, which returns an
+  iterator object.
+
+- Whenever an object needs to be iterated, its @@iterator method is called with
+  no arguments, and the returned iterator is used to obtain a sequence of values
+  to be iterated.
+
+- the @@iterator key is refered as ``Symbol.iterator``.
+
+- builtin iterables:
+
+  * String. iterates through string's characters.
+
+  * Array. iterates through array's elements.
+
+  * TypedArray.
+
+  * Map.
+
+  * Set.
+
+iterator protocol
+-----------------
+- iterator protocol defines a standard way to produce a sequence of values.
+
+- iterator: an object that implements a ``next()`` method that returns an
+  object on each call. The returned object has the following attributes:
+
+  * value. the produced value. can be omitted when ``done`` is true.
+
+  * done. a boolean that is true if the iterator is past the end of the
+    iterated sequence; false if the iterator is able to produce more value,
+    in which case done property can be omitted.
+
+  If non-object is returned by iterator's ``next()`` method, TypeError is
+  raised.
 
 statements
 ==========
@@ -712,8 +790,8 @@ for statement
           i = j;
       }
 
-for-in, for-of statements
-^^^^^^^^^^^^^^^^^^^^^^^^^
+for-in statement
+^^^^^^^^^^^^^^^^
 ::
 
   for ([var|let|const] <var> in <obj>) {
@@ -742,6 +820,8 @@ for-in, for-of statements
 
 - ``const`` is useful to prevent loop variable getting modified in loop body.
 
+for-of statement
+^^^^^^^^^^^^^^^^
 ::
 
   for ([var|let|const] <var> of <obj>) {
@@ -911,19 +991,20 @@ this keyword
   * global context. ``this`` refers to global object.
 
   * function context. depends on how function is called (call-site and context
-    object).
+    object). 无论使用下述哪种方式, 如果最终传入 function body 的 ``this`` value
+    是 undefined, 在 non-strict mode 会转换成 global object (WTFJS_); 在 strict
+    mode 保持 undefined.
 
-    - simple call. ``this`` defaults to global object, except when its value is
-      set by the call. In strict mode, ``this`` remains at whatever it was set
-      to when entering the execution context, which defaults to undefined.
+    - simple call. ``this`` defaults to undefined, except when its value is
+      set by the call. 在 non-stirct mode, 变成 global object.
 
     - called via a context object's method reference. ``this`` is set to the
       context object.
 
       注意如果 method reference 之后没有直接 call function, 而是通过 simple
-      call 的方式去调用, 这是符合 simple call 的情况的. 此时 ``this`` 是 global
-      object. (WTFJS_) 这是因为无论函数在哪里定义 (单独声明, 还是在 object
-      attribute 赋值 function expression), 创建的结果都是相同的 function object.
+      call 的方式去调用, 这是符合 simple call 的情况的. 此时 ``this`` 是 undefined.
+      这是因为无论函数在哪里定义 (单独声明, 还是在 object attribute 赋值
+      function expression), 创建的结果都是相同的 function object.
       只有调用的方式最终决定 ``this`` binding.::
 
         var x = {};
@@ -1134,14 +1215,20 @@ relational operators
   * if at least one of both is not string, they are coerced to numbers
     then compared.
 
-property membership test
-------------------------
+in operator
+-----------
 ::
 
   <prop> in <obj>
 
 - ``in`` operator tests whether a property name is reachable from an object.
   This includes an object's own property and traversing its prototype chain.
+
+- RHS of in operator must be an object.
+
+- 目前没有 builtin 方法可以获取一个 object 的所有 properties, 包含 own properties,
+  inherited properties, enumerable and non-enumerable. 即 in operator test 的
+  property set. 必须手动遍历所有父类, 对每个类 ``getOwnPropertyNames``.
 
 assignment operators
 ---------------------
