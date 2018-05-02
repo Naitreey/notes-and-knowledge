@@ -704,6 +704,10 @@ TIME
 
 - display format: ``[H]HH:MM:SS[.fraction]``
 
+- time 除了可以作为 time of day 使用, 还可以作为 interval 使用. 但是
+  这个 interval 比较小, 最多 999 hours. 需要比较大的 interval 最好还是
+  使用一系列的 INT 类型.
+
 YEAR
 ^^^^
 
