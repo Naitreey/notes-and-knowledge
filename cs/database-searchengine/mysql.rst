@@ -1195,6 +1195,27 @@ filesystem
   client is converted from ``character_set_client`` to ``character_set_filesystem``
   before opening files. Default is ``binary``, no conversion occurs.
 
+recipes
+-------
+
+convert database to utf8mb4
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- mysql 8.0+ 默认的 charset 就是 utf8mb4 了. 省去了麻烦.
+  但在此之前的版本, 需要修改.
+
+- 配置文件::
+
+    [client]
+    default-character-set = utf8mb4
+    #
+    [mysqld]
+    #
+    # * encoding
+    #
+    character-set-server = utf8mb4
+
+
 InnoDB storage engine
 =====================
 InnoDB is fully transactional and supports foreign key references.

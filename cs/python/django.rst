@@ -3464,9 +3464,9 @@ connection settings
 
     2. NAME, USER, PASSWORD, HOST, PORT. 转换成连接参数.
 
-    3. MySQL option files. 因为 mysqlclient 调用 libmysqlclient C API,
-       后者会加载各种 mysql 配置文件. 这里关注的是配置文件中 client
-       部分的配置.
+    3. MySQL option files. 因为 mysqlclient 调用 libmysqlclient C API
+       ``mysql_options()``, 加载各种 mysql 配置文件. 这里关注的是配置文件中
+       client group 的配置.
 
   * 保证服务端 ``sql_mode`` 开启了 STRICT_TRANS_TABLES.
 
