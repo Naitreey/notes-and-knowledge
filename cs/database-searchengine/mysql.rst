@@ -28,7 +28,9 @@ String literals
 
 - Quoted strings placed next to each other are concatenated to a single string.
 
-- A string literal can specify its charset and collation.
+- A string literal can specify its charset (introducer) and/or collation.
+  如果两个都没有指定, fallback 至 ``character_set_connection`` and
+  ``collation_connection``.
 
 - backslash escapes.
   
@@ -54,6 +56,10 @@ hex literals
 - hex literal can be a binary string or number. To ensure numeric treatment of
   a hexadecimal literal, use it in numeric context.
 
+- hex literal as a binary string, has default charset ``_binary``.
+
+- introducer can be useful to prevent hex literal being treated as number.
+
 bit-value literals
 ^^^^^^^^^^^^^^^^^^
 ::
@@ -63,6 +69,8 @@ bit-value literals
   
 - By default, a bit-value literal is a binary string. In numeric contexts,
   MySQL treats a bit literal like an integer.
+
+- bit literal as a binary string, has default charset ``_binary``.
 
 boolean literals
 ^^^^^^^^^^^^^^^^
@@ -269,6 +277,9 @@ Numeric types
     generated value follows sequentially from the inserted value.
 
     一个表里只能有一个列是 auto-incremented, 并且该列必须有 index.
+
+    You can retrieve the most recent automatically generated ``AUTO_INCREMENT``
+    value with the ``LAST_INSERT_ID()`` SQL function.
 
 - In non-strict sql mode, out-of-range values are clipped to the appropriate
   endpoint of the column data type range and the resulting value are stored.
@@ -852,6 +863,21 @@ JSON type
 SQL statements
 ==============
 
+Data Definition Language (DDL)
+------------------------------
+
+CREATE DATABASE
+^^^^^^^^^^^^^^^
+::
+
+  CREATE DATABASE [IF NOT EXISTS] <name>
+      [[DEFAULT] CHARACTER SET [=] charset_name]
+      [[DEFAULT] COLLATE [=] collation_name]
+
+- privilege: CREAT for the specified database.
+
+- database definition is recorded in INFORMATION_SCHEMA.SCHEMATA.
+
 Data Manipulation Language (DML)
 --------------------------------
 
@@ -877,17 +903,7 @@ SELECT
   * mysql 不支持 ``SELECT DISTINCT ON (...)``, 聚合时若要根据某列的 distinct 来
     选择行, 可以通过 ``COUNT(DISTINCT <colname>)`` 来迂回处理. 这很 hack.
 
-- 注意 ``SELECT`` 后面的部分是 case insensitive 的.
-
-- column header 是 ``SELECT`` 的项, 它可以是表的列名字, 也可能是表达式.
-
 - 可以给用户分配不存在的数据库的权限. 然后这个用户可以创建这个数据库.
-
-- ``DATE`` data type 要求的输入格式是 ``YYYY-MM-DD``.
-
-- Comparisons on character type columns are case-insensitive. 并且这直接影响按照 char
-  type 类型排序时是 case-insensitive 的. 用 ``BINARY`` 来避免这种效果. ``BINARY``
-  还可以转换 regexp 的匹配成为 case-sensitive 的.
 
 - NULL
 
@@ -926,23 +942,11 @@ SELECT
   * Sometimes it is useful to join a table to itself, if you want to compare records
     in a table to other records in that same table.
 
-- ``AUTO_INCREMENT`` field
-
-  对于 auto increment field, 插入 0 或 NULL 时写入自增的值. 若设置了
-  ``NO_AUTO_VALUE_ON_ZERO``, 则插入 0 就是插入 0.
-
-  When you insert any other value into an ``AUTO_INCREMENT`` column, the column is
-  set to that value and the sequence is reset so that the next automatically
-  generated value follows sequentially from the largest column value.
-
-  You can retrieve the most recent automatically generated ``AUTO_INCREMENT``
-  value with the ``LAST_INSERT_ID()`` SQL function.
-
 - 一个表必须有一个或者一组 unique key 可以唯一识别不同的资源实例, 否则无法完全
   避免多个 session 同时创建同一个实例时导致的重复 (race condition).
 
-transaction
------------
+transaction statements
+----------------------
 - A transaction is an atomic operation that can be committed or rolled back.
   All changes made in a transaction are applied atomically or none applied.
 
@@ -983,6 +987,212 @@ COMMIT
 
 ROLLBACK
 ^^^^^^^^
+
+Character set and collation
+===========================
+
+overview
+--------
+
+character set
+^^^^^^^^^^^^^
+- available character sets 保存在 ``INFORMATION_SCHEMA.CHARACTER_SETS`` table.
+  Can be queried by SHOW CHARACTER SET.
+
+- mysql stores metadata in ``character_set_system``, which is always UTF-8.
+
+collation
+^^^^^^^^^
+- available collations 保存在 ``INFORMATION_SCHEMA.COLLATIONS`` table.
+  Can be queried by SHOW COLLATION.
+
+- collation naming convention::
+
+    <charset>[_<attr>]...
+
+  attributes:
+
+  * language-specific attribute includes a locale code or language name.
+
+  * ``_ai``, accent insensitive; ``_as``, accent sensitive,
+    ``_ci``, case insensitive; ``_cs``, case sensitive; ``_ks``, kana
+    sensitive; ``_bin``, binary.
+
+- For the binary collation of the binary character set, comparisons are based
+  on numeric byte values. For the _bin collation of a nonbinary character set,
+  comparisons are based on numeric character code values, which differ from
+  byte values for multibyte characters.
+
+character set repertoire
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+- A string expression has repertoire attribute, which can be:
+
+  * ASCII.
+
+  * UNICODE.
+
+- The repertoire for a string constant depends on string content and may differ
+  from the repertoire of the string character set. 例如一个 UTF-8 character set
+  的 string 如果只有 ASCII 字符, 则 repertoire 是 ASCII. 
+
+settings at different levels of data storage
+--------------------------------------------
+- Character set and collation can be set at server, database, table, column
+  levels.
+
+- 在任何一层, 如果没有明确设置 collation, 将使用 character set 的默认 collation;
+  如果明确设置了 collation 但没设置 character set, 将使用该 collation 所属的
+  character set.
+
+server level
+^^^^^^^^^^^^
+
+- defined by ``character_set_server``, ``collation_server``.
+
+- The server character set and collation are used as default values for
+  database creation if these are not specified in CREATE DATABASE statements.
+
+database level
+^^^^^^^^^^^^^^
+
+- defined by CREATE DATABASE or fallback to server-level settings.
+
+- current default database's values are character_set_database and
+  collation_database.
+
+table level
+^^^^^^^^^^^
+
+- defined by CREATE/ALTER TABLE or fallback to database-level settings.
+
+- table level settings are used as string columns' default settings.
+
+column level
+^^^^^^^^^^^^
+
+- defined by CHAR, VARCHAR, TEXTs, ENUM, SET definition.
+
+- 如果修改某列的 charset & collation 配置, 保存的数据会进行映射至新的
+  charset & collation. 若目标 charset 不包含所需全部字符, 可能 data
+  corrupt.
+
+settings for connection
+-----------------------
+- data from client to server: ``character_set_client``
+
+- 服务端接收到数据后, It converts statements sent by the client from
+  character_set_client to ``character_set_connection``. 这步转换只对
+  string literals 之间的比较有意义.
+
+- string 数据转换成 column 所需 charset 并存储.
+
+- data from server to client: ``character_set_results``
+
+- mysql client programs 对 3 个 connection-related charset 的设置.
+
+  * 用户指定, 通过 ``--default-character-set`` 参数或者执行 SET NAMES.
+
+  * 检测环境变量 LANG, LC_ALL. UTF-8 maps to utf8mb4.
+
+  * default utf8mb4.
+
+SQL statements
+--------------
+
+SHOW CHARACTER SET
+^^^^^^^^^^^^^^^^^^
+::
+
+  SHOW CHARACTER SET [LIKE <pattern> | WHERE <expr>]
+
+- show available character sets.
+
+- ``Maxlen`` column 是单个字符所需最大 bytes.
+
+SHOW COLLATION
+^^^^^^^^^^^^^^
+::
+
+  SHOW COLLATION [LIKE <pattern> | WHERE <expr>]
+
+- Compiled column indicates whether the character set is compiled into the
+  server.
+
+- Sortlen is related to the amount of memory required to sort strings expressed
+  in the character set.
+
+SET NAMES
+^^^^^^^^^
+::
+
+  SET NAMES {<charset> [COLLATE <collation>] | DEFAULT}
+
+- indicates to server what character set the client will use to send SQL
+  statements to the server and what character set the server should use for
+  sending results back to the client.
+
+- set ``character_set_client``, ``character_set_connection``,
+  ``character_set_results`` to the given character set.
+
+- ``collation_connection`` is also set implicitly to the default
+  collation of the given charset, or explicitly by COLLATE clause.
+
+- DEFAULT can be used to restore settings to their default.
+
+SET CHARACTER SET
+^^^^^^^^^^^^^^^^^
+::
+
+  SET CHARACTER SET {<charset> | DEFAULT}
+
+- set character_set_client and character_set_results are set to the given
+  character set, and character_set_connection to the value of
+  character_set_database.
+
+- SET NAMES vs SET CHARACTER SET. 两者的区别仅在于后者将 string literals 
+  之间的比较置于 server charset 之下进行. 前者则置于指定的 charset 下进行.
+  一般使用 SET NAMES.
+
+configuration variables
+-----------------------
+
+connection
+^^^^^^^^^^
+- ``character_set_client``. 向服务端声明客户端向服务端发送请求使用的 charset.
+  该参数值 一般由 client 在连接上 server 后在 session-scope 进行声明, 目的是让
+  server 知道该怎么解析客户端的请求. server 端的 global-scope 配置主要用于 when
+  the client-requested value is unknown or not available.
+
+- ``character_set_results``. 告诉服务端向客户端发送结果应使用的 charset.
+
+- ``character_set_connection``. 这个 charset 只对 string literal 之间的比较有
+  价值, 对其他情况都用不着.
+
+- ``collation_connection``. collation of ``character_set_connection``.
+
+data
+^^^^
+- ``--character-set-server``, ``character_set_server``. 服务端的默认 charset.
+
+- ``--collation-server``, ``collation_server``. collation of ``character_set_server``.
+
+- ``character_set_database``. charset of the default database of current
+  session. If no default database, use the same value as ``character_set_server``.
+  This variable is readonly.
+
+- ``collation_database``. collation of ``character_set_database``.
+
+metadata
+^^^^^^^^
+- ``character_set_system``. 服务端用于存储 metadata. always utf8.
+
+filesystem
+^^^^^^^^^^
+- ``character_set_filesystem``. The server's file system character set. Used to
+  interpret string literals that refer to file names. Filenames provided by
+  client is converted from ``character_set_client`` to ``character_set_filesystem``
+  before opening files. Default is ``binary``, no conversion occurs.
 
 InnoDB storage engine
 =====================
