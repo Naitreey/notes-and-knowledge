@@ -1091,7 +1091,8 @@ settings for connection
 
 - mysql client programs 对 3 个 connection-related charset 的设置.
 
-  * 用户指定, 通过 ``--default-character-set`` 参数或者执行 SET NAMES.
+  * 用户指定, 通过客户端支持的方式, 例如 ``--default-character-set``
+    参数, API 参数, 或者直接执行 SET NAMES.
 
   * 检测环境变量 LANG, LC_ALL. UTF-8 maps to utf8mb4.
 
