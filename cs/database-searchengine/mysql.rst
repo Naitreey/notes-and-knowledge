@@ -397,6 +397,9 @@ CHAR
 
 - synonym: CHARACTER.
 
+- storage: M×W bytes, where W is bytes required for the maximum-length
+  character in the character set. 
+
 VARCHAR
 """"""""
 ::
@@ -416,9 +419,14 @@ VARCHAR
 
   * You *can* use CHAR if all your strings are of *the same length*. 如果满足这个
     前提条件, using CHAR can be more space efficient (no length prefix) and 
-    faster (optimization).
+    faster (optimization). 
 
   * 注意 CHAR's whitespace stripping behavior may cause problem.
+
+  * 使用 multi-byte charset 时, VARCHAR 在空间利用率上高效很多. 对于 CHAR 每个字符
+    位置都需要占用 charset 单个字符所需最大空间, 所以如果字符串长度不一致, 相对
+    VARCHAR 会浪费更多空间. 对于 VARCHAR, 不同长度的字符相邻存放, 不需要给每个
+    分配固定的长度.
 
   * VARCHAR in general is more preferable, because usually strings are not of
     the same length and may vary significantly. Therefore it can be more space
@@ -495,7 +503,9 @@ TINYTEXT
 
   TINYTEXT [CHARACTER SET charset_name] [COLLATE collation_name]
 
-- A TEXT column, limited to 255 bytes.
+- A TEXT column.
+ 
+- storage: limited to 255 bytes.
 
 - stored with 1-byte length prefix.
 
@@ -505,7 +515,9 @@ TEXT
 
   TEXT ...
 
-- text column, limited to 65535 bytes.
+- text column
+ 
+- storage: limited to 65535 bytes.
 
 - stored with 2-byte length prefix.
 
@@ -515,7 +527,9 @@ MEDIUMTEXT
 
   MEDIUMTEXT ...
 
-- text column, limited to 2^24-1 bytes.
+- text column
+ 
+- storage: limited to 2^24-1 bytes.
 
 - stored with 3-byte length prefix.
 
@@ -525,7 +539,9 @@ LONGTEXT
 
   LONGTEXT ...
 
-- text column, limited to 2^32-1 bytes.
+- text column
+ 
+- storage: limited to 2^32-1 bytes.
 
 - stored with 4-byte length prefix.
 
@@ -878,6 +894,21 @@ CREATE DATABASE
 
 - database definition is recorded in INFORMATION_SCHEMA.SCHEMATA.
 
+ALTER DATABASE
+^^^^^^^^^^^^^^
+::
+
+  ALTER DATABASE [<name>]
+      alter_spec ...
+
+  alter_spec:
+      [DEFAULT] CHARACTER SET [=] charset_name
+    | [DEFAULT] COLLATE [=] collation_name
+
+- privilege: ALTER privilege on the database.
+
+- If database name is omitted, use current default database.
+
 Data Manipulation Language (DML)
 --------------------------------
 
@@ -1050,8 +1081,8 @@ server level
 
 - defined by ``character_set_server``, ``collation_server``.
 
-- The server character set and collation are used as default values for
-  database creation if these are not specified in CREATE DATABASE statements.
+- server level 的 charset, collation 的唯一用途是作为创建数据库时的
+  default 值.
 
 database level
 ^^^^^^^^^^^^^^
@@ -1061,12 +1092,16 @@ database level
 - current default database's values are character_set_database and
   collation_database.
 
+- database level 的 charset, collation 的唯一用途是作为创建表时的
+  default 值.
+
 table level
 ^^^^^^^^^^^
 
 - defined by CREATE/ALTER TABLE or fallback to database-level settings.
 
-- table level settings are used as string columns' default settings.
+- table level 的 charset, collation 的唯一用途是作为 string type columns
+  的 default 值.
 
 column level
 ^^^^^^^^^^^^
@@ -1195,16 +1230,63 @@ filesystem
   client is converted from ``character_set_client`` to ``character_set_filesystem``
   before opening files. Default is ``binary``, no conversion occurs.
 
-recipes
--------
+Character sets
+--------------
 
-convert database to utf8mb4
+utf8mb3
+^^^^^^^
+- Use max 3-bytes for one char. only support characters in BMP.
+
+utf8mb4
+^^^^^^^
+- Use max 4-bytes for one char. support complete Unicode character sets. BMP +
+  supplementary characters.
+
+- For BMP characters, utf8mb4 and utf8mb3 have identical storage
+  characteristics: same code values, same encoding, same length.
+
+- For supplementary characters, utf8mb4 requires 4 bytes.
+
+convert utf8mb3 to utf8mb4
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - mysql 8.0+ 默认的 charset 就是 utf8mb4 了. 省去了麻烦.
   但在此之前的版本, 需要修改.
 
-- 配置文件::
+- 讨论:
+  
+  * 数据: 对于 string type columns, utf8mb3 -> utf8mb4 对数据不会造成影响, 因为
+    BMP 内的字符编码两个 charset 是相同的.
+
+- 表结构方面可能需要调整. 注意检查以下几点, 若存在相应问题, 需要先进行调整:
+ 
+  * 由于 row size 64KB 限制, 在行内保存的字符串类型列 CHAR, VARCHAR 等能保存
+    的最大字符数目在 ut8mb4 时减少了. 检查列定义有没有超过行长度上限. 若超过,
+    需要修改列定义, 减小长度; 或修改为 TEXT types, 不在行内保存.
+
+  * 对于 TEXT types, 由于最大长度固定, 若要求必须能保存大于某个长度的字符串,
+    但在 utf8mb4 下容不下, 则需要修改定义使用更大的 TEXT 类型.
+
+  * 由于索引长度上限是固定的 bytes 值 (根据 row format 不同可能是 767 bytes or
+    3072 bytes). 所以可索引的字符数减少了. 检查须索引的列定义有没有超过索引长度
+    上限. 若超过, 需要减小列长度定义或 index prefix.
+
+- 直接修改所有表 (和所有列) 的 charset, 以及数据库的 default charset::
+
+    ALTER TABLE <table> CONVERT TO CHARACTER SET utf8mb4; -- every table
+    ALTER DATABASE <db> CHARACTER SET utf8mb4; -- every database
+
+  注意 CONVERT TO CHARACTER SET 可能修改列的类型以保证在新的 charset 下,
+  该列能保存和原来 charset 下至少一样多的字符数. 如要避免类型修改, 只能对
+  每个列单独 MODIFY.
+
+- 配置文件中:
+  
+  * 保证 client/server 之间发送数据通过 utf8mb4 编码.
+    
+  * 服务端的 charset 为 utf8mb4, 即新数据库的默认编码.
+    
+  ::
 
     [client]
     default-character-set = utf8mb4
