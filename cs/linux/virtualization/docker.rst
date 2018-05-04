@@ -991,10 +991,16 @@ config file 以 base64 编码存储在 docker config 中.
 
 A config that is being used by any tasks can not be deleted.
 
-configurations are immutable, so you can’t change the file for an existing
-service. 只能先删除再创建, 或换个名字. 若使用 docker service update 进行
-rolling update, 只能换个名字然后使用 ``--config-add`` & ``--config-rm``
-更换配置.
+更新配置文件:
+
+- configurations are immutable, so you can’t change the file for an existing
+  service. 只能先删除再创建, 或换个名字. 若使用 docker service update 进行
+  rolling update, 只能换个名字然后使用 ``--config-add`` & ``--config-rm``
+  更换配置.
+
+- 应该对 configs & secrets 设置版本号文件名. 在 stack compose file 中定义
+  configs 时, 每次更新配置要先修改配置文件, 重命名为新版本, 在 compose file
+  中更新 config 的版本号和相应的新版本配置文件.
 
 若 config 在 stack 中定义 (通过 compose file), 在 remove stack 时, 所有相关
 configs 跟着删除.
@@ -1972,6 +1978,14 @@ strategies
 ----------
 Swarm managers can use several strategies to distribute containers in the
 cluster.
+
+swarm problems
+--------------
+- docker swarm 更新配置 configs & secrets 非常麻烦, 需要更新版本号. 正在
+  使用的配置不能删除. See `docker config`_.
+
+- 类似上述, docker swarm 更新 volume 也麻烦, 需要更新版本号. 正在使用
+  的 volume (即使相关容器没有运行) 不能删除.
 
 stack
 =====
