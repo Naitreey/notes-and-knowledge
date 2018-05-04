@@ -116,6 +116,8 @@ class instance
 
   若最终没找到, call ``__getattr__``.
 
+  以上步骤详见 `attribute access`_.
+
 * attribute modification. 修改和删除属性只更新 ``__dict__``. 若
   定义了 ``__setattr__``, ``__delattr__`` 则直接调用这两个方法.
 
@@ -257,14 +259,19 @@ attribute access
 
   2. 尝试 instance attribute (``__dict__``). 若有, 直接返回.
 
-  3. 尝试 non-data descriptor 和 class attribute. 若有, 且是 non-data descriptor,
-     调用::
+  3. 尝试 non-data descriptor 和 class attribute. 若存在, 
+      
+     * 对于 non-data descriptor, 调用::
 
-       descriptor.__get__(self, instance, type(instance))
+         descriptor.__get__(self, instance, type(instance))
 
-     若是 class attribute, 直接返回.
+       注意 class 中定义的函数本质上就是 non-data descriptor. 访问 method
+       function 时 ``__get__`` 给出一个 bound method.
 
-  4. 若以上全败, 调用 ``__getattr__``.
+     * 对于 class attribute, 直接返回.
+
+  4. 若以上全败, 调用 ``__getattr__``. 对这一点应用的一个例子是
+     ``pymongo.MongoClient``.
 
   5. raise AttributeError.
 
@@ -389,17 +396,6 @@ descriptor class definition
   
 - non-data descriptor: 只定义 ``__get__``.
 
-在 ``obj`` instance 上进行 attribute lookup  ``obj.attr`` 时, attr 的搜索优先级
-为:
-
-- data descriptor.
- 
-- instance attribute.
- 
-- non-data descriptor and class attribute. (注意 method 实际是 non-data descriptor.)
-
-- ``__getattr__``. 
-
 typical use cases
 ^^^^^^^^^^^^^^^^^
 
@@ -485,7 +481,7 @@ class creation procedure
   * ``metaclass.__init__``, customize class object.
 
   若任意 method 中包含 ``super``, 过程中创建 implicit ``__class__`` reference,
-  指向创建的 class object. 这用于 ``super()``.
+  指向创建的 class object. 这用于 argumentless ``super()``.
 
 metaclass
 ^^^^^^^^^
@@ -894,7 +890,7 @@ memory
 inheritance
 -----------
 
-- ``super(type, object_or_type=None)``. super object constructor.
+- ``super([type[, object_or_type=None]])``. super object constructor.
 
   Return a proxy object that delegates attributes access to a parent or sibling
   class of type. 尽管一般用于获取 overrided method, 但必须清楚, super 的作用是
@@ -903,19 +899,22 @@ inheritance
 
   注意 super class 有自定义的 ``__getattribute__``, 决定属性行为.
 
-  若两个参数都省略, 相当于 ``super(__class__, self)``. 其中 ``__class__``
-  是解释器在编译过程中加入的 implicit reference to lexically current class.
+  参数和意义:
 
-  若 second argument is:
+  * 若两个参数都省略, ``super()`` 必须出现在 method definition 内部, 否则 raise
+    RuntimeError. 此时, ``super()`` 相当于 ``super(__class__, <first-arg>)``.
+    其中 ``__class__`` 是解释器在编译过程中加入的 implicit reference to lexically
+    current class. ``<first-arg>`` 是函数的第一个参数, 即 self or cls (classmethod).
 
-  * omitted (None), the super object is unbound. This is
+  * 若只有一个参数, 第二参数省略 (None), the super object is unbound. This is
     actually historical and **USELESS**.
     http://www.artima.com/weblogs/viewpost.jsp?thread=236278
 
-  * a subclass ``type2`` of ``type``. 此时, 访问 ``super(type, type2).x``
-    给出的是定义在父类中的 function ``x``, 或者说 unbound method ``x``.
-    ``type2`` 除了告诉 super object 要返回 unbound function 本身之外,
-    没别的作用.
+  * 若第二个参数是 a subclass ``type2`` of ``type``. 此时, 访问
+    ``super(type, type2).x`` 给出的是定义在父类中的 function ``x``, 或者说
+    unbound method ``x``. 这可用于在子类 classmethod 中访问父类的相同 classmethod
+    (此时 type2 也是 type). 若在 class definition 之外单独使用, 则只是给出 type
+    的父类的 function 而已, type2 并无别的意义.
 
   * a instance ``instance`` of ``type``. 此时, ``super(type, instance).x``
     给出的是 bound method ``x``, bound to ``instance``, i.e. ``self=instance``.

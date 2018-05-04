@@ -100,22 +100,6 @@
   任何正经的 python module 存在这个问题. 公共逻辑应该放在一个单独的模块中,
   然后各个执行者都从这个模块中 import 公共的功能.
 
-- debugging methods:
-
-  * read traceback
-
-  * print, dump, etc.
-
-  * logging
-
-  * pdb
-
-  * code.interact, jump to interactive interpreter at the exact point you want
-
-  * python -i, 简单的 post-mortem debugging
-
-  * python -v[v], 检查 import 是否符合预期 (sys.path 是否正确, pyc 是否正确等)
-
 - testing methods:
 
   * python -W default, 所有 warnings 都显示, 即开启默认不显示的那些警告
@@ -123,21 +107,6 @@
   * doctest
 
   * unittest
-
-- pdb 的五种主要用法:
-
-  * debug 整个脚本: ``python -m pdb program.py``
-
-  * debug 一段代码: ``import pdb; pdb.run("<code-snippet>")``
-
-  * 从某个点插入 debug 模式: ``import pdb; pdb.set_trace()``
-
-  * 在预期会抛异常的地方加入 try...except compound statement, 在
-    except 里加入 ``import pdb; pdb.post_mortem()``. 这对调试
-    异常很方便.
-
-  * 在 interactive 解释器中 debug 已死的程序 (post-mortem):
-    ``import pdb; pdb.pm()``
 
 - Creating pipelines with subprocess
   It is possible to create process pipelines using ``subprocess.Popen``,
@@ -233,18 +202,6 @@
     需要在必须的时候先生成一个 list, 即 ``list(dict.keys())``, 再遍历这个 list.
     否则, 遍历时, 可能会漏掉一些项或重复一些项.
 
-- `io.StringIO` constructor 的 `initial_value` 是用于设置 buffer 的初始值以便于
-  接下来修改的. 相当于一个文件以 "r+" mode 打开. fd 指向 buffer 起始位置. `write()`
-  会覆盖掉 `initial_value` 的部分.
-
-- how does argument-less ``super()`` work?
-
-  每个函数都保存一个隐性的不可外部访问的引用量 ``__cls__``, 它是对该函数定义所在的
-  class object 的引用. 函数中的 ``super()`` 等价于 ``super(__cls__, <firstarg>)``,
-  其中 ``<firstarg>`` 是该函数的第一个参数, 一般情况下是 ``self`` 或 ``cls``.
-
-  对于不在 class 内定义的函数, ``__cls__`` 不存在, 因此不能使用无参数 super.
-
 - class decorator 应该应用于对它修饰的 class 的某些方面进行修改, 进行某种外部
   注册等等并不覆盖 class 本身的行为, 或者创建一个新类对原有的类进行覆盖命名.
   前两种的很好的应用有 ``django.utils.python_2_unicode_compatible``,
@@ -297,12 +254,6 @@
             # 因此不存在问题.
             super().__init__()
 
-
-- 对于明确只能使用一次的 context manager, 可以利用 `contextlib.contextmanager`
-  使用 generator 来生成. 在 generator function 中只写一个 ``yield``, 这样只能
-  yield 一次, 所以同一个 generator 不能在不同 ``with`` statement 中重用.
-  但是其实这也不一定. 写一个完整的类并实现 context manager protocol 很多时候
-  是更好的选择.
 
 - python3.4+ 中, module ``__file__`` attribute 总是该 module 的绝对路径, 唯一的
   例外是作为 `__main__` module 执行的命令行脚本. ``__main__.__file__`` 的值与
@@ -433,15 +384,6 @@
             self.__dict__[k] = v
         def __delitem__(self, k):
             del self.__dict__[k]
-
-- ``__getattr__`` vs ``__getattribute__``
-
-  * 获取一个 attribute 时, 如果在 object 自身以及在它的类的 MRO chain 上都
-    找不到这个 attribute 时, 就会 call 它的 ``__getattr__``. 这可用于动态的
-    attribute access. ``pymongo`` 是很好的例子.
-
-  * 如果实现了 ``__getattribute__``, 则所有 attribute access 的操作都会走这个
-    method.
 
 - Indentation is rejected as inconsistent if a source file mixes tabs and spaces
   in a way that makes the meaning dependent on the worth of a tab in spaces;
@@ -579,65 +521,6 @@
   的 hash value 与该实例的 identity 一致. 即所有实例的 hash 不同, 通过 hash 值可以
   判断是否是同一个对象.
 
-- interesting stuffs in `sys` module
-
-  * ``sys.base_prefix``, ``sys.base_exec_prefix``,
-    ``sys.prefix``, ``sys.exec_prefix``: 前两个和后两个在 virtual environment 中不同.
-
-  * ``sys.byteorder``
-
-  * ``sys.builtin_module_names``: modules built in cpython interpreter
-
-  * ``sys._current_frames()``: 包含所有线程号和各自的 top stack frame
-
-  * ``sys.displayhook()``, ``sys.excepthook()``,
-    ``sys.__displayhook__``, ``sys.__excepthook__``:
-    用于输出运算结果 (interactive) 和输出 traceback. ipython 解释器给前两个 hooks
-    赋了自己的值.
-
-  * ``sys.exc_info()``: 当前正在处理的 exception 信息. py3 中一般情况下没有理由直接
-    访问这个量.
-
-  * ``sys.executable``: absolute pathname of python interpreter
-
-  * ``sys.exit()``: exit by raise ``SystemExit``.
-
-  * ``sys.getdefaultencoding()``: default encoding used for ``bytes <--> str``
-    decoding/encoding.
-
-  * ``sys.getfilesystemencoding()``, ``sys.getfilesystemencodeerrors``:
-    文件系统中文件名的 bytes 和 str 转换时, 使用的 encoding 和 error handler.
-    即 ``os.fsencode``, ``os.fsdecode`` 使用.
-
-  * ``sys.getrefcount()``
-
-  * ``sys.getswitchinterval()``, ``sys.setswitchinterval()``:
-    thread switch interval in secs
-
-  * ``sys._getframe()``
-
-  * ``sys.__interactivehook__``: called during startup in interactive mode. 默认
-    这个 hook 用于加载 readline.
-
-  * ``sys.maxsize``, ``sys.maxunicode``: max hardware integer, max unicode point
-
-  * ``sys.modules``: loaded modules
-
-  * ``sys.path``: module search pathes
-
-  * ``sys.platform``
-
-  * ``sys.ps1``, ``sys.ps2``
-
-  * ``sys.stdin``, ``sys.stdout``, ``sys.stderr``,
-    ``sys.__stdin__``, ``sys.__stdout__``, ``sys.__stderr__``:
-    When interactive, standard streams are line-buffered.
-    Otherwise, they are block-buffered like regular text files.
-    To write or read binary data from/to the standard streams,
-    use the underlying binary ``buffer`` object.
-
-  * ``sys.version_info``
-
 - binascii, base64, hashlib
 
   * binascii 包含 binary data 和各种基于 ASCII 的 printable 表达形式或编码形式,
@@ -646,21 +529,6 @@
   * base64 包含更丰富的统一的 binary data 和各种进制转换.
 
   * hashlib 包含各种 hash 以及相关函数.
-
-- interesting stuffs in `os.path` module
-
-  * 一系列基于 ``stat(2)`` 的函数, 例如 ``exists()``, ``getatime()``, ``ismount()``,
-    ``samefile()``, etc.
-
-  * 一系列 path manipulation functions, 比较容易被忽略的有 ``split()``, ``splitext()``,
-    ``commonpath()``, ``commonprefix()``, ``expanduser()``, etc.
-
-  * ``expanduser()`` 选择的 home directory 首先根据 environ ``HOME``; 若不存在, 则根据
-    real UID 去 passwd 文件里 home directory (根据 pwd module). 注意是 real UID, 因为
-    real UID 的概念就是进程的 owner.
-
-  * ``exists`` & ``lexists`` 都是检查路径是否存在, 但前者会认为 broken symlink 属于
-    路径不存在, 所以还是要根据自己的需求进行选择.
 
 - python 中, 各种 protocol 实际上是各种 interface 的规定. 满足这些协议 (interface)
   就可以按照相应的方式去使用. 这是 duck typing 的一种体现.
@@ -1100,69 +968,3 @@
     GC 机制, 所以不如 finalize callback 通用.
 
   - ``__del__`` 在实现时比 weakref 容易很多.
-
-json
-====
-
-- 注意 json format 不支持 binary data 这种类型. 所有的 binary data 都必须使用某种数字
-  进制编码成字符串, 才能用 json format 来传递.
-
-  由于 json 数据要求是纯文本, 因此 ``json.dumps`` 的结果一定是 `str` 而不会是 `bytes`.
-
-- 如果需要经常对某个数据结构进行 json 的转换, 可通过扩展 JSONDecoder/JSONEncoder
-  来实现. 使用时 ``json.loads`` ``json.dumps`` 之类操作加上自定义的 encoder/decoder,
-  这样很方便.
-
-enum
-====
-
-- python 3.4 之后就有 enum module 了.
-
-- 对于已经定义了 members 的 enum class 不能再被 subclass. 但若一个 enum
-  仅仅定义了 methods, 没定义任何 member, 可以被继承. 这是为了方便在不同
-  enum class 之间共用相同的 methods, behaviors, etc.
-
-Jinja template
-==============
-language
---------
-
-以下主要记录需要注意点以及与 django template 的不同之处.
-
-jinja 由于应用场景更加宽泛, 不仅仅是 render html, 因此它的一些默认配置和设计
-决策与 django template 有所不同. (例如, 是否 automatic html escaping.)
-
-- ``{{# ... #}}`` 是 block comment.
-
-- 访问 attribute/key 值时, 除了 ``.`` operator 之外, python 的 index syntax
-  ``[]`` 也是支持的.
-
-  * ``foo.bar`` 的解析顺序:
-
-    - getattr(foo, bar)
-
-    - foo.__getitem__(bar)
-
-    - undefined value
-
-  * ``foo['bar']`` 的解析顺序:
-
-    - foo.__getitem__(bar)
-
-    - getattr(foo, bar)
-
-    - undefined value
-
-- filter 的参数放在 ``()`` 中: ``val|filter(arg)``
-
-- 多次输出同一个 block: 使用 ``{{ self.<blockname>() }}``, 其中 blockname 是要
-  重复输出的 block 名字.
-
-- super block ``{{ super() }}``.
-
-- jinja 默认不对输出做 automatic html escaping.
-
-- 若要输出 literal 的 template control syntax, 可以直接作为字符串写出, 或用
-  ``raw`` statement.
-
-- control structure
