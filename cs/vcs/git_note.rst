@@ -165,3 +165,8 @@ submodule vs subtree
 
   * 我不知道 submodule subtree 哪个更好. 但目前看来, submodule 能干的 subtree 都能干,
     而且流程更简单无痛. 所以我更愿意用 subtree.
+
+- ``git diff`` can be a general tool to diff arbitrary files. 而不用在 git repo 内部.
+  这是一个比 diff 好用得多的工具.::
+
+    git diff --no-index [--word-diff --ignore-all-space] file1 file2
