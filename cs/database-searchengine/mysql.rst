@@ -1271,15 +1271,6 @@ convert utf8mb3 to utf8mb4
     3072 bytes). 所以可索引的字符数减少了. 检查须索引的列定义有没有超过索引长度
     上限. 若超过, 需要减小列长度定义或 index prefix.
 
-- 直接修改所有表 (和所有列) 的 charset, 以及数据库的 default charset::
-
-    ALTER TABLE <table> CONVERT TO CHARACTER SET utf8mb4; -- every table
-    ALTER DATABASE <db> CHARACTER SET utf8mb4; -- every database
-
-  注意 CONVERT TO CHARACTER SET 可能修改列的类型以保证在新的 charset 下,
-  该列能保存和原来 charset 下至少一样多的字符数. 如要避免类型修改, 只能对
-  每个列单独 MODIFY.
-
 - 配置文件中:
   
   * 保证 client/server 之间发送数据通过 utf8mb4 编码.
@@ -1297,6 +1288,48 @@ convert utf8mb3 to utf8mb4
     #
     character-set-server = utf8mb4
 
+- 两种修改方式.
+
+  1. 备份所有数据.
+
+     保存一份当前数据库内的所有表定义, 用于修改后进行对比.::
+
+       mysql -B >output-file <<EOF
+       SELECT * FROM information_schema.COLUMNS
+       WHERE TABLE_SCHEMA = 'enoc' order by TABLE_NAME, ORDINAL_POSITION
+       EOF
+
+     直接修改所有需要修改的表 (和所有列) 的 charset, 以及相关数据库的 default
+     charset::
+
+       ALTER TABLE <table> CONVERT TO CHARACTER SET utf8mb4; -- every table
+       ALTER DATABASE <db> CHARACTER SET utf8mb4; -- every database
+
+     自动执行第一行::
+
+       tables=$(mysql --user root -p<pass> --host <host> -N <<<'SHOW TABLES FROM <db>')
+       for tbl in $tables; do
+           mysql --user root -p<pass> --host <host> <<EOF
+       ALTER TABLE <db>.$tbl CONVERT TO CHARACTER SET utf8mb4
+       EOF
+       done
+
+     注意 CONVERT TO CHARACTER SET 可能修改列的类型以保证在新的 charset 下,
+     该列能保存和原来 charset 下至少一样多的字符数. 如要避免类型修改, 只能对
+     每个列单独 MODIFY.
+
+     对比表结构, 看看有什么被修改了.
+
+     修改配置文件如上.
+
+  2. mysqldump 所有数据. 修改以下 charset 定义::
+
+       pass
+
+     重新部署 MySQL. 设置如上配置文件. 以保证所有数据库和表都是 utf8mb4. 恢复数据.
+
+     或者无需修改 mysqldump 文件. 恢复数据后按照 1 中的方式修改所需修改的数据库
+     和表中的 charset.
 
 InnoDB storage engine
 =====================
@@ -2371,6 +2404,81 @@ replication info
 
 CLI
 ===
+
+Option Files
+------------
+- option files 是 mysql 相关程序通用的一种配置文件系统.
+  本质上是配置了各种 mysql 程序启动时指定的命令行参数.
+
+- ``--help`` 输出一个 mysql 程序识别的配置参数, 读取的配置文件和顺序, 以及
+  对每个文件读取的 config group.
+
+- MySQL ignores configuration files that are world-writable.
+
+- option files and read order:
+
+  * /etc/my.cnf
+
+  * /etc/mysql/my.cnf
+
+  * SYSCONFDIR/my.cnf. don't know what it is.
+
+  * $MYSQL_HOME/my.cnf. server only.
+
+  * defaults-extra-file. specified by ``--defaults-extra-file``.
+
+  * ~/.my.cnf.
+
+  * ~/.mylogin.cnf. clients only. encrypted.
+
+  * DATADIR/mysqld-auto.cnf. server only. managed by mysqld.
+
+- 重复的选项最后一个生效, 除非该选项允许指定多次. ``--user`` 只有第一个生效.
+
+- Any long option that may be given on the command line when running a MySQL
+  program can be given in an option file as well. 同时, hyphen 也都可以转换
+  成 underscore, 符合 system variable 的形式.
+
+file format
+^^^^^^^^^^^
+
+- empty lines are ignored.
+
+- #, ; starts line comment.
+
+- ``[<group>]`` a config group. group name can be:
+
+  * mysql program name. the options apply only to the specific program.
+
+  * 对于 mysqld group, 可以附加版本号, 例如: ``[mysqld-8.0]``.
+
+  * ``client``. applies to all client mysql programs. Be sure not to put an
+    option in the [client] group unless it is recognized by all client programs
+    that you use. 不然的话会导致一些 client program 无法运行.
+
+  * option files 中的 groups 应该从 general 至 specific 的顺序安排. 例如::
+
+    [client]
+    # ...
+    [mysql]
+    # ...
+    [mysqld]
+    # ...
+
+- ``{opt_name|opt-name} = value``.
+  
+  * space around = is optional.
+  
+  * value can be optionally quoted using single or double quotes.
+
+  * On an option line, leading and trailing spaces are stripped.
+
+  * backslash escape sequences are accepted as in string literals.
+
+- ``!include <file>``. read additional file.
+
+- ``!includedir <dir>``. files in dir must ends with ``.cnf``.
+  Order of reading of files in dir is unspecified.
 
 Client Programs
 ---------------
