@@ -3458,20 +3458,32 @@ connection settings
 ^^^^^^^^^^^^^^^^^^^
 - mysql
 
-  * 配置项优先级从高至低.
+  * 配置项加载顺序. (优先级低至高.)
 
-    1. OPTIONS. 里面直接写 ``mysqlclient.connect`` 允许的各种连接参数.
-
-    2. NAME, USER, PASSWORD, HOST, PORT. 转换成连接参数.
-
-    3. MySQL option files. 因为 mysqlclient 调用 libmysqlclient C API
+    1. MySQL option files. 因为 mysqlclient 调用 libmysqlclient C API
        ``mysql_options()``, 加载各种 mysql 配置文件. 这里关注的是配置文件中
        client group 的配置.
 
-  * 保证服务端 ``sql_mode`` 开启了 STRICT_TRANS_TABLES.
+    2. NAME, USER, PASSWORD, HOST, PORT. 转换成连接参数.
 
-  * isolation level. django is designed for ``read committed`` isolation level,
-    it won't work *correctly* under another isolation level.
+    3. OPTIONS. 里面直接写 ``mysqlclient.connect`` 允许的各种连接参数. 应
+       包含::
+
+        'OPTIONS': {
+            # the following is default for django2.0+
+            'isolation_level': "read committed",
+            'charset': "utf8mb4",
+        }
+         
+
+  * 保证服务端 ``sql_mode`` 开启了 STRICT_TRANS_TABLES. 对于 mysql 5.7+ 这是
+    默认值, 因此不用配置.
+
+  * 设置 isolation level.
+
+    django is designed for ``read committed`` isolation level, it won't work
+    *correctly* under another isolation level. This is default for django 2.0+.
+    不用配置.
     
     例如, 当使用 atomic request 时, 若多个线程中同时 get 一个 entry,
     即使其中一个 create 已经 commit, 在别的中也不可见, 仍然会 create,
@@ -3481,6 +3493,9 @@ connection settings
 
     所以不能用 mysql default ``repeatable read``. 在 django 2.0+, 连接时默认会
     设置 mysql isolation level 为 read committed.
+
+  * 保证 mysqlclient 和服务端之间通过 utf8mb4 charset 通信. 由于不能保证
+    django server 运行的环境中有 mysql 配置文件, 因此需要在这里配置.
 
 database connection
 -------------------
@@ -3518,8 +3533,9 @@ persistent connection 的坏处是, 提高了数据库服务器的负担. 若数
 则可以缩短 persistent connection 的时长, 或使用 nonpersistent connection.
 
 注意, 对于流量非常小的情况, persistent connection 可能长时间处于 wait 状态,
-db server 端可能连接等待超时断开. 此时 CONN_MAX_AGE 应该设置为小于 timeout
-时长. 对于大流量网站, 则没有这个问题.
+db server 端可能连接等待超时断开, 并记录错误日志. 此时没必要设置 persistent
+connection. 或者 CONN_MAX_AGE 应该设置为小于 timeout 时长. 对于大流量网站,
+则没有这个问题.
 
 connection management
 ^^^^^^^^^^^^^^^^^^^^^
@@ -5638,6 +5654,15 @@ django-nested-admin
 
 django-mysql
 ------------
+
+additional checks
+^^^^^^^^^^^^^^^^^
+
+- mysql strict mode check: django_mysql.W001
+
+- InnoDB strict mode check: django_mysql.W002
+
+- utf8mb4 charset check: django_mysql.W003
 
 django-auth-ldap
 ----------------
