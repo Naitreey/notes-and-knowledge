@@ -2360,6 +2360,9 @@ db field value related APIs. 它们的作用还不完全清楚.
 - ``get_db_prep_value(value, connection, prepared=False)``
   将 field value 转换成 db-specific 的列值.
 
+- ``from_db_value(value, expression, connection)``.
+  将 db-specific 的 value 转换成合法的 python 列值.
+
 - ``get_db_prep_save(value, connection)``.
   用于在访问数据库保存数据之前, 将 field value 转换成 db-specific
   的列值. 默认直接使用 ``get_db_prep_value()``.
@@ -2367,9 +2370,6 @@ db field value related APIs. 它们的作用还不完全清楚.
 - ``pre_save(model_instance, add)``. 在 ``get_db_prep_save()`` 之前,
   给出要使用的列值. 返回要使用的列值.  需要对 ``model_instance``
   上的列属性做相应的设置.
-
-- ``from_db_value(value, expression, connection)``.
-  将 db-specific 的 value 转换成合法的 python 列值.
 
 Deserialization.
 
@@ -3430,7 +3430,9 @@ subclass ``django.db.models.Manager`` 以进行自定义.
 
 若自定义了 QuerySet 的 methods, 然后希望这些方法也 expose 到 manager 中,
 需要使用 ``QuerySet.as_manager`` classmethod 创建 manager class. 它调用
-``BaseManager.from_queryset`` class method.
+``BaseManager.from_queryset`` class method. 注意, 使用 ``QuerySet.as_manager()``
+而不是直接使用 ``Manager.from_queryset()``. 前者会保证 migration 过程中,
+重新构建 model 时还使用这个 QuerySet 和 Manager.
 
 自定义的 manager class 必须能够 shallow copied by ``copy.copy()``.
 
@@ -5663,6 +5665,76 @@ additional checks
 - InnoDB strict mode check: django_mysql.W002
 
 - utf8mb4 charset check: django_mysql.W003
+
+queryset extensions
+^^^^^^^^^^^^^^^^^^^
+
+- QuerySet extension 可以从不同角度使用.
+
+  * 若原来使用的 ``django.db.models.Model`` 作为父类, 可以替换使用
+    ``django_mysql.models.Model``.  该类设置了 ``objects`` manager 使用
+    ``django_mysql.models.QuerySet.as_manager()``.
+
+  * 若使用了自定义的 parent model class, 可以不修改 model 原来的父类,
+    直接设置 ``objects`` 或其他 default manager 为
+    ``django_mysql.models.QuerySet.as_manager()``.
+
+  * 若使用了 custom QuerySet class, 可继承 ``django_mysql.models.QuerySetMixin``,
+    添加所需功能.
+
+  * 使用 ``add_QuerySetMixin()`` 对某个 QuerySet instance 单独 override
+    ``__class__`` attribute, 返回一个添加了 ``QuerySetMixin`` 方法的新的
+    queryset (不修改传入的 queryset). 这种动态修改 class 的方式, 完全不推荐,
+    需小心使用.
+
+more model fields
+^^^^^^^^^^^^^^^^^
+
+JSONField
+""""""""""
+- 使用 mysql JSON data type.
+
+- MySQL 5.7+ 可用.
+
+- 其值可以是任何 valid json value 的 python equivalent. 只要能够 ``json.dumps()``.
+
+- checkings.
+
+  * check ``default`` is not mutable container object. 因为会共享.
+
+  * check mysql version.
+
+EnumField
+""""""""""
+- 使用 mysql ENUM data type.
+
+- 这是 CharField 子类.
+
+- options.
+
+  * choices. required. 除了 django model field 标准的 ``choices`` 参数
+    格式之外, 支持 a list of strings. 此时, 选项值与显示形式相同.
+
+  * 虽是 CharField 子类, 但不允许 ``max_length``. 将 max length 的检查
+    交给 mysql. mysql 会检查 enum 的元素个数以及每个元素的长度是否超过
+    上限.
+
+Bit1BooleanField
+""""""""""""""""
+- BooleanField subclass.
+
+- use mysql BIT(1) data type for boolean data.
+
+NullBit1BooleanField
+""""""""""""""""""""
+
+- NullBooleanField subclass.
+
+extra field lookups
+^^^^^^^^^^^^^^^^^^^
+
+JSON field lookups
+""""""""""""""""""
 
 django-auth-ldap
 ----------------
