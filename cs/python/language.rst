@@ -164,6 +164,30 @@ instantiation
 以下属性在 class instances 上有.
 
 - ``instance.__class__``. the class of the instance.
+  
+  这个属性是 writable 的. 隐含之意是 technically, we can change an instance's
+  class dynamically at runtime. 然后所有的 MRO 相关机制在执行时都会通过新的
+  ``__class__`` 类. 这样做在正常情况下是不推荐的, 但不是说完全没有用处.
+
+  用处:
+
+  * 允许用户临时给某个实例增加一些兼容的子类方法. 例如
+    ``django_mysql.models.add_QuerySetMixin()``
+
+  * If you have a long time running application and you need to replace an old
+    version of some object by a newer version of the same class without loss of
+    data, e.g. after ``importlib.reload()``.
+
+  可能的问题[SOPyChangeClass]_:
+
+  * confuses people reading or debugging your code.
+
+  * ``__init__`` 时使用的是原来的类, 因此可能实例上没有新的类方法所需的数据.
+
+  * If you use ``__slots__``, all of the classes must have identical slots.
+
+  * 如果两个类使用了不同的 metaclass, more confusion.
+
 
 attribute store
 ^^^^^^^^^^^^^^^
@@ -1094,3 +1118,4 @@ References
 .. [PythonFAQ] `Why is Python a dynamic language and also a strongly typed language? <https://wiki.python.org/moin/Why%20is%20Python%20a%20dynamic%20language%20and%20also%20a%20strongly%20typed%20language>`_.
 .. [SOPyRecur] `Using Y combinator to optimize tail recursion in Python <https://stackoverflow.com/a/18506625/1602266>`_
 .. [TCO] `TCO module <https://github.com/baruchel/tco>`_
+.. [SOPyChangeClass] `How dangerous is setting self.__class__ to something else? <https://stackoverflow.com/questions/13280680/how-dangerous-is-setting-self-class-to-something-else>`_
