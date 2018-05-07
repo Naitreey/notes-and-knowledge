@@ -323,6 +323,24 @@ attribute access
   subclass/submetaclass 一般不该完全自定义该方法, 而是在调用父类的方法基础上
   进行适当的自定义.
 
+stringify and formating
+^^^^^^^^^^^^^^^^^^^^^^^
+
+- ``object.__str__``
+
+- ``object.__bytes__``
+
+- ``object.__repr__``
+
+- ``object.__format__(self, format_spec)``. used by ``format()``, ``str.format()``
+  formatted string literal. 当 object 作为被 format 的对象时使用. `format_spec`
+  是与该对象对应的 ``{:spec}`` 部分. 该方法根据 format spec 进行格式化, 输出恰当
+  的 string 形式. most classes will either delegate formatting to one of the
+  built-in types, or use a similar formatting option syntax.
+
+  object 的默认 ``__format__`` 实现只接受 ``""``, 并输出 ``__str__`` 形式.
+  对任何 non-empty string, raise TypeError.
+
 context manager protocol
 ------------------------
 A context manager manages some "context". They usually do some setup work
@@ -1000,7 +1018,16 @@ methods
   * 获取到的值可进一步通过 ``!rsa`` 转换, 以及 ``:`` 进行 formatting.
 
   * A ``format_spec`` field can also include one-level nested replacement
-    fields within it. 形式:
+    fields within it.
+
+    - ``format_spec`` 会传入要 format 的对象的 ``__format__`` method. 只有
+      对象的类本身实现了 ``__format__`` method, 并对传入的 format spec 能
+      识别, 才会输出 format result. 否则应 raise TypeError. 以下格式, 是
+      ``str.__format__`` 识别的格式.
+
+      注意如果 format spec 之前包含 ``!{r|s|a}`` 转换部分, 转换结果即字符串
+      的 ``__format__`` method will be called with ``format_spec``, 而不是原
+      object 的方法.
 
     - DNF::
 
@@ -1037,8 +1064,8 @@ python 中有 4 种 string interpolation 的方式:
 
 第一种最常见最简单, 但不如第二种方便;
 
-第二种明显优点有 2 个, 1) 灵活方便, 功能丰富; 2) 实际上使用 `__format__` protocol,
-即可以自定义 format 逻辑, 实现多态性的封装 (duck typing), e.g., datetime;
+第二种明显优点有 2 个, 1) 灵活方便, 功能丰富; 2) 使用 `__format__` protocol
+可以自定义 format 逻辑, 实现多态性的封装 (duck typing), e.g., datetime.
 
 第三种克服了第二种的 verbosity 问题, 并且增加灵活性可以执行 python 表达式.
 所以, 对于 py3.6+, 应该用第三种, 之前的最好用第二种.
