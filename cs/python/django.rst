@@ -2355,21 +2355,45 @@ db field value related APIs. 它们的作用还不完全清楚.
 .. TODO 弄清作用和区别
 
 - ``get_prep_value(value)``.
-  将 field value 转换成这个列的值合法的数据类型.
+  将 field value 转换成这个列的数据库形式, 但不应考虑与具体数据库相关的不同
+  情况. 这是 ``get_db_prep_value()`` 的预处理部分.
+
+  * value: 在 model instance 上的列值的 python 形式.
 
 - ``get_db_prep_value(value, connection, prepared=False)``
-  将 field value 转换成 db-specific 的列值.
+  将 field value 转换成 db-specific 的列值. 默认该方法给出 ``get_prep_value()``
+  的值. 即默认没有 db-specific 转换, 直接使用通用值. 但一些 model field 通过
+  ``<backend>.operations`` 进行了进一步转换.
 
-- ``from_db_value(value, expression, connection)``.
-  将 db-specific 的 value 转换成合法的 python 列值.
+  * value: 在 model instance 上的列值的 python 形式或者已经处理过的列值.
+
+  * connection: database connection.
+
+  * 是否已经预处理过了, 默认逻辑是如果 prepared, 直接返回 value.
 
 - ``get_db_prep_save(value, connection)``.
-  用于在访问数据库保存数据之前, 将 field value 转换成 db-specific
-  的列值. 默认直接使用 ``get_db_prep_value()``.
+  将 field value 转换成 db-specific 的列值, 但是只有在需要对该列数据进行写入
+  时使用 (例如 INSERT, UPDATE). 除此之外, 与 ``get_db_prep_value()`` 相同.
 
-- ``pre_save(model_instance, add)``. 在 ``get_db_prep_save()`` 之前,
-  给出要使用的列值. 返回要使用的列值.  需要对 ``model_instance``
-  上的列属性做相应的设置.
+  * value: 在 model instance 上的列值的 python 形式. (已经经过 ``pre_save()``
+    操作).
+
+  * connection: database connection.
+
+- ``from_db_value(value, expression, connection)``.
+  将从 database backend 传回来的 value 进一步转换成所需 python 形式. builtin
+  fields 没有实现这个方法. 因 backend 传回的已经是所需形式. 在应用时,
+  ``from_db_value()`` 是作为 ``sql.SQLCompiler.get_converters()`` 的一部分.
+
+  * value: 已经经过多次转换的列值.
+
+  * expression: ``Col`` expression of this field.
+
+  * connection: database connection.
+
+- ``pre_save(model_instance, add)``. 在 INSERT, UPDATE 等写操作之前进行的一些
+  操作. 主要用于更新 model instance 上的列值等. 最终确定下 model instance 上的
+  各个列值. 这个方法发生在 ``get_db_prep_save()`` 之前.
 
 Deserialization.
 
