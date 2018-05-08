@@ -2587,6 +2587,9 @@ field types
 
   mysql note: VARCHAR column 若设置 unique constraint, 要求 max_length <= 255.
 
+  django 没有提供 CharField 对应的 binary 形式. 即没有 VARBINARY type 的 django model.
+  只有 TextField (LONGTEXT) 对应的 BinaryField (LONGBLOB).
+
 - ``TextField``.
 
   max_length attribute will be reflected in the Textarea widget of the
@@ -2718,6 +2721,10 @@ field types
   validations.
 
   * 若设置了 ``max_length``, 检查数据长度.
+
+  数据库类型对应:
+
+  * mysql: LONGBLOB. 2**32 - 1 bytes = 4GiB.
 
 - ``URLField``.
   A CharField subclass for urls.
