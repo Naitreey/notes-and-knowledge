@@ -294,6 +294,13 @@ TINYINT
 - BOOL, BOOLEAN are synonyms for TINYINT(1). 所以实际上 BOOL 可以存 0-255
   的数据. FUCKED UP.
 
+- Which data type to use for BOOL, BOOL a.k.a. TINYINT(1) or BIT(1)?
+
+  * BIT(1) 可以严格限制数据.
+
+  * TINYINT(1) 的默认输出就是 1, 0 integer. 无需额外转换, 与 true/false
+    一致. BIT(1) 可能需要应用去额外转换.
+
 SMALLINT
 """"""""
 
@@ -2590,6 +2597,10 @@ Language driver
 mysqlclient
 -----------
 
+mysql data types in python
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- BIT(N): bytes
 
 mysql vs postgresql
 ===================
