@@ -1337,6 +1337,29 @@ convert utf8mb3 to utf8mb4
      或者无需修改 mysqldump 文件. 恢复数据后按照 1 中的方式修改所需修改的数据库
      和表中的 charset.
 
+Optimization
+============
+
+index
+-----
+- Create right index to answer the required question. 不要创建不必要的
+  索引, 因为:
+  
+  * 在空间上索引要占用内存和存储;
+   
+  * 在时间上创建和更新索引需要时间, 每次 insert, update, delete 的过程中,
+    都需要完成相关索引的更新.
+
+- index's data structure.
+
+  * B-tree: PRIMARY KEY, UNIQUE, INDEX
+
+  * R-tree: indexes on spatial data types.
+
+  * Inverted index: FULLTEXT.
+
+  * Hash index.
+
 InnoDB storage engine
 =====================
 InnoDB is fully transactional and supports foreign key references.
