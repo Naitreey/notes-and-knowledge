@@ -105,70 +105,186 @@ app
 URLconf
 =======
 
-* 最顶层的 URLconf 由 ``settings.ROOT_URLCONF`` 定义.
+- URLconf 是 url pattern 和 view callable 之间的映射.
 
-* django import 每个 URLconf 时, 加载 ``urlpatterns`` 变量里的 url 规则.
+- 一组全局的 URLconf 加载逻辑.
+  
+  * 最顶层的 URLconf 由 ``settings.ROOT_URLCONF`` 定义. root urlconf
+    中包含全局的 url, 并引入各个 app 中的 URLconf.
 
-* 匹配请求 url 时, 按照 ``urlpatterns`` 里的顺序进行, 执行第一个被匹配的
-  url 的 view callable. urlpatterns are a list of ``url()`` instances.
+  * 不同层的 URLconf 可以位于不同的 namespace. 由 ``include()`` 或者
+    ``app_name`` 定义.
 
-* URLconf 可以动态生成, 而不是写死在 ``urls.py`` 里.
+  * URLconf 内容可以动态生成.
 
-* URLconf 中的 url pattern 在它首次被访问时编译好.
+- 对一个请求, 如何选择相应的 url 并进行处理:
 
-* 每个 app 的 URLconf 中应该包含 ``app_name``, 即它是 url name 的 namespace.
-  可避免不同 app 的 url name 相互覆盖.
+  * 选择 URLconf: ``Request.urlconf`` 或全局的 ``settings.ROOT_URLCONF``.
+
+  * 按顺序遍历 url patterns, stops at the first one that matches the requested
+    URL. 请求与 url pattern 在匹配时, 忽略 domain name 和 query string 部分,
+    并不考虑请求方法. 按照不同请求方法进行不同处理的逻辑在 view callable 中实现.
+
+  * call view callable, 传入 ``HttpRequest`` object, 传入 url pattern
+    中匹配的 groups and named groups, 分别以 positional & kwargs 传入.
+
+URLconf 定义
+------------
+- ``<app>/urls.py``.
+
+- ``urlpatterns`` 全局量. A list of url patterns.
+
+  * 使用 ``include()`` 加载别的 urlpatterns list 至特定 url prefix 下面.
+    可以指定一个 URLconf 的 import path, 或者一个 ``url()`` list.
+
+    Whenever Django encounters ``include()``, it chops off whatever part of the
+    URL matched up to that point and sends the remaining string to the included
+    URLconf for further processing.
+
+- ``app_name``. optional. 指定该 URLconf 所属的 namespace.
+  
+related functions
+^^^^^^^^^^^^^^^^^
+
+- ``include()``.
+
+url namespace
+-------------
+
+一个 url namespace 由两部分组成: application namespace 和 instance namespace.
+
+namespace can be nested. 在一个本身有 namespace 的 urlpatterns 中 ``include``
+另一个有 namespace 的 urlpatterns, 就得到了 nested namespace.
+
+application namespace
+^^^^^^^^^^^^^^^^^^^^^
+- 对应一个 django app.
+
+- 一个 django app 的多个 instance 具有相同的 application namespace.
+
+- application namespace 可以通过两种方式指定:
+  
+  * 如果是 include 另一个 URLconf, 在 included URLconf 中指定 ``app_name``
+    这可以避免不同 app 的 url name 相互覆盖.
+   
+  * 如果是 include 一段单独的 urlpatterns, 在 ``include()`` 中指定
+    ``(urlpatterns, <app_namespace>)`` 形式参数.
+
+instance namespace
+^^^^^^^^^^^^^^^^^^
+一个 app 可以在一个项目中部署多个 instance.
+
+.. XXX 不理解 instance namespace. Looks like pretty useless.
+
+application namespace 和 instance namespace 看上去很乱的样子, 什么意思啊??
+只有当一个项目中部署了同一个 app 的多个实例时, 才需要考虑到 instance namespace.
+
+URL pattern
+-----------
 
 * 由于所有 url 的路径部分都以 ``/`` 起始, 所以 django 的 url pattern 把它的
   匹配省去了, 写成 ``^path/to/resource/`` 而不是 ``^/path/to/resouce/``.
 
-* url regex pattern 中尽量使用 named capturing group, 增加灵活性.
-  included url pattern 会收到在父级 url prefix 中匹配的变量值.
+* view callable 会收到在各级 url pattern 中匹配的变量值.
 
-  only capture the values the view needs to work with and use non-capturing
-  arguments when the regular expression needs an argument but the view
-  ignores it.
+* Each regular expression in a urlpatterns is compiled the first time it’s
+  accessed. This makes the system blazingly fast.
 
-* 请求与 url pattern 在匹配时, 忽略 domain name 和 query string 部分, 并
-  不论请求方法. 按照不同请求方法进行不同处理的逻辑在 view callable 中实现.
+url pattern definitions
+^^^^^^^^^^^^^^^^^^^^^^^
 
-* 使用 ``include()`` 加载别的 urlpatterns 至特定 url prefix 下面.
-  可以指定一个 URLconf 的 import path, 或者一个 ``url()`` list.
+- ``path(route, view, kwargs=None, name=None)``.
 
-  Whenever Django encounters ``include()``, it chops off whatever part of
-  the URL matched up to that point and sends the remaining string to the
-  included URLconf for further processing.
+  * arguments.
 
-* url reversing.
+    - kwargs. url pattern 匹配的参数的默认值. 若 ``view`` 的部分是 ``include()``
+      expression, kwargs 会传入包含的每个 url pattern.
 
-  Avoid hard-coding URLs.
+    - name. url pattern's name.
 
-  为了能够 reverse resolution, 需要对 url pattern 命名. 这样的 URLconf 包含从
+  * capture format::
+
+      <[type:]name>
+
+    - ``name`` name of matched path.
+
+    - ``type`` path converter. used to convert captured string to the specified
+      value. 默认为 ``str`` converter.
+
+  * 一个 capture group 是否会匹配并赋值, 取决于 path converter 的 regex pattern
+    是否匹配. 相应地, capture group 是否可以跨越 ``/`` 完全取决于 path
+    converter 的正则是否匹配.
+
+  * 传入 view callable 的参数总是 kwargs 的形式.
+
+- ``re_path(route, view, kwargs=None, name=None)``.
+
+  * regex pattern 中应使用 named capturing group, 增加灵活性. 避免使用
+    unnamed capturing group.
+
+  * only capture the values the view needs to work with and use non-capturing
+    arguments when the regular expression needs an argument but the view
+    ignores it.
+  
+- ``path()`` vs ``re_path()``.
+ 
+  * ``path()`` is used for simple or more confined pattern matching.
+
+  * ``re_path()`` 更灵活, 因为可以直接指定正则. 但相对于 ``path()``,
+    缺乏类型转换功能. 输出的总是字符串.
+
+path converter
+""""""""""""""
+- builtin path converters:
+  
+  * str. match any non-empty string, excluding /.
+
+  * int. match a sequence of non-negative digits.
+
+  * slug. ASCII letters, numbers, hyphen, underscore.
+
+  * uuid. match uuid format, return UUID instance.
+
+  * path. match any non-empty string, including /.
+
+- path converter class definition.
+
+  * ``regex`` attribute. regex pattern to match url segment.
+
+  * ``to_python(value)``. convert matched string to value to be passed
+    to view callable.
+
+  * ``to_url(value)``. reverse process of ``to_python()``. used for
+    url reversing.
+
+- 注册 path converter: ``register_converter()``.
+
+- path converter 和注册操作应该放在 ROOT_URLCONF 中. 因为注册的 converter
+  全局可见.
+
+Reverse url resolution
+----------------------
+
+- design principle: Avoid hard-coded URLs.
+
+- 为了能够 reverse resolution, 需要对 url pattern 命名. 这样的 URLconf 包含从
   url 映射至功能以及从功能反向映射至 url 的双向信息.
 
-  对于不同场景下的 url reversing 需求, django 提供了不同的操作:
+- You can deliberately choose the same URL name as another application if you
+  want to override a view.
+
+- 对于不同场景下的 url reversing 需求, django 提供了不同的操作:
   ``url`` tag, ``reverse()`` function, ``Model.get_absolute_url()`` method.
 
-  - ``reverse()``.
+related functions
+^^^^^^^^^^^^^^^^^
+- ``reverse()``.
 
-    reverse 函数在反向查找时, 根据命名、参数数目、以及 kwargs 的名字来匹配.
-    如果根据这些规则去匹配后有冲突, ``reverse()`` 选择 urlpatterns 中最后一个
-    符合的 pattern. 这可以用于 override 其他 app 提供的同名 view.
+  reverse 函数在反向查找时, 根据命名、参数数目、以及 kwargs 的名字来匹配.
+  如果根据这些规则去匹配后有冲突, ``reverse()`` 选择 urlpatterns 中最后一个
+  符合的 pattern. 这可以用于 override 其他 app 提供的同名 view.
 
-    reverse 输出的 url 已经是 url-encoded.
-
-* url namespace. 两部分: application namespace 和 instance namespace.
-  注意一个 app 可以在一个项目中部署多个 instance.
-
-  namespace can be nested. 在一个本身有 namespace 的 urlpatterns 中 ``include``
-  另一个有 namespace 的 urlpatterns, 就得到了 nested namespace.
-
-  application namespace 可以通过两种方式指定: 如果是 include 另一个 app,
-  在 ``urls.py`` 中指定 ``app_name``; 如果是 include 一段单独的 urlpatterns,
-  在 ``include()`` 中指定 ``(urlpatterns, <app_namespace>)`` 参数.
-
-  application namespace 和 instance namespace 看上去很乱的样子, 什么意思啊??
-  只有当一个项目中部署了同一个 app 的多个实例时, 才需要考虑到 instance namespace.
+  reverse 输出的 url 已经是 url-encoded.
 
 timezone
 ========
@@ -304,7 +420,7 @@ Class-based views
   * 所有传入 constructor 的 kwargs 都会成为 instance attributes.
 
   * 除此之外, ``request``, url pattern 匹配的 ``args`` & ``kwargs``
-    都会成为 view instance attributes.
+    三个参数会成为 view instance attributes.
 
 - methods.
 
