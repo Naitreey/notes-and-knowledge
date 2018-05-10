@@ -377,19 +377,24 @@ view
 
     ``QuerySet.filter()`` a list of objects, 其他同上.
 
-* view, template, form/formset 等的构建.
+view, template, form/formset 的设计思考
+---------------------------------------
 
-  前端构建的传至后端的 form data 必须要能再次回到前端填充成原始的 form
+* 使用同一个 view 和同一个 url 去获取 form 和处理 form data.
+  基本逻辑: GET 和 POST with invalid data 时返回 form 本身, 并且由于已经有数据,
+  可以在 render 时对错误进行相应提示; POST with valid data 时处理数据返回结果.
+
+* 前端构建的传至后端的 form data 必须要能再次回到前端填充成原始的 form
   输入内容. 也就是说, Form, BaseFormSet 等的实例必须包含能重新构建前端
   form 填充形式的所有数据. 不要在前端 form 和 django form/formset 之间
   进行数据格式转换, 这是多此一举的, 而且非常麻烦.
 
-  form/formset 没必要和 model 一致 (也就是说没必要用 modelform), 而是完全
+* form/formset 没必要和 model 一致 (也就是说没必要用 modelform), 而是完全
   由前端业务逻辑决定的. 但是, form 中的各项最好和页面模板中的 html form
   项是一致的. 这样从 POST 数据构建 form, ``form_valid``, ``form_invalid``
   等的处理和数据重填都很方便.
 
-  如果想要传递某些 form 项但不希望用户输入, 则使用 hidden input type (配合
+* 如果想要传递某些 form 项但不希望用户输入, 则使用 hidden input type (配合
   js 进行输入), 而不是直接从 form 中去掉这项. 注意 view 中逻辑需要对 hidden
   input 的数据合法性进行验证.
 
@@ -1882,8 +1887,151 @@ session
 form
 ====
 
+- form & form fields 与 model & model fields 是对应的, 并且是紧密联系的.
+
+Form
+----
+
 * ``django.forms.Form`` 是 form handling 的核心. A ``Form`` class describes
   a form and determines how it works and appears.
+
+- form methods.
+
+  * ``is_valid()`` method 验证 form data 是否合法并清理数据设置 ``cleaned_data``.
+    在背后, 它调用所有 fields 的验证和数据清理逻辑.
+
+* 很多对象 render 为 html 形式后会添加标识 id 和样式 class. 方便进行前端自定义.
+
+* When we instantiate a form, we can opt to leave it empty or pre-populate it.
+
+methods
+^^^^^^^
+
+- ``hidden_fields()``
+
+- ``visible_fields()``
+
+form rendering
+^^^^^^^^^^^^^^
+
+* 永远不要在 django form 中添加 css styling 信息. 记住, django form 是业务逻辑
+  的数据部分的后端抽象, 它必须与前端展示逻辑解耦合. CSS styling 要放在模板中.
+
+  考虑到要和各种前端框架的 element 结构层级、样式定义结合, 直接把整个 form
+  或者 field 按照默认的 html 代码输出很多时候是不实际的. 
+  
+  解决方法:
+  
+  - 如果使用 vanilla django, 只能仔细在 html 代码中定义好结构和样式,
+    只用模板变量填入必要的信息.
+
+  - 使用 django-widget-tweaks 来更方便地调整 widget 样式. 或者参考使用
+    django-material 等风格 plugin.
+
+* ``str(form)`` 即获得 form instance 对应的 html 代码. 注意 rendered Form
+  instance 不包含 ``<form>`` element wrapper 和 submit button.
+
+* ``form.non_field_errors`` 是全局错误. When rendered as html, 成为 ul
+  element ``<ul class="errorlist nonfield">``. ``nonfield`` class 与
+  ``BoundField.errors`` 进行区分.
+
+* 也可以 ``form.as_table`` ``form.as_p`` ``form.as_ul``.
+
+* render 后, 每个 input field 的 ``id`` attribute 是 ``id_<field-name>``.
+
+* ``form[<field-name>]`` 是各个 field 对应的 ``BoundField``.
+
+bound and unbound form
+^^^^^^^^^^^^^^^^^^^^^^
+``is_bound`` 属性判断是否 bound.
+
+- unbound form: no data. when rendered, being empty or containing only default
+  values.
+
+- bound form: has data. can tell if data is valid, 若数据非法, 会生成
+  相应的错误信息, 可填入模板, 返回给用户.
+
+Form validation
+^^^^^^^^^^^^^^^
+- ``is_valid()``. Run validation routines for all fields. If valid, place
+  form data in ``cleaned_data`` attribute.
+
+ModelForm
+---------
+
+- ``ModelForm`` 是 ``Form`` 的一种, 它根据现成的 model 去生成 form.
+
+* 当一个 form 与某个 model 对应时, 使用 ``ModelForm``, 否则使用 ``Form`` 即可.
+
+- 指定所使用的 ``Model``, 它会 build a form, along with the appropriate fields
+  and their attributes, from a Model class. 省去手动写 field 的麻烦.
+
+- The generated Form class will have a form field for every model field
+  specified, in the order specified in the fields attribute.
+
+- ``ModelForm.__init__`` 中若加入 ``instance=`` 参数, 则是将 form 与一个
+  现存的 model instance 关联, 例如为了更新它的一些列. 这样, 在 validation
+  时, 可能会修改传入的 model instance. 若验证失败, 传入的 model instance
+  可能处于 inconsistent state, 不适合再次使用.
+
+- 选择需要包含在 form 中的 model fields.
+  ``ModelForm`` 要求必须定义 ``Meta.fields`` 或 ``Meta.exclude``.
+
+  It is strongly recommended that you explicitly set all fields that should
+  be edited in the form using the ``fields`` attribute. Failure to do so can
+  easily lead to security problems when a form unexpectedly allows a user to
+  set certain fields, especially when new fields are added to a model.
+
+  ``fields = '__all__'`` 自动包含所有列.
+
+- model field 和 form field 的对应.
+
+  * ``TextField`` model field 默认的 form field 是 ``CharField``, 并设置 widget
+    为 ``Textarea``.
+
+  * ``ForeignKey`` model field 对应 ``ModelChoiceField``.
+
+  * ``ManyToManyField`` model field 对应 ``ModelMultipleChoiceField``.
+
+- model option 和 form option 的对应.
+
+  * ``blank=True`` 对应 ``required=False``. 由于默认 Field option ``blank=False``,
+    因此默认 ``required=True``.
+
+  * ``verbose_name=`` 对应 ``label=``.
+
+  * 若 model field 有 ``choices``, form field ``widget`` 默认是 ``Select``.
+
+- methods.
+
+  * ``.save()``
+
+    ``.save()`` 可以直接保存新的 model instance 或更新现有的
+    instance (若 constructor 有 ``instance`` 参数). 它会进行验证.
+    它调用 ``Model.save()``.
+
+    ``commit=False`` 时并不将数据存入数据库, 而是只返回 model instance.
+    若 model 存在 ManyToManyField 需要修改或创建, ``commit=False`` 显然
+    不会创建在 form 中选定的那些关联. 这样, 若手动执行 ``Model.save()``
+    来保存实例的话, 之后需要使用 ``ModelForm.save_m2m()`` 单独保存选定
+    的关联关系至数据库.
+
+    若 model 中定义了 ``FileField`` 且 form 中传入了相应文件, ``.save()``
+    会自动将文件保存至 ``upload_to`` 位置.
+
+inheritance
+-----------
+
+``Form`` 类继承时, 父类的列在先, 子类的列在后.
+对于多继承, 列的先后顺序根据各父类的远近关系按由远至近的顺序.
+这里的远近关系值的是在 MRO 中的顺序的逆序, 在 MRO 中越靠后越远.
+
+model form
+----------
+
+form field
+----------
+- model field maps to 数据库列; form field maps to HTML input 元素.
 
 * A form’s fields are themselves classes; they manage form data, perform
   validation and clean form data when a form is submitted.
@@ -1892,151 +2040,68 @@ form
   a piece of user interface machinery. Each field type has an appropriate
   default ``Widget`` class.
 
-* So when we handle a model instance in a view, we typically retrieve it
-  from the database. When we’re dealing with a form we typically instantiate
-  it in the view.
+- form field types.
 
-* When we instantiate a form, we can opt to leave it empty or pre-populate it.
+  * ``FilePathField``
 
-* 使用同一个 view 和同一个 url 去获取 form 和处理 form data.
-  基本逻辑: GET 和 POST with invalid data 时返回 form 本身, 并且由于已经有数据,
-  可以在 render 时对错误进行相应提示; POST with valid data 时处理数据返回结果.
+  * ``ModelChoiceField`` 的参数是待选的 QuerySet.
 
-* ``Form`` class.
+  * ``ModelMultipleChoiceField`` 的参数是待选的 QuerySet.
 
-  - ``Model`` 类属性 maps to 数据库列; ``Form`` 类属性 maps to HTML input 元素.
+  * ``CharField``
 
-  - 每个 Form field 不仅负责对数据进行验证, 还负责对数据进行 clean, normalizing
-    it to a consistent format.
+  * ``FileField``, bound 之后的值 ``.value()`` 是 ``UploadedFile`` instance.
 
-  - form field types.
+  * ``URLField``. html input type is ``url``.
 
-    * ``FilePathField``
+  * ``EmailField``. html input type is ``email``.
 
-    * ``ModelChoiceField`` 的参数是待选的 QuerySet.
+  * All integer fields. html input type is ``number``.
 
-    * ``ModelMultipleChoiceField`` 的参数是待选的 QuerySet.
+- form field options.
 
-    * ``CharField``
+  * ``label`` 定义 ``<label>`` tag 内容.
 
-    * ``FileField``, bound 之后的值 ``.value()`` 是 ``UploadedFile`` instance.
+  * ``max_length`` 定义 ``<input>`` 最大长度, 并具有验证功能.
 
-  - form field options.
+  * ``help_text`` 在 render 时放在 field 旁边.
 
-    * ``label`` 定义 ``<label>`` tag 内容.
+  * ``error_messages`` overrides default field validation errors.
 
-    * ``max_length`` 定义 ``<input>`` 最大长度, 并具有验证功能.
+widget
+------
 
-    * ``help_text`` 在 render 时放在 field 旁边.
+BoundField
+----------
 
-    * ``error_messages`` overrides default field validation errors.
-
-  - form methods.
-
-    * ``is_valid()`` method 验证 form data 是否合法并清理数据设置 ``cleaned_data``.
-      在背后, 它调用所有 fields 的验证和数据清理逻辑.
-
-  - render form.
-
-    * 考虑到要和各种前端框架的 element 结构层级、样式定义结合, 直接把整个 form
-      或者 field 输出为 html 代码根本不实际, 输出太死板. 绝大部分时候还是需要
-      仔细在 html 代码中定义好结构和样式, 只用模板变量填入必要的值.
-
-    * ``str(form)`` 即获得 form instance 对应的 html 代码. 注意 rendered Form
-      instance 不包含 ``<form>`` element wrapper 和 submit button.
-
-    * ``form.non_field_errors`` 是全局错误.
-
-    * 也可以 ``form.as_table`` ``form.as_p`` ``form.as_ul``.
-
-    * render 后, 每个 input field 的 ``id`` attribute 是 ``id_<field-name>``.
-
-    * ``form[<field-name>]`` 是各个 field 对应的 ``BoundField``.
-
-  - unbound form: no data. when rendered, being empty or containing only
-    default values.
-    bound form: has data. can tell if data is valid, 若数据非法, 会生成
-    相应的错误信息, 可填入模板, 返回给用户.
-    ``is_bound`` 属性判断是否 bound.
-
-* ``BoundField`` class.
-
-  - ``str(boundfield)`` 给出它的 input HTML element.
-
-  - attributes & methods.
-  ``.errors`` ``.id_for_label`` ``.label`` ``.label_tag()`` ``.value()``
-  ``.html_name`` ``.help_text`` ``.is_hidden`` ``.field``
-
-  ``.errors`` 的 string 形式是一个 ``<ul class="errorlist">`` element,
+attributes
+^^^^^^^^^^
+- ``id_for_label``. html id of the field.
+  
+- ``label``. html label of the field.
+  
+- ``html_name``. ``<input>`` element's ``name`` attribute, 包含
+  ``Form.prefix``.
+  
+- ``help_text``. field's help text.
+  
+- ``is_hidden``. whether the field is hidden.
+  
+- ``errors``. 的 string 形式是一个 ``<ul class="errorlist">`` element,
   但在 loop over 它的时候, 每个 error 只生成纯字符串.
 
-* ``ModelForm`` class.
+- ``field``. The original ``django.forms.Field`` instance of this
+  BoundField.
 
-  - ``ModelForm`` 是 ``Form`` 的一种, 它根据现成的 model 去生成 form.
+methods
+^^^^^^^
 
-  - 指定所使用的 ``Model``, 它会 build a form, along with the appropriate fields
-    and their attributes, from a Model class. 省去手动写 field 的麻烦.
+- ``__str__()`` 给出它的 input HTML element.
 
-  - The generated Form class will have a form field for every model field
-    specified, in the order specified in the fields attribute.
-
-  - ``ModelForm.__init__`` 中若加入 ``instance=`` 参数, 则是将 form 与一个
-    现存的 model instance 关联, 例如为了更新它的一些列. 这样, 在 validation
-    时, 可能会修改传入的 model instance. 若验证失败, 传入的 model instance
-    可能处于 inconsistent state, 不适合再次使用.
-
-  - 选择需要包含在 form 中的 model fields.
-    ``ModelForm`` 要求必须定义 ``Meta.fields`` 或 ``Meta.exclude``.
-
-    It is strongly recommended that you explicitly set all fields that should
-    be edited in the form using the ``fields`` attribute. Failure to do so can
-    easily lead to security problems when a form unexpectedly allows a user to
-    set certain fields, especially when new fields are added to a model.
-
-    ``fields = '__all__'`` 自动包含所有列.
-
-  - model field 和 form field 的对应.
-
-    * ``TextField`` model field 默认的 form field 是 ``CharField``, 并设置 widget
-      为 ``Textarea``.
-
-    * ``ForeignKey`` model field 对应 ``ModelChoiceField``.
-
-    * ``ManyToManyField`` model field 对应 ``ModelMultipleChoiceField``.
-
-  - model option 和 form option 的对应.
-
-    * ``blank=True`` 对应 ``required=False``. 由于默认 Field option ``blank=False``,
-      因此默认 ``required=True``.
-
-    * ``verbose_name=`` 对应 ``label=``.
-
-    * 若 model field 有 ``choices``, form field ``widget`` 默认是 ``Select``.
-
-  - methods.
-
-    * ``.save()``
-
-      ``.save()`` 可以直接保存新的 model instance 或更新现有的
-      instance (若 constructor 有 ``instance`` 参数). 它会进行验证.
-      它调用 ``Model.save()``.
-
-      ``commit=False`` 时并不将数据存入数据库, 而是只返回 model instance.
-      若 model 存在 ManyToManyField 需要修改或创建, ``commit=False`` 显然
-      不会创建在 form 中选定的那些关联. 这样, 若手动执行 ``Model.save()``
-      来保存实例的话, 之后需要使用 ``ModelForm.save_m2m()`` 单独保存选定
-      的关联关系至数据库.
-
-      若 model 中定义了 ``FileField`` 且 form 中传入了相应文件, ``.save()``
-      会自动将文件保存至 ``upload_to`` 位置.
-
-* 当一个 form 与某个 model 对应时, 使用 ``ModelForm``, 否则使用 ``Form`` 即可.
-
-* 很多对象 render 为 html 形式后会添加标识 id 和样式 class. 方便进行前端自定义.
-
-* form inheritance. ``Form`` 类继承时, 父类的列在先, 子类的列在后.
-  对于多继承, 列的先后顺序根据各父类的远近关系按由远至近的顺序.
-  这里的远近关系值的是在 MRO 中的顺序的逆序, 在 MRO 中越靠后越远.
+- ``label_tag()``. field's label wrapped in ``<label>`` tag, including
+  ``Form.label_suffix``.
+  
+- ``value()``. field's value.
 
 Export
 ======
