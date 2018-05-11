@@ -1956,6 +1956,14 @@ Form validation
 - ``is_valid()``. Run validation routines for all fields. If valid, place
   form data in ``cleaned_data`` attribute.
 
+- ``full_clean()``.
+
+- ``clean()``. Custom Form 若要进行 form-level 的 validation (而不是 form
+  field-level), 可自定义这个方法.
+
+- ``errors``. 获取 Form 的错误信息. 若未验证, 调用 ``Form.full_clean()``
+  验证 form.
+
 ModelForm
 ---------
 
@@ -1969,65 +1977,151 @@ ModelForm
 - The generated Form class will have a form field for every model field
   specified, in the order specified in the fields attribute.
 
-- ``ModelForm.__init__`` 中若加入 ``instance=`` 参数, 则是将 form 与一个
-  现存的 model instance 关联, 例如为了更新它的一些列. 这样, 在 validation
-  时, 可能会修改传入的 model instance. 若验证失败, 传入的 model instance
-  可能处于 inconsistent state, 不适合再次使用.
+Meta options
+^^^^^^^^^^^^
 
-- 选择需要包含在 form 中的 model fields.
-  ``ModelForm`` 要求必须定义 ``Meta.fields`` 或 ``Meta.exclude``.
+specifying fields
+""""""""""""""""""
+- ``fields``. 设置 model form 中包含的列. ``'__all__'`` 自动包含所有列.
 
   It is strongly recommended that you explicitly set all fields that should
   be edited in the form using the ``fields`` attribute. Failure to do so can
   easily lead to security problems when a form unexpectedly allows a user to
   set certain fields, especially when new fields are added to a model.
 
-  ``fields = '__all__'`` 自动包含所有列.
+- ``exclude``. 排除一些列. ``fields`` 和 ``exclude`` 必须设置至少一个.
 
-- model field 和 form field 的对应.
+field customization
+"""""""""""""""""""
+- ``widgets``. A dict mapping from field name to widget class or instance.
+  Customize widgets.
 
-  * ``TextField`` model field 默认的 form field 是 ``CharField``, 并设置 widget
-    为 ``Textarea``.
+- ``labels``.
 
-  * ``ForeignKey`` model field 对应 ``ModelChoiceField``.
+- ``help_texts``.
 
-  * ``ManyToManyField`` model field 对应 ``ModelMultipleChoiceField``.
+- ``error_messages``.
 
-- model option 和 form option 的对应.
+- ``field_classes``. Customize field class.
 
-  * ``blank=True`` 对应 ``required=False``. 由于默认 Field option ``blank=False``,
-    因此默认 ``required=True``.
+localization
+""""""""""""
+- ``localized_fields``.
 
-  * ``verbose_name=`` 对应 ``label=``.
+constructor options
+^^^^^^^^^^^^^^^^^^^
 
-  * 若 model field 有 ``choices``, form field ``widget`` 默认是 ``Select``.
+- ``instance``. 将 form 与一个现存的 model instance 关联, 为了更新它的
+  一些列. 这样, 在 validation 时, 可能会修改传入的 model instance. 若验证
+  失败, 传入的 model instance 可能处于 inconsistent state, 不适合再次使用.
 
-- methods.
+- ``initial``. 设置 form field 的初始值.
 
-  * ``.save()``
+attributes
+^^^^^^^^^^
 
-    ``.save()`` 可以直接保存新的 model instance 或更新现有的
-    instance (若 constructor 有 ``instance`` 参数). 它会进行验证.
-    它调用 ``Model.save()``.
+- ``instance``. 对于 bound model form, form validation 之后, 生成的 model
+  instance 会保存在这里.
 
-    ``commit=False`` 时并不将数据存入数据库, 而是只返回 model instance.
-    若 model 存在 ManyToManyField 需要修改或创建, ``commit=False`` 显然
-    不会创建在 form 中选定的那些关联. 这样, 若手动执行 ``Model.save()``
-    来保存实例的话, 之后需要使用 ``ModelForm.save_m2m()`` 单独保存选定
-    的关联关系至数据库.
+  Any fields not included in a form will not be set by model form. 这些列的值
+  可通过在 ModelForm, Model 等的 hooks 中设置, ModelForm 的 ``initial`` 参数
+  设置, 或者在 model field 层的 ``default``.
 
-    若 model 中定义了 ``FileField`` 且 form 中传入了相应文件, ``.save()``
-    会自动将文件保存至 ``upload_to`` 位置.
+methods
+^^^^^^^
+
+- ``.save(commit=True)``
+
+  保存 model form 关联的 instance to database (通过 ``Model.save()``).
+  If the form hasn’t been validated, calling ``save()`` will do so by checking
+  ``form.errors``.
+
+  ``commit=False`` 时并不将数据存入数据库, 而是只返回 model instance.
+  若 model 存在 ManyToManyField 需要修改或创建, ``commit=False`` 显然
+  不会创建在 form 中选定的那些关联. 这样, 若手动执行 ``Model.save()``
+  来保存实例的话, 之后需要使用 ``ModelForm.save_m2m()`` 单独保存选定
+  的关联关系至数据库.
+
+  若 model 中定义了 ``FileField`` 且 form 中传入了相应文件, ``.save()``
+  会自动将文件保存至 ``upload_to`` 位置.
+
+Auto-generated fields
+^^^^^^^^^^^^^^^^^^^^^
+
+- The generated Form class will have form fields corresponding to model field
+  specified, in the order specified in the fields attribute.
+
+- ModelForm 自动生成的 form field 与 model field 的映射关系, 以及默认选项设置由
+  ``models.Field.formfield()`` 方法决定.
+  
+  几个比较值得关注的映射, 从 model field 至 form field:
+
+  * ``AutoField``, ``BigAutoField`` 不映射.
+
+  * ``TextField`` -> ``CharField``, widget 为 ``forms.Textarea``.
+
+  * ``ForeignKey`` -> ``ModelChoiceField``.
+
+  * ``ManyToManyField`` -> ``ModelMultipleChoiceField``.
+
+  比较值得关注的一般性的 form field options 与 model field option 的决定关系.
+
+  * ``required``. ``blank=True`` 则 ``required=False``. 由于默认 Field option
+    ``blank=False``, 因此默认 ``required=True``.
+
+  * ``label``. ``verbose_name`` capitalized.
+
+  * ``choices``. 若 model field 有 choices, form field ``widget`` 默认是
+    ``Select``. 选项的设置逻辑:
+
+    - 如果 ``blank=True``, 即允许不选择. 因此包含 empty choice 项.
+      此时, 如果没有 ``default``, 默认选择 empty choice; 如果有 ``default``,
+      默认选择 default.
+
+    - 如果 ``blank=False``, 即不允许不选择. 此时, 如果有 ``default``, 不包含
+      empty choice, 默认选择 default; 如果没有 ``default``, 仍包含 empty
+      choice 并默认选择, 这是为了强制用户进行选择, 否则后端 form 校验时会
+      报错.
+
+  * ``initial``. 如果有 ``default``, 使用该值或者 callable.
+
+  * ``empty_value``. If ``null=True``, ``empty_value=None``.
+
+Custom fields
+^^^^^^^^^^^^^
+- Additional fields can be declared in ModelForm class namespace
+  declaratively as a normal Form.
+
+- 若一个定义的列的名字与 model field 相同, model field will be overrided.
+  ModelForm will only generate fields that are missing from the form, or in
+  other words, fields that weren’t defined declaratively.
+
+model form validation
+^^^^^^^^^^^^^^^^^^^^^
+- ModelForm 在普通的 Form validation 逻辑之后, 实现了 ``Form._post_clean()``
+  hook. 在该方法中, ModelForm 调用了 Model instance 的 validation 逻辑
+  ``Model.full_clean()``.
+
+- error messages definition.
+  
+  * Error messages defined at the form field level or at the form Meta level
+    always take precedence over the error messages defined at the model field
+    level.
+
+  * Error messages defined on model fields are only used when the
+    ValidationError is raised during the model validation step and no
+    corresponding error messages are defined at the form level.
+
+  * You can override the error messages from NON_FIELD_ERRORS raised by model
+    validation by adding the NON_FIELD_ERRORS key to the error_messages
+    dictionary of the ModelForm’s inner Meta class.
 
 inheritance
 -----------
 
-``Form`` 类继承时, 父类的列在先, 子类的列在后.
-对于多继承, 列的先后顺序根据各父类的远近关系按由远至近的顺序.
-这里的远近关系值的是在 MRO 中的顺序的逆序, 在 MRO 中越靠后越远.
-
-model form
-----------
+- ``Form`` 类继承时, 父类的列在先, 子类的列在后. 对于多继承, 列的先后顺序
+  根据各父类的远近关系按由远至近的顺序. 这里的远近关系值的是在 MRO 中的顺序
+  的逆序, 在 MRO 中越靠后越远.
 
 form field
 ----------
@@ -2040,33 +2134,35 @@ form field
   a piece of user interface machinery. Each field type has an appropriate
   default ``Widget`` class.
 
-- form field types.
+field types
+^^^^^^^^^^^
 
-  * ``FilePathField``
+* ``FilePathField``
 
-  * ``ModelChoiceField`` 的参数是待选的 QuerySet.
+* ``ModelChoiceField`` 的参数是待选的 QuerySet.
 
-  * ``ModelMultipleChoiceField`` 的参数是待选的 QuerySet.
+* ``ModelMultipleChoiceField`` 的参数是待选的 QuerySet.
 
-  * ``CharField``
+* ``CharField``
 
-  * ``FileField``, bound 之后的值 ``.value()`` 是 ``UploadedFile`` instance.
+* ``FileField``, bound 之后的值 ``.value()`` 是 ``UploadedFile`` instance.
 
-  * ``URLField``. html input type is ``url``.
+* ``URLField``. html input type is ``url``.
 
-  * ``EmailField``. html input type is ``email``.
+* ``EmailField``. html input type is ``email``.
 
-  * All integer fields. html input type is ``number``.
+* All integer fields. html input type is ``number``.
 
-- form field options.
+field options
+^^^^^^^^^^^^^
 
-  * ``label`` 定义 ``<label>`` tag 内容.
+* ``label`` 定义 ``<label>`` tag 内容.
 
-  * ``max_length`` 定义 ``<input>`` 最大长度, 并具有验证功能.
+* ``max_length`` 定义 ``<input>`` 最大长度, 并具有验证功能.
 
-  * ``help_text`` 在 render 时放在 field 旁边.
+* ``help_text`` 在 render 时放在 field 旁边.
 
-  * ``error_messages`` overrides default field validation errors.
+* ``error_messages`` overrides default field validation errors.
 
 widget
 ------
