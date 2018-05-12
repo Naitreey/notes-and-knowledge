@@ -1904,6 +1904,12 @@ Form
 
 * When we instantiate a form, we can opt to leave it empty or pre-populate it.
 
+constructor options
+^^^^^^^^^^^^^^^^^^^
+
+- ``initial``. 设置 form fields 的初始值. 这些初始值会 override field definition
+  中的初始值. (instance-time options override class definition-time options.)
+
 methods
 ^^^^^^^
 
@@ -1964,6 +1970,15 @@ Form validation
 - ``errors``. 获取 Form 的错误信息. 若未验证, 调用 ``Form.full_clean()``
   验证 form.
 
+form inheritance
+^^^^^^^^^^^^^^^^
+
+- ``Form`` 类继承时, 父类的列在先, 子类的列在后. 对于多继承, 列的先后顺序
+  根据各父类的远近关系按由远至近的顺序. 这里的远近关系值的是在 MRO 中的顺序
+  的逆序, 在 MRO 中越靠后越远.
+
+- 若要删除从父类继承的某个列, 设置它为 None.
+
 ModelForm
 ---------
 
@@ -2015,7 +2030,9 @@ constructor options
   一些列. 这样, 在 validation 时, 可能会修改传入的 model instance. 若验证
   失败, 传入的 model instance 可能处于 inconsistent state, 不适合再次使用.
 
-- ``initial``. 设置 form field 的初始值.
+  instance 上的各列值与 ``initial`` 参数的初始值, 合并在一起, 作为 BaseForm
+  的 ``initial`` 参数, 即作为 Form 的初始值. ``initial`` 的值 overrides
+  ``instance`` 上的值.
 
 attributes
 ^^^^^^^^^^
@@ -2116,12 +2133,32 @@ model form validation
     validation by adding the NON_FIELD_ERRORS key to the error_messages
     dictionary of the ModelForm’s inner Meta class.
 
-inheritance
------------
+model form inheritance
+^^^^^^^^^^^^^^^^^^^^^^
 
-- ``Form`` 类继承时, 父类的列在先, 子类的列在后. 对于多继承, 列的先后顺序
-  根据各父类的远近关系按由远至近的顺序. 这里的远近关系值的是在 MRO 中的顺序
-  的逆序, 在 MRO 中越靠后越远.
+- 遵循与 Form inheritance 相同的规则.
+
+- Meta class 是自动继承的 (作为 class attribute), 若要自定义可明确继承.
+
+- 在 parent form 中 declaratively defined additional fields 可以设置
+  None 来移除. 但 ModelForm 自动生成的列并不能这样移除. 仍需要设置
+  Meta.exclude option.
+
+ModelForm factory
+^^^^^^^^^^^^^^^^^
+
+- ``modelform_factory()``.
+
+- 对于从 Model 至 ModelForm 自动映射生成的 Form class, 如果没有很多自定义
+  需求, 可以使用 ``modelform_factory()`` function, 省得写 class definition.
+
+- 还可用于基于现有的 ModelForm, 做一些小的修改, 生成新的 ModelForm.
+
+parameters
+""""""""""
+
+model formsets
+--------------
 
 form field
 ----------
@@ -2197,7 +2234,8 @@ methods
 - ``label_tag()``. field's label wrapped in ``<label>`` tag, including
   ``Form.label_suffix``.
   
-- ``value()``. field's value.
+- ``value()``. 根据该 bound field 所属的 form 是否 ``is_bound``, 给出该列
+  的初始值 (``Form.initial`` 或者 ``Field.initial``) 或数据值.
 
 Export
 ======
