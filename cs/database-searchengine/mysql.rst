@@ -2628,19 +2628,6 @@ mysql data types in python
 mysql vs postgresql
 ===================
 
-- encoding.
-
-  mysql 5.7 仍然不是默认 utf-8 编码. 而且要在 mysql 中使用真正的 utf-8
-  编码需要使用奇葩的 utf8mb4.
- 
-  postgresql 默认是 utf-8.
-
-- select ... for update.
-
-  mysql 不支持 ``NOWAIT``, ``SKIP LOCKED``, which is VERY IMPORTANT features!
-
-  postgresql 支持得很好.
-
 - default isolation level.
 
   mysql 使用 repeatable read. postgresql 使用 read committed.
