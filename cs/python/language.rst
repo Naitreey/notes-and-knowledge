@@ -541,16 +541,22 @@ instance method 定义第一个参数是 ``cls``, class method 的第一个
 
 methods.
 
-- ``metaclass.__new__(metaclass, name, bases, namespace, **kwargs)``. 
-  本质上就是 ``object.__new__``. 不同的是, 在 metaclass 语境下, 第一个
-  参数即要实例化的类, 现在变成了 metaclass. 后面的三个参数也是解释器
-  自动添加的. kwargs 是在 class definition line 上指定的.
-
 - ``metaclass.__prepare__(metaclass, name, bases, **kwargs)``.
   这是一个 class method. 定义时需要使用 classmethod decorator.
   在上述的 prepare class body namespace 步骤中调用, 返回一个准备好的
   namespace. 返回的应该是一个 MutableMapping instance, e.g. dict,
-  OrderedDict.
+  OrderedDict. By default, class namespace is initialised as an empty ordered
+  mapping.
+
+  注意这个 classmethod 是在调用 ``name = metaclass(...)`` 之前执行的, 其输出
+  作为 ``metaclass()`` call 中的 namespace 参数值. 因此, ``__prepare__``
+  应定义在 ``__new__`` 的前面.
+
+- ``metaclass.__new__(metaclass, name, bases, namespace, **kwargs)``. 
+  本质上是 override ``object.__new__`` classmethod. 不同的是, 在 metaclass
+  语境下, 第一个参数是现在变成了 metaclass. 后面三个 positionals 形式和意义
+  是固定的. 使用 ``metaclass(...)`` 手动提供或使用 class definition statement
+  由解释器自动添加. kwargs 是在 class definition line 上指定的.
 
 Expressions
 ===========
