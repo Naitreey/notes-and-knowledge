@@ -398,9 +398,10 @@ view, template, form/formset 的设计思考
   js 进行输入), 而不是直接从 form 中去掉这项. 注意 view 中逻辑需要对 hidden
   input 的数据合法性进行验证.
 
-* form validation. 不要在 view 本身的逻辑中写 form 本身数据 validation 逻辑,
-  要归入 form class 的定义中, 对于 model form 的情况, 还可考虑是否应当
-  再归入 model class 中, 即从 model 层对数据的合法性进行进一步限制.
+* form clean & validation. 不要在 view 本身的逻辑中写 form 本身数据 clean &
+  validation 逻辑, 要归入 form class 的定义中, 对于 model form 的情况,
+  还可考虑是否应当 再归入 model class 中, 即从 model
+  层对数据的合法性进行进一步限制.
 
   但对于 form data 是否 suspicious 之类的检查, 需要在 view 中进行.
 
@@ -1910,9 +1911,48 @@ constructor options
 - ``initial``. 设置 form fields 的初始值. 这些初始值会 override field definition
   中的初始值. (instance-time options override class definition-time options.)
 
+class attributes
+^^^^^^^^^^^^^^^^
+- ``declared_fields``. declaratively defined fields. An OrderedDict.
+
+- ``base_fields``. all fields. For normal Form, this is the same as
+  ``declared_fields``. For ModelForm, 包含 declared fields and auto-generated
+  fields. Also An OrderedDict.
+
+attributes
+^^^^^^^^^^
+- ``errors``. 获取 Form 的错误信息. 若未验证, 自动调用 ``Form.full_clean()``
+  验证 form.
+
 methods
 ^^^^^^^
 
+cleaning & validation
+""""""""""""""""""""""
+- ``is_valid()``. Check whether or not the form is valid. If the form is
+  not validated yet, 访问 ``errors`` property 的操作会自动进行验证.
+
+- ``full_clean()``.
+
+- ``clean()``. Custom Form 若要进行 form-level 的 clean & validation (而不是
+  form field-level), 可自定义这个方法.
+
+- ``clean_<fieldname>()``. form-level clean & validation on a specific
+  field. 对于一个列, 如果它的某部分 clean & validation 逻辑不是仅仅对列值
+  自身进行验证, 而是需要一些 form-level 的考量, 或者某些相关的外部信息,
+  则可以放在这里. 注意这里仍然是关于这个列单独去考虑时具有的 clean &
+  validation 逻辑. 若涉及多个列的关系, 应该放在 ``Form.clean()`` 中.
+
+  在调用该方法时, ``<fieldname>.clean()`` method is called already, 因此
+  ``Form.cleaned_data`` 中相应位置已经转换成了相对于列定义而言是合法的
+  数据格式.
+
+- ``non_field_errors()``.
+
+- ``add_error()``.
+
+field visibility
+""""""""""""""""
 - ``hidden_fields()``
 
 - ``visible_fields()``
@@ -1957,18 +1997,39 @@ bound and unbound form
 - bound form: has data. can tell if data is valid, 若数据非法, 会生成
   相应的错误信息, 可填入模板, 返回给用户.
 
-Form validation
-^^^^^^^^^^^^^^^
-- ``is_valid()``. Run validation routines for all fields. If valid, place
-  form data in ``cleaned_data`` attribute.
+Form clean & validation
+^^^^^^^^^^^^^^^^^^^^^^^
+- Form cleaning and validation 可通过几个点触发:
 
-- ``full_clean()``.
+  * call ``is_valid()``
+  
+  * access ``errors`` property
+  
+  * call ``full_clean()``
 
-- ``clean()``. Custom Form 若要进行 form-level 的 validation (而不是 form
-  field-level), 可自定义这个方法.
+- Form 的 clean & validation 整体逻辑由 ``full_clean()`` 控制. 遵从以下步骤:
 
-- ``errors``. 获取 Form 的错误信息. 若未验证, 调用 ``Form.full_clean()``
-  验证 form.
+  * clean & validation of form fields ``_clean_fields()``. 对每个 field,
+
+    - 调用 ``Field.clean()`` 进行 form field 定义的 clean & validation logic.
+
+    - 调用 form-level 定义的 ``clean_<fieldname>()`` method, 若有定义.
+
+    若以上任一方法 raise ValidationError, 记录错误至 ``Form.errors``.
+    停止该 field validation, 进行下一个 field validation.
+
+  * clean & validation of form in general ``_clean_form()``.
+
+    - 调用 ``Form.clean()`` 进行 form-level 整体 clean & validation.
+
+    这里的 ValidationError 会加入 NON_FIELD_ERRORS, ``clean()`` 返回的
+    data 会设置为新的 ``Form.cleaned_data``.
+
+  * post clean & validation hook ``_post_clean()``.
+    See `model form clean & validation`_.
+
+- 在 clean & validation 之后, 最终的有效 form data 只能从 ``Form.cleaned_data``
+  获取.
 
 form inheritance
 ^^^^^^^^^^^^^^^^
@@ -1996,7 +2057,7 @@ Meta options
 ^^^^^^^^^^^^
 
 specifying fields
-""""""""""""""""""
+"""""""""""""""""
 - ``fields``. 设置 model form 中包含的列. ``'__all__'`` 自动包含所有列.
 
   It is strongly recommended that you explicitly set all fields that should
@@ -2026,19 +2087,22 @@ localization
 constructor options
 ^^^^^^^^^^^^^^^^^^^
 
-- ``instance``. 将 form 与一个现存的 model instance 关联, 为了更新它的
-  一些列. 这样, 在 validation 时, 可能会修改传入的 model instance. 若验证
-  失败, 传入的 model instance 可能处于 inconsistent state, 不适合再次使用.
+- ``instance``. 将 form 与一个现存的 model instance 关联, 为了更新它的 一些列.
+  这样, 在 clean & validation 时, 可能会修改传入的 model instance. 若验证失败,
+  传入的 model instance 可能处于 inconsistent state, 不适合再次使用.
 
   instance 上的各列值与 ``initial`` 参数的初始值, 合并在一起, 作为 BaseForm
   的 ``initial`` 参数, 即作为 Form 的初始值. ``initial`` 的值 overrides
   ``instance`` 上的值.
 
+class attributes
+^^^^^^^^^^^^^^^^
+
 attributes
 ^^^^^^^^^^
 
-- ``instance``. 对于 bound model form, form validation 之后, 生成的 model
-  instance 会保存在这里.
+- ``instance``. 对于 bound model form, form clean & validation 之后, 生成的
+  model instance 会保存在这里.
 
   Any fields not included in a form will not be set by model form. 这些列的值
   可通过在 ModelForm, Model 等的 hooks 中设置, ModelForm 的 ``initial`` 参数
@@ -2077,7 +2141,11 @@ Auto-generated fields
 
   * ``TextField`` -> ``CharField``, widget 为 ``forms.Textarea``.
 
-  * ``ForeignKey`` -> ``ModelChoiceField``.
+  * ``ForeignKey`` -> ``ModelChoiceField``. 参数默认值:
+
+    - ``queryset``: remote model default manager's all.
+
+    - ``to_field_name``: ``ForeignKey.to_field``.
 
   * ``ManyToManyField`` -> ``ModelMultipleChoiceField``.
 
@@ -2113,25 +2181,18 @@ Custom fields
   ModelForm will only generate fields that are missing from the form, or in
   other words, fields that weren’t defined declaratively.
 
-model form validation
-^^^^^^^^^^^^^^^^^^^^^
-- ModelForm 在普通的 Form validation 逻辑之后, 实现了 ``Form._post_clean()``
-  hook. 在该方法中, ModelForm 调用了 Model instance 的 validation 逻辑
-  ``Model.full_clean()``.
+model form clean & validation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- ModelForm 在普通的 Form clean & validation 逻辑之后, 实现了
+  ``Form._post_clean()`` hook. 执行逻辑:
 
-- error messages definition.
-  
-  * Error messages defined at the form field level or at the form Meta level
-    always take precedence over the error messages defined at the model field
-    level.
+  * 使用 ``Form.cleaned_data`` 填充 ``ModelForm.instance``.
+ 
+  * 调用 ``Model.full_clean()`` 进行 model instance clean & validation.
 
-  * Error messages defined on model fields are only used when the
-    ValidationError is raised during the model validation step and no
-    corresponding error messages are defined at the form level.
+  * 调用 ``Model.validate_unique()``.
 
-  * You can override the error messages from NON_FIELD_ERRORS raised by model
-    validation by adding the NON_FIELD_ERRORS key to the error_messages
-    dictionary of the ModelForm’s inner Meta class.
+  以上每个步骤中 raise ValidationError, 不影响剩下的执行.
 
 model form inheritance
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -2157,6 +2218,114 @@ ModelForm factory
 parameters
 """"""""""
 
+form and model cleaning and validation in general
+-------------------------------------------------
+
+normal form cleaning and validation procedure
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+See `Form clean & validation`_ for detail.
+
+- For each form field
+ 
+  * 调用 field-level cleaning and validations.
+
+  * 调用 field-specific cleaning and validation method defined on form class
+    ``clean_<fieldname>()``.
+
+- For form level, call ``clean()``.
+
+- Call post clean hook. noop by default.
+
+form field cleaning and validation procedure
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+See `form field clean & validation`_ for detail.
+
+- ``to_python()``
+
+- ``validate()``
+
+- ``run_validators()``
+
+model form cleaning and validation procedure
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+See `model form clean & validation`_ for detail.
+
+- 前两步同上.
+
+- post clean hook 中进行 model-level clean and validation.
+
+model instance cleaning and validation procedure
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+See `model instance clean & validation`_.
+
+- For each model field, 调用 field-level cleaning and validation.
+
+- For model-level, call ``clean()``.
+
+model field cleaning and validation procedure
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- ``to_python()``
+
+- field-level validation ``validate()``
+
+- run all validators.
+
+Validation errors and messages
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- 在 clean & validation methods 中, 若验证失败, 应 raise ValidationError with
+  appropriate arguments. 这包含 form-level, form field-level, model-level,
+  model field-level 各种 clean & validation 相关方法.
+
+ValidationError
+""""""""""""""""
+- constructor options.
+
+  * message.
+    
+    A message Can be
+    
+    - a single error
+     
+    - a list of errors. 这可用于当一个 validation 操作发现多个错误.
+     
+    - a dict mapping from field names to a list of errors.
+
+    An error can be:
+
+    - A string.
+
+    - A ValidationError instance with ``message`` attribute.
+
+    A list or dict can be:
+
+    - an actual list or dict
+
+    - A ValidationError with ``error_list`` or ``error_dict`` attribute.
+
+  * code. error code.
+
+  * params. a dict of string interpolation parameters corresponding to
+    ``message``.
+
+error messages
+""""""""""""""
+  
+  * Error messages defined at the form field level or at the form Meta level
+    always take precedence over the error messages defined at the model field
+    level.
+
+  * Error messages defined on model fields are only used when the
+    ValidationError is raised during the model clean & validation step and no
+    corresponding error messages are defined at the form level.
+
+  * You can override the error messages from NON_FIELD_ERRORS raised by model
+    clean & validation by adding the NON_FIELD_ERRORS key to the error_messages
+    dictionary of the ModelForm’s inner Meta class.
+
 model formsets
 --------------
 
@@ -2171,25 +2340,6 @@ form field
   a piece of user interface machinery. Each field type has an appropriate
   default ``Widget`` class.
 
-field types
-^^^^^^^^^^^
-
-* ``FilePathField``
-
-* ``ModelChoiceField`` 的参数是待选的 QuerySet.
-
-* ``ModelMultipleChoiceField`` 的参数是待选的 QuerySet.
-
-* ``CharField``
-
-* ``FileField``, bound 之后的值 ``.value()`` 是 ``UploadedFile`` instance.
-
-* ``URLField``. html input type is ``url``.
-
-* ``EmailField``. html input type is ``email``.
-
-* All integer fields. html input type is ``number``.
-
 field options
 ^^^^^^^^^^^^^
 
@@ -2200,6 +2350,131 @@ field options
 * ``help_text`` 在 render 时放在 field 旁边.
 
 * ``error_messages`` overrides default field validation errors.
+
+methods
+^^^^^^^
+
+clean & validation
+""""""""""""""""""
+
+- ``clean(value)``. handle `form field clean & validation`_, return cleaned
+  value.
+
+- ``to_python(value)``. 将 form field data 转换成该列预期的数据类型.
+
+- ``validate(value)``. field-specific validation that is not suitable for a
+  validator. 也就是不仅仅是对 value 的验证, 而可能需要考虑 field-level
+  的一些特性. This method does not return anything and shouldn’t alter the
+  value.
+
+- ``run_validators(value)``. Run ``Field.validators``, aggregates all the
+  errors into a single ValidationError.
+
+field types
+^^^^^^^^^^^
+
+FilePathField
+""""""""""""""
+
+CharField
+""""""""""
+- constructor parameters.
+
+  * ``empty_value``. default is ``""``. 意味着默认情况下所有的
+    ``Field.empty_values`` 在 ``to_python()`` 时都会转换成空字符串.
+
+  * ``strip``. 默认 leading and trailing whitespace chars are stripped.
+    对于比如密码等输入, 则不该 strip.
+
+- 关于区分 empty string & NULL. Django 强制认为 empty string & None 是
+  一样的. 因此, 对于 CharField 而言, form data 是 "" 或 None 都会
+  转换成 ``CharField.empty_value``, 无论这个值是什么.
+
+  若要一个 CharField, 只有 NULL 时才认为是空值, 而对 "" 有别的含义. 可以
+  定义类似 `snippets/nullcharfield.py`.
+
+FileField
+""""""""""
+bound 之后的值 ``.value()`` 是 ``UploadedFile`` instance.
+
+URLField
+""""""""
+html input type is ``url``.
+
+EmailField
+""""""""""
+html input type is ``email``.
+
+integer fields
+""""""""""""""
+* All integer fields. html input type is ``number``.
+
+ModelChoiceField
+""""""""""""""""
+- a subclass of ChoiceField.
+
+- 用于选择一个 model object, 例如作为 foreign key relation.
+
+- 当需要在前端进行复杂筛选时, ModelChoiceField 根本不适合直接 render 至
+  html 形式. 因为复杂筛选一般需要 js 插件实现, ajax 加载所需数据. 这时,
+  这个列的作用主要是后端抽象, 进行验证等.
+
+- constructor options.
+
+  * ``queryset``. 待选的 QuerySet, also used for validate user selection.
+    This is required. 
+
+  * ``empty_label``. empty option's text. empty option can be disabled by
+    setting this to ``None``. default is ``---------``.
+
+  * ``to_field_name``. Select widget 的 option list 使用 model 的哪个列值
+    作为 option value. The field must ensure uniqueness in the queryset.
+    default is None, causing the primary key is used.
+
+- methods.
+
+  * ``label_from_instance(obj)``. 给出对应于 model instance 的 option text.
+    默认给出 string representation.
+
+- cleaning & validation:
+
+  * ``to_python()`` 将 form data 匹配 ``to_field_name`` 列, 从 queryset
+    中解析成一个 model instance.
+
+- error message codes:
+
+  * ``required``. (inherited from Field.)
+
+  * ``invalid_choice``.
+
+- 如果 queryset 需要根据一些外部参数动态生成, 可在 form 实例化时设置
+  ModelChoiceField 的 queryset 参数::
+
+    # in form class 
+    def __init__(self, *args, **kwargs):
+        self.fields['<name>'].queryset = ...
+
+ModelMultipleChoiceField
+""""""""""""""""""""""""
+参数是待选的 QuerySet.
+
+form field clean & validation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+form field clean & validation 由 ``Field.clean(value)`` method 实现. 步骤为:
+
+- 调用 ``to_python(value)``.
+
+- 调用 ``validate(value)``.
+
+- 调用 ``run_validators(value)``.
+
+以上任一 raise ValidationError 则立即停止.
+
+validators
+""""""""""
+Validators are run after the field’s to_python and validate methods have been
+called.
 
 widget
 ------
@@ -2235,7 +2510,9 @@ methods
   ``Form.label_suffix``.
   
 - ``value()``. 根据该 bound field 所属的 form 是否 ``is_bound``, 给出该列
-  的初始值 (``Form.initial`` 或者 ``Field.initial``) 或数据值.
+  的初始值 (``Form.initial`` 或者 ``Field.initial``) 或数据值. 注意这个
+  值只是赋予这个 form field 的值, 它可能是合法的也可能不是. form clean
+  & validation 并不修改这个值.
 
 Export
 ======
@@ -2485,14 +2762,14 @@ to the parent class and then don’t use them later on.
   OneToOneField 一定是 unqiue 的, 设不设都行.
   ManyToManyField 由于本身不是一个列, 不支持 unique option.
 
-  unique constraint is checked during model instance validation, and enforced
-  in db.
+  unique constraint is checked during model instance clean & validation, and
+  enforced in db.
 
 - ``unique_for_date``, ``unqiue_for_month``, ``unique_for_year``.
   this field is unqiue with respect to the specified period of time.
   该选项的值为所参考的时间列.
 
-  在 model instance validation 时检查. 
+  在 model instance clean & validation 时检查. 
 
 - ``default``.
   a value or callable. lambda 不能做 default, 因为不能 serialized in migration.
@@ -2754,7 +3031,7 @@ field checkings.
 
   * backend-specific field checks.
 
-form validation.
+model clean & validation.
 
 - ``clean(value, model_instance)``.
   1. 调用 to_python() 转换 value 为合法列值(或报错).
@@ -3027,8 +3304,7 @@ field types
 - ``JSONField``. postgresql 可以使用 native JSONField, 对于 mysql 5.7+ 可以使用
   django-mysql module 提供的 JSONField.
 
-- ``BinaryField``. 其值必须是 bytes instance.
-  BinaryField 的 ``editable=False``, 它不会出现在 model form 中.
+- ``BinaryField``. 其值必须是 bytes instance. 限制它不能出现在 model form 中.
 
   注意 binary field 不是用来保存静态文件的, 静态文件还是要在文件系统中保存.
   这只是用于保存小量的只读只写的特殊用途的 binary data.
@@ -3053,7 +3329,7 @@ field types
   一般用法是设置 ``default=uuid.uuid4`` callable.
 
 relation fields
-'''''''''''''''
+""""""""""""""""
 
 relational fields 的说明.
 
@@ -3171,6 +3447,9 @@ concrete forward relations.
   - OTO field 的 ``parent_link`` 结合 conrete model inheritance 时有特殊作用,
     它让父类的 field 可在子类即 OTO field 所在 model 中直接访问.
 
+  - ``related_name``. 由于反向关系直接给出一个 model instance, by default
+    ``related_name`` is lower-case name of the current model.
+
 - ``ManyToManyField``: many-to-many relation.
 
   - 由于一个列无法体现多对多的关系, ``ManyToManyField`` 在实现时, 不是构成了一个列,
@@ -3229,14 +3508,8 @@ index 通过 ``Model.Meta.indexes`` option 指定, a list of Index objects.
   fallback 至 field's db_tablespace; 若未指定或是复合索引, fallback 至
   model ``Meta.db_tablespace``.
 
-model instance & form instance validations
-------------------------------------------
-
-* instantiation.
-
-  - 在创建 model instance 时, 对于 FK field, 有两种指定方式:
-    ``<FK-field>=<FK-model-object>``, ``<FK>_id=<FK-model-object>.{id|pk}``.
-    这不同于 field lookup, 不支持 id 和 object 交叉混合的方式.
+model instance clean & validation
+---------------------------------
 
 * 在定义 model class 时, 要考虑应该在 model 层就限制的数据合法性要求.
   这包括:
@@ -3246,7 +3519,7 @@ model instance & form instance validations
 
   - 对于 model 内各数据之间的制约关系, 自定义 model 的 clean methods 等.
 
-* model instance validation.
+* model instance clean & validation.
 
   ``.save()`` 时不会自动调用 ``.full_clean()`` (因 form 验证时会执行它),
   若 model instance 不是来源于上层 form, 这验证操作必须手动执行. 或者
@@ -3318,6 +3591,12 @@ builtin validators ``django.core.validators``.
 
 model instance
 --------------
+* instantiation.
+
+  - 在创建 model instance 时, 对于 FK field, 有两种指定方式:
+    ``<FK-field>=<FK-model-object>``, ``<FK>_id=<FK-model-object>.{id|pk}``.
+    这不同于 field lookup, 不支持 id 和 object 交叉混合的方式.
+
 - 对于 model class 在实例化时, Django doesn’t hit the database until you
   explicitly call ``save()``.
 
@@ -3986,7 +4265,8 @@ database transactions
   transaction 被去掉后, hook 仍能得到执行. 尽管执行时机不一定合理.
 
   ``on_commit`` hook 还是挺有用的. 例如无法在 transaction 外部直接添加后续执行
-  逻辑时, 就可以通过这个 hook 加入代码.
+  逻辑时, 就可以通过这个 hook 加入代码. 具体而言, 例如在 view 中注册一个
+  on commit hook, 在 commit 成功后才发送 celery task, 保证执行顺序.
 
 * low-level APIs.
 
