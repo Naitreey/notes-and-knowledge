@@ -502,13 +502,20 @@ to boolean
 
 - Object: true.
 
-protocols
-=========
+iteration and generation
+========================
 
 iterable protocol
 -----------------
-- iterable: an object that implements the @@iterator method, which returns an
-  iterator object.
+- iterable: an object (or one of the objects up its prototype chain) that
+  implements the @@iterator method, which returns an iterator object.
+
+- The @@iterator method can be implemented by:
+
+  * a normal function that manually returns a iterator object.
+
+  * a generator function that, when called, returns a generator object
+    (which is also an iterator) automatically.
 
 - Whenever an object needs to be iterated, its @@iterator method is called with
   no arguments, and the returned iterator is used to obtain a sequence of values
@@ -528,6 +535,20 @@ iterable protocol
 
   * Set.
 
+- iterable protocol is useful in various circumstances. e.g.:
+
+  * for-of statement.
+
+  * spread syntax ``...``::
+
+      [..."sef"] == ["s", "e", "f"]
+
+  * delegated yield statement: ``yield*``.
+
+  * destructuring assignment.
+
+  * various container object constructors. e.g., Map(), Set(), etc.
+
 iterator protocol
 -----------------
 - iterator protocol defines a standard way to produce a sequence of values.
@@ -543,6 +564,24 @@ iterator protocol
 
   If non-object is returned by iterator's ``next()`` method, TypeError is
   raised.
+
+generator function
+------------------
+
+- A GeneratorFunction is a special type of function that works as a factory for
+  generator iterators. 
+
+- Use ``function*`` keyword to define a generator function.
+
+generator
+---------
+
+- A generator object is both an iterable and an iterator.
+  Its @@iterator method simply returns itself.::
+
+    function* f() {yield 1;}
+    let g = f();
+    g[Symbol.iterator]() === g
 
 statements
 ==========
