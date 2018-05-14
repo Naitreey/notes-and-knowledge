@@ -37,7 +37,7 @@ Data model
 
 The standard type hierarchy
 ---------------------------
-包含对一系列类型概念的标准陈述.
+包含对一系列类型的标准陈述.
 
 module
 ^^^^^^
@@ -658,6 +658,10 @@ slicing (包含 subscription) 是通过 ``__getitem__`` 实现.
 Statements
 ==========
 
+assignment statements
+---------------------
+
+
 import statement
 ----------------
 
@@ -775,6 +779,33 @@ class definitions
     时消除状态.
 
   * 需要对实例进行额外的修改, 且这些修改在逻辑上不是该类的一部分.
+
+iteration and generation
+========================
+
+generator function
+------------------
+
+- Generator function 的重要意义在于简化对 iterable protocol 的实现流程.
+  手动构建 iterable 需要处理:
+  
+  * 构建含 ``__iter__`` 方法的 iterable 类
+   
+  * 构建包含 ``__next__`` 方法的 iterator 返回值
+   
+  * 手动维持 iterator 内部状态.
+
+  这些麻烦通过 generator function (yield) & interpreter magic 可以方便地解决.
+
+- generator function is not inherently more CPU/memory efficient than manually
+  defined iterables, when generating a large sequence of values. 无论是
+  generator 还是 iterator, 写好了都可以高效, 也都可以低效.
+
+generator
+---------
+
+- A generator object is both an iterator and iterable.
+  Its ``__iter__`` method simply returns itself.
 
 built-in exception hierarchy
 ============================
