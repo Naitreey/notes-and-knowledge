@@ -2790,8 +2790,7 @@ to the parent class and then don’t use them later on.
   field 值为 None; 若 True, create table 时有 ``NULL``, 且允许 field 值
   为 None.
 
-  ``blank`` 是规定 form validation 时是否允许空值.
-  两者的意义是不同的.
+  ``blank`` 是规定 form validation 时是否允许空值. 两者的意义是不同的.
   ``null`` 和 ``blank`` 的默认值都是 ``False``.
 
   .. TODO read with form
@@ -3519,16 +3518,9 @@ model instance clean & validation
 
   - 对于 model 内各数据之间的制约关系, 自定义 model 的 clean methods 等.
 
-* model instance clean & validation.
-
-  ``.save()`` 时不会自动调用 ``.full_clean()`` (因 form 验证时会执行它),
+* ``.save()`` 时不会自动调用 ``.full_clean()`` (因 form 验证时会执行它),
   若 model instance 不是来源于上层 form, 这验证操作必须手动执行. 或者
   等着数据库下层报错.
-
-  ``Model.full_clean()`` 默认只进行数据库层 data integrity 方面的检验.
-  field 中的很多限制条件, 例如 ``choices``, ``blank``, 以及一些 field type, 例如
-  ``FilePathField`` 等, 本身不能限制存储的值, 因为这些条件不能在数据库中表达.
-  这些条件只有配合 ``ModelForm`` 使用, 才能有用.
 
 validators
 ----------
@@ -3609,23 +3601,247 @@ model instance
 
 QuerySet
 --------
-- QuerySet 封装了 database entries 数据以及对数据的 CRUD 和聚合等操作.
+
+evaluation and cache
+^^^^^^^^^^^^^^^^^^^^
+
+evaluation
+""""""""""
+- QuerySets are lazy. 在必须访问数据库之前, 所有的过滤筛选等操作都只在内存
+  中构建类似于 AST 的结构, 并不编译至 SQL 语句和访问数据库执行语句. 这种
+  不同阶段的分工类似于解释器 lex 阶段构建语法树, 编译阶段生成可执行 bytecode.
+
+- 以下操作导致 queryset being evaluated:
+
+  * iteration. Any operation that calls ``__iter__``.
+
+  * Slicing operation that involves ``step`` argument.
+
+  * Pickle queryset.
+
+  * representation ``__repr__``
+
+  * length ``__len__``
+
+  * testing queryset in a boolean context ``__bool__``.
+
+- 注意并不是所有 queryset evaluation 都会填充 cache.
+
+cache
+""""""
+- QuerySet cache. The first time a QuerySet is evaluated – and, hence, a
+  database query happens – Django saves the query results in the QuerySet’s
+  cache and returns the results that have been explicitly requested. Subsequent
+  evaluations of the QuerySet reuse the cached results.
+
+- QuerySet slicing 时的 cache 处理.
+
+  当取一个 QuerySet 的部分数据时 (通过 extended indexing syntax, 即转换成
+  ``OFFSET`` ``LIMIT``), 若本身有 cache, 则直接返回结果, 否则只访问数据库
+  (如果需要访问的话) 进行所需部分数据的查询和返回, 并不 cache. 这里的抽象
+  逻辑是, slicing 和 indexing 这些操作是在一个完整的 QuerySet 上进行的部分
+  截取. 而 cache 是属于 QuerySet 的, 若有则应该包含它代表的所有数据.
+
+- ``bool(queryset)`` 会计算整个 ``queryset``, 从而填入 cache.
+
+- ``print()`` ``repr()`` 只计算整个 QuerySet 的一个 slice, 因此不会填入
+  cache.
+
+- QuerySet 的外键列的 cache 处理.
+
+  若模型包含 ``ForeignKey`` ``OneToOneField`` field 时, QuerySet 在取实例时
+  相当于只将 FK_id 取回来, 而不会自动 JOIN 表查询取到关联的对象数据. 这是
+  为了避免不必要的 overhead. 当用户明确要访问 FK object 这个属性时, 才再次
+  访问数据库将数据填入 cache, 返回真实的关联对象. 之后再访问该属性时不再
+  访问数据库.
+
+pickling
+^^^^^^^^
+- Pickle a queryset force all results to be loaded and cached. 这是因为 pickle
+  的目的往往是为了能从 pickled 数据快速重建原对象. 如果不保存 queryset 中的实例,
+  仍需从数据库中获取 (较慢, 并依赖于外部数据库), 就失去了 pickle 的意义.
+
+- 注意 when you unpickle a QuerySet, it contains the results at the moment it
+  was pickled, rather than the results that are currently in the database.
+
+- 若希望 unpickle 时从数据库重新加载内容. 可只 pickle ``QuerySet.query`` attribute.
+
+constructor options
+^^^^^^^^^^^^^^^^^^^
+- model. 与这个 QuerySet 关联的 model.
+
+- query. 设置与这个 QuerySet 关联的底层 SQL Query object. 默认 None, 创建一个新的
+  Query object.
+
+- using. 限制操作在哪个数据库上. 默认 None, 不指定.
+
+attributes
+^^^^^^^^^^
+- model.
+
+- query. 与这个 QuerySet 关联的底层 SQL Query object. 这个 Query object
+  保持着 QuerySet 的所有 internal sql query state.
+
+- ordered. whether or not the queryset is ordered.
+  A queryset is ordered if one the following is true:
+
+  * it has a ``order_by()`` clause
+
+  * its model has a default ordering ``Meta.ordering``.
+
+  检查一个 QuerySet 的最终 ORDER BY 效果::
+
+    QuerySet.query.get_compiler(DEFAULT_DB_ALIAS).get_order_by()
+
+- db. the db to be used for this queryset.
+
+methods
+^^^^^^^
+- QuerySet 封装了 database entries 以及对数据的 CRUD 和聚合等操作.
 
 - 获取对象的各个方法在 ``Manager`` 和 ``QuerySet`` 中都有 (在 QuerySet 中定义,
   expose to Manager 中), 且可以串联在一起. ``.delete()`` 是唯一的 QuerySet 有
-  但 Manager 的没有的方法 (为了避免误删全部).
+  但 Manager 没有的方法 (为了避免误删全部).
+
+representation
+""""""""""""""
+- ``__repr__``.
+
+boolean operation
+""""""""""""""""""
+- ``__bool__``.
+
+pickling
+""""""""
+- ``__getstate__``
+
+- ``__setstate__``
+
+limiting queryset
+"""""""""""""""""
+- slicing operation (extended index syntax), ``__getitem__``.
+
+  * Slicing an unevaluated QuerySet without ``step`` argument, returns another
+    unevaluated QuerySet. Slicing with ``step`` argument will evaluate the
+    queryset.
+
+  * Slicing an evaluated queryset returns a list of object. Thus, slicing with
+    step parameter will return a list (queryset is evaluated implicitly).
+
+  * A sliced queryset can not be modified further, since it doesn't translate
+    well to SQL.
+
+counting
+""""""""
+- ``count()``
+
+- ``__len__()``. 这需要 fetch all objects, 只有当 cache 已经填充, 或者后续需要
+  使用 cache 时才这么用. 若只需要 count, 使用 ``count()``.
+
+filtering
+""""""""""
+
+- ``filter(*args, **kwargs)``.  positionals 是 Q objects, kwargs 为 field
+  lookup syntax. 匹配所有条件同时满足的.
+
+- ``exclude(*args, **kwargs)``. ditto. 但是排除所有条件同时满足的. 实现上
+  相当于 ``filter(~Q(*args, **kwargs))``. SQL::
+ 
+    NOT (condition1 AND condition2)
+
+  若要排除 matching condition1 OR matching condition2 的::
+
+    exclude(<condition1>).exclude(<condition2>)
+
+  SQL::
+
+    NOT condition1 AND NOT condition2
+
+sorting
+""""""""
+
+aggregation
+""""""""""""
+- ``annotate(*args, **kwargs)``
+  Annotates each object in the QuerySet with the provided list of query
+  expressions.
+  
+  这不仅仅可用于 ``GROUP BY`` 聚合, 还可用于对每行返回所需
+  的运算结果, 即 annotate 的一般含义. 使用这个一般意义, 还可以进行 sql
+  ``SELECT name AS name2`` 操作: ``queryset.annotate(name2=F("name"))``.
+
+  * 到底是聚合, 还是单纯地 annotation, 取决于使用的 query expression
+    的属性和操作.
+
+  * annotate 语法与 aggregate 相同, 但是每个聚合值是 attach 到各个
+    元素上的, 成为元素的 attribute.
+    
+  * attribute name.
+    
+    对于 kwargs, keys 成为新增的 attribute names.
+    
+    对于 positionals, attribute name is generated for them based upon the name
+    of the aggregate function and the model field that is being aggregated::
+
+      <field_name>__<expression_name>
+
+    Only aggregate expressions that reference a single field can be positional.
+
+  * 由于结果成为了 attributes, 返回的仍是一个 QuerySet, 因此可以继续
+    operation chain.
+
+  * annotate 增加的 attributes 可以在后续的 operation chain 中使用, 例如
+    用于进一步 ``filter()``.
+
+  * 使用 annotate 进行多项聚合时必须要谨慎, 很可能结果不对, 并且必要时检查
+    生成的 raw sql statements. 多项聚合结果可能错误的原因是 django 简单
+    地将多项聚合条件涉及的所有表 join 在一起, 然后再算聚合值.
+
+  * GROUP BY 使用的列.
+    
+    - 默认情况下, GROUP BY 使用 model PK.
+
+    - 若 queryset operation chain 中, ``.annotate()`` 前面有 ``.values()``
+      或 ``.values_list()`` 且它们指定了列参数 (不是无参的), 则 annotate 时
+      的 GROUP BY 会使用这些列来分组, 不再使用原 model 的 pk. 此时, annotate
+      的结果不再与各个 model instance 对应. 这样, 生成的组不再局限于 model
+      instance.
+
+      注意, 此时 ``.values()`` ``.values_list()`` 选择的列, 以及 ``.annotate()``
+      中新增的列, 是在 GROUP BY 之后进行的. SQL 对应为::
+
+        SELECT <values/values_list columns and annotate columns>
+            FROM <some_table>
+            GROUP BY <values/values_list columns>;
+
+      需要明确, 当 annotate 出现在 ``.values()`` ``.values_list()`` 后面时,
+      并不是说只剩下了它们选择出来的列, 而是最终从表中中取出这些列. 所以,
+      annotate 仍然可以访问所有在原来表中存在的列, 它不限于 values, values_list.
+
+- ``aggregate(*args, **kwargs)``
+
+  给整个 QuerySet 生成各种聚合值.
+
+  * 需要执行的聚合操作通过 positional args 或 keyword args 来指定.
+    返回聚合结果 dict. key 是聚合项, value 是聚合值. key 自动根据
+    field name 和聚合操作名生成; 或者通过 keyword 参数指定.
+
+  * 由于返回一个 dict, 所以 ``.aggregate`` 要作为 QuerySet chain 的最后操作.
+
+get, create, update, delete
+""""""""""""""""""""""""""""
+For retrieval operation, QuerySet itself serves as ``SELECT`` SQL equivalent,
+whereas ``get()`` API is just a convenience method to get out a single model
+instance.
+
+- ``create(**kwargs)``. create a model instance and save it. Return the created
+  instance.
 
 CRUD
-^^^^
+""""
 * attributes & methods.
 
-  - ``ordered``, QuerySet 是否有排序.
-
   - ``.all()``
-
-  - ``.filter()``
-
-  - ``.exclude()``
 
   - ``.get()``, 生成的 sql 与 ``.filter()`` 的相同, 也就是说取回的
     queryset 可能是多行的, 没有在数据库层做 LIMIT 1 之类的限制.
@@ -3680,8 +3896,11 @@ CRUD
     one-to-many relation of a reverse foreign key) because the “one row,
     one object” assumption doesn’t hold.
 
-  - ``exists()``, 判断某项是否在 queryset 中. 这比 ``in`` operator 高效,
-    后者必须遍历整个 queryset.
+  - ``exists()``, 判断 queryset 是否是空的.
+    
+    这还可用于实现高效的 ``elem in queryset`` 式的判断. 即
+    ``queryset.filter(<elem-filter>).exists()`` 比 ``in`` operator 高效.
+    因为由于 queryset 的实现, membership 检查要 调用 ``__iter__`` 做遍历.
 
 - 使用 extended indexing and slicing syntax 来进行 ``LIMIT`` ``OFFSET`` 之类的
   操作. 注意 negative index 是不允许的. 如果是单个的 index, 就返回 QuerySet
@@ -3690,30 +3909,6 @@ CRUD
 
 - 在过滤方法串联中, 每次返回的 ``QuerySet`` 都是相互独立的, 各自可以单独使用,
   不会相互影响.
-
-- QuerySets are lazy. 在不得不访问数据库之前, 所有的过滤筛选等操作都是在内存
-  中进行的, 而不去执行底层的 SQL 语句.
-
-- QuerySet cache. The first time a QuerySet is evaluated – and, hence,
-  a database query happens – Django saves the query results in the QuerySet’s
-  cache and returns the results that have been explicitly requested. Subsequent
-  evaluations of the QuerySet reuse the cached results.
-
-  当取一个 QuerySet 的部分数据时 (通过 extended indexing syntax, 即转换成
-  ``OFFSET`` ``LIMIT``), 若本身有 cache, 则直接返回结果, 否则只访问数据库
-  进行所需部分数据的查询和返回, 并不进行 cache. 这里的抽象逻辑是, slicing
-  和 indexing 这些操作是在一个完整的 QuerySet 上进行的部分截取. 而 cache
-  是属于 QuerySet 的, 若有则应该包含它代表的所有数据.
-
-  注意 ``bool(queryset)`` 会计算整个 ``queryset``, 从而填入 cache. 然而
-  ``print()`` ``repr()`` 只计算整个 QuerySet 的一个 slice, 因此不会填入
-  cache.
-
-  若模型包含 ``ForeignKey`` ``OneToOneField`` field 时, QuerySet 在取实例时
-  相当于只将 FK_id 取回来, 而不会自动 JOIN 表查询取到关联的对象数据. 这是
-  为了避免不必要的 overhead. 当用户明确要访问 FK object 这个属性时, 才再次
-  访问数据库将数据填入 cache, 返回真实的关联对象. 之后再访问该属性时不再
-  访问数据库.
 
 - 同一个 model 的实例之间进行比较时, 比较的是 primary key. 不同 model 的实例
   之间总是不相等的. 但是大小关系没有确定结果. (why not TypeError?)
@@ -3754,84 +3949,6 @@ CRUD
   它们也会在 SQL 中被包含.
 
   这可能导致 DISTINCT, GROUP BY, aggregation 等结果与预期不符. 需要小心对待.
-
-aggregation
-^^^^^^^^^^^
-
-* 两种聚合方式: ``QuerySet.aggregate()``, ``QuerySet.annotate``.
-
-* ``QuerySet.aggregate()``: 给整个 QuerySet 生成各种聚合值.
-
-  - 需要执行的聚合操作通过 positional args 或 keyword args 来指定.
-    返回聚合结果 dict. key 是聚合项, value 是聚合值. key 自动根据
-    field name 和聚合操作名生成; 或者通过 keyword 参数指定.
-
-  - 由于返回一个 dict, 所以 ``.aggregate`` 要作为 QuerySet chain 的最后操作.
-
-* ``QuerySet.annotate()``:
-
-  给 QuerySet 里的每个元素生成聚合值. 这不仅仅可用于 ``GROUP BY`` 聚合,
-  还可用于对每行返回所需的运算结果, 即 annotate 的一般含义. 使用这个一般
-  意义, 还可以进行 sql ``SELECT name AS name2`` 操作:
-  ``queryset.annotate(name2=F("name"))``.
-
-  - annotate 语法与 aggregate 相同, 但是每个聚合值是 attach 到各个
-    元素上的, 成为元素的 attribute.
-
-  - 由于结果成为了 attributes, 返回的仍是一个 QuerySet, 因此可以继续
-    operation chain.
-
-  - annotate 增加的 attributes 可以在后续的 operation chain 中使用, 例如
-    用于进一步 ``filter()``.
-
-  - 使用 annotate 进行多项聚合时必须要谨慎, 很可能结果不对, 并且必要时检查
-    生成的 raw sql statements. 多项聚合结果可能错误的原因是 django 简单
-    地将多项聚合条件涉及的所有表 join 在一起, 然后再算聚合值.
-
-  - 一般意义的 GROUP BY 操作:
-
-    若 queryset operation chain 中, ``.annotate()`` 前面有 ``.values()``
-    或 ``.values_list()`` 且它们指定了列参数 (不是无参的), 则 annotate 时
-    的 GROUP BY 会使用这些列来分组, 不再使用原 model 的 pk. 此时, annotate
-    的结果不再与各个 model instance 对应. 这样, 生成的组不再局限于 model
-    instance.
-
-    注意, 此时 ``.values()`` ``.values_list()`` 选择的列, 以及 ``.annotate()``
-    中新增的列, 是在 GROUP BY 之后进行的. SQL 对应为
-    SELECT `values, values_list columns and annotate columns` FROM `some_table`
-    GROUP BY `values and values_list columns`.
-
-    需要明确, 当 annotate 出现在 ``.values()`` ``.values_list()`` 后面时,
-    并不是说只剩下了它们选择出来的列, 而是在最终构建的复合表 (包含 GROUP 之后)
-    中取出这些列. 所以, annotate 仍然可以访问所有在这个复合表中存在的列, 它
-    不限于 values, values_list 的列.
-
-* aggregation functions.
-
-  - 各聚合函数的参数是列, 并可使用 field lookup syntax 去指定任意 related table
-    field.
-
-  - QuerySet 为空时, 除了 Count 之外所有 aggregate function 都返回 None,
-    Count 返回 0.
-
-  - 所有 aggregate function 接受一个 positional arg 作为要聚合的对象, 这可以是
-    field lookup syntax 也可以是 query expression.
-
-  - 所有 aggregate function 接受一个 ``output_field`` kwarg, 指定输出列的类型.
-
-  - ``Count()`` 有 ``distinct`` 参数, 对应于 ``COUNT(DISTINCT <colname>)``.
-
-  - ``Avg``
-
-  - ``MAX``
-
-  - ``MIN``
-
-  - ``StdDev``
-
-  - ``Variance``
-
-  - ``Sum``
 
 raw SQL
 ^^^^^^^
@@ -3877,20 +3994,8 @@ Syntax: ``<field>[__<field>...][__<lookuptype>]=value``.
   related_query_name 值. 在此之后再指定 related model 中的 field 和条件.
 
 * 对于每个查询方法, 传入的所有 positional and keyword arguments (Q objects +
-  field lookup syntax) 代表的条件都会 ``AND`` 在一起.
-  但注意对于 ``.exclude()``, 这种与关系不太好理解.
-
-* ``.filter()`` 中同时指定多个条件时, 是在筛选所有这些条件都满足的实例, 这相当于
-  ``WHERE condition1 AND condition2``.
-
-  当 ``.filter()`` 是对所指向的关系 (即 JOIN 表) 进行查询时, 注意
-  ``.filter(fk_obj__field1..., fk_obj__field2...)`` 以及
-  ``.filter(fk_obj__field1...).filter(fk_obj__field2...)`` 两个的区别.
-  前者是两个条件对 JOIN 表中一行同时满足; 后者是先 JOIN 一次筛出符合
-  条件的, 再 JOIN 一次筛出符合另一个条件的, 相当于 subquery 嵌套.
-
-* ``.exclude()`` 中同时指定多个条件时, 是在排除满足其中任一个条件的实例, 即筛选
-  所有这些条件都不满足的实例, 这相当于 ``WHERE NOT condition1 AND NOT condition2``.
+  field lookup syntax) 代表的条件都会 ``AND`` 在一起. 注意对于 ``.exclude()``,
+  取了一个反.
 
 * django 提供了一个特殊的 ``pk`` field 名称, 用来代指当前 model 的 pk field,
   它可以像实际的 pk field 一样去写任何 field lookup 语法.
@@ -3943,6 +4048,33 @@ query expressions
   - ``Case``. 接受 positional ``When`` objects 作为 cases, 这些 When objects
     依次执行, 直到有一个为 True 为止, 返回的结果是相应的 When 的 then.
     若没有一个 When 为真, 则返回 ``default=`` 值或 None.
+
+* aggregation expressions.
+
+  - 各聚合函数的参数是列, 并可使用 field lookup syntax 去指定任意 related table
+    field.
+
+  - QuerySet 为空时, 除了 Count 之外所有 aggregate function 都返回 None,
+    Count 返回 0.
+
+  - 所有 aggregate function 接受一个 positional arg 作为要聚合的对象, 这可以是
+    field lookup syntax 也可以是 query expression.
+
+  - 所有 aggregate function 接受一个 ``output_field`` kwarg, 指定输出列的类型.
+
+  - ``Count()`` 有 ``distinct`` 参数, 对应于 ``COUNT(DISTINCT <colname>)``.
+
+  - ``Avg``
+
+  - ``MAX``
+
+  - ``MIN``
+
+  - ``StdDev``
+
+  - ``Variance``
+
+  - ``Sum``
 
 RawQuerySet
 -----------
@@ -6323,6 +6455,10 @@ JSONField
 - MySQL 5.7+ 可用.
 
 - 其值可以是任何 valid json value 的 python equivalent. 只要能够 ``json.dumps()``.
+
+- constructor options.
+
+  * default. 默认的 default 值是 ``dict``.
 
 - checkings.
 
