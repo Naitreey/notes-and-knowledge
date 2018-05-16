@@ -92,6 +92,8 @@ configurations
 
 - keyboard/mouse bindings.
 
+  * Use ``bindsym`` keyword.
+
   * If you often switch keyboard layouts but you want to keep your bindings in
     the same physical location on the keyboard, use keycodes. If you don’t
     switch layouts, and want a clean and simple config file, use keysyms.
@@ -99,6 +101,11 @@ configurations
   * modifiers: mod1-mod5, Shift, Control. (see xmodmap(1).)
 
   * key symbol, key code, mouse buttons 都可以 bind.
+
+  * Some tools (such as import or xdotool) might be unable to run upon a
+    KeyPress event, because the keyboard/pointer is still grabbed. For these
+    situations, the --release flag can be used, which will execute the command
+    after the keys have been released.
 
 - binding modes.
 
