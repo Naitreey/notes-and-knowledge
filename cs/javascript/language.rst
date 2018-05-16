@@ -583,6 +583,14 @@ generator
     let g = f();
     g[Symbol.iterator]() === g
 
+methods
+^^^^^^^
+- next()
+
+- return()
+
+- throw()
+
 statements
 ==========
 In js, statement normally ends with ``;``.
