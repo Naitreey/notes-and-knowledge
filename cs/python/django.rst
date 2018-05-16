@@ -3834,8 +3834,15 @@ For retrieval operation, QuerySet itself serves as ``SELECT`` SQL equivalent,
 whereas ``get()`` API is just a convenience method to get out a single model
 instance.
 
-- ``create(**kwargs)``. create a model instance and save it. Return the created
+- ``create(**kwargs)``. Create a model instance and save it. Return the created
   instance.
+
+- ``update(**kwargs)``. Update the matched rows with ``kwargs``, then return
+  the number of rows matched.
+
+  更新操作是批量进行、立即生效的. 它使用 ``UPDATE`` statement, 无需从数据库取
+  数据, 因此不创建和填充 model instance. 因此各种 model 层的封装特性, 例如
+  custom ``save()``, auto_now, pre_save/post_save signal 等都不会生效.
 
 CRUD
 """"
@@ -3920,14 +3927,6 @@ CRUD
     删除了很多不同表中的条目.
 
   * model instance 和 QuerySet 都有 delete method.
-
-- update. QuerySet ``.update()`` 中以 kwargs 形式写入要更新的列和值.
-  many-to-many field 无法这样更新.
-
-  ``.update()`` 更新操作是批量进行、立即生效的. 它不会使用 model 的 ``.save()``
-  method (否则就不是批量执行了), 而是直接生成批量执行的 SQL. 因此各种 model
-  层的封装特性, 例如 custom save, auto_now, pre_save/post_save signal 等
-  都不会生效.
 
 - ``select_related()``.
   如果用户在查询某模型时, 已知会访问到关联的 FK 对象, 可使用 ``select_related()``
