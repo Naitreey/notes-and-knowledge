@@ -660,8 +660,104 @@ Statements
 
 assignment statements
 ---------------------
+以下 DNF 有所简化.
 
+::
 
+  assignment_stmt ::= (target_list "=")+ expression_list
+  target_list ::= target ("," target)* [","]
+  target ::= identifier
+             | "(" [target_list] ")"
+             | "[" [target_list] "]"
+             | attributeref
+             | subscription
+             | slicing
+             | "*" target
+
+about target list
+^^^^^^^^^^^^^^^^^
+- An assignment statement evaluates the expression list and and assigns the
+  single resulting object to each of the target lists, from left to right.
+
+- 一个 assignment 如何去给 LHS 赋值, 取决于 LHS 的形式.
+
+  * 当 LHS 是一个 target list, 则需要对 RHS 进行 iterable unpacking.
+
+  * 当 LHS 是一个 single target, 则 RHS 是整体赋值给 LHS.
+
+- 注意到 DNF 中, target list 是递归定义的. 以下详述 target list 的可能形式.
+
+  * target list 可以是 surrounded by ``()``, ``[]`` 或者裸的.  但是注意, ``()``
+    中包含单个 target 时, 服从 tuple 的书写规则.  即 ``(x) = [1]`` 不会认为是
+    target list, ``()`` 是括号, 自动去掉. 该赋值 LHS 是单层的 single target.
+    ``(x,) = [1]`` 才是 target list, 对 RHS unpacking.
+
+  * target list 可以是单层或多层的. 对于多层的, 则自然需要 ``()`` or ``[]``
+    进行界限划分.
+
+  * 对某一层, 最多只能有一个 ``*target`` 形式的 target.
+    (否则无法确定性地分配剩余元素.) 该 target 可以出现在该层的任意位置.
+
+  * 对于某一层, RHS unpacking 后的元素个数必须大于等于 target list 中除了
+    starred target 以外的 target 个数. 若没有多余的元素可分配, starred target
+    分配到的元素列表为空.
+
+  * ``*target`` starred target 本身仍可以是一个下一层的 target list.
+
+  * 赋值时, 除了 starred target 之外, 对于每一层的一个 target, 对应于 RHS
+    相应的层 unpacking 后的一个元素, 无论这个 target 本身是否又是一个下一层的
+    target list. 即使是下一层的 target list, 在本层也只对应于一个元素.
+
+  * 对于 starred target, 接受本层的所有剩余的无法分配的元素.
+
+  * 注意理论上 ``()`` ``[]`` 里面的 target list 可以为空, 此时在 RHS
+    的对应位置上元素进行 unpacking 后结果也要为空.::
+
+      () = []
+      a, () = 1, ()
+
+- 神经病示例.
+
+  .. code:: python
+
+    a, b, *(c, *[d, *(e, *f), g], h), i, j, (), l = *range(20), [], 20
+    a, b, *(c, *[d, *(e, *()), f], g), h, i, (), j = *range(9), [], 9
+
+about attributeref
+^^^^^^^^^^^^^^^^^^
+- If a target is attributeref, LHS 一定是对 instance attribute 的 set 操作,
+  右侧则可以是对 class or instance attribute 的 get 操作.::
+
+    class Cls:
+        x = 3
+    inst = Cls()
+    inst.x = inst.x + 1   # writes inst.x as 4 leaving Cls.x as 3
+
+about slicing
+^^^^^^^^^^^^^
+- If a target is a slicing, (for builtin sequence types) the assigned object
+  should also be a sequence object. Then the sequence object is asked to
+  replace the slice with the items of the assigned sequence. The length of the
+  slice may be different from the length of the assigned sequence, thus
+  changing the length of the target sequence, if the target sequence allows it.
+
+about evaluation order
+^^^^^^^^^^^^^^^^^^^^^^
+- LHS & RHS 的运算顺序: RHS 部分先计算完毕, 然后对 LHS target list 进行赋值.
+
+  因此, 以下是成立的::
+
+    a, b = b, a # swap a and b
+
+- LHS target list 的运算顺序: target list 中, 各 targets 按从左至右的顺序赋值.
+
+  例如::
+
+    x = [1, 0]
+    i = 0
+    i, x[i] = x[i], i
+    print(x) # [1, 0]
+    
 import statement
 ----------------
 
