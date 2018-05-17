@@ -505,6 +505,9 @@ to boolean
 iteration and generation
 ========================
 
+- js 中的 iterable, iterator, generator function, generator 与 python
+  中的概念是基本一致的, 只是实现方式有些差异而已.
+
 iterable protocol
 -----------------
 - iterable: an object (or one of the objects up its prototype chain) that
@@ -583,13 +586,47 @@ generator
     let g = f();
     g[Symbol.iterator]() === g
 
+- A generator function's return value or ``generator.return(value)`` method
+  传入的值是一个 generator 对应于 ``done: true`` 时的值. 注意这个值本身不属于
+  generator 生成的 value list 的一部分. (这类似于 python 中 generator function
+  的 return value 只是 StopIteration 的参数.) 例如:
+
+  .. code:: javascript
+
+    function* f() {
+        yield 1;
+        yield 2;
+        return 3;
+    }
+
+    for (const v of f()) {
+        console.log(v);
+    }
+    // 1, 2
+        
+
 methods
 ^^^^^^^
-- next()
+- ``next([value])``. ``value`` 值是 send to generator 内部的一个值, 用于影响
+  generator 的行为. 这个值成为 yield expression 的值. 不设置时, 默认值为
+  undefined. Return an object conforming to iterator protocol's requirement.
 
-- return()
+  与 python generator 相比, ``next()`` method 结合了 python 中 generator 的
+  ``__next__`` & ``send(value)`` method. 感觉更方便一些.
 
-- throw()
+  对一个 generator, 第一次执行 ``next()`` 时, 启动 generator 运行. 此时传入
+  value 并无意义.
+
+- ``return([value])``. returns ``{"value": value, "done": true}`` and closes
+  the generator. ``value`` defaults to undefined. If the generator is already
+  closed, its state is not changed.
+
+  这对应于 python 中 ``generator.close()``, 但更灵活一些.
+
+- ``throw(exception)``. throw ``exception`` from the point where the execution
+  was paused in the generator. Return the next item (or exit at its will). If
+  the generator function does not catch the passed-in exception, or raises a
+  different exception, then that exception propagates to the caller.
 
 statements
 ==========
