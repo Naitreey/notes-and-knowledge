@@ -6171,6 +6171,24 @@ only pass on records when ``settings.DEBUG`` is False.
 RequireDebugTrue
 ^^^^^^^^^^^^^^^^
 
+unit testing
+============
+
+- django 默认使用 unittest module 实现单元测试. 但提供与多种单元测试
+  框架集成的方式.
+
+- test files should be put in ``tests.py`` module or subpackage in each django
+  app.
+
+- Run test: ``./manage.py test``.
+
+django.test.TestCase
+--------------------
+
+- subclass of ``unittest.TestCase``.
+
+- Suitable for tests that rely on database access. It runs each test inside a
+  transaction to provide isolation.
 
 django-admin
 ============
@@ -6228,7 +6246,8 @@ command loading prcedence.
 
 ``INSTALLED_APPS`` + ``django.core.management``, 越靠前的优先级越高.
 
-``django.core.management``:
+django.core.management
+^^^^^^^^^^^^^^^^^^^^^^
 
 * ``shell`` 启动 shell 并加载项目相关 django 配置; 这相当于
   执行了:
@@ -6257,12 +6276,43 @@ command loading prcedence.
 * ``inspectdb``. 根据数据库 schema 反向推导生成与之匹配的 model code.
   通过分析 mysql's builtin ``information_schema`` database.
 
-``django.contrib.sessions``:
+* ``test``.::
+
+    test [<test_label>]...
+
+  - Test discovery based on unittest's test discovery.
+
+  - test labels can be supplied to run the specific tests. Each test label can
+    be
+    
+    * a full Python dotted path to a package, module, TestCase subclass, or
+      test method, to discover tests under that namespace.
+
+    * a directory to discover tests under that directory.
+
+  - ``--pattern <pattern>``. discover any file under the current working
+    directory matching ``<pattern>``. It defaults to ``test*.py``.
+
+  - Abort testing.
+
+    * press Ctrl-C once. the test runner will wait for the currently running test
+    to complete and then exit gracefully. During a graceful exit the test
+    runner will output details of any test failures, report on how many tests
+    were run and how many errors and failures were encountered, and destroy any
+    test databases as usual. 
+
+    * press Ctrl-C twice. the test run will halt immediately, but not gracefully.
+    No details of the tests run before the interruption will be reported, and
+    any test databases created by the run will not be destroyed.
+
+django.contrib.sessions
+^^^^^^^^^^^^^^^^^^^^^^^
 
 * ``clearsessions`` 清除过期的 session data. django 不提供自动清理
   session 的机制. 可以定期执行这个命令手动清除过期的 session.
 
-``django.contrib.staticfiles``:
+django.contrib.staticfiles
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * ``runserver``.
 

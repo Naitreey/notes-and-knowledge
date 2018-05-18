@@ -968,3 +968,6 @@
     GC 机制, 所以不如 finalize callback 通用.
 
   - ``__del__`` 在实现时比 weakref 容易很多.
+
+- 在 function argument list 中, bare start ``*`` 若要用于分隔 positional &
+  keyword-only argument, 后面必须确实有至少一个 argument.
