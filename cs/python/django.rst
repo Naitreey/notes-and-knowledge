@@ -662,6 +662,8 @@ Class-based views
 
     - ``success_url``
 
+    - ``get_form_kwargs()``. 获取 form 实例化时的 constructor arguments.
+
     - ``form_valid()`` POST valid data 时调用.
 
     - ``form_invalid()`` POST invalid data 时调用.
@@ -1666,61 +1668,132 @@ settings
 migration
 =========
 
-* You should think of migrations as a version control system for your
-  database schema. ``makemigrations`` is responsible for packaging up
-  your model changes into individual migration files - analogous to
-  commits - and ``migrate`` is responsible for applying those to your
-  database.
+overview
+--------
+- Database migrations is a version control system for your database schema.
 
-  Make changes to your models - say, add a field and remove a model -
-  and then run ``makemigrations``. Your models will be scanned and
-  compared to the versions currently contained in your migration files,
-  and then a new set of migrations will be written out.
+  ``makemigrations`` is responsible for packaging up your model changes into
+  individual migration files - analogous to commits - and ``migrate`` is
+  responsible for applying those to your database.
 
-  Once the migration is applied correctly to test database, commit the
-  migration and the models change to your version control system as a
-  single commit.
+- Workflow to change database models.
+  
+  * Make changes to your models.
+    
+  * run ``makemigrations``. Models will be scanned and compared to the versions
+    currently contained in migration files, and then a new set of migrations
+    will be written out.
 
-* 旧版本 django 中生成的 migration files 保证能在新版 django 中使用.
-  也就是说, migration system 是向后兼容的.
+  * After the model and migration are tested and run as expected, commit the
+    migration and the models change to your version control system *as a single
+    commit*. (理想情况如此, 实际上不容易做到. 因为 data model 是否合适, 是需要在
+    业务逻辑中使用中才能切实体会出来的.)
 
-* 所有 string literal 统一使用 unicode string 或 bytestring. 这不仅是一般
-  的 py2py3 统一性要求. 在 django 中, 若要 app 同时兼容 py2py3. 必须这样做.
-  因为, py2 默认 bytestring, 这样应用在数据库中的是 bytes, 同样的代码在 py3
-  下运行时, 由于 django 看见都是 unicode string, 而数据库中是 bytes, 这样
-  要再生成一个 migration 去修改现有数据库结构至支持 unicode string.
+  * 在极端情况下, 例如对 app models 的修改积累的 migration files 已经非常多,
+    例如几千个以上, 可以用 ``squashmigrations`` 将历史整合.
 
-* ``manage.py migrate`` 除了可以 apply migration 之外还可以指定将某个 app 的
-  数据库状态确定在某个 migration 上面, 若当前状态已经新于指定的状态, 则
-  unapply necessary migrations.
+- Migration system is backward-compatible. 旧版本 django 中生成的 migration
+  files 保证能在新版 django 中使用.
 
-* django 生成的 migrations 需要仔细检查, 对于复杂的数据库修改, 不能保证不出错,
+- django 生成的 migrations 需要仔细检查, 对于复杂的数据库修改, 不能保证不出错,
   必要时需要手动修改甚至手动创建 migrations. 对于自动生成的 migrations, 尤其是
   ``squashmigrations`` 生成的 migration file, 一定要测试可用.
 
-* ``makemigrations`` 和 ``migrate`` 操作一般不要限制 ``app_label``, 要对所有 apps
-  同时进行. 因为 model 之间经常是相互依赖的. 如果只对某个 model 更新数据库状态
-  可能 break dependency.
-  在特殊情况下, 要限制 migration file 修改在某个 app 中, 此时采用 app label.
+migration files
+---------------
 
-* migration definition.
-
-  - 每个 migration 必须是名为 ``Migration`` 的 class, 且为
-    ``django.db.migrations.Migration`` 的子类. 其中包含 ``dependencies``
-    ``operations`` 等属性.
-
-  - 每个 migration operation 是 ``Operation`` class 的 (子类的) 实例.
+- migration files 中的 string literal 要统一使用 unicode string 或 bytestring.
+  这不仅是一般的 py2py3 统一性要求. 在 django 中, 若要 app 同时兼容 py2py3.
+  必须这样做. 因为, py2 默认 bytestring, 这样应用在数据库中的是 bytes,
+  同样的代码在 py3 下运行时, 由于 django 看见都是 unicode string, 而数据库中是
+  bytes, 这样要再生成一个 migration 去修改现有数据库结构至支持 unicode string.
 
 * 若要在 migration 中删除/重命名某个 model 或者删除它的数据, 必须设置
   dependency 保证依赖于原 model 和数据的 migration 执行在先.
 
-* data migration.
+* Migration 大致分为 schema migrations & data migrations.
 
-  - data migration 必须手写, 涉及 ``RunPython`` operation.
+  - schema migrations 大部分情况下可以依赖 makemigrations 自动生成.
 
-* database operation and state operation.
+  - data migrations 必须手写, 涉及例如 ``RunPython``, ``RunSQL`` 等操作.
 
-* How to move model between apps, without losing any data?
+migration definition
+^^^^^^^^^^^^^^^^^^^^
+
+* 每个 migration 必须是名为 ``Migration`` 的 class, 且为
+  ``django.db.migrations.Migration`` 的子类. 其中包含 ``dependencies``
+  ``operations`` 等 class attributes.
+
+* 每个 migration operation 是 ``Operation`` class (子类的) 实例.
+
+* 在 migration 中无法访问 model 中定义的 methods. 解决办法是在 migration 中
+  再定义一遍. 由于 migration 只代表在确定历史状态下的操作, 所以这种重复不造成
+  问题.
+
+management commands
+-------------------
+
+- ``makemigrations`` 和 ``migrate`` 操作一般不要限制 ``app_label``, 要对所有
+  apps 同时进行. 因为 model 之间经常是相互依赖的. 如果只对某个 model 更新数据库
+  状态可能 break dependency.  在特殊情况下, 需要限制 migration file 修改在某个
+  app 中, 此时采用 app label.
+
+migrate
+^^^^^^^
+::
+
+  ./manage.py migrate [<app_label>] [<migration_name>]
+
+- ``--database``. 在多数据库情况下, 指定使用的数据库.
+
+- 若指定了 ``migration_name``, 是将数据库状态确定在某个 migration 相应的状态上.
+  若当前状态已经新于指定的状态, 则 unapply necessary migrations.
+
+makemigrations
+^^^^^^^^^^^^^^
+
+首先检查数据库中的 migration history 是否与 migration files 中的一致.
+一般只检查 default database, 但会考虑 ``Router.allow_migrate``.
+
+- ``--dry-run`` 可用来检查当前记录的数据库结构 (通过 migration files 来体现)
+  是否和 models 里的模型代码保持一致.
+
+squashmigrations
+^^^^^^^^^^^^^^^^
+
+squash migration 十分有用. 可以用来将过多的 migration 历史合并成一个等价的
+初始版本.
+
+These files are marked to say they replace the previously-squashed migrations,
+so they can coexist with the old migration files, and Django will intelligently
+switch between them depending where you are in the history. If you’re still
+part-way through the set of migrations that you squashed, it will keep using
+them until it hits the end and then switch to the squashed history, while new
+installs will just use the new squashed migration and skip all the old ones.
+
+The recommended process is to squash, keeping the old files, commit and
+release, wait until all systems are upgraded with the new release, and
+then remove the old files, commit and do a second release.
+只有当所有项目的实例都已经更新到 squashed migration 的结束点之后时, 才能
+删除它替代的那些原始文件.
+
+最终, 使用 squashed migration file 替代一系列原始文件的方法是:
+
+- Deleting all the migration files it replaces.
+
+- Updating all migrations that depend on the deleted migrations to depend
+  on the squashed migration instead.
+
+- Removing the ``replaces`` attribute in the Migration class of the squashed
+  migration.
+
+当数据库结构之间的关系非常复杂时, 慎用 squash migration. 最好检查 squash
+的结果是否符合当前 models 结构.
+
+recipes
+-------
+
+- How to move model between apps, without losing any data?
   possibly with foreign key constraints?
   possibly with many-to-many field constraints?
   possibly with one-to-one field constraints?
@@ -1747,38 +1820,24 @@ migration
      的 migration 依赖顺序. 按照先创建新的, 迁移, 再删除旧的, 这个顺序创建
      migration. 第一个和最后一个 migration 都可以通过修改 models 来自动生成.
 
-* squash migration 十分有用. 可以用来将过多的 migration 历史合并成一个等价的
-  初始版本.
+- Change nullable field to non-nullable. 根据不同需求有两种办法
 
-  These files are marked to say they replace the previously-squashed migrations,
-  so they can coexist with the old migration files, and Django will intelligently
-  switch between them depending where you are in the history. If you’re still
-  part-way through the set of migrations that you squashed, it will keep using
-  them until it hits the end and then switch to the squashed history, while new
-  installs will just use the new squashed migration and skip all the old ones.
+  * specify a default on model field or a one-time default.
 
-  The recommended process is to squash, keeping the old files, commit and
-  release, wait until all systems are upgraded with the new release, and
-  then remove the old files, commit and do a second release.
-  只有当所有项目的实例都已经更新到 squashed migration 的结束点之后时, 才能
-  删除它替代的那些原始文件.
+  * create manual migration. 根据业务逻辑先将不合适的列值替换掉, 再
+    makemigrations ALTER TABLE.
 
-  最终, 使用 squashed migration file 替代一系列原始文件的方法是:
+- add a non-nullable field without default to existing model. 步骤:
 
-  - Deleting all the migration files it replaces.
+  * 先创建 nullable field 或使用某个默认值的 field.
 
-  - Updating all migrations that depend on the deleted migrations to depend
-    on the squashed migration instead.
+  * create manual migration, 根据业务逻辑修改数据.
 
-  - Removing the ``replaces`` attribute in the Migration class of the squashed
-    migration.
+  * ALTER TABLE to non-nullable, 添加其他所需条件, 例如 UNIQUE.
 
-  当数据库结构之间的关系非常复杂时, 慎用 squash migration. 最好检查 squash
-  的结果是否符合当前 models 结构.
-
-* 在 migration 中无法访问 model 中定义的 methods. 解决办法是在 migration 中
-  再定义一遍. 由于 migration 只代表在确定历史状态下的操作, 所以这种重复不造成
-  问题.
+- Making non-atomic data migrations. 如果要修改的数据非常多, 可能希望
+  不使用整体性的 atomic migration (``Migration.atomic == False``), 而是
+  使用 batch modification. 对于每个 batch, 放入一个 transaction.
 
 session
 =======
@@ -1934,9 +1993,6 @@ cleaning & validation
 
 - ``full_clean()``.
 
-- ``clean()``. Custom Form 若要进行 form-level 的 clean & validation (而不是
-  form field-level), 可自定义这个方法.
-
 - ``clean_<fieldname>()``. form-level clean & validation on a specific
   field. 对于一个列, 如果它的某部分 clean & validation 逻辑不是仅仅对列值
   自身进行验证, 而是需要一些 form-level 的考量, 或者某些相关的外部信息,
@@ -1946,6 +2002,14 @@ cleaning & validation
   在调用该方法时, ``<fieldname>.clean()`` method is called already, 因此
   ``Form.cleaned_data`` 中相应位置已经转换成了相对于列定义而言是合法的
   数据格式.
+
+- ``clean()``. Custom Form 若要进行 form-level 的 clean & validation (而不是
+  form field-level), 可自定义这个方法. Return a new ``cleaned_data`` or None
+  (``cleaned_data`` is modified in-place).
+
+  这里的验证应该满足以下原则: 当所需的各个 fields 已经通过 field-level
+  clean & validation 时, 也即在 ``cleaned_data`` 中存在时, 才进行验证.
+  否则直接返回原数据即可.
 
 - ``non_field_errors()``.
 
@@ -2028,8 +2092,11 @@ Form clean & validation
   * post clean & validation hook ``_post_clean()``.
     See `model form clean & validation`_.
 
+  以上三步中, 任何一步 raise ValidationError 只会记录下来, 不影响其他步骤的执行.
+
 - 在 clean & validation 之后, 最终的有效 form data 只能从 ``Form.cleaned_data``
-  获取.
+  获取. ``Form.cleaned_data`` 中只包含成功 cleaned 的 field data 部分. 因此
+  在各个地方使用时, 要考虑到所需 field 可能不存在.
 
 form inheritance
 ^^^^^^^^^^^^^^^^
@@ -2916,7 +2983,8 @@ fields 需要设置这些属性.
 
 methods
 ^^^^^^^
-db data type related APIs.
+db data type related APIs
+""""""""""""""""""""""""""
 
 - ``get_internal_type()``.
   给出这个 Field class 对应的 django builtin field type name.
@@ -2941,9 +3009,8 @@ db data type related APIs.
   当这个 Field 成为 ForeignKey, OneToOneField 等 many-to-one field 所指向
   的列时, 给出相应的 many-to-one field 所应使用的 ``db_type()``.
 
-db field value related APIs. 它们的作用还不完全清楚.
-
-.. TODO 弄清作用和区别
+db field value related APIs
+""""""""""""""""""""""""""""
 
 - ``get_prep_value(value)``.
   将 field value 转换成这个列的数据库形式, 但不应考虑与具体数据库相关的不同
@@ -2986,7 +3053,8 @@ db field value related APIs. 它们的作用还不完全清楚.
   操作. 主要用于更新 model instance 上的列值等. 最终确定下 model instance 上的
   各个列值. 这个方法发生在 ``get_db_prep_save()`` 之前.
 
-Deserialization.
+Deserialization
+""""""""""""""""
 
 - ``to_python(value)``.
   called by deserialization and during the clean() method used from forms.
@@ -3000,19 +3068,22 @@ Deserialization.
 
   * None.
 
-Serialization.
+Serialization
+""""""""""""""
 
 - ``value_to_string(obj)``.
   convert field value, which is attribute of ``obj``, to string form.
   使用 ``value_from_object(obj)`` 获取列的值, 然后再 serialize.
 
-form field.
+form field
+""""""""""
 
 - ``formfield(form_class=None, choices_form_class=None, **kwargs)``.
   Returns the default django.forms.Field of this field for ModelForm.
   ``kwargs`` are passed to form class constructor.
 
-field checkings.
+field checkings
+""""""""""""""""
 
 - ``check(**kwargs)``. 检查列定义是否合法.
   检查项.
@@ -3030,7 +3101,8 @@ field checkings.
 
   * backend-specific field checks.
 
-model clean & validation.
+model clean & validation
+""""""""""""""""""""""""
 
 - ``clean(value, model_instance)``.
   1. 调用 to_python() 转换 value 为合法列值(或报错).
@@ -3049,7 +3121,21 @@ model clean & validation.
 
   * 校验是否允许空值.
 
-deconstruction.
+default value
+""""""""""""""
+- ``has_default()``. 是否有明确设置的默认值.
+
+- ``get_default()``. 给出该列合适的默认值. 这个方法总能编出一个
+  值来. 即使 ``has_default() is False``.
+
+  * 如果 Field 有明确设置的默认值, 使用该值
+
+  * 否则, 如果 nullable, 返回 None.
+
+  * 否则, 返回 "" empty string.
+
+deconstruction
+""""""""""""""
  
 - ``deconstruct()``.
   Returns a 4-tuple with enough information to recreate the field.
@@ -3308,6 +3394,9 @@ field types
   注意 binary field 不是用来保存静态文件的, 静态文件还是要在文件系统中保存.
   这只是用于保存小量的只读只写的特殊用途的 binary data.
 
+  default value. 若 ``super().get_default()`` 给出 "", 转换成 b"" empty bytes
+  string.
+
   validations.
 
   * 若设置了 ``max_length``, 检查数据长度.
@@ -3521,6 +3610,14 @@ model instance clean & validation
 * ``.save()`` 时不会自动调用 ``.full_clean()`` (因 form 验证时会执行它),
   若 model instance 不是来源于上层 form, 这验证操作必须手动执行. 或者
   等着数据库下层报错.
+
+- ``Model.clean()``.
+
+  注意由于即使 field-level validation 失败, ``Model.clean()``
+  也会执行. 因此不能假设各列属性的值是合法的甚至是存在的. 需要
+  进行判断. 这个方法中, 应该是先判断所需的列值存在并合法, 若
+  是这样, 再进行 inter-field 或 model 整体的 clean & validation.
+  若不满足前提条件, 不该报错. 而是默默返回.
 
 validators
 ----------
@@ -4705,18 +4802,25 @@ AnonymousUser implements basic interface of AbstractUser.
   This model behaves identically to the default user model, but you’ll be
   able to customize it in the future if the need arises.
 
-- 用户相关的信息的存储位置.
+- 用户相关的信息的存储位置和存储方式.
 
   * 若这些信息是 app-specific 的, 而不是用户本身的属性、通用的信息或认证和权限
-  相关的信息, 则应该存在 app models 中, 添加对 user model 的 one-to-one
-  relation 或者 subclass user model, 这样是解耦合的.
+    相关的信息, 则应该存在 app models 中, 添加对 user model 的 one-to-one
+    relation, 这样是解耦合的.
 
-  理由: 1. 当多个 app 需要添加相似的 user model 关系, 若直接与 user model 建立
-  关系, 则可能出现冲突, 因此降低了 app 的重用价值. 若与 app 自己的 user profile
-  model 建立关系, 在由它统一与 user model建立关系, 则大大降低了冲突的可能.
-  2. 假如需要途中替换 user model, 若统一通过 profile model 间接建立关联, 则
-  每个 app 只需更新 profile model 与 user model 的关联; 若各 model 直接与 user
-  model 关联, 则需要更新所有关联.
+    理由: 1. 当多个 app 需要添加相似的 user model 关系, 若直接与 user model 建立
+    关系, 则可能出现冲突, 因此降低了 app 的重用价值. 若与 app 自己的 user profile
+    model 建立关系, 在由它统一与 user model建立关系, 则大大降低了冲突的可能.
+    2. 假如需要途中替换 user model, 若统一通过 profile model 间接建立关联, 则
+    每个 app 只需更新 profile model 与 user model 的关联; 若各 model 直接与 user
+    model 关联, 则需要更新所有关联.
+
+    注意 user profile model 不能用 concrete model inheritance 实现. user profile
+    model 需要在 app 中与 user 进行关联. 在创建用户时, 同时创建各个 app 中的
+    profile 部分. 两者是解耦合的. 在 concrete model inheritance 中, 子类就是包含
+    父类内容的一个完整类, 而不单纯是 profile 部分. 创建子类实例会相应在父类表中
+    创建相应部分. 这种抽象逻辑与 profile model 是不相符的. 并且子类实例与其父类
+    的那个部分是强耦合的.
 
   * 若是属于用户本身, 甚至是用户认证相关的属性, 才应该放在 user model 中.
 
@@ -4741,8 +4845,7 @@ AnonymousUser implements basic interface of AbstractUser.
 
   * 在 connect handler to signal 时, 若需要 filter user model, 使用 AUTH_USER_MODEL.
 
-  ``get_user_model()`` 也可以在 import-time 使用. 例如在 app 中创建
-  user model subclass, 作为 app-specific user profile 时, 需要使用.
+  ``get_user_model()`` 也可以在 import-time 使用.
 
   .. code:: python
 
@@ -6190,6 +6293,36 @@ django.test.TestCase
 - Suitable for tests that rely on database access. It runs each test inside a
   transaction to provide isolation.
 
+management commands
+-------------------
+::
+  test [<test_label>]...
+
+- Test discovery based on unittest's test discovery.
+
+- test labels can be supplied to run the specific tests. Each test label can
+  be
+  
+  * a full Python dotted path to a package, module, TestCase subclass, or
+    test method, to discover tests under that namespace.
+
+  * a directory to discover tests under that directory.
+
+- ``--pattern <pattern>``. discover any file under the current working
+  directory matching ``<pattern>``. It defaults to ``test*.py``.
+
+- Abort testing.
+
+  * press Ctrl-C once. the test runner will wait for the currently running test
+  to complete and then exit gracefully. During a graceful exit the test
+  runner will output details of any test failures, report on how many tests
+  were run and how many errors and failures were encountered, and destroy any
+  test databases as usual. 
+
+  * press Ctrl-C twice. the test run will halt immediately, but not gracefully.
+  No details of the tests run before the interruption will be reported, and
+  any test databases created by the run will not be destroyed.
+
 django-admin
 ============
 
@@ -6257,53 +6390,18 @@ django.core.management
     os.environ['DJANGO_SETTINGS_MODULE'] = "<project>.settings"
     import django; django.setup()
 
-* ``makemigrations``
-
-  首先检查数据库中的 migration history 是否与 migration files 中的一致.
-  一般只检查 default database, 但会考虑 ``Router.allow_migrate``.
-  
-  - ``--dry-run`` 可用来检查当前记录的数据库结构 (通过 migration files 来体现)
-    是否和 models 里的模型代码保持一致.
+* ``makemigrations``. Make new migration files. See `migration`_.
 
 * ``dbshell``
 
   似乎不会使用平时 django 运行时传入的 OPTIONS 参数.
 
-* ``migrate``
-
-  - ``--database``. 在多数据库情况下, 指定使用的数据库.
+* ``migrate``. Update database schema with migration files. See `migration`_.
 
 * ``inspectdb``. 根据数据库 schema 反向推导生成与之匹配的 model code.
   通过分析 mysql's builtin ``information_schema`` database.
 
-* ``test``.::
-
-    test [<test_label>]...
-
-  - Test discovery based on unittest's test discovery.
-
-  - test labels can be supplied to run the specific tests. Each test label can
-    be
-    
-    * a full Python dotted path to a package, module, TestCase subclass, or
-      test method, to discover tests under that namespace.
-
-    * a directory to discover tests under that directory.
-
-  - ``--pattern <pattern>``. discover any file under the current working
-    directory matching ``<pattern>``. It defaults to ``test*.py``.
-
-  - Abort testing.
-
-    * press Ctrl-C once. the test runner will wait for the currently running test
-    to complete and then exit gracefully. During a graceful exit the test
-    runner will output details of any test failures, report on how many tests
-    were run and how many errors and failures were encountered, and destroy any
-    test databases as usual. 
-
-    * press Ctrl-C twice. the test run will halt immediately, but not gracefully.
-    No details of the tests run before the interruption will be reported, and
-    any test databases created by the run will not be destroyed.
+* ``test``. Run unit tests. See `unit testing`_.
 
 django.contrib.sessions
 ^^^^^^^^^^^^^^^^^^^^^^^

@@ -2635,6 +2635,9 @@ mysql vs postgresql
   后者才是一般预期的行为, 是除了 mysql 之外所有其他数据库的默认行为.
   这两个 isolation level 的差异, 会导致应用程序的一些 subtle bugs.
 
+- mysql does not support DDLs in transaction. DDL statements are
+  non-transactional and break transactions (cause implicit commit etc.).
+
 References
 ==========
 .. [DOMysqlSlave] `How To Set Up Master Slave Replication in MySQL <https://www.digitalocean.com/community/tutorials/how-to-set-up-master-slave-replication-in-mysql>`_
