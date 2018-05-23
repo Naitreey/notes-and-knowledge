@@ -502,8 +502,8 @@ to boolean
 
 - Object: true.
 
-iteration and generation
-========================
+iteration, generation and asynchronous programming
+==================================================
 
 - js 中的 iterable, iterator, generator function, generator 与 python
   中的概念是基本一致的, 只是实现方式有些差异而已.
@@ -576,6 +576,11 @@ generator function
 
 - Use ``function*`` keyword to define a generator function.
 
+- generator function 中支持 ``yield*`` expression to delegate generation to
+  another iterable, 注意是 iterable 即可, 无需是 iterator (会自动生成). The
+  value of ``yield*`` expression itself is the value returned by the created
+  iterator when it's closed.
+
 generator
 ---------
 
@@ -604,6 +609,8 @@ generator
     }
     // 1, 2
         
+- Exception thrown inside the generator make the generator finished, unless it
+  is caught within the generator's body.
 
 methods
 ^^^^^^^
@@ -627,6 +634,11 @@ methods
   was paused in the generator. Return the next item (or exit at its will). If
   the generator function does not catch the passed-in exception, or raises a
   different exception, then that exception propagates to the caller.
+
+async, await
+------------
+- Async functions generators and promises in a higher level syntax. Please
+  understand that they work essentially under the same principle.
 
 statements
 ==========
@@ -1040,6 +1052,17 @@ function declaration statement
   函数来使用, 也可以作为 object bound method 使用. 而如果要作为 class unbound
   method 使用, 需要使用 ``Function.prototype.call()``, ``Function.prototype.apply()``.
 
+generator function declaration
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+::
+
+  function* name([param[, ...]]) {
+      // statements
+  }
+
+- generator function can not be used as constructor. (注意 generator function
+  与 normal function 只是语法上长得像, 实际上是在执行逻辑上完全不同的.)
+
 with statement
 --------------
 deprecated.
@@ -1323,6 +1346,52 @@ conditional operator
 ::
 
   <boolean-expression> ? <expr1> : <expr2>
+
+spread and rest syntax
+----------------------
+::
+
+  ...<iterable>
+
+- Spread syntax allows an iterable to be expanded in places where zero or more
+  arguments (for function calls) or elements (for array literals) are expected,
+  or an object expression to be expanded in places where zero or more key-value
+  pairs (for object literals) are expected.
+
+- spread syntax can be used as:
+
+  * the rest parameter of the parameter list of function definition. 表示 0 or
+    more remaining arguments.  此时, rest parameter 必须是最后一个参数. 在
+    function call 中, 该参数收集到 an array of remaining arguments.
+
+  * an argument of the argument list of function call. operand must be an iterable.
+    iterable 生成的所有值, 成为 argument list 的一部分. spread syntax 可以在 argument
+    list 中出现多次, 且位置不限.
+
+  * in array literal. 进行 iterable unpacking. unpacked elements 成为新 array 的成员.
+    spread syntax 可以出现多次, 且位置不限.
+
+  * in object literal. 进行 mapping unpacking. unpacked key-value pairs 成为新的 object
+    的属性和值. 可以出现多次, 且位置不限.::
+
+      {...{a:1}, b:2, ...{c:3}}
+
+    注意这是唯一一处不要求 ``...`` operand 是 iterable object 的用法.
+
+  * in LHS of destructuring assignment. 收集 0 个或多个 remaining RHS's
+    elements at the same unpacking level. 注意 reset parameter 必须是同层
+    的最后一个项. 并且支持 nested spread syntax.::
+
+      let [a,b, ...c] = [1,2,3,4]
+      let [a,b, ...[c, d, ...e]] = [1,2,3,4,5,6]
+
+    与 python 中不同, 这里如果 LHS 变量不能全部赋值, 剩下的会使用默认值 undefined,
+    相当于只声明未赋值.::
+
+      let [a,b, ...[c, d, ...e]] = [1,2,[3,4,5,6]]
+      // c: [3,4,5,6]
+      // d: undefined
+      // e: []
 
 function expressions
 --------------------
