@@ -876,32 +876,67 @@ class definitions
 
   * 需要对实例进行额外的修改, 且这些修改在逻辑上不是该类的一部分.
 
-iteration and generation
-========================
+iteration, generation and asynchronous programming
+==================================================
 
 generator function
 ------------------
 
-- Generator function 的重要意义在于简化对 iterable protocol 的实现流程.
-  手动构建 iterable 需要处理:
+- Generator function 的重要意义在于两点:
   
-  * 构建含 ``__iter__`` 方法的 iterable 类
-   
-  * 构建包含 ``__next__`` 方法的 iterator 返回值
-   
-  * 手动维持 iterator 内部状态.
+  * 简化对 iterable protocol 的实现流程. 手动构建 iterable 需要处理:
+  
+    - 构建含 ``__iter__`` 方法的 iterable 类
+     
+    - 构建包含 ``__next__`` 方法的 iterator 返回值
+     
+    - 手动维持 iterator 内部状态.
 
-  这些麻烦通过 generator function (yield) & interpreter magic 可以方便地解决.
+    这些麻烦通过 generator function (yield) & interpreter magic 可以方便地解决.
 
-- generator function is not inherently more CPU/memory efficient than manually
-  defined iterables, when generating a large sequence of values. 无论是
-  generator 还是 iterator, 写好了都可以高效, 也都可以低效.
+    注意, generator function is not inherently more CPU/memory efficient than
+    manually defined iterables, when generating a large sequence of values.
+    无论是 generator 还是 iterator, 写好了都可以高效, 也都可以低效.
+
+  * 为基于 async/await 的单线程异步编程范式提供基础. (注意 generator or async/await
+    等高级语言机制并不是实现单线程异步的必要条件, 但是会很方便, 通过 event 机制同样
+    可以做到.)
+
+- 基于 generator function + promises 已经可以实现比较方便的单线程异步编程, 但
+  async/await 将它升华成了语言 builtin 的一种范式. 通过提供语言层的基础性支持,
+  无需手动实现 所需机制, 从而更统一 (所有人用一样的实现) 更高效 (在解释器中去优化,
+  在 C/C++ 层优化).
 
 generator
 ---------
+- generator workflow.
+  
+  When generator function is called, a generator iterator is generated. 这个
+  iterator 封装了 generator function body 编译后的等价逻辑.
+
+  generator 的抽象执行逻辑:
+  
+  * 调用 ``__next__``, ``send()``, ``throw()`` 等方法, generator 开始执行.
+
+  * 到 yield 后, 返回至 caller, 并给出 yield 值.
+
+  * caller 再次调用上述控制方法, 进入 generator context, 从 yield 处继续执行.
+
+  * generator function 结束时, raise ``StopIteration(<retval>)``, 结束 generator
+    执行.
+
+  这种 execution context 和控制权的交替执行, 是逻辑上的描述. 在内存中并不存在一个保留的
+  generator function stack, 也不能让执行流在两个 stack 之间交替. 它本质上是解释器根据
+  编译 generator function body 结构, 生成了一个等价的 iterator, 它来维持 generator 的
+  内部状态.
 
 - A generator object is both an iterator and iterable.
   Its ``__iter__`` method simply returns itself.
+
+async, await
+------------
+- async/await 机制提供了 builtin 的完整的单线程异步编程的解决方案. 避免了通过 generator
+  + promises, 甚至是更基础的机制 (e.g., event + callback) 去手动实现单线程异步所缺失的部分.
 
 built-in exception hierarchy
 ============================

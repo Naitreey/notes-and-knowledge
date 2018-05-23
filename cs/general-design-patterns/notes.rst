@@ -404,3 +404,8 @@ The principle of least privilege/exposure
 * 在 Linux 中, 一个进程的正常运行, 应限制在最低可能的用户和 capabilities.
 
 * 用户的权限, 应该设置在他正常工作所需的最低权限.
+
+Callback -- Inversion of control
+================================
+- 当使用 library API 去传入 callback 时, 是把程序的控制权交给了这个 library, 这样
+  造成了 inversion of control, 即变成了 library 去控制接下来你的程序该怎么运行.
