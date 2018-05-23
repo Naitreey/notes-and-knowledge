@@ -6114,8 +6114,20 @@ JSON
 ----
 
 - DjangoJSONEncoder 在 ``json.JSONEncoder`` 基础上, 额外支持:
-  datetime.datetime, datetime.date, datetime.time, datetime.timedelta,
-  decimal.Decimal, django.utils.functional.Promise, uuid.UUID.
+
+  * datetime.datetime,
+    
+  * datetime.date,
+    
+  * datetime.time,
+    
+  * datetime.timedelta,
+  
+  * decimal.Decimal,
+    
+  * django.utils.functional.Promise,
+    
+  * uuid.UUID.
 
 Security, SSL & HTTPS
 =====================
