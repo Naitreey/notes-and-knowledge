@@ -6,9 +6,10 @@ class cached_mutable_property(object):
     Optional ``name`` argument allows you to make cached properties of other
     methods. (e.g.  url = cached_property(get_absolute_url, name='url') )
     """
-    def __init__(self, fget, fset=None, name=None):
+    def __init__(self, fget, fset=None, fdel=None, name=None):
         self.fget = fget
         self.fset = fset
+        self.fdel = fdel
         self.__doc__ = getattr(fget, '__doc__')
         self.name = name or fget.__name__
 
@@ -33,7 +34,7 @@ class cached_mutable_property(object):
             self.fdel(instance)
             del instance.__dict__[self.name]
         else:
-            raise AttributeError("can not be deleted")
+            raise AttributeError("can not delete attribute")
 
     def setter(self, fset):
         self.fset = fset
