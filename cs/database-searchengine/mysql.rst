@@ -2021,14 +2021,12 @@ configuration
 
       CHANGE MASTER TO
           MASTER_HOST='master_host_name',
-          MASTER_USER='replication_user_name',
-          MASTER_PASSWORD='replication_password',
           MASTER_LOG_FILE='recorded_log_file_name',
           MASTER_LOG_POS=recorded_log_position;
       
   * start slave threads::
 
-      START SLAVE;
+      START SLAVE USER='replication_user_name' PASSWORD='replication_password';
 
   * check slave status::
 
@@ -2073,9 +2071,9 @@ master info log and relay log options.
   default: master.info.
 
 - ``--master-info-repository={FILE|TABLE}``, ``master_info_repository``.
-  default: FILE.
+  default: TABLE.
   whether the slave logs master status and connection information to a FILE or
-  TABLE.
+  TABLE (``mysql.slave_master_info``).
 
 - ``--relay-log=pathname``, ``relay_log``.
   default: ``<hostname>-relay-bin`` for default channel, or
@@ -2088,7 +2086,7 @@ master info log and relay log options.
   default: relay-log.info.
 
 - ``--relay-log-info-repository={FILE|TABLE}``, ``relay_log_info_repository``.
-  default: FILE.
+  default: TABLE.
   whether the slave's position in the relay logs is written to a FILE or TABLE.
 
 - ``--relay-log-purge={0|1}``, ``relay_log_purge``.
