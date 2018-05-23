@@ -246,42 +246,88 @@
 URI
 ===
 
-- absolute url vs relative url.
-
-  absolute url 包含 schema, userinfo, domain, port, path, query parameters,
-  url fragment 等.
-  relative url 包含 path, query parameters, url fragment 等部分.
-
-- schema 后面的 ``//`` 本来并不必须, Tim Berners-Lee 为此错误道过歉.
-  事实上一些协议并不添加这部分, 例如 ``javascript:``, ``mailto:``, ``tel:``.
-
-- uri 是 url + urn 的统称. 但一般说 uri 就指的是 url.
+overview
+--------
+- URI 是 URL + URN 的统称. 但一般说 URI 就指的是 URL.
 
 - IRI (internationalized resource identifier) 是 URI 的扩展.
   URI 本身只支持 ASCII, IRI 扩展为 Unicode. 所以说现今的 URL
   实际上是 IRI.
 
-- url design
+- schema 后面的 ``//`` 本来并不必须, Tim Berners-Lee 为此错误道过歉.
+  事实上一些协议并不添加这部分, 例如 ``javascript:``, ``mailto:``, ``tel:``.
 
-  * A clean, elegant URL scheme is an important detail in a high-quality
-    Web application.
+components
+----------
+- absolute url 包含 schema, userinfo, domain, port, path, query parameters,
+  url fragment 等.
 
-    Cool urls don't change. Try to make your url last as long as possible.
+- relative url 包含 path, query parameters, url fragment 等部分.
 
-  * 遵从 REST 思想.
+URI characters
+--------------
+- reserved: characters that have special meaning.
 
-  * ajax 返回 json 的 url api 可以直接以 ``.json`` 结尾, 以示与普通 view
-    的区别.
+- unreserved: characters without special meaning.
 
-- url length limit
+url encoding
+------------
+- A mechanism for encoding information to be used in URI and related usage,
+  such as ``application/x-www-form-urlencoded`` form data.
 
-  * HTTP 协议本身并不限制 url 长度. 但建议接收方和发送方都支持至少 8000 bytes
-    长度的 url.
+types of encodings
+^^^^^^^^^^^^^^^^^^
 
-  * 若 url 太长服务端无法处理, 应返回 414 (URI Too Long).
+- reserved characters.
+  
+  * reserved characters needs to be encoded to be used literally in a url
+    segment, if and only if it has special meaning in that url segment.
 
-  * 各浏览器有不同的 url 长度限制 (可输入的或可接受的 url 长度). IE8+ ~ 2000 bytes,
-    其他浏览器都比这个长, 甚至长很多. 所以 2000 bytes 可看作是长度的上确界.
+    例如, / is special in url's path segment, but not special in query string.
+
+  * converting the character to its corresponding byte value in ASCII and then
+    representing that value as a pair of hexadecimal digits prefixed with ``%``.
+
+- unreserved ASCII characters.
+
+  * unreserved characters need not be percent-encoded.
+
+- binary data.
+
+  * the representation of binary data in a URI must divide the data into 8-bit
+    bytes and percent-encode each byte.
+
+- unicode characters.
+
+  * converted to utf-8 encoded byte sequence, then url-encoded as binary data.
+
+- in ``application/x-www-form-urlencoded`` media type.
+
+  * special treatment: spaces is encoded as ``+``
+
+url design
+----------
+
+* A clean, elegant URL scheme is an important detail in a high-quality
+  Web application.
+
+  Cool urls don't change. Try to make your url last as long as possible.
+
+* 遵从 REST 思想.
+
+* ajax 返回 json 的 url api 可以直接以 ``.json`` 结尾, 以示与普通 view
+  的区别.
+
+url length limit
+----------------
+
+* HTTP 协议本身并不限制 url 长度. 但建议接收方和发送方都支持至少 8000 bytes
+  长度的 url.
+
+* 若 url 太长服务端无法处理, 应返回 414 (URI Too Long).
+
+* 各浏览器有不同的 url 长度限制 (可输入的或可接受的 url 长度). IE8+ ~ 2000 bytes,
+  其他浏览器都比这个长, 甚至长很多. 所以 2000 bytes 可看作是长度的上确界.
 
 Headers
 =======
