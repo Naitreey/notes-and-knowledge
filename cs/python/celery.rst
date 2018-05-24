@@ -136,6 +136,14 @@ states
 - PENDING state is not a recorded state, but rather the default state for any
   task id that’s unknown.
 
+task routing
+------------
+两种方式:
+
+- 静态配置: ``task_routes``
+
+- dispatch 时设置: ``apply_async(queue=...)``
+
 methods
 -------
 
@@ -194,6 +202,88 @@ AMQP
 - 与 RPC result backend 同理, 但相比于 rpc 非常低效, 它对于每个任务都单独
   开一个队列.
 
+Canvas
+======
+- Canvas 的用处和价值.
+
+  * 如果我们每次请求执行任务时, 只需要异步执行一个单独的任务, 那么 ``Task.delay()``
+    即可满足需求. 但很多时候并没有这么简单. 可能需要异步执行多个任务, 且任务之间
+    存在依赖关系和执行顺序问题. 也就是说, 我们请求执行的是一个多步骤的任务流.
+    
+    最简单的解决办法是在上一步任务中同步或异步地调用下一步任务. 这样显然是有很多
+    缺陷的. 首先, 强制给任务之间写入关联, 造成了任务之间的强耦合, 各个任务不再能够
+    独立执行. 其次, 这种方式有很大的局限性, 对于复杂的关系流, 比如涉及分支和汇聚过程,
+    变得难以维护. 显然, 任务之间应该是无显性关联的, 任务之间要保持逻辑独立.
+
+  * Canvas 的意义, 就在于提供一种机制能够将多个独立任务组织起来, 成为一个复杂的异步
+    任务流. 一次构建, 一次分发, 分发后任务的依赖关系和执行顺序内部自动解决.
+
+Signature
+---------
+- A Signature wraps the arguments and execution options of a single task
+  invocation. A signature 类似于 partially applied function.
+
+- 与普通的 partially applied function 不同, 初始化 Signature 时, 传入的参数是靠右侧
+  填充的. 例如::
+
+    @app.task
+    def f(a,b,c):
+        pass
+
+    f.s(1,2) # b == 1, c == 2
+    f.s(1,2).delay(3) # a == 3
+
+- A Signature supports the Task APIs, such as being asynchronously dispatched,
+  invoked directly, etc. 在 call Signature 时, 提供的 kwargs overrides those passed
+  in Signature initialization.
+
+methods
+^^^^^^^
+
+- ``apply_async()``
+
+- ``delay()``
+
+primitives
+----------
+- Primitives are special Signature subclasses that serves as job workflow
+  orchestration toolset.
+
+- Primitives wraps 一系列的 Signatures, 生成一个新的 Signature, 作为一个 workflow.
+  如果其中包含 partial signatures, 在 dispatch workflow Signature 时, 可以一起填充
+  缺失的参数.
+
+group
+^^^^^
+- A group calls an iterable of tasks in parallel.
+
+chain
+^^^^^
+- A chain links tasks together to be executed sequentially, where the output of
+  the previous task's signature is feed as input of the next task's signature.
+
+- A bitwise OR-ed sequence of Signatures is chained automatically.
+
+constructor
+""""""""""""
+- A bitwise OR-ed sequence of Task Signatures.
+
+chord
+^^^^^
+- A chord is a group with callback task. In other words, the iterable of tasks
+  are executed in parallel, of which the results are feed into the callback task.
+
+- A group chained to another task will be automatically converted to a chord.
+
+map
+^^^
+
+starmap
+^^^^^^^
+
+chunks
+^^^^^^
+
 worker
 ======
 
@@ -211,6 +301,12 @@ worker pool options
 - ``--concurrency``. the number of worker processes. default is the
   number of logical CPUs on current system. 对每个 worker process,
   实施 ``--pool`` 指定的 worker pool 处理任务.
+
+- ``--events``. send task events for monitoring.
+
+queue options
+""""""""""""""
+- ``--queues``, 指定该 worker 监听的队列.
 
 celery multi
 ^^^^^^^^^^^^
@@ -253,9 +349,9 @@ Routing
 
 - 不同 pool 类型的 workers 适合处理不同类型的任务.
 
-- 可以通过设置不同的队列, 对任务进行分类. 在不同类型的 worker
-  端, 监听不同的队列. 不同 worker 处理自己擅长的任务, 达到更有效
-  的资源利用.
+- 可以通过设置不同的队列, 对任务进行分类. 在不同类型的 worker 端,
+  监听不同的队列 (``--queues`` option). 不同 worker 处理自己擅长的任务,
+  达到更有效的资源利用.
 
 - 任务还可以分优先级, 并设置相应不同优先级的队列.
 
@@ -263,6 +359,40 @@ Monitoring
 ==========
 
 - Worker can send task-related events.
+
+- Remote control and inspection of worker at runtime can be done if
+  message broker is rabbitmq, redis, qpid etc.
+
+CLI
+---
+
+celery inspect
+^^^^^^^^^^^^^^
+- inspect worker.
+
+celery control
+^^^^^^^^^^^^^^
+- control worker
+
+- operations.
+
+  * enable_events
+
+  * disable_events
+
+celery events
+^^^^^^^^^^^^^
+- show events sent by workers.
+
+celery status
+^^^^^^^^^^^^^
+- shows online workers.
+
+timezone
+========
+- All times and dates, internally and in messages uses the UTC timezone.
+
+- UTC time from/to local time conversion is based on ``timezone`` setting.
 
 Configuration
 =============
@@ -280,6 +410,16 @@ message broker
 result backend
 --------------
 - ``result_backend``
+
+routing
+-------
+
+- ``task_routes``
+
+monitoring
+----------
+
+- ``worker_send_task_events``
 
 celery CLI
 ==========
@@ -312,6 +452,14 @@ subcommands
 - worker
 
 - multi
+
+- status
+
+- inspect
+
+- control
+
+- events
 
 References
 ==========
