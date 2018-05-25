@@ -6617,7 +6617,7 @@ JSONField
 
 - constructor options.
 
-  * default. 默认的 default 值是 ``dict``.
+  * default. 注意默认的 default 值是 ``dict``. 如需要其他值比如 NULL 需明确设置.
 
 - checkings.
 

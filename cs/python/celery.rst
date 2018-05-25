@@ -308,6 +308,11 @@ queue options
 """"""""""""""
 - ``--queues``, 指定该 worker 监听的队列.
 
+embedded beat options
+""""""""""""""""""""""
+- ``--beat``. embed celery beat scheduler in this worker. 这导致该
+  worker 只能运行一个实例.
+
 celery multi
 ^^^^^^^^^^^^
 
@@ -388,11 +393,81 @@ celery status
 ^^^^^^^^^^^^^
 - shows online workers.
 
+Periodic tasks
+==============
+- Periodic tasks are registered from the ``beat_schedule`` settings or
+  other configured sources (like SQL database).
+
+- Periodic tasks are executed by the ``celery beat`` process.
+  Only one beat process can be run at a time.
+
+- The tasks may overlap if the first task doesn’t complete before the next. If
+  undesirable, use some locking strategy to prevent this.
+
+scheduler classes
+-----------------
+
+PersistentScheduler
+^^^^^^^^^^^^^^^^^^^
+
+- This is the default scheduler.
+ 
+- It automatically detects timezone changes, and reset the schedule.
+
+- It uses a local shelve database file to keep track of task run times
+  (``--schedule`` option).
+
+Add task entries
+----------------
+
+- ``app.on_after_configure.connect``. 添加 task 至 ``beat_schedule``.
+
+- manually add tasks in ``beat_schedule``, which is a dict of schedule
+  names to schedule configs.
+
+  * task. import path string of task.
+
+  * schedule. the number of seconds, a timedelta, a crontab, or other
+    custom schedule values.
+
+  * args. list or tuple.
+
+  * kwargs. dict.
+
+  * options. options for ``apply_async``
+
+  * relative.
+
+schedule types
+--------------
+
+
+crontab
+^^^^^^^
+
+solar
+^^^^^
+- Schedule events according to solar events at a specific location on earth.
+
+CLI
+---
+
+celery beat
+^^^^^^^^^^^
+::
+
+  celery -A proj beat
+
+- For development, celery beat can be embedded in celery worker.
+
+- ``--schedule``. path of schedule database.
+
 timezone
 ========
 - All times and dates, internally and in messages uses the UTC timezone.
 
 - UTC time from/to local time conversion is based on ``timezone`` setting.
+  (For django, ``TIME_ZONE`` setting.)
 
 Configuration
 =============
@@ -421,6 +496,90 @@ monitoring
 
 - ``worker_send_task_events``
 
+periodic tasks
+--------------
+
+- ``beat_schedule``
+
+django integration
+==================
+- Celery has builtin support for Django. 通过一些设置, celery 可以加载
+  django project 中所有 installed apps 中的 tasks. Optionally, celery
+  can also load configs from Django's settings module.
+
+setup
+-----
+- main celery module in global app: ``proj/proj/celery.py``.
+  
+  * 设置独立加载 django project 所需配置
+    
+  * 初始化 celery app
+
+  * 从 django settings 中加载 celery 配置.
+
+  * 自动从 ``<app_name>/tasks.py`` 加载 tasks.
+
+  ::
+
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', "enoc.settings")
+
+    app = Celery("enoc")
+    app.config_from_object("django.conf:settings", namespace="CELERY")
+    app.autodiscover_tasks()
+
+- global app's init file: ``proj/proj/__init__.py``.
+
+  * 加载 celery app instance. 对于 celery worker, 这一步并不需要. 这是
+    为了能够在 django project 中使用 shared celery tasks. 因为 django 不会自动
+    加载 ``celery.py``, 会自动加载 app package. 从而加载了初始化的 celery app.
+    从而, 加载 shared tasks 时, 会给已经加载的这个 app 添加各个 tasks.
+
+  ::
+
+    from .celery import app as celery_app
+
+    __all__.append(celery_app)
+
+- each app's tasks file: ``proj/app_name/tasks.py``
+
+  * 使用 ``shared_task`` decorator 定义所需任务实例. 使用 ``shared_task``
+    是为了避免 explicitly depends on global app, 提高 app 的可重用性.
+
+  ::
+  
+    @shared_task
+    def f...
+
+- celery settings. 在 ``proj/proj/settings.py`` 中设置. 根据预设的规则前缀
+  进行设置.
+
+  * 对于 timezone, ``TIME_ZONE`` setting will be used if a celery-specific
+    ``timezone`` is not defined.
+
+- start worker::
+
+  celery -A proj worker ...
+
+extensions
+----------
+
+django-celery-results
+^^^^^^^^^^^^^^^^^^^^^
+使用 django ORM 保存 celery task results.
+
+看上去并没有什么必要. celery 使用自己的 result backend 存储方式
+就挺好, 何必添加 (与 django project 之间) 不必要的耦合.
+
+django-celery-beat
+^^^^^^^^^^^^^^^^^^
+将 periodic tasks 保存在 database 中. 并可以通过 django admin
+进行管理.
+
+这是有价值的, 因为提高了任务配置的灵活性, 不需要在 settings 中
+写死.
+
+但是这个 extension 是否 production-ready?
+        
 celery CLI
 ==========
 
@@ -460,6 +619,8 @@ subcommands
 - control
 
 - events
+
+- beat
 
 References
 ==========
