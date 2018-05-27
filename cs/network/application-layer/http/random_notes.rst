@@ -332,139 +332,201 @@ url length limit
 Headers
 =======
 
-- ``Referer``, 是 request header. 包含该请求来自的那个页面对应的 url.
-  浏览器自动加上它. 可被后端用于识别来源, 从而 logging, tracking 等等.
-  url fragment (``#id``) 和 userinfo ``user@pass`` 不被包含.
+Referer
+-------
 
-  若原页面是 local ``file:`` ``data:`` uri 则不设置该 header;
-  若原页面是 https 的, 但本请求是 http 的, 则不设置该 header.
+request header. 包含该请求来自的那个页面对应的 url.
+浏览器自动加上它. 可被后端用于识别来源, 从而 logging, tracking 等等.
+url fragment (``#id``) 和 userinfo ``user@pass`` 不被包含.
 
-  事实上这个单词拼错了: Referrer.
+若原页面是 local ``file:`` ``data:`` uri 则不设置该 header;
+若原页面是 https 的, 但本请求是 http 的, 则不设置该 header.
 
-- ``Expect`` request header: 指定为了完成请求, 预期服务器要满足的条件.
+事实上这个单词拼错了: Referrer.
 
-  目前仅定义了 ``Expect: 100-continue``. 这用于避免白白时间和资源将整个请求
-  传递给了服务端, 结果请求本身不合法. 对于体积比较大的 POST 类请求时, 可首先
-  传递 header 部分, 加上这个 header, 若相应返回 status code 100 (Continue),
-  则继续上传 body 部分, 若返回 417 (Expectation Failed) 则中断.
+Expect
+------
 
-  这个 header 目前没有主流浏览器实现, 只有 cURL 会在 POST 大文件时这么做.
-  对于 curl, 它发出 header 部分后, 会等待一个 ``expect100-timeout`` 时间,
-  若没等到任何相应, 则继续传 body.
+request header: 指定为了完成请求, 预期服务器要满足的条件.
 
-- ``X-Forwarded-Host``, 在包含 reverse proxy (反向代理) 的环境中, 代理服务器
-  (即直接接受客户端请求的服务器, cache, CDN 等) 向真实处理请求的服务器转发时,
-  要加上这个 header, 其值为原始的 ``HOST`` header 值. 从而真实服务端能够判断
-  客户端请求的 host 是什么.
+目前仅定义了 ``Expect: 100-continue``. 这用于避免白白时间和资源将整个请求
+传递给了服务端, 结果请求本身不合法. 对于体积比较大的 POST 类请求时, 可首先
+传递 header 部分, 加上这个 header, 若相应返回 status code 100 (Continue),
+则继续上传 body 部分, 若返回 417 (Expectation Failed) 则中断.
 
-- ``X-Forwarded-For``, 在 proxy 向服务端请求时, 或者 reverse proxy 向真实服务端
-  请求时, 通过这个 header, 来识别原始的请求客户端 IP 地址.
+这个 header 目前没有主流浏览器实现, 只有 cURL 会在 POST 大文件时这么做.
+对于 curl, 它发出 header 部分后, 会等待一个 ``expect100-timeout`` 时间,
+若没等到任何相应, 则继续传 body.
 
-- X-Forwarded-For, X-Forwarded-Host 的值都可能包含多项地址, 因经过了多次代理或
-  转发. 从而第一个是最原始那个.
+X-Forwarded-Host
+----------------
 
-- ``X-Requested-With``, 现代的 js library 在做 AJAX 请求时, 都会添加这个 header,
-  并设置值为 ``XMLHttpRequest``. 这是为了防止 AJAX 来源的 CSRF attack.
+在包含 reverse proxy (反向代理) 的环境中, 代理服务器
+(即直接接受客户端请求的服务器, cache, CDN 等) 向真实处理请求的服务器转发时,
+要加上这个 header, 其值为原始的 ``HOST`` header 值. 从而真实服务端能够判断
+客户端请求的 host 是什么.
 
-  当服务端本身允许某个 ajax 跨域, 为了区别合法和非法的跨域请求, 要对请求来源进行验证.
-  浏览器发现 ajax 请求包含了这个 header 时, 会添加 CORS 相关 headers 或 preflight
-  请求, 这样服务端就可以验证 ajax 的真伪. 若请求本身不包含这个 header, 服务端可以
-  直接拒绝掉.
+X-Forwarded-For
+---------------
 
-- `Host` header
+在 proxy 向服务端请求时, 或者 reverse proxy 向真实服务端
+请求时, 通过这个 header, 来识别原始的请求客户端 IP 地址.
 
-  * A `Host` header field must be sent in all HTTP/1.1 request messages.
-    A 400 (Bad Request) status code will be sent to any HTTP/1.1 request
-    message that lacks a Host header field or contains more than one.
+X-Forwarded-For, X-Forwarded-Host 的值都可能包含多项地址, 因经过了多次代理或
+转发. 从而第一个是最原始那个.
 
-  * `Host` header can contain port number or not.
+X-Requested-With
+----------------
 
-  * `Host` header can be used for virtual hosting.
+现代的 js library 在做 AJAX 请求时, 都会添加这个 header,
+并设置值为 ``XMLHttpRequest``. 这是为了防止 AJAX 来源的 CSRF attack.
 
-- ``Vary``
+当服务端本身允许某个 ajax 跨域, 为了区别合法和非法的跨域请求, 要对请求来源进行验证.
+浏览器发现 ajax 请求包含了这个 header 时, 会添加 CORS 相关 headers 或 preflight
+请求, 这样服务端就可以验证 ajax 的真伪. 若请求本身不包含这个 header, 服务端可以
+直接拒绝掉.
 
-  * 与 cache 相关. Vary 的值是一系列 comma separated headers, 这些 headers
-    是出现在 request 中的. cache 在缓存 response 时, 将根据 Host, url path,
-    以及 Vary 中出现的各个 request headers, 来对 response 进行分类缓存.
-    达到的效果是, cache 将根据 request 中的 header 的值选择 cached response
-    版本.
+Host
+----
 
-    例如, ``Vary: User-Agent`` 可以避免 mobile browser 收到 desktop 版的页面.
-    因如果 cache 中没有 mobile 的 user agent 对应的页面, cache miss 从而向
-    原始服务端请求.
+* A `Host` header field must be sent in all HTTP/1.1 request messages.
+  A 400 (Bad Request) status code will be sent to any HTTP/1.1 request
+  message that lacks a Host header field or contains more than one.
 
-- ``Cache-Control``
+* `Host` header can contain port number or not.
 
-  * request 和 response 都可以设置.
+* `Host` header can be used for virtual hosting.
 
-  * directives.
+Vary
+----
 
-    - ``public``, response only. response may be cached by any cache.
+* 与 cache 相关. Vary 的值是一系列 comma separated headers, 这些 headers
+  是出现在 request 中的. cache 在缓存 response 时, 将根据 Host, url path,
+  以及 Vary 中出现的各个 request headers, 来对 response 进行分类缓存.
+  达到的效果是, cache 将根据 request 中的 header 的值选择 cached response
+  版本.
 
-    - ``private``, response only. response is intended for single user and should
-      not be stored by a shared cache. A private cache may store the response.
+  例如, ``Vary: User-Agent`` 可以避免 mobile browser 收到 desktop 版的页面.
+  因如果 cache 中没有 mobile 的 user agent 对应的页面, cache miss 从而向
+  原始服务端请求.
 
-    - ``no-cache``, request/response. cache must submit the request to origin
-      server for validation before returning the cached copy.
+Cache-Control
+-------------
 
-    - ``no-store``, request/response. cache should not store anything about
-      request/response.
+* request 和 response 都可以设置.
 
-    - ``only-if-cached``, request only. client only want the cached response.
+* directives.
 
-    - ``max-age=<seconds>``, request/response. the max time the resource will
-      be considered fresh.
+  - ``public``, response only. response may be cached by any cache.
 
-    - ``must-revalidate``, response only. stale resoures must be validated before
-      serving.
+  - ``private``, response only. response is intended for single user and should
+    not be stored by a shared cache. A private cache may store the response.
 
-- ``Referer``
+  - ``no-cache``, request/response. cache must submit the request to origin
+    server for validation before returning the cached copy.
 
-- ``Strict-Transport-Security``. response header.
-  response 包含该 header 告知浏览器启动 HSTS 机制.
+  - ``no-store``, request/response. cache should not store anything about
+    request/response.
 
-  directives.
+  - ``only-if-cached``, request only. client only want the cached response.
+
+  - ``max-age=<seconds>``, request/response. the max time the resource will
+    be considered fresh.
+
+  - ``must-revalidate``, response only. stale resoures must be validated before
+    serving.
+
+Strict-Transport-Security
+-------------------------
+
+response header.
+response 包含该 header 告知浏览器启动 HSTS 机制.
+
+directives.
+
+* max-age. 持续 ``max-age`` 时间 (in seconds). 意思是浏览器会记这么久, 在这段时间
+  内, 所有对该 domain 的所有访问, 都强制使用 https. 无论是不是一个 browser session.
+  只考虑绝对时间. 过期后的非指定 scheme 的首次访问转回 http.
+
+  每次响应中出现该 header & max-age directive, 过期时间都会刷新, 重新计算.
+  若想 disable HSTS, 设置 max-age=0.
+
+* includeSubDomains. this rule applies to all of the site's subdomains as well.
+
+* preload. 表示该 domain 在 browser 预加载的 HSTS domain list 中.
+
+X-Frame-Options
+---------------
+
+response header.
+服务端通过设置该 header, 告知浏览器是否允许以 ``<iframe>``, ``<frame>``,
+``<object>`` 等嵌入式方式 render 这个响应. 这用于解决 clickjacking.
+
+directives.
+
+* DENY. 禁止一切嵌入.
+
+* SAMEORIGIN. 当该资源与触发请求的页面同源时才允许嵌入.
+
+* ALLOW-FROM <uri>. 只允许匹配的 domain 来源时嵌入.
+
+X-Content-Type-Options
+----------------------
+
+防止浏览器根据自己 sniff 到的 (即自己认为的)
+content type 而 override 服务端设置的 Content-Type header.
+
+directives.
+
+* nosniff.
+
+X-XSS-Protection
+----------------
+
+directives.
+
+* 0. disable xss filtering.
+
+* 1. enable. If a cross-site scripting attack is detected, the browser will
+  sanitize the page (remove the unsafe parts).
+
+* 1; mode=block. prevent rendering of the page if an attack is detected.
+
+Status code in response
+=======================
+- 5 classes of responses:
   
-  * max-age. 持续 ``max-age`` 时间 (in seconds). 意思是浏览器会记这么久, 在这段时间
-    内, 所有对该 domain 的所有访问, 都强制使用 https. 无论是不是一个 browser session.
-    只考虑绝对时间. 过期后的非指定 scheme 的首次访问转回 http.
+  * informational responses,
+    
+  * successful responses,
+    
+  * redirects,
+    
+  * client errors,
+    
+  * servers errors.
 
-    每次响应中出现该 header & max-age directive, 过期时间都会刷新, 重新计算.
-    若想 disable HSTS, 设置 max-age=0.
+informational
+-------------
 
-  * includeSubDomains. this rule applies to all of the site's subdomains as well.
+100 Continue
+^^^^^^^^^^^^
+- Used with ``Expect`` request header. 表示 client should continue with the request,
+  or ignore it if the client has finished request.  See also `Expect`_.
 
-  * preload. 表示该 domain 在 browser 预加载的 HSTS domain list 中.
+101 Switching Protocol
+^^^^^^^^^^^^^^^^^^^^^^
 
-- ``X-Frame-Options``. response header.
-  服务端通过设置该 header, 告知浏览器是否允许以 ``<iframe>``, ``<frame>``,
-  ``<object>`` 等嵌入式方式 render 这个响应. 这用于解决 clickjacking.
+102 Processing
+^^^^^^^^^^^^^^
 
-  directives.
+- In WebDAV
 
-  * DENY. 禁止一切嵌入.
+successful
+----------
 
-  * SAMEORIGIN. 当该资源与触发请求的页面同源时才允许嵌入.
-
-  * ALLOW-FROM <uri>. 只允许匹配的 domain 来源时嵌入.
-
-- ``X-Content-Type-Options``. 防止浏览器根据自己 sniff 到的 (即自己认为的)
-  content type 而 override 服务端设置的 Content-Type header.
-
-  directives.
-
-  * nosniff.
-
-- ``X-XSS-Protection``.
-
-  directives.
-
-  * 0. disable xss filtering.
-
-  * 1. enable. If a cross-site scripting attack is detected, the browser will
-    sanitize the page (remove the unsafe parts).
-
-  * 1; mode=block. prevent rendering of the page if an attack is detected.
+200 OK
+^^^^^^
 
 Browser development tools
 =========================
