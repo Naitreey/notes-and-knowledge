@@ -175,6 +175,8 @@ methods
 
   * If the task raised an exception, it is re-raised inside of the get call.
 
+  * ``wait()`` is a deprecated alias of ``get()``.
+
 - ``failed()``
 
 - ``successful()``
@@ -286,6 +288,11 @@ chunks
 
 worker
 ======
+- 使用不同 pool 类型的 workers 适合处理不同类型的任务.
+
+- 可以通过设置不同的队列, 对任务进行分类. 在不同类型的 worker 端,
+  监听不同的队列 (``--queues`` option). 不同 worker 处理自己擅长的任务,
+  达到更有效的资源利用.
 
 CLIs
 ----
@@ -349,16 +356,153 @@ eventlet, gevent
 - eventlet, gevent workers 适合进行 async IO 相关的任务处理.
   一个重点是在这些 worker 中不要处理需要 blocking 操作的任务.
 
-Routing
-=======
+Routing and Messaging
+=====================
 
-- 不同 pool 类型的 workers 适合处理不同类型的任务.
+- 一些 routing 设计考虑的方面:
 
-- 可以通过设置不同的队列, 对任务进行分类. 在不同类型的 worker 端,
-  监听不同的队列 (``--queues`` option). 不同 worker 处理自己擅长的任务,
-  达到更有效的资源利用.
+  * 考虑 worker 的类型: prefork, eventlet, gevent. 接受不同类型
+    的任务.
 
-- 任务还可以分优先级, 并设置相应不同优先级的队列.
+  * 任务的优先级.
+
+  * 常规任务或周期性任务.
+
+routing configs
+---------------
+
+exchange, queue, bindings setup
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- define queues: ``task_queues``. A list of ``kombu.Queue``. The default is a
+  queue/exchange/binding key of ``celery``, with exchange type ``direct``.
+
+  Celery automatically create entities necessary for these queue configuration
+  to work. For example, in rabbitmq, creating necessary exchanges, queues,
+  bindings.
+
+- define ``task_default_queue`` used for tasks that don't have explicit routing
+  key.
+
+- define ``task_default_delivery_mode`` used for tasks that don't have explicit
+  delivery mode.
+
+- define ``task_default_exchange``, ``task_default_exchange_type``,
+  ``task_default_routing_key``, 作为 ``task_queues``
+  中各个 Queue 的参数的默认值.
+
+task routing setup
+^^^^^^^^^^^^^^^^^^
+- define task routers. ``task_routes`` 集中定义了各个 task 在 dispatch 时生成的
+  message 的路由参数是什么样的. 从而能够到达预期的队列, 被预期的 worker 接受.
+
+  ``task_routes`` is a single router or a list of routers. When sending tasks,
+  the routers are consulted in order. The first router that doesn’t return None
+  is the route to use. A router is one of the following:
+
+  * A router function.
+
+  * import path string to a router function.
+
+  * A dict containing router specification.
+
+  * A list of key-value pairs equivalent to a router specification dict. This
+    is useful if the order of matching keys in router spec dict is significant.
+
+  In a router specification dict (or its list equivalent),
+  
+  * key can be:
+    
+    - task's import path string
+     
+    - glob pattern matching task's import path string
+
+    - regex object matching task's import path string
+
+  * value is a routing config dict containing any combination of following
+    keys:
+
+    - ``queue``
+
+    - ``exchange``
+
+    - ``routing_key``
+
+  A router function has
+  
+  * signature::
+
+      (name, args, kwargs, options, task=None, **kwargs)
+
+  * return value: if the router does not know the route of the task to take, it
+    returns None; otherwise it returns the name of a queue defined in
+    ``task_queues`` or a dict of custom routwrouting configs.
+  
+
+routing determination
+---------------------
+A task's final routing config fields are determined in the following order,
+with the same parameter values in the former override those in the latter:
+
+- Config values returned by routers defined in ``task_routes``.
+
+- The routing arguments to ``Task.apply_async()``.
+
+- Routing configs related attributes defined on the Task itself.
+
+message protocol
+----------------
+
+message format
+^^^^^^^^^^^^^^
+- headers.
+
+  * content type. the serialization format of message.
+
+  * encoding
+
+- body.
+
+  * task name
+
+  * task uuid
+
+  * task args
+
+  * task kwargs
+
+  * metadata
+
+AMQP API
+--------
+basic.publish
+
+queue.declare
+
+basic.ack
+
+exchange.declare
+
+queue.delete
+
+basic.get
+
+exchange.delete
+
+queue.bind
+
+queue.purge
+
+AMQP CLI
+--------
+
+celery amqp
+^^^^^^^^^^^
+- used for low-level message broker administration.
+
+- support tab completion.
+
+- commands are direct counterparts to AMQP APIs.
 
 Monitoring
 ==========
@@ -417,8 +561,8 @@ PersistentScheduler
 - It uses a local shelve database file to keep track of task run times
   (``--schedule`` option).
 
-Add task entries
-----------------
+task entries
+------------
 
 - ``app.on_after_configure.connect``. 添加 task 至 ``beat_schedule``.
 
@@ -490,6 +634,16 @@ routing
 -------
 
 - ``task_routes``
+
+- ``task_create_missing_queues``
+
+- ``task_queues``
+
+- ``task_default_queue``
+
+- ``task_default_exchange``
+
+- ``task_default_routing_key``
 
 monitoring
 ----------
@@ -578,8 +732,10 @@ django-celery-beat
 这是有价值的, 因为提高了任务配置的灵活性, 不需要在 settings 中
 写死.
 
-但是这个 extension 是否 production-ready?
-        
+使用::
+
+  celery -A proj beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+
 celery CLI
 ==========
 
@@ -621,6 +777,8 @@ subcommands
 - events
 
 - beat
+
+- amqp
 
 References
 ==========
