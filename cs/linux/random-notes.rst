@@ -128,9 +128,6 @@
   anacron 不是 daemon, 它要靠在 crontab 中注册, 每小时运行一次, 来检查和执行
   需要的任务. anacron 的注册方式是 ``cron.hourly/0anacron``.
 
-- linux FHS 的思路实际上就是从抽象至具体, 从 class/interface 至实例一层层递进
-  的思路. 这与 OOP 程序设计的思路 (或者宽泛的一般性的程序设计思路) 实际上是一致的.
-
 - ``/dev/sd?`` 已经失去它原本的含义了 (sd: SCSI device). 如今, 它更像是一个泛泛的
   对存储设备的概括 (sd: storage device). 因为使用 SAS, SATA, PATA, SCSI, USB, 等协议
   和总线的设备往往都显示为 ``sd?``. 注意, 这些协议本身都是不同的, 不一定有兼容性.
