@@ -1088,13 +1088,26 @@ dockerd
   跨机器协作. 通过几个简单的环境变量修改, 一个 docker (CLI) client 可以
   切换控制本地或远端等多个 daemon.
 
-configuration
-~~~~~~~~~~~~~
-- proxy settings. 在 ``/etc/systemd/system/docker.service.d/`` 中创建
-  配置文件修改 ``HTTP_PROXY``, ``NO_PROXY`` 环境变量. 注意若需要和
-  private registry 交互, 相应的 ``NO_PROXY`` 是必须的. 否则无法 docker
-  login 之类的操作.
+systemd configs
+~~~~~~~~~~~~~~~
+proxy settings
+""""""""""""""
+- daemon 在启动时通过读取 systemd 设置的这些环境变量, 设置使用 proxy.
+  因此不能使用 ``daemon.json`` 来配置.
 
+- 在 ``/etc/systemd/system/docker.service.d/`` 中创建配置文件修改
+  ``HTTP_PROXY``, ``HTTPS_PROXY``, ``NO_PROXY`` 环境变量. 注意若需要和 private
+  registry 交互, 相应的 ``NO_PROXY`` 是必须的. 否则无法 docker login
+  之类的操作.::
+
+    [Service]
+    Environment="..."
+
+- Reload systemd daemon::
+
+    systemctl daemon-reload
+
+- Restart docker.
 
 object label
 ------------
