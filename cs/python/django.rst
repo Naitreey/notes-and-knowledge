@@ -5527,7 +5527,8 @@ class attribute.
 * redirect_field_name.
 
 以下 mixin class 都会 override ``View.dispatch()`` method, 因此需要保证在
-MRO 的最左边.
+MRO 的最左边. 此外, 由于它们直接 override ``dispatch()``, 因此无论 request
+method 是什么都会生效. 不如相应的 decorator 灵活.
 
 - ``LoginRequiredMixin``
 
