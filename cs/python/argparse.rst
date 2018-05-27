@@ -96,13 +96,13 @@ fromfile_prefix_chars
 
 argument_default
 ~~~~~~~~~~~~~~~~
-各个参数的 parser-wide default. 当某个参数是 optional 的时候, 且并没有明确设置
+- 各个参数的 parser-wide default. 当某个参数是 optional 的时候, 且并没有明确设置
 默认值时, 就会 fallback 至这个默认值.
 
-``argparse.SUPPRESS`` 是一个特殊值, 若设置它为 argument_default, 则此时在结果
-Namespace 中不包含默认的属性.
-
-- default: None.
+  * default: None.
+  
+  * ``argparse.SUPPRESS`` 是一个特殊值, 若设置它为 argument_default, 则此时在结果
+    Namespace 中不包含默认的属性.
 
 conflict_handler
 ~~~~~~~~~~~~~~~~
@@ -238,6 +238,10 @@ default
   * default: None.
 
 - 若 default is SUPPRESS, 结果 namespace 中不添加 dest 对应的默认值.
+
+- 从效果上看, 除非 ``default`` 值为 ``SUPPRESS`` 或者 fallback 至 ``SUPPRESS``,
+  在 ``parse_args()`` 阶段, 生成的 namespace 中一定会有相应的参数项, 若命令行
+  没有指定, 则取根据上述逻辑确定的默认值. 
 
 type
 ~~~~
