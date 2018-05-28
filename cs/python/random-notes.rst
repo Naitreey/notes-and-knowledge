@@ -617,13 +617,6 @@
 
     sys.stdout = open(sys.stdout.fileno(), mode="w", errors="backslashreplace")
 
-- time, datetime
-
-  * time.timezone 给出的 offset 是 localtime 和 utc-time 之差的相反数.
-
-  * 对于 datetime.strptime classmethod, ``format`` 中包含 ``%z`` 时, 将生成一个
-    timezone-aware 的 datetime object.
-
 - membership test ``x in y`` 如何进行判断.
 
   * For container types such as list, tuple, set, frozenset, dict, or collections.deque,
