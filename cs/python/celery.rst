@@ -428,6 +428,9 @@ task routing setup
 
     - ``routing_key``
 
+    注意, 符合 AMQP 协议需要至少提供 ``exchange`` and ``routing_key``. 否则
+    可能产生非预期路由结果.
+
   A router function has
   
   * signature::
