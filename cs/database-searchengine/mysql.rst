@@ -1951,8 +1951,8 @@ replication formats
 
 - MBR. 
 
-configuration
-""""""""""""""
+Configuring replication
+""""""""""""""""""""""""
 - On the master, you must enable binary logging and configure a non-zero
   unique server ID::
 
@@ -1974,34 +1974,39 @@ configuration
     GRANT REPLICATION SLAVE ON *.* TO 'replication'@'%';
     FLUSH PRIVILEGES;
 
-- Before creating a data snapshot or starting the replication process, on the
-  master you should record the current position in the binary log.
+- manully backup master mysql data, or for the better, use xtrabackup. See
+  `Percona XtraBackup`_.
 
-  * Start a session and flush all tables and block write statements::
-
-      FLUSH TABLES WITH READ LOCK;
-
-    leave the session open to keep global lock.
-
-  * get current binary log coordinates::
-
-      SHOW MASTER STATUS;
-
-    For a new master, this is empty, then use ``''`` and 4.
+  - Before creating a data snapshot or starting the replication process, on the
+    master you should record the current position in the binary log.
   
-- If you already have data on the master and want to use it to synchronize the
-  slave, you need to create a data snapshot to copy the data to the slave.
-
-  * use mysqldump::
-      
-      mysqldump --all-databases --master-data >dump.sql
-
-    release read lock::
-      
-      UNLOCK TABLES;
-      QUIT;
-
-  * copy raw data.
+    * Start a session and flush all tables and block write statements::
+  
+        FLUSH TABLES WITH READ LOCK;
+  
+      leave the session open to keep global lock.
+  
+    * get current binary log coordinates::
+  
+        SHOW MASTER STATUS;
+  
+      For a new master, this is empty, then use ``''`` and 4.
+    
+  - If you already have data on the master and want to use it to synchronize the
+    slave, you need to create a data snapshot to copy the data to the slave.
+  
+    * use mysqldump::
+        
+        mysqldump --all-databases --master-data >dump.sql
+  
+      release read lock::
+        
+        UNLOCK TABLES;
+        QUIT;
+  
+    * copy raw data.
+  
+    * apply master data snapshot to slave.
 
 - Configure the slave with settings for connecting to the master.
 
@@ -2015,18 +2020,18 @@ configuration
       relay-log-purge=1
       relay-log-recovery=1
 
-  * apply master data snapshot.
-
   * configure replication::
 
       CHANGE MASTER TO
           MASTER_HOST='master_host_name',
+          MASTER_USER='replication_user_name',
+          MASTER_PASSWORD='replication_password',
           MASTER_LOG_FILE='recorded_log_file_name',
           MASTER_LOG_POS=recorded_log_position;
       
   * start slave threads::
 
-      START SLAVE USER='replication_user_name' PASSWORD='replication_password';
+      START SLAVE;
 
   * check slave status::
 
@@ -2056,6 +2061,21 @@ checking replication status
     ``Last_IO_Error``, ``Last_SQL_Error``.
 
   * ``performance_schema`` replication tables.
+
+Remove a slave
+""""""""""""""
+
+- stop slave threads::
+
+    STOP SLAVE;
+
+- clear replication status and saved configs on slave::
+
+    RESET SLAVE ALL;
+
+- remove replication related configurations.
+
+- restart slave mysqld.
 
 replication options
 ^^^^^^^^^^^^^^^^^^^
@@ -2346,6 +2366,47 @@ SHOW SLAVE STATUS
 CHANGE MASTER TO
 """"""""""""""""
 - 配置保存在 ``performance_schema.replication_connection_configuration``.
+
+STOP SLAVE
+""""""""""
+::
+
+  STOP SLAVE [thread_type [, thread_type] ... ] [FOR CHANNEL channel]
+
+  thread_type: IO_THREAD | SQL_THREAD
+
+- requires the REPLICATION_SLAVE_ADMIN or SUPER privilege.
+
+- STOP SLAVE causes an implicit commit of an ongoing transaction.
+
+- If no tread_type is provided, all types of threads are stopped.
+
+- Providing a FOR CHANNEL clause applies the STOP SLAVE statement to a
+  specific replication channel. If a STOP SLAVE statement does not name a
+  channel when using multiple channels, this statement stops the specified
+  threads for all channels.
+
+RESET SLAVE
+"""""""""""
+::
+
+  RESET SLAVE [ALL] [FOR CHANNEL channel]
+
+- reset slave's some or all configs and data about replication.
+
+- Use RESET SLAVE to reset slave's replication to its initial state and
+  ready to perform a clean start. Maybe for the specified channel.
+
+- Without ALL, It clears the master info and relay log info repositories,
+  deletes all the relay log files, and starts a new relay log file. It also
+  resets to 0 the replication delay. Connection parameters are not reset.
+ 
+- With ALL, connection parameters and other configs are further reset. So
+  basically nothing about replication is preserved. All replication channels
+  or the specified channel is deleted.
+
+- Providing a FOR CHANNEL channel clause operation affecting a specific
+  replication channel.
 
 CHANGE REPLICATION FILTER
 """""""""""""""""""""""""
