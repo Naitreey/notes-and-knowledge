@@ -493,14 +493,48 @@ methods
 
 - tzname(dt). timezone's name.
 
-- fromutc(dt). get 
+- fromutc(dt). treat dt as in UTC, return equivalent datetime in tzinfo's
+  timezone. 
 
 timezone
 ^^^^^^^^
 - A subclass of tzinfo that has fixed offset from UTC.
+
+class attributes
+""""""""""""""""
+- utc. The UTC timezone.
 
 dateutil
 ========
 
 calendar
 ========
+
+- calendar calculations.
+
+- 提供日历相关函数和日历展示函数.
+
+Calendar
+--------
+- provides several methods that can be used for preparing the calendar data for
+  formatting. This class doesn’t do any formatting itself.
+
+TextCalendar
+------------
+- generate plain text calendar like unix cal.
+
+HTMLCalendar
+------------
+- generate HTML calendar.
+
+LocaleTextCalendar
+------------------
+
+LocaleHTMLCalendar
+------------------
+
+utilities
+---------
+- utilities for convenient operations.
+
+- one unfit ``timegm()`` function.
