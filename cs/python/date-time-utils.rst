@@ -506,6 +506,84 @@ class attributes
 
 dateutil
 ========
+- features:
+
+  * date parsing. supporting more format than possible with datetime.strptime.
+
+  * relativedelta provides more flexible datetime manipulation than it is
+    possible with ``timedelta``.
+
+  * various tzinfo implementations
+
+  * flexible calendar-based recurrence rules.
+
+parser
+------
+- If AM or PM is left unspecified, a 24-hour clock is assumed.
+
+- If a time zone is omitted, a timezone-naive datetime is returned.
+
+- two parser function:
+
+  * ``parse``: support many formats.
+
+  * ``isoparse``: parse ISO-8601 format string.
+
+relativedelta
+-------------
+
+constructor
+^^^^^^^^^^^
+两种实例化方式:
+
+- dt1, dt2. 生成 dt1 - dt2 的时间差.
+
+- 提供一系列 keyword 参数, 代表 absolute and relative 时间项.
+
+  * The plural is relative, and the singular is absolute.
+
+  * relative values can be positive or negative.
+
+  * absolute: year, month, day, hour, minute, second, microsecond, weekday
+
+  * relative: years, months, weeks, days, hours, minutes, seconds, microseconds
+
+  * weekday can be special ``MO``, ``TU(-1)`` etc., or ``calendar.MONDAY`` etc.
+
+methods
+^^^^^^^
+
+operation
+""""""""""
+- When a relativedelta is added to a datetime,
+  
+  * the absolute attributes are applied first by setting each attribute to that
+    value.
+   
+  * then the relative form by adding the value to the attribute.
+
+  * finally weekday is applied, setting day to the nearest N's weekday, going
+    forward or backward.
+
+- For months with different numbers of days, adding one month will never cross
+  the month boundary.
+
+rrule
+-----
+
+tz
+--
+
+module-level stuffs
+^^^^^^^^^^^^^^^^^^^
+
+- ``UTC``.
+
+- ``gettz(name=None)``. get the specified timezone. name is a time zone name,
+  location of a zoneinfo file, TZ variable style time zone specifier. Default
+  return local timezone.
+
+  * any two calls to gettz using the same input will return the same object.
 
 calendar
 ========
