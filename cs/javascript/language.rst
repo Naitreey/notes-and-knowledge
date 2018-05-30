@@ -797,6 +797,55 @@ var
 
   Var hoisting should NOT be relied upon.
 
+destructuring assignment
+------------------------
+::
+
+  let [a, b] = [1, 2];
+  let [a, b, ...c] = [1, 2, 3, 4];
+
+  let {x, y} = {x:1, y:2};
+  ({a, b, ...c} = {x:1, y:2, z:3, w:4});
+  let {x: p, y: q} = {x:1, y:2};
+
+- object destructuring 是将属性值赋值给对应属性名的变量, 因此在 LHS 不关心变量的
+  书写顺序. 只有在 RHS unpacking 时具有的属性才会被赋值, 否则使用默认值. 如果包含
+  rest parameter, 剩下的成为 rest object 的属性.
+
+- 对于 object 的 destructuring assignment, 若不是在声明时初始化, 则必须添加 ``()``,
+  这是 js 词法分析限制导致的: ``{}`` on the left-hand side is considered a
+  block and not an object literal.
+
+  在省略 ``;`` 的情况下, ``()`` wrapper 可能导致误当作函数参数. 但省略 semicolon 本来
+  就是不对的.
+
+- 如果 LHS 变量数多于 RHS unpacking 的值的数目, 即 LHS 不能全部赋值,
+  剩下的会使用默认值 undefined, 相当于只声明未赋值.::
+
+    let [a,b, ...[c, d, ...e]] = [1,2,[3,4,5,6]]
+    // c: [3,4,5,6]
+    // d: undefined
+    // e: []
+
+  如果 LHS 少于 RHS, 多余的 RHS 值直接抛弃.
+
+  这些方面与 python 中不同,
+
+- LHS 的各变量支持设置默认值, 当没有 RHS 中相应的项赋值, 则使用默认值, 默认的
+  默认值是 undefined.::
+
+    [a=1, b=2, c=3] = [4, 4]; //a:4, b:4, c:3
+    ({a, b, c=3} = {a:1, b:2});
+
+  rest parameter 不支持设置默认值.
+
+- unneeded unpacking values can be ignored by leaving the corresponding LHS
+  position empty. 这与 python 中不同.::
+
+    [a,,b] = [1,2,3,4,5]
+  
+  object destructuring 不支持这种形式.
+
 block statement
 ---------------
 ::
@@ -1364,6 +1413,14 @@ spread and rest syntax
     more remaining arguments.  此时, rest parameter 必须是最后一个参数. 在
     function call 中, 该参数收集到 an array of remaining arguments.
 
+    注意, 在函数定义中出现的 spread syntax 仍然可以一般性以多层形式出现.::
+
+      function f(a, ...[b, c, ...d]) {
+          //
+      }
+
+    这与 python 不同.
+
   * an argument of the argument list of function call. operand must be an iterable.
     iterable 生成的所有值, 成为 argument list 的一部分. spread syntax 可以在 argument
     list 中出现多次, 且位置不限.
@@ -1376,22 +1433,16 @@ spread and rest syntax
 
       {...{a:1}, b:2, ...{c:3}}
 
-    注意这是唯一一处不要求 ``...`` operand 是 iterable object 的用法.
-
   * in LHS of destructuring assignment. 收集 0 个或多个 remaining RHS's
     elements at the same unpacking level. 注意 reset parameter 必须是同层
     的最后一个项. 并且支持 nested spread syntax.::
 
       let [a,b, ...c] = [1,2,3,4]
       let [a,b, ...[c, d, ...e]] = [1,2,3,4,5,6]
+      let a,b;
+      ({a, b, ...c} = {c:10, d:20, e:30, f:40}); //c: {e:30, f:40}
 
-    与 python 中不同, 这里如果 LHS 变量不能全部赋值, 剩下的会使用默认值 undefined,
-    相当于只声明未赋值.::
-
-      let [a,b, ...[c, d, ...e]] = [1,2,[3,4,5,6]]
-      // c: [3,4,5,6]
-      // d: undefined
-      // e: []
+    object destructure 似乎不支持 nested.
 
 function expressions
 --------------------
