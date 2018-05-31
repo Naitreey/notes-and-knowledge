@@ -808,19 +808,8 @@ destructuring assignment
   ({a, b, ...c} = {x:1, y:2, z:3, w:4});
   let {x: p, y: q} = {x:1, y:2};
 
-- object destructuring 是将属性值赋值给对应属性名的变量, 因此在 LHS 不关心变量的
-  书写顺序. 只有在 RHS unpacking 时具有的属性才会被赋值, 否则使用默认值. 如果包含
-  rest parameter, 剩下的成为 rest object 的属性.
-
-- 对于 object 的 destructuring assignment, 若不是在声明时初始化, 则必须添加 ``()``,
-  这是 js 词法分析限制导致的: ``{}`` on the left-hand side is considered a
-  block and not an object literal.
-
-  在省略 ``;`` 的情况下, ``()`` wrapper 可能导致误当作函数参数. 但省略 semicolon 本来
-  就是不对的.
-
 - 如果 LHS 变量数多于 RHS unpacking 的值的数目, 即 LHS 不能全部赋值,
-  剩下的会使用默认值 undefined, 相当于只声明未赋值.::
+  剩下的会使用默认值.::
 
     let [a,b, ...[c, d, ...e]] = [1,2,[3,4,5,6]]
     // c: [3,4,5,6]
@@ -829,13 +818,13 @@ destructuring assignment
 
   如果 LHS 少于 RHS, 多余的 RHS 值直接抛弃.
 
-  这些方面与 python 中不同,
+  这些方面与 python 中不同.
 
 - LHS 的各变量支持设置默认值, 当没有 RHS 中相应的项赋值, 则使用默认值, 默认的
   默认值是 undefined.::
 
     [a=1, b=2, c=3] = [4, 4]; //a:4, b:4, c:3
-    ({a, b, c=3} = {a:1, b:2});
+    ({a, b, c:d=3} = {a:1, b:2});
 
   rest parameter 不支持设置默认值.
 
@@ -845,6 +834,73 @@ destructuring assignment
     [a,,b] = [1,2,3,4,5]
   
   object destructuring 不支持这种形式.
+
+- nested destructuring assignment.
+
+  * for array destructuring.::
+
+      [a, [b, [c, d]]] = [1, [2, [3, 4]]];
+
+  * for object destructuring.::
+
+      ({a:aa, b: {c: cc, d: dd}} = {a:1, b: {c: 3, d: 4}});
+
+- destructuring assignment, 尤其是比较复杂的, 例如涉及 nested, 涉及 array &
+  object destructuring, 涉及使用 ignored parameter, rest parameter, etc,
+  很适合用于从数据结构中提取所需信息. ::
+
+    var metadata = {
+        title: 'Scratchpad',
+        translations: [
+           {
+            locale: 'de',
+            localization_tags: [],
+            last_edit: '2014-04-14T08:43:37',
+            url: '/de/docs/Tools/Scratchpad',
+            title: 'JavaScript-Umgebung'
+           }
+        ],
+        url: '/en-US/docs/Tools/Scratchpad'
+    };
+
+    var {title: englishTitle, translations: [{title: localeTitle}]} = metadata;
+
+    console.log(englishTitle); // "Scratchpad"
+    console.log(localeTitle);  // "JavaScript-Umgebung"
+
+object destructuring
+^^^^^^^^^^^^^^^^^^^^
+- object destructuring 的一般形式::
+
+    let {<var>[:<newvar>][=<default>], ...} = <object>
+    ({<var>[:<newvar>][=<default>], ...} = <object>)
+
+- 当 newvar 未指定时, 默认为 var; 当 default 未指定时, 默认为 undefined.
+
+  如果 object 中要赋值的 key 不是 valid identifier, 即只能以 string 形式
+  写出, 则必须设置 valid identifier newvar 来接受对应值. 例如::
+
+    let {'var-': var} = {'var-': 1};
+
+- 赋值的是 newvar. 若使用声明并初始化形式, 声明并初始化的是 newvar.
+
+- object destructuring 是将属性值赋值给 LHS 对应位置的映射参数的值, 因此在
+  LHS 不关心变量的书写顺序. 只有在 RHS unpacking 时具有的属性才会被赋值,
+  否则使用默认值. 如果包含 rest parameter, 剩下的成为 rest object 的属性.
+
+- 对于 object 的 destructuring assignment, 若不是在声明时初始化, 则必须添加 ``()``,
+  这是 js 词法分析限制导致的: ``{}`` on the left-hand side is considered a
+  block and not an object literal.
+
+- 在省略 ``;`` 的情况下, ``()`` wrapper 可能导致误当作函数参数. 但省略
+  semicolon 本来就是不对的.
+
+- object destructuring 允许用在函数参数部分, 用来模拟 keyword-only parameters
+  with default value. 这是相当奇怪的语法.::
+
+    let f = ({a=1, b=2}={}) => {
+        //
+    }
 
 block statement
 ---------------
@@ -1092,6 +1148,14 @@ function declaration statement
 - When function is called, its formal parameters are set values sequentially
   corresponding to argument list. All remaining formal parameters fall back to
   their default values. If ``default`` is unspecified, it's ``undefined``.
+
+- 模拟更灵活的 keyword parameter.
+
+  注意 ``param=default`` 形式的参数定义, 在 JS 中只是 explicitly 设置了参数的
+  默认值, 并没有允许 keyword 形式的参数赋值. 函数在调用时, 参数传递仍然是
+  positional 依次赋值的.
+
+  使用 object destructuring assignment 可以模拟 keyword argument 形式参数赋值.
 
 - Differing from variable declaration with initial value, function declaration
   is handled entirely by compiler: compiler handles both the function name

@@ -4140,6 +4140,9 @@ query expressions
 
   - ``When``. 条件通过 positional Q objects 或者 keyword field lookup syntax
     指定. 结果通过 ``then=`` 指定, 结果可以是一个 query expression.
+    
+    注意, 如果 ``then=`` 的值是一个 string, 会被认为是 field name, 从而转换成
+    ``F()`` expression. 若需要 literal value, 使用 ``Value()`` expression.
 
   - ``Case``. 接受 positional ``When`` objects 作为 cases, 这些 When objects
     依次执行, 直到有一个为 True 为止, 返回的结果是相应的 When 的 then.

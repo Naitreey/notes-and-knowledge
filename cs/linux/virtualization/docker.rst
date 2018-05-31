@@ -178,7 +178,7 @@ base image
 ----------
 
 制作基镜像
-~~~~~~~~~~
+^^^^^^^^^^
 两种制作 base image 的方法.
 
 * ``docker image import``. 这种方式的问题是只有结果, 没有过程.
@@ -193,7 +193,7 @@ While scratch appears in Docker’s repository on the hub, you can’t pull it o
 run it.
 
 选择基镜像
-~~~~~~~~~~
+^^^^^^^^^^
 - 当需要同时运行多个服务时, 尽量选择存在共同基镜像的镜像版本. 例如
   基于 debian image 各个版本, alpine 等的镜像.
 
@@ -385,18 +385,18 @@ A Dockerfile must start with zero or more ``ARG`` instructions followed by a
 对于 array 形式的参数, 使用 valid JSON array syntax.
 
 instruction
-~~~~~~~~~~~
+^^^^^^^^^^^
 INSTRUCTION is case-insensitive. Convention is to be uppercase to distinguish
 them from arguments easily.
 
 Instructions is executed in order. 
 
 comment
-~~~~~~~
+^^^^^^^
 Line comments (and parser directives) must start at the beginning of lines.
 
 parser directive
-~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^
 All parser directives must be at the very top of a Dockerfile.
 Each directive may only be used once.
 
@@ -407,7 +407,7 @@ instructions
 ------------
 
 FROM
-~~~~
+^^^^
 ::
   FROM <image>[:<tag>|@<digest>] [AS <name>]
 
@@ -420,7 +420,7 @@ FROM
   of a build stage.
 
 SHELL
-~~~~~
+^^^^^
 ::
   SHELL ["cmd", ...]
 
@@ -431,7 +431,7 @@ SHELL
 - The SHELL instruction can appear multiple times.
 
 RUN
-~~~
+^^^
 ::
   RUN <command>
   RUN ["cmd", ...]
@@ -466,7 +466,7 @@ RUN
   例如, 对于 commands involving pipelines, 设置 ``pipefail`` option.
 
 ENTRYPOINT
-~~~~~~~~~~
+^^^^^^^^^^
 ::
   ENTRYPOINT ["cmd", ...]
 
@@ -521,7 +521,7 @@ ENTRYPOINT
   不必要的麻烦.
 
 CMD
-~~~
+^^^
 ::
   CMD ["cmd", ...]
   CMD ["param", ...]
@@ -542,7 +542,7 @@ CMD
 - CMD 可被 ``docker run`` 的命令行执行的命令和/或参数覆盖.
 
 EXPOSE
-~~~~~~
+^^^^^^
 ::
   EXPOSE <port>[/<protocol>] ...
 
@@ -560,7 +560,7 @@ EXPOSE
 - 镜像 exposed ports 可通过 ``docker inspect`` 看到.
 
 ARG
-~~~
+^^^
 ::
   ARG <name>[=<default>]
 
@@ -592,7 +592,7 @@ ARG
   * At build time, ENV variable always override ARG variable of the same name.
 
 ENV
-~~~
+^^^
 ::
   ENV <key>=<value> ...
 
@@ -607,7 +607,7 @@ ENV
 - ENV 环境变量可通过 ``docker inspect`` 查看.
 
 COPY
-~~~~
+^^^^
 ::
   COPY [--chown=<user|id>:<group|id>] <src> ... <dest>
 
@@ -637,7 +637,7 @@ COPY
   specifically required files change.
 
 ADD
-~~~
+^^^
 ::
   ADD [--chown=<user|id>:<group|id>] <src> ... <dest>
 
@@ -656,7 +656,7 @@ ADD
   strongly discouraged. 使用 RUN 去下载、使用、删除一个命令完成.
 
 VOLUME
-~~~~~~
+^^^^^^
 ::
   VOLUME ["mountpoint", ...]
 
@@ -670,7 +670,7 @@ change the data within the volume mountpoint after it has been declared, those
 changes will be discarded.
 
 USER
-~~~~
+^^^^
 ::
   USER <user|id>[:<group|id>]
 
@@ -678,7 +678,7 @@ Specify user and/or group name/id used by any following RUN, CMD, ENTRYPOINT
 instructions.
 
 WORKDIR
-~~~~~~~
+^^^^^^^
 ::
   WORKDIR /path
 
@@ -693,14 +693,14 @@ WORKDIR
 - use WORKDIR instead of ``RUN cd … && do-something``.
 
 STOPSIGNAL
-~~~~~~~~~~
+^^^^^^^^^^
 ::
   STOPSIGNAL <signal|id>
 
 Set the signal to be sent to container when ``docker stop``.
 
 HEALTHCHECK
-~~~~~~~~~~~
+^^^^^^^^^^^
 ::
   HEALTHCHECK [--interval=<duration>|--timeout=<duration>|
                --retries=N|--start-period=<duration>]
@@ -762,7 +762,7 @@ event. When the health status of a container changes, a `health_status` event is
 generated with the new status.
 
 LABEL
-~~~~~
+^^^^^
 ::
   LABEL <key>=<value> ...
 
@@ -772,7 +772,7 @@ LABEL
   inherited by your image.
 
 ONBUILD
-~~~~~~~
+^^^^^^^
 ::
   ONBUILD <instruction>
 
@@ -804,7 +804,7 @@ parser directives
 -----------------
 
 escape
-~~~~~~
+^^^^^^
 设置 dockerfile 中用于 escape 的 char. default is ``\``.
 
 parameter substitution
@@ -927,7 +927,7 @@ Volumes are only removed when you explicitly remove them. 对于同一个容器,
 volume. 原来 anonymous volume 里的数据会迁移至新的 anonymous volume.
 
 copy
-~~~~
+^^^^
 对于 mountpoint 位置本身有数据时, empty volume, non-empty volume 和 bind mount
 的处理是不同的:
 
@@ -936,7 +936,7 @@ copy
 - non-empty volume & bind mount: Linux 正常方式, 直接挂载.
 
 swarm mode notice
-~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^
 swarm mode 与 named volume 注意事项.
 Swarm does not currently orchestrate volumes. The syntax
 is very purposefully ``--mount`` and not ``--volume`` for this reason.
@@ -958,7 +958,7 @@ constraints on the service so that its tasks are deployed on a node that has
 the volume present.
 
 volume drivers
-~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^
 除了 local driver 之外, volume drivers 可以是别的形式, 例如 remote hosts, cloud
 storage. volume drivers 是 docker plugins.
 
@@ -1006,7 +1006,7 @@ A config that is being used by any tasks can not be deleted.
 configs 跟着删除.
 
 mechanism
-~~~~~~~~~
+^^^^^^^^^
 docker config 基本上和 bind mount 机制差不多. 但它是作用在 service 
 上的, 因此自动分布式应用在所有相关 tasks 上而无论节点. 没有重复操作.
 这是它相比与 bind mount config 的主要好处.
@@ -1018,7 +1018,7 @@ managers, ensuring the same high availability guarantees for configs as for the
 rest of the swarm management data.
 
 rotate a config
-~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^
 在服务运行过程中更新 docker config, you first save a new config with a
 different name than the one that is currently in use. You then redeploy the
 service (via ``docker service update`` or ``docker stack deploy``), removing
@@ -1039,7 +1039,7 @@ unmounted from the in-memory filesystem for that container and flushed from the
 node’s memory.
 
 mechanism
-~~~~~~~~~
+^^^^^^^^^
 docker secret 使用 tmpfs mount, 并且加密保存和传输. 单独使用 tmpfs mount
 在安全性和便利性上不如 docker secret.
 
@@ -1047,7 +1047,7 @@ When you grant a newly-created or running service access to a secret, the
 decrypted secret is mounted into the container in an in-memory filesystem.
 
 rotate secret
-~~~~~~~~~~~~~
+^^^^^^^^^^^^^
 使用 ``--secret-add``, ``--secret-rm``. 其他类似 docker config.
 
 engine
@@ -1089,7 +1089,7 @@ dockerd
   切换控制本地或远端等多个 daemon.
 
 systemd configs
-~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^
 proxy settings
 """"""""""""""
 - daemon 在启动时通过读取 systemd 设置的这些环境变量, 设置使用 proxy.
@@ -1120,7 +1120,7 @@ engine
 ------
 
 container
-~~~~~~~~~
+^^^^^^^^^
 
 - docker container run, docker run.
 
@@ -1223,7 +1223,7 @@ container
   选项有不同的结果!!!!! 看源代码解决.
 
 image
-~~~~~
+^^^^^
 
 - docker image build, docker build.
 
@@ -1272,7 +1272,7 @@ image
   时间, hash 等信息.
 
 swarm
-~~~~~
+^^^^^
 
 - docker swarm init. initialize a swarm.
   并自动让当前节点成为 swarm manager.
@@ -1295,12 +1295,12 @@ swarm
   需要不同的 token.
 
 node
-~~~~
+^^^^
 
 - docker node ls.
 
 stack
-~~~~~
+^^^^^
 
 - docker stack deploy.
   deploy 时会自动 docker pull 所需镜像.
@@ -1319,7 +1319,7 @@ stack
 - docker stack services. list services in the stack.
 
 service
-~~~~~~~
+^^^^^^^
 - docker service create. create a service.
   支持一些类似 docker run 的参数以及 compose file 的内容.
 
@@ -1379,7 +1379,7 @@ service
 - docker service logs. 可以查看一个服务的整体日志, 按照 task 分开显示.
 
 config
-~~~~~~
+^^^^^^
 - docker config create.
   支持从 stdin 创建配置. config name 必须唯一, 不能重复.
 
@@ -1392,7 +1392,7 @@ config
 - docker config rm.
 
 secret
-~~~~~~
+^^^^^^
 
 - docker secret create.
 
@@ -1403,20 +1403,20 @@ secret
 - docker secret rm.
 
 object
-~~~~~~
+^^^^^^
 
 - docker inspect. insepct any docker objects.
   实际上各个主要 docker object 的子命令中还有 inspect 命令专门查看该类型对象.
 
 registry
-~~~~~~~~
+^^^^^^^^
 
 - docker login.
 
 - docker logout.
 
 network
-~~~~~~~
+^^^^^^^
 
 - docker network create.
 
@@ -1457,7 +1457,7 @@ network
   remove unused networks.
 
 volume
-~~~~~~
+^^^^^^
 
 - docker volume create.
   create named or anonymous volume.
@@ -1476,7 +1476,7 @@ volume
 - docker volume rm.
 
 plugin
-~~~~~~
+^^^^^^
 
 compose
 -------
@@ -1583,6 +1583,8 @@ compose file
 
 overview
 --------
+- Definition file for a group of containers, used by docker-compose and by
+  swarm mode.
 
 - Format: yaml.
 
@@ -1591,7 +1593,7 @@ overview
   standalone mode).
 
 parameter substitution
-~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^
 - compose file 内支持 shell parameter substitution syntax 使用环境变量的值.
   这可用于将某些 flag 或量参数化. 避免每次修改都要该 compose file.
 
@@ -1612,7 +1614,7 @@ parameter substitution
 - ``$$``
 
 extension fields and merge
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 top-level keys can be named starting with ``x-``, where the entire
 tree is ignored by parser. This is useful to construct yaml anchor nodes,
 for collecting common configs into one place.
@@ -1625,7 +1627,7 @@ version info
 ------------
 
 version
-~~~~~~~
+^^^^^^^
 String. Compose file format is versioned.
 
 compose file versions:
@@ -1641,7 +1643,7 @@ build configs
 -------------
 
 build
-~~~~~
+^^^^^
 one of the either:
 
 - A string to build context.
@@ -1674,15 +1676,15 @@ service configs
 ---------------
 
 cap_add, cap_drop
-~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^
 注意 not usable in docker stack.
 
 command
-~~~~~~~
+^^^^^^^
 override ``CMD`` in dockerfile. string or list.
 
 configs
-~~~~~~~
+^^^^^^^
 a list of docker configs applied to this service.
 
 对于每个 config, 可以:
@@ -1692,20 +1694,20 @@ a list of docker configs applied to this service.
 * 使用 long syntax, 此时每项是 mapping. 包含: source, target, uid, gid, mode.
 
 secrets
-~~~~~~~
+^^^^^^^
 a list of secret names, or a list of mappings with keys source, target, uid,
 gid, mode.
 
 cgroup_parent
-~~~~~~~~~~~~~
+^^^^^^^^^^^^^
 ignored in swarm mode.
 
 container_name
-~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^
 ignored in swarm mode.
 
 deploy
-~~~~~~
+^^^^^^
 only usable in docker swarm, otherwise ignored. define docker service parameters.
 
 keys:
@@ -1733,67 +1735,67 @@ keys:
 * update_config.
 
 labels
-~~~~~~
+^^^^^^
 container labels.
 
 devices
-~~~~~~~
+^^^^^^^
 ignored in swarm mode.
 
 depends_on
-~~~~~~~~~~
+^^^^^^^^^^
 ignored in swarm mode.
 
 dns
-~~~
+^^^
 a string or list.
 
 dns_search
-~~~~~~~~~~
+^^^^^^^^^^
 a string or list.
 
 tmpfs
-~~~~~
+^^^^^
 ignored in swarm mode.
 
 entrypoint
-~~~~~~~~~~
+^^^^^^^^^^
 a string or list.
 
 env_file
-~~~~~~~~
+^^^^^^^^
 a string or list.
 
 environment
-~~~~~~~~~~~
+^^^^^^^^^^^
 a mapping or list of ``key=val``.
 
 expose
-~~~~~~
+^^^^^^
 expose ports to other containers in the composed network.
 .. TODO why needed? all ports are available from beginning.
 
 external_links
-~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^
 ignored in swarm mode.
 
 extra_hosts
-~~~~~~~~~~~
+^^^^^^^^^^^
 a list of "<host>:<ip>" strings added to /etc/hosts
 
 healthcheck
-~~~~~~~~~~~
+^^^^^^^^^^^
 like HEALTHCHECK.
 
 image
-~~~~~
+^^^^^
 image:tag or id.
 
 isolation
-~~~~~~~~~
+^^^^^^^^^
 
 logging
-~~~~~~~
+^^^^^^^
 keys:
 
 * driver.
@@ -1801,7 +1803,7 @@ keys:
 * options. a mapping.
 
 networks
-~~~~~~~~
+^^^^^^^^
 a list of networks. a network can be a string or a mapping of options.
 
 keys:
@@ -1811,43 +1813,45 @@ keys:
 - ipv4_address, ipv6_address.
 
 pid
-~~~
+^^^
 pid namespace.
 
 ports
-~~~~~
+^^^^^
 a list of port mapping strings in form of ``docker run --publish`` option,
 or a list of mapping in form of ``docker service create --publish`` option.
 
+设置的端口如何生效由端口的 mode 决定. 即 ingress or host.
+
 security_opt
-~~~~~~~~~~~~
+^^^^^^^^^^^^
 ignored in swarm mode.
 
 stop_grace_period
-~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^
 how long to wait for container stop before SIGKILL.
 ``[<n><unit>]+``
 
 stop_signal
-~~~~~~~~~~~
+^^^^^^^^^^^
 ignored in swarm mode.
 
 sysctls
-~~~~~~~
+^^^^^^^
 kernel parameters to set in the container.
 ignored in swarm mode.
 
 ulimits
-~~~~~~~
+^^^^^^^
 a mapping of ulimit keys and values.
 value can be a number or a mapping of soft and hard values.
 
 userns_mode
-~~~~~~~~~~~
+^^^^^^^^^^^
 ignored in swarm mode.
 
 volumes
-~~~~~~~
+^^^^^^^
 short syntax: a list of strings conforming to ``docker run --volume`` option
 syntax.
 
@@ -1856,51 +1860,62 @@ syntax. 对于每种类型, 支持 bind, volume, tmpfs 三个 key 指定 type-sp
 options.
 
 restart
-~~~~~~~
-ignored in swarm mode.
+^^^^^^^
+- ignored in swarm mode, 使用 ``restart_policy``. 在 swarm 分布式系统中,
+  restart 提供的简单的重启选项, 过于简化, 可能引起一些副作用. 但在单机 compose
+  时 (例如研发测试), 可以简单粗暴地设置服务的重启模式, 还是挺有用的.
+
+- values: "no", always, on-failure, unless-stopped.
 
 hostname
-~~~~~~~~
+^^^^^^^^
 
 ipc
-~~~
+^^^
 ipc namespace
 
 mac_address
-~~~~~~~~~~~
+^^^^^^^^^^^
 
 privileged
-~~~~~~~~~~
+^^^^^^^^^^
 boolean.
 
 read_only
-~~~~~~~~~
+^^^^^^^^^
 boolean.
 
 shm_size
-~~~~~~~~
+^^^^^^^^
 
 stdin_open
-~~~~~~~~~~
+^^^^^^^^^^
 keep stdin open. like ``docker run --interactive``
 
 tty
-~~~
+^^^
 boolean
 
 user
-~~~~
+^^^^
 like ``docker run --user``
 
 working_dir
-~~~~~~~~~~~
+^^^^^^^^^^^
 
+stdin_open
+^^^^^^^^^^
+stdin_open, tty 两个选项保证了容器在需要时仍然可以 attach.
+它们的作用即 ``docker run -it``.
+
+tty
+^^^
 
 docker config configs
 ---------------------
 
 configs
-~~~~~~~
+^^^^^^^
 declare docker configs. a mapping.
 
 对每个 config:
@@ -1915,7 +1930,7 @@ docker secret configs
 ---------------------
 
 secrets
-~~~~~~~
+^^^^^^^
 
 similar to configs key.
 
@@ -1923,7 +1938,7 @@ volume configs
 --------------
 
 volumes
-~~~~~~~
+^^^^^^^
 
 volume mapping can be key-only. all options fallbacks to default.
 
@@ -1943,7 +1958,7 @@ network configs
 ---------------
 
 networks
-~~~~~~~~
+^^^^^^^^
 
 keys:
 
@@ -2033,16 +2048,6 @@ service is named by ``<stack-name>_<service-name>``
 
 一个 service 里的每个 task 命名为 ``<stack-name>_<service-name>.<N>``.
 
-compose file
-============
-Definition file for a group of containers, used by docker-compose and by swarm
-mode.
-
-服务端口设置. 注意到 ports 是对 service 进行设置的, 而不是对 task 设置的.
-service 属于整个 stack. 所以在整个 swarm 的所有节点上, 这个端口映射至相应
-服务都要成立. 这与各个 tasks 部署在哪个节点上无关. 无论从哪个节点访问, 都
-可以 load balance. 这由一个 ingress routing mesh 实现.
-
 network
 =======
 
@@ -2068,7 +2073,7 @@ layer-3 switch. 若还需要外界能主动访问容器, 需要手动配置路�
 这通过 overlay network 来解决. (或者使用 host network 来避免网络隔离.)
 
 default bridge
-~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^
 bridge 是创建 docker network 时默认使用的 driver.
 It is considered a legacy detail of Docker and is not recommended for
 production use.
@@ -2081,7 +2086,7 @@ To configure the default bridge network, you specify options in daemon.json.
 Then restart docker daemon to take effect.
 
 default bridge vs user-defined bridge
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 User-defined bridge networks are superior to the default bridge network.
 
 - 对于 user-defined bridges, 容器运行时自动设置它在 network 中的 alias, 默认为
@@ -2114,7 +2119,7 @@ overlay network 一般用于 docker swarm mode.
 
 
 default ingress & docker_gwbridge networks
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 When you initialize a swarm or join a Docker host to an existing swarm, two new
 networks are created on that Docker host:
 
@@ -2140,7 +2145,7 @@ networks are created on that Docker host:
   automatic settings since it already exists.
 
 ports
-~~~~~
+^^^^^
 
 - TCP port 2377 for cluster management communications.
 
@@ -2149,7 +2154,7 @@ ports
 - UDP port 4789 for the container ingress network.
 
 routing mesh
-~~~~~~~~~~~~
+^^^^^^^^^^^^
 By default, swarm services which publish ports do so using the routing mesh.
 When you connect to a published port on any swarm node (whether it is running a
 given service or not), you are redirected to a worker which is running that
@@ -2175,13 +2180,13 @@ published ports 只在从外部向 overlay network 连接时使用. 即这些端
 在网络内部服务之间相互访问, 以及从外部向网络访问, 都可用.
 
 encryption
-~~~~~~~~~~
+^^^^^^^^^^
 All swarm service management traffic is encrypted by default.
 To encrypt application data as well, add ``--opt encrypted`` when creating the
 overlay network. This enables IPSEC encryption at the level of the vxlan.
 
 management and data traffic
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 swarm management traffic is encrypted by default. And by default, management
 and data traffic run on the same network. The two traffic can be separated
 to different network, if your nodes have two NICs. For each node joining the
@@ -2189,7 +2194,7 @@ swarm, specify --advertise-addr and --datapath-addr to separate management
 and data traffic.
 
 ingress overlay network vs user-defined overlay network
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 - The ingress network is special-purpose and only for handling publishing.
 
 - Ingress network is not for production use.
