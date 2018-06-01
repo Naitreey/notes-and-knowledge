@@ -6114,8 +6114,14 @@ Pagination
 Serialization
 =============
 
+
 JSON
 ----
+
+- 注意 Serializer/Deserializer API 与 JSON encoder/decoder 是不同层的结构. 前者
+  是对于各种数据格式通用的 django-specific 的封装. 后者只是对 JSON 的 encoder
+  decoder API 的扩展. 对于 JSON format, 两者的关系是 django serialization API
+  通过 DjangoJSONEncoder 来实现.
 
 - DjangoJSONEncoder 在 ``json.JSONEncoder`` 基础上, 额外支持:
 

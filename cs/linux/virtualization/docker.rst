@@ -1575,6 +1575,8 @@ docker-compose run
   specified in the service configuration. This prevents port collisions with
   those opened by other container of the same running service.
 
+- ``--rm`` remove container after run. Useful if restart policy is effective.
+
 docker-compose exec
 ^^^^^^^^^^^^^^^^^^^
 
@@ -1865,7 +1867,11 @@ restart
   restart 提供的简单的重启选项, 过于简化, 可能引起一些副作用. 但在单机 compose
   时 (例如研发测试), 可以简单粗暴地设置服务的重启模式, 还是挺有用的.
 
-- values: "no", always, on-failure, unless-stopped.
+- values: "no", always, on-failure, unless-stopped. default "no".
+
+- 如果设置了 restart policy, ``docker-compose run`` 会根据设置的 policy
+  自动重启命令, which is annoying. 使用 ``docker-compose run --rm`` 来 override
+  the behavior.
 
 hostname
 ^^^^^^^^
