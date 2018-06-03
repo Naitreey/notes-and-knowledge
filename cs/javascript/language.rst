@@ -121,6 +121,30 @@ object
           [Symbol.Something]: "sef"
       };
 
+  * concise method definitions: functions defined in object literal form, 可
+    省去 function keyword, 形成如下形式::
+
+      let x = {
+          // function
+          f() {},
+          // generator
+          *g() {},
+          // async
+          async h() {},
+          // with computed property name,
+          ["f" + "g"]() {},
+      }
+
+    注意 normal function, generator function, async function, etc, 以及配合
+    computed property name 的各种形式都可以使用.
+
+    注意, concise method definition 定义的函数, 是 anonymous function
+    expression, 等价于::
+
+      f: function () {}
+
+    具有 anonymous function 的一切问题.
+
 - constructor: ``Object()``.
 
 - an object is simply a hash map. In JS, virtually every non-primitive instance
@@ -217,29 +241,38 @@ object property
 
   * freeze. Seal an object and make all data property non-writable.
 
-prototype
-^^^^^^^^^
-- 必须要明确: 在 JS 中, 并不存在传统 OOP 语言中 class 与 instance 之间的区分.
-  在 JS 中, class 是 object, instance 还是 object. Instance object 可以任意
-  修改自己的 property 去构建自己的行为. Instance object 也可以修改自己的
-  prototype 反过来成为新的 class, 去创建自己的实例. class 也是某些 prototype
-  chain 上游 的 object 的实例.
-
-- property reference (method resolution order). ``[[Get]]`` internal method.
-
-- property assignment. ``[[Set]]`` internal method.
+object prototype
+^^^^^^^^^^^^^^^^
+- ``prototype`` property object 是 JS 中类和继承的实现基础. See `class`_.
 
 static methods
 ^^^^^^^^^^^^^^
 
-- ``assign(target, ...sources)``. shallow copy source objects into target object.
-  Return target object.
+prototype related
+""""""""""""""""""
+- ``create(proto[, propertiesObject])``. Create a new object using ``proto``
+  as its prototype (i.e., its class). The created object is linked to ``proto``.
 
-  * only copies enumerable and own properties from a source object to a target object.
+  If ``proto === null``, the created object has an empty prototype chain. It's
+  not linked to anything including Object.prototype. The created object has 
+  only own properties. It is useful for purely storing data as properties.
+  
+  ``propertiesObject`` specifies an object whose enumerable own properties will
+  be added to the newly-created object.
 
-  * It uses ``[[Get]]`` on the source and ``[[Set]]`` on the target, so it will
-    invoke getters and setters.
+- ``getPrototypeOf(obj)``. returns the prototype of the obj. Note it might be
+  null.
 
+- ``setPrototypeOf(obj, prototype)``. Set ``[[Prototype]]`` of ``obj`` to be
+  ``prototype``.
+
+  * 注意修改一个对象的 prototype chain 会影响所有相关代码的优化和执行效率. 该
+    操作可能对效率产生巨大的负面影响. avoid setting the ``[[Prototype]]`` of an
+    object. Instead, create a new object with the desired ``[[Prototype]]`` using
+    ``Object.create()``.
+
+property manipulation
+""""""""""""""""""""""
 - ``getOwnPropertyDescriptor(obj, prop)``. Returns a own property's property
   descriptor.
 
@@ -269,8 +302,36 @@ static methods
 - ``keys(obj)``. returns an array of object's enumerable property names, in the
   same order as for...in loop would.
 
-instance methods
-^^^^^^^^^^^^^^^^
+- ``assign(target, ...sources)``. shallow copy source objects into target object.
+  Return target object.
+
+  * only copies enumerable and own properties from a source object to a target object.
+
+  * It uses ``[[Get]]`` on the source and ``[[Set]]`` on the target, so it will
+    invoke getters and setters.
+
+instance properties
+^^^^^^^^^^^^^^^^^^^
+defined in ``Object.prototype``.
+
+class and prototype
+""""""""""""""""""""
+- ``constructor``. A reference to the function that created this object.
+  
+  * All objects have a consturctor, except for ``Object.create(null)``.
+
+  * Objects created without the explicit use of a constructor function (i.e.
+    the object and array literals) will have a constructor property that points
+    to the Fundamental Object constructor type for that object.
+
+  * The attribute is writable. So it's not entirely reliable. 例如, 如果
+    prototype 属性完全由另一个 object 替换, 则不能保证其值可信.
+
+- ``isPrototypeOf(obj)``. test whether the object appears in obj's prototype
+  chain. 与 instanceof operator 进行的是类似的判断.
+
+property manipulation
+""""""""""""""""""""""
 
 - ``hasOwnProperty(<prop>)``. Whether the object has this own property.
 
@@ -449,6 +510,10 @@ methods
   * the result bound function's ``name`` attribute is ``bound <func>``.
 
   * the result function can not only be bound, but also partially applied.
+
+  * The bound function does not have ``prototype`` property. In cases where
+    prototype is required, the original function's ``prototype`` is used,
+    e.g. during ``new`` instantiation; ``instanceof`` testing.
 
 Date
 ^^^^
@@ -1081,104 +1146,12 @@ try statement
 function statements
 -------------------
 
-function declaration statement
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-::
-
-  function <identifier> ([param=default, ...]) {
-      [statements]
-  }
-
-- function declaration creates a lexical scope. (a function scope.)
-
-- ``var`` declarations in function has function scope.
-
-  ``var`` + function scope is fine enough for normal programming requirements.
-  That's almost all we have in Python.
-
-- hoisting. Wherever a function declaration is inside a scope, that declaration
-  is taken to belong to the entire scope and accessible everywhere throughout
-  (WTFJS_).
-
-  Function variable and function definition is hoisted together. This is
-  different from ``var`` hoisting.
-
-  Function declaration is hoisted before ``var`` declaration. For duplicate
-  function declarations, the latter override the former.
-
-  Note that function expression does not hoist of course. The following code
-  may trick you::
-
-    func(); // `TypeError`, NOT `ReferenceError`. As `func` is hoisted.
-    var func = function func() {
-        ...
-    }
-
-- Special note on block-level function declaration (ES6) [SOBLKFUNC]_ (WTFJS_).
-
-  * In strict mode, function declared in block scope is hoisted in the scope,
-    and only visible inside the block scope. Reference the same identifier
-    outside of defining scope raises ``ReferenceError``.::
-
-      "use strict";
-      foo(); //ReferenceError
-      if (true) {
-         function foo() { console.log( "a" ); }
-      }
-      else {
-         function foo() { console.log( "b" ); }
-      }
-      foo(); //ReferenceError
-
-  * In non-strict mode, function identifier is hoisted to the nearest function
-    or global scope, but function definition is not visible until declaration
-    statement is reached. After that, the definition is visible until the end
-    of nearst function or global scope.::
-
-      /* var foo; */ // implicit hoisting.
-      foo(); // TypeError
-      if (true) {
-         function foo() { console.log( "a" ); }
-      }
-      else {
-         function foo() { console.log( "b" ); }
-      }
-      foo(); // a
-
-- When function is called, its formal parameters are set values sequentially
-  corresponding to argument list. All remaining formal parameters fall back to
-  their default values. If ``default`` is unspecified, it's ``undefined``.
-
-- 模拟更灵活的 keyword parameter.
-
-  注意 ``param=default`` 形式的参数定义, 在 JS 中只是 explicitly 设置了参数的
-  默认值, 并没有允许 keyword 形式的参数赋值. 函数在调用时, 参数传递仍然是
-  positional 依次赋值的.
-
-  使用 object destructuring assignment 可以模拟 keyword argument 形式参数赋值.
-
-- Differing from variable declaration with initial value, function declaration
-  is handled entirely by compiler: compiler handles both the function name
-  declaration in scope and function body definition during code-generation.
-
-- JS 中, 由于 ``this`` 是根据调用情况自动赋值的, 一个函数本身可以既做单纯的
-  函数来使用, 也可以作为 object bound method 使用. 而如果要作为 class unbound
-  method 使用, 需要使用 ``Function.prototype.call()``, ``Function.prototype.apply()``.
-
-generator function declaration
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-::
-
-  function* name([param[, ...]]) {
-      // statements
-  }
-
-- generator function can not be used as constructor. (注意 generator function
-  与 normal function 只是语法上长得像, 实际上是在执行逻辑上完全不同的.)
+Including function declaration statements, generator function declaration
+statements, See `function`_.
 
 with statement
 --------------
-deprecated.
+**deprecated.**
 
 It makes compiler disable compile-time optimization, leading to slower code.
 
@@ -1279,11 +1252,20 @@ Otherwise, ``TypeError`` is raised.
 
 new operator
 ^^^^^^^^^^^^
+::
+
+  new Func(<args>)
 
 - new operator instantiates a instance of constructor.
 
-- In JS, constructors are just normal functions that called after ``new`` operator. In
-  other words, ``new func()`` is just the ``func``'s constructor call.
+- In JS, constructors are normal functions that called after ``new`` operator.
+  We can say ``new func()`` is the ``func``'s constructor call.
+  
+- Func 在实例化过程中的作用.
+  
+  * Func.prototype is linked as the prototype of the created object.
+
+  * called to initialize the object created by ``new`` operator.
 
 - During constructor call, the following happens,
 
@@ -1304,9 +1286,6 @@ new operator
     var ins = new f2();
     ins instanceof f2; // true
     ins instanceof func; // true
-
-super keyword
-^^^^^^^^^^^^^
 
 unary operators
 ---------------
@@ -1450,6 +1429,22 @@ in operator
   inherited properties, enumerable and non-enumerable. 即 in operator test 的
   property set. 必须手动遍历所有父类, 对每个类 ``getOwnPropertyNames``.
 
+instanceof operator
+-------------------
+::
+
+  obj instanceof cls
+
+- test whether the ``prototype`` property of a class/constructor function
+  appears anywhere in the prototype chain of an object.
+
+- to test whether an object appears in another object's prototype chain,
+  use ``.isPrototypeOf()`` method.
+
+- 注意, 在 JS 中, instanceof 和 typoeof 两个 operator 检查的是完全不同的东西,
+  不具有相关性. 前者检查的是 prototype chain 的相关问题; 后者检查的是一个数据
+  值的所属几种基本类型. (WTFJS_)
+
 assignment operators
 ---------------------
 assignments are operators. thus assignment is an expression, unlike python.
@@ -1510,6 +1505,116 @@ spread and rest syntax
 
 function expressions
 --------------------
+Including simple function expressions, property accessor function, arrow function
+expression, See `function`_.
+
+function
+========
+        
+function statements
+-------------------
+
+See `function`_.
+
+function declaration statement
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+::
+
+  function <identifier> ([param=default, ...]) {
+      [statements]
+  }
+
+- function declaration creates a lexical scope. (a function scope.)
+
+- ``var`` declarations in function has function scope.
+
+  ``var`` + function scope is fine enough for normal programming requirements.
+  That's almost all we have in Python.
+
+- hoisting. Wherever a function declaration is inside a scope, that declaration
+  is taken to belong to the entire scope and accessible everywhere throughout
+  (WTFJS_).
+
+  Function variable and function definition is hoisted together. This is
+  different from ``var`` hoisting.
+
+  Function declaration is hoisted before ``var`` declaration. For duplicate
+  function declarations, the latter override the former.
+
+  Note that function expression does not hoist of course. The following code
+  may trick you::
+
+    func(); // `TypeError`, NOT `ReferenceError`. As `func` is hoisted.
+    var func = function func() {
+        ...
+    }
+
+- Special note on block-level function declaration (ES6) [SOBLKFUNC]_ (WTFJS_).
+
+  * In strict mode, function declared in block scope is hoisted in the scope,
+    and only visible inside the block scope. Reference the same identifier
+    outside of defining scope raises ``ReferenceError``.::
+
+      "use strict";
+      foo(); //ReferenceError
+      if (true) {
+         function foo() { console.log( "a" ); }
+      }
+      else {
+         function foo() { console.log( "b" ); }
+      }
+      foo(); //ReferenceError
+
+  * In non-strict mode, function identifier is hoisted to the nearest function
+    or global scope, but function definition is not visible until declaration
+    statement is reached. After that, the definition is visible until the end
+    of nearst function or global scope.::
+
+      /* var foo; */ // implicit hoisting.
+      foo(); // TypeError
+      if (true) {
+         function foo() { console.log( "a" ); }
+      }
+      else {
+         function foo() { console.log( "b" ); }
+      }
+      foo(); // a
+
+- When function is called, its formal parameters are set values sequentially
+  corresponding to argument list. All remaining formal parameters fall back to
+  their default values. If ``default`` is unspecified, it's ``undefined``.
+
+- 模拟更灵活的 keyword parameter.
+
+  注意 ``param=default`` 形式的参数定义, 在 JS 中只是 explicitly 设置了参数的
+  默认值, 并没有允许 keyword 形式的参数赋值. 函数在调用时, 参数传递仍然是
+  positional 依次赋值的.
+
+  使用 object destructuring assignment 可以模拟 keyword argument 形式参数赋值.
+
+- Differing from variable declaration with initial value, function declaration
+  is handled entirely by compiler: compiler handles both the function name
+  declaration in scope and function body definition during code-generation.
+
+- JS 中, 由于 ``this`` 是根据调用情况自动赋值的, 一个函数本身可以既做单纯的
+  函数来使用, 也可以作为 object bound method 使用. 而如果要作为 class unbound
+  method 使用, 需要使用 ``Function.prototype.call()``, ``Function.prototype.apply()``.
+
+generator function declaration
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+::
+
+  function* name([param[, ...]]) {
+      // statements
+  }
+
+- generator function can not be used as constructor. (注意 generator function
+  与 normal function 只是语法上长得像, 实际上是在执行逻辑上完全不同的.)
+
+function expressions
+--------------------
+
+See `function`_.
 
 function expression
 ^^^^^^^^^^^^^^^^^^^
@@ -1544,6 +1649,13 @@ section.
     defining context, e.g., used as RHS of assignment, as object property value,
     etc., which eventually becomes ``function.name`` attribute. If not inferred,
     ``function.name`` is ``""``, which is anonymous function.
+
+    Some hard disadvantages of anonymous function:
+
+    - debugging: less informative and hard to identify in call stack.
+
+    - recursion: self-referencing in function body is not possible. Thus recursion
+      is impossible.
 
   * named function can be seen in stack traces, call stacks, list of breakpoints, etc.
 
@@ -1614,7 +1726,376 @@ arrow function expression
 
 - arrow function is very useful for callbacks. because of its succinctness and
   lexical ``this`` behavior.
-        
+
+class
+=====
+
+- In JS, classes are just special functions.
+
+  * ``new <func>(<args>)`` creates instances of ``func`` class.
+
+  * ``func`` itself serves as the constructor of class.
+  
+  * ES6 ``class`` syntax is just a syntactic sugar. It does not change the way
+    class works in JS.
+
+- 与正常的 OOP 语言不同, JS 中不存在明确的 class 与 instance 的区分. 一个 object
+  是根据某个类 object 的 prototype 生成的. 这个 object 本身还可以作为类去实例化
+  prototype 部分.
+
+- Inheritance in JS.
+  
+  * JS uses a prototype-based inheritance. 与正常的 OOP language 不同, 在 JS
+    中, 一个 object 具有它自己的部分, 和它的作为 class 的部分 (即 ``prototype``
+    object). 只有 prototype 部分是实例的模板, 而它自己的部分实例是访问不到的.
+
+  * JS doesn't support multiple inheritance.
+
+- Polymorphism in JS.
+
+  * before ES6, 对于一个父类的方法, 子类只有两个选择: 完全继承或完全覆盖. 子类
+    方法中, 没有机制能够相对地引用父类同名方法. 除非直接明确访问父类获取所需
+    方法再 ``.call(this)`` bind 至本实例. 然而这种写死类名的方式维护成本太高.
+
+  * In ES6 and later, class syntax solved super method reference problem.
+
+class definition
+----------------
+
+pre-ES6
+^^^^^^^
+- definition function used as constructor call. If there is parent class,
+  their constructors must be called::
+
+    function Cls(<args>) {
+        // call parent class constructors
+        Parent.call(this, <args>);
+        // initialization logics
+    }
+
+- If there is parent class, link ``Cls.prototype`` to parent class's
+  prototype.::
+
+    Cls.prototype = Object.create(Parent.prototype);
+    // or ES6 and later
+    Object.setPrototypeOf(Cls.prototype, Parent.prototype);
+
+  注意, 使用以下代码对 prototype 赋值是不合适的::
+
+    Cls.prototype = new Parent();
+
+  因为对 Parent class 实例化会执行 Parent constructor, 这样就执行了很多不必要
+  的逻辑, 可能有 unwanted side-effect, 而且这里如果需要传递参数进去也会很奇怪.
+
+- fix constructor attribute if so inclined::
+
+    Cls.prototype.constructor = Cls
+
+- define class attributes and instance methods::
+
+    Cls.prototype.attr = val;
+    Cls.prototype.meth = function meth(args) {
+        // ...
+    }
+
+  如果子类要 override 父类的同名方法, 并在其中调用 overridden 方法, 唯一的方式
+  就是使用 absolute name::
+
+    Parent.prototype.meth.call(this, <args>);
+
+ES6 and after
+^^^^^^^^^^^^^
+
+class declaration statements
+""""""""""""""""""""""""""""
+::
+
+  class <name> [extends <parent>] {
+      // body
+  }
+
+- inheritance.
+
+  * to inherit a parent class, use ``extends`` keyword. All of class-declared
+    classes, function-declared classes, and builtin classes can be extended
+    this way.
+
+  * Use ``super`` keyword to access data properties and methods at higher
+    prototype chain. In constructor method, use ``super(<args>)`` to call
+    parent class's constructor.
+
+- method definition.
+
+  * only methods but not variables can be defined in class definition block.
+    Methods must be defined using concise method definition syntax.
+
+  * To define a static method, use ``static`` keyword. 它的用处即一般的
+    static method 的各种用处, 例如创建 utility functions.
+
+    注意到在 static method 中, ``this`` keyword 一般指向 class 本身 (仍然是
+    基于 `this keyword`_ rules). 因此可以访问 class function 上的一切属性.
+
+  * To define an instance method, just define it without ``static``.
+
+    在 instance method 中, ``this`` keyword 一般指向 instance object.
+
+  * constructor is defined obviously using ``constructor`` method.  There can
+    only be one constructor method in class definition body. Otherwise
+    SyntaxError is raised.
+
+- data properties.
+
+  * Class-only data properties and class data properties has to be defined
+    outside of class definition body.::
+
+      class A {}
+      A.x = 1;
+      A.prototype.b = 2;
+
+- mixin classes. 由于 JS 不支持多继承, mixin class 必须通过 factory function,
+  在使用时再生成, 作为 main base class 的子类. 从而在 prototype chain 中
+  插入自己的方法或 override 父类的方法.::
+
+    let mixin_factory = Base => class SomeMixin extends Base {
+        // mixin methods
+    }
+
+    // in use
+    class Child extends mixin_factory(Parent) {
+        // methods
+    }
+
+- Definition interpretation. ES6 class syntax 与 pre-ES6 的 function syntax
+  生成的是相同的东西. 具体讲,
+
+  * 生成的 class object 本身是一个 constructor function, 由 constructor
+    method definition 决定.
+
+  * ``static`` keyword 生成的 static method 即 class object 的 properties.
+
+  * 其他所有 methods 成为 ``cls.prototype`` object 的 properties.
+
+  * 对于 ``extends Parent``, 继承的仍然是 ``Parent.prototype``. 也就是将
+    ``Parent.prototype`` 作为子类的上级 prototype.
+
+- hoisting. class declarations are *not* hoisted like function declarations.
+  So classes must be lexically defined before they are used.
+
+- The whole class body is executed in strict mode.
+
+class expression
+""""""""""""""""
+This section shows stuffs specific to class expression. For other info, see
+`class declaration statements`_.
+
+- class expression can be named or unamed. The class name in class expression
+  is local to class body.
+  
+- Anonymous class shares the same problems with anonymous function expression.
+
+static keyword
+""""""""""""""
+- define static method for a class.
+
+- those static methods are only availabel on class function object.
+
+- Based on normal ``this`` value resolution rules, a static method can access
+  another static method in its body.
+
+super keyword
+""""""""""""""
+::
+
+  super(<args>)
+  super.prop
+
+- super keyword is used to access an object's parent.
+
+- super bindings.
+
+  - In constructor method, ``super`` must be called as a function, it represents
+    the parent class's constructor.
+  
+  - In instance method, ``super`` represents the parent prototype object. Thus
+    have access to all prototype's properties.
+
+- super keyword can't be used for deleting properites on parent prototype.::
+
+    delete super.prop; // ReferenceError
+
+- super bindings are static, they don't change at different call-site. They
+  are bound at definition time.::
+
+    class P {
+        foo() { console.log( "P.foo" ); }
+    }
+
+    class C extends P {
+        foo() {
+            super();
+        }
+    }
+
+    var c1 = new C();
+    c1.foo(); // "P.foo"
+
+    var D = {
+        foo: function() { console.log( "D.foo" ); }
+    };
+
+    var E = {
+        foo: C.prototype.foo
+    };
+
+    // Link E to D for delegation
+    Object.setPrototypeOf( E, D );
+
+    E.foo(); // "P.foo"
+
+extends keyword
+""""""""""""""""
+
+instantiation
+-------------
+- Instance object is created by ``new Func(<args>)`` operation. See
+  `new operator`_.
+
+prototype
+---------
+- All functions by default has a public, non-enumerable ``prototype`` property,
+  which is a reference to an arbitrary object.
+
+- Prototype is denoted by ``[[Prototype]]`` in spec.
+
+- An object's ``prototype`` property is NOT *the* object's prototype, but the
+  prototype of the object's *instances*. The object itself's prototype is only
+  accessible via ``Object.getPrototypeOf()``.
+
+prototype chain
+^^^^^^^^^^^^^^^
+
+- A object has a prototype chain linked to its parent classes. This prototype
+  chain is internal, but directly accessible like in python (``__mro__``). but
+  can be inspected indirectly via ``Object.getPrototypeOf()``.
+  
+- There two ways to create a new object that links to a specified prototype
+  object.
+
+  * as a side-effect of ``obj = new Func(<args>)`` instantiation, which
+    cause obj linked to ``Func.prototype``.
+
+  * as a direct operation of ``obj = Object.create(<proto>)``, which cause
+    obj linked to proto.
+
+method resolution
+-----------------
+
+property reference
+^^^^^^^^^^^^^^^^^^
+
+- ``[[Get]]`` internal method is called to get a property of a object.
+
+- logic of ``[[Get]]``.
+
+  * Check whether the property is the object's own property.
+
+  * Check whether it's the object's prototype's own property.
+
+  * Check the prototype of the object's prototype object... doing so
+    recursively upwards, until reaching ``Object.prototype``.
+
+  * If not found anywhere, return undefined.
+
+property assignment
+^^^^^^^^^^^^^^^^^^^
+
+- ``[[Set]]`` internal method is called to set a property.
+
+- ``[[Set]]`` is invoked when explicit assignment operations (including ++, --
+  operators), but not invoked when using ``Object.defineProperty`` etc.
+
+- logic of setting ``prop`` to ``value``, on ``obj``. e.g, ``obj.prop = val``.
+
+  * If ``prop`` not found anywhere (as own properties and on prototype chain),
+    it's created as a data descriptor on obj.
+
+  * If ``prop`` is found as a writable data descriptor anywhere, obj's own
+    ``prop`` is modified or created as appropriate.
+
+  * If ``prop`` is found but a readonly data descriptor anywhere, assignment is
+    disallowed and ignored in non-strict mode. Error is raised if in strict
+    mode.
+
+  * If ``prop`` is found as a accessor descriptor anywhere, setter is invoked.
+
+- Be very careful that ``[[Set]]`` is invoked for ``++``, ``--`` operators.
+  This may cause unexpected behavior::
+
+    function A() {}
+    A.prototype.a = 1;
+    function B() {}
+    B.prototype = new A();
+    let b = new B();
+    b.a++;
+    console.log(b.a, B.prototype.a);
+
+type introspection
+------------------
+
+Three ways to inspect the type and prototype of an object, see their
+respective sections for detail.
+
+- Object.getPrototypeOf
+
+- Object.prototype.isPrototypeOf
+
+- instanceof
+
+OLOO -- an alternative design
+-----------------------------
+
+- OLOO: Objects Linked to Other Objects.
+
+- OLOO design ditches class design patterns (which is not very well supported
+  in js), embraces purely prototype chain and behavior delegation.
+
+- Some design notes:
+
+  * See objects in prototype chains are peers rather than parent-child
+    relationship, where one object delegates some of its operations to another
+    object.
+
+  * Avoid naming things the same at different levels of the prototype chain.
+    This is different from polymorphism in OOP design.
+
+definition
+^^^^^^^^^^
+
+- Create base object, note it's not creating base class. It's just normal object
+  used as upper node in prototype chain, used for delegation. We are not creating
+  classes.::
+
+    let Parent = {
+        attr: ...,
+        init: function ...,
+        meth: function ...,
+    }
+
+  Both class attribute and instance methods are defined here.
+  Constructor/initializer must be defined manually.
+
+- Create derived object, linked to parent.::
+
+    let Child = Object.create(Parent);
+
+- Create child's methods etc.::
+
+    Child.meth = ...;
+
+- To make instance::
+
+    let c = Object.create(Child);
+
 modules
 =======
 

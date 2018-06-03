@@ -38,8 +38,8 @@ object-oriented programming
 - Class is an optional design pattern in software design. You can use it or
   not.
 
-key concepts
-^^^^^^^^^^^^
+concepts
+^^^^^^^^
 
 class
 """"""
@@ -70,6 +70,13 @@ three properties of OOP
 成一个个相互作用的实体 (即 class), 如何设计实体之间的相互作用, 如何设计一系列
 同类实体之间的共性和特性 (即设计抽象类与具体类的继承和多态). 这些学问, 都是
 需要不断思考、不断体会的.
+
+other concepts
+""""""""""""""
+- introspection. Introspection is an operation that inspects an instance at
+  runtime for its class hierarchy and other static information.
+
+- duck typing. Duck typing 是 interface/protocol 的一般化, 是一种更广泛的多态性.
 
 scope
 =====
