@@ -43,7 +43,10 @@ a-z, A-Z, 0-9, $, or _. And it must not starts with number.
 data types
 ==========
 
-- 7 builtin primitive types.
+- 7 builtin types. Null, Undefined, String, Number,
+  Boolean, Symbol, Object.
+
+  All types except object are primitives.
 
 - Unlike python, object is just one of the basic builtin types.
   In other words, string, number, etc. are all distinct types
@@ -95,6 +98,37 @@ string
 symbol
 ------
 
+Well-known symobls
+^^^^^^^^^^^^^^^^^^
+
+Symbol.species
+""""""""""""""
+
+- @@species is a readonly accessor property that returns a constructor function
+  (class function). The returned constructor function is used to create derived
+  objects from this class's instances.
+
+- A derived object is one created after  a specific operation on the original
+  object.
+  
+  For example, ``Array.prototpye.map()`` creates a derived array as the result
+  of map operation. It actually consults @@species accessor property to know
+  what class to use as the result.
+
+  Example::
+
+    class SomeArray extends Array {
+        get [Symbol.species] {
+            return Array;
+        }
+
+        some_method() {
+            //
+        }
+    }
+
+  See also: [WellKnownSymbols]_.
+
 number
 ------
 
@@ -144,6 +178,19 @@ object
       f: function () {}
 
     具有 anonymous function 的一切问题.
+
+  * concise accessor property definitions. Accessor properties can be defined
+    using ``get``, ``set`` keyword in object literal form. Rather than having
+    to use ``Object.defineProperty``.::
+
+      let x = {
+          get prop() {
+              //
+          }
+          set prop(value) {
+              //
+          }
+      }
 
 - constructor: ``Object()``.
 
@@ -447,7 +494,11 @@ methods
 Function
 ^^^^^^^^
 
-- literal form: function declaration, function expression and arrow function expression.
+- A function is a callable object. It has the internal ``[[Call]]`` method
+  so that the object can be called.
+
+- literal form: function declaration, function expression and arrow function
+  expression.
 
 - constructor ``Function()``.
 
@@ -471,6 +522,15 @@ Function
     2
     > x
     { [Function: x] r: 1, p: 2 }
+
+attributes
+""""""""""
+- ``length``. readonly data property. the number of positional args expected by
+  function.
+
+  * This number excludes the rest parameter and only includes parameters before
+    the first one with a default value.
+
 
 methods
 """""""
@@ -1292,27 +1352,36 @@ unary operators
 
 typeof
 ^^^^^^
-return string name of the type of the operand.
+- return string name of the type of the operand.
 
-- Undefined: "undefined"
+- output of different types of objects.
 
-- Null: "object". **Note** it's not "null"[1]_ (WTFJS_).
+  - Undefined: "undefined"
+  
+  - Null: "object". **Note** it's not "null"[1]_ (WTFJS_).
+  
+  - Boolean: "boolean".
+  
+  - Number: "number"
+  
+  - String: "string"
+  
+  - Symbol: "symbol"
+  
+  - Object:
+  
+    * host object: implementation-dependent
+  
+    * object that implements Call: "function"
+  
+    * otherwise: "object" (WTFJS_)
 
-- Boolean: "boolean".
+- For undeclared variable, typeof operation 的结果是 "undefined" (WTFJS_).
+  注意这不同于直接作为 rvalue 使用时的结果, 那时 raise ReferenceError.
 
-- Number: "number"
-
-- String: "string"
-
-- Symbol: "symbol"
-
-- Object:
-
-  * host object: implementation-dependent
-
-  * object that implements Call: "function"
-
-  * otherwise: "object" (WTFJS_)
+  这可用于检查某个 identifier 是否定义, 而不导致 raise exception. 所以还是
+  有用的. 其实需要使用这种办法还是因为 js 中缺乏更合理的处理机制. 一个合理
+  设计的语言中的合理代码根本不该出现不知道某个量是否存在这种情况的.
 
 .. [1] In the first implementation of JavaScript, JavaScript values were
        represented as a type tag and a value, with the type tag for objects being 0,
@@ -1816,9 +1885,9 @@ class declaration statements
 
 - inheritance.
 
-  * to inherit a parent class, use ``extends`` keyword. All of class-declared
-    classes, function-declared classes, and builtin classes can be extended
-    this way.
+  * to inherit a parent class, use ``extends`` keyword. Class-declared classes,
+    function-declared classes, and builtin classes can all be extended this
+    way.
 
   * Use ``super`` keyword to access data properties and methods at higher
     prototype chain. In constructor method, use ``super(<args>)`` to call
@@ -1827,7 +1896,8 @@ class declaration statements
 - method definition.
 
   * only methods but not variables can be defined in class definition block.
-    Methods must be defined using concise method definition syntax.
+    Methods can be defined using concise method definition syntax and concise
+    accessor property definition syntax.
 
   * To define a static method, use ``static`` keyword. 它的用处即一般的
     static method 的各种用处, 例如创建 utility functions.
@@ -1842,6 +1912,8 @@ class declaration statements
   * constructor is defined obviously using ``constructor`` method.  There can
     only be one constructor method in class definition body. Otherwise
     SyntaxError is raised.
+
+    Default Constructor method does nothing.
 
 - data properties.
 
@@ -1881,10 +1953,16 @@ class declaration statements
 - hoisting. class declarations are *not* hoisted like function declarations.
   So classes must be lexically defined before they are used.
 
+- An identifier defined using class syntax can not be redefined.
+
 - The whole class body is executed in strict mode.
+
+- class syntax 定义的 class function 只能在实例化时与 ``new`` 一起使用.
+  Otherwise TypeError is raised.
 
 class expression
 """"""""""""""""
+
 This section shows stuffs specific to class expression. For other info, see
 `class declaration statements`_.
 
@@ -1954,6 +2032,34 @@ super keyword
 
 extends keyword
 """"""""""""""""
+::
+
+  class Child extends Parent {}
+
+- to extend a class.
+
+- 当使用 extends 时, 实际上是 extends 的是 ``Parent.prototype``. 或者准确地
+  说是将 ``Child.prototype`` 与 ``Parent.prototype`` 建立 prototpye link.
+  与 Parent 上的其他除了 prototype 之外的属性没有关系.
+
+- A class can extend another class or null. 当继承 null 时, 等价于::
+
+    Child.prototype = Object.create(null);
+
+  这样, Child 不包含任何默认继承自 ``Object.prototype`` 的属性.
+
+constructor method
+""""""""""""""""""
+- constructor method 生成的就是 class function.
+
+- There can be only one special method with the name "constructor" in a class.
+  Otherwise SyntaxError is raised.
+
+- The default constructor does nothing.::
+
+    constructor() {}
+
+  For derived class, the parent class's constructor is inherited by default.
 
 instantiation
 -------------
@@ -2314,3 +2420,4 @@ references
 .. [SOnamedFuncExp2] `What is the point of using a named function expression? <https://stackoverflow.com/questions/19303923/what-is-the-point-of-using-a-named-function-expression>`_
 .. [SOBLKFUNC] `What are the precise semantics of block-level functions in ES6? <https://stackoverflow.com/questions/31419897/what-are-the-precise-semantics-of-block-level-functions-in-es6>`_
 .. [SOLetLoop] `let keyword in the for loop <https://stackoverflow.com/questions/16473350/let-keyword-in-the-for-loop>`_
+.. [WellKnownSymbols] `Detailed overview of well-known symbols <https://dmitripavlutin.com/detailed-overview-of-well-known-symbols/#6speciestocreatederivedobjects>`_
