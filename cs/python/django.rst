@@ -1039,7 +1039,7 @@ filters
 
 - ``lower``
 
-- ``cut``
+- ``cut(value, arg)``. 删除 ``arg`` 部分. 本质是 ``value.replace(arg, "")``.
 
 - ``addslashes``
 
@@ -1319,6 +1319,10 @@ request and response
     * ``POST``. 以 QueryDict 形式保存的 form data, 即通过设置 Content-Type 为
       ``application/x-www-form-urlencoded`` 和 ``multipart/form-data`` 时 POST
       的 body, 但并不包含文件上传部分.
+
+      注意, 前端 form 中留空的部分, 仍然在 form data 中, 其值为 empty string "".
+      并不存在 input field 值为 None 的情况. 当这些 empty values 传入 form 后,
+      如何转换取决于 form field 的转换规则 (``to_python()``).
 
     * 在 view 中 ``GET`` ``POST`` 是 immutable 的, 需要先 ``QueryDict.copy()``
       后再修改.
@@ -2791,7 +2795,10 @@ model meta options
 
 * ``label``, ``label_lower``, readonly. ``<app_label>.<model_name>``.
 
-* ``default_manager_name``. 指定 ``Model._default_manager`` 使用哪个名字的 manager.
+* ``default_manager_name``. 指定 ``Model._default_manager`` 使用哪个名字的
+  manager. default is None.
+
+* ``base_manager_name``. 指定 ``Model._base_manager`` 的名字. default is None.
 
 model field
 -----------
@@ -4259,20 +4266,25 @@ specify manager in model
 
 - default manager.
 
-  ``Model.Meta.default_manager_name`` 或 model class 中第一个定义的
-  manager object 当作 ``_default_manager``.
+  * 定义. 由 ``Model.Meta.default_manager_name`` 指定一个已定义的 manager 作为
+    default manager. 若其值为 None, 自动选择 model class 中第一个定义的 manager
+    object 当作 ``_default_manager``.
 
-  当程序逻辑需要使用未知 model 的 manager 时, 应使用 default manager,
-  而不该假设 ``objects`` manager 存在.
+  * 作用. default manager 允许进行一些默认的过滤等操作, 这是作为访问该 model
+    数据时进行的默认过滤. 当程序逻辑需要访问一个非确定的 generic model 的
+    manager 时, 应使用 default manager, 而不该假设 ``objects`` manager 存在.
 
-- base manager. 当通过一个 model instance 访问 related objects 时, 使用
-  related model 的 ``_base_manager`` 获取 queryset (再筛选出关联的 entries),
-  而不是使用 ``_default_manager``. 这是因为 default manager 可能进行了一些
-  过滤和限制. 而默认情况下 base manager 不使用 model class 中定义的一系列 
-  managers. 而是使用最通用的 ``django.db.models.Manager``.
+- base manager.
+  
+  * 定义. ``Model.Meta.base_manager_name`` 指定使用预定义的某个 manager 作为
+    base manager. 若值为 None, 自动生成一个标准 ``django.db.models.Manager``
+    作为 base manager. 该 manager 不包含在 ``Model._meta.managers`` 中.
 
-  ``Model.Meta.base_manager_name`` 可以指定使用预定义的某个 manager 作为
-  base manager.
+  * 作用. 相比于 default manager, base manager 一般不进行任何过滤. 可以默认
+    认为它提供该 model 最全的数据集. 例如, 当通过一个 model instance 访问
+    related objects 时, 会使用 related model 的 ``_base_manager`` 获取 queryset
+    (再筛选出关联的 entries), 而不是使用 ``_default_manager``. 这是因为 default
+    manager 可能进行了一些过滤和限制.
 
 custom manager
 ^^^^^^^^^^^^^^
@@ -6139,6 +6151,30 @@ JSON
     
   * uuid.UUID.
 
+management commands
+-------------------
+
+dumpdata
+^^^^^^^^
+::
+
+  ./manage.py dumpdata [<app_label>[.ModelName]]...
+
+- Dump data of the specified apps/models, or of all installed apps.
+
+- ``--all``. By default, dumpdata uses the default manager on each model to
+  select records to dump. Use this option to use base manager, which presumably
+  does not do default filtering.
+
+- ``--format``. Serialization format. Default JSON format.
+
+- ``--indent``. Serialization format's indent option.
+
+- ``--exclude``. exclude app or model. can be specified multiple times.
+
+loaddata
+^^^^^^^^
+
 Security, SSL & HTTPS
 =====================
 - 很多 SSL 相关的检查和操作最好在前端服务器而不是在上游 django 处理.
@@ -6424,6 +6460,9 @@ django.core.management
   通过分析 mysql's builtin ``information_schema`` database.
 
 * ``test``. Run unit tests. See `unit testing`_.
+
+* ``dumpdata``. Dump database data of django apps in serialized format.
+  See `Serialization`_.
 
 django.contrib.sessions
 ^^^^^^^^^^^^^^^^^^^^^^^
