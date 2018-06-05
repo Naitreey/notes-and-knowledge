@@ -945,11 +945,19 @@ django template system & language
 * 为了结构清晰, 应该把不同 app 的模板放在各自目录下的 ``templates/<app>/`` 下面.
 
 * template 中 object 的 ``.`` operator 的查找顺序:
-  dict key, object attribute, list index.
-  若 attribute 是一个 callable, it'll be called with no argument.
-  django 不允许 callable 输入变量, 是为了避免对可以执行函数这个功能滥用.
-  数据应该在 view 中计算完成再传入 template 进行渲染, 而不是在 template
-  中才计算.
+
+  - dict key
+   
+  - object attribute
+   
+  - list index.
+
+  若 attribute 是一个 callable, it'll be called with no argument. django
+  不允许 callable 输入变量. 数据应该在 view 中计算完成再传入 template 进行渲染,
+  而不是在 template 中才计算.
+
+  注意凡是包含 ``__call__`` 属性的变量都会 called, 所以小心, 如果需要直接使用传入
+  的量, 但它包含 ``__call__`` 属性. 会得到非预期结果. 例如直接使用 enum.Enum 类型.
 
   This lookup order can cause some unexpected behavior with objects that override
   dictionary lookup. 例如重定义了 ``__getitem__`` (defaultdict), 导致没有 key
@@ -992,6 +1000,10 @@ django template system & language
   不允许 newline).
 
 * 模板中 single quote 和 double quote 没有区别, 跟 python 一样.
+
+writing template tags
+^^^^^^^^^^^^^^^^^^^^^
+- 若设置 tag function 接收 keyword-only argument, 必须设置 ``**kwargs`` 参数.
 
 filters
 ^^^^^^^
