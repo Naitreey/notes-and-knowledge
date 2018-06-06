@@ -1208,12 +1208,15 @@ container
   main process inside container will be killed by SIGKILL or other signal
   specified by ``--signal`` option.
 
-- docker contaienr logs, docker logs.
+- docker container logs, docker logs.
 
-  ``-f, --follow`` follow output. 此时 docker attach to the running container.
+  * ``-f, --follow`` follow output. 此时 docker attach to the running container.
 
-  ``-t, --timestamps`` 显示日志的时间. 这是 docker 给记录的. 也就是说, docker
-  化的应用, 即使是异常崩溃等本身并无时间记录的输出信息, 也会有时间信息. 这很有用.
+  * ``-t, --timestamps`` 显示日志的时间. 这是 docker 给记录的. 也就是说, docker
+    化的应用, 即使是异常崩溃等本身并无时间记录的输出信息, 也会有时间信息. 这很有用.
+
+  * ``--tail[=all]``. specify how many lines to show from the end of log file.
+    Default all.
 
 - docker container attach, docker attach.
   attach container 实际上就是将 PID1 的 stdin/out/err 与 local console 的相应
