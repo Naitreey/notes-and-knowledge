@@ -550,6 +550,8 @@ testing
   array passes the test. 参数意义 ditto. Returns true if the callback function
   returns a truthy value for any array element; otherwise, false.
 
+  * callback signature: ``callback(value, index, array)``
+
   * Once a truthy return value is realized, ``some()`` immediately returns true.
 
   * holes in sparse array is skipped.
@@ -1232,6 +1234,9 @@ for-in statement
 
 - ``const`` is useful to prevent loop variable getting modified in loop body.
 
+- 注意在 for-in loop 的 ``<var>`` 赋值语句, 支持所有一般形式的声明初始化
+  statement, 包含普通的变量初始化语句与 destructuring assignment statement.
+
 for-of statement
 ^^^^^^^^^^^^^^^^
 ::
@@ -1247,6 +1252,9 @@ for-of statement
 
 - For ``(var|let|const) <var>`` form, ``<var>`` is re-declared for each
   iteration of loop.
+
+- 注意在 for-of loop 的 ``<var>`` 赋值语句, 支持所有一般形式的声明初始化
+  statement, 包含普通的变量初始化语句与 destructuring assignment statement.
 
 flow control statements
 -----------------------
