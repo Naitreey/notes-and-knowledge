@@ -96,6 +96,59 @@ boolean
 
 string
 ------
+string literal
+^^^^^^^^^^^^^^
+- a sequence of unicode characters surrounded by single or double quotes.
+
+- A string literal must be on one physical line.
+
+template literal
+^^^^^^^^^^^^^^^^
+::
+
+  [tag]`string ${expression}`
+
+- a type of string literal that allows embedded expressions.
+
+- surrounded by backtick ``\```. to escape backtick char in template literal,
+  use backslash escape ``\\\```.
+
+- template literal can be multiline, line breaks are preserved as ``\n`` in 
+  resulting string.
+
+- placeholder.
+
+  * format::
+
+      ${expression}
+
+  * 任何 expression, 只要 evaluate 至一个值, 就可以放在里面. 甚至可以包含
+    nested template literal.
+
+- nested template literal. 由于 placeholder 里面可以是任何 expression, it can
+  also be template literal expression. 里面的 backtick 无需 escape.::
+
+    const classes = `header ${ isLargeScreen() ? '' :
+     `icon-${item.isCollapsed ? 'expander' : 'collapser'}` }`;
+
+- tag function. 整个 template literal 被分成以下两个部分
+  
+  * 一个字符串数组, 包含除了 placeholders 之外的各个 string segements.
+    该数组包含一个特殊属性: ``.raw``, 其值为各个 string segments 的 raw form,
+    即 input form. 相当于 python raw string.
+
+  * a sequence of placeholder expressions' values.
+
+  这两部分作为参数传入 tag function, 注意第二部分是作为 vararg positional 参数
+  传入的. 由 tag function 决定最终输出值是什么, 甚至可以不是字符串.
+
+  默认的 tag function 直接将输入参数 concatenated 构成输出.
+
+  tag function examples:
+
+  * ``String.raw()``: make template literal like those raw strings in python::
+
+      String.raw`\d+\nwhatever\\` // output: '\\d+\\nwhatever\\\\'
 
 symbol
 ------
