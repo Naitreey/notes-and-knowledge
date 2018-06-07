@@ -66,12 +66,12 @@ data types
   * as type conversion function.
 
 - autoboxing (WTFJS_). Under certain conditions, primitive value
-  will be automatically wrapped in its object equivalent. For example,
+  will be automatically wrapped in its object equivalent. These includes
+  [SOJSAutobox]_
 
   * When accessing a primitive value's property.
 
   * When passed as ``this`` binding target.
-
 
 undefined
 ---------
@@ -96,11 +96,28 @@ boolean
 
 string
 ------
+
+- 由于 autoboxing, 这里只记录 string literal formats. 关于方法和其他机制,
+  see `String`_.
+
+- strings are immutable. 对 string 的任何 inplace modification 都不会
+  生效. 凡是涉及到 property modification, 修改的是 autobox 后的对像上的
+  属性, 并没有改变原 string primitive.
+  
+
 string literal
 ^^^^^^^^^^^^^^
 - a sequence of unicode characters surrounded by single or double quotes.
 
 - A string literal must be on one physical line.
+
+- 常见的 backslash escaped sequence 可以加入 string literal 中.
+  
+  * 支持 unicode escape sequence: ``\uXXXX`` 以及 ``\u{X}...\u{XXXXXX}``.
+
+  * newline at the end of physical lines can be escaped, thus spanning
+    string literal across multiple physical lines. 生成的 string literal
+    不包含 escaped ``\n``.
 
 template literal
 ^^^^^^^^^^^^^^^^
@@ -131,24 +148,30 @@ template literal
     const classes = `header ${ isLargeScreen() ? '' :
      `icon-${item.isCollapsed ? 'expander' : 'collapser'}` }`;
 
-- tag function. 整个 template literal 被分成以下两个部分
+- tag function.
   
-  * 一个字符串数组, 包含除了 placeholders 之外的各个 string segements.
-    该数组包含一个特殊属性: ``.raw``, 其值为各个 string segments 的 raw form,
-    即 input form. 相当于 python raw string.
+  - 整个 template literal 被分成以下两个部分
+  
+    * 一个字符串数组, 包含除了 placeholders 之外的各个 string segements.
 
-  * a sequence of placeholder expressions' values.
+    * a sequence of placeholder expressions' values.
 
-  这两部分作为参数传入 tag function, 注意第二部分是作为 vararg positional 参数
-  传入的. 由 tag function 决定最终输出值是什么, 甚至可以不是字符串.
+    这两部分作为参数传入 tag function, 注意第二部分是作为 vararg positional 参数
+    传入的. 由 tag function 决定最终输出值是什么, 甚至可以不是字符串.
 
-  默认的 tag function 直接将输入参数 concatenated 构成输出.
+  - string segment 数组包含一个特殊属性: ``.raw``, 其值为各个 string segments
+    的 raw form, 即 input form. 相当于 python raw string.
+  
+  - 默认的 tag function 直接将输入参数 concatenated 构成输出.
+  
+  - tag function examples:
+  
+    * ``String.raw()``: make template literal like those raw strings in python::
+  
+        String.raw`\d+\nwhatever\\` // output: '\\d+\\nwhatever\\\\'
 
-  tag function examples:
-
-  * ``String.raw()``: make template literal like those raw strings in python::
-
-      String.raw`\d+\nwhatever\\` // output: '\\d+\\nwhatever\\\\'
+- ``tag`string``` 形式可以看作是对 C 和 python, SQL 等语言里面的 prefix string
+    的一般化.
 
 symbol
 ------
@@ -450,10 +473,19 @@ object subtypes
 
 String
 ------
+::
 
-- string primitive type's object counterpart.
+  String([arg])
+  new String([arg])
 
-- Constructor function: ``String()``.
+- String is string primitive type's object counterpart.
+
+- 若 ``arg`` omitted, return "" empty string; 否则根据 `ToString`_ 
+  转换成字符串. 当不使用 ``new`` operator 时, ``String(arg)`` 就是在
+  进行 explicit type conversion.
+
+- When ``String`` function is used not as a constructor, its a convertion
+  function, which converts its input to string primitive value.
 
 - String instances are iterable objects, i.e., String implements the
   @@iterator method.
@@ -461,6 +493,25 @@ String
 - String instsances are array-like objects. String objects have length
   property, and have sensible numerical index properties which returns
   individual characters.
+
+- String instance 的 numerical index properties 以及其他重要 properties 都是
+  ``writable: false, configurable: false``. 这对应于 string primitive
+  is immutable.
+
+  但注意 String instance is extensible.
+
+static methods
+^^^^^^^^^^^^^^
+- ``fromCodePoint(num1, num2, ...)``. class method that build a string
+  from unicode points.
+
+- ``raw(strings, ...substitutions)``. used for template literal tag function.
+  Return raw string like python raw string.
+
+methods
+^^^^^^^
+
+- ``charAt(N)``.
 
 Number
 ------
@@ -744,8 +795,11 @@ type coercion
   confusion if you haven't taken the time to learn the rules that govern its
   behavior.
 
-to boolean
-^^^^^^^^^^
+- type coercion is implemented by calling various abstract operations.
+  实际上可以理解为调用各个类型的 constructor function 进行类型转换.
+
+ToBoolean
+^^^^^^^^^
 - Undefined: false.
 
 - Null: false.
@@ -1377,6 +1431,21 @@ expressions
     < > <= >=
     && ||
 
+additive operators
+------------------
+
+addition (+) operator
+^^^^^^^^^^^^^^^^^^^^^
+- 两种操作: string concatenation or numerical addition.
+
+  * 当两个 operand 中至少有一个的值是 string 类型时, 进行 strint concatenation.
+    此时, 将另一个 operand 也转换成 string, 然后 concatenation. 生成一个 string
+    primitive typed value.
+
+  * 所有其他情况都进行 numerical addition.
+
+- 对于 object type operands, 首先转换成 primitive. 然后才判断进行哪种操作.
+
 Primary expression
 ------------------
 
@@ -1625,10 +1694,13 @@ relational operators
 
 - logic.
 
+  * objects are firstly converted to primitive values.
+
   * if both are strings, they are compared lexicographically.
 
   * if at least one of both is not string, they are coerced to numbers
     then compared.
+
 
 in operator
 -----------
@@ -2591,3 +2663,4 @@ references
 .. [SOLetLoop] `let keyword in the for loop <https://stackoverflow.com/questions/16473350/let-keyword-in-the-for-loop>`_
 .. [WellKnownSymbols] `Detailed overview of well-known symbols <https://dmitripavlutin.com/detailed-overview-of-well-known-symbols/#6speciestocreatederivedobjects>`_
 .. [SOArrayLike] `javascript - Difference between Array and Array-like object <https://stackoverflow.com/questions/29707568/javascript-difference-between-array-and-array-like-object>`_
+.. [SOJSAutobox] `Does javascript autobox? <https://stackoverflow.com/questions/17216847/does-javascript-autobox>`_
