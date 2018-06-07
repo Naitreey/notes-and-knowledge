@@ -484,7 +484,7 @@ String
   转换成字符串. 当不使用 ``new`` operator 时, ``String(arg)`` 就是在
   进行 explicit type conversion.
 
-- When ``String`` function is used not as a constructor, its a convertion
+- When ``String`` function is used not as a constructor, it's a convertion
   function, which converts its input to string primitive value.
 
 - String instances are iterable objects, i.e., String implements the
@@ -500,18 +500,136 @@ String
 
   但注意 String instance is extensible.
 
+- String encoding. JS 字符串 API 不完整支持 unicode character.
+ 
+  JS string 使用 UTF-16 encoding 存储 (WTFJS_). 并且奇葩的 是, 它认为每个 16bit
+  code unit 是一个字符, 而不是一个完整的 unicode point 是一个字符. 对于 BMP
+  之内的字符, 这没有问题, 但对于 BMP 之外的字符, 一个 字符以多个 code unit
+  编码保存. 这样 ``charAt``, indexing 等给出的是 code unit 位置的内容,
+  而不一定是预期字符. 例如::
+
+    '𝌆'.length === 2
+
+  为了得到字符串中第 i 个 unicode character 的可靠方式只有两种:
+
+  * String 的 @@iterator 能够保证按照 unicode point 对字符进行遍历. 因此::
+
+      [...string][i]
+
+  * code point methods::
+
+      String.fromCharPoint(string.codePointAt(i))
+
+constructor
+^^^^^^^^^^^
+- as normal function, convert input to string primitive representation,
+  calling `ToString`_.
+
+- as constructor, create String object with that string representation value.
+
 static methods
 ^^^^^^^^^^^^^^
+
+- ``fromCharCode(num1, num2, ...)``. from utf-16 code unit.
+
 - ``fromCodePoint(num1, num2, ...)``. class method that build a string
   from unicode points.
 
 - ``raw(strings, ...substitutions)``. used for template literal tag function.
   Return raw string like python raw string.
 
+attributes
+^^^^^^^^^^
+
+- length.
+
+- <N>. note that indexes are attributes. 注意给出的是 utf-16 code unit 位置的值.
+
 methods
 ^^^^^^^
 
-- ``charAt(N)``.
+character
+"""""""""
+
+- ``charAt(n)``. Note it counts utf-16 code unit.
+
+- ``charCodeAt(n)``. Note it counts utf-16 code unit.
+
+- ``codePointAt(n)``. Note it counts unicode point.
+
+substring
+""""""""""
+- ``includes(substr[, position])``. test substring in string.
+
+- ``indexOf(substr[, position])``. first occurrence.
+
+- ``lastIndexOf(substr[, position])``. last occurrence.
+
+- ``startsWith(substr[, position])``.
+
+- ``endsWith(substr[, position])``.
+
+- ``match(regexp)``.
+
+- ``search(regexp)``.
+
+slice
+""""""
+- ``slice([begin[, end]])``.
+
+- ``substr(start[, length])``. slice from start through length chars. (WTFJS_)
+
+- ``substring()``. useless. (WTFJS_)
+
+manipulation
+""""""""""""
+- ``concat(str1, str2, ...)``. concatenate string with the argument strings.
+  Why not use addition operator?
+
+- ``replace(regexp|substr, replacement|function)``.
+
+- ``split([separator[, limit]])``
+
+- ``trim()``.
+
+- ``trimStart()``, ``trimLeft()``. those are aliases (WTFJS_).
+
+- ``trimEnd()``, ``trimRight()``.
+
+letter case
+"""""""""""
+- ``toLowerCase()``
+
+- ``toUpperCase()``
+
+- ``toLocaleLowerCase()``
+
+- ``toLocaleUpperCase()``
+
+conversion
+""""""""""
+- ``toString()``. Return string representation of the object. For String, just
+  return primitive string equivalent. The same as valueOf.
+
+- ``valueOf()``. return primitive string value of String object.
+
+formatting
+""""""""""
+- ``padStart(target_length[, padstr])``.
+
+- ``padEnd(target_length[, padstr])``.
+
+- ``repeat(count)``.
+
+iteration
+""""""""""
+- ``[Symbol.iterator]()``. iterating chars of string.
+
+misc
+""""
+- ``localeCompare()``
+
+- ``normalize()``
 
 Number
 ------
