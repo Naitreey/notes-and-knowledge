@@ -587,102 +587,6 @@ Class-based views
 
     - ``DeletionMixin`` 定义 POST 和 DELETE 都会删除这个对象.
 
-- view mixins.
-
-  * ``TemplateResponseMixin``
-
-    Every built in view which returns a TemplateResponse will call the
-    render_to_response() method that TemplateResponseMixin provides.
-
-    render_to_response() itself calls get_template_names(), which by
-    default will just look up template_name on the class-based view; two
-    other mixins (SingleObjectTemplateResponseMixin and
-    MultipleObjectTemplateResponseMixin) override this to provide more
-    flexible defaults when dealing with actual objects.
-
-    - ``template_name`` 自定义模板名.
-
-    - ``render_to_response()`` 实现最终的 ``HttpResponse`` 实例化和返回.
-
-    - ``get_template_names()`` 生成模板名字 list.
-
-  * ``MultipleObjectMixin``
-
-    It provides both get_queryset() and paginate_queryset().
-    It uses the queryset or model attribute on the view class to get
-    queryset.
-
-    - ``model`` 定义这个 view 是操作在什么 model 上的.
-      Specifying ``model = SomeModel`` is really just shorthand for saying
-      ``queryset = SomeModel.objects.all()``.
-
-    - ``queryset`` 自定义数据集.
-
-    - ``context_object_name``
-
-    - ``get_queryset()`` method 动态自定义获取的数据集.
-
-  * ``MultipleObjectTemplateResponseMixin``
-
-  * ``ContextMixin``
-
-    Every built in view which needs context data, such as for rendering a
-    template (including TemplateResponseMixin above), should call
-    get_context_data() passing any data they want to ensure is in there as
-    keyword arguments. get_context_data() returns a dictionary; in
-    ContextMixin it simply returns its keyword arguments, but it is common
-    to override this to add more members to the dictionary.
-
-    - ``get_context_data()`` 自定义 context.
-
-  * ``SingleObjectMixin``
-
-    provides a get_object() method that figures out the object based on the
-    URL of the request (it looks for pk and slug keyword arguments as
-    declared in the URLConf, and looks the object up either from the model
-    attribute on the view, or the queryset attribute if that’s provided).
-
-    - ``model``
-
-    - ``queryset``
-
-    - ``context_object_name``
-
-    - ``pk_url_kwarg``, url pattern 中使用的 object 正则 group 名字.
-      默认是 ``pk``.
-
-    - ``get_object()`` 获取单个数据. 使用 ``pk_url_kwarg`` 的值从 queryset
-      中选择要获取的 object.
-
-  * ``SingleObjectTemplateResponseMixin``
-
-  * ``FormMixin``
-
-    - ``form_class``
-
-    - ``success_url``
-
-    - ``get_form_kwargs()``. 获取 form 实例化时的 constructor arguments.
-
-    - ``form_valid()`` POST valid data 时调用.
-
-    - ``form_invalid()`` POST invalid data 时调用.
-
-  * ``ModelFormMixin``
-
-    - ``fields`` 选择生成的 ModelForm 要包含的 fields.
-      该参数或者 ``form_class`` 必选一.
-
-    - ``model``, ``get_object().__class__`` ``queryset.model``
-      三者之一决定这个 view 所使用的 ``ModelForm`` 是什么.
-
-    - 若未提供 ``success_url``, 使用 ``Model.get_absolute_url()``.
-
-    - ``form_valid()`` 调用 ``form.save()`` 保存 model instance.
-
-    - ModelFormMixin 和一些 form 类型的 view 结合, 成为具体的
-      CreateView, UpdateView.
-
 - 避免过于复杂的 mixins, main class 的多继承. 如果继承太复杂, 需要太多
   override 和自定义, 不如自己从基本的 generic view 开始继承, 自己实现
   所需功能.
@@ -733,6 +637,156 @@ Class-based views
 
 * 当选择将 mixin 与 class 的功能结合使用时, 可以有多个 mixin class, 但只能有一个
   main class. 并且 mixin 先于 main class 出现在 MRO 中才行.
+
+view mixins
+^^^^^^^^^^^
+
+TemplateResponseMixin
+"""""""""""""""""""""
+Every built in view which returns a TemplateResponse will call the
+render_to_response() method that TemplateResponseMixin provides.
+
+render_to_response() itself calls get_template_names(), which by
+default will just look up template_name on the class-based view; two
+other mixins (SingleObjectTemplateResponseMixin and
+MultipleObjectTemplateResponseMixin) override this to provide more
+flexible defaults when dealing with actual objects.
+
+- ``template_name`` 自定义模板名.
+
+- ``render_to_response()`` 实现最终的 ``HttpResponse`` 实例化和返回.
+
+- ``get_template_names()`` 生成模板名字 list.
+
+MultipleObjectMixin
+""""""""""""""""""""
+提供方法获取 iterable of objects ``get_queryset()`` 并进行 pagination
+``paginate_queryset()``.
+
+attributes.
+
+- ``model`` 定义这个 view 是操作在什么 model 上的.
+  Specifying ``model = SomeModel`` is really just shorthand for saying
+  ``queryset = SomeModel.objects.all()``.
+
+- ``queryset`` 自定义数据集.
+
+- ``paginate_by`` the number of entries for a page.
+
+- ``page_kwarg`` kwarg for requested page number. 对应的参数可以作为 kwarg
+  传入 view function, 或者作为 query string 的一个参数. 若未提供, 默认使用
+  第一页. page number is 1-based integer, or special string ``last`` for last
+  page.
+
+- ``allow_empty``. 是否允许第一个页面为空, 即完全没有东西可以显示. If False,
+  raise 404 instead of displaying an empty page.
+
+- ``paginate_orphans``. An integer. 如果指定, 表示如果最后一页只剩下小于等于
+  这个数目的条目, 就塞到倒数第二页显示.
+
+- ``paginator_class``. paginator class.
+
+- ``ordering``. ordering of list.
+
+- ``context_object_name``
+
+methods.
+
+- ``get_queryset()`` method 动态自定义获取的数据集.
+  It uses the queryset or model attribute on the view class to get
+  queryset. Returns an iterable or more preferably a QuerySet, not
+  paginated yet.
+
+- ``paginate_queryset(queryset, page_size)``.
+  Returns a 4-tuple containing (paginator, page, object_list, is_paginated).
+
+template context.
+
+- ``object_list``. original queryset, NOT paginated.
+
+- ``<context_object_name>``. ditto.
+
+- ``is_paginated``
+
+- ``paginator``. 
+
+- ``page_obj``. A Page object instance, containing current page's entries.
+
+MultipleObjectTemplateResponseMixin
+""""""""""""""""""""""""""""""""""""
+A TemplateResponseMixin adjusted for a list of entries.
+
+- Requires main class provides ``object_list`` attribute.
+
+attributes.
+
+- ``template_name_suffix``. default ``_list``.
+
+methods.
+
+- ``get_template_names()``. fallback to use
+  ``<app_label>/<model_name><template_name_suffix>.html``
+
+ContextMixin
+""""""""""""
+Every built in view which needs context data, such as for rendering a
+template (including TemplateResponseMixin above), should call
+get_context_data() passing any data they want to ensure is in there as
+keyword arguments. get_context_data() returns a dictionary; in
+ContextMixin it simply returns its keyword arguments, but it is common
+to override this to add more members to the dictionary.
+
+- ``get_context_data()`` 自定义 context.
+
+SingleObjectMixin
+""""""""""""""""""
+provides a get_object() method that figures out the object based on the
+URL of the request (it looks for pk and slug keyword arguments as
+declared in the URLConf, and looks the object up either from the model
+attribute on the view, or the queryset attribute if that’s provided).
+
+- ``model``
+
+- ``queryset``
+
+- ``context_object_name``
+
+- ``pk_url_kwarg``, url pattern 中使用的 object 正则 group 名字.
+  默认是 ``pk``.
+
+- ``get_object()`` 获取单个数据. 使用 ``pk_url_kwarg`` 的值从 queryset
+  中选择要获取的 object.
+
+SingleObjectTemplateResponseMixin
+""""""""""""""""""""""""""""""""""
+
+FormMixin
+""""""""""
+
+- ``form_class``
+
+- ``success_url``
+
+- ``get_form_kwargs()``. 获取 form 实例化时的 constructor arguments.
+
+- ``form_valid()`` POST valid data 时调用.
+
+- ``form_invalid()`` POST invalid data 时调用.
+
+ModelFormMixin
+""""""""""""""
+- ``fields`` 选择生成的 ModelForm 要包含的 fields.
+  该参数或者 ``form_class`` 必选一.
+
+- ``model``, ``get_object().__class__`` ``queryset.model``
+  三者之一决定这个 view 所使用的 ``ModelForm`` 是什么.
+
+- 若未提供 ``success_url``, 使用 ``Model.get_absolute_url()``.
+
+- ``form_valid()`` 调用 ``form.save()`` 保存 model instance.
+
+- ModelFormMixin 和一些 form 类型的 view 结合, 成为具体的
+  CreateView, UpdateView.
 
 file upload
 ===========
