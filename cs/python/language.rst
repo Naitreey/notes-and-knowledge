@@ -1142,7 +1142,8 @@ methods
   Use ``keyword.iskeyword()`` tests for reserved keywords.
 
 - ``__mod__(arg)``. 字符串的 modulo operation 即 string formatting.
-  See `docs <https://docs.python.org/3/library/stdtypes.html#printf-style-string-formatting>`_. 对于 ``format % value``:
+  See `docs <https://docs.python.org/3/library/stdtypes.html#printf-style-string-formatting>`_.
+  对于 ``format % value``:
 
   * 对于 positional 形式, format 要求的参数必须与 value 部分提供的值一一对应.
     对于 keyword 形式, mapping object 的 keys 可以比 format 中多.
@@ -1241,8 +1242,8 @@ python 中有 4 种 string interpolation 的方式:
 第四种仅用在特殊场合, 例如为了填充使用了 shell syntax 的模板, 或者为了与常见的
 formatting 语法相区别.
 
-set types
----------
+set types - set, frozenset
+--------------------------
 - elements must be hashable.
 
 - ``set`` is mutable, unhashable. ``frozenset`` is immutable and hashable.
@@ -1307,6 +1308,24 @@ Set's mutable operations
 - ``pop()``. pop arbitrarily.
 
 - ``clear()``.
+
+numeric types
+-------------
+- ``float`` type literal forms::
+
+    NN.[NN]
+    [0].NN
+    # some exponential forms
+    NN"e"NN
+    NN"E"NN
+
+  注意由于 ``NN.`` 是合法的 float number, digits 后面的第一个 ``.``
+  会认为是 decimal point, 而不是 attribute reference. 例如::
+
+    1.is_integer # SyntaxError
+    (1).is_integer # OK
+    1..is_integer # OK
+    1.1.is_integer # Ok
 
 References
 ==========
