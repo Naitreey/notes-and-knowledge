@@ -48,6 +48,11 @@ data types
 
   All types except object are primitives.
 
+- value-copy vs reference. On assignment, 到底是复制 value 还是复制 reference
+  完全取决于 value 的类型. Values of primitive types are always copied on
+  assignment; instances of object type are referenced to the same object on
+  assignment.
+
 - values of primitive types are immutable, i.e., primitive values can not be
   modified inplace. modifying their values automatically generates a new value.
 
@@ -76,6 +81,8 @@ data types
 undefined
 ---------
 
+- ``undefined`` is the only value of Undefined type.
+
 Some cases when undefined is resultant:
 
 - an undefined variable's type is ``"undefined"`` (WTFJS_). But it results in
@@ -86,8 +93,14 @@ Some cases when undefined is resultant:
 - A function returns ``undefined`` if nothing is returned explicitly via
   ``return`` statement.
 
+- ``undefined`` is not a reserved keyword, but an identifier. 准确地讲,
+  undefined is a readonly property of global object (WTFJS_). 由于 undefined
+  is not reserved, it's technically possible to define a local variable
+  named ``undefined``.
+
 null
 ----
+- ``null`` is the only value of Null type.
 
 - It is a bug in JS language definition that: ``typeof null === "object"``.
 
@@ -209,11 +222,49 @@ Symbol.species
 
 number
 ------
+- literal forms::
 
-methods
-^^^^^^^
+    // decimal forms
+    NN[.[NN]]
+    [0].NN
+    // exponential forms
+    NN{e|E}NN
+    // octal, hex, binary integer forms
+    0{o|O}NN
+    0{x|X}NN
+    0{b|B}NN
 
-- ``toFixed()``.
+  注意由于 ``NN.`` 是合法的 number syntax, digits 后面的第一个 ``.``
+  会认为是 decimal point, 而不是 attribute reference. 例如::
+
+    1.toFixed // SyntaxError
+    (1).toFixed // OK
+    1..toFixed // OK
+    1.1.toFixed // Ok
+
+- JS number type 类型值全部是 floating-point number. 没有真正的 integer.
+
+  * 整数完全依靠 53 个 significand bits 来保证准确. 这导致,
+    ``Number.MAX_SAFE_INTEGER`` 以及 ``Number.MIN_SAFE_INTEGER`` 之外的
+    64bit 整数不能使用 number type 存储 (WTFJS_). 目前需要使用 ``node-int64``
+    package.  bigint feature 可能在 ESnext 中包含.
+
+- JS number type implements IEEE 754 double precision number.
+
+- Very large or very small numbers will by default be outputted in exponent
+  form.
+
+- normal zero and negative zero. An requirement of IEEE 754.
+
+  * 0 and -0 always compares equal.
+
+  * multiplication, division can lead to -0.
+
+  * addition, substraction can not lead to -0.
+
+  * ``-0``'s string form is ``"0"``
+
+  * However, the reverse is not true. ``"-0"`` to number leads to ``-0``.
 
 object
 ------
@@ -382,8 +433,10 @@ prototype related
   not linked to anything including Object.prototype. The created object has 
   only own properties. It is useful for purely storing data as properties.
   
-  ``propertiesObject`` specifies an object whose enumerable own properties will
-  be added to the newly-created object.
+  ``propertiesObject`` is an object whose enumerable own properties are property
+  descriptor definitions to be added to the created object. 也就是说该 object 
+  符合 ``Object.defineProperties()`` 参数形式.
+
 
 - ``getPrototypeOf(obj)``. returns the prototype of the obj. Note it might be
   null.
@@ -397,7 +450,7 @@ prototype related
     ``Object.create()``.
 
 property manipulation
-""""""""""""""""""""""
+"""""""""""""""""""""
 - ``getOwnPropertyDescriptor(obj, prop)``. Returns a own property's property
   descriptor.
 
@@ -424,9 +477,6 @@ property manipulation
 
 - ``isFrozen(obj)``.
 
-- ``keys(obj)``. returns an array of object's enumerable property names, in the
-  same order as for...in loop would.
-
 - ``assign(target, ...sources)``. shallow copy source objects into target object.
   Return target object.
 
@@ -434,6 +484,26 @@ property manipulation
 
   * It uses ``[[Get]]`` on the source and ``[[Set]]`` on the target, so it will
     invoke getters and setters.
+
+iteration
+"""""""""
+- ``keys(obj)``. returns an array of object's enumerable property names, in the
+  same order as for...in loop would.
+
+- ``entries(obj)``. returns an array of a given object's own enumerable
+  property ``[key, value]`` pairs.
+
+equality and sameness
+""""""""""""""""""""""
+
+- ``is(value1, value2)``. test two values based on same-value equality. Here,
+  same-value means values are functionally identical in all contexts.
+
+  这只对 -0 和 NaN 相关的判断有意义. 除此之外, 与 ``===`` 的效果相同, 但可能
+  执行效率比 ``===`` 慢很多.::
+
+    Object.is(-0, 0) // false
+    Object.is(Number.NaN, Number.NaN) // true
 
 instance properties
 ^^^^^^^^^^^^^^^^^^^
@@ -638,6 +708,79 @@ Number
 
 - constructor function: ``Number()``.
 
+constructor
+^^^^^^^^^^^
+::
+
+  new Number([value])
+  Number([ value ])
+
+- If value is omitted, default to 0.
+
+- Performing `ToNumber`_ conversion before creating Number instance.
+
+- If not with ``new``, only do type conversion and return a number primitive.
+
+static attributes
+^^^^^^^^^^^^^^^^^
+
+- ``EPSILON``. The smallest interval between two representable numbers. 标准
+  高等数学术语.
+
+- ``MAX_SAFE_INTEGER``.
+
+- ``MIN_SAFE_INTEGER``.
+
+- ``MIN_VALUE``. the smallest positive number.
+
+- ``NaN``. Not a Number. Representing a invalid number resulted from failed
+  numerical operations.
+  
+  * By definition, NaN is the only number that does not equal to itself.
+    因此, 不能使用 ``a == NaN`` 进行判断. 需要使用 ``Number.isNaN`` 进行判断.
+
+- ``POSITIVE_INFINITY``.
+
+- ``NEGATIVE_INFINITY``.
+
+static methods
+^^^^^^^^^^^^^^
+
+- ``isNaN(value)``.
+
+- ``isFinite(value)``
+
+- ``isInteger(value)``. 即使是在 MAX_SAFE_INTEGER 和 MIN_SAFE_INTEGER 之外的整数
+  也 return true.
+
+- ``isSafeInteger(value)``
+
+- ``parseFloat(string)``. 与 ``Number()`` constructor 不同, 并没有使用 `ToNumber`_
+  operation. 因此不提供与之完全相同的对各类型的转换逻辑. 这里, 主要用于转换字符串.
+  允许 leading whitespace chars, 和 any trailing unrecognized chars. it returns
+  the value up to a valid number and ignores all remaining text. 对于不识别的字符串
+  给出 NaN.
+
+- ``parseInt(string[, radix])``. ditto for integer only.
+
+methods
+^^^^^^^
+
+- ``toExponential([fraction_digits])``. default use as many number of digits as
+  needed after decimal point.
+
+- ``toFixed([fraction_digits])``. To fixed point representation, number of
+  digits after decimal point defaults to 0.
+
+- ``toPrecision([precision])``. in fixed-point or exponential notation rounded
+  to precision significant digits.
+
+- ``toString([radix])``. return string form in the specified radix.
+
+- ``valueOf()``.
+
+- ``toLocaleString()``
+
 Boolean
 -------
 
@@ -647,10 +790,17 @@ Boolean
 
 Array
 -----
+- literal form::
+ 
+    [a, b, ...]
+    [a, , b, ...]
 
-- literal form: ``[...]``
+  sparse array (i.e. array with unfilled slots) can be created with second
+  form. 注意末尾的 ``,`` 不会识别为后侧还有 slot. 每个 ``,`` 只影响左侧::
 
-- Constructor function: ``Array()``
+    [1,,,2,] // [1,,,2,]
+
+- In JS, Arrays are list-like high-level objects.
 
 - array index.
  
@@ -658,7 +808,7 @@ Array
 
   * Formally, array indices are just array object's normal properties.
     Therefore indices are actually strings. A integer index is firstly
-    coerced to string before used to access array element.::
+    coerced to string (via `ToString`_) before used to access array element.::
 
       var x = ['a', 'b', 'c'];
       x[1]; // 'b'
@@ -701,20 +851,25 @@ Array
     因为本质上是删除了一个名为 index 数值的 property. 被删掉的 index 不再
     存在, 但其他内容并不自动更新.
 
-- Array-like object. An object which has a ``length`` property of a
-  non-negative integer, and some indexed properties. [SOArrayLike]_
+  * 如果 Array 的 sparse array 属性 is undesirable, and dense array is required,
+    use typed arrays.
 
-  When an array-like object is used under array context, the list of values
-  is generated by accessing index properties from 0 to length. Much like the
-  following::
+constructor
+^^^^^^^^^^^
+::
 
-    values = [];
-    for (let i = 0; i < obj.length; i++) {
-        values.append(obj[i]);
-    }
+  new Array(elem0, elem1, ...)
+  new Array(length)
 
-  So, in a sense, ``{length: 5}`` is an array-like object.
-  
+- If the only argument passed to the Array constructor is an integer between
+  0 and 2**(32-1) (inclusive), this returns a new JavaScript array with its
+  length property set to that number.
+
+- 如果要避免歧义, 使用 ``Array.of()`` static method.
+
+static attributes
+^^^^^^^^^^^^^^^^^
+- @@species, Symbol.species.
 
 static methods
 ^^^^^^^^^^^^^^
@@ -734,19 +889,34 @@ static methods
   * ``Array.from`` is a class method, it use current class's constructor to
     create the new array. 因此, 子类调用该方法自动生成子类实例.
 
+- ``isArray(obj)``. test whether obj is Array instance. Mostly irrelevant
+  except across iframes (?). instanceof do just fine in most cases.
+
+- ``of(elem0, elem1, ...)``. 无歧义版的 Array constructor.
+
 attributes
 ^^^^^^^^^^
 - ``length``. The length of array which is an unsigned 32-bit integer that is
   greater than the highest index in the array.
 
-  注意 ``length`` property is writable. 修改 length 值直接影响 array 的实际长度.
+  If array's highest numerical index is changed, its length is adjusted
+  automatically. It does not care the sparsity of the array.
+
+  ``length`` property is writable. 修改 length 值直接影响 array 的实际长度.
   若变短, 多余的元素直接舍去.
+
+- N. numerical index.
 
 methods
 ^^^^^^^
 
 iteration
 """"""""""
+- @@iterator, Symobol.iterator. Returns an ``Array Iterator`` yielding array
+  values. This makes Array objects iterable.
+
+- ``values()``. ditto.
+
 - ``forEach(<callback>[, <this>])``. Run callback for each element. Returns
   undefined. callback's signature: current element, current index, the array
   itself. callback's ``this`` can be bound to ``<this>``, which defaults to
@@ -754,8 +924,6 @@ iteration
 
   * There is no way to stop or break a forEach() loop other than by throwing an
     exception.
-
-  * holes in sparse array is skipped.
 
   * behavior of array modification during iteration.
 
@@ -765,6 +933,56 @@ iteration
     - 遍历到某个 index 时, 取的是该 index 上的最新元素值, 所有之前的修改都可见.
 
     - elements that are deleted before being visited are not visited.
+
+  * holes in sparse array is skipped.
+
+- ``entries()``. returns an ``Array Iterator`` that yields ``[index, value]``
+  pairs. This is like ``enumerate()`` in python.
+
+  * holes in sparse array is not skipped.
+
+- ``filter(testfunc[, <this>])``. Filter out an array of values that passes the
+  test. Signature of ``testfunc``: ``(element, index, array)``.
+
+  * holes in sparse array is skipped.
+
+- ``keys()``. return an ``Array Iterator`` that yields array's filled *and*
+  unfilled indices. This differs from ``Object.keys()`` in that the form includes
+  all integers from ``[0, ..., length-1]``, while the latter cares only about
+  numerically named properties that are actually present.
+
+  * holes in sparse array is not skipped.
+
+- ``map(mapfunc[, <this>])``. returns a new array with the results of applying
+  mapfunc on every elements of the array.
+
+  * holes in sparse array is not skipped.
+
+- ``reduce(callback[, initial])``.
+
+  * holes in sparse array is skipped.
+
+- ``reduceRight(callabck[, initial])``
+
+  * holes in sparse array is skipped.
+
+element
+""""""""
+- ``indexOf(elem[, start])``
+
+  * holes in sparse array is skipped.
+
+- ``lastIndexOf(elem[, start])``
+
+  * holes in sparse array is skipped.
+
+- ``find(testfunc[, <this>])``.
+
+  * holes in sparse array is not skipped.
+
+- ``findIndex(testfunc[, <this>])``. ditto for index.
+
+  * holes in sparse array is not skipped.
 
 testing
 """"""""
@@ -780,8 +998,14 @@ testing
 
 - ``every(...)``. whether all elements pass the test. All else ditto.
 
-generating new arrays
-""""""""""""""""""""""
+  * holes in sparse array is skipped.
+
+- ``includes(elem[, start])``. test elem in array.
+
+  * holes in sparse array is not skipped.
+
+generating new stuff
+""""""""""""""""""""
 - ``slice([begin[, end]])``. Return a slice of array into a new array. Like
   iterable slicing syntax in python ``[begin:end]``.
 
@@ -800,6 +1024,70 @@ generating new arrays
 
       let args = Array.prototype.slice.call(arguments);
       let args = [].slice.call(arguments);
+
+  * holes in sparse array is not skipped.
+
+- ``concat(elem_or_array, ...)``
+
+  * holes in sparse array is not skipped.
+
+- ``join([sep])``
+
+  * holes in sparse array is not skipped.
+
+array-wide manipulation
+"""""""""""""""""""""""
+- ``copyWithin(target[, start[, end]])``
+
+  * holes in sparse array is not skipped.
+
+- ``fill(value[, start[, end]])``. fill with static value.
+
+  * holes in sparse array is not skipped.
+
+- ``splice(start[, deleteCount[, item1, ...]])``. 删除一部分, 插入一部分.
+
+  * holes in sparse array is not skipped.
+
+ordering
+""""""""
+- ``reverse()``
+
+  * holes in sparse array is not skipped.
+
+- ``sort([comp])``. default comparison function compares elements' `ToString`_
+  value.
+
+  * holes in sparse array is not skipped.
+
+head or tail manipulation
+""""""""""""""""""""""""""
+- ``pop()``
+
+  * holes in sparse array is not skipped.
+
+- ``push()``
+
+  * holes in sparse array is not skipped.
+
+- ``shift()``
+
+  * holes in sparse array is not skipped.
+
+- ``unshift()``
+
+  * holes in sparse array is not skipped.
+
+conversion
+""""""""""
+
+- ``toString()``. string representation which is ``elem1,elem2,...``
+
+  * holes in sparse array is not skipped.
+
+- ``toLocaleString()``
+
+  * holes in sparse array is not skipped.
 
 Function
 --------
@@ -940,6 +1228,32 @@ ToBoolean
 
 - Object: true.
 
+ToNumber
+^^^^^^^^
+
+- Undefined: NaN
+
+- Null: 0
+
+- Boolean: true 1, false 0.
+
+- Number: argument.
+
+- String:
+
+  * numeric literal in string form, possibly surrounded by whitespace chars
+    are converted to corresponding number.
+
+    numeric literal can be in decimal, octal, hex, or binary format.
+
+  * empty string or string with only whitespace chars are converted to 0.
+
+  * strings can not be parsed converted to NaN.
+
+- Symbol: TypeError
+
+- Object: `ToPrimitive`_ then `ToNumber`_.
+
 iteration, generation and asynchronous programming
 ==================================================
 
@@ -1077,6 +1391,23 @@ async, await
 ------------
 - Async functions generators and promises in a higher level syntax. Please
   understand that they work essentially under the same principle.
+
+Array-like object
+-----------------
+An array-like object is one that has a ``length`` property of a non-negative
+integer, and some indexed properties. [SOArrayLike]_
+
+When an array-like object is used under context where array is required, the
+list of values is generated by accessing index properties from 0 to length.
+Much like the following::
+
+  values = [];
+  for (let i = 0; i < obj.length; i++) {
+      values.append(obj[i]);
+  }
+
+So, in a sense, ``{length: 5}`` is an array-like object.
+  
 
 statements
 ==========
@@ -1563,6 +1894,25 @@ addition (+) operator
   * 所有其他情况都进行 numerical addition.
 
 - 对于 object type operands, 首先转换成 primitive. 然后才判断进行哪种操作.
+
+bitwise operators
+-----------------
+- Only defined for the lower 32 bits of numbers. Meaning the higher 32 bits of
+  the operands are just ignored. (WTFJS_)
+
+multiplicative operators
+------------------------
+
+division (/) operator
+^^^^^^^^^^^^^^^^^^^^^
+
+- divide-by-zero. In JS, this is not an exceptional condition. Instead, positive
+  or negative infinity is returned::
+
+    1/0 // Infinity
+    -1/0 // -Infinity
+
+- infinity divides by infinity. NaN.
 
 Primary expression
 ------------------
@@ -2192,6 +2542,10 @@ pre-ES6
 
   因为对 Parent class 实例化会执行 Parent constructor, 这样就执行了很多不必要
   的逻辑, 可能有 unwanted side-effect, 而且这里如果需要传递参数进去也会很奇怪.
+
+- If another mixin class is needed::
+
+    Object.assign(Cls.prototype, Parent2.prototype);
 
 - fix constructor attribute if so inclined::
 
