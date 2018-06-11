@@ -1,14 +1,200 @@
-- integer division:
-    2. `/`: floor division. result is `int`, rounding downwards.
-       1/2=0, -1/2=-1
-    3. `/`: real division. 两整数转换为 `float` 后再做除法, 结果是 `float.`
-       `//`: floor division, as in python2.
-    compatible: `from __future__ import division`
+language
+========
 
-- numeric number types:
-    2. int, long, float, complex
-       long 以 `L`或`l` 标识, int 太长可以自动转换为 long.
-    3. int, float, complex
+class
+-----
+
+old-style class and new-style class
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- old-style class vs new-style class.
+
+  * 从 OOP 角度, new-style class 是 object 的子类, 这样的类是一个类型, 地位与 int, str
+    等 built-in 类型等同. 形成了一个以 object 为 root 的继承树 (类似 Java).
+
+    old-style class 不是这样. 它不是 object 的子类. 没有继承, 就没有乐趣.
+
+  * descriptor.
+    
+    old-style class::
+   
+     instance -> class -> parent
+
+    new-style class::
+   
+     data descriptor -> instance -> class attr and non-data descriptor
+     -> parent -> ... -> object
+
+    因此 new-style class 可以使用 descriptor (e.g., property). More fun.
+
+
+  * MRO. a.k.a. class hierarchy linearization.
+    
+    example: diamond problem.::
+
+         C
+        / \
+       /   \
+      A     B
+       \   /
+        \ /
+         D
+
+    old-style class: DACBC (left-to-right, depth first.)
+    new-style class: BABC
+
+- syntax.
+
+  .. code:: python
+
+    # - py2 -
+
+    class A: # old-style class
+        pass
+
+    class A(object): # new-style class
+        pass
+
+    # - py3 -
+
+    class A: # new-style class
+        pass
+
+    class A(object): # new-style class
+        pass
+
+  compatibility:
+
+  .. code:: python
+
+    class A(object):
+        pass
+
+exception
+---------
+
+- Syntax.
+
+  .. code:: python
+
+    # - py2 -
+
+    try:
+        pass
+    except Exception, exc:
+        pass
+    # or
+    except Exception as exc:
+        pass
+
+    # - py3 -
+
+    try:
+        pass
+    except Exception as exc:
+        pass
+    # which makes it possible to catch by multiple exception classes
+    except (FileNotFoundError, PermissionError) as exc:
+        pass
+
+  compatibility:
+
+  .. code:: python
+
+    try:
+        pass
+    except (FileNotFoundError, PermissionError) as exc:
+        pass
+
+
+- context and cause.
+
+  .. code:: python
+
+    # - py2 -
+
+    try:
+        raise SyntaxError
+    except Exception as exc:
+        # handle exception but failed
+        raise IndexError
+
+    # output:
+    # Traceback (most recent call last):
+    #   File "<stdin>", line 5, in <module>
+    # IndexError
+
+    # - py3 -
+
+    try:
+        raise SyntaxError
+    except Exception as exc:
+        # handle exception but failed
+        raise IndexError
+
+    # output:
+    # Traceback (most recent call last):
+    #   File "<stdin>", line 2, in <module>
+    # SyntaxError: None
+    # 
+    # During handling of the above exception, another exception occurred:
+    # 
+    # Traceback (most recent call last):
+    #   File "<stdin>", line 5, in <module>
+    # IndexError
+
+    try:
+        raise SyntaxError
+    except Exception as exc:
+        # handle exception
+        raise IndexError from exc
+
+    # output:
+    # Traceback (most recent call last):
+    #   File "<stdin>", line 2, in <module>
+    # SyntaxError: None
+    # 
+    # The above exception was the direct cause of the following exception:
+    # 
+    # Traceback (most recent call last):
+    #   File "<stdin>", line 5, in <module>
+    # IndexError
+
+builtin types
+-------------
+
+- 整数类型. int & long -> int.
+
+  py2:
+  
+  * int -- hardware-based (``sys.maxint``, ``long`` in C, 2**63-1).
+
+  * long -- software-based. unlimited. Indicated by ``L`` suffix.
+
+  py3:
+
+  * int. 自动切换.
+
+- 除法.
+
+  py2:
+
+  * `/`: floor division. result is `int`, rounding downwards.::
+
+      1/2=0, -1/2=-1
+
+  py3:
+    
+  * `/`: float division. 两整数转换为 `float` 后再做除法, 结果是 `float`.
+
+  * `//`: floor division, as in py2.
+
+
+  compatibility::
+  
+    from __future__ import division
+
+IO
+--
 
 - print:
     2. print 是 keyword, 后接要输出的表达式成为 print statement, 不是 expression
@@ -96,14 +282,6 @@
 - indentation:
     2. allow tab/space mix indentation
     3. disallow tab/space mix indentation
-
-- catch exception:
-    2. except <exception>, <ref> 或者 new syntax: except <exception> as <ref>
-    3. except <exception> as <ref>
-
-- old-style and new-style classes:
-    2. old-style class by default. to get new-style class use `__metaclass__ = type` or subclass a new-style class
-    3. only new style class
 
 - iterator:
     2. iterator object has next() method to get its next value, or use next() global function
