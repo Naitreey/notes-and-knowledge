@@ -1709,6 +1709,8 @@ operations
 
 formats
 """"""""
+三种 binlog format 设置: row, statement, mixed.
+
 - statement-based logging. actual SQL statement is logged.
 
   With statement-based replication, there may be issues with replicating
@@ -1760,6 +1762,22 @@ formats
 
 - mixed logging. statement-based logging is used by default, but the logging
   mode switches automatically to row-based in certain cases.
+
+具体细节说明.
+
+- 关于 ``mysql`` database 的 replication.[SEMysqlRepl]_
+
+  * 对 ``mysql`` database 的直接修改, 会按照 ``binlog_format`` 设置的格式
+    进行记录和复制.
+
+  * 如果是因为执行一些 statements, 导致了修改 ``mysql`` database 的 side
+    effect, 即间接的修改. 这些修改会按照 statement format 进行记录和复制.
+    这些语句包含: GRANT, REVOKE, SET PASSWORD, RENAME USER, CREATE (all forms
+    except CREATE TABLE ... SELECT), ALTER (all forms), and DROP (all forms).
+
+    这导致一些麻烦的问题. 由于执行这些语句时, 一般不会先 ``use mysql;``, 所以
+    slave 的 database-level 的 replication filter 可能不能起作用 (注意它们是
+    statement format 进行记录的).
 
 options
 """""""
@@ -1819,6 +1837,16 @@ binlog buffer.
 - ``--max-binlog-cache-size=#``, ``max_binlog_cache_size``.
   max size of buffer for a transaction. including in-memory buffer and on-disk
   temporary file.
+
+binlog filters.
+
+- ``--binlog-do-db``
+  
+- ``--binlog-ignore-db``
+
+  注意这些选项是控制哪些数据库需要记录 binlog. 这不同于哪些数据库需要
+  replication. 因为 binlog 除了用于 replication, 还用于数据恢复. 对于
+  replication 相关的控制和过滤, 应该只在 slave 上进行.
 
 HA and scalability
 ==================
@@ -2077,15 +2105,51 @@ Remove a slave
 
 - restart slave mysqld.
 
+replication filtering
+^^^^^^^^^^^^^^^^^^^^^
+- Decisions about whether to execute or ignore statements received from the
+  master are made according to the ``--replicate-*`` options that the slave was
+  started with.
+
+  * Database-level options are checked first. If no database-level options are
+    used, option checking proceeds to any table-level options that may be in
+    use.
+
+- To make it easier to determine what effect an option set will have, it is
+  recommended that you avoid mixing “do” and “ignore” options, or wildcard and
+  nonwildcard options.
+
+- procedure.
+
+  * 根据该条 log 的格式确定要检查的数据库.
+    
+    每条 relay log 可以是不同格式的 (statement or row format). 各个 replication
+    filters 对不同格式的 relay log 解析方式不同.
+
+    - 对于 row format log, 要检查的数据库是修改所涉及的数据库.
+
+    - 对于 statement format log, 要检查的数据库是 current default database.
+
+  * 剩下的 See https://dev.mysql.com/doc/refman/8.0/en/replication-rules-db-options.html
+    and https://dev.mysql.com/doc/refman/8.0/en/replication-rules-table-options.html
+
+  * 根据上述步骤, 可以看出如果要稳定可靠的 cross-database replication filtering,
+    只使用 database-level 的 filtering rule 是不够的, 还需要使用 table-level 的.
+    例如, ``--replicate-ignore-table``, ``--replicate-wild-ignore-table``.
+
 replication options
 ^^^^^^^^^^^^^^^^^^^
+
+essentials
+""""""""""
 - ``--server-id``, ``server_id``.
   default: 0. If the server ID is set to 0, binary logging takes place (if
   ``log_bin`` is set), but a master with a server ID of 0 refuses any
   connections from slaves, and a slave with a server ID of 0 refuses to connect
   to a master.
 
-master info log and relay log options.
+master info log and relay log options
+"""""""""""""""""""""""""""""""""""""
 
 - ``--master-info-file=<filename>``.
   default: master.info.
@@ -2121,10 +2185,27 @@ master info log and relay log options.
 - ``--max-relay-log-size=#``, ``max_relay_log_size``.
   default 0, which falls back to ``max_binlog_size``.
 
-binlog checksum.
+binlog checksum
+""""""""""""""""
 
 - ``--slave-sql-verify-checksum={0|1}``, ``slave_sql_verify_checksum``.
   let slave use checksum to verify binlog.
+
+replication filter options
+""""""""""""""""""""""""""
+
+- ``--replicate-ignore-db``.
+
+  To specify more than one database to ignore, use this option multiple times.
+
+- ``--replicate-wild-ignore-table``
+
+  Ignore replicating a statement in which any table matches the given wildcard
+  pattern. Works for cross-database updates.
+
+  This option applies to tables, views, and triggers. It does not apply to
+  stored procedures and functions, or events. To filter statements operating on
+  the latter objects, use one or more of the --replicate-*-db options.
 
 performance schema replication tables
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -2703,3 +2784,4 @@ References
 .. [PerconaAcce] `Accelerating the backup process <https://www.percona.com/doc/percona-xtrabackup/LATEST/innobackupex/parallel_copy_ibk.html>`_
 .. [PerconaXbstream] `The xbstream binary <https://www.percona.com/doc/percona-xtrabackup/LATEST/xbstream/xbstream.html>`_
 .. [SOCharVarchar] `What are the use cases for selecting CHAR over VARCHAR in SQL? <https://stackoverflow.com/questions/59667/what-are-the-use-cases-for-selecting-char-over-varchar-in-sql>`_
+.. [SEMysqlRepl] `How can you stop MySQL slave from replicating changes to the 'mysql' database? <https://dba.stackexchange.com/questions/584/how-can-you-stop-mysql-slave-from-replicating-changes-to-the-mysql-database>`_
