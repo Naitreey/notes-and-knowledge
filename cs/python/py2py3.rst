@@ -8,8 +8,9 @@ old-style class and new-style class
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 - old-style class vs new-style class.
 
-  * 从 OOP 角度, new-style class 是 object 的子类, 这样的类是一个类型, 地位与 int, str
-    等 built-in 类型等同. 形成了一个以 object 为 root 的继承树 (类似 Java).
+  * 从 OOP 角度, new-style class 是 object 的子类, 这样的类是一个类型, 地位与
+    int, str 等 built-in 类型等同. 形成了一个以 object 为 root 的继承树 (类似
+    Java).
 
     old-style class 不是这样. 它不是 object 的子类. 没有继承, 就没有乐趣.
 
@@ -69,12 +70,6 @@ old-style class and new-style class
     class A(object):
         pass
 
-    # or
-
-    __metaclass__ = type
-    class A:
-        pass
-
 definition
 ^^^^^^^^^^
 - python3 去掉了 unbound method 概念. ``class.func`` 得到的就是定义的函数本身;
@@ -116,14 +111,14 @@ inheritance
 exception
 ---------
 
-- Syntax.
+- ``except`` clause.
 
   .. code:: python
 
     # - py2 -
 
     try:
-        pass
+        # ...
     except Exception, exc:
         pass
     # or
@@ -133,22 +128,14 @@ exception
     # - py3 -
 
     try:
-        pass
+        # ...
     except Exception as exc:
         pass
     # which makes it possible to catch by multiple exception classes
     except (FileNotFoundError, PermissionError) as exc:
         pass
 
-  compatibility:
-
-  .. code:: python
-
-    try:
-        pass
-    except (FileNotFoundError, PermissionError) as exc:
-        pass
-
+  compatibility: latter form.
 
 - context and cause.
 
@@ -202,6 +189,24 @@ exception
     # Traceback (most recent call last):
     #   File "<stdin>", line 5, in <module>
     # IndexError
+
+- ``raise`` statement.
+
+  .. code:: python
+
+    # - py2 -
+
+    raise exc_type|exc_value, exc_value|args|None, None|exc_tb
+
+    # - py3 -
+
+    raise exc_value[.with_traceback(exc_tb)] [from None|exc_value]
+
+  compatibility:
+
+  .. code:: python
+
+    from future.utils import raise_, raise_from, raise_with_traceback
 
 - builtin exception hierarchy.
 
@@ -509,6 +514,8 @@ builtin functions
   * py2. exec 是 keyword, 即 exec statement.
 
   * py3. exec 是 function, 返回值 None.
+
+- ``apply()`` removed.
 
 IO
 --
@@ -849,7 +856,9 @@ prerequisites
   * future. 提供诸多 python3 功能的 backport. 提供 ``futurize`` 脚本
     自动转换源代码至 py3-compatible.
 
-  * six
+  * six (implicit)
+
+  * 2to3 (implicit)
 
   * argparse (pip, py2.6 only)
 
@@ -857,24 +866,31 @@ prerequisites
 
 conversion
 ----------
+- ``futurize``
 
+  .. code:: sh
+  
+    futurize2 -a -0 <file|dir>
+
+- 检查转换结果.
 
 coding 
 ------
+- `Writing Python 2-3 compatible code <http://python-future.org/compatible_idioms.html>`_.
 
-- 使用 absolute import
+- 不能用 py3-only syntaxes. 即使 conditionally 也不行. 因为解释器在
+  语义分析阶段就会报错 SyntaxError.
 
-- 不能用 py3-only syntaxes.
-
-- 每个源代码中首先设置 ``__future__`` imports.
+- 每个文件中设置 ``__future__`` imports.
 
 - 项目中设置一个 ``six`` module/subpackage, 包含所有项目中需要使用到的
-  兼容性定义.
+  兼容性定义. 在项目的各个文件中, import 该文件.
 
   example:
 
   .. code:: python
 
+    # six.py
     # -*- coding: utf-8 -*-
     # vim:fileencoding=utf-8
 
@@ -883,20 +899,30 @@ coding
     from __future__ import print_function
     from __future__ import unicode_literals
 
-    from django.utils.six import *
-    from django.utils.six.moves import *
-
     import sys
+    from builtins import *
+    from future import standard_library as _standard_library
+    _standard_library.install_aliases()
+    PY2 = sys.version_info[0] == 2
     PY3 = sys.version_info[0] == 3
-    if not PY3:
-        from io import open
-        from itertools import imap as map
-        __metaclass__ = type
-        range = xrange
-        str = unicode
-        py2_round = round
-        def round(*args, **kwargs):
-            return int(py2_round(*args, **kwargs))
+    # optional additional tests
+    PY26 = sys.version_info[0:2] == (2, 6)
+
+    # other compatibility definitions ...
+
+- 在其他项目文件中加入以下代码. 然后直接按照 python3 风格书写.
+
+  .. code:: python
+
+    # another file
+    # -*- coding: utf-8 -*-
+    # vim:fileencoding=utf-8
+    from __future__ import division
+    from __future__ import absolute_import
+    from __future__ import print_function
+    from __future__ import unicode_literals
+
+    from .six import *
 
 - 在具体情况下, 需要分别对 py2, py3 进行不同实现时, 做版本判断, 再分别实现.
 
@@ -907,4 +933,44 @@ coding
     else PY3:
         # ...
 
-- 参考开源项目中的兼容性定义是如何做的. 例如 django (1.11), celery, six.
+tools
+-----
+
+python-future
+^^^^^^^^^^^^^
+features
+""""""""
+- 提供从 py2-only code 向 py2py3-compatible 的兼容性 module 和转换脚本.
+  (向前兼容)
+
+- 提供从 py3-only code 向 py2py3-compatible 的兼容性 module 和转换脚本.
+  (向后兼容)
+
+- 可以进行 standard library reorganization. 使用 python3 的 library
+  hierarchy 来 import module.
+
+tools
+"""""
+- ``future`` package (forward-compatibility)
+  
+  * ``future.builtins`` py3 builtins
+
+  * ``future.utils`` compatible utils
+
+- ``past`` package (backward-compatibility)
+
+- ``futurize`` script
+
+- ``pasteurize`` script
+
+usage
+""""""
+- use ``futurize`` script to convert existing py2 code.
+
+- use ``future`` and ``builtins`` package to write forward-compatible code.
+  (Together with ``__future__``.)
+
+multi-version management
+========================
+
+See `here <multi-version.rst>`_.
