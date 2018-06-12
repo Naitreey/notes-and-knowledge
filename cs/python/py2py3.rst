@@ -108,6 +108,16 @@ inheritance
 - py2 中, 若 class decorator 中要对类实例化或要生成新类, 原类定义中使用
   ``super()`` 时会造成麻烦 (NameError 或无限递归).
 
+metaclass
+^^^^^^^^^
+- compatibility.
+
+  .. code:: python
+
+    from future.utils import with_metaclass
+    class Cls(with_metaclass(Meta, Parent)):
+        pass
+
 exception
 ---------
 
@@ -299,6 +309,7 @@ scope
 
 builtin types
 -------------
+py3 removed following types: long, unicode, xrange.
 
 - 整数类型. int & long -> int.
 
@@ -348,27 +359,16 @@ builtin types
 
     range = xrange
 
+    # or
+
+    from builtins import range
+
 - builtin sequence types:
 
   py2: list, tuple, str, unicode, xrange object, bytes (alias for str), bytearray
 
   py3: list, tuple, bytes, str, range object, bytearray
 
-
-- str
-
-  * `string` module. string.letters string.uppercase ... is removed. as unicode
-    is default, these string constant make no sense any more. Use `ascii_`
-    prefixed version.
-  
-  * translate chars in string:
-  
-    py2: string.maketrans() provide translation table, str.translate() executes
-    the translation and handles deletechars.
-  
-    py3: string.maketrans() is moved to be a function of str type. It is also
-    more flexible. 并且删除字符也统一为映射的一部分, 从而在 maketrans() 中指明.
-    str.translate() 只根据 translation table 执行 translation.
 
 - object.
 
@@ -395,7 +395,24 @@ builtin types
 
     - py3. ``__bool__``
 
-    compatibility: 两个都定义.
+    compatibility:
+
+    .. code:: python
+
+      def implements_bool(cls):
+          if not PY3:
+              cls.__nonzero__ = cls.__bool__
+              del cls.__bool__
+          return cls
+
+      @implements_bool
+      class Container(object):
+
+          def __init__(self):
+              self.bucket = []
+
+          def __bool__(self):
+              return bool(self.bucket)
 
   * type coercion
   
@@ -417,6 +434,8 @@ builtin types
   * (py3.6) order of dict key is implicitly ensured.
 
     For compatibility and correctness, still use ``OrderedDict``.
+
+- basestring, removed. Since ``str`` is the only and actual string type.
 
 string formatting
 -----------------
@@ -460,18 +479,44 @@ iteration
 
     don't use ``iter*`` anymore.
 
-  * zip, range, map.
+  * zip, range, map, filter.
 
     compatibility
 
     .. code:: python
 
-      from itertools import imap as map, izip as zip
+      from itertools import imap as map, izip as zip, ifilter as filter
       range = xrange
 
-  * itertools module: ``[i]xxx``
+      # or
+
+      from builtins import map, zip, range, filter
+
+  * other iterable functions in itertools
+
+    .. code:: python
+
+      from itertools import ifilterfalse as filterfalse, izip_longest as zip_longest
 
 - ``iterator.next()`` -> ``iterator.__next__()``
+
+  compatibility:
+
+  .. code:: python
+
+    from future.utils import implements_iterator
+    @implements_iterator
+    class Counter(object):
+
+        def __init__(self, start=0):
+            self.count = start
+
+        def __iter__(self):
+            return self
+
+        def __next__(self):
+            self.count += 1
+            return self.count
 
 coroutine
 ^^^^^^^^^
@@ -479,6 +524,8 @@ coroutine
 
 builtin functions
 -----------------
+py3 removed following built-in functions: apply, cmp, coerce, execfile, file,
+raw_input, reduce, reload.
 
 - comparision and key functions.::
  
@@ -500,9 +547,8 @@ builtin functions
 
   .. code:: python
 
-    if PY3:
-        from importlib import reload
-        from functools import reduce
+    from importlib import reload
+    from functools import reduce
 
 - ``round()``.  py2 中 round 函数只支持 float 且返回 float, py3
   中它支持任何实现了 ``__round__`` 的类型, 且对于 float 返回 int.
@@ -546,6 +592,10 @@ IO
 
       input = raw_input
 
+      # or
+
+      from future.builtins import input
+
   * conversion::
 
       input -> eval(input())
@@ -572,6 +622,16 @@ IO
 
       from io import open
 
+- ``StringIO``.
+
+  * py3. 整合至 ``io`` module.
+
+  * compatibility
+
+    .. code:: python
+
+      from io import StringIO, BytesIO
+
 character set and encoding
 --------------------------
 - 字符集和编码. See `../characters-and-fonts/character-encodings.rst`.
@@ -588,16 +648,25 @@ character set and encoding
 
         u"unicode"
 
-  * py3. (sanitized.) ``str`` 即 unicode. ``bytes`` for byte string.
+  * py3. (sanitized.) ``str`` 即 unicode. ``bytes`` for byte string.::
+
+      "string"
+      b"bytes"
 
   compatibility
 
   - future::
 
       from __future__ import unicode_literals
-      chr = unichr
 
-  - use normal string as unicode string, use bytes for bytes
+      chr = unichr
+      # or
+      from builtins imoprt chr
+
+  - use normal string as unicode string, use bytes for bytes::
+
+      "string" # unicode in py2
+      b"bytes" # str in py2
 
 - source code encoding
 
@@ -627,7 +696,7 @@ module and package
     proj/
     ├── __init__.py
     ├── app1.py
-    └── six.py
+    └── utils.py
 
   .. code:: python
 
@@ -635,14 +704,14 @@ module and package
 
     # - py2 -
 
-    from six import *
+    from utils import *
 
     # - py3 -
 
     # local
-    from .six import *
+    from .utils import *
     # global
-    from six import *
+    from utils import *
 
   compatibility
 
@@ -805,39 +874,28 @@ REPL
 
 library
 =======
-- Standard library reorganization
+- Standard library reorganization `PEP 3108 <https://www.python.org/dev/peps/pep-3108/>`_
 
-urllib
-------
-- urllib + urllib2 -> urllib package
+  涉及 44 modules. 例如: urllib, http.
 
-- py3 中 ``urlopen`` 的返回对象得到了优化. 可以用作 context manager.
+  compatibility:
 
-http
-----
+  * 根据 py 版本选择不同的 import path.
 
-html
-----
+  * 使用 future.
 
-pathlib
--------
-- mostly replace ``os.path``
+    .. code:: python
 
-enum
-----
+      from future import standard_library as _standard_library
+      _standard_library.install_aliases()
 
-ipaddress
----------
+- new packages. e.g., pathlib, enum, ipaddress, html.
 
-django
-------
- 
-- django 2.0 不再支持 python2.
+  compatibility:
 
-json
-----
-- json decode 时报的 exception, 在 py2 中经常是非常一般化的错误, 难以 catch
-  单独处理; 在 py3 中是 ``JSONDecodeError``, 很明确.
+  * install explicit backport packages. e.g., enum, singledispatch, pathlib.
+
+  * install backports namespace packages.
 
 py2 py3 compatible code
 =======================
@@ -849,7 +907,7 @@ prerequisites
 
   * See above.
 
-  * `Writing Python 2-3 compatible code <http://python-future.org/compatible_idioms.html>`_.
+  * See also `Writing Python 2-3 compatible code <http://python-future.org/compatible_idioms.html>`_.
 
 - tools.
 
@@ -863,6 +921,12 @@ prerequisites
   * argparse (pip, py2.6 only)
 
   * importlib (pip, py2.6 only)
+
+- 不要盲目信任这些工具. They do have bugs and limitations (like every software).
+  这就是为什么需要从原理上理解 py2, py3 的区别. 当这些工具失效时, 需要手工去实现
+  合适的兼容性修改.
+
+  这也是要看源代码的原因之一.
 
 conversion
 ----------
@@ -946,7 +1010,7 @@ features
 - 提供从 py3-only code 向 py2py3-compatible 的兼容性 module 和转换脚本.
   (向后兼容)
 
-- 可以进行 standard library reorganization. 使用 python3 的 library
+- 实现 standard library reorganization. 使用 python3 的 library
   hierarchy 来 import module.
 
 tools
@@ -962,6 +1026,14 @@ tools
 - ``futurize`` script
 
 - ``pasteurize`` script
+
+- import tools. 实现 PEP 3108 standard library reorganization.
+  
+  * 诸多 wrapper packages
+
+  * extensions on existing packages
+
+  * included backports
 
 usage
 """"""
