@@ -269,6 +269,8 @@ number
 object
 ------
 
+- constructor function: ``Object()``
+
 - literal form: ``{...}``.
 
   * in literal form, property name must be a string, string can be specified
@@ -421,6 +423,23 @@ object prototype
 ^^^^^^^^^^^^^^^^
 - ``prototype`` property object 是 JS 中类和继承的实现基础. See `class`_.
 
+constructor
+^^^^^^^^^^^
+::
+
+  Object([value])
+  new Object([value])
+
+- 无论有没有 new, 效果都是根据 ``value`` 生成一个 object wrapper. 当没有 new
+  时, 可以理解为转换成 object wrapper 形式, 但其实是一个意思.
+
+- When ``value`` is null or undefined, return an empty object.
+
+  When ``value`` is other primitive value, return its corresponding object
+  wrapper form.
+
+  When ``value`` is already an object, return ``value`` unchanged.
+
 static methods
 ^^^^^^^^^^^^^^
 
@@ -535,11 +554,23 @@ property manipulation
 
 - ``propertyIsEnumerable(<prop>)``. Whether the property is enumerable.
 
+[[Class]]
+---------
+- objects have an internal ``[[Class]]`` property, 其值是 built-in native
+  constructor that's related to the value.
+
 object subtypes
 ---------------
 
-- common subtypes of object: String, Number, Boolean, Array, Function, Date,
-  RegExp, Error
+- built-in subtypes of object: String, Number, Boolean, Array, Function, Date,
+  RegExp, Error.
+
+- built-in object types' constructors, including: Object, String, Number,
+  Boolean, Array, Function, Date, RegExp, Error, can all be called with or
+  without ``new`` operator.
+  
+  一般情况下, 没有 ``new`` operator, 只是作为 function call 时, 是作为转换函数;
+  有 ``new`` 时, 是作为 constructor. 不过, 对于一些类型, 两个用法的效果是相同的.
 
 String
 ------
@@ -787,6 +818,11 @@ Boolean
 - boolean primitive type's object counterpart.
 
 - constructor function: ``Boolean()``.
+
+- 注意在 boolean 环境下, 根据 `ToBoolean`_, Boolean instance 由于是 object,
+  所以是 truthy 的.  这与 boolean primitive 不同::
+
+    !(new Boolean(false)) // false
 
 Array
 -----
