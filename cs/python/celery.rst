@@ -588,6 +588,8 @@ task entries
 schedule types
 --------------
 
+schedule
+^^^^^^^^
 
 crontab
 ^^^^^^^

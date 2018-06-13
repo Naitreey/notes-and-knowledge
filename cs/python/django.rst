@@ -1800,6 +1800,18 @@ migration definition
   再定义一遍. 由于 migration 只代表在确定历史状态下的操作, 所以这种重复不造成
   问题.
 
+migration operations
+--------------------
+
+- migration 过程中从 ``ModelState`` 重建 model. 这样重建的 model 不同于
+  当前源代码中记录的 model. 这导致的问题包括:
+
+  * Custom class attributes and methods are not restored and thus not
+    accessible.
+
+  * signal handlers are not called properly. 因为注册的 ``sender`` model
+    与重建的实际上并不是一个.
+
 management commands
 -------------------
 
@@ -2942,6 +2954,10 @@ to the parent class and then don’t use them later on.
   
   选项值的 symbolic enum 以及 choices list 本身, 应设置在 model class 中.
   这是为了方便后续在查询等操作中使用.
+  
+  注意如果只在 model class 中设置 enum, choices 等常量的话, 这些常量是不能在
+  migration 中使用的. 因为 migration 重建的 model class 不包含这些 class
+  attributes. 所以为了可用性, 需要在 module-level 设置相应的常量.
   
   设置该选项后, 默认的 form field 使用 TypedChoiceField, form widget 是
   (multiple) select box.
