@@ -972,7 +972,7 @@ coding
     # optional additional tests
     PY26 = sys.version_info[0:2] == (2, 6)
 
-    # other compatibility definitions ...
+- 其他兼容性定义也放在该文件中. 可以参考 django (1.11), celery 等.
 
 - 在其他项目文件中加入以下代码. 然后直接按照 python3 风格书写.
 
