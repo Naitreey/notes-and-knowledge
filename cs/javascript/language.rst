@@ -456,7 +456,6 @@ prototype related
   descriptor definitions to be added to the created object. 也就是说该 object 
   符合 ``Object.defineProperties()`` 参数形式.
 
-
 - ``getPrototypeOf(obj)``. returns the prototype of the obj. Note it might be
   null.
 
@@ -509,6 +508,9 @@ iteration
 - ``keys(obj)``. returns an array of object's enumerable property names, in the
   same order as for...in loop would.
 
+- ``values(obj)``. return an array of object's own enumerable property values,
+  in the same order as for...in loop wound.
+
 - ``entries(obj)``. returns an array of a given object's own enumerable
   property ``[key, value]`` pairs.
 
@@ -545,7 +547,7 @@ class and prototype
   chain. 与 instanceof operator 进行的是类似的判断.
 
 property manipulation
-""""""""""""""""""""""
+"""""""""""""""""""""
 
 - ``hasOwnProperty(<prop>)``. Whether the object has this own property.
 
@@ -553,6 +555,39 @@ property manipulation
   non-enumerable properties.
 
 - ``propertyIsEnumerable(<prop>)``. Whether the property is enumerable.
+
+conversion
+""""""""""
+以下方法用于各种 abstract operation 中的转换流程中.
+
+- ``toString()``. Return string representation of object. The default
+  implementation returns ``[object <type>]``, where ``type`` is one of
+  native object types. 注意不是 class function.::
+
+    > Object.prototype.toString.call(null)
+    '[object Null]'
+    > Object.prototype.toString.call(1)
+    '[object Number]'
+    > Object.prototype.toString.call(undefined)
+    '[object Undefined]'
+    > Object.prototype.toString.call(true)
+    '[object Boolean]'
+    > Object.prototype.toString.call(Symbol.iterator)
+    '[object Symbol]'
+    > Object.prototype.toString.call("")
+    '[object String]'
+    > Object.prototype.toString.call({})
+    '[object Object]'
+        
+- ``valueOf()``. Return the primitive value of object. Default implementation
+  returns the object itself. 所以实在没啥用. 所有子类都有 override 这个方法.::
+
+    > Object.prototype.valueOf.call("")
+    [String: '']
+    > Object.prototype.valueOf.call(1)
+    [Number: 1]
+    > Object.prototype.valueOf.call({})
+    {}
 
 [[Class]]
 ---------
@@ -887,8 +922,8 @@ Array
     因为本质上是删除了一个名为 index 数值的 property. 被删掉的 index 不再
     存在, 但其他内容并不自动更新.
 
-  * 如果 Array 的 sparse array 属性 is undesirable, and dense array is required,
-    use typed arrays.
+  * 如果 Array 的 sparse array 属性 is undesirable, and dense array is
+    required, use typed arrays.
 
 constructor
 ^^^^^^^^^^^
@@ -896,12 +931,15 @@ constructor
 
   new Array(elem0, elem1, ...)
   new Array(length)
+  Array(...)
 
 - If the only argument passed to the Array constructor is an integer between
   0 and 2**(32-1) (inclusive), this returns a new JavaScript array with its
-  length property set to that number.
+  length property set to that number. (WTFJS_) Which is a stupid terrible idea.
 
 - 如果要避免歧义, 使用 ``Array.of()`` static method.
+
+- 有没有 new operator, 效果都一样.
 
 static attributes
 ^^^^^^^^^^^^^^^^^
@@ -1157,6 +1195,21 @@ Function
     > x
     { [Function: x] r: 1, p: 2 }
 
+constructor
+^^^^^^^^^^^
+::
+
+  new Function([arg1[, arg2, ...]], body)
+  Function([arg1[, arg2, ...]], body)
+
+- Constructor works the same with or without ``new`` operator.
+
+- ``argN`` 是参数名称, in string. ``body`` is function body in stirng.
+
+  ``body`` is ``eval()``-ed. function body will only be able to access their
+  own local variables and global ones, not the ones from the scope in which the
+  Function constructor was called.
+
 attributes
 ^^^^^^^^^^
 - ``length``. readonly data property. the number of positional args expected by
@@ -1165,6 +1218,8 @@ attributes
   * This number excludes the rest parameter and only includes parameters before
     the first one with a default value.
 
+- ``name``. function's name or ``anonymous`` if function is created
+  anonymously.
 
 methods
 ^^^^^^^
