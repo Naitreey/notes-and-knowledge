@@ -1870,7 +1870,9 @@ Replication
     
   * one-way replication: data is replicated from master to slaves.
     
-  * master is write-only, slaves are read-only.
+  * master is write-only, slaves are read-only. 只有 master 上没有向 slave
+    replicate 的数据库和/或表, 或者只有 slave 上存在的数据库和表,  slave 上
+    才能安全地进行写操作. 否则, slave 必须保持只读.
 
   * 同步类型:
 
