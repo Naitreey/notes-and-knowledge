@@ -2497,6 +2497,18 @@ mysql
 
 - volume: /var/lib/mysql
 
+redis
+-----
+- 主要镜像分类:
+
+  * ``redis:<version>`` based on debian
+
+  * ``redis:alpine*`` based on alpine.
+
+- expose 6379
+
+- volume: /data. used for redis persistent storage.
+
 APIs
 ====
 
