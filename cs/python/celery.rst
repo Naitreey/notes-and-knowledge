@@ -741,6 +741,36 @@ django-celery-beat
 
   celery -A proj beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
 
+models
+""""""
+- IntervalSchedule. define interval schedules.
+
+- CrontabSchedule. define crontab schedules.
+
+- SolarSchedule. define solar schedules.
+
+- PeriodicTask. define periodic tasks.
+
+  * name 是 unique key. 从而可唯一确定一个任务.
+  
+  * 与某个 schedule entry 关联.
+
+  * 可设置任务参数.
+
+  * 可设置各种 apply 参数, 例如 queue, exchange, routing_key.
+
+- PeriodicTasks. keep track of when the schedule is last updated.
+
+  * ``update_changed()``. classmethod. 更新上次更新时间.
+
+signals
+""""""""
+增加、修改、删除 ``PeriodicTask`` 和 ``*Schedule`` 时会自动更新上次
+更新时间. 从而应用新配置.
+
+由于 bulk create/update/delete 操作时不会触发 signal, 此时需要手动
+更新时间.
+
 celery CLI
 ==========
 
