@@ -245,7 +245,7 @@ redis expires
 commands
 ========
 - All redis's commands are atomic. This is simply a consequence of Redis
-  using a single-threaded event loop to handle client operations.
+  using a single-threaded event loop to handle client operations.[SORedisConcurrency]_
 
 generic
 -------
@@ -573,3 +573,4 @@ clustering
 references
 ==========
 .. [SOMemcachedRedis] https://stackoverflow.com/questions/10558465/memcached-vs-redis
+.. [SORedisConcurrency] `Redis is single-threaded, then how does it do concurrent I/O? <https://stackoverflow.com/questions/10489298/redis-is-single-threaded-then-how-does-it-do-concurrent-i-o>`
