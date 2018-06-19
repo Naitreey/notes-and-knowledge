@@ -110,13 +110,29 @@ app config
 
 - ``config_from_object(<module>)``. 
 
+send task
+^^^^^^^^^
+- argsrepr
+
+- kwargsrepr
+
 Tasks
 =====
 
 task definition
 ---------------
 - A task is a simple callable object wrapped by a task instance.
+  Create a task by:
 
+  * ``Celery.task`` decorator
+
+  * ``shared_task`` decorator
+
+  When multiple decorators are applied to a task callable, the task decorator
+  must be the outermost wrapper.
+
+design considerations
+^^^^^^^^^^^^^^^^^^^^^
 - 函数参数注意事项:
 
   * Don't pass complex objects as task paramters. Only pass JSON/msgpak, etc,
@@ -126,8 +142,186 @@ task definition
     from db at the receiving end. The database object you passed might change
     in between the time you place the task and the time it gets executed.
 
-states
-------
+- 等幂性 (idempotence).
+
+  * 理想情况下, 任务的定义应保证等幂性. 即对一个任务多次调用时, 只要维持输入相同,
+    任务执行后的结果或者说系统状态就应该是相同的.
+
+  * 但实际中往往不能保证任务的等幂性. 这是一个尽量去满足的要求, 但不强求.
+
+  * 满足等幂性的任务可以配合 ``acks_late`` 来方便地 retry.
+
+- about blocking operations.
+
+  * 如果任务体中需要进行 blocking operation, 例如 IO 操作, 保证这些操作设置了某种
+    timeout 机制, 以避免 blocks indefinitely.
+
+  * 另一种避免 task blocks indefinitely 的方式是设置 work 在执行 task 使用的
+    soft/hard time limits.
+
+  * 精细的 timeout 与宏观的 time limit 机制应结合使用.
+
+bound task
+^^^^^^^^^^
+- bind task callable to created task class as a method, rather than static
+  method. Therefore, the first paramter must be ``self``. In task body, the
+  Task instance is accessible.
+
+- task decorators accepts ``bind`` option to create bound task. It's not a
+  option on ``Task`` class, but defined on ``Celery._task_from_fun``.
+
+task inheritance
+^^^^^^^^^^^^^^^^
+- Create subclass of ``celery.app.task.Task`` to do customizations.
+
+- task decorators accepts ``base`` option to designate base Task class to use.
+  It's not a option on ``Task`` class, but defined on ``Celery._task_from_fun``.
+
+task retry
+^^^^^^^^^^
+- 应用 ``Task.retry()`` 处理 recoverable, expected errors.
+
+- retry 后, 任务进入 RETRY state.
+
+- By default, ``Task.retry()`` will raise an ``Retry`` exception. It isn’t
+  handled as an error but rather as a semi-predicate to signify to the worker
+  that the task is to be retried. The extra ``raise`` statement is to clearify
+  this line is the end of execution, and is not a necessity.
+
+- 若有 exception, can be passed in::
+
+    raise self.retry(exc=exc)
+
+  The original exception 会记录在日志和任务结果中.
+
+- 若 max_retries is configured, task will fail after retries, and current
+  exception or original exception will be raised (if there is one).
+
+- task decorators options for convenient retry configuration. 这种 retry
+  配置是认为整个 task body 任意位置出现指定错误都可以 retry. 所以精细程度
+  低一些.
+
+  * ``autoretry_for``. a list of exception classes, if any of those is raised
+    then task is automatically retried.
+
+  * ``retry_kwargs``. a dict of ``Task.retry()`` arguments.
+
+  * ``retry_backoff``. boolean or int. use exponential backoff as countdown.
+
+  * ``retry_backoff_max``. default 600. max backoff interval between retries.
+
+  * ``retry_jitter``. default True. introduce randomness into backoff. The
+    actual delay value will be a random number between zero and the expected
+    backoff.
+
+- Task.retry vs acks_late.[DocFAQRetry]_
+
+  * acks_late would be used when you need the task to be executed again if the
+    worker (for some reason) crashes mid-execution. The worker isn’t known to
+    crash, and if it does it’s usually an unrecoverable error that requires
+    human intervention.
+
+    此外, 在保证任务等幂性的情况下, 才可以使用 ``acks_late``.
+
+  * When task message is re-queued depends on the message broker being used.
+    例如对于 rabbitmq, 当连接中断 (channel closed) 时 message 重新排队. 因此,
+    我们说这种延迟 ack 只是为了处理 worker crash 的情况.
+
+  * 注意, 只有当任务导致 worker crash 才会导致 message 不被 ack, 其他情况,
+    无论是执行成功、失败、raise exception 等情况 message 都会 ack, 这样
+    ``acks_late`` 就起不到作用.
+
+  * 根据上述分析, 我们看到 Task.retry 和 acks_late 解决的实际上是不同的问题.
+    Task.retry 解决的是当任务遇到可控的问题时, 可以 gracefully finish 当前
+    执行进度并进行重试; acks_late 解决是当任务遇到不可控的问题、并导致突然
+    中断时, 可以重新调度.
+
+    两种机制并不矛盾, 完全可以在需要的时候配合使用. 即一个任务, 即在任务体中
+    考虑了可能的 retry point, 又设置了 acks_late 保证中断时重新调度.
+  
+  * 在一般的情况下, Task.retry 相对于 acks_late 是合适的设计. 因为, 只有
+    遇到了 uncatchable errors 才需要 acks_late 提供的可靠性 (即在这种情况下还
+    可以重新执行任务). 然而, 如果 error 都是 uncatchable 了, 更有可能的原因是
+    代码 bug, 而不是重新执行可以解决的.
+
+    因此, 在一般的情况下, 没必要收到任务不 ack. 而是立即 ack, 如果在任务执行中
+    出错, 重新排队该任务进行重试.
+
+task options
+^^^^^^^^^^^^
+- name. must be unique. 默认根据 task module + function name 自动生成.
+  生成逻辑由 ``Celery.gen_task_name`` 定义. 子类可自定义.
+
+- typing. whether or not checks task's argument when calling. 若检查, 参数不符
+  时在 producer 端就会 raise exception; 否则需要等到 worker 端调用 task callable
+  时才能 raise exception. default True.
+
+- max_retries. default 3. set to None will retry indefinitely.
+
+- default_retry_delay. the number of seconds to wait by default when retrying
+  task. default: 180s (3min).
+
+- throws. a list of expected error classes that shouldn’t be regarded as an
+  actual error.  Errors in this list will be reported as a failure to the
+  result backend, but the worker won’t log the event as an error, and no
+  traceback will be included. default ().
+
+- rate_limit. limits the number of tasks that can be run in a given time frame.
+  This is a per worker instance rate limit, and not a global rate limit. default
+  None.
+
+- time_limit. hard time limit in seconds. default to ``task_time_limit``.
+
+- soft_time_limit. default to ``task_soft_time_limit``.
+
+- ignore_result. don't store task state and result. defaults to ``task_ignore_result``.
+
+- store_errors_even_if_ignored. defaults to ``task_store_errors_even_if_ignored``.
+
+- serializer. defaults to ``task_serializer``.
+
+- compression. defaults to ``task_compression``.
+
+- backend. result backend for this task. default to ``app.backend`` defined by
+  ``result_backend``.
+
+- acks_late. ack task message after the task has been executed. defaults to
+  ``task_acks_late``.
+
+- track_started. track STARTED state. useful for when there are long running
+  tasks and there’s a need to report what task is currently running. The host
+  name and process id of the worker executing the task will be available in the
+  state meta-data. defaults to ``task_track_started``.
+
+task message
+------------
+- 在 producer 端, Task instance 生成 task message 送入队列, worker processes 读取
+  任务消息, 调用指定任务传入指定参数.
+
+message acknowledgement
+^^^^^^^^^^^^^^^^^^^^^^^
+- A task message is not removed from the queue until that message has been
+  acknowledged by a worker.
+
+- By default, worker acknowledges the message in advance, just before it's executed.
+  这是保守的做法, 即默认 task is not idempotent. 这样避免消息再次出现在队列中, 被别的
+  worker 接收, 如果任务不能保证 idempotent, 这样就会出问题.
+
+- 对于 ``Task.acks_late`` 的任务, message is ack-ed after task is returned.
+
+- By default, the worker will acknowledge the message if the child process
+  executing the task is terminated (either by the task calling sys.exit(), or
+  by signal) even when ``acks_late`` is enabled.
+  
+  这是因为如果一个任务导致 worker's child process get terminated,
+  这更可能是某种人为行为或者十分异常的 malfunction (因为 python 级别的
+  exception 全部被 catch 掉了, 避免 child 退出). 如果要避免这种 ack, 设置
+  ``Task.reject_on_worker_lost``.
+
+task states
+-----------
+- 
+
 - states transition: PENDING -> STARTED -> [RETRY -> STARTED]... -> SUCCESS|FAILURE
 
 - STARTED state is available only if ``task_track_started`` is enabled
@@ -136,13 +330,17 @@ states
 - PENDING state is not a recorded state, but rather the default state for any
   task id that’s unknown.
 
-task routing
-------------
-两种方式:
+meta informations
+-----------------
 
-- 静态配置: ``task_routes``
+- ``request`` property. Information and state related to the currently
+  executing task.
 
-- dispatch 时设置: ``apply_async(queue=...)``
+task class
+----------
+- celery 读取应用中定义的 task callable, 对于每个 task callable, 定义一个
+  ``celery.app.task.Task`` subclass, 包裹 task callable, 并实例化后返回, 替换
+  原来的 task callable.
 
 methods
 -------
@@ -153,6 +351,14 @@ delay
 
 apply_async
 ^^^^^^^^^^^
+- options.
+
+  * argsrepr. Hide sensitive information in arguments.
+
+  * kwargsrepr. Hide sensitive information in arguments.
+
+retry
+^^^^^
 
 Results
 =======
@@ -322,6 +528,51 @@ embedded beat options
 
 celery multi
 ^^^^^^^^^^^^
+
+Logging
+=======
+- 默认配置 ``worker_hijack_root_logger=True``, 此时 root, celery, celery.task,
+  celery.redirected loggers 全部被 celery 重新配置 (其他 logger 维持原样).
+  例如, django 的 ``LOGGINGS`` 配置中相关的 logger 会被重新配置.
+
+- 因此, 设置必要的 celery logging settings, 并使用 ``celery.utils.log`` 获取
+  loggers, 能最佳地与 celery logging 封装协作.
+
+- By default, stdout/stderr streams will be redirected to ``celery.redirected``
+  logger, with WARNING level.
+
+task logging
+------------
+
+- use ``get_task_logger`` to retrieve ``ceelry.task`` logger children.
+  享受 ``worker_task_log_format`` 自动提供的额外信息.::
+
+    from celery.utils.log impor get_task_logger
+
+    logger = get_task_logger(__name__)
+
+settings
+--------
+- ``worker_hijack_root_logger``. default True. To configure logging manually,
+  set this to False.
+
+- ``worker_log_color``. by default use color if logging to terminal.
+
+- ``worker_log_format``. format used by all loggers except for celery.task.
+  default::
+
+    [%(asctime)s: %(levelname)s/%(processName)s] %(message)s
+
+- ``worker_task_log_format``. format for celery.task. 默认就多了 ``task_name``
+  和 ``task_id`` 的自动输出. default::
+
+    %(asctime)s: %(levelname)s/%(processName)s] [%(task_name)s(%(task_id)s)] %(message)s
+
+- ``worker_redirect_stdouts``. default True. redirect stdout/stderr streams
+  to logger.
+
+- ``worker_redirect_stdouts_level``. default WARNING. stdout/stderr output's
+  level.
 
 Serialization
 =============
@@ -818,3 +1069,4 @@ subcommands
 References
 ==========
 .. [CeleryPip] http://docs.celeryproject.org/en/latest/getting-started/introduction.html#installation
+.. [DocFAQRetry] http://docs.celeryproject.org/en/latest/faq.html#should-i-use-retry-or-acks-late

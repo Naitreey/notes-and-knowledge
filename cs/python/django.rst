@@ -2026,6 +2026,92 @@ session
   即使过期. 因此需要定期执行 ``clearsessions`` 命令删除过期 session.
   对于 cache-based session store, 显然不存在这个问题.
 
+cache framework
+===============
+- django 包含两种 cache 机制:
+
+  * server 端 cache. 由 django web service 自己控制的 cache server. 就像数据库一样,
+    可以在代码逻辑中任意方式使用.
+  
+  * downstream in-path cache. 通过 cache control 类的 HTTP headers 指示 downstream 
+    n-path cache system (例如 CDN) 或者浏览器本地缓存该如何进行缓存. 这样的交互主要
+    则局限很多, 主要应用在页面或静态文件的加速读取上面.
+
+  两种 cache 机制各自有不同的适用性, 并不能相互替代.
+
+- 对于 server 端 cache, django 提供多种精度的缓存控制.
+
+  * per-site cache.
+
+  * per-view cache.
+
+  * template cache.
+
+  * low-level cache APIs.
+
+- django builtin 提供了几种 server-side cache backend 的封装.
+
+  * memcached.
+
+  * database cache.
+
+  * filesystem cache (file-based).
+
+  * local memory cache.
+
+  * dummy cache (fake cache).
+
+- django-redis package 提供了 redis 作为 cache backend 的封装. See
+  `django-redis`_.
+
+settings
+--------
+
+- ``settings.CACHES``. a dict of caches, mapping cache alias to its config
+  dict. 若不设置, 默认只设置 ``default`` cache, 使用 ``LocMemCache`` backend.
+
+  如设置该参数, 必须设置一个 ``default`` cache.
+
+  对于每个 cache, config dict 内容:
+
+  * BACKEND.
+
+  * LOCATION. 指定 cache 的路径. depending on backend, this may use different
+    format.
+
+  * KEY_FUNCTION. function that derives the final cache key from input prefix,
+    version and key name.
+
+  * KEY_PREFIX. cache key's prefix string.
+
+  * TIMEOUT. cache content expire time.
+
+  * OPTIONS. backend-specific option dict.
+
+  * VERSION. default version number of keys.
+
+cache backends
+--------------
+- ``django.core.cache.caches`` 保存着根据 settings.CACHES 生成的一组 cache
+  backend instances. It's an instance of ``CacheHandler``.
+
+- ``django.core.cache.cache`` is a proxy to ``default`` cache. It's an instance
+  of ``DefaultCacheProxy``.
+
+memcached
+^^^^^^^^^
+- Two memcached backend implementations, based respectively on,
+  python-memcached and pylibmc.
+
+BaseMemcachedCache
+""""""""""""""""""
+
+MemcachedCache
+""""""""""""""
+
+PyLibMCCache
+""""""""""""
+
 form
 ====
 
