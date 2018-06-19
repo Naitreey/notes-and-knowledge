@@ -320,15 +320,79 @@ message acknowledgement
 
 task states
 -----------
-- 
 
-- states transition: PENDING -> STARTED -> [RETRY -> STARTED]... -> SUCCESS|FAILURE
+新状态的 metadata 会覆盖旧状态的 metadata.
 
-- STARTED state is available only if ``task_track_started`` is enabled
-  or in a per-task setting.
+- PENDING. Task is waiting for execution or unknown. Not a recorded state, but
+  rather the default state for any task id that’s unknown. Unknown 指的是
+  result backend 还没有关于该任务的任何记录. 所以说, 任务状态不会查询消息队列,
+  无论是还在排队还是根本没这个任务, 对于 celery 而言都一样, 就是未知的.
 
-- PENDING state is not a recorded state, but rather the default state for any
-  task id that’s unknown.
+- RECEIVED. task is received by a worker, 但可能还没有执行. This state is
+  not normally available. Only used in events.
+
+- STARTED. Task execution is started for real. Available only if
+  ``task_track_started`` is enabled or in per-task ``Task.track_started``.
+
+  Meta data: ``pid`` and ``hostname`` of worker process.
+
+- RETRY: task is being retried.
+
+  Meta data: ``result`` is the exception that caused the retry,
+  ``traceback`` is exception's traceback.
+
+- SUCCESS. task execution has finished and is successful.
+
+  Meta data: ``result`` is task's return value.
+
+- FAILURE: task execution has finished and is unsuccessful.
+
+  Meta data: ``result`` is raised exception instance, ``traceback``
+  is exception's traceback.
+
+- REVOKED. Task has been revoked.
+
+States transition
+^^^^^^^^^^^^^^^^^
+::
+
+  PENDING -> STARTED -> [RETRY -> STARTED]... -> SUCCESS|FAILURE
+
+classification
+^^^^^^^^^^^^^^
+- ready states, meaning the task is finished, its result is ready.
+  无论成败. 当任务进入 ready states, AsyncResult 会 cache task data
+  on the instance.
+
+  * SUCCESS
+
+  * FAILURE
+
+  * REVOKED
+
+- unready states.
+
+  * PENDING
+
+  * RECEIVED
+
+  * STARTED
+
+  * REJECTED
+
+  * RETRY
+
+- propagate states. The exception can be propagated to caller-side
+  if task is in these states.
+
+  * FAILURE
+
+  * REVOKED
+
+custom state
+^^^^^^^^^^^^
+- simply define a unique state name and associate with this state whatever
+  metadata you want. Then call ``Task.update_state()``.
 
 meta informations
 -----------------
@@ -388,7 +452,7 @@ methods
 - ``successful()``
 
 Result backend
---------------
+==============
 - Result backend is required to keep track of tasks' states.
   默认不启用 result backend, 即默认配置下, 不可获取任务的状态和结果.
 
@@ -398,17 +462,44 @@ Result backend
 - Result backends aren’t used for monitoring tasks and workers, for that Celery
   uses dedicated event messages.
 
-RPC
----
+content
+-------
+- result backend 保存着任务的各种信息, 这些信息是 ``AsyncResult`` 中信息的来源.
+  包含:
 
-- It sends state back as transient messages.
+  * task id ``task_id``.
 
-- 它对于每个 client 开一个队列.
+  * 当前状态 ``status``.
 
-AMQP
-----
-- 与 RPC result backend 同理, 但相比于 rpc 非常低效, 它对于每个任务都单独
-  开一个队列.
+  * 结果 ``result``.
+
+  * ``traceback`` if any.
+
+  * children tasks ``children`` if any.
+
+RPC and AMQP result backends
+----------------------------
+- When rabbitmq or QPid is used as message broker, RPC and AMQP result
+  backend ``rpc://`` and ``amqp://`` are available automatically.
+
+- They send task state information back as transient messages, rather than
+  actually storing result somewhere. Therefore result can only be retrieved
+  once, and only by the client that initiated the task.
+
+- It's still an excellent choice if you need to receive state changes in
+  real-time. Using messaging means the client doesn’t have to poll for new
+  states.
+
+- RPC 对于每个 client 开一个队列. AMQP 对于每个任务单独开一个队列. 因此后者
+  非常低效, is deprecated.
+
+database result backends
+------------------------
+- Polling the database for new states is expensive. 避免过于频繁的状态 polling.
+
+- MySQL transaction isolation level should be READ-COMMITTED. 不然如果在一个
+  transaction 中 polling for state change, 会看不到这期间其他数据库线程 commit
+  的状态改变.
 
 Canvas
 ======
