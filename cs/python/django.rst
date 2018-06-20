@@ -4677,7 +4677,8 @@ database transactions
 
   ``on_commit`` hook 还是挺有用的. 例如无法在 transaction 外部直接添加后续执行
   逻辑时, 就可以通过这个 hook 加入代码. 具体而言, 例如在 view 中注册一个
-  on commit hook, 在 commit 成功后才发送 celery task, 保证执行顺序.
+  on commit hook, 在 commit 成功后才发送 celery task, 保证执行顺序, 避免
+  任务执行时可能相关数据还没有 commit, 这样就造成了 race condition.
 
 * low-level APIs.
 

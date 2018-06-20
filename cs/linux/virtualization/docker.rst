@@ -376,11 +376,12 @@ concepts and best practices
 format
 ------
 .. code:: dockerfile
+
   # Comment|directive=value
   INSTRUCTION arguments
 
 A Dockerfile must start with zero or more ``ARG`` instructions followed by a
-``FROM`` instruction. 这个主要目的是为了将 FROM instruction 参数化.
+``FROM`` instruction.
 
 对于 array 形式的参数, 使用 valid JSON array syntax.
 
@@ -402,6 +403,44 @@ Each directive may only be used once.
 
 Parser directives are not case-sensitive. However, convention is for them to be
 lowercase. Convention is also to include a blank line following parser directives.
+
+A list of parser directives.
+
+- escape: 设置 dockerfile 中用于 escape 的 char. default is ``\``.
+
+parameter substitution
+^^^^^^^^^^^^^^^^^^^^^^
+dockerfile 中支持进行 bash-like parameter substitution syntax. 可以替换的
+变量是 build time 环境中本来包含的环境变量以及由 ENV 和 ARG instruction 设置
+的环境变量.
+
+支持的语法:
+
+- ``$var``
+
+- ``${var}``
+
+- ``${var:-default}``
+
+- ``${var:+default}``
+
+注意: Environment variable substitution will use the same value for each
+variable throughout the entire instruction.
+
+.. code:: dockerfile
+
+  ENV abc=hello
+  # the following "def" is "hello"
+  ENV abc=bye def=$abc
+  # the following "ghi" is "bye"
+  ENV ghi=$abc
+
+quoting
+^^^^^^^
+- 对于需要命令行形式的 arguments 的 instruction, 其 arguments 部分对于
+  single and double quotes 的解析与 shell 一致.
+
+- 注意 JSON 形式的参数须使用 double quotes.
 
 instructions
 ------------
@@ -799,37 +838,6 @@ ONBUILD
     ONBUILD RUN mvn install
 
 - ONBUILD triggers are not inherited by grand-children images.
-
-parser directives
------------------
-
-escape
-^^^^^^
-设置 dockerfile 中用于 escape 的 char. default is ``\``.
-
-parameter substitution
-----------------------
-dockerfile 中支持进行 bash-like parameter substitution syntax. 可以替换的
-变量是 ENV 设置的环境变量.
-
-支持的语法:
-
-- ``$var``
-
-- ``${var}``
-
-- ``${var:-default}``
-
-- ``${var:+default}``
-
-注意: Environment variable substitution will use the same value for each
-variable throughout the entire instruction.
-.. code:: dockerfile
-  ENV abc=hello
-  # the following "def" is "hello"
-  ENV abc=bye def=$abc
-  # the following "ghi" is "bye"
-  ENV ghi=$abc
 
 dockerignore
 ============

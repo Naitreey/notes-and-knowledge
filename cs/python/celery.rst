@@ -110,6 +110,10 @@ app config
 
 - ``config_from_object(<module>)``. 
 
+tasks
+^^^^^
+- tasks. The Celery app's task registry.
+
 send task
 ^^^^^^^^^
 - argsrepr
@@ -133,6 +137,17 @@ task definition
 
 design considerations
 ^^^^^^^^^^^^^^^^^^^^^
+- Task's granularity. 即一个大任务应该如何切分成多个小任务, 即构建一个工作流.
+
+  In general it is better to split the problem up into many small tasks rather
+  than have a few long running tasks.
+
+  With smaller tasks you can process more tasks in parallel and the tasks won’t
+  run long enough to block the worker from processing other waiting tasks.
+
+  但是过于精细的划分可能会适得其反, 因为每个任务执行的 overhead 带来的影响
+  变得显著了.
+
 - 函数参数注意事项:
 
   * Don't pass complex objects as task paramters. Only pass JSON/msgpak, etc,
@@ -161,6 +176,21 @@ design considerations
 
   * 精细的 timeout 与宏观的 time limit 机制应结合使用.
 
+- 任务结果. 如果不需要任务结果, 就别记录. 设置 ``ignore_result``.
+
+- 避免在任务体中再执行同步任务, 使用 canvas 设计更高效、解耦合的异步工作流.
+  在任务体中执行同步任务不仅低效 (对 worker 资源不能很好利用), 而且当 worker
+  pool exhausted 时会导致 dead lock. 
+
+- 尽量提高 worker 获取执行任务所需数据的效率. 例如, 缓存经常用到的数据至
+  cache system.
+
+- Asserting the world is the responsibility of the task, not the caller.
+
+- database transaction 与任务分发. 任务必须在 database transaction 成功
+  后才分发. 否则任务中如果需要用到 transaction 中修改的数据, 可能导致
+  race condition.
+
 bound task
 ^^^^^^^^^^
 - bind task callable to created task class as a method, rather than static
@@ -177,7 +207,7 @@ task inheritance
 - task decorators accepts ``base`` option to designate base Task class to use.
   It's not a option on ``Task`` class, but defined on ``Celery._task_from_fun``.
 
-task retry
+retry task
 ^^^^^^^^^^
 - 应用 ``Task.retry()`` 处理 recoverable, expected errors.
 
@@ -247,51 +277,89 @@ task retry
     因此, 在一般的情况下, 没必要收到任务不 ack. 而是立即 ack, 如果在任务执行中
     出错, 重新排队该任务进行重试.
 
+revoke task
+^^^^^^^^^^^
+revoke task 是不需要 task body 实现进行配合的 task abortion. 它的原理是
+producer 发起 revoke, 广播 revoke event, 让所有 worker 知道这个任务要
+revoke.
+
+worker 会把要 revoke 的任务记在一个 set 中. 当 worker 收到相符的任务消息,
+会发送 task-revoked event, 记录该任务的状态 REVOKED 以及相关信息至 backend,
+ack 任务消息.
+
+注意几点:
+
+- 如果 worker 在收到 revoke 广播之前已经执行完了该任务, 就不会再收到这个
+  任务 id. 从而 revoke 已经执行的任务没有效果, 不会修改任务状态.
+
+- 如果任务正在执行, 一般情况下已经无法 revoke. 除非强制 ``terminate=True``,
+  此时 the worker child process processing the task will be terminated.
+  该操作只应该作为 last resort 使用. 用于手动清除卡住的任务, 释放 worker.
+  不该 used programmatically. 因为这里存在 race condition. 如果发送 signal
+  时任务已经执行完, worker 开始执行下一个任务, 就会错误地杀掉其他任务.
+
+- worker 将 to-be-revoked 和 revoked tasks 放在自身内存中. 默认不是持久的.
+  若 worker restart, 这些记录会消失. 该 revoke 的任务就不会被 revoke 了.
+  需要使用 ``--statedb`` option 保持 revoked task 至持久性存储.
+
+revoke and abort.
+
+- revoke 不适合去可靠地常规性地 revoke 正在执行的任务. 它只适合 revoke
+  尚未执行的任务.
+
+- revoke 到底有什么用呢? 它只能 revoke 尚未执行的任务. 可能就是用在大量
+  任务堆积时, 清除某些特定的任务、或者批量 revoke 吧.
+
+- abort 相对而言, 更合适实现 graceful abort 正在执行的任务. 它需要 task
+  body 去配合. 如果无论是处于什么情况下的任务, 都希望能够可靠地清除, 应该
+  使用 abortable task.
+
+abort task
+^^^^^^^^^^
+- ``celery.contrib.abortable`` 提供了 AbortableTask 和 AbortableAsyncResult.
+
+- 原理是, producer 调用 ``AbortableAsyncResult.abort()`` 在 result backend
+  中置 ABORTED 状态. task body 中, 设置多处 ``AbortableTask.is_aborted()``
+  检查. 若发现 aborted, 相应处理和退出.
+
+- abortable task 需要保存任务状态, 且能够反复获取, 因此需要使用基于 database or
+  cache 的 result backend. 而不能是 RPC backend.
+
+reject task
+^^^^^^^^^^^
+reject task 是需要配合 AMQP 的 basic_reject method 来使用的, 即是对这个方法
+的封装. 相应地, reject task 有两种用途:
+
+- reject task message and requeue. worker reserved task message, 但随后
+  rejected the message. 消息重回队列. 继续可以被任何 worker 接收执行.::
+
+    raise Reject(requeue=True)
+
+  这种用法并不推荐. 因为可能造成无限循环. 不如使用 Task.retry + max_retries.
+
+- reject task message and send to Dead Letter Exchange (DLE). 用于进行特殊
+  处理.::
+
+    raise Reject(requeue=False)
+
+注意无论哪种用法, 在 task body 中进行 reject 的前提是任务消息没有被预先 ack.
+因此, 必须配合 ``acks_late`` 使用才有效果.
+
+Rejected task 在没有后续 worker 处理之前, 状态停留在 PENDING (or STARTED if
+recorded). 
+
+ignore task
+^^^^^^^^^^^
+ignore task 的效果是该任务没有任何自动的状态记录 (或只有 STARTED 记录, if
+recorded). 注意到任务消息在 raise Ignore 之前就 ack 了.::
+
+    raise Ignore()
+
+这可用于手动状态记录, 或就是 ignore.
+
 task options
 ^^^^^^^^^^^^
-- name. must be unique. 默认根据 task module + function name 自动生成.
-  生成逻辑由 ``Celery.gen_task_name`` 定义. 子类可自定义.
-
-- typing. whether or not checks task's argument when calling. 若检查, 参数不符
-  时在 producer 端就会 raise exception; 否则需要等到 worker 端调用 task callable
-  时才能 raise exception. default True.
-
-- max_retries. default 3. set to None will retry indefinitely.
-
-- default_retry_delay. the number of seconds to wait by default when retrying
-  task. default: 180s (3min).
-
-- throws. a list of expected error classes that shouldn’t be regarded as an
-  actual error.  Errors in this list will be reported as a failure to the
-  result backend, but the worker won’t log the event as an error, and no
-  traceback will be included. default ().
-
-- rate_limit. limits the number of tasks that can be run in a given time frame.
-  This is a per worker instance rate limit, and not a global rate limit. default
-  None.
-
-- time_limit. hard time limit in seconds. default to ``task_time_limit``.
-
-- soft_time_limit. default to ``task_soft_time_limit``.
-
-- ignore_result. don't store task state and result. defaults to ``task_ignore_result``.
-
-- store_errors_even_if_ignored. defaults to ``task_store_errors_even_if_ignored``.
-
-- serializer. defaults to ``task_serializer``.
-
-- compression. defaults to ``task_compression``.
-
-- backend. result backend for this task. default to ``app.backend`` defined by
-  ``result_backend``.
-
-- acks_late. ack task message after the task has been executed. defaults to
-  ``task_acks_late``.
-
-- track_started. track STARTED state. useful for when there are long running
-  tasks and there’s a need to report what task is currently running. The host
-  name and process id of the worker executing the task will be available in the
-  state meta-data. defaults to ``task_track_started``.
+所有的 Task class attributes 都可以在 task decorator 中设置.
 
 task message
 ------------
@@ -323,13 +391,12 @@ task states
 
 新状态的 metadata 会覆盖旧状态的 metadata.
 
+标准状态
+^^^^^^^^
 - PENDING. Task is waiting for execution or unknown. Not a recorded state, but
   rather the default state for any task id that’s unknown. Unknown 指的是
   result backend 还没有关于该任务的任何记录. 所以说, 任务状态不会查询消息队列,
   无论是还在排队还是根本没这个任务, 对于 celery 而言都一样, 就是未知的.
-
-- RECEIVED. task is received by a worker, 但可能还没有执行. This state is
-  not normally available. Only used in events.
 
 - STARTED. Task execution is started for real. Available only if
   ``task_track_started`` is enabled or in per-task ``Task.track_started``.
@@ -352,11 +419,23 @@ task states
 
 - REVOKED. Task has been revoked.
 
+其他状态
+^^^^^^^^
+这些状态一般不会出现, 但可以手动设置.
+
+- RECEIVED. task is received by a worker, 但可能还没有执行. This state is
+  not normally available. Only used in events.
+
+- REJECTED.
+
+- IGNORED.
+
 States transition
 ^^^^^^^^^^^^^^^^^
 ::
 
-  PENDING -> STARTED -> [RETRY -> STARTED]... -> SUCCESS|FAILURE
+  PENDING -> [STARTED] -> [RETRY -> [STARTED]]... -> SUCCESS|FAILURE
+                                                  -> REVOKED
 
 classification
 ^^^^^^^^^^^^^^
@@ -378,8 +457,6 @@ classification
 
   * STARTED
 
-  * REJECTED
-
   * RETRY
 
 - propagate states. The exception can be propagated to caller-side
@@ -394,35 +471,88 @@ custom state
 - simply define a unique state name and associate with this state whatever
   metadata you want. Then call ``Task.update_state()``.
 
-meta informations
------------------
-
-- ``request`` property. Information and state related to the currently
-  executing task.
-
 task class
 ----------
 - celery 读取应用中定义的 task callable, 对于每个 task callable, 定义一个
   ``celery.app.task.Task`` subclass, 包裹 task callable, 并实例化后返回, 替换
   原来的 task callable.
 
+- A task is not instantiated for every message, but is registered in the task
+  registry as a global instance.
+
+class attributes
+^^^^^^^^^^^^^^^^
+- name. must be unique. 默认根据 task module + function name 自动生成.
+  生成逻辑由 ``Celery.gen_task_name`` 定义. 子类可自定义.
+
+- typing. whether or not checks task's argument when calling. 若检查, 参数不符
+  时在 producer 端就会 raise exception; 否则需要等到 worker 端调用 task callable
+  时才能 raise exception. default True.
+
+- max_retries. default 3. set to None will retry indefinitely.
+
+- default_retry_delay. the number of seconds to wait by default when retrying
+  task. default: 180s (3min).
+
+- throws. a list of expected error classes that shouldn’t be regarded as an
+  actual error.  Errors in this list will be reported as a failure to the
+  result backend, but the worker won’t log the event as an error, and no
+  traceback will be included. default ().
+
+- rate_limit. limits the number of tasks that can be run in a given time frame.
+  This is a per worker instance rate limit, and not a global rate limit. default
+  None.
+
+- time_limit. hard time limit in seconds. default to ``task_time_limit``.
+
+- soft_time_limit. default to ``task_soft_time_limit``.
+
+- ignore_result. don't store task state and result. defaults to
+  ``task_ignore_result``. 如果任务结果确实没用, 应该设置这个选项.
+
+- store_errors_even_if_ignored. defaults to ``task_store_errors_even_if_ignored``.
+
+- serializer. defaults to ``task_serializer``.
+
+- compression. defaults to ``task_compression``.
+
+- backend. result backend for this task. default to ``app.backend`` defined by
+  ``result_backend``.
+
+- acks_late. ack task message after the task has been executed. defaults to
+  ``task_acks_late``.
+
+- track_started. track STARTED state. useful for when there are long running
+  tasks and there’s a need to report what task is currently running. The host
+  name and process id of the worker executing the task will be available in the
+  state meta-data. defaults to ``task_track_started``.
+
+attributes
+^^^^^^^^^^
+- ``request`` property. Metadata and state related to the currently executing
+  task.
+
 methods
--------
+^^^^^^^
 
-delay
-^^^^^
-- Returns a ``AsyncResult``.
+- ``delay()``. Returns a ``AsyncResult``.
 
-apply_async
-^^^^^^^^^^^
-- options.
+- ``apply_async()``
 
   * argsrepr. Hide sensitive information in arguments.
 
   * kwargsrepr. Hide sensitive information in arguments.
 
-retry
-^^^^^
+- ``retry()``
+
+- ``after_return()``. handler to call after task returns. 无论成功还是失败.
+  对于需要忽略的 return reason: IGNORED, REJECTED, RETRY 不会执行.
+
+- ``on_failure()``. handler to run when the task fails.
+
+- ``on_retry()``. handler to run when task is to be retried.
+
+- ``on_success()``. handler to run when task succeeded.
 
 Results
 =======
