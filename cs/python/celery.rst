@@ -295,8 +295,9 @@ ack 任务消息.
 - 如果任务正在执行, 一般情况下已经无法 revoke. 除非强制 ``terminate=True``,
   此时 the worker child process processing the task will be terminated.
   该操作只应该作为 last resort 使用. 用于手动清除卡住的任务, 释放 worker.
-  不该 used programmatically. 因为这里存在 race condition. 如果发送 signal
-  时任务已经执行完, worker 开始执行下一个任务, 就会错误地杀掉其他任务.
+  若 used programmatically, 必须十分谨慎. 因为这里存在 race condition.
+  如果发送 signal 时任务已经执行完, worker 开始执行下一个任务, 就会错误地
+  杀掉其他任务.
 
 - worker 将 to-be-revoked 和 revoked tasks 放在自身内存中. 默认不是持久的.
   若 worker restart, 这些记录会消失. 该 revoke 的任务就不会被 revoke 了.
@@ -324,6 +325,11 @@ abort task
 
 - abortable task 需要保存任务状态, 且能够反复获取, 因此需要使用基于 database or
   cache 的 result backend. 而不能是 RPC backend.
+
+- 对于 producer 而言, 它唯一能做的就是 signal task body the task has been
+  aborted. 到底怎么处理完全由 task 执行逻辑来控制, 并且也只能由 task 执行逻辑
+  来可靠地控制. producer 做不了其他的任何事. Producer 尝试做任何其他努力, 例如
+  terminate worker process, 都可能造成 race condition.
 
 reject task
 ^^^^^^^^^^^
