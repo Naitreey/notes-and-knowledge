@@ -246,22 +246,7 @@ retry task
 
 - Task.retry vs acks_late.[DocFAQRetry]_
 
-  * acks_late would be used when you need the task to be executed again if the
-    worker (for some reason) crashes mid-execution. The worker isn’t known to
-    crash, and if it does it’s usually an unrecoverable error that requires
-    human intervention.
-
-    此外, 在保证任务等幂性的情况下, 才可以使用 ``acks_late``.
-
-  * When task message is re-queued depends on the message broker being used.
-    例如对于 rabbitmq, 当连接中断 (channel closed) 时 message 重新排队. 因此,
-    我们说这种延迟 ack 只是为了处理 worker crash 的情况.
-
-  * 注意, 只有当任务导致 worker crash 才会导致 message 不被 ack, 其他情况,
-    无论是执行成功、失败、raise exception 等情况 message 都会 ack, 这样
-    ``acks_late`` 就起不到作用.
-
-  * 根据上述分析, 我们看到 Task.retry 和 acks_late 解决的实际上是不同的问题.
+  * Task.retry 和 acks_late 解决的实际上是不同的问题.
     Task.retry 解决的是当任务遇到可控的问题时, 可以 gracefully finish 当前
     执行进度并进行重试; acks_late 解决是当任务遇到不可控的问题、并导致突然
     中断时, 可以重新调度.
@@ -526,7 +511,42 @@ class attributes
   ``result_backend``.
 
 - acks_late. ack task message after the task has been executed. defaults to
-  ``task_acks_late``.
+  ``task_acks_late``. See also `retry task`_ and `message acknowledgement`_.
+
+  * acks_late would be used when you need the task to be executed again if the
+    worker (注意是 worker 而不是 worker's child process) crashes mid-execution.
+
+    ack task message 是 worker 的任务而不是 child process 的任务. 这里导致
+    worker crash 的原因例如: worker has bug, worker get killed by SIGKILL,
+    twice ctrl-c on terminal (quick shutdown), 服务器关机、重启、断电等.
+    
+  * 注意 acks_late 不管 child process crash 的情况. 那是由 reject_on_worker_lost
+    控制的. 当 ``acks_late=True, reject_on_worker_lost=False`` 时, 如果 worker's
+    child crash (导致 worker 中出现 WorkerLostError), 仍然会 ack.
+
+    做这些区分, 是因为 celery 中任务由 worker's childs 执行, worker 本身是
+    控制. 如果 worker crash, 是外部原因, 不怪任务, 所以 acks_late 就可以让
+    任务重新执行; 如果 worker's child crash, 则更可能是 task 本身导致了
+    unrecoverable error (python 层的错误都会被 catch), 或者 admin 明确 kill
+    掉执行进程, 总之, 应该是 task 本身存在 bug 或者其他问题, 所以这样的任务
+    更保险的处理是不重新执行, 故进行 ack, 而 reject_on_worker_lost 会允许
+    这样的任务也再次执行.
+
+  * 在保证任务等幂性的情况下, 才可以使用 ``acks_late``.
+
+  * When task message is re-queued depends on the message broker being used.
+    例如对于 rabbitmq, 当连接中断 (channel closed) 时 message 重新排队. 因此,
+    我们说这种延迟 ack 只是为了处理 worker crash 的情况.
+
+  * 注意, 只有当任务导致 worker crash 才会导致 message 不被 ack, 其他情况,
+    无论是执行成功、失败、raise exception 等情况 message 都会 ack, 这样
+    ``acks_late`` 就起不到作用.
+
+- reject_on_worker_lost. 默认 False. 如果一个任务 acks_late, 并且 worker's
+  child process is lost during task execution, 决定是要 reject task message
+  还是 ack task message. 如果开启, 则 reject task message 并 requeue. 从而
+  再次执行. 注意如果一个 task message 已经 redelivered 过了, 则会 reject 而
+  不再 requeue. 这样不会再次执行.
 
 - track_started. track STARTED state. useful for when there are long running
   tasks and there’s a need to report what task is currently running. The host
@@ -1292,6 +1312,36 @@ subcommands
 - beat
 
 - amqp
+
+recipes
+=======
+
+- 可靠的 long-running task 的中断.
+
+  * 首先, 使用 abortable task. 通过 ABORTED 状态标识需要中断.
+   
+  * 在任务体中多处进行判断. 最好能够在执行 IO 等长时间操作的
+    同时 polling task state (要求异步). 如果需要执行 blocking
+    操作, 最好能设置 timeout.
+
+  * 发起任务中断时, 检查任务状态是否 ready (READY_STATES), 
+    若已经完成则没必要中断了. 否则发起 abort, 即设置 ABORTED
+    状态.
+    
+  * 以上能解决几乎所有问题. 保证无论当前任务是还在排队还是已经
+    开始, 只要任务逻辑正确, 就能保证任务按要求在未来某个时间中断.
+    
+  * 注意没必要记录 STARTED 状态, 即没必要区分任务是否开始来分别
+    处理. 例如, 若记录了 STARTED, 则 PENDING 表示只在排队尚未开始.
+    可能想到此时 revoke 即可. 但是这可能存在 race condition.
+    即当前以为是还在排队中, 所以 revoke. 但同时可能任务已经开始,
+    从而 revoke 失败.
+
+  * 注意, 如果中断的同时需要删除数据库记录, 根据不同需求, 可能在
+    中断发起处删除也可能在原任务体中的中断逻辑里面设置删除数据库
+    记录. 对于后者, 需要考虑如果 worker 在执行过程中重启或退出,
+    会导致数据库记录残留. 这时需要设置 ``acks_late`` 保证任务重新
+    执行, 从而再次执行中断清理, 从而还要保证任务等幂性.
 
 References
 ==========

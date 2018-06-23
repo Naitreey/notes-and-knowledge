@@ -4275,6 +4275,9 @@ Syntax: ``<field>[__<field>...][__<lookuptype>]=value``.
   语句语法中, 由 SQL metachar ``%`` 和 ``_`` 概念. 在 django 层, 若输入这两个
   字符, 将自动在 SQL 层进行转义, 保证 django 的抽象与底层 SQL 实现无关.
 
+* 注意到 lookup type 只有 positive 的, 没有 negative 的, 这些只能使用
+  ``QuerySet.exclude()`` 或 Q expression 配合 positive lookup types 构建.
+
 query expressions
 ^^^^^^^^^^^^^^^^^
 
