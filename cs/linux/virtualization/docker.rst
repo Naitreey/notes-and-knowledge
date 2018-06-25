@@ -1132,6 +1132,18 @@ container
 
 - docker container run, docker run.
 
+  这是 docker system 运行容器的基本机制. 若直接使用, 往往是运行一个
+  临时的容器, one-time command 等.
+
+  在生产环境, 执行 one-time command 只该使用 docker run 新开一个容器,
+  而不该使用 ``docker container exec``. 后者只用于研发和 debug 时. 因为
+  它运行在服务本身的环境下, 所做的操作会对服务的运行环境造成 side effect.
+  这样是不好的. 而 ``docker run`` 新开一个容器, 它的影响局限在新容器中,
+  使用完删除即可.[SOExecSwarm]_
+
+  例如, 在 compose 时, 使用 ``docker-compose run --rm``; 在 swarm mode,
+  ``docker run --network`` attach to service stack's network 再执行.
+
   ``--hostname``. 默认情况下容器的 hostname 是它的 short UUID, 该选项
   指定 hostname. 设置 ``/etc/hostname``.
 
@@ -1207,6 +1219,11 @@ container
   否则就输出到 docker logs 中.
 
   .. TODO WTF???????????????????????????? 乱七八糟, 看系统编程, 看源代码!!!!!!!!!
+
+- docker container exec.
+
+  这个命令只该用于 debugging purpose (包含研发时使用). 不该在生产环境执行任意
+  命令使用. 
 
 - docker container stop, docker stop.
   ``docker stop`` 的效果不受 ``docker run --restart=`` 参数影响. 即使
@@ -2548,3 +2565,8 @@ Docker Engine API
 python
 ------
 - ``docker`` module.
+
+
+References
+==========
+.. [SOExecSwarm] `execute a command within docker swarm service <https://stackoverflow.com/questions/39362363/execute-a-command-within-docker-swarm-service>`_

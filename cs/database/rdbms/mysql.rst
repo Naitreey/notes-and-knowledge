@@ -1296,7 +1296,9 @@ convert utf8mb3 to utf8mb4
 
 - 两种修改方式.
 
-  1. 备份所有数据.
+  1. 只修改指定表和数据库的 charset.
+       
+     备份所有数据.
 
      保存一份当前数据库内的所有表定义, 用于修改后进行对比.::
 
@@ -1305,8 +1307,7 @@ convert utf8mb3 to utf8mb4
        WHERE TABLE_SCHEMA = 'enoc' order by TABLE_NAME, ORDINAL_POSITION
        EOF
 
-     直接修改所有需要修改的表 (和所有列) 的 charset, 以及相关数据库的 default
-     charset::
+     修改需要转换的表 (包含所有列) 和数据库的 default charset::
 
        ALTER TABLE <table> CONVERT TO CHARACTER SET utf8mb4; -- every table
        ALTER DATABASE <db> CHARACTER SET utf8mb4; -- every database
@@ -1328,14 +1329,14 @@ convert utf8mb3 to utf8mb4
 
      修改配置文件如上.
 
-  2. mysqldump 所有数据. 修改以下 charset 定义::
-
-       pass
+  2. 修改服务器上所有表和数据库的 charset 默认使用 utf8mb4 charset. 这需要重新
+     部署 mysql 服务器, 再恢复数据.
+       
+     mysqldump 所需备份数据.
 
      重新部署 MySQL. 设置如上配置文件. 以保证所有数据库和表都是 utf8mb4. 恢复数据.
 
-     或者无需修改 mysqldump 文件. 恢复数据后按照 1 中的方式修改所需修改的数据库
-     和表中的 charset.
+     恢复数据后按照 1 中的方式修改恢复的数据库和表中的 charset.
 
 Optimization
 ============
