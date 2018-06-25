@@ -479,6 +479,12 @@ firmware
   地址上. 总之, CPU 从 reset vector 处开始执行, 即开始执行 BIOS, 从而开始了
   boot sequence. BIOS 在 soft boot 时, 会跳过 POST 过程.
 
+- disable/enable secure boot. See [ASUSSecureboot]_.
+
+  * To disable secure boot, must delete Platform Key (PK).
+
+  * Before deleting keys, first make backups.
+
 processor
 ---------
 
@@ -827,3 +833,7 @@ bus & connector
   * HDMI 收费, DP 理论上免费.
 
   * DP 1.4 throughput (32.4Gib/s) 高于 HDMI 2.0b (14.4Gib/s).
+
+references
+==========
+.. [ASUSSecureboot] `How to Disable or Enable Secure Boot on Your Computer via ASUS UEFI BIOS Utility <https://www.technorms.com/45538/disable-enable-secure-boot-asus-motherboard-uefi-bios-utility>`_
