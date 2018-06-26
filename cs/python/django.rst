@@ -102,6 +102,18 @@ app
 
   - structure.
 
+management commands
+-------------------
+
+startproject
+^^^^^^^^^^^^
+::
+
+  django-admin startproject <name> [directory]
+
+- 在 ``directory`` 中创建 django project directory structure. 若未指定, 创建
+  ``$PWD/<name>`` 然后在里面初始化. 若指定, directory 必须事先存在.
+
 URLconf
 =======
 
