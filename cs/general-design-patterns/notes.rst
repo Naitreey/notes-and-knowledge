@@ -409,3 +409,11 @@ Callback -- Inversion of control
 ================================
 - 当使用 library API 去传入 callback 时, 是把程序的控制权交给了这个 library, 这样
   造成了 inversion of control, 即变成了 library 去控制接下来你的程序该怎么运行.
+
+Refactoring
+===========
+
+- Refactoring is the process of improving the code without changing its
+  functionality.
+
+- The first rule is that you can’t refactor without tests.

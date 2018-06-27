@@ -1591,15 +1591,6 @@ static file
 - 全局性质的 (属于整个 project 而不属于某个 app 的) templates 和 static files 应该放在
   ``$BASE_DIR/<project-name>/{templates,static}``.
 
-test
-====
-
-* model 层的 test 的测试点是测试 model 的正确性、合理性;
-  view 层的 test (配合 urlconf) 测试的是操作是否符合预期.
-  因此前者手动操作数据库, 而后者模仿 useragent 用 client.
-
-* 每个 test method 执行结束后数据库状态都会被重置.
-
 admin site
 ==========
 
@@ -6522,8 +6513,8 @@ only pass on records when ``settings.DEBUG`` is False.
 RequireDebugTrue
 ^^^^^^^^^^^^^^^^
 
-unit testing
-============
+testing
+=======
 
 - django 默认使用 unittest module 实现单元测试. 但提供与多种单元测试
   框架集成的方式.
@@ -6533,10 +6524,24 @@ unit testing
 
 - Run test: ``./manage.py test``.
 
+django.test.SimpleTestCase
+--------------------------
+
+methods
+^^^^^^^
+
+- ``assertTemplateUsed(response=None, template_name=None, msg_prefix='', count=None)``.
+
+  * 注意如果要验证的模板在所有模板搜索路径中存在重复, 即刻意的
+    overriding/extending, 只通过 ``template_name`` 校验不能完全保证正确加载,
+    还需校验 ``Template.origin.name``. 这可通过::
+
+      self.assertTrue(any("..." in t.source.name for t in response.templates))
+
 django.test.TestCase
 --------------------
 
-- subclass of ``unittest.TestCase``.
+- subclass of ``SimpleTestCase``.
 
 - Suitable for tests that rely on database access. It runs each test inside a
   transaction to provide isolation.

@@ -24,9 +24,26 @@ questions and concerns
 ----------------------
 - microstepping 所要求的每次 test/code 循环每次只解决一点问题就测试太繁琐了吧?
 
-- 每行代码即使是非常 trivial 的操作也要测试?
+  * 一开始需要这么做, 是为了强化流程. 当熟悉之后, 可以适当灵活一些.
 
-- Testing the tiniest thing, and taking ridiculously many small steps?
+- 每行代码即使是非常 trivial 的操作、函数也要测试?
+
+  * 如果不想这么严格, 其实可以放松一些. 即不绝对测试所有代码.
+
+  * 但是, 这么做是有好处的. 首先, 强制一套所有代码都要测试的规矩, 有助于在复杂
+    的实际应用中, 不让任何本该测试的、看上去十分无辜的代码被忽略, 最最终成为
+    那最脆弱的一环.
+
+  * 其次, 在实际项目中, 随着产品的迭代, 一个简单的逻辑可能逐渐变得复杂, 如果
+    一开始因为简单所以不写测试, 那么要如何决定何时这个逻辑复杂到该写测试代码
+    呢? 这个界限可能是很主观、比较不可靠的, 并且需要花时间考虑要不要加测试.
+    甚至更糟的是, 由于一开始没有相应的测试, 就懒得写, 一直拖着, 最终变成大麻烦.
+    所以, 即使是最简单的逻辑, 从一开始就写上 placeholder test case, 是最稳妥
+    的做法.
+
+  * 最后, 既然逻辑 trivial, 测试 trivial, 何不少说废话直接写了得了呢?
+
+- 
 
 terminology
 -----------
@@ -52,8 +69,7 @@ workflow
   
   * test/implement/test cycle.
 
-  * microstepping: be absolutely sure that each bit of code is justified by a
-    test.
+  * be absolutely sure that each bit of code is justified by a test.
 
 - detail.
 
@@ -74,6 +90,11 @@ workflow
   4. Now we can rerun our functional tests and see if they pass, or get a little
      further. That may prompt us to write some new unit tests, and some new
      code, and so on.
+
+- 这种小步伐的 test/code cycle 还有助于 keep development progress. 注意到所有
+  的 development expectation 都在 functional tests and unit tests 中得到记录.
+  如果忘记上次开发到哪里了, 只需跑一轮测试, 哪里不通过, 就知道开发到哪里了 (因为
+  每次一小步, 已经实现的代码部分都相应地测试通过了.)
 
 test classification
 ===================
@@ -125,6 +146,15 @@ unit test
 - Unit tests test the application from the inside, from the point of view of
   the programmer (about the interactions of the internal components of
   application).
+
+- Test program logic, flows, configuration, etc. that changes. Don't test
+  constants, because it's useless -- constants nevers changes it's written as
+  is and functions as is.
+
+  这里 constant 的含义是广泛的, 不仅仅是写死在代码中的常量, 还包含例如不变的
+  模板文件等不会变的固定的 entity.
+
+- 在单元测试中, 需要仔细考虑什么是变的, 什么是不变的, 才能只对变化的部分做测试.
 
 TEMP
 ====
