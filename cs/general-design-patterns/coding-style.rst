@@ -12,7 +12,8 @@ Comment
   become more straightforward and obvious -- then, and only then, should you feel
   compelled to add a comment explaining what your code does.
 
-- 注释解释的是为什么要这样做, 以及它是怎么做的 (如果说确实逻辑很复杂的话). 注释不解释
-  代码做的是什么, 那是代码本身的功能.
+- Comment isn't there to explain *what*, it's there to explain *why*.
+  注释解释的是为什么要这样做, 以及它是怎么做的 (如果说确实逻辑很复杂的话).
+  注释不解释 代码做的是什么, 那是代码本身的功能.
 
 - Too many comments (one per line, for example) is probably a sign of poorly written code.
