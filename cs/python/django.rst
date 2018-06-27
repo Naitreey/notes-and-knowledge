@@ -140,8 +140,8 @@ URLconf
   * call view callable, 传入 ``HttpRequest`` object, 传入 url pattern
     中匹配的 groups and named groups, 分别以 positional & kwargs 传入.
 
-URLconf 定义
-------------
+URLconf definition
+------------------
 - ``<app>/urls.py``.
 
 - ``urlpatterns`` 全局量. A list of url patterns.
@@ -273,6 +273,12 @@ path converter
 
 - path converter 和注册操作应该放在 ROOT_URLCONF 中. 因为注册的 converter
   全局可见.
+
+url resolution
+--------------
+
+- Resolver404 is a subclass of Http404. 一般不会在 view 中 raise Resolver404
+  因为绝大部分情况下不会需要在 view 中 resolve url.
 
 Reverse url resolution
 ----------------------
@@ -1221,9 +1227,9 @@ tags
   * 使用 ``{% endblock <name> %}`` 增加可读性.
 
   * template blocks 表达的是模板结构的继承关系, 所有的 block 在 compile time
-    resolve 成为模板代码 (类似 cpp 和 c 的关系). 此后再也没有 block tag.
-    在 runtime, 模板代码去 render context, 生成页面.
-    因此, 不能通过某种 runtime 条件判断让 block 出现、消失或重定义.
+    resolve 成为模板代码 (类似 cpp 和 c 的关系). 此后再也没有 block tag.  在
+    runtime, 模板代码去 render context, 生成页面. 因此, 不能通过某种 runtime
+    条件判断让 block 出现、消失或重定义.
 
   * 接上, 若要根据 runtime 条件判断是否重新定义一个 block, 可以用以下方法:
 
