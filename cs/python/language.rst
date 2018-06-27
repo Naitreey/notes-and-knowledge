@@ -876,6 +876,24 @@ class definitions
 
   * 需要对实例进行额外的修改, 且这些修改在逻辑上不是该类的一部分.
 
+assertion statement
+-------------------
+::
+
+  assert expression1[, expression2]
+
+- 用于任何需要进行中断式声明判断的情况, 而不是正常程序逻辑的条件判断. 例如,
+
+  * 单元测试.
+
+  * debug code 部分.
+
+- expression1 is used in boolean context (as test), expression2 if present is
+  argument of ``AssertionError``.
+
+- Assertions is run under normal interpreter invocation, and skipped if
+  interpreter is run with optimization (``__debug__ == False``).
+
 iteration, generation and asynchronous programming
 ==================================================
 
@@ -1326,6 +1344,15 @@ numeric types
     (1).is_integer # OK
     1..is_integer # OK
     1.1.is_integer # Ok
+
+built-in constants
+==================
+
+runtime constants
+-----------------
+
+- ``__debug__``. True if Python is not started with optimization (-O, -OO
+  options).
 
 References
 ==========
