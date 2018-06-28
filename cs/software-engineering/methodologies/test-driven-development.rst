@@ -26,6 +26,10 @@ questions and concerns
 
   * 一开始需要这么做, 是为了强化流程. 当熟悉之后, 可以适当灵活一些.
 
+  * 但一定要抑制不写测试就写代码实现的冲动. 要保证 test/code/test cycle.
+
+  * think ahead, test ahead, implement, test again.
+
 - 每行代码即使是非常 trivial 的操作、函数也要测试?
 
   * 如果不想这么严格, 其实可以放松一些. 即不绝对测试所有代码.
@@ -42,8 +46,6 @@ questions and concerns
     的做法.
 
   * 最后, 既然逻辑 trivial, 测试 trivial, 何不少说废话直接写了得了呢?
-
-- 
 
 terminology
 -----------
@@ -67,29 +69,36 @@ workflow
 
 - in general:
   
-  * test/implement/test cycle.
+  * test/implement/test[/refactor] cycle.
 
   * be absolutely sure that each bit of code is justified by a test.
 
-- detail.
+- detail (Double-Loop TDD).
 
-  1. We start by writing a functional test, describing the new functionality
-     from the user’s point of view.
+  1. Write a functional test, describing the new functionality from the user’s
+     point of view. Run the test to make sure it fails.
 
-  2. Once we have a functional test that fails, we start to think about how to
-     write code that can get it to pass (or at least to get past its current
-     failure). We now use one or more unit tests to define how we want our code
-     to behave—the idea is that each line of production code we write should be
-     tested by (at least) one of our unit tests.
+  2. write minimal code to implement the functionality.
 
-  3. Once we have a failing unit test, we write the smallest amount of
-     application code we can, just enough to get the unit test to pass. We may
-     iterate between steps 2 and 3 a few times, until we think the functional
-     test will get a little further.
+     a. Think about how to write code that can get it to pass (or at least to
+     get past its current failure). Write some unit tests to define how we want
+     our code to behave—the idea is that each line of production code we write
+     should be tested by (at least) one of our unit tests. Run the unit tests
+     to make sure they fails.
 
-  4. Now we can rerun our functional tests and see if they pass, or get a little
-     further. That may prompt us to write some new unit tests, and some new
-     code, and so on.
+     b. Write the smallest amount of application code we can, just enough to
+     get the unit tests to pass.
+
+     c. Think about whether the code needs refactoring. If so, refactor the
+     code and ensure it passes the unit tests.
+
+  3. Rerun our functional tests and see if they pass, or get a little further.
+     That may prompt us to go back to step 2.
+
+  4. Think about whether the code needs refactoring. If so, go back to step 2
+     and refactor the code. Ensure it passes the functional and unit tests.
+
+- 以上步骤也称为 Red/Green/Refactor cycle.
 
 - 这种小步伐的 test/code cycle 还有助于 keep development progress. 注意到所有
   的 development expectation 都在 functional tests and unit tests 中得到记录.
@@ -101,6 +110,9 @@ test classification
 
 - The functional tests are driving what development we do from a high level
   (outside), while the unit tests drive what we do at a low level (internal).
+
+- The functional tests are the ultimate judge of whether your application works
+  or not. The unit tests are a tool to help you along the way.
 
 - Functional tests should help you build an application with the right
   functionality, and guarantee you never accidentally break it. Unit tests

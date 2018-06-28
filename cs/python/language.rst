@@ -894,6 +894,12 @@ assertion statement
 - Assertions is run under normal interpreter invocation, and skipped if
   interpreter is run with optimization (``__debug__ == False``).
 
+iterable and mapping unpacking
+==============================
+
+- builtin types 的 unpacking 似乎是直接访问内部存储的. 而不会访问 python-level
+  的 iterable/mapping protocol 各个方法.
+
 iteration, generation and asynchronous programming
 ==================================================
 
