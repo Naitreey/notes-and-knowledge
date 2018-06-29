@@ -50,7 +50,12 @@ questions and concerns
 terminology
 -----------
 
-- expected failure.
+- expected failure. When a test fails in an expected way. 这可能是因为实现还不
+  充分.
+
+- unexpected failure. When a test fails in a way we weren’t expecting. This
+  either means that we’ve made a mistake in our tests, or that the tests have
+  helped us find a regression, and we need to fix something in our code.
 
 - user story.
 
@@ -167,6 +172,19 @@ unit test
   模板文件等不会变的固定的 entity.
 
 - 在单元测试中, 需要仔细考虑什么是变的, 什么是不变的, 才能只对变化的部分做测试.
+
+design patterns
+===============
+
+- Each test should only test one thing. Just like each function should only does
+  one thing.
+  
+  这个好处了常见的模块化、重用、职责清晰之外, 更重要的是, 由于每个测试是独立
+  执行的, 每个测试只检测一个问题, 有助于同时检测和发现多个问题. 如果将多个
+  不相互依赖的测试逻辑放在一个测试单元中执行, 第一个不通过的部分就会 raise
+  exception, 后续的测试则不会执行.
+
+- Ensure isolations between test cases.
 
 TEMP
 ====

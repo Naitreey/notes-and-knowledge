@@ -296,13 +296,24 @@ Reverse url resolution
 
 related functions
 ^^^^^^^^^^^^^^^^^
-- ``reverse()``.
+- ``django.urls.base.reverse()``.
 
   reverse 函数在反向查找时, 根据命名、参数数目、以及 kwargs 的名字来匹配.
   如果根据这些规则去匹配后有冲突, ``reverse()`` 选择 urlpatterns 中最后一个
   符合的 pattern. 这可以用于 override 其他 app 提供的同名 view.
 
   reverse 输出的 url 已经是 url-encoded.
+
+- ``django.shortcuts.resolve_url(to, *args, **kwargs)``.
+  Reverse resolution of ``to`` into a url. 这是一个比较 high-level 的抽象操作.
+
+  Accepts:
+
+  * model instance, call ``Model.get_absolute_url()``
+
+  * reverse url resolution by calling ``reverse()``
+
+  * a url.
 
 timezone
 ========
@@ -368,33 +379,6 @@ view
   error code 对应的 response view. 例如 ``handler400``, ``handler403``,
   ``handler404``, ``handler500``.
 
-* view shortcut functions.
-
-  - ``django.shortcuts.render()``
-
-  - ``django.shortcuts.redirect()``
-
-    * return ``HttpResponseRedirect``.
-
-    * 输入 model, redirect to ``Model.get_absolute_url()``.
-
-    * 输入 view name (with args, kwargs), redirect to ``reverse()`` url.
-
-    * 输入 absolute/relative url, redirect to that url.
-
-    * ``permanent=True``, return 301 (Moved Permanently) rather than 302 (Found).
-
-  - ``django.shortcuts.get_object_or_404()``
-
-    ``QuerySet.get()`` a single object from a Model/Manager/QuerySet, 满足 args
-    和 kwargs 设置的过滤条件. 语法与 ``Q`` objects + field lookup syntax 相同.
-
-    由于是直接 raise ``Http404``, 所以这只适合在 view 中使用.
-
-  - ``django.shortcuts.get_list_or_404()``
-
-    ``QuerySet.filter()`` a list of objects, 其他同上.
-
 view, template, form/formset 的设计思考
 ---------------------------------------
 
@@ -422,6 +406,43 @@ view, template, form/formset 的设计思考
   层对数据的合法性进行进一步限制.
 
   但对于 form data 是否 suspicious 之类的检查, 需要在 view 中进行.
+
+view shortcut utilities
+-----------------------
+
+response
+^^^^^^^^
+- ``django.shortcuts.render()``
+
+- ``django.shortcuts.redirect()``
+
+  * return ``HttpResponseRedirect``.
+
+  * 输入 model instance, redirect to ``Model.get_absolute_url()``.
+
+  * 输入 view name (with args, kwargs), redirect to ``reverse()`` url.
+
+  * 输入 absolute/relative url, redirect to that url.
+
+  * ``permanent=True``, return 301 (Moved Permanently) rather than 302 (Found).
+
+model retrieval
+^^^^^^^^^^^^^^^
+- ``django.shortcuts.get_object_or_404()``
+
+  ``QuerySet.get()`` a single object from a Model/Manager/QuerySet, 满足 args
+  和 kwargs 设置的过滤条件. 语法与 ``Q`` objects + field lookup syntax 相同.
+
+  由于是直接 raise ``Http404``, 所以这只适合在 view 中使用.
+
+- ``django.shortcuts.get_list_or_404()``
+
+  ``QuerySet.filter()`` a list of objects, 其他同上.
+
+reverse url resolution
+^^^^^^^^^^^^^^^^^^^^^^
+
+- ``django.shortcuts.resolve_url()``. See `Reverse url resolution`_.
 
 Class-based views
 -----------------
@@ -1029,7 +1050,11 @@ django template system & language
   而不是在 template 中才计算.
 
   注意凡是包含 ``__call__`` 属性的变量都会 called, 所以小心, 如果需要直接使用传入
-  的量, 但它包含 ``__call__`` 属性. 会得到非预期结果. 例如直接使用 enum.Enum 类型.
+  的量, 但它包含 ``__call__`` 属性. 会得到非预期结果. 例如:
+  
+  - 不能在模板中直接使用 enum.Enum 类型.
+
+  - **不能在模板中直接使用 model class, 因为会被实例化.**
 
   This lookup order can cause some unexpected behavior with objects that override
   dictionary lookup. 例如重定义了 ``__getitem__`` (defaultdict), 导致没有 key
@@ -1253,7 +1278,16 @@ tags
   给变量, 在后面使用. 支持 ``silent``, 可以单纯声明 cycle, 而不立即输出值.
   ``{% cycle 1 2 as nums silent %}``
 
-- ``debug``, 输出 debug 信息.
+- ``debug``, 输出 debug 信息. including the current context and imported
+  modules. 注意由于字符串中包含 ``<...>`` 结构, 但是字符串没有被
+  ``conditional_escape()``, 导致直接显示在页面上时浏览器会把有用的信息全都
+  当成不认识的 html tag 忽略掉!!! 所以必须配合以下 snippet 来使用::
+
+    <pre>{% filter force_escape %}{% debug %}{% endfilter %}</pre>
+
+  ``<pre>`` 让字符串中的 newline and whitespaces 得以保留. ``force_escape``
+  filter 强制 escape 已经被 ``NodeList`` mark as safe (但根本不 safe) 的 debug
+  字符串.[SODjTemplateDebug]_
 
 - ``filter``, 将整段内容经过一个或多个 filter.
 
@@ -4506,46 +4540,53 @@ default when no other database has been selected.
 
 connection settings
 ^^^^^^^^^^^^^^^^^^^
-- mysql
+mysql
+""""""
 
-  * 配置项加载顺序. (优先级低至高.)
+* 配置项加载顺序. (优先级低至高.)
 
-    1. MySQL option files. 因为 mysqlclient 调用 libmysqlclient C API
-       ``mysql_options()``, 加载各种 mysql 配置文件. 这里关注的是配置文件中
-       client group 的配置.
+  1. MySQL option files. 因为 mysqlclient 调用 libmysqlclient C API
+     ``mysql_options()``, 加载各种 mysql 配置文件. 这里关注的是配置文件中
+     client group 的配置.
 
-    2. NAME, USER, PASSWORD, HOST, PORT. 转换成连接参数.
+  2. NAME, USER, PASSWORD, HOST, PORT. 转换成连接参数.
 
-    3. OPTIONS. 里面直接写 ``mysqlclient.connect`` 允许的各种连接参数. 应
-       包含::
+  3. OPTIONS. 里面直接写 ``mysqlclient.connect`` 允许的各种连接参数. 应
+     包含::
 
-        'OPTIONS': {
-            # the following is default for django2.0+
-            'isolation_level': "read committed",
-            'charset': "utf8mb4",
-        }
-         
+      'OPTIONS': {
+          # the following is default for django2.0+
+          'isolation_level': "read committed",
+          'charset': "utf8mb4",
+      }
+       
 
-  * 保证服务端 ``sql_mode`` 开启了 STRICT_TRANS_TABLES. 对于 mysql 5.7+ 这是
-    默认值, 因此不用配置.
+* 保证服务端 ``sql_mode`` 开启了 STRICT_TRANS_TABLES. 对于 mysql 5.7+ 这是
+  默认值, 因此不用配置.
 
-  * 设置 isolation level.
+* 设置 isolation level.
 
-    django is designed for ``read committed`` isolation level, it won't work
-    *correctly* under another isolation level. This is default for django 2.0+.
-    不用配置.
-    
-    例如, 当使用 atomic request 时, 若多个线程中同时 get 一个 entry,
-    即使其中一个 create 已经 commit, 在别的中也不可见, 仍然会 create,
-    等到 request 处理结束 commit 时才报错, 返回 500 internal error.
-    也就是说, atomic request 与 repeatable read isolation level 一起,
-    更容易做无用功, 并返回 500.
+  django is designed for ``read committed`` isolation level, it won't work
+  *correctly* under another isolation level. This is default for django 2.0+.
+  不用配置.
+  
+  例如, 当使用 atomic request 时, 若多个线程中同时 get 一个 entry,
+  即使其中一个 create 已经 commit, 在别的中也不可见, 仍然会 create,
+  等到 request 处理结束 commit 时才报错, 返回 500 internal error.
+  也就是说, atomic request 与 repeatable read isolation level 一起,
+  更容易做无用功, 并返回 500.
 
-    所以不能用 mysql default ``repeatable read``. 在 django 2.0+, 连接时默认会
-    设置 mysql isolation level 为 read committed.
+  所以不能用 mysql default ``repeatable read``. 在 django 2.0+, 连接时默认会
+  设置 mysql isolation level 为 read committed.
 
-  * 保证 mysqlclient 和服务端之间通过 utf8mb4 charset 通信. 由于不能保证
-    django server 运行的环境中有 mysql 配置文件, 因此需要在这里配置.
+* 保证 mysqlclient 和服务端之间通过 utf8mb4 charset 通信. 由于不能保证
+  django server 运行的环境中有 mysql 配置文件, 因此需要在这里配置.
+
+sqlite3
+""""""""
+
+- 由于 sqlite 数据库就是单个的文件, 默认配置下无需手动创建数据库. django 会自动
+  创建数据库文件.
 
 database connection
 -------------------
@@ -6524,6 +6565,25 @@ testing
 
 - Run test: ``./manage.py test``.
 
+test databases
+--------------
+- 对于每个 ``settings.DATABASES`` 中配置的数据库, 测试时单独创建一个相应的测试
+  数据库.
+  
+- 这些数据库依据各自的 ``TEST`` dictionary 进行创建. 默认配置大致相当于::
+
+    {
+        "NAME": f"test_{NAME}",
+        # other configs from parent dict
+    }
+
+  对于 sqlite, 默认使用 in-memory database. (因为 sqlite 每个数据库就是一个文件,
+  没有 server, 所以这里创建一个 in-memory db file 是最合适的.)
+
+- 测试数据库在测试开始时创建, 测试结束后自动删除. 除非使用了 ``--keepdb`` option.
+
+- 创建数据库后, 自动应用 migrations.
+
 django.test.SimpleTestCase
 --------------------------
 
@@ -6971,3 +7031,7 @@ settings
 
 - ``AUTH_LDAP_USER_ATTR_MAP``.
   LDAP attribute 至 user model fields 的映射.
+
+References
+==========
+.. [SODjTemplateDebug] `Django debug display all variables of a page <https://stackoverflow.com/a/21205925/1602266>`_
