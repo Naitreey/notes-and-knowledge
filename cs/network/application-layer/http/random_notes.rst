@@ -204,8 +204,15 @@
 - 构建指向某个对象的 url 时, for url to be meaningful, 可以在指定 object id 同时
   指定 slug. 例如 https://www.stackoverflow.com/questions/id/question-title
 
-design patterns
-===============
+REST design
+===========
+- It's not necessary or even possible to design your web service sticking
+  strictly to REST rules. But they are great guidelines for that matter.
+
+- REST suggests that we have a URL structure that matches our data structure.
+
+web components
+==============
 
 web form
 --------
