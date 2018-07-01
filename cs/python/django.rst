@@ -6560,8 +6560,13 @@ testing
 - django 默认使用 unittest module 实现单元测试. 但提供与多种单元测试
   框架集成的方式.
 
-- test files should be put in ``tests.py`` module or subpackage in each django
-  app.
+- directory organization:
+  
+  * unit test files should be put in ``tests.py`` module or subpackage in each
+    django app.
+
+  * functional test files should be put in global app's ``functional_tests.py``
+    or subpackage. Add Called separately via ``./manage.py test ...``.
 
 - Run test: ``./manage.py test``.
 
@@ -6584,11 +6589,14 @@ test databases
 
 - 创建数据库后, 自动应用 migrations.
 
+test classes
+------------
+
 django.test.SimpleTestCase
---------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 methods
-^^^^^^^
+""""""""
 
 - ``assertTemplateUsed(response=None, template_name=None, msg_prefix='', count=None)``.
 
@@ -6599,12 +6607,28 @@ methods
       self.assertTrue(any("..." in t.source.name for t in response.templates))
 
 django.test.TestCase
---------------------
+^^^^^^^^^^^^^^^^^^^^
 
 - subclass of ``SimpleTestCase``.
 
 - Suitable for tests that rely on database access. It runs each test inside a
   transaction to provide isolation.
+
+django.test.LiveServerTestCase
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- 配合外部测试工具使用. 当外部测试工具需要进行 functional tests, 进行真实的服务端
+  访问时, 必须要有一个 web server 在运行, 不能使用 ``django.test.Client`` 这种内部
+  模块单元测试工具来模拟.
+  
+  然而, 我们不能开一个普通的 dev server (``runserver``), 因为我们需要让功能性测试
+  运行在 test database 上. 而研发服务器使用的是标准数据库配置 ``settings.DATABASES``
+  而不是 ``TEST`` 部分配置. ``LiveServerTestCase`` 就是解决了这个问题, 它在当前进程
+  即 ``./manage.py test`` 命令进程中开一个 dev server thread, 这样自动使用了已经使用
+  ``TEST`` 部分配置好的数据库连接, 只会访问测试数据库.
+
+- bind to localhost and some ephemeral port (0). Can be accessed via
+  ``live_server_url``.
 
 management commands
 -------------------

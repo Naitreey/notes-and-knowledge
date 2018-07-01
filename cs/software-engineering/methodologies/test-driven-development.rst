@@ -20,6 +20,63 @@ overview
   行为等价于本质. 对行为的约束会自然形成恰当的内部结构. 所以软件行为的定义和
   验证的重要性是很高的, 然后才是设计实现.
 
+why testing in general and why TDD
+----------------------------------
+
+- 单独来讲, 自动化的 unit tests, functional tests, acceptance tests 等等最大的
+  价值是, 它们提供了低成本高效率可重复的 bug detection mechanism. 这对避免
+  regression 问题有很大价值.
+
+- 接上, 由于 regression test 很容易, 所以可以放心地做代码重构.
+
+- 自动化的测试有助于提高程序员的对程序信心和编码过程的愉悦.
+
+- TDD 的思想和方法, 最重要的特点是将测试提前到实现之前. 而不是先实现, 再根据
+  实现来写测试. 通过测试代码来具体化需求, 将需求呈现为一个个可以检验的指标. 
+  也就是说, 它定义软件整体的行为和各个模块的 API, 以达到驱动软件整体以及各个
+  模块的设计和实现的效果.
+
+  In TDD, The tests tell you what to do, what to do next, when you are done.
+  They tell you what the design is, what the API is going to be.
+
+- TDD 强制先设计, 再实现. 先考虑怎么用, 再考虑怎么做. 这是由于要先写出测试代码,
+  所以程序员要设计程序的整体行为 (即程序如何和外部交互), 以及各个模块的 API (即
+  模块之间如何交互), 然后才去填充实现.
+
+  这种方式, 有助于达到一个使用起来更自然更合理的设计.
+
+- 接上, 这种流程强制程序员写出易于测试的代码. 因为必须已经知道相关代码要怎么
+  测试了, 已经知道它会怎么去使用了, 才会去写代码本身. 相反, 如果实现之后再写
+  测试, 有可能代码本身是不易于测的, 因为没有测试代码去做规范.
+
+  而易于测试的代码自然带有一个更有价值的属性: 低耦合. 否则它不可能易于测试.
+
+- 在写功能代码前先写测试代码让写测试代码这件事更加 stimulating, 因为测试代码
+  成为了开发过程的 guideline, 是个必要的成分. 如果完成功能代码后再写测试代码,
+  那么写测试这件事更让人觉得这是额外的一项工作, 只是为了保证 *以后* 去检查
+  regression bug, 而对当下并没有用, 因为代码已经手工测试过了.
+
+- Better code quality. 与前一点相关, TDD 在帮助实现更好的设计时, 显然也同时帮助
+  实现更好的代码质量. 因为要求可测性, 因而有清晰的 API 和功能行为. 这样的功能
+  模块达到 high cohesion low coupling. You can bind it to the rest of the
+  project as easily as you can test it.
+  
+- TDD 有助于更有目的地做事, 构建出最小可用的实现, 提高开发效率, 避免不必要的
+  复杂度.
+
+- TDD 时, functional tests and acceptance tests 可以做需求文档的具体实例 (user
+  story). 而所有测试代码, 尤其是 unit tests 可以作为 API documentation.
+
+- 先写测试再写代码更有趣, 因为是先构建问题 (test failure), 再解决问题 (test pass)
+  的过程.
+
+- TDD 似乎能大幅减少 debugging 时间.
+
+- The most magical thing about TDD is: By enforcing a rigorous suite of tests,
+  the right algorithm/implementation is just incrementally being derived out of
+  those tests. It doesn't mean we don't plan things, design things, do
+  architecture. It does mean we got a tool to support incremental development.
+
 questions and concerns
 ----------------------
 - microstepping 所要求的每次 test/code 循环每次只解决一点问题就测试太繁琐了吧?
@@ -71,6 +128,7 @@ terminology
 
 workflow
 ========
+.. |tdd-workflow| image:: tdd-workflow.png
 
 - in general:
   
@@ -78,7 +136,11 @@ workflow
 
   * be absolutely sure that each bit of code is justified by a test.
 
+  * Working incrementally and step-by-step, with each of them should be small.
+
 - detail (Double-Loop TDD).
+
+  |tdd-workflow|
 
   1. Write a functional test, describing the new functionality from the user’s
      point of view. Run the test to make sure it fails.
@@ -103,7 +165,11 @@ workflow
   4. Think about whether the code needs refactoring. If so, go back to step 2
      and refactor the code. Ensure it passes the functional and unit tests.
 
-- 以上步骤也称为 Red/Green/Refactor cycle.
+  以上步骤也称为 Red/Green/Refactor cycle.
+
+- When refactoring, the code should starts with working state, then move
+  incrementally to another working state. 步伐尽量可控, 过程中每一步都要
+  保证测试通过, 不要一次性做一大堆修改然后扯着蛋.
 
 - 这种小步伐的 test/code cycle 还有助于 keep development progress. 注意到所有
   的 development expectation 都在 functional tests and unit tests 中得到记录.
@@ -185,6 +251,55 @@ design patterns
   exception, 后续的测试则不会执行.
 
 - Ensure isolations between test cases.
+
+  * Properly isolated tests can be run in any sequence.
+
+  * Always rebuild your starting state from scratch.
+
+  * 如果多个测试需要共享某个初始状态, each test must cleans up properly after
+    itself.
+
+- Carefully deal with tested code containing asynchronous operation.
+
+  * Best solution: 对于异步操作, 如果它接受传入 callback 是最好的. 此时可利用
+    callback 去检测结果.
+
+  * Normal solution: Polling the result of async operation. Caller 必须等着
+    结果返回, 让异步变成同步. 不能让异步操作就那么溜过去. 设置尽量小的 polling
+    interval, 并设置 polling upper bound. (Avoid hardcode single sleep.)
+
+- Do not actually access external services in unit and functional tests.
+  External services are not in developer's control, thus introduces
+  non-determinism. Also, accesssing external services is usually slow, which
+  slows down TDD development cycle. Mock their APIs, so that they are in our
+  control and fast.
+
+- Ensure tests are deterministic.
+  
+  A test is non-deterministic when it passes sometimes and fails sometimes,
+  without any noticeable change in the code, tests, or environment. Such tests
+  fail, then you re-run them and they pass.
+
+  Non-deterministic tests have two problems:
+
+  * They are useless.
+
+  * They infects the whole test suite. Initially people will look at the
+    failure report and notice that the failures are in non-deterministic tests,
+    but soon they'll lose the discipline to do that. Once that discipline is
+    lost, then a failure in the healthy deterministic tests will get ignored
+    too. At that point you've lost the whole game and might as well get rid of
+    all the tests.
+
+  Analysis to non-deterministic tests:
+
+  * 不确定性的测试的可能原因: 1) 测试之间没有保证更好的独立性; 2) 异步操作
+    在时间上的不确定性导致测试结果不确定; 3) 测试需依赖于外部服务, 后者的
+    不确定性 (例如可用性) 导致结果不确定.
+
+  * 如果目前没有时间处理这些不确定性的测试, 先隔离至另一个 test suite. 然后
+    及时处理. A danger here is that tests keep getting thrown into quarantine
+    and forgotten, which means your bug detection system is eroding.
 
 TEMP
 ====
