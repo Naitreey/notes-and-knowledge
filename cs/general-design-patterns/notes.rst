@@ -23,6 +23,9 @@
 (这些流程会自然地穿插进行或省略, 但是这是一个基本的思路和步骤.)
 
 -----
+- Principle: A good design is easier to change than a bad design. Make design
+  that is easier to make changes in the future.
+
 - 程序中不要出现同一个名字代表两种不同的对象.
 
 - refactoring: 只传递有用的参数进入函数或方法.

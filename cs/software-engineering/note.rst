@@ -1,3 +1,11 @@
+warnings
+========
+- No rules are universal. All rules require context.
+  不要盲目相信和绝对执行所谓方法论. 记住, 只有你自己才知道你所处的情况最
+  需要什么. 而所有的一般性方法, 都是工具, they are not absolute. 与具体情况
+  结合, 才能发挥价值. 要有勇气去根据具体情况修改一般性的方法, 思考和总结出
+  一套最符合具体情况的方法.
+
 time estimation
 ===============
 

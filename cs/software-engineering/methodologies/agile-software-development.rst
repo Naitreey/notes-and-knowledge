@@ -15,3 +15,22 @@
   Instead you have a load of unused code, adding to the complexity of your
   application. YAGNI is the mantra we use to resist our overenthusiastic
   creative urges.
+
+- Principle: The agile way of development, and the agile way of life in
+  general.
+
+  What to do:
+
+  * Find out where you are
+
+  * Take a small step towards your goal
+
+  * Adjust your understanding based on what you learned
+
+  * Repeat
+
+  How to do it:
+
+  * When faced with two of more alternatives that deliver roughly the same
+    value, take the path that makes future change easier.
+    (A good design is easier to change than a bad design.)
