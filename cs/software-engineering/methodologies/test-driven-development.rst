@@ -171,6 +171,10 @@ workflow
   incrementally to another working state. 步伐尽量可控, 过程中每一步都要
   保证测试通过, 不要一次性做一大堆修改然后扯着蛋.
 
+  The step-by-step approach, in which you go from working code to working code,
+  is really counterintuitive. 甚至中间的一些 working state 极其错误, 完全不合理.
+  但这完全是为了不破坏已经建立的局面, 然后一步一步向更好的局面发展.
+
 - 这种小步伐的 test/code cycle 还有助于 keep development progress. 注意到所有
   的 development expectation 都在 functional tests and unit tests 中得到记录.
   如果忘记上次开发到哪里了, 只需跑一轮测试, 哪里不通过, 就知道开发到哪里了 (因为
@@ -224,6 +228,10 @@ functional test (FT)
   to make a coherent story out of the test, it makes sure we’re always testing
   from the point of view of the user.
 
+- 功能性测试中可以测试 style design 是否按预期加载, 但不严格测试 style 本身.
+  例如对前端页面, 测试方法可以是: 大致地测试一下某个页面组件是否在预期位置附近,
+  以确定 style 文件被加载 (smoke test for css file loading).
+
 unit test
 ---------
 - Unit tests test the application from the inside, from the point of view of
@@ -232,7 +240,7 @@ unit test
 
 - Test program logic, flows, configuration, etc. that changes. Don't test
   constants, because it's useless -- constants nevers changes it's written as
-  is and functions as is.
+  is and works as is.
 
   这里 constant 的含义是广泛的, 不仅仅是写死在代码中的常量, 还包含例如不变的
   模板文件等不会变的固定的 entity.
@@ -300,6 +308,25 @@ design patterns
   * 如果目前没有时间处理这些不确定性的测试, 先隔离至另一个 test suite. 然后
     及时处理. A danger here is that tests keep getting thrown into quarantine
     and forgotten, which means your bug detection system is eroding.
+
+- 当开始实现一个设计时, split work out into small, achievable tasks. 抑制
+  一次实现所有设计的冲动. 每实现一部分功能时, 一定要先写测试.
+
+- 当重构时, move step-by-step, from working state to working state. Being
+  the testing goat, not the refactoring cat. Our natural urge is often to dive
+  in and fix everything at once... But if we’re not careful, we’ll end up
+  like Refactoring Cat, in a situation with loads of changes to our code and
+  nothing working again.
+
+- YAGNI. You ain’t gonna need it! Avoid the temptation to write code that you
+  think might be useful, just because it suggests itself at the time.
+
+- Don't test aesthetics in automated tests. 因为: 1) 样式设计都是在静态文件
+  中固定写好的, 这相当于常量的地位; 2) 样式设计最好是由人类去辨别.
+  
+  But you are allowed to test the implementation of those aesthetics, e.g.,
+  testing CSS files, font files are loaded. 例如通过粗略地测试某些页面元素
+  是否在预期的位置上.
 
 TEMP
 ====
