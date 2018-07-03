@@ -365,6 +365,7 @@ message format
 
 - The additional RR section 在 delegation 时可能包含各个 name servers 的 IP
   (若出现 circular dependency 时).
+
 resource records (RR)
 =====================
 
@@ -458,3 +459,9 @@ ARPA
   * ``e164.arpa``, telephone number mapping.
 
   * ``uri.arpa``, ``urn.arpa``, uniform resource identifier resolution.
+
+tools
+=====
+
+- A website to checking propagation of a DNS record around the world:
+  https://www.whatsmydns.net/
