@@ -204,6 +204,10 @@ document metadata
 
   * ``type``, mime type of the linked resource.
 
+  * ``integrity``, a base64-encoded cryptographic hash of the resource (file)
+    you’re telling the browser to fetch. 如果浏览器不支持就自动忽略, 所以使用
+    CDN 时还是加上比较好.
+
 - ``<style>``, 属于 metadata content, 从 html 规范上讲, 只能放在 head element 中.
   Although in practice, every browser allows style element in body.
 
