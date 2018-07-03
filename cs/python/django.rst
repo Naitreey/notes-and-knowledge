@@ -1585,10 +1585,13 @@ request and response
   搭配 unnamed temporary file, 我们可以在 file closed 的同时, 内核自动
   释放硬盘资源.
 
-static file
-===========
+static files
+============
 
-* static file namespace 与 template namespace 机制类似.
+- contrib package, not core functionality. 因为只有研发时才需要通过 django
+  去 serve static files: ``django.contrib.staticfiles``.
+
+- static file namespace 与 template namespace 机制类似.
 
 * template tags.
 
@@ -1624,6 +1627,13 @@ static file
 
 - 全局性质的 (属于整个 project 而不属于某个 app 的) templates 和 static files 应该放在
   ``$BASE_DIR/<project-name>/{templates,static}``.
+
+testing
+-------
+
+django.contrib.staticfiles.testing.StaticLiveServerTestCase
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 
 admin site
 ==========
@@ -6617,18 +6627,24 @@ django.test.TestCase
 django.test.LiveServerTestCase
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-- 配合外部测试工具使用. 当外部测试工具需要进行 functional tests, 进行真实的服务端
-  访问时, 必须要有一个 web server 在运行, 不能使用 ``django.test.Client`` 这种内部
-  模块单元测试工具来模拟.
-  
-  然而, 我们不能开一个普通的 dev server (``runserver``), 因为我们需要让功能性测试
-  运行在 test database 上. 而研发服务器使用的是标准数据库配置 ``settings.DATABASES``
-  而不是 ``TEST`` 部分配置. ``LiveServerTestCase`` 就是解决了这个问题, 它在当前进程
-  即 ``./manage.py test`` 命令进程中开一个 dev server thread, 这样自动使用了已经使用
-  ``TEST`` 部分配置好的数据库连接, 只会访问测试数据库.
+- 配合外部测试工具使用. 当外部测试工具需要进行 functional tests, 进行真实的
+  服务端访问时, 必须要有一个 web server 在运行, 不能使用 ``django.test.Client``
+  这种内部模块单元测试工具来模拟.
+
+  然而, 我们不能开一个普通的 dev server (``runserver``), 因为我们需要让功能性
+  测试运行在 test database 上. 而研发服务器使用的是标准数据库配置
+  ``settings.DATABASES`` 而不是 ``TEST`` 部分配置. ``LiveServerTestCase``
+  就是解决了这个问题, 它在当前进程即 ``./manage.py test`` 命令进程中开一个 dev
+  server thread, 这样自动使用了已经使用 ``TEST`` 部分配置好的数据库连接, 只会
+  访问测试数据库.
 
 - bind to localhost and some ephemeral port (0). Can be accessed via
   ``live_server_url``.
+
+- 注意 django core 的 runserver command 不提供 serve static files 的功能.
+  相应地 ``LiveServerTestCase`` 只是为了方便, 提供了 serve ``STATIC_ROOT``
+  下静态文件的功能. 若要方便测试时 serve 各个 app 下的静态文件, 使用
+  ``django.contrib.staticfiles.testing.StaticLiveServerTestCase``.
 
 management commands
 -------------------

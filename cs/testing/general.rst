@@ -14,9 +14,47 @@ functional testing
 
 integration testing
 -------------------
+- Testing the collection and interface modules to check whether they give the
+  expected result.
+
+- Only Functional testing is performed to check whether the two modules when
+  combined give correct outcome.
+
+- It is a low level testing performed after unit testing
+
+- It is both black box and white box testing approach so it requires the
+  knowledge of the two modules and the interface.
+
+- Integration testing is performed by developers as well test engineers.
+
+- Here the testing is performed on interface between individual module thus any
+  defect found is only for individual modules and not the entire system
 
 system testing
 --------------
+- Testing the completed product to check if it meets the specification
+  requirements.
+
+- Both functional and non-functional testing are covered like sanity,
+  usability, performance, stress an load.
+
+- It is a high level testing performed after integration testing.
+
+- Here the testing is performed on the system as a whole including all the
+  external interfaces, so any defect found in it is regarded as defect of whole
+  system
+
+- 对于功能性测试部分, 可以基于功能性单元测试的验证内容来改写.
+
+- 测试人员进行的系统测试一般是在一个单独的 staging environment 中进行的.
+
+- 自动化的功能测试系统还有助于检测 staging environment 上的应用系统的配置
+  和部署情况.
+
+- 在研发阶段, 自动化的集成测试和系统测试脚本 (或系统) 也是很有帮助的.
+  因为, 研发时当一个功能开发完毕 (已经通过了单元测试与功能性的单元测试),
+  还需要检查多个服务集成时是否通畅, 各种行为是否符合预期, 等等. 此时,
+  集成测试和系统测试脚本就能用上.
 
 acceptance testing
 ------------------
@@ -50,3 +88,4 @@ References
 ==========
 
 .. [SmokeVSRegression] `WHAT’S THE DIFFERENCE BETWEEN SMOKE TESTING & REGRESSION TESTING? <https://www.bytelion.com/smoke-testing-vs-regression-testing/>`_
+.. [IntegrationVSSystemTesting] `What is the difference between system and integration testing? <https://www.quora.com/What-is-the-difference-between-system-and-integration-testing>`_

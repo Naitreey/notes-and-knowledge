@@ -180,8 +180,8 @@ workflow
   如果忘记上次开发到哪里了, 只需跑一轮测试, 哪里不通过, 就知道开发到哪里了 (因为
   每次一小步, 已经实现的代码部分都相应地测试通过了.)
 
-test classification
-===================
+test classifications
+====================
 
 - The functional tests are driving what development we do from a high level
   (outside), while the unit tests drive what we do at a low level (internal).
@@ -231,6 +231,14 @@ functional test (FT)
 - 功能性测试中可以测试 style design 是否按预期加载, 但不严格测试 style 本身.
   例如对前端页面, 测试方法可以是: 大致地测试一下某个页面组件是否在预期位置附近,
   以确定 style 文件被加载 (smoke test for css file loading).
+
+- 注意 TDD 使用的 functional tests 是不同于集成测试或系统测试中的功能性测试.
+  
+  * TDD 时的 FT 目的是 drive design, testing design during development.
+    而集成和系统测试的目的就是测试, 而且是对开发完毕后的软件进行测试.
+    
+  * TDD 时的 FT 必须执行迅速, 快速给出反馈, 若涉及 external services, 必须
+    mock. 而集成测试和系统测试必须是在真实的服务上进行测试.
 
 unit test
 ---------
@@ -321,12 +329,21 @@ design patterns
 - YAGNI. You ain’t gonna need it! Avoid the temptation to write code that you
   think might be useful, just because it suggests itself at the time.
 
-- Don't test aesthetics in automated tests. 因为: 1) 样式设计都是在静态文件
-  中固定写好的, 这相当于常量的地位; 2) 样式设计最好是由人类去辨别.
+- About testing on design and layout.
+
+  基本原则: Don't test aesthetics in automated tests.
   
-  But you are allowed to test the implementation of those aesthetics, e.g.,
-  testing CSS files, font files are loaded. 例如通过粗略地测试某些页面元素
-  是否在预期的位置上.
+  这是因为: 1) 样式设计都是在静态文件中固定写好的, 这相当于常量的地位; 2) 对
+  style 的测试容易比较 brittle, 需要经常修改; 3) 样式设计最好是由人类去辨别.
+  
+  但是, 进行某些基本的 style checking 还是可以的, 以保证比如静态文件正确加载,
+  预期的效果大致达成. It is valuable to have some kind of minimal "smoke test"
+  which checks that your static files and CSS are working.
+
+  Try to write the minimal tests that will give you confidence that your design
+  and layout is working, without testing what it actually is. Aim to leave
+  yourself in a position where you can freely make changes to the design and
+  layout, without having to go back and adjust tests all the time.
 
 TEMP
 ====
