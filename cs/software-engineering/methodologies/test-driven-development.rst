@@ -77,6 +77,9 @@ why testing in general and why TDD
   those tests. It doesn't mean we don't plan things, design things, do
   architecture. It does mean we got a tool to support incremental development.
 
+- TDD 的功能性测试和单元测试还可以在 interface review 上发挥作用. Interface
+  review 比 code review 重要.
+
 questions and concerns
 ----------------------
 - microstepping 所要求的每次 test/code 循环每次只解决一点问题就测试太繁琐了吧?
@@ -104,6 +107,14 @@ questions and concerns
 
   * 最后, 既然逻辑 trivial, 测试 trivial, 何不少说废话直接写了得了呢?
 
+- TDD 不是不注重设计. 相反, 前期对需求的分析和功能设计的仔细考虑并没有任何改变.
+  只有当相对宏观的设计已经想清楚了, 才开始将需求和设计具体化为功能性测试用例.
+  此时, 才开始 TDD 的流程 (即开始开发).
+
+  如果对于能通过测试的实现 (green), 如果不够清晰合理, 及时 refactor. 不是说
+  第一次实现时只要通过测试即可, 如果能一次性实现好, 当然最好. 只是说, 不需要
+  强求一次性达到最佳实现, 快速做好第一版实现, 如果需要 refacor, 就去 refactor.
+
 terminology
 -----------
 
@@ -128,6 +139,9 @@ terminology
 
 workflow
 ========
+
+general and detailed workflow
+-----------------------------
 .. |tdd-workflow| image:: tdd-workflow.png
 
 - in general:
@@ -167,6 +181,13 @@ workflow
 
   以上步骤也称为 Red/Green/Refactor cycle.
 
+- 这种小步伐的 test/code cycle 还有助于 keep development progress. 注意到所有
+  的 development expectation 都在 functional tests and unit tests 中得到记录.
+  如果忘记上次开发到哪里了, 只需跑一轮测试, 哪里不通过, 就知道开发到哪里了 (因为
+  每次一小步, 已经实现的代码部分都相应地测试通过了.)
+
+about refactoring
+-----------------
 - When refactoring, the code should starts with working state, then move
   incrementally to another working state. 步伐尽量可控, 过程中每一步都要
   保证测试通过, 不要一次性做一大堆修改然后扯着蛋.
@@ -175,10 +196,22 @@ workflow
   is really counterintuitive. 甚至中间的一些 working state 极其错误, 完全不合理.
   但这完全是为了不破坏已经建立的局面, 然后一步一步向更好的局面发展.
 
-- 这种小步伐的 test/code cycle 还有助于 keep development progress. 注意到所有
-  的 development expectation 都在 functional tests and unit tests 中得到记录.
-  如果忘记上次开发到哪里了, 只需跑一轮测试, 哪里不通过, 就知道开发到哪里了 (因为
-  每次一小步, 已经实现的代码部分都相应地测试通过了.)
+- You can begin refactoring only when you know you are safe to refactor.
+  也就是说, 例如我们已经完成一个功能还没有开始新功能的开发, 或者至少我们现在
+  位于 working state. 不要在半截上开始 refactor, 此时应该先记下稍后需要
+  refactor.
+
+application on deployment
+-------------------------
+- TDD 的思路还可以应用于服务器应用部署方面 (非容器化的方式). 一步一步地配置,
+  work incrementally, make one change at a time, and run your tests frequently.
+
+  When things (inevitably) go wrong, resist the temptation to flail about and
+  make other unrelated changes in the hope that things will start working
+  again; instead, stop, go backward if necessary to get to a working state, and
+  figure out what went wrong before moving forward again.
+
+  Don't fall into the Refactoring-Cat trap on the server.
 
 test classifications
 ====================
@@ -202,7 +235,8 @@ test classifications
 functional test (FT)
 --------------------
 
-- functional test a.k.a. acceptance test or end-to-end test, black-box test.
+- functional test, 在 TDD 只关注于研发阶段, 这里主要指的是功能性的单元测试, 这
+  不同于集成测试或系统测试时的功能性测试.
 
 - FTs test how application *functions* from the user's point of view.
 
@@ -240,6 +274,14 @@ functional test (FT)
   * TDD 时的 FT 必须执行迅速, 快速给出反馈, 若涉及 external services, 必须
     mock. 而集成测试和系统测试必须是在真实的服务上进行测试.
 
+- 如何组织功能性测试?
+
+  * 对每个 feature, 单独创建一个 test file. 这个 test file 中包含一个或多个
+    相关的 test class.
+
+  * 每个 feature 可能需要多个 user stories 从不同方面具体化. 对应于一个 test
+    class 的多个 test method. 每个 test method 表达一个完整的 user story.
+
 unit test
 ---------
 - Unit tests test the application from the inside, from the point of view of
@@ -258,9 +300,9 @@ unit test
 design patterns
 ===============
 
-- Each test should only test one thing. Just like each function should only does
-  one thing.
-  
+- Each test should only test one thing. Just like each function should only
+  does one thing.
+
   这个好处了常见的模块化、重用、职责清晰之外, 更重要的是, 由于每个测试是独立
   执行的, 每个测试只检测一个问题, 有助于同时检测和发现多个问题. 如果将多个
   不相互依赖的测试逻辑放在一个测试单元中执行, 第一个不通过的部分就会 raise
@@ -344,40 +386,3 @@ design patterns
   and layout is working, without testing what it actually is. Aim to leave
   yourself in a position where you can freely make changes to the design and
   layout, without having to go back and adjust tests all the time.
-
-TEMP
-====
-
-FOr now
------------
-
-- Test-Driven Development with Python: Obey the Testing Goat: Using Django, Selenium, and JavaScript
-
-  * online version: http://www.obeythetestinggoat.com/pages/book.html
-
-  * source: https://github.com/hjwp/Book-TDD-Web-Dev-Python/
-
-- django test topics
-
-- unittest and other tools in python
-
-- selenium wiki https://en.wikipedia.org/wiki/Selenium_(software)
-
-  and doc https://www.seleniumhq.org/
-
-- geckodriver
-
-- web driver in general
-
-- homebrew
-
-For then
-------------
-- wiki https://en.wikipedia.org/wiki/Test-driven_development
-
-- https://softwareengineering.stackexchange.com/a/57309/163588
-
-- Test Driven Development: By Example
-
-- Growing Object-Oriented Software, Guided by Tests
-

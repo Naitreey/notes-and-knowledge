@@ -1227,6 +1227,8 @@ django-celery-results
 看上去并没有什么必要. celery 使用自己的 result backend 存储方式
 就挺好, 何必添加 (与 django project 之间) 不必要的耦合.
 
+而且, 用关系型数据库保存 celery result 多慢啊.
+
 django-celery-beat
 ^^^^^^^^^^^^^^^^^^
 将 periodic tasks 保存在 database 中. 并可以通过 django admin
