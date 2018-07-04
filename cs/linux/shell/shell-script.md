@@ -193,6 +193,15 @@ declare x; x=1
     started SUID root (UID!=EUID) and uses its root power to throw this power
     away, resetting EUID to UID.[[SEBashSuid]](#SEBashSuid)
 
+-   若需要加载一个 shell variables 配置文件, 并且希望所有加载的量 export 成环境变量,
+    可以使用 `set -a` 方便地进行, 例如:
+
+    ```sh
+    set -a
+    . some_config_file
+    set +a
+    ```
+
 # shell 初始化文件的执行流程
 
 * bash 初始化文件的执行.

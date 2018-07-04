@@ -6434,7 +6434,6 @@ settings
   上游服务器时, 若 ALLOWED_HOSTS 限制只允许本地访问, 在 django 中配置的
   redirect 根本不会成功.
 
-
 - SECURE_HSTS_SECONDS, SECURE_HSTS_INCLUDE_SUBDOMAINS, SECURE_HSTS_PRELOAD.
   HSTS 配置. 不要使用. 要在前端服务器配置.
 
