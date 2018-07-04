@@ -1,5 +1,14 @@
 tools comparison
 ================
+- fabric vs configuration management system.
+
+  * Fabric is an excellent choice for executing scripts in one or more remote
+    systems. 它的用处就在于此, high-level 的 (更多的时候比 paramiko 易用) 的
+    remote execution library.
+   
+  * 然而对于配置管理系统, remote execution 只是一部分, 例如还有配置状态声明,
+    配置状态保证与检查. 所以需要专门的配置管理系统. Fabric 之类的远程执行
+    library 可以是它的一个组成部分.
 
 - ansible vs salt vs puppet vs chef
 
