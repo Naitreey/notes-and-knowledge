@@ -201,6 +201,9 @@ about refactoring
   位于 working state. 不要在半截上开始 refactor, 此时应该先记下稍后需要
   refactor.
 
+- Don’t refactor code against failing tests, except for the test you are
+  currently working on.
+
 application on deployment
 -------------------------
 - TDD 的思路还可以应用于服务器应用部署方面 (非容器化的方式). 一步一步地配置,
@@ -297,6 +300,13 @@ unit test
 
 - 在单元测试中, 需要仔细考虑什么是变的, 什么是不变的, 才能只对变化的部分做测试.
 
+- 如何组织单元测试?
+
+  * 一般情况下, 每个源代码文件对应一个单元测试文件.
+
+  * 对每个 class 和 function, 至少有一个 unit test, 即使只是 placeholder test.
+    (See `questions and concerns`_ for reason.)
+
 design patterns
 ===============
 
@@ -386,3 +396,6 @@ design patterns
   and layout is working, without testing what it actually is. Aim to leave
   yourself in a position where you can freely make changes to the design and
   layout, without having to go back and adjust tests all the time.
+
+- Sometimes it's useful to skip on a test which is testing something you
+  haven't written yet. 但注意及时 unskip it.
