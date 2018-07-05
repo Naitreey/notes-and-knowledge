@@ -402,8 +402,8 @@ view, template, form/formset 的设计思考
 
 * form clean & validation. 不要在 view 本身的逻辑中写 form 本身数据 clean &
   validation 逻辑, 要归入 form class 的定义中, 对于 model form 的情况,
-  还可考虑是否应当 再归入 model class 中, 即从 model
-  层对数据的合法性进行进一步限制.
+  还可考虑是否应当再归入 model class 中, 即从 model 层对数据的合法性进行进一步
+  限制.
 
   但对于 form data 是否 suspicious 之类的检查, 需要在 view 中进行.
 
@@ -2508,6 +2508,10 @@ parameters
 
 form and model cleaning and validation in general
 -------------------------------------------------
+- model 的归 model, form 的归 form.
+  
+  即, 对于需要在 model-level 保证的数据条件限制 (而不论在哪里使用 model), 就在
+  model 层保证; 对于某个 form-specific 的条件限制则在 form 层保证.
 
 normal form cleaning and validation procedure
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -3826,6 +3830,18 @@ index 通过 ``Model.Meta.indexes`` option 指定, a list of Index objects.
 
 model instance clean & validation
 ---------------------------------
+
+* model instance 的 clean & validation 不会在直接创建或保存 model instance
+  时自动执行. 这些逻辑依赖两方面进行保证:
+  
+  - 向下, 在 model-level 设置的数据库 constraints 会在数据库层进行保障 (当有
+    相应的数据库结构时), 在 model 层不做校验, 依靠在写入时数据库报错来
+    invalidate;
+    
+  - 向上, 在 model-level 设置的数据有效性 constraints 和数据合法性校验与数据
+    类型转换会在 ModelForm 层校验时执行. 所以, 任何外源性的非可信数据, 最好
+    先填入 ModelForm, 整体校验后保存. 只有内源性的数据在修改数据库时, 才可以
+    直接读写 model instance.
 
 * 在定义 model class 时, 要考虑应该在 model 层就限制的数据合法性要求.
   这包括:

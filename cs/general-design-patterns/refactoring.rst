@@ -20,7 +20,14 @@ concepts
 - Don't Repeat Yourself (DRY).
 
 - Three strikes and refactor. 一旦逻辑类似或甚至完全重复的代码出现达到 3 次,
-  就一定要重构并统一, 从而能够 DRY. 我更习惯 2 次就重构.
+  就一定要重构并统一, 从而能够 DRY. 我更习惯 2 次就重构. 但要小心 2 次就
+  重构的话, 可能不太容易保证代码的一般性, 所以要仔细考虑.
+
+  One of the reasons that the "three strikes and refactor" rule exists is that,
+  if you wait until you have three use cases, each might be slightly different,
+  and it gives you a better view for what the common functionality is. If you
+  refactor too early, you may find that the third use case doesn’t quite fit
+  with your refactored code.
 
 - Before you do a refactor, commit. After you do a refactor, commit.
 
