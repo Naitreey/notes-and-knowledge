@@ -6661,6 +6661,14 @@ django.test.LiveServerTestCase
   下静态文件的功能. 若要方便测试时 serve 各个 app 下的静态文件, 使用
   ``django.contrib.staticfiles.testing.StaticLiveServerTestCase``.
 
+test runners
+------------
+
+- 在功能性测试中, 一般需要浏览器. 常见的处理方法是在每个 test class 的
+  setup/teardown 中打开和关闭浏览器. 这带来的问题是太慢了. 我这里写了
+  一个 test runner 在 setup/teardown test environment 时打开和关闭浏览器.
+  `code <snippets/browser_test_runner.py>`_
+
 management commands
 -------------------
 ::

@@ -186,6 +186,12 @@ general and detailed workflow
   如果忘记上次开发到哪里了, 只需跑一轮测试, 哪里不通过, 就知道开发到哪里了 (因为
   每次一小步, 已经实现的代码部分都相应地测试通过了.)
 
+- Initial tentative design and implementation. 很多时候, 在一个功能或模块 API
+  的最初设计和实现过程中, 我们设想的设计在实现时才发现需要调整的地方. 因此,
+  不可避免地需要反过来调整设计, 调整测试代码. 在这个尝试性的阶段, 同时修改代码
+  实现和测试用例是允许的. 当初始设计基本确定之后, 需要保证不同时修改测试和实现,
+  进入 Red/Green/Refactor 流程.
+
 about refactoring
 -----------------
 - When refactoring, the code should starts with working state, then move
@@ -313,10 +319,22 @@ design patterns
 - Each test should only test one thing. Just like each function should only
   does one thing.
 
-  这个好处了常见的模块化、重用、职责清晰之外, 更重要的是, 由于每个测试是独立
-  执行的, 每个测试只检测一个问题, 有助于同时检测和发现多个问题. 如果将多个
-  不相互依赖的测试逻辑放在一个测试单元中执行, 第一个不通过的部分就会 raise
-  exception, 后续的测试则不会执行.
+  * 对于功能性测试, 一个 test case 只测试一个 user story.
+
+  * 对于单元测试, 一个 test case 只测试被测对象的一个行为点.
+
+  意义:
+  
+  * 模块化、重用、职责清晰
+    
+  * 由于每个测试是独立执行的, 每个测试只检测一个问题, 有助于同时检测和发现
+    多个问题. 如果将多个不相互依赖的测试逻辑放在一个测试单元中执行, 第一个
+    不通过的部分就会 raise exception, 后续的测试则不会执行.
+
+  * It helps you isolate the exact problem you may have, when you later come
+    and change your code and accidentally introduce a bug.
+
+- 尽量减少不同测试用例之间的重复. 尽量不重复测试相同的行为点.
 
 - Ensure isolations between test cases.
 
@@ -399,3 +417,7 @@ design patterns
 
 - Sometimes it's useful to skip on a test which is testing something you
   haven't written yet. 但注意及时 unskip it.
+
+- Do not test for developer's stupidity. You should trust yourself (and fellow
+  developers) not to do something deliberately stupid, but not something
+  accidentally stupid. (If not, you have a much bigger problem.)
