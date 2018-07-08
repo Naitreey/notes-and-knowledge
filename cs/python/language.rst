@@ -1150,8 +1150,13 @@ inheritance
     (此时 type2 也是 type). 若在 class definition 之外单独使用, 则只是给出 type
     的父类的 function 而已, type2 并无别的意义.
 
-  * a instance ``instance`` of ``type``. 此时, ``super(type, instance).x``
-    给出的是 bound method ``x``, bound to ``instance``, i.e. ``self=instance``.
+  * 若第二个参数是 a instance ``instance`` of ``type``. 此时,
+    ``super(type, instance).x`` 给出的是 bound method ``x``, bound to
+    ``instance``, i.e. ``self=instance``.
+
+  一般情况下在类里面使用无参形式 ``super()`` 访问父类成员. 两个参数形式的一个
+  用处是明确指定 MRO 的起点, 例如要绕过 parent class 去访问 grandparent 的成员.
+  (但也许这是一个信号: 应该抽象出一个共同的基类, 再分别继承后实现各自所需.)
 
 builtin types
 =============

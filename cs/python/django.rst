@@ -2224,6 +2224,8 @@ cleaning & validation
   ``Form.cleaned_data`` 中相应位置已经转换成了相对于列定义而言是合法的
   数据格式.
 
+  该方法 return cleaned field value, or raise ValidationError.
+
 - ``clean()``. Custom Form 若要进行 form-level 的 clean & validation (而不是
   form field-level), 可自定义这个方法. Return a new ``cleaned_data`` or None
   (``cleaned_data`` is modified in-place).
@@ -6631,10 +6633,20 @@ methods
 
       self.assertTrue(any("..." in t.source.name for t in response.templates))
 
+django.test.TransactionTestCase
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- subclass of ``SimpleTestCase``.
+
+methods
+""""""""
+
+- ``assertQuerysetEqual(qs, values, transform=repr, ordered=True, msg=None)``.
+
 django.test.TestCase
 ^^^^^^^^^^^^^^^^^^^^
 
-- subclass of ``SimpleTestCase``.
+- subclass of ``TransactionTestCase``.
 
 - Suitable for tests that rely on database access. It runs each test inside a
   transaction to provide isolation.
