@@ -186,14 +186,21 @@ general and detailed workflow
   如果忘记上次开发到哪里了, 只需跑一轮测试, 哪里不通过, 就知道开发到哪里了 (因为
   每次一小步, 已经实现的代码部分都相应地测试通过了.)
 
-- Initial tentative design and implementation. 很多时候, 在一个功能或模块 API
+关于步骤的说明
+--------------
+
+* FT 描述的新功能需要在软件的哪个部分添加功能实现, 就在这个部分中写单元测试和
+  进行实现. 每个部分所用的语言可能是不同的, 所用的单元测试框架也可以是不同的.
+  注意 FT 的实现与具体的单元测试 (和实现) 是独立的.
+
+* Initial tentative design and implementation. 很多时候, 在一个功能或模块 API
   的最初设计和实现过程中, 我们设想的设计在实现时才发现需要调整的地方. 因此,
   不可避免地需要反过来调整设计, 调整测试代码. 在这个尝试性的阶段, 同时修改代码
   实现和测试用例是允许的. 当初始设计基本确定之后, 需要保证不同时修改测试和实现,
   进入 Red/Green/Refactor 流程.
-
-about refactoring
------------------
+  
+With refactoring
+----------------
 - When refactoring, the code should starts with working state, then move
   incrementally to another working state. 步伐尽量可控, 过程中每一步都要
   保证测试通过, 不要一次性做一大堆修改然后扯着蛋.
@@ -210,8 +217,8 @@ about refactoring
 - Don’t refactor code against failing tests, except for the test you are
   currently working on.
 
-application on deployment
--------------------------
+TDD on deployment
+-----------------
 - TDD 的思路还可以应用于服务器应用部署方面 (非容器化的方式). 一步一步地配置,
   work incrementally, make one change at a time, and run your tests frequently.
 
@@ -221,6 +228,16 @@ application on deployment
   figure out what went wrong before moving forward again.
 
   Don't fall into the Refactoring-Cat trap on the server.
+
+About prototyping
+-----------------
+- prototyping: 尝试和学习一个新的工具, 设计一个新的解决方法时, 可能需要一些
+  表达基本思想的原型代码. 这就是在做 prototype. 在 TDD 中也称为 spike.
+
+- 在做原型时, 完全可以不管 TDD 或只有必要的测试代码, 纯粹尝试性的 try if it
+  works as expected.
+
+- 在将 prototype 重新整理为系统化的设计和实现时 (de-spike), 再认真地 TDD.
 
 test classifications
 ====================
@@ -315,6 +332,10 @@ unit test
 
 design patterns
 ===============
+
+- 功能性测试代码应当是与实现独立的. 即功能性测试不直接引用实现细节 (只检验
+  实现). 它是从外部观测. 功能性测试与所测试功能的实现完全可以在两种不同的语言
+  中写.
 
 - Each test should only test one thing. Just like each function should only
   does one thing.

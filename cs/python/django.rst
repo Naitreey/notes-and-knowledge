@@ -5315,7 +5315,7 @@ authenticate & login/logout
 
 - settings.
 
-  ``settings.LOGIN_URL``, default ``/accounts/login``. 该值可以设置为
+  ``settings.LOGIN_URL``, default ``/accounts/login/``. 该值可以设置为
   url pattern name.
 
   ``settings.LOGIN_REDIRECT_URL``, 登录后的默认跳转路径.
