@@ -3368,6 +3368,8 @@ default value
 
   * 否则, 返回 "" empty string.
 
+  注意到, 如果一个列没有设置明确默认值, 且 NOT NULL, 会给出 "" 默认值.
+
 deconstruction
 """"""""""""""
  
@@ -3928,9 +3930,18 @@ model instance
 --------------
 * instantiation.
 
-  - 在创建 model instance 时, 对于 FK field, 有两种指定方式:
-    ``<FK-field>=<FK-model-object>``, ``<FK>_id=<FK-model-object>.{id|pk}``.
-    这不同于 field lookup, 不支持 id 和 object 交叉混合的方式.
+  model instance 的列值来自
+
+  * args and kwargs. 一般只使用 kwargs 形式即可. 若 args and kwargs 都有,
+    对于一个 field 优先使用 args 的值.
+
+    - 对于 FK field, 有两种指定方式:
+      ``<FK-field>=<FK-model-object>``, ``<FK>_id=<FK-model-object>.{id|pk}``.
+      这不同于 field lookup, 不支持 id 和 object 交叉混合的方式.
+
+  * field 的默认值 ``Field.get_default()``.
+
+  可以看出在实例化时, 所有的列都一定会有个值.
 
 - 对于 model class 在实例化时, Django doesn’t hit the database until you
   explicitly call ``save()``.
