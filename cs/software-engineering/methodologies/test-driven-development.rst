@@ -66,6 +66,8 @@ why testing in general and why TDD
 
 - TDD 时, functional tests and acceptance tests 可以做需求文档的具体实例 (user
   story). 而所有测试代码, 尤其是 unit tests 可以作为 API documentation.
+  Sometimes, if you forget why you’ve done something a particular way, going
+  back and looking at the tests will give you the answer.
 
 - 先写测试再写代码更有趣, 因为是先构建问题 (test failure), 再解决问题 (test pass)
   的过程.
@@ -442,3 +444,15 @@ design patterns
 - Do not test for developer's stupidity. You should trust yourself (and fellow
   developers) not to do something deliberately stupid, but not something
   accidentally stupid. (If not, you have a much bigger problem.)
+
+Techniques
+==========
+
+test double
+-----------
+
+mock
+^^^^
+
+- 在 dynamic language 中, 经常使用 monkey patching 方法来 manually mock
+  external services.
