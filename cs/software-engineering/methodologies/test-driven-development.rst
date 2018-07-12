@@ -492,3 +492,19 @@ mock
 
 - 很多语言已经提供方便的 mock library, 一般无需手动构建替代的 mock function, 也
   无需手动替换方法和调用.
+
+- 在一个功能的单元测试中, 对 mock 调用情况的检测不可避免地是在测试功能的实现细节,
+  而不是它的 API. 因此, 过分地对 mock 的测试可能导致测试用例与功能实现细节强耦合.
+
+  而另一方面, 对 mock 调用的检验却也是必不可少的. 因为我们在单元测试时, 人为地将
+  外部服务从功能代码中切断, 硬生生地切出来第三组 (输入输出之外) 接口. 少了真实
+  的外部服务对代码逻辑的检验, 就要求我们去检验代码对这组接口的访问情况, 以保证
+  正确性.
+
+  因此, 构造对 mock 的检验需要谨慎小心. 尽量一般化, 考虑到多种可能的调用模式,
+  避免被测功能逻辑没有修改, 却需要测试代码跟着 external service 调用的修改而
+  修改的问题.
+
+  It’s better to test behaviour, not implementation details; test what happens,
+  not how you do it. Mocks often end up erring too much on the side of the
+  "how" rather than the "what".
