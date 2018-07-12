@@ -453,6 +453,42 @@ test double
 
 mock
 ^^^^
+- Mock 的基本概念是使用一个假的 service call 来替代真实的 service call. 来避免
+  在单元测试中需要调用外部服务. service call 本身的设计应该是一个不透明的接口,
+  即有规范设计的输入和输出. mock 能够完全替换这个 service call, 则需要具有完全
+  相同的接口.
 
-- 在 dynamic language 中, 经常使用 monkey patching 方法来 manually mock
-  external services.
+  Mock 必须具有与原操作相同的接口, 才能发挥测试的意义. 即保证功能实现中对外部
+  服务的调用是正确的.
+
+- 必要时还需要在单元测试中检查对 service call 的调用输入和输出的检测. 以保证对
+  服务的调用确实是符合预期的 (因为 mock 接口正确还不够, 调用参数还需要正确.)
+
+- 在 dynamic language 中, 经常使用 monkey patching 方法来 dynamically
+  substitute calls to external services with a mock.
+
+- 以 python 为例, 手动 mock 与单元测试的流程大致为:
+
+  .. code:: python
+
+    def test_foo():
+
+        def fake_call(arg1, arg2, kwarg1=foo, kwarg2=bar):
+            fake_call.arg1 = arg1
+            fake_call.arg2 = arg2
+            fake_call.kwarg1 = kwarg1
+            fake_call.kwarg2 = kwarg2
+            return value
+
+        # mock
+        module.external_call = fake_call
+        # call operation being tested
+        ret = operation_being_tested(a, b, c)
+        # test operation's result and side effects
+        # ...
+        # test service call
+        assert fake_call.arg1 == "something"
+        assert fake_call.arg2 == "something else"
+
+- 很多语言已经提供方便的 mock library, 一般无需手动构建替代的 mock function, 也
+  无需手动替换方法和调用.

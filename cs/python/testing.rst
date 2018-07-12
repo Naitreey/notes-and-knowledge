@@ -26,4 +26,6 @@ unittest
   * ``fail`` method fails a test case unconditionally. When author hasn't
     finished written a test case, fail method can be used to signify unconditional
     failure.
-    
+
+unittest.mock
+=============
