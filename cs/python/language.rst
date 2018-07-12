@@ -112,7 +112,7 @@ class instance
     instance -> class -> parent class -> ... -> object
 
   若属性是一个 function object, 转变成 bound instance method, 它的
-  ``__self__`` attribute is the instance.
+  ``__self__`` attribute is the instance. See also `instance method`_.
 
   若最终没找到, call ``__getattr__``.
 
@@ -147,6 +147,34 @@ user-defined function
   * ``__annotations__``. function annotation storage.
 
   * ``__kwdefaults__``. storage for defaults of keyword-only parameters.
+
+instance method
+^^^^^^^^^^^^^^^
+- 从一个 instance method 中可以获取两方面信息:
+
+  * 所属的 class instance or class (if classmethod).
+
+  * 所源于的 function object.
+
+  相应地, 它具有以下各点所述属性.
+
+- ``__self__``. class instance or class itself (if classmethod).
+
+- ``__func__``. underlying function object.
+
+- ``__doc__``. function's docstring.
+
+- ``__name__``. function's name.
+
+- ``__module__``. the name of the module where the function is defined.
+
+- Readonly access to arbitrary function attributes on the underlying function
+  object.
+
+- 不能直接对 instance method 赋值任意属性. 会 raise AttributeError.
+
+- The transformation from function object to instance method object happens
+  each time the attribute is retrieved from the instance.
 
 special attributes & methods
 ----------------------------
