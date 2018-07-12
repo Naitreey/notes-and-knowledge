@@ -2607,18 +2607,17 @@ ValidationError
 
 error messages
 """"""""""""""
-  
-  * Error messages defined at the form field level or at the form Meta level
-    always take precedence over the error messages defined at the model field
-    level.
+* Error messages defined at the form field level or at the form Meta level
+  always take precedence over the error messages defined at the model field
+  level.
 
-  * Error messages defined on model fields are only used when the
-    ValidationError is raised during the model clean & validation step and no
-    corresponding error messages are defined at the form level.
+* Error messages defined on model fields are only used when the
+  ValidationError is raised during the model clean & validation step and no
+  corresponding error messages are defined at the form level.
 
-  * You can override the error messages from NON_FIELD_ERRORS raised by model
-    clean & validation by adding the NON_FIELD_ERRORS key to the error_messages
-    dictionary of the ModelForm’s inner Meta class.
+* You can override the error messages from NON_FIELD_ERRORS raised by model
+  clean & validation by adding the NON_FIELD_ERRORS key to the error_messages
+  dictionary of the ModelForm’s inner Meta class.
 
 model formsets
 --------------
@@ -2879,7 +2878,8 @@ inheritance
     若子类 model 仍需是 ABC, 需要再设置.
 
   * 对于 ABC model 的继承, 可以覆盖列名. 因为 ABC model 并没有实际的表去关联.
-    还可以设置 ``field = None`` 在子类中去掉特定列.
+    还可以通过设置列名为任意非 ``Field`` 属性, 来删除一个数据库列, 用一个属性
+    去替换.
 
   * 若 ABC model 中包含 FK 等关系列, 则 related_name/related_query_name  应该
     使用默认的值或者设置对于不同的 subclass model 自动取不同的值, 例如包含
