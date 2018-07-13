@@ -29,3 +29,10 @@ unittest
 
 unittest.mock
 =============
+
+- random notes:
+
+  * Be careful when using ``Mock`` object's special assert methods. Unless you
+    get the magic method name exactly right, then you will just get a "normal"
+    mock method, which just silently return another mock, and you may not
+    realise that you’ve written a test that tests nothing at all.

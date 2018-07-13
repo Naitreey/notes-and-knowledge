@@ -209,8 +209,9 @@ url pattern definitions
 
   * arguments.
 
-    - kwargs. url pattern 匹配的参数的默认值. 若 ``view`` 的部分是 ``include()``
-      expression, kwargs 会传入包含的每个 url pattern.
+    - kwargs. pass additional arguments to the view function or method 若
+      ``view`` 的部分是 ``include()`` expression, kwargs 会传入包含的每个 url
+      pattern.
 
     - name. url pattern's name.
 
@@ -5619,13 +5620,14 @@ authorization and authentication backends
 
   Required:
 
-  * ``get_user()``, takes a user_id – which could be a username, database ID or
+  * ``get_user(user_id)``. takes a user_id – which could be a username, database ID or
     whatever, but has to be the primary key of your user object – and returns a
-    user object.
+    user object. If the specified user can not be retrieved according to backend's
+    knowledge or its policy (e.g. user's inactive), returns None.
 
-  * ``authenticate()``, takes a request argument and credentials as keyword
-    arguments, return a user object that matches those credentials if the
-    credentials are valid. If they’re not valid, it should return None.
+  * ``authenticate(request, ...)``. takes a request argument and credentials as
+    keyword arguments, return a user object that matches those credentials if
+    the credentials are valid. If they’re not valid, it should return None.
 
   Optional: 权限类方法. 在 AbstractUser 上调用这些方法时, 会 delegate 至各个
   定义了这些方法的 backend 去执行. 即遍历 AUTHENTICATION_BACKENDS 检查是否定义了
@@ -6683,6 +6685,29 @@ django.test.LiveServerTestCase
   相应地 ``LiveServerTestCase`` 只是为了方便, 提供了 serve ``STATIC_ROOT``
   下静态文件的功能. 若要方便测试时 serve 各个 app 下的静态文件, 使用
   ``django.contrib.staticfiles.testing.StaticLiveServerTestCase``.
+
+test client
+-----------
+- ``Client.request()`` method initiates a request , returns a HttpResponse
+  object.
+
+testing-purpose HttpResponse attributes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- ``client``.
+
+- ``request``. Parameters of the initiating request.
+
+- ``wsgi_request``. The HttpRequest object. Actually a WSGIRequest object.
+
+- ``context``.
+
+- ``json(**kwargs)``
+
+- ``status_code``.
+
+- ``template``.
+
+- ``resolver_match``.
 
 test runners
 ------------

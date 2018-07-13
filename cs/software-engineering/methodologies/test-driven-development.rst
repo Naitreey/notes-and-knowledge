@@ -342,7 +342,8 @@ design patterns
 - Each test should only test one thing. Just like each function should only
   does one thing.
 
-  * 对于功能性测试, 一个 test case 只测试一个 user story.
+  * 对于功能性测试, 一个 test case 只测试一个 user story. 注意到一个 user story 
+    可能很长, 需要检测很多个功能点.
 
   * 对于单元测试, 一个 test case 只测试被测对象的一个行为点.
 
@@ -445,6 +446,29 @@ design patterns
   developers) not to do something deliberately stupid, but not something
   accidentally stupid. (If not, you have a much bigger problem.)
 
+- 代码逻辑映射与单元测试之间映射的一些 rules of thumb:
+
+  * Any ``if`` statement means an extra test.
+
+  * Any ``try/catch`` exception handling means an extra test.
+
+- Readability vs duplication for unit tests.[SODupUT]_
+
+  * 对单元测试, 易读性是更重要的特性. If a test fails, you want the problem to
+    be obvious.
+
+  * 适当地 refactor 和抽象有助于保持单元测试的清晰可读, as long as it doesn't
+    obscure anything, and eliminating the duplication in your tests may lead to
+    a better API. 但太多抽象和 DRY 会损害单元测试结果的易读性. Developer
+    shouldn't have to wade through a lot of heavily factored test code to
+    determine exactly what failed.
+
+  * 不同的测试用例可能会有一些重复, 这是允许的. 但同时也要警惕, 如果好几个
+    测试用例都在测试相同的内容, 那它们本身应该合并为一个测试.
+
+  * 此外, (错误地) 检测被测功能的实现而不是它的 API, 也会导致多处重复, 这
+    本来就是该避免的. 避免测试实现细节, 除非涉及外部服务接口处.
+
 Techniques
 ==========
 
@@ -508,3 +532,7 @@ mock
   It’s better to test behaviour, not implementation details; test what happens,
   not how you do it. Mocks often end up erring too much on the side of the
   "how" rather than the "what".
+
+references
+==========
+.. [SODupUT] `Is duplicated code more tolerable in unit tests? <https://stackoverflow.com/questions/129693/is-duplicated-code-more-tolerable-in-unit-tests>`_
