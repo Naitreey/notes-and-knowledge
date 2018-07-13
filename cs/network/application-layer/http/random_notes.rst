@@ -101,9 +101,23 @@
 - http 中, 由于 url 是由 web server 去解析的. url 中的 ``/`` 分隔的 segments
   仅仅是逻辑上的分隔, 没必要对应实际的文件路径.
 
-- HTTP is stateless (无状态的), 指的是前一组 http 请求响应的结果不会平白无故地影响
-  后一组请求响应. 若想要后一请求建立在前一请求的结果基础上, 必须在请求中传递某种
-  状态信息, 作为依据.
+- HTTP is a stateless protocol. Meaning that each request message can be
+  understood in isolation. This means that every request needs to bring with it
+  as much detail as the server needs to serve that request, without the server
+  having to store a lot of info and meta-data from previous requests.
+
+  相比之下, a stateful protocol requires the participants keep the internal
+  state of the transmission. Otherwise the transmission can not proceed.
+  例如, TCP is stateful. 双方都必须维持比如 congestion window, acked package,
+  unacked packages, etc.
+
+  注意, 在判断一个协议是 stateful or stateless 时, 要根据协议的定义是否要求
+  通信双方必须保持一定状态, 否则通信无法继续. 对于 HTTP, 协议本身的定义不
+  要求这些状态维持, 但不是说通信双方 *不能* 保存一定的状态信息. 它是可以的,
+  例如 http cookie, session etc. 这相当于是创建了一种基于 HTTP 协议的 stateful
+  protocol.
+
+  See also [SOHTTP2Stateless]_, [SOHttpStateless]_.
 
 - HTTP cookie
 
@@ -616,3 +630,5 @@ headers
 References
 ==========
 .. [HttpWatchBackBtn] `60% of Web Users Can’t be Wrong – Don’t Break the Back Button! <https://blog.httpwatch.com/2007/10/03/60-of-web-users-cant-be-wrong-dont-break-the-back-button/>`_
+.. [SOHTTP2Stateless] `Is HTTP/2 a stateless protocol? <https://stackoverflow.com/questions/36178447/is-http-2-a-stateless-protocol>`_
+.. [SOHttpStateless] `Why say that HTTP is a stateless protocol? <https://stackoverflow.com/questions/13200152/why-say-that-http-is-a-stateless-protocol>`_
