@@ -17,3 +17,16 @@ Comment
   注释不解释 代码做的是什么, 那是代码本身的功能.
 
 - Too many comments (one per line, for example) is probably a sign of poorly written code.
+
+Naming
+======
+- application/package naming.
+
+  * 给应用或 package 一个比较容易区分的名字.
+  
+  * 避免使用比较通用的名字.
+
+  * 如果一个应用本身的功能就是偏向于某种通用的内容, 则需要创新性地
+    从另一个角度对应用命名. 例如如果一个 app 是处理配置文件的, 那
+    如果也叫 ``config...``, 很可能就会跟真正的配置文件目录名字相近,
+    就要换个更有识别性的名字.
