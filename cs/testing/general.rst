@@ -83,6 +83,14 @@ regression testing
   A regression test will cover every feature, new and old, along with bug fix
   checks to make sure bugs did not reappear in the software.
 
+design patterns
+===============
+- slow tests and fast tests.
+
+  * integration/functional/system/regression tests can be slow.
+
+  * unittests (both low-level modular tests and high-level functional tests)
+    must be fast.
 
 References
 ==========

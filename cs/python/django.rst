@@ -6709,6 +6709,18 @@ testing-purpose HttpResponse attributes
 
 - ``resolver_match``.
 
+test fixtures
+-------------
+- 避免使用 json test fixtures. It makes test
+  
+  * less readable (because fixture's content is opaque in test code)
+
+  * less maintainable (如果多个 test case 需要使用类似的却不完全相同的
+    json fixtures, 则需要复制整个 json file. 再做修改.)
+
+  最好在 test case 中配置 fixture data, 使用例如 ``unittest.TestCase.setUp()``,
+  ``django.TestCase.setUpTestData()``. 以及使用 factory boy.
+
 test runners
 ------------
 

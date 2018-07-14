@@ -345,7 +345,9 @@ design patterns
   * 对于功能性测试, 一个 test case 只测试一个 user story. 注意到一个 user story 
     可能很长, 需要检测很多个功能点.
 
-  * 对于单元测试, 一个 test case 只测试被测对象的一个行为点.
+  * 对于单元测试, 一个 test case 只测试被测对象的一个行为点. 对一个行为点的
+    检测, 应该只需要一个或少量几个相关的 assertions. 避免多个 assertions 串在
+    一起.
 
   意义:
   
@@ -532,6 +534,22 @@ mock
   It’s better to test behaviour, not implementation details; test what happens,
   not how you do it. Mocks often end up erring too much on the side of the
   "how" rather than the "what".
+
+test fixtures
+-------------
+- A test fixture is a fixed state of a set of objects used as a baseline for
+  running tests.
+
+- The purpose of a test fixture is to ensure that there is a well known and
+  fixed environment in which tests are run.
+
+- Fixture can be not only database states, but also general precondition setup
+  in all other aspects.
+
+- The benefits of test fixture.
+
+  * reduce duplication and automatically ensure baseline environment is always
+    set up before running a test.
 
 references
 ==========
