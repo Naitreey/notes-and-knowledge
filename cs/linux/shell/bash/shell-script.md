@@ -1,11 +1,203 @@
-# language
-## overview
+# overview
 
--   bash/shell script is an interpreted language.
-    并且不包含预编译阶段. 不仅如此, bash 是依次对每个 logical line 进行 read, parse, execute
-    操作的. 而不是对整个脚本进行这三个步骤. 所以只有执行到特定一行时才知道该行有没有语法错误.
-    (这也给调试带来了很多麻烦.) 这是与 Python, JavaScript 等 interpreted language 的一个区别.
-    [[interpreted]](#interpreted).
+-   BASH -- Bourne-Again SHell
+
+-   bash/shell script as a language is an interpreted command language.
+
+-   Bash as a shell is the interpreter of the bash command language.
+
+    *   bash 对脚本的解析不包含预编译阶段. 不仅如此, bash 是依次对每个 logical
+        line 进行 read, parse, execute 操作的. 而不是对整个脚本进行这三个步骤.
+        所以只有执行到特定一行时才知道该行有没有语法错误.  (这也给调试带来了很
+        多麻烦.) 这是与 Python, JavaScript 等 interpreted language 的一个区别.
+        [[interpreted]](#interpreted).
+
+-   Bash incorporates useful features from Korn shell `ksh`, C shell `csh` and
+    Z shell `zsh`.
+
+# terms
+
+```
+                   +------------+       token       +--------------+
+                   |                                               |
+                   |                                               |
+                   |                                               |
+                   +                                               +
+
+    +------+     word     +-------+                  +-----+    operator    +---------+
+    |                             |                  |                                |
+    |                             |                  |                                |
+    |                             |                  |                                |
+    |                             |                  |                                |
+    +                             +                  +                                +
+
+identifier                     value           control operator             redirection operator
+
+```
+
+-   token. A sequence of characters considered a single unit by the shell. It's
+    a word or a operator.
+
+-   word. A sequence of characters treated as a unit by the shell. Words are
+    separated by metacharacters.
+
+-   reserved word. A word that is reserved by shell.
+
+-   identifier (name). A word consisting solely of letters, numbers, and
+    underscores, and beginning with a letter or underscore. Names are used as
+    shell variable and function names.
+
+-   operator. A control operator or redirection operator. Operators consist of
+    one or more unquoted metacharacter.
+
+-   control operator. A token that performs execution controls.
+
+-   metacharacter. A character that, when unquoted, separates words. the followings
+    are metacharacters:
+
+    ```sh
+     (blank: space or tab) | & ; ( ) < >
+    ```
+
+-   blank. a space or tab char.
+
+## examples
+
+```sh
+git config --global user.name 'Naitree Zhu'      # 5 tokens: 5 words
+sleep 10 && foo=1 systemctl poweroff&            # 7 tokens: 5 words, 2 operators
+```
+
+# shell's execution workflow
+
+1.  Read input. from stdin, or a file argument, or argument string of `-c` option.
+
+2.  Breaks input into tokens (obeying quoting rules), 识别 words and operators.
+    即 lexical analysis.
+
+    *   Aliases are expanded in this stage. 因 alias 中可以包含各种复杂的多种 words
+        and operators.
+
+3.  Parse tokens into command structures (including simple and compound commands).
+    此时只是界定出了不同命令的分界点, 以及 compound command 与 simple commands 的嵌套
+    结构. 对每条 simple command 本身的机构还不清楚.
+
+4.  对于每条 simple command,
+
+    *   确定是否有 variable assignments. 只有 leading words of the form
+        `identifier=value` 被认为是变量赋值, 其中 `identifier` 必须是合法的
+        identifier. 若有, 保留至命令执行阶段, 并从 simple command 中
+        删除.
+
+    *   确定是否有 redirections. 若有, 相关的 operator & operands 保留到命令
+        执行阶段使用, 并从 simple command 中删除.
+
+    *   Perform various shell expansions. If any words remain after expansion,
+        the first word is taken to be the name of the command and the remaining
+        words are the arguments.
+
+        由于 expansion 时 assignment & redirection 已经移除, 所以它们的位置不影响
+        command name 的确定.
+
+5.  Perform redirections. From left to right.
+
+    由于 redirection 在命令执行之前进行, 所以类似以下操作不成立:
+
+    ```sh
+    grep pattern file >file
+    ```
+
+6.  如果 command name 找到了, execute command, pass in arguments. variable
+    assignment 修改命令的环境变量. 如果 command name 没有找到, variable
+    assignment 修改当前 scope 的 shell variables.
+
+7.  If command executes, wait for command to complete or carry on (for background job).
+
+## examples
+
+```sh
+read -r name version _ < <(uname -sv)
+
+tot() { IFS=$'\n' read -d "" -ra pkgs < <("$@");((packages+="${#pkgs[@]}"));pac "${#pkgs[@]}"; }
+
+IFS=$'\n' read -d "" -ra gpus <<< "$gpu_cmd"
+
+IFS=$'\n'"| " read -d "" -ra mem_stat <<< "$(svmon -G -O unit=MB)"
+
+read -r w h \
+    < <(xwininfo -root | awk -F':' '/Width|Height/ {printf $2}')
+
+term_font="$(grep -i "${term/d}"'\**\.*font' <<< "$xrdb")"
+
+has() { type -p "$1" >/dev/null && manager="$_"; }
+        has "snap" && ps -e | grep -qFm 1 "snapd" >/dev/null && tot snap list && ((packages-=1))
+
+mpc &>/dev/null && song="$(mpc -f '%artist% \n %album% \n %title%' current)"
+    type -p df &>/dev/null ||\
+        { err "Disk requires 'df' to function. Install 'df' to get disk info."; return; }
+
+[[ "$image_backend" != "off" ]] && ! type -p convert &>/dev/null && \
+    { image_backend="ascii"; err "Image: Imagemagick not found, falling back to ascii mode."; }
+```
+
+# quoting
+
+# variables
+
+# flow control
+
+# functions
+
+# builtins
+
+-   Builtins are commands that are actually executed by bash shell itself, rather than
+    by an external program.
+
+-   Why bash needs builtin commands:
+
+    *   some functionalities need to modify the runtime environment of the shell itself.
+        Therefore impossible to implement as separate utility. E.g., `cd` changes
+        shell's CWD.
+
+    *   The essential language constructs needs to be executed by shell itself, because:
+
+        -   Language constructs shows up every frequent in shell script. This
+            is the most efficient way, without spawning a subprocess.
+
+        -   Language constructs control the workflow of command execution. 这属于控制类的
+            meta operation. 因此应该由 shell 统一控制. 例如:
+
+            ```sh
+            if true; then
+                cmd1
+            else
+                cmd2
+            fi
+            ``` 
+
+            应该是 shell 去控制该执行 cmd1 or cmd2, 并且由 shell 直接去 spawn cmd1 or cmd2.
+            而不是由 `if` program 去控制和执行.
+
+# job control
+
+-   A job is a pipeline and any processes descended from it, that are all in
+    the same process group.
+
+
+# command line editing
+
+# command history
+
+# alias
+
+# compatibility
+
+-   basically compatible with Bourne shell `sh`.
+-   POSIX compliant.
+
+--------------------------------
+
+# language
 
 ## scope
 
