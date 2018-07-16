@@ -167,6 +167,52 @@ Strategies
 
 ORMs
 ----
+对于配合不同的 ORM 使用时, 需要使用不同的 Factory subclass. 这些子类对
+每个 ORM 的特性有个性化的处理.
+
+django ORM
+^^^^^^^^^^
+
+DjangoModelFactory
+""""""""""""""""""
+- factory.django.DjangoModelFactory.
+
+- ``create`` strategy uses ``Model.objects.create()`` or
+  ``Model._default_manager.create()``.
+
+- If the factory contains at least one ``RelatedFactory`` or ``PostGeneration``
+  attributes, the base object will be ``.save()``-ed again to update fields
+  possibly modified by post-generation hooks.
+
+DjangoOptions
+"""""""""""""
+DjangoModelFactory automatically use DjangoOptions as its Meta inner class.
+
+该 Meta class 支持以下特性
+
+- ``Meta.model`` 支持指定字符串形式的 ``app_label.Model``
+
+- ``Meta.database`` specify the database to use.
+
+- ``Meta.django_get_or_create``. Specify the fields to be used for
+  filtering in ``Model.objects.get_or_create()``. 指定这个属性后, 创建 instance
+  会使用 ``get_or_create()``, 而不使用 ``create()``.
+
+extra attribute classes
+""""""""""""""""""""""""
+
+- FileField.
+
+- ImageField.
+
+disabling signals
+""""""""""""""""""
+- If signals are used to create related objects, they may interfere with
+  RelatedFactory. 如果一个 factory 中指定了 RelatedFactory, (反向) 相关联
+  的实例也会自动创建, 这是由 factory boy 实现的. 所以在 django 系统中设置
+  的 signal 就需要 disable 掉.
+
+- ``mute_signals(signal1, ...)``. a decorator and context manager.
 
 Debugging
 ---------
