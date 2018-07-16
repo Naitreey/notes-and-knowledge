@@ -92,6 +92,11 @@ design patterns
   * unittests (both low-level modular tests and high-level functional tests)
     must be fast.
 
+- 小心不要直接 running integration/system tests against clones of production data.
+  至少要将 sensitive content 以及用户真实 profile 等信息做处理后再使用. 这不仅仅是
+  避免隐私泄露. 更重要的是, 避免测试操作直接影响真实用户, 例如给真实用户发了邮件、
+  短信等.
+
 References
 ==========
 
