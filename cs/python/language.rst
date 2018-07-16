@@ -89,6 +89,8 @@ class
 
   最后返回 ``instance`` 给 caller.
 
+  这套实例化逻辑在 ``type.__call__`` 中定义.
+
 - attribute reference.
 
   搜索顺序. 首先搜索 class ``__dict__``, 然后搜索 parent class ``__dict__``
@@ -548,7 +550,8 @@ class creation procedure
 
   * ``metaclass.__new__``, 创建 class object.
 
-  * ``metaclass.__init__``, customize class object.
+  * ``cls.__init__`` (instance method, 此时 instance 为 class), customize class
+    object.
 
   若任意 method 中包含 ``super``, 过程中创建 implicit ``__class__`` reference,
   指向创建的 class object. 这用于 argumentless ``super()``.
