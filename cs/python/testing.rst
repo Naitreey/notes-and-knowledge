@@ -105,13 +105,23 @@ Meta options
 
 - ``strategy``. factory's default strategy.
 
+Parameters
+^^^^^^^^^^
+
+Traits
+^^^^^^
+
+declarations
+------------
+- These are special class-level declarations.
+
 lazy attributes
----------------
+^^^^^^^^^^^^^^^
 - Some attributes (such as fields whose value is computed from other elements)
   will need values assigned each time an instance is generated.
 
 LazyFunction
-^^^^^^^^^^^^
+""""""""""""
 - Useful when the value of a field is determined dynamically. So it can be 
   simulated by a function.
 
@@ -119,15 +129,12 @@ LazyFunction
   use LazyAttribute.
 
 LazyAttribute
-^^^^^^^^^^^^^
+"""""""""""""
 
 - When the value of a field is determined dynamically and related to the
   specific instance.
 
 - ``lazy_attribute()`` decorator.
-
-Sequential values
------------------
 
 Sequence
 ^^^^^^^^
@@ -137,19 +144,56 @@ Sequence
 - ``sequence()`` decorator
 
 Relational attributes
----------------------
+^^^^^^^^^^^^^^^^^^^^^
 
 SubFactory
-^^^^^^^^^^
+""""""""""
 
 RelatedFactory
-^^^^^^^^^^^^^^
+""""""""""""""
 
-Parameters
-----------
+post-generation hooks
+^^^^^^^^^^^^^^^^^^^^^
+- 在生成实例之后执行的进一步自定义处理和定义.
 
-Traits
-------
+- usage examples.
+
+  * 在生成实例后, 设置 ManyToMany relationship.
+
+- Post-generation hooks are called in the same order they are declared in the
+  factory class, so that functions can rely on the side effects applied by the
+  previous post-generation hook.
+
+- utils.
+  
+  * ``PostGeneration``. a BaseDeclaration subclass.
+
+  * ``post_generation``. a decorator that functions exactly like PostGeneration
+    class.
+
+- define post-generation hook.
+
+  * define a callback function in Factory class, of the form:
+
+    .. code:: python
+
+      @post_generation
+      def callback(obj, create, extracted, **kwargs):
+          pass
+
+  * the name of callback function becomes a valid kwarg of Factory constructor.
+
+  * During factory call, if the kwarg is passed value, it will become the
+    value of ``extracted`` arg of the callback. Otherwise ``extracted`` is
+    None.
+
+  * Any argument starting with ``<callback>__<field>`` will be extracted, its
+    ``<callback>__`` prefix removed, and added to the ``kwargs`` passed to the
+    callback.
+
+  * When post-generation hook is called, ``obj`` is the instance created by
+    base factory; ``create`` is True if the strategy is "create", otherwise
+    False.
 
 Strategies
 ----------
@@ -172,6 +216,8 @@ ORMs
 
 django ORM
 ^^^^^^^^^^
+- 在 app 中, 一系列测试共用的 factories 应该放在一个单独的 ``factories.py``
+  文件中.
 
 DjangoModelFactory
 """"""""""""""""""
@@ -214,6 +260,20 @@ disabling signals
 
 - ``mute_signals(signal1, ...)``. a decorator and context manager.
 
+Faker
+-----
+- ``factory.Faker`` is a factory declaration subclass, utilizing ``faker``
+  module to provide more real fake data.
+
+constructor
+^^^^^^^^^^^
+
+- ``provider``
+
+- ``locale``
+
+- ``**kwargs``. provider's optional arguments.
+
 Debugging
 ---------
 
@@ -230,3 +290,112 @@ Debugging
   logger = logging.getLogger('factory')
   logger.addHandler(logging.StreamHandler())
   logger.setLevel(logging.DEBUG)
+
+faker
+=====
+
+overview
+--------
+- Usage of faker module: generate fake data.
+
+- When you needs fake data:
+
+  * testing.
+
+  * 业务逻辑示例展示.
+
+  * anonymize data taken from a production service.
+
+Faker
+-----
+- create a ``Faker`` object, call its methods to get the specified
+  type of fake data.
+
+constructor
+^^^^^^^^^^^
+- locale. specify locale of fake data. default ``en_US``.
+
+attributes
+^^^^^^^^^^
+
+- ``random``. The ``random.Random`` instance used to generate fake data.
+
+methods
+^^^^^^^
+
+- ``add_provider()``.
+
+- ``seed(seed)``. seed the shared random number generator. This is useful to
+  ensure the reproducibility of fake data during unit test.
+
+- ``seed_instance(seed)``. Use a private ``random.Random`` instance rather
+  than the shared one.
+
+providers
+---------
+
+- a provider provides a classification of fake data.
+
+- builtin providers are in ``faker.providers`` subpackage.
+
+internet
+^^^^^^^^
+- ``user_name()``
+
+- ``email(domain=None)``. domain 若未指定, 可能是随机生成或使用 free emails.
+
+- ``ascii_email()``. 保证 ascii.
+
+- ``safe_email()``. domain 全是 ``example.%s``. 保证不真实存在.
+
+- ``ascii_safe_email()``.
+
+- ``free_email()``. domain 是几个免费邮箱: gmail, yahoo, hotmail.
+
+- ``ascii_free_email()``.
+
+- ``company_email()``. domain 随机生成.
+
+- ``ascii_company_email()``.
+
+misc
+^^^^
+
+- ``password(length=10, special_chars=True, digits=True, upper_case=True, lower_case=True)``.
+
+
+custom provider
+^^^^^^^^^^^^^^^
+- Create a subclass of ``BaseProvider``
+
+- define fake provider as a method.
+
+- ``Faker.add_provider()`` to faker instance.
+
+generator
+---------
+- By default all generators share the same ``random.Random`` instance,
+  ``faker.generator.random``.
+
+locales
+-------
+
+CLI
+---
+::
+
+  faker [-h] [--version] [-o output]
+        [-l {bg_BG,cs_CZ,...,zh_CN,zh_TW}]
+        [-r REPEAT] [-s SEP]
+        [-i {package.containing.custom_provider otherpkg.containing.custom_provider}]
+        [fake] [fake argument [fake argument ...]]
+
+- ``-l``. locale
+
+- ``-r``. repeat number of entry.
+
+- ``-s``. separator between entries.
+
+- ``fake``. fake provider name.
+
+- ``argument``. provider's optional argument.
