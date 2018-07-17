@@ -4583,7 +4583,7 @@ connection settings
 mysql
 """"""
 
-* 配置项加载顺序. (优先级低至高.)
+* 对于 mysql, 配置值加载顺序. (优先级低至高.)
 
   1. MySQL option files. 因为 mysqlclient 调用 libmysqlclient C API
      ``mysql_options()``, 加载各种 mysql 配置文件. 这里关注的是配置文件中
@@ -4595,11 +4595,10 @@ mysql
      包含::
 
       'OPTIONS': {
-          # the following is default for django2.0+
+          # "read commited" is default for django2.0+
           'isolation_level': "read committed",
           'charset': "utf8mb4",
       }
-       
 
 * 保证服务端 ``sql_mode`` 开启了 STRICT_TRANS_TABLES. 对于 mysql 5.7+ 这是
   默认值, 因此不用配置.
@@ -4619,8 +4618,19 @@ mysql
   所以不能用 mysql default ``repeatable read``. 在 django 2.0+, 连接时默认会
   设置 mysql isolation level 为 read committed.
 
-* 保证 mysqlclient 和服务端之间通过 utf8mb4 charset 通信. 由于不能保证
-  django server 运行的环境中有 mysql 配置文件, 因此需要在这里配置.
+* 使用 ``charset`` OPTIONS key 保证 mysqlclient 和服务端之间通过 utf8mb4
+  charset 通信. 由于不能保证 django server 运行的环境中有 mysql 配置文件, 因此
+  需要在这里配置.
+
+* 对于测试数据库, 也需要保证默认 charset 为 utf8mb4, 以及合适的 collation. 如果
+  mysqld system variable 已经设置 ``character_set_server`` 为 utf8mb4, 并设置了
+  合适的 ``collation_server``, 则不需要单独设置.  否则的话, 需要单独设置一个
+  ``TEST`` dict::
+
+    'TEST': {
+        'CHARSET': "utf8mb4",
+        'COLLATION': "utf8mb4_unicode_520_ci", # 或其他更优化的 collation.
+    }
 
 sqlite3
 """"""""
@@ -7001,14 +7011,25 @@ django-nested-admin
 django-mysql
 ------------
 
-additional checks
-^^^^^^^^^^^^^^^^^
+system checks
+^^^^^^^^^^^^^
+
+Strict Mode
+"""""""""""
 
 - mysql strict mode check: django_mysql.W001
 
+InnoDB Strict Mode
+""""""""""""""""""
+
 - InnoDB strict mode check: django_mysql.W002
 
-- utf8mb4 charset check: django_mysql.W003
+utf8mb4
+"""""""
+
+- system check id: ``django_mysql.W003``
+
+- utf8mb4 charset check.
 
 queryset extensions
 ^^^^^^^^^^^^^^^^^^^

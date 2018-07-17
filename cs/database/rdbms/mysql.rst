@@ -915,6 +915,17 @@ ALTER DATABASE
 
 - If database name is omitted, use current default database.
 
+SHOW CREATE DATABASE
+^^^^^^^^^^^^^^^^^^^^
+::
+
+  SHOW CREATE DATABASE [IF NOT EXISTS] <db_name>
+
+- 输出创建该数据库使用的 CREATE DATABASE statement.
+
+- default charset and collation 也会输出. 如果 collation 部分
+  没有显示, 说明使用的是相应 charset 默认的 collation.
+
 Data Manipulation Language (DML)
 --------------------------------
 
@@ -1150,7 +1161,11 @@ SHOW CHARACTER SET
 
 - show available character sets.
 
-- ``Maxlen`` column 是单个字符所需最大 bytes.
+- 输出内容包括:
+
+  * ``Maxlen`` column 是单个字符所需最大 bytes.
+
+  * ``Default collation`` of the charset.
 
 SHOW COLLATION
 ^^^^^^^^^^^^^^
@@ -1252,6 +1267,22 @@ utf8mb4
   characteristics: same code values, same encoding, same length.
 
 - For supplementary characters, utf8mb4 requires 4 bytes.
+
+collations
+""""""""""
+- Never use ``utf8mb4_general_ci``, use ``utf8mb4_unicode_ci`` or better
+  ``utf8mb4_unicode_520_ci``, or even better ``utf8mb4_0900_ai_ci``.
+  See also [SOUTF8Difference]_.
+
+- For 8.0+, ``utf8mb4_0900_ai_ci`` is the default collation for utf8mb4.
+
+- 如何修改成更好的 collation?
+ 
+  * 考虑到不同 mysql 版本, utf8mb4 的 collation 总是变 (不断变得更好), 最简单
+    的办法是不在任何层设置明确的 collation, 依赖数据库升级后自动升级默认的
+    collation. 然后重新创建数据库, 导入数据. 这个前提是数据不太庞大.
+
+  * 如果数据太多, 则只能挨个 ``ALTER DATABASE``, ``ALTER TABLE``.
 
 convert utf8mb3 to utf8mb4
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1420,7 +1451,6 @@ User account
 
 User privileges
 ^^^^^^^^^^^^^^^
-
 
 Account SQL statements
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -2788,3 +2818,4 @@ References
 .. [PerconaXbstream] `The xbstream binary <https://www.percona.com/doc/percona-xtrabackup/LATEST/xbstream/xbstream.html>`_
 .. [SOCharVarchar] `What are the use cases for selecting CHAR over VARCHAR in SQL? <https://stackoverflow.com/questions/59667/what-are-the-use-cases-for-selecting-char-over-varchar-in-sql>`_
 .. [SEMysqlRepl] `How can you stop MySQL slave from replicating changes to the 'mysql' database? <https://dba.stackexchange.com/questions/584/how-can-you-stop-mysql-slave-from-replicating-changes-to-the-mysql-database>`_
+.. [SOUTF8Difference] `What's the difference between utf8_general_ci and utf8_unicode_ci <https://stackoverflow.com/questions/766809/whats-the-difference-between-utf8-general-ci-and-utf8-unicode-ci>`_
