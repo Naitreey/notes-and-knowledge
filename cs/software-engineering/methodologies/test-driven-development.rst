@@ -154,7 +154,7 @@ general and detailed workflow
 
   * Working incrementally and step-by-step, with each of them should be small.
 
-- detail (Double-Loop TDD).
+- detail (Outside-In Double-Loop TDD).
 
   |tdd-workflow|
 
@@ -200,6 +200,9 @@ general and detailed workflow
   不可避免地需要反过来调整设计, 调整测试代码. 在这个尝试性的阶段, 同时修改代码
   实现和测试用例是允许的. 当初始设计基本确定之后, 需要保证不同时修改测试和实现,
   进入 Red/Green/Refactor 流程.
+
+Outside-In vs Inside-Out
+------------------------
   
 With refactoring
 ----------------
