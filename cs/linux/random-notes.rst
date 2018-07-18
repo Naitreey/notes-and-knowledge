@@ -1,28 +1,8 @@
-- why do you love linux?
+- why do I love linux?
 
   * so simple, yet so powerful. unix 思想有很好的一般性.
 
   * 小身材, 大有不同.
-
-- Linux 工作环境优化.
-
-  经过我长时间的不懈努力, 一些日常接触的、非开发直接相关的方面, 仍然
-  难以让我满意, 不断给我添麻烦. 难以解决的问题:
-
-  * 我使用 i3wm, gtk 应用和 qt5 应用难以风格一致. 即使用了 qt5ct 让主体
-    一致了, 也难以让 font 一致. 除非我花时间弄清除它们背后的所有机制.
-
-  * Linux wifi sucks. Support for 802.11ac is really unstable.
-
-  * 除非理解清除背后的各种机制 (CUPS, SAMBA, drivers, etc.), 在 i3 下
-    难以配置成功 windows 网络打印机.
-
-  * no decent pdf viewer AT ALL. okular 只是勉强能用, evince 就别提了.
-
-  方案.
-  
-  * mac 配合 Linux desktop VM. 也许还可以考虑 mac 下直接运行 x windows.
-
 
 - 线程的目的不仅仅是为了 *同时的* 并行计算, 而是为了构建多个独立的运算单元.
   将这些运算单元分配到不同的 CPU 核上才具有 "同时并行" (parallel computing) 的意义.
@@ -405,26 +385,3 @@
 
 - NSS (Name Service Switch). NSS 整合了各种 name services 即 directory services,
   相当于一个统一的 API. 这包括 DNS, LDAP, 等等.
-
-distributions
-=============
-Arch Linux
-----------
-
-installation
-~~~~~~~~~~~~
-- packages to install at bootstrap. base base-devel gnome lightdm
-  lightdm-gtk-greeter iw wpa_supplicant gvim
-
-Debian, Ubuntu
---------------
-
-RHEL, CentOS, Fedora
---------------------
-
-Alpine Linux
-------------
-
-- alpine linux features small, simple and secure.
-
-- alpine 常用于作为容器基镜像, 或者其他需要 minimal linux environment 的情况.

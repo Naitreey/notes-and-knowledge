@@ -270,3 +270,22 @@
   text fields. Once fielddata has been loaded into the heap, it remains there for the
   lifetime of the segment. Also, loading fielddata is an expensive process which can
   cause users to experience latency hits. 
+
+advantages and disadvantages
+============================
+- 明显优点
+
+  1. 完全基于分布式的理念而设计. ES 中的各种操作都考虑到了分布式所带来的问题 (节点同步、更新冲突等),
+     es 多节点之间涉及的问题很大程度上都能够自动化地解决, 对用户只暴露出十分简单、方便的 API 和配置.
+
+  2. 匹配度概念和模糊搜索. ES 中每个 field 都可以建立 inverted index, 经过 tokenization + analysis
+     (分词和分析) 等操作, 一个 field 的值分成多个 token, 在 inverted index 中出现多次. 对搜索输入也
+     做相同的操作, 从而允许计算匹配程度.
+
+  3. 内存占用小. es 的各种 index 定时 flush 到硬盘上. 内存中只保留比如半个小时的索引数据.
+
+- 缺点
+
+  1. 搜索语法费劲.
+
+  2. 有点慢. (因为不占内存?)
