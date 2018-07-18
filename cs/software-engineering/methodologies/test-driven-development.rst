@@ -117,6 +117,13 @@ questions and concerns
   第一次实现时只要通过测试即可, 如果能一次性实现好, 当然最好. 只是说, 不需要
   强求一次性达到最佳实现, 快速做好第一版实现, 如果需要 refacor, 就去 refactor.
 
+- TDD 与创造性和功能的一般性. TDD 强调 YAGNI, 鼓励 (合理设计的) 代码仅仅能够通
+  过测试即可. 考虑到企业业务逻辑快速和频繁变化的 情景下是合适的. 但不要将这个思
+  路绝对化. 该一般化的时候就要一般化, 该创造性地实现一个牛逼玩意儿时还是要发挥
+  最大的创造性.
+
+  或者说, TDD 不该抑制创造性和更好的设计.
+
 terminology
 -----------
 
@@ -203,7 +210,46 @@ general and detailed workflow
 
 Outside-In vs Inside-Out
 ------------------------
+- Outside-In TDD 的思路是由外至内地去实现 -- (由宏观需求触发) 交互/展示/UI 层,
+  view/controller layer, model layer 等 -- 每一个外层都为它所依赖的内层提需求, 
+  每一个内层的实现都完全是为了满足已知的需求而实现, 而不是 trying to anticipate
+  the usage pattern, trying to anticipate the upper layer's requirement.
+
+  * Outside-In TDD is also called "programming by wishful thinking". We start
+    writing code at the higher levels based on what we wish we had at the lower
+    levels, even though it doesn’t exist yet.
   
+    Actually, any kind of TDD involves some wishful thinking. We’re always
+    writing tests for things that don’t exist yet.
+  
+  * Outside-In TDD 让程序员关注于那些对用户直接可见的功能部分, 要小心不要忽视了
+    不对用户直接可见的功能部分, 例如 security features. 对于这些功能, 必须提醒
+    自己要去实现.
+  
+- Inside-Out TDD. the natural way most people intuitively work before they
+  encounter TDD. After coming up with a design, the natural inclination is to
+  implement it starting with the innermost, lowest-level components first.
+
+  * It feels comfortable because it means you’re never working on a bit of code
+    that is dependent on something that hasn’t yet been implemented. Each bit
+    of work on the inside is a solid foundation on which to build the next
+    layer out.
+
+  * The most obvious problem with inside-out is that it requires us to stray
+    from a TDD workflow. Instead of solving the most imminent testing failure,
+    we decide to ignore that and go off to the lowest level to build from
+    there (with test/code cycle).
+
+  * Inside-Out may build inner components that are more general or more capable
+    than we actually need, which is a waste of time. It may build inner
+    components' APIs that is incompetent for upper layer's use. Even worse,
+    the lower level components might not even solve the upper layer's problem.
+
+- 注意无论是 Outside-In 还是 Inside-Out, 这些都是方法. 我们的目的是达成一个 合
+  理的设计和优质的实现. 所以实践中, 我们可能就会 out-in, in-out, out-in, etc.
+  等一系列过程, 最终达到一个很好的结果. 这是一个灵活的随机应变的过程. 即 agile
+  的本质. 但总体来讲, 目前我倾向于整体上以 Outside-In TDD 为主.
+
 With refactoring
 ----------------
 - When refactoring, the code should starts with working state, then move

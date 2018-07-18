@@ -3,12 +3,17 @@ overview
 
 concepts
 --------
-作为一个 web server or web framework, django 的各种主要功能和模块,
-都是在从 receive request 开始, 至 send out response 结束, 这个流程中
-做文章的.
+- 作为一个 web server or web framework, django 的各种主要功能和模块,
+  都是在从 receive request 开始, 至 send out response 结束, 这个流程中
+  做文章的.
 
-一个 django 应用, 或任何一个 web app, 一旦运行起来, 就只做一件事:
-接收请求 -- 处理请求 -- 返回响应.
+  一个 django 应用, 或任何一个 web app, 一旦运行起来, 就只做一件事:
+  接收请求 -- 处理请求 -- 返回响应.
+
+- django 的架构 MVC/MTV.
+
+  * Template 属于展示层, 它是一个功能实现的最外层. View 属于控制层 (controller).
+    Model 属于 model 层, 它在最里面.
 
 from request to response, full workflow
 ---------------------------------------

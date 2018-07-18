@@ -16,6 +16,8 @@
   application. YAGNI is the mantra we use to resist our overenthusiastic
   creative urges.
 
+- 但我要说, YAGNI, 但你需要的时候, 就要很好地完成它.
+
 - Principle: The agile way of development, and the agile way of life in
   general.
 
