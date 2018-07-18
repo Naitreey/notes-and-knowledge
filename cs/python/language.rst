@@ -542,7 +542,10 @@ class creation procedure
 - 调用 ``metaclass.__prepare__`` class method 准备 class namespace (pre-populate
   it), 返回 namespace.
 
-- Execute class body in the created namespace.
+- Execute class body in the created namespace. 注意, class body 的定义本身不过
+  是一个 namespaced execution environment. class body 包含的内容不需要局限于
+  对 class members 的定义. Everything that can be done at module namespace
+  level, can be similarly done in a class namespace.
 
 - 执行 ``name = metaclass(name, bases, namespace, **kwargs)`` 创建 class object.
   这实际上就是按照正常的实例化流程进行 (metaclass 仍然是 object 的子类, 遵从
@@ -570,7 +573,8 @@ instance method 定义第一个参数是 ``cls``, class method 的第一个
 
 注意 metaclass 仍然是 object 的子类. 遵从一般的逻辑.
 
-methods.
+metaclass methods
+"""""""""""""""""
 
 - ``metaclass.__prepare__(metaclass, name, bases, **kwargs)``.
   这是一个 class method. 定义时需要使用 classmethod decorator.
@@ -588,6 +592,17 @@ methods.
   语境下, 第一个参数是现在变成了 metaclass. 后面三个 positionals 形式和意义
   是固定的. 使用 ``metaclass(...)`` 手动提供或使用 class definition statement
   由解释器自动添加. kwargs 是在 class definition line 上指定的.
+
+methods
+^^^^^^^
+- why in python, we need ``self`` (or whatever you like) as the first parameter
+  of method, rather than making it implicit (like in Java or JavaScript)?
+
+  * This is an accidental good design. Guido 在设计 python 时, 一开始没有想到
+    要 class. 后来只花了一天引入 class. What he basically did was indent all
+    module-level functions into a new namespace. But he needed a way to pass
+    instance into method via ``.`` operator, so ``self`` is introduced as a
+    quick fix.
 
 Expressions
 ===========
