@@ -299,11 +299,10 @@ mpc &>/dev/null && song="$(mpc -f '%artist% \n %album% \n %title%' current)"
 *   函数最好有明确的返回值
 *   构造 associative array 是从 sed/awk 等工具中一次性返回多个值的清晰方法; 此外也可以将输出构造成 key=value 形式并结合 eval 来赋值
 *   you can never be too careful dealling with `>` and `>>`, 看清楚自己用的他妈是哪个
-*   never use "``" for command substitution, it's not properly nested. Use `$()`
+*   never use `\`\`` for command substitution, it's not properly nested. Use `$()`
 *   方便地输出多行信息可以使用 `cat` + here document 的方式.
 *   `hash` builtin 的用处: 提高 shell 找命令的速度. 若将一个命令在 PATH 的不同路径之间移动,
-    可能需要更新 hash.
-`h  ash` 还可以用来临时地让某个程序可以被 shell 找到, 而无需修改 PATH.
+    可能需要更新 hash. `hash` 还可以用来临时地让某个程序可以被 shell 找到, 而无需修改 PATH.
 *   一些有助于发现变成错误、规范化流程的脚本初始设定:
     ```
     set -o pipefail
