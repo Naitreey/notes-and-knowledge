@@ -150,8 +150,36 @@ user-defined function
 
   * ``__kwdefaults__``. storage for defaults of keyword-only parameters.
 
+class method object
+^^^^^^^^^^^^^^^^^^^
+- typical usage.
+
+  * as alternative constructor for the class. The ``cls`` argument is the
+    key for subclassing.
+    
+    如果一个 class 确实需要 从概念上完全不同的构造方式, 则完全可以创建多个
+    ``__init__`` 之外的 class method 作为 alternative constructor. (When they
+    want different ways, give it to them.)
+
+    例如, ``datetime.datetime`` 的多个 constructor.
+
+static method object
+^^^^^^^^^^^^^^^^^^^^
+- typical usage.
+
+  * 当一个函数更多的是一种 utility 的地位, 与实例无关, 与 class 也无关, 并且也
+    确实不需要子类去自定义的时候. 就可以用 static method.
+
+    那么, 既然跟类都没有关系, 干嘛要放在类里面呢? 一个解释是, 有时候这样更便于
+    用户找到他所需要的 utility, 并且 cls name 为这个 utility 提供了一个有意义
+    的 context, 用以和其他类似的 utility 做区分. 实际上如果合适的话也可以放在
+    module-level.
+
 instance method
 ^^^^^^^^^^^^^^^
+- A instance method can be created via a function, a classmethod object,
+  etc. that are defined as attribute of class object.
+
 - 从一个 instance method 中可以获取两方面信息:
 
   * 所属的 class instance or class (if classmethod).
@@ -221,9 +249,10 @@ instantiation
 
 attribute store
 ^^^^^^^^^^^^^^^
-以下属性在非 ``__slots__`` objects 上有.
+- ``object.__dict__``. 一个对象自身存储的属性. 如果 class 定义了 ``__slots__``,
+  实例就没有 dict store.
 
-- ``object.__dict__``. 一个对象自身存储的属性.
+- ``__slots__``.
 
 object identification
 ^^^^^^^^^^^^^^^^^^^^^
@@ -616,6 +645,25 @@ Atoms
   scope rule. 与一般的 for loop 不同, comprehension 中的 loop variable is scoped
   inside the expression itself, whereas for loop does not build a scope (python
   does not have block scope).
+
+identifiers
+^^^^^^^^^^^
+- name mangling. Occurs when an identifier that textually occurs in a class
+  definition begins with two or more underscore characters and does not end in
+  two or more underscores. Basically, ``__name`` in ``cls`` becomes
+  ``_cls__name``.
+
+  name mangling 是在 bytecode 生成之前, 类似于预处理.
+
+  如果 identifier 只有 ``_`` 组成, 不会 mangling.
+
+  什么时候使用 name mangling?
+
+  * 当我们需要指定私有成员, 从而避免子类能够无意或刻意地去 override/extend 在基
+    类中的定义.
+
+  * 当我们在实现一个函数, 如果它一定要使用在这个类中实现的方法, 而不能因为实例是
+    子类的, 就自动使用了子类中同名的方法.
 
 tuple, list, set, dict's display
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1401,6 +1449,23 @@ numeric types
     (1).is_integer # OK
     1..is_integer # OK
     1.1.is_integer # Ok
+
+descriptor types
+^^^^^^^^^^^^^^^^
+
+property
+""""""""
+
+- property and its alikes (``cached_property``, etc.) 是 python 对 attribute
+  getter/setter methods 的一个清晰而简洁的解决方案.
+
+- python 中不需要 getter/setter methods. 只需要对外开放的 attributes 以及
+  property. 通过使用 property, 一个简单的 attribute 数据可以 transparently
+  transform into a complex getter/setter combo, 而不做任何 API 改动. 仍然
+  保持整洁、简单.
+
+- 这种从 data attribute 与 getter/setter 的透明切换可以看作是 dynamic language
+  的一个 feature, 这是 compiled language 不具有的.
 
 built-in constants
 ==================

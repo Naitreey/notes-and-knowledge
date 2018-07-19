@@ -324,13 +324,17 @@ naming conventions
 - class name 使用 CamelCase 时, 注意当名字中包含缩写时, 需要将所有缩写大写,
   而不是只大写缩写的首字母, e.g., 是 ``HTTPConnection``, 不是 ``HttpConnection``.
 
+- 表示公有 API 的一部分使用 ``identifier``. 谁都可以访问.
+
 - 表示内部使用的量用 ``_name`` 命名. 如果这个量在 module level 定义,
   ``from module import *`` 不会 import 这个量. 如果这个量定义为 class
   成员, 则不是 public API 的一部分. 这个量会被子类继承, 相当于 Java 中的
   protected member.
 
-- 表示类的私有成员的量用 ``__name`` 命名. 这样的量不能在子类中直接访问 (name mangling).
-  如果某个类成员确实只应该这个类自己去使用不让子类访问, 请这样命名.
+- 表示类的私有成员的量用 ``__name`` 命名, Java 的 private member. 这样的量在
+  class 或 instance 的 namespace 中定义后, 就会被 name mangling. 不能在不失去灵
+  活性的前提下 在子类中直接访问.  如果某个类成员确实只应该这个类自己去使用不 让
+  子类访问, 请这样命名.
 
 - 避免与 keyword 冲突时, 用 ``keyword_``.
 

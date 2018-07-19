@@ -261,19 +261,6 @@
   的判断.
   ref: https://docs.python.org/3.4/whatsnew/3.4.html#other-language-changes
 
-- python class member vs java class member
-
-  ``self.__identifier`` 类似于 Java 的 private member. 这种成员只要是在 class 或
-  instance 的 namespace 中定义, 就会被 name mangling. 而且 prefix 的 class name
-  取决于 lexical scope 的类名. 因此实现了子类无法访问的 private member.
-
-  ``self._identifier`` 意在作为类似 protected member. Subclass 可以访问, 外界不该
-  (而非不能) 访问.
-
-  ``self.identifier`` 是共有成员. 谁都可以访问.
-
-  在 python class 的定义中应该遵守这个规则, 非共有成员一律以 ``_`` 起始.
-
 - 关于编译. 直接在命令行上指定的 python module (一般是可执行脚本) 的编译结果不会被
   cache 到文件系统中.
   编译的 pyc 文件是 platform-independent.
