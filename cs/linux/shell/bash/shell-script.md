@@ -72,29 +72,29 @@ sleep 10 && foo=1 systemctl poweroff&            # 7 tokens: 5 words, 2 operator
 
 1.  Read input. from stdin, or a file argument, or argument string of `-c` option.
 
-2.  Breaks input into tokens (obeying quoting rules), 识别 words and operators.
-    即 lexical analysis.
+2.  Breaks input into tokens (obeying [quoting](#quoting) rules), 识别 words
+    and operators. 即 lexical analysis.
 
-    *   Aliases are expanded in this stage. 因 alias 中可以包含各种复杂的多种 words
-        and operators.
+    *   [Aliases](#aliases) are expanded in this stage. 因 alias 中可以包含各种复
+        杂的多种 words and operators.
 
-3.  Parse tokens into command structures (including simple and compound commands).
-    此时只是界定出了不同命令的分界点, 以及 compound command 与 simple commands 的嵌套
-    结构. 对每条 simple command 本身的机构还不清楚.
+3.  Parse tokens into command structures, including [simple](#simple-commands)
+    and [compound](#compound-commands) commands. 此时只是界定出了不同命令的分界
+    点, 以及 compound command 与 simple commands 的嵌套结构. 对每条 simple
+    command 本身的机构还不清楚.
 
 4.  对于每条 simple command,
 
-    *   确定是否有 variable assignments. 只有 leading words of the form
+    *   确定是否有 [variable assignments](#variables). 只有 leading words of the form
         `identifier=value` 被认为是变量赋值, 其中 `identifier` 必须是合法的
-        identifier. 若有, 保留至命令执行阶段, 并从 simple command 中
-        删除.
+        identifier. 若有, 保留至命令执行阶段, 并从 simple command 中删除.
 
-    *   确定是否有 redirections. 若有, 相关的 operator & operands 保留到命令
-        执行阶段使用, 并从 simple command 中删除.
+    *   确定是否有 [redirections](#redirections). 若有, 相关的 operator &
+        operands 保留到命令 执行阶段使用, 并从 simple command 中删除.
 
-    *   Perform various shell expansions. If any words remain after expansion,
-        the first word is taken to be the name of the command and the remaining
-        words are the arguments.
+    *   Perform various [shell expansions](#shell-expansions). If any words
+        remain after expansion, the first word is taken to be the name of the
+        command and the remaining words are the arguments.
 
         由于 expansion 时 assignment & redirection 已经移除, 所以它们的位置不影响
         command name 的确定.
@@ -107,48 +107,86 @@ sleep 10 && foo=1 systemctl poweroff&            # 7 tokens: 5 words, 2 operator
     grep pattern file >file
     ```
 
-6.  如果 command name 找到了, execute command, pass in arguments. variable
-    assignment 修改命令的环境变量. 如果 command name 没有找到, variable
-    assignment 修改当前 scope 的 shell variables.
+6.  For simple command, try to locate the command name. If command name
+    contains `/`, 不需要定位. 否则, 按照以下步骤定位.
 
-7.  If command executes, wait for command to complete or carry on (for background job).
+    *   Use [shell function](#functions) of that name, if one exists.
 
-## examples
+    *   Use [shell builtin](#builtins) of that name, if one exists.
+
+    *   Search an in-memory hash table for remembered commands.
+
+    *   Search each directory in `$PATH`, in that order, for an executable
+        file of the same name.
+
+7.  Execute command, pass in arguments. variable assignment 修改命令的环境变量.
+    如果在 expansion 后 command name 为空, variable assignment 修改当前 scope
+    的 shell variables.
+
+8.  If command executes, wait for command to complete or carry on (for
+    background job).
+
+# quoting <a id="quoting"></a>
+
+-   不该将 quoted words 称为字符串. 在 shell language 中, 所有 words 都是字符串,
+    语言本身不包含其他任何数据类型. 所以只存在 quoted/unquoted 的字符串的区分,
+    而不存在字符串和其他数据类型的区分.
+
+# commands
+
+## simple commands <a id="simple-commands"></a>
+
+## compound compands <a id="compound-commands"></a>
+
+# variables <a id="variables"></a>
+
+## data types
+
+## variable attributes
+
+## scope
+
+bash script 使用的是 dynamic scope, 而不是 lexical scope. 因而在 name
+resolution 方面与常见 现代语言不同.
+
+name resolution 时, 依据 call stack, 从顶层 (即当前函数) 开始, 向下搜索 (caller
+方向), 直至 global scope. 若最终没找到该变量, 对于 rvalue resolution, expands
+to empty string; 对于 lvalue resolution, 在 global scope 创建该变量 (这一点类似
+js 中 lvalue 的处理).
+
+在 nested scope 中, inner scope 声明的变量在相应 scope 中覆盖 outer scope 的同
+名变量. 但只要 出了 scope (即 return to caller stack 后), outer scope 中的变量
+赋值就继续有效.
+
+以 dynamic scope 思想为基础, 我们可以理解以下几个 statement 的清晰含义
 
 ```sh
-read -r name version _ < <(uname -sv)
-
-tot() { IFS=$'\n' read -d "" -ra pkgs < <("$@");((packages+="${#pkgs[@]}"));pac "${#pkgs[@]}"; }
-
-IFS=$'\n' read -d "" -ra gpus <<< "$gpu_cmd"
-
-IFS=$'\n'"| " read -d "" -ra mem_stat <<< "$(svmon -G -O unit=MB)"
-
-read -r w h \
-    < <(xwininfo -root | awk -F':' '/Width|Height/ {printf $2}')
-
-term_font="$(grep -i "${term/d}"'\**\.*font' <<< "$xrdb")"
-
-has() { type -p "$1" >/dev/null && manager="$_"; }
-        has "snap" && ps -e | grep -qFm 1 "snapd" >/dev/null && tot snap list && ((packages-=1))
-
-mpc &>/dev/null && song="$(mpc -f '%artist% \n %album% \n %title%' current)"
-    type -p df &>/dev/null ||\
-        { err "Disk requires 'df' to function. Install 'df' to get disk info."; return; }
-
-[[ "$image_backend" != "off" ]] && ! type -p convert &>/dev/null && \
-    { image_backend="ascii"; err "Image: Imagemagick not found, falling back to ascii mode."; }
+x=1
+declare x=1
+declare x; x=1
 ```
 
-# quoting
+-   第一个 statement 经常用于声明全局变量 `x` 并赋值, 但实际上它不是变量声明而
+    是一种偷懒的赋值.  实际上, 这是对 lvalue 的赋值. 根据 lvalue resolution 机
+    制, `x` 变量可能是在 caller function 中声明的, 或者在全局中声明的, 或者是没
+    有声 明的. 却不一定是全局的. 总之, 这个 statement 只应该用于变量赋值而不该
+    是代替变量声明.
 
-# variables
+-   第二个 statement 是标准的变量声明. 并且具有清晰的 scope -- 出现在 global
+    scope, 就是声明 global variable; 出现在 function scope, 就是声明
+    function-scope variable.
+
+-   第三个 statement 是标准的先声明再赋值.
+
+# expansions <a id="shell-expansions"></a>
+
+# redirections <a id="redirections"></a>
+
+# functions <a id="functions"></a>
 
 # flow control
 
-# functions
-
-# builtins
+# builtins <a id="builtins"></a>
 
 -   Builtins are commands that are actually executed by bash shell itself, rather than
     by an external program.
@@ -178,6 +216,33 @@ mpc &>/dev/null && song="$(mpc -f '%artist% \n %album% \n %title%' current)"
             应该是 shell 去控制该执行 cmd1 or cmd2, 并且由 shell 直接去 spawn cmd1 or cmd2.
             而不是由 `if` program 去控制和执行.
 
+# analysis by examples
+
+```sh
+read -r name version _ < <(uname -sv)
+
+tot() { IFS=$'\n' read -d "" -ra pkgs < <("$@");((packages+="${#pkgs[@]}"));pac "${#pkgs[@]}"; }
+
+IFS=$'\n' read -d "" -ra gpus <<< "$gpu_cmd"
+
+IFS=$'\n'"| " read -d "" -ra mem_stat <<< "$(svmon -G -O unit=MB)"
+
+read -r w h \
+    < <(xwininfo -root | awk -F':' '/Width|Height/ {printf $2}')
+
+term_font="$(grep -i "${term/d}"'\**\.*font' <<< "$xrdb")"
+
+has() { type -p "$1" >/dev/null && manager="$_"; }
+        has "snap" && ps -e | grep -qFm 1 "snapd" >/dev/null && tot snap list && ((packages-=1))
+
+mpc &>/dev/null && song="$(mpc -f '%artist% \n %album% \n %title%' current)"
+    type -p df &>/dev/null ||\
+        { err "Disk requires 'df' to function. Install 'df' to get disk info."; return; }
+
+[[ "$image_backend" != "off" ]] && ! type -p convert &>/dev/null && \
+    { image_backend="ascii"; err "Image: Imagemagick not found, falling back to ascii mode."; }
+```
+
 # job control
 
 -   A job is a pipeline and any processes descended from it, that are all in
@@ -188,7 +253,7 @@ mpc &>/dev/null && song="$(mpc -f '%artist% \n %album% \n %title%' current)"
 
 # command history
 
-# alias
+# aliases <a id="aliases"></a>
 
 # compatibility
 
@@ -196,36 +261,6 @@ mpc &>/dev/null && song="$(mpc -f '%artist% \n %album% \n %title%' current)"
 -   POSIX compliant.
 
 --------------------------------
-
-# language
-
-## scope
-
-bash script 使用的是 dynamic scope, 而不是 lexical scope. 因而在 name resolution 方面与常见
-现代语言不同.
-
-name resolution 时, 依据 call stack, 从顶层 (即当前函数) 开始, 向下搜索 (caller 方向), 直至
-global scope. 若最终没找到该变量, 对于 rvalue resolution, expands to empty string; 对于 lvalue
-resolution, 在 global scope 创建该变量 (这一点类似 js 中 lvalue 的处理).
-
-在 nested scope 中, inner scope 声明的变量在相应 scope 中覆盖 outer scope 的同名变量. 但只要
-出了 scope (即 return to caller stack 后), outer scope 中的变量赋值就继续有效.
-
-以 dynamic scope 思想为基础, 我们可以理解以下几个 statement 的清晰含义
-
-```sh
-x=1
-declare x=1
-declare x; x=1
-```
-
--   第一个 statement 经常用于声明全局变量 `x` 并赋值, 但实际上它不是变量声明而是一种偷懒的赋值.
-    实际上, 这是对 lvalue 的赋值. 根据 lvalue resolution 机制, `x` 变量可能是在 caller function
-    中声明的, 或者在全局中声明的, 或者是没有声明的. 却不一定是全局的. 总之, 这个 statement
-    只应该用于变量赋值而不该是代替变量声明.
--   第二个 statement 是标准的变量声明. 并且具有清晰的 scope -- 出现在 global scope, 就是声明
-    global variable; 出现在 function scope, 就是声明 function-scope variable.
--   第三个 statement 是标准的先声明再赋值.
 
 # Design pattern
 *   将要实现的功能分类, 提炼出功能模块.
