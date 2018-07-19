@@ -37,6 +37,9 @@ unittest.mock
     mock method, which just silently return another mock, and you may not
     realise that you’ve written a test that tests nothing at all.
 
+  * patch 直接使用的地方, 这样是最可靠的, 而且是影响最小的; 不要 patch 定义的地方,
+    因为不可靠, 在使用处的 import 可能比 patch 应用要早, 这样就会 patch 失败.
+
 factory boy
 ===========
 

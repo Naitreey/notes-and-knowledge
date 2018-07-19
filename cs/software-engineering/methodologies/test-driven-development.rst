@@ -161,7 +161,7 @@ general and detailed workflow
 
   * Working incrementally and step-by-step, with each of them should be small.
 
-- detail (Outside-In Double-Loop TDD).
+- detail (Double-Loop TDD).
 
   |tdd-workflow|
 
@@ -208,47 +208,72 @@ general and detailed workflow
   实现和测试用例是允许的. 当初始设计基本确定之后, 需要保证不同时修改测试和实现,
   进入 Red/Green/Refactor 流程.
 
-Outside-In vs Inside-Out
-------------------------
+Outside-In and Inside-Out
+-------------------------
+- 在实践 double-loop TDD 时, 有了宏观的需求以及功能性测试后, 对一个功能可能需
+  要实现模块化解耦合的多个层级. 构建这个层级可以由外至内 (outside-in), 也可以由
+  内至外 (inside-out).
+
+- 注意无论是 Outside-In 还是 Inside-Out, 这些都是方法. 我们的目的是达成一个合
+  理的设计和优质的实现. 所以实践中, 我们可能就会 out-in, in-out, out-in, etc.
+  等一系列过程, 最终达到一个很好的结果. 这是一个灵活的随机应变的过程. 即 agile
+  的本质. 但总体来讲, 目前我倾向于整体上以 Outside-In TDD 为主.
+
+Outside-In TDD
+^^^^^^^^^^^^^^
 - Outside-In TDD 的思路是由外至内地去实现 -- (由宏观需求触发) 交互/展示/UI 层,
   view/controller layer, model layer 等 -- 每一个外层都为它所依赖的内层提需求, 
   每一个内层的实现都完全是为了满足已知的需求而实现, 而不是 trying to anticipate
   the usage pattern, trying to anticipate the upper layer's requirement.
 
-  * Outside-In TDD is also called "programming by wishful thinking". We start
-    writing code at the higher levels based on what we wish we had at the lower
-    levels, even though it doesn’t exist yet.
-  
-    Actually, any kind of TDD involves some wishful thinking. We’re always
-    writing tests for things that don’t exist yet.
-  
-  * Outside-In TDD 让程序员关注于那些对用户直接可见的功能部分, 要小心不要忽视了
-    不对用户直接可见的功能部分, 例如 security features. 对于这些功能, 必须提醒
-    自己要去实现.
-  
+- Outside-In TDD is also called "programming by wishful thinking". We start
+  writing code at the higher levels based on what we wish we had at the lower
+  levels, even though it doesn’t exist yet.
+
+  Actually, any kind of TDD involves some wishful thinking. We’re always
+  writing tests for things that don’t exist yet.
+
+- 注意事项:
+
+  * Listen to your tests. If a "dependency is hard to mock, then it's
+    definitely hard to use for the object that'll actually be using it."
+
+    换句话说, 如果在测试代码中发现被测功能的某个依赖 mock 起来比较费劲,
+    那说明它的 API 不太容易使用, 可能需要重构这个依赖的 API.
+
+  * 使用 Outside-In TDD 时, 需要尽量保证测试代码对被测功能的细节访问仅限于其他
+    层 API 部分. 避免太多耦合. London-school TDD routinely provides feedback
+    about whether each unit's usage is awkward under real-world conditions.
+
+- Outside-In TDD 的缺点:
+
+  * Outside-In TDD 的最大缺点是为了测试隔离 (通过 mock), 对一个实现层的测试, 必
+    须要清楚被测实现层的底层依赖, 以及清楚被测实现层是如何使用底层 API 的. 这样
+    测试不可避免地与被测功能的实现细节有一定的耦合. 从而提高了重构的成本.
+ 
+  * 让程序员关注于那些对用户直接可见的功能部分, 要小心不要忽视了 不对用户直接可
+    见的功能部分, 例如 security features. 对于这些功能, 必须提醒 自己要去实现.
+
+Inside-Out TDD
+^^^^^^^^^^^^^^
 - Inside-Out TDD. the natural way most people intuitively work before they
   encounter TDD. After coming up with a design, the natural inclination is to
   implement it starting with the innermost, lowest-level components first.
 
-  * It feels comfortable because it means you’re never working on a bit of code
-    that is dependent on something that hasn’t yet been implemented. Each bit
-    of work on the inside is a solid foundation on which to build the next
-    layer out.
+- It feels comfortable because it means you’re never working on a bit of code
+  that is dependent on something that hasn’t yet been implemented. Each bit
+  of work on the inside is a solid foundation on which to build the next
+  layer out.
 
-  * The most obvious problem with inside-out is that it requires us to stray
-    from a TDD workflow. Instead of solving the most imminent testing failure,
-    we decide to ignore that and go off to the lowest level to build from
-    there (with test/code cycle).
+- The most obvious problem with inside-out is that it requires us to stray
+  from a TDD workflow. Instead of solving the most imminent testing failure,
+  we decide to ignore that and go off to the lowest level to build from
+  there (with test/code cycle).
 
-  * Inside-Out may build inner components that are more general or more capable
-    than we actually need, which is a waste of time. It may build inner
-    components' APIs that is incompetent for upper layer's use. Even worse,
-    the lower level components might not even solve the upper layer's problem.
-
-- 注意无论是 Outside-In 还是 Inside-Out, 这些都是方法. 我们的目的是达成一个 合
-  理的设计和优质的实现. 所以实践中, 我们可能就会 out-in, in-out, out-in, etc.
-  等一系列过程, 最终达到一个很好的结果. 这是一个灵活的随机应变的过程. 即 agile
-  的本质. 但总体来讲, 目前我倾向于整体上以 Outside-In TDD 为主.
+- Inside-Out may build inner components that are more general or more capable
+  than we actually need, which is a waste of time. It may build inner
+  components' APIs that is incompetent for upper layer's use. Even worse,
+  the lower level components might not even solve the upper layer's problem.
 
 With refactoring
 ----------------
