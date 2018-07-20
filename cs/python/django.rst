@@ -4549,8 +4549,18 @@ custom manager
 ^^^^^^^^^^^^^^
 subclass ``django.db.models.Manager`` 以进行自定义.
 
-- 添加 custom manager method. 用处: 当需要对 models 添加 table-level 的功能
-  和操作时 (而不是对 row-level 即具体 model instance 的方法.)
+- 添加 custom manager method. 用处:
+  
+  * 当需要对 models 添加 table-level 的功能和操作时 (而不是对 row-level 即具体
+    model instance 的方法.)
+
+  * table-level 的 ORM 操作, 可以封装成 custom manager helper methods. 在
+    form/view 等上层代码中不直接写 ORM method chain, 而是将所有 ORM code 塞到
+    model-level 代码中. 这样做有至少两点好处: 1) 提高可读性 2) 将应用与业务逻
+    辑与 django-specific ORM 解耦合.
+
+  * 是否应该将 ORM 操作封装成 manager 的 helper method 仍然要根据具体情况去
+    具体分析. (Does it worth the effort?)
 
 - customize initial queryset. override ``get_queryset()`` method.
   ``Manager.all()`` method 的返回值与之一致.
@@ -6611,6 +6621,12 @@ RequireDebugTrue
 
 testing
 =======
+
+- django 提供的各种测试工具, 包括 ``TestCase``, ``Client`` 等工具, 对写集成
+  测试很有帮助. 当然, 同样地也适合去写单元测试.
+
+- 注意在写单元测试时, 要避免使用 django 提供的各种非模块化的、跨越多个实现层
+  的那些工具.
 
 - django 默认使用 unittest module 实现单元测试. 但提供与多种单元测试
   框架集成的方式.

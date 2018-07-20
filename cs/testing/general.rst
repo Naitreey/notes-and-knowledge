@@ -61,18 +61,46 @@ test classification
                              |                            |                                          |
                              +----------------------------+------------------------------------------+------------------
 
+
+在产品研发的不同阶段, 各种测试的作用:
+
+- 在需求确定后, 进行宏观功能设计. 宏观功能设计完成后, 具体化为功能性测试.
+
+- 研发人员将需求具体化为研发阶段的功能性测试.
+
+- 根据功能性测试, 实现各个模块和实现层.
+
+- 对于每个模块和实现层, 通过单元测试设计模块实现, 检测模块行为.
+
+- 对一个功能的各个模块实现完毕后, 通过集成测试打通各个模块和实现层, 检测模块之
+  间的交互是否符合预期.
+
+- 集成测试通过后, 使用研发阶段的功能性测试来打磨整个功能的外部行为, 检查从用户
+  的角度整个功能的外部表现是否符合需求.
+
+- 每个服务的开发都按照上述方式进行. 各个服务构成系统整体, 进行系统测试.
+
+- 系统测试通过后, 测试人员使用功能性测试检验系统整体是否符合需求.
+
 unit testing
 ------------
 
 integration testing
 -------------------
+
 - Testing the collection and interface modules to check whether they give the
   expected result.
 
+- 注意 integration test 测试的是一个服务的各个代码模块之间的继承. 而不是跨服务、
+  跨语言的测试, 后者是 system test 的职责.
+
+- It is a low level testing performed after unit testing.
+  
+- 在执行效率上 integration test 要与 unit test 类似地能够迅速执行, 提供 quick
+  feedback.
+
 - Only Functional testing is performed to check whether the two modules when
   combined give correct outcome.
-
-- It is a low level testing performed after unit testing
 
 - It is both black box and white box testing approach so it requires the
   knowledge of the two modules and the interface.
@@ -80,7 +108,7 @@ integration testing
 - Integration testing is performed by developers as well test engineers.
 
 - Here the testing is performed on interface between individual module thus any
-  defect found is only for individual modules and not the entire system
+  defect found is only for individual modules and not the entire system.
 
 system testing
 --------------
@@ -96,23 +124,25 @@ system testing
   external interfaces, so any defect found in it is regarded as defect of whole
   system
 
-- 对于功能性测试部分, 可以基于功能性单元测试的验证内容来改写.
+- 对于功能性测试部分, 可以基于研发阶段的功能性测试的验证内容来改写.
 
 - 测试人员进行的系统测试一般是在一个单独的 staging environment 中进行的.
 
 - 自动化的功能测试系统还有助于检测 staging environment 上的应用系统的配置
   和部署情况.
 
-- 在研发阶段, 自动化的集成测试和系统测试脚本 (或系统) 也是很有帮助的.
-  因为, 研发时当一个功能开发完毕 (已经通过了单元测试与功能性的单元测试),
-  还需要检查多个服务集成时是否通畅, 各种行为是否符合预期, 等等. 此时,
-  集成测试和系统测试脚本就能用上.
-
 functional testing
 ------------------
 
-acceptance testing
-------------------
+- 功能性测试可以分两种:
+
+  * 在研发阶段进行的功能性测试, 这种测试是从用户角度去检测一个功能的整体实现情
+    况是否与需求匹配. 但这种功能性测试必须要比较快, 必须保证 isolation, 以提供
+    相对迅速的反馈, 以支持下一步研发. 研发阶段也需要功能性测试是因为这是唯一能
+    够证明功能整体符合需求的测试.
+
+  * 在持续继承阶段以及人工测试阶段进行的功能性测试, 这种测试需要全面, 可以很慢.
+    它必须运行在整个系统之上, 不能存在 isolation.
 
 smoke testing
 -------------

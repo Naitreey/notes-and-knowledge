@@ -233,17 +233,32 @@ Outside-In TDD
   Actually, any kind of TDD involves some wishful thinking. We’re always
   writing tests for things that don’t exist yet.
 
-- 注意事项:
+- Outside-In TDD 必须保证 test isolation. 使用 mock 将被测功能与它的依赖独立开来.
+  在写这种 isolated test case 时, 它会自动 drive 我们将功能按照不同层去考虑, 将
+  不属于被测功能层的内容解耦合至其他模块.
 
-  * Listen to your tests. If a "dependency is hard to mock, then it's
-    definitely hard to use for the object that'll actually be using it."
+- Isolated test 只测试该功能层的逻辑, 这包括它自身的 API 以及依赖调用. 不测试任
+  何其他层的逻辑和 side effects. 并且这种该测试什么、不该测试什么实际上由 mock
+  来强制执行了, 因为依赖全部被 mock 掉了, 没办法去测试其他层的逻辑和副作用.
 
-    换句话说, 如果在测试代码中发现被测功能的某个依赖 mock 起来比较费劲,
-    那说明它的 API 不太容易使用, 可能需要重构这个依赖的 API.
+- 我们可以认为一个功能的多个实现层是相互协作的关系, 即互为 collaborator.
+  每个 collaborator 提供的 API 就是它与其他 collaborator 之间的 contract.
+  Whenever we mock out the behaviour of one layer, we have to make a mental
+  note that there is now an implicit contract between the layers, and that a
+  mock on one layer should probably translate into a test at the layer below.
 
-  * 使用 Outside-In TDD 时, 需要尽量保证测试代码对被测功能的细节访问仅限于其他
-    层 API 部分. 避免太多耦合. London-school TDD routinely provides feedback
-    about whether each unit's usage is awkward under real-world conditions.
+- Listen to your tests. If a "dependency is hard to mock, then it's
+  definitely hard to use for the object that'll actually be using it."
+
+  换句话说, 如果在测试代码中发现被测功能的某个依赖 mock 起来比较费劲,
+  那说明它的 API 不太容易使用, 可能需要重构这个依赖的 API.
+
+- 如果一个测试用例需要很多 mock 才能保证被测功能与它的依赖隔离开来, 才能
+  保证仅仅是在测试该层的功能逻辑, 则说明代码实现可能可以优化, 降低耦合.
+
+- 使用 Outside-In TDD 时, 需要尽量保证测试代码对被测功能的细节访问仅限于其他
+  层 API 部分. 避免太多耦合. London-school TDD routinely provides feedback
+  about whether each unit's usage is awkward under real-world conditions.
 
 - Outside-In TDD 的缺点:
 
@@ -337,7 +352,7 @@ test classifications
 functional test (FT)
 --------------------
 
-- functional test, 在 TDD 只关注于研发阶段, 这里主要指的是功能性的单元测试, 这
+- functional test, 在 TDD 只关注于研发阶段, 这里主要指的是研发阶段的功能性测试, 这
   不同于集成测试或系统测试时的功能性测试.
 
 - FTs test how application *functions* from the user's point of view.
@@ -383,6 +398,23 @@ functional test (FT)
 
   * 每个 feature 可能需要多个 user stories 从不同方面具体化. 对应于一个 test
     class 的多个 test method. 每个 test method 表达一个完整的 user story.
+
+integration test
+----------------
+
+- 在 Outside-In TDD 流程中, 集成测试可以由两部分构成:
+  
+  * 简单地将各个实现层的单元测试的 mock 全部去掉, 成为一部分功能性测试.
+
+  * 单独进行一些相对整体的操作和检验.
+
+- 把单元测试的 mock 去掉后, 测试的独立性就完全消除了. 模块之间进行了真实的
+  相互调用, 这就达到了集成测试的目的.
+
+- 在 TDD 流程中, 集成测试位于单元测试与研发阶段的功能性测试之间, 它的主要作用
+  是 provide a faster feedback cycle, and help you identify more clearly what
+  integration problems you suffer from, 以打通各个层. 因其快速, 可以快速检验.
+  这是功能性测试不够合适的地方.
 
 unit test
 ---------
@@ -607,6 +639,9 @@ mock
   外部服务从功能代码中切断, 硬生生地切出来第三组 (输入输出之外) 接口. 少了真实
   的外部服务对代码逻辑的检验, 就要求我们去检验代码对这组接口的访问情况, 以保证
   正确性.
+
+  此外, 在 Outside-In TDD 中, mock 是保证单元测试隔离性的必要手段. 即需要 mock
+  掉所有它依赖的 (从而是尚未实现的) 模块 API.
 
   因此, 构造对 mock 的检验需要谨慎小心. 尽量一般化, 考虑到多种可能的调用模式,
   避免被测功能逻辑没有修改, 却需要测试代码跟着 external service 调用的修改而
