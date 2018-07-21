@@ -7,6 +7,10 @@ general
   构建出一套最符合实际情况的规则. (虽然很多时候, 如果能从一开始就基本上
   按照官方的来, 效果一定不会糟糕. 所以官方的风格规范实际上已经足够.)
 
+- 不要让你的注意力从写出优质量的 pythonic code 分散至仅仅关注肤浅表面的
+  styling format 上面. 在关注 style 之前, 要首先关注的是, 代码本身的结构
+  是否合理, 封装是否良好, 逻辑是否流畅等. 然后才是 styling 方面的优化.
+
 indentation and line continuation
 =================================
 - 4-space per indentation level.
@@ -115,8 +119,10 @@ indentation and line continuation
 
 line length
 ===========
-- 代码部分每行最佳状态是 79 字符以内. 根据实际情况某些行允许多 2-3 个字符.
-  但这样的行一定是极少数的.
+- 代码部分每行最佳状态是 79 字符以内. 根据实际情况某些行允许多几个字符.
+  但这样的行应该是极少数的. 一个固定字符数的限制, 目的在于提醒程序员,
+  maybe this line is doing too much, maybe it's not doing great, maybe
+  it's better to split up into more of lines.
 
 - 文字描述部分, 例如注释或 docstring 最多 72 字符.
 
@@ -386,46 +392,6 @@ Programming
   ``functools.total_ordering``.
 
 - 如果需要把 lambda 表达式赋值给变量, 那就不该用 lambda, 用 ``def``.
-
-- 所有自定义的 exception 都应是 ``Exception`` 的子类, 而不是 ``BaseException`` 的.
-  Catching subclasses of ``BaseException`` is almost always the wrong thing to do.
-
-- When catching exceptions, mention specific exceptions whenever possible instead
-  of using a bare ``except:`` clause. If you want to catch all exceptions that
-  signal program errors, use ``except Exception:`` (Bare except is equivalent to
-  ``except BaseException:``).
-
-- Design exception hierarchies based on the distinctions that code catching the
-  exceptions is likely to need, rather than the locations where the exceptions
-  are raised. Aim to answer the question "What went wrong?" programmatically,
-  rather than only stating that "A problem occurred".
-
-- For all try/except clauses, limit the try clause to the absolute minimum amount
-  of code necessary. This avoids masking bugs.
-
-- When a resource is local to a particular section of code, use a with statement
-  to ensure it is cleaned up promptly and reliably after use. A try/finally
-  statement is also acceptable.
-
-- Context managers should be invoked through separate functions or methods whenever
-  they do something other than acquire and release resources. For example:
-
-  Yes:
-
-  .. code:: python
-
-    with conn.begin_transaction():
-        do_stuff_in_transaction(conn)
-  No:
-
-  .. code:: python
-
-    with conn:
-        do_stuff_in_transaction(conn)
-
-  The latter example doesn't provide any information to indicate that the
-  ``__enter__`` and ``__exit__`` methods are doing something other than closing
-  the connection after a transaction. Being explicit is important in this case.
 
 - 一个函数里可以完全没有 return; 但如果有 return statement, 所有的返回点都要
   有 return, 且如果没有明确的返回值, 需要 ``return None``.

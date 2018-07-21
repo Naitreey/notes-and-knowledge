@@ -429,7 +429,8 @@ stringify and formating
 
 - ``object.__bytes__``
 
-- ``object.__repr__``
+- ``object.__repr__``. Try always create a ``__repr__`` for your class to make
+  debugging easier.
 
 - ``object.__format__(self, format_spec)``. used by ``format()``, ``str.format()``
   formatted string literal. 当 object 作为被 format 的对象时使用. `format_spec`
@@ -496,6 +497,35 @@ common context managers
 
 - connection objects. auto-close on finish, like ``pymongo.MongoClient``.
   auto-commit on finish. like ``MySQLdb.connections.Connection``.
+
+design patterns
+^^^^^^^^^^^^^^^
+- When an operation requires setup and teardown logic, use context manager to
+  encapsulate it.
+
+- When a resource is local to a particular section of code, use a context manager
+  to ensure it is cleaned up promptly and reliably after use. A try/finally
+  statement is also acceptable.
+
+- Context managers should be invoked through separate functions or methods whenever
+  they do something other than acquire and release resources. For example:
+
+  Yes:
+
+  .. code:: python
+
+    with conn.begin_transaction():
+        do_stuff_in_transaction(conn)
+  No:
+
+  .. code:: python
+
+    with conn:
+        do_stuff_in_transaction(conn)
+
+  The latter example doesn't provide any information to indicate that the
+  ``__enter__`` and ``__exit__`` methods are doing something other than closing
+  the connection after a transaction. Being explicit is important in this case.
 
 descriptor protocol
 -------------------
@@ -1006,6 +1036,27 @@ try statement
 
   两者是不同的情况. 然而, 两个情况可能存在相互嵌套. 例如, 通过条件判断是否通过来决定
   是否 raise exception; 通过是否 raise exception 来决定条件判断是否通过.
+
+design patterns
+^^^^^^^^^^^^^^^
+- Create custom exception classes for your code, your library etc. Design a
+  hierarchy suitable for your need.
+
+- 所有自定义的 exception 都应是 ``Exception`` 的子类, 而不是 ``BaseException`` 的.
+  Catching subclasses of ``BaseException`` is almost always the wrong thing to do.
+
+- When catching exceptions, mention specific exceptions whenever possible instead
+  of using a bare ``except:`` clause. If you want to catch all exceptions that
+  signal program errors, use ``except Exception:`` (Bare except is equivalent to
+  ``except BaseException:``).
+
+- Design exception hierarchies based on the distinctions that code catching the
+  exceptions is likely to need, rather than the locations where the exceptions
+  are raised. Aim to answer the question "What went wrong?" programmatically,
+  rather than only stating that "A problem occurred".
+
+- For all try/except clauses, limit the try clause to the absolute minimum amount
+  of code necessary. This avoids masking bugs.
 
 function definitions
 --------------------
