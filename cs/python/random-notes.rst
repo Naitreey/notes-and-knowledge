@@ -470,23 +470,6 @@
   ``memoryview`` 和 file-like object 的 ``.readinto`` 和 socket object 的 ``.recv_into``
   等 methods, 达到避免复制的目的.
 
-- ``__slots__``
-
-  * ``__slots__`` 使得实例中没有 ``__dict__`` 和 ``__weakref__``.
-
-  * 某个类和它所有的父类都定义了 ``__slots__``, 这个类的实例才没有 ``__dict__``.
-    ``__slots__`` 的作用局限在定义类中. 不同类中定义的 slots 取并集得到了当前类
-    实例化后的 attributes.
-
-  * slots 中的 attributes 实际上以 data descriptor 方式在类中定义, 定义为
-    ``member_descriptor`` descriptor object.
-
-  * 使用 slots 的好处是
-
-    - faster attribute access
-
-    - potential memory savings
-
 - ``\b`` backspace char 只是把光标向左移动 1 格, 并不删除涉及的字符;
   ``\r`` carriage return 只是把光标移至当前行首, 并不删除本行内容.
 

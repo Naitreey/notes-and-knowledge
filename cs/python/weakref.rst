@@ -29,3 +29,17 @@ weak set
 finalizer
 =========
 - register a cleanup function to be called when an object is garbage collected.
+
+special attributes
+==================
+
+- ``__weakref__``. a cpython implementation detail of weakref. It is a linked
+  list storing all weakrefs to the current object. The head of that list (the
+  first weak reference to an object) is available via ``__weakref__``. 
+
+  See also: [SOWeakref]_
+
+references
+==========
+
+.. [SOWeakref] `What exactly is __weakref__ in Python? <https://stackoverflow.com/questions/36787603/what-exactly-is-weakref-in-python>`_

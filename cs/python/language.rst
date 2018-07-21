@@ -252,7 +252,47 @@ attribute store
 - ``object.__dict__``. 一个对象自身存储的属性. 如果 class 定义了 ``__slots__``,
   实例就没有 dict store.
 
-- ``__slots__``.
+- ``__slots__``. explicitly declare instance members, suppressing the creation
+  of ``__dict__`` and ``__weakref__``, unless they are explicitly specified in
+  ``__slots__`` or available in parent class.
+
+  * slots 的用处:
+
+    - 对于需要大量构建实例, 而实例本身不会出现任意属性时, 可以使用 slots 来优化
+      内存使用效率.
+
+    - 更快的属性访问.
+
+  * Any non-string iterable may be used in slots definition.
+  
+  * slots 本质上以 data descriptor 方式作为 class attribute 来定义, 其类型为
+    ``member_descriptor``. slots 定义所在类中, 若再定义同名的 class member,
+    会造成冲突 raise ValueError. 但是在子类中, 可以定义 class member 来覆盖
+    父类中定义的 slot member.
+
+  * 当前类的 slots 与各个父类的 slots 的并集为类实例实际具有的 slots. 在多继承
+    中, 只有一个直接父类允许具有 non-empty slots. 其他直接父类如果有 slots 则必
+    须是 empty 的. Otherwise raises TypeError: multiple bases have instance
+    lay-out conflict.
+
+  * 如果父类没有 ``__slots__`` declaration (``object`` 除外), 则即使子类设置了
+    slots, ``__dict__`` 和 ``__weakref__`` 也会存在. 从而 defeat the purpose
+    of slots.
+
+  * 如果父类设置了 slots, 但子类没有设置, 子类实例仍会有 ``__dict__`` and
+    ``__weakref__``. 这是为了保证兼容, 即假设父类本来没有设置 slots, 那么在
+    未来如果父类选择去设置 slots 来进行优化, 子类代码不会 break.
+    
+    为保证子类也没有那两个存储, 需要设置额外的 slots 定义, 即使为空.
+
+  * Assigning to the name of attribute not declared in slots raises
+    AttributeError.  Read the value of uninitialized slots raises
+    AttributeError.
+
+  * Without ``__weakref__``, instances can not be weakref-ed.
+
+  * Nonempty ``__slots__`` does not work for classes derived from
+    variable-length built-in types such as int, bytes and tuple.
 
 object identification
 ^^^^^^^^^^^^^^^^^^^^^
@@ -748,6 +788,39 @@ Subscriptions & slicing
     p[::2] => p[slice(None, None, 2)]
 
 slicing (包含 subscription) 是通过 ``__getitem__`` 实现.
+
+comparisons
+-----------
+- comparison operators::
+
+    < > == >= <= !=
+    is [not]
+    [not] in
+
+- All comparison operators have the same precedence.
+
+- Comparison operations can be chained together arbitrarily. And the overall
+  evaluation order is strictly left-to-right and short-circuit. In other words,
+  if::
+  
+    a, b, c, …, y, z
+    
+  are expressions and::
+  
+    op1, op2, …, opN
+    
+  are comparison operators, then::
+  
+    a op1 b op2 c ... y opN z
+    
+  is equivalent to::
+  
+    a op1 b and b op2 c and ... y opN z
+
+  except that each expression is evaluated at most once.
+
+- Note that ``a op1 b op2 c`` doesn’t imply any kind of comparison between
+  ``a`` and ``c``. So it's legal to say ``x < y > z``
 
 Statements
 ==========
