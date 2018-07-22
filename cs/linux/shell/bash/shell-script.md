@@ -211,7 +211,7 @@ declare x; x=1
             else
                 cmd2
             fi
-            ``` 
+            ```
 
             应该是 shell 去控制该执行 cmd1 or cmd2, 并且由 shell 直接去 spawn cmd1 or cmd2.
             而不是由 `if` program 去控制和执行.
@@ -384,7 +384,7 @@ mpc &>/dev/null && song="$(mpc -f '%artist% \n %album% \n %title%' current)"
 -   必须要明确, 在 shell 中, 所有内容本身就是字符串, 不同的 quoting 本质上都是为了附加
     别的作用的 (而不是表示 XXX 是字符串).
     
--   在 double quoting 中, 只有 $, `, \, !, 字符有特殊含义. 注意没有 ', 所以 $'\n' 形式的
+-   在 double quoting 中, 只有 $, \`, \\, !, 字符有特殊含义. 注意没有 ', 所以 $'\n' 形式的
     ANSI-C quoting 不能在 double quoting 中使用.
 
 -   command grouping: `()` vs `{}`, 各自在什么时候使用?

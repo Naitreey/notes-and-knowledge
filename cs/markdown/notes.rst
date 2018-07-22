@@ -50,7 +50,7 @@ block elements
   blank lines. A blank line is any line that looks like a blank line — a line
   containing nothing but spaces or tabs is considered blank.
   
-  若需要在段内添加 强制的 line break, you end a line with two or more spaces,
+  若需要在段内添加 强制的 linebreak, you end a line with two or more spaces,
   then type return.
 
 - headers. 两种风格.
@@ -78,13 +78,13 @@ block elements
   若 list item 之间存在 blank lines, 则每个 item 会自成一段, 即 wrapped in ``<p/>``
   tag.
 
-  一个 list item 也可以由多段构成, 每段的第一行必须缩进 4 spaces.
-  注意无论是 ordered/unordered list, 为了 parser 正确识别多段或者包含 sublist
-  的复杂情况, 一个关键点是 marker 和它后面的空格总计要是 4 spaces 长度. 这样
-  和多段的情况统一.
-
+  一个 list item 也可以由多段构成, 每段的第一行必须缩进 4 spaces.  因此, 为了统
+  一, list item marker 和它后面的空格也应该是 4 spaces 长度.
+  
   list item 中出现的任何其他 markup element, e.g. blockquote, code block 等都要
-  基于 list item 段首的缩进量进行.
+  基于 list item 段首的缩进量进行. 例如 blockquote 需要相对于 list item 起始处
+  缩进 4 spaces or a tab; code block 本身需要缩进 4-space/1-tab, 所以相对于
+  list item 起始处需要缩进 8-spaces/2-tabs.
 
 verbatim blocks
 ---------------
