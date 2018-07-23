@@ -1645,13 +1645,18 @@ parameter substitution
 
 extension fields and merge
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
-top-level keys can be named starting with ``x-``, where the entire
-tree is ignored by parser. This is useful to construct yaml anchor nodes,
-for collecting common configs into one place.
+- Extension fields are named starting with ``x-``, where the entire tree is
+  ignored by parser. This is useful to construct yaml anchor nodes, for
+  collecting common configs into one place.
 
-yaml ``<<`` merge indicator is also supported.
+- Extension fields can be at:
 
-使用 yaml 的这些语法, 相当于 compose file 具有了变量抽象、赋值和引用能力.
+  * at the root of compose file.
+
+  * at the root of service, volume, network, config and secret definitions.
+
+- yaml ``<<`` merge indicator is also supported. 使用 yaml 的这些语法, 相当于
+  compose file 具有了变量抽象、赋值和引用能力.
 
 version info
 ------------
@@ -1764,6 +1769,8 @@ keys:
 
 * update_config.
 
+* rollback_config.
+
 labels
 ^^^^^^
 container labels.
@@ -1823,6 +1830,11 @@ image:tag or id.
 
 isolation
 ^^^^^^^^^
+
+init
+^^^^
+run a init process inside container. a boolean or path to init program.
+Relating to ``docker run --init``.
 
 logging
 ^^^^^^^
