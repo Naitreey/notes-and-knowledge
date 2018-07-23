@@ -146,6 +146,8 @@ terminology
 
 - microstepping. test/code cycle must be tiny.
 
+- SUT. system under test.
+
 workflow
 ========
 
@@ -399,6 +401,11 @@ functional test (FT)
   * 每个 feature 可能需要多个 user stories 从不同方面具体化. 对应于一个 test
     class 的多个 test method. 每个 test method 表达一个完整的 user story.
 
+- 功能性测试因为是从用户角度进行测试, 这样的测试应该尽量保证与 SUT 的实现细节
+  相独立. 即黑盒测试. 然而, 由于这是研发阶段的测试, 在恰当的时候, 可以走一些
+  捷径, 访问实现细节进行更方便、更高效的 baseline setup. 这需要根据具体情况
+  分析决定.
+
 integration test
 ----------------
 
@@ -430,6 +437,17 @@ unit test
   模板文件等不会变的固定的 entity.
 
 - 在单元测试中, 需要仔细考虑什么是变的, 什么是不变的, 才能只对变化的部分做测试.
+
+- 单元测试应该尽量保证独立性, 只测试 SUT 本身, 而不测试它的依赖. 这需要使用
+  mock 来达成.
+  
+  有些时候, SUT 与它的依赖或者说它外部的东西的界限不是那么清晰的, 例如当使用
+  framework 时. 这时, 不可避免地, unit test 变成了一定程度上的 integration
+  test. 这是一个相对模糊的事情, 而没有清晰的界限.
+
+- 如果要写保证具有完善的独立性的单元测试, 不可避免地需要接触和了解一定程度的
+  implementation details. 这一点, 尤其是当自己的代码与 framework 交互时尤其
+  显著. 此时, 我们需要了解一些 framework 本身的实现细节.
 
 - 如何组织单元测试?
 
@@ -584,24 +602,67 @@ design patterns
   * 保证测试数据的可重复性. 如果使用随机数据, 应保证每次独立执行的测试, 都使用
     相同的 seed.
 
+- Rule of thumb for different type of tests in a project.
+
+  * unit test. 70%.
+
+  * integration test. 20%.
+
+  * UI test (functional test). 10%.
+
 Techniques
 ==========
 
 test double
 -----------
+- Conventionally, mocks may refer collectively to test stub, test spy, and mock
+  object.
 
 mock
 ^^^^
-- Mock 的基本概念是使用一个假的 service call 来替代真实的 service call. 来避免
-  在单元测试中需要调用外部服务. service call 本身的设计应该是一个不透明的接口,
-  即有规范设计的输入和输出. mock 能够完全替换这个 service call, 则需要具有完全
-  相同的接口.
+- Mock 的基本概念是使用一个假的 service call 来替代真实的 service call, so that
+  to eliminate dependencies. service call 本身的设计应该是一个不透明的接口, 即
+  有规范设计的输入和输出. mock 能够完全替换这个 service call, 则需要具有完全 相
+  同的接口.
 
   Mock 必须具有与原操作相同的接口, 才能发挥测试的意义. 即保证功能实现中对外部
   服务的调用是正确的.
 
 - 必要时还需要在单元测试中检查对 service call 的调用输入和输出的检测. 以保证对
   服务的调用确实是符合预期的 (因为 mock 接口正确还不够, 调用参数还需要正确.)
+
+- The usage of mocks.
+
+  * to eliminate dependencies for a SUT.
+
+  * When a dependency has no return value. (behavior verification)
+
+  * Ease the testing of different SUT logic branches. 有时候一些逻辑分支很难
+    在真实情况下构建, 使用 mock 则可以轻易地伪造实际中难以测试的情况.
+
+  * eliminate dependency on database calls, to speed up unit testing.
+
+  * Don't have to wait for implementing SUT's dependency to test the SUT.
+    (Outside-In TDD)
+
+- 在一个功能的单元测试中, 对 mock 调用情况的检测不可避免地是在测试功能的实现细节,
+  而不是它的 API. 因此, 过分地对 mock 的测试可能导致测试用例与功能实现细节强耦合.
+
+  而另一方面, 对 mock 调用的检验却也是必不可少的. 因为我们在单元测试时, 人为地将
+  外部服务从功能代码中切断, 硬生生地切出来第三组 (输入输出之外) 接口. 少了真实
+  的外部服务对代码逻辑的检验, 就要求我们去检验代码对这组接口的访问情况, 以保证
+  正确性.
+
+  此外, 在 Outside-In TDD 中, mock 是保证单元测试隔离性的必要手段. 即需要 mock
+  掉所有它依赖的 (从而是尚未实现的) 模块 API.
+
+  因此, 构造对 mock 的检验需要谨慎小心. 尽量一般化, 考虑到多种可能的调用模式,
+  避免被测功能逻辑没有修改, 却需要测试代码跟着 external service 调用的修改而
+  修改的问题.
+
+  It’s better to test behaviour, not implementation details; test what happens,
+  not how you do it. Mocks often end up erring too much on the side of the
+  "how" rather than the "what".
 
 - 在 dynamic language 中, 经常使用 monkey patching 方法来 dynamically
   substitute calls to external services with a mock.
@@ -632,25 +693,11 @@ mock
 - 很多语言已经提供方便的 mock library, 一般无需手动构建替代的 mock function, 也
   无需手动替换方法和调用.
 
-- 在一个功能的单元测试中, 对 mock 调用情况的检测不可避免地是在测试功能的实现细节,
-  而不是它的 API. 因此, 过分地对 mock 的测试可能导致测试用例与功能实现细节强耦合.
-
-  而另一方面, 对 mock 调用的检验却也是必不可少的. 因为我们在单元测试时, 人为地将
-  外部服务从功能代码中切断, 硬生生地切出来第三组 (输入输出之外) 接口. 少了真实
-  的外部服务对代码逻辑的检验, 就要求我们去检验代码对这组接口的访问情况, 以保证
-  正确性.
-
-  此外, 在 Outside-In TDD 中, mock 是保证单元测试隔离性的必要手段. 即需要 mock
-  掉所有它依赖的 (从而是尚未实现的) 模块 API.
-
-  因此, 构造对 mock 的检验需要谨慎小心. 尽量一般化, 考虑到多种可能的调用模式,
-  避免被测功能逻辑没有修改, 却需要测试代码跟着 external service 调用的修改而
-  修改的问题.
-
-  It’s better to test behaviour, not implementation details; test what happens,
-  not how you do it. Mocks often end up erring too much on the side of the
-  "how" rather than the "what".
-
+- 在 mock 时, 一定要正确地判断 SUT 依赖的 API 是什么, 即它与外部交互的点是什么.
+  只应该 mock dependency 与 SUT 交互处的 API. 而不该去 mock 更多的东西. 例如,
+  SUT 调用另一个模块中的 ``cls.method``, 只应该 mock ``cls.method``, 而不该去
+  mock ``cls`` 整体.
+https://www.youtube.com/watch?v=wf-BqAjZb8M
 test fixtures
 -------------
 - A test fixture is a fixed state of a set of objects used as a baseline for
