@@ -1794,6 +1794,11 @@ settings
 
 * ``UST_TZ`` determines whether datetime objects are naive.
 
+design pattern
+--------------
+
+- 
+
 migration
 =========
 
@@ -6623,7 +6628,7 @@ testing
 =======
 
 - django 提供的各种测试工具, 包括 ``TestCase``, ``Client`` 等工具, 对写集成
-  测试很有帮助. 当然, 同样地也适合去写单元测试.
+  测试很有帮助. 它们中的一部分也适合去写单元测试.
 
 - 注意在写单元测试时, 要避免使用 django 提供的各种非模块化的、跨越多个实现层
   的那些工具.
@@ -6719,6 +6724,12 @@ django.test.LiveServerTestCase
 
 test client
 -----------
+- ``django.test.Client`` is an integration testing tool, not a unit testing
+  tool.
+
+Client
+^^^^^^
+
 - ``Client.request()`` method initiates a request , returns a HttpResponse
   object.
 
@@ -6789,6 +6800,30 @@ management commands
   * press Ctrl-C twice. the test run will halt immediately, but not gracefully.
   No details of the tests run before the interruption will be reported, and
   any test databases created by the run will not be destroyed.
+
+design patterns
+---------------
+
+- Every layers of code must be unit-tested in isolation. Template, view, form,
+  model etc. Use mocks to ensure test isolation.
+
+- 区分清晰哪部分属于 SUT, 哪部分属于外部依赖, 这样才能确定什么东西是需要 mock
+  掉的. 例如, 在一个功能中, 不仅仅 form 层是 view 层的依赖; 在 view 层代码中,
+  django generic view class 同样也是 业务逻辑 view class 的依赖.
+
+- Don't test django code, test only your logic.
+  
+  * 例如, 设置了 ``template_name`` 之后, 加载 template 的整个逻辑是 django
+    framework 提供的, 与你无关. 因此无需写测试去测试是否加载了正确的模板文件.
+
+- Don't test constants. 例如, 没必要测试一个 ModelForm 中设置的 model class
+  是否正确.
+
+- mock only the relevant APIs, not any more. 例如, 在 form 只会调用 Model.save,
+  就不要 mock 整个 Model, 而是 Model.save.
+
+- integration test 时才使用 django 的那些跨越多个模块层的工具, 写单元测试时
+  不要使用.
 
 django-admin
 ============
