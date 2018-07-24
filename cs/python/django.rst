@@ -1796,8 +1796,39 @@ settings
 
 design pattern
 --------------
+- the section describes how to design django settings in a flexible way that
+  works across different environment.
 
-- 
+- Why need this? once you start setting up your Django app on multiple
+  environments; like production, testing, and staging — and on machines for
+  developers, you are likely to run into a pain point; managing the
+  configuration across the different environments.
+
+settings subpackage
+^^^^^^^^^^^^^^^^^^^
+- ``settings`` 拆分成 ``settings`` subpackage. 内含 ``base.py``, ``production.py``
+  和 ``local.py`` 三个 modules.[SODjSettings]_
+
+  * ``base`` settings 包含在不同环境下都需要的公共的、基础的配置项部分.
+
+  * ``production`` 和 ``local`` settings 分别是生产环境和研发环境需要的配置部分.
+
+- 无论是哪个 settings 配置文件, 意义在于两点:
+
+  * 确定各个环境下所需的配置项是哪些.
+
+  * 对于无需根据不同环境进行修改的配置项, 设置固定配置值. 对于可能需要根据
+    具体情况设置的配置项, 设置默认值, 并可从环境变量 (以及 env file) 中获取
+    实际配置值.
+
+- 实际使用哪个 settings 文件, 根据环境变量 ``DJANGO_SETTINGS_MODULE`` 来自动决
+  定.
+
+- 如果某个环境需要修改配置项或者默认配置值, 修改相应的 settings 文件. 如果某
+  个环境需要修改配置项的实际配置值, 不修改 settings 文件, 修改环境变量.
+
+env file
+^^^^^^^^
 
 migration
 =========
@@ -7232,6 +7263,10 @@ settings
 - ``AUTH_LDAP_USER_ATTR_MAP``.
   LDAP attribute 至 user model fields 的映射.
 
+django-environ
+--------------
+
 References
 ==========
 .. [SODjTemplateDebug] `Django debug display all variables of a page <https://stackoverflow.com/a/21205925/1602266>`_
+.. [SODjSettings] `How to manage local vs production settings in Django? <https://stackoverflow.com/questions/1626326/how-to-manage-local-vs-production-settings-in-django>`_
