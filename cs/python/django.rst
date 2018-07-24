@@ -1806,29 +1806,61 @@ design pattern
 
 settings subpackage
 ^^^^^^^^^^^^^^^^^^^
-- ``settings`` 拆分成 ``settings`` subpackage. 内含 ``base.py``, ``production.py``
-  和 ``local.py`` 三个 modules.[SODjSettings]_
+
+- ``settings`` 拆分成 ``settings`` subpackage. 内含 ``base.py``,
+  ``production.py`` 和 ``local.py`` 三个 modules.
 
   * ``base`` settings 包含在不同环境下都需要的公共的、基础的配置项部分.
 
-  * ``production`` 和 ``local`` settings 分别是生产环境和研发环境需要的配置部分.
+  * ``production`` 和 ``local`` settings 分别是生产环境和研发环境需要的配置部分
+    .
 
 - 无论是哪个 settings 配置文件, 意义在于两点:
 
   * 确定各个环境下所需的配置项是哪些.
 
-  * 对于无需根据不同环境进行修改的配置项, 设置固定配置值. 对于可能需要根据
-    具体情况设置的配置项, 设置默认值, 并可从环境变量 (以及 env file) 中获取
-    实际配置值.
+  * 对于无需根据不同环境进行修改的配置项, 设置固定配置值. 对于可能需要根据具体
+    情况设置的配置项, 设置默认值, 并可从环境变量 (以及 env file) 中获取实际配置
+    值.
 
 - 实际使用哪个 settings 文件, 根据环境变量 ``DJANGO_SETTINGS_MODULE`` 来自动决
   定.
 
-- 如果某个环境需要修改配置项或者默认配置值, 修改相应的 settings 文件. 如果某
-  个环境需要修改配置项的实际配置值, 不修改 settings 文件, 修改环境变量.
+- 如果某个环境需要修改配置项或者默认配置值, 修改相应的 settings 文件. 如果某个
+  环境需要修改配置项的实际配置值, 不修改 settings 文件, 修改环境变量. 这样,
+  settings files 实际是一部分固定的配置 + 一部分模板化的配置.
 
-env file
-^^^^^^^^
+settings in env file
+^^^^^^^^^^^^^^^^^^^^
+
+- use ``django-environ`` to facilitate configuration.
+
+- ``.env.example`` 包含全部可配置项, 以及示例值. 此文件用于表示 env file 的格式
+  以及支持的配置项. 提示用户该文件只用于格式说明.
+
+- 在使用时, 用户添加一个 ``.env`` 文件在项目根目录, 填入需要配置的配置项, 使用
+  ``.env.example`` 中的示例格式. ``.env`` 文件不加入版本管理.
+
+- ``.env`` 文件在研发、测试、生产等不同环境下设置, 用于设置该具体实例下使用的
+  配置值.
+
+- 当我们使用 docker 时, 根据不同的服务启动方式, 有以下方式加载 env file 至
+  app process environment 中.
+
+  * one-off app container: ``docker run --env-file``
+
+  * single swarm service: ``docker service create --env-file``
+
+  * services defined in composefile (swarm stack 以及 docker-compose):
+    ``env_file`` key.
+
+settings in environment
+^^^^^^^^^^^^^^^^^^^^^^^
+
+- ``.env.example`` (从而 ``.env``) 文件中的配置项还可以通过设置环境变量来临时修
+  改.  例如, 在生产环境, 临时设置 ``DEBUG=True``.
+
+- 在使用 docker 时, 根据不同的服务运行方式, 选择合适的临时环境变量传入方式.
 
 migration
 =========
@@ -7265,6 +7297,154 @@ settings
 
 django-environ
 --------------
+overview
+^^^^^^^^
+- usage: parse environ and env file to fill configuration files.
+
+- 为什么需要这么做:
+  
+  * 这是为了将配置文件模板化, 当我们需要部署多个实例, 而每个实例的配置值可能不
+    尽相同时, 每个实例只需修改抽象出来的配置值, 而不需要维护一个自定义的配置文
+    件.
+
+  * 由于 settings 是 python source, 其中的配置具有复杂的结构, 如果不用 env file
+    and environ, 只用 local settings file, 当需要修改复杂配置项例如 ``DATABASES``
+    中的某个具体子项的值时, 需要复杂的操作. 模板化则修改起来很简单.
+
+- features.
+
+  * read env file.
+
+  * read environ.
+
+  * value casting with predefined types and formats.
+
+- inspired by 12factor app.
+
+env file format
+^^^^^^^^^^^^^^^
+- basic shell variable format
+
+- support ``$var`` for referencing another variable.
+
+environ.Env
+^^^^^^^^^^^
+- encapsulate getting environment variables.
+
+- 所有 Env 实例共享一份环境变量, 即 ``os.environ``.
+
+- basic usage.
+
+  * configuration scheme 可以在 ``Env`` 初始化时一次性指定, 或者获取配置值时
+    分别指定.
+
+  * read env file: ``Env.read_env()``
+
+- cast spec and corresponding value formats:
+
+  * str
+
+  * bool
+
+  * int
+
+  * float
+
+  * list. value format: ``a,b,c``
+
+  * tuple. value format: ``(a,b,c)``
+
+  * dict. value format: ``key=val,key=val``
+
+  * ``{"key": cast, "value": cast, "cast": {"key": cast, ...}}``. ``key`` 和
+    ``value`` keys 表达的是 generic key 和 value 的 cast spec. ``cast`` 表达的
+    是根据具体 key 名字进行的分别 cast spec.
+
+  * 任意函数. 例如 json (json.loads), url (urlparse).
+
+- If the key is not available in environ, raise ImproperlyConfigured.
+
+constructor
+"""""""""""
+- ``**scheme``. 设置配置项的 scheme. a scheme is a tuple of
+  ``(cast, default)``.
+
+methods
+"""""""
+- ``__call__(var, cast=None, default=NOTSET, parse_default=False)``.
+  获取环境变量值. ``parse_default`` 则 default 也会被 cast.
+
+- ``__contains__(var)``. key in environ.
+
+- ``read_env(env_file=None, **overrides)``. if ``env_file`` is None,
+  try to read ``.env`` at project root. ``overrides`` overrides value
+  in env file.
+
+- ``str()``
+
+- ``bytes()``
+
+- ``bool()``
+
+- ``int()``
+
+- ``float()``
+
+- ``json()``
+
+- ``list()``
+
+- ``tuple()``
+
+- ``dict()``
+
+- ``url()``
+
+- ``db_url()``
+
+- ``cache_url()``
+
+- ``email_url()``
+
+- ``search_url()``
+
+- ``path()``
+
+Path
+^^^^
+
+- convenient file paths handling in settings.
+
+- If path is required but not physically exists, raise ImproperlyConfigured.
+
+constructor
+""""""""""""
+- ``start=""``. default current directory. The starting part of Path.
+
+- ``is_file=False``. whether ``start`` is a file or directory, if it is a file, 
+  resolve to its parent directory.
+
+- ``required=False``. whether the path is required to exist physically.
+
+methods
+""""""""
+- ``__call__(*paths, **kwargs)``. get path in string, with ``paths`` appended.
+
+- ``path(*paths, **kwargs)``. new path from current path.
+
+- ``file(name, *args, **kwargs)``. open file, ``name`` is relative to
+  current path. args, kwargs are passed to ``open``.
+
+- ``__add__(other)`` append path.
+
+- ``__sub__(other)``. If string, subtract trailing path from current path;
+  if int, go up that many levels.
+
+- ``__invert__()``. go up one level (``~Path``).
+
+- ``__contains__(item)``. whether item is current path's subpath.
+
+- ``__fspath__()``. os.PathLike object interface.
 
 References
 ==========

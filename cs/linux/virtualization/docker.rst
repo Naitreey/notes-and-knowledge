@@ -1220,6 +1220,13 @@ container
 
   .. TODO WTF???????????????????????????? 乱七八糟, 看系统编程, 看源代码!!!!!!!!!
 
+  ``--env={var[=val]}``. 设置环境变量. 可指定多次. 若变量没有 ``=val`` 部分,
+  从当前环境变量中获取相应变量值, 若未找到, 则不设置相应环境变量. ``--env``
+  设置的环境变量 override ``--env-file`` 中设置的同名变量.
+
+  ``--env-file={file}``. 读取 env file 进入进程的环境变量中. 可指定多次. 其中的
+  语法是 ``--env`` 支持的两种形式, 以及 ``#`` line comment.
+
 - docker container exec.
 
   这个命令只该用于 debugging purpose (包含研发时使用). 不该在生产环境执行任意
@@ -1801,11 +1808,20 @@ a string or list.
 
 env_file
 ^^^^^^^^
-a string or list.
+- a string or list, 对应于指定一个或多个 env file.
+
+- multiple env files are processed from the top down.
+
+- vars defined in ``environment`` section overrides same vars in env files.
+
+- file format see ``docker container run --env-file``.
 
 environment
 ^^^^^^^^^^^
-a mapping or list of ``key=val``.
+- a mapping of ``key: value`` or list of ``key=val``.
+
+- Any boolean values; true, false, yes no, need to be enclosed in quotes to
+  ensure they are not converted to True or False by the YML parser.
 
 expose
 ^^^^^^
