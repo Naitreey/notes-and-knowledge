@@ -1615,6 +1615,35 @@ docker-compose run
 docker-compose exec
 ^^^^^^^^^^^^^^^^^^^
 
+environment variables supported by Compose
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- ``COMPOSE_PROJECT_NAME``. project name.
+
+- ``COMPOSE_FILE``. path to compose file. This variable supports multiple
+  Compose files separated by a ``COMPOSE_PATH_SEPARATOR``.
+
+- ``COMPOSE_PATH_SEPARATOR``. default ``:`` on linux.
+
+- ``COMPOSE_API_VERSION``.  Set the version value to match the server version,
+  intended as a workaround for situations where you need to run temporarily
+  with a mismatch between the client and server version.
+
+- ``COMPOSE_HTTP_TIMEOUT``. http timeout to communicate with daemon. default 60
+  seconds.
+
+- ``COMPOSE_TLS_VERSION``. TLS version to daemon. default TLSv1.
+
+- ``COMPOSE_IGNORE_ORPHANS``. boolean. If set, doesn’t try to detect orphaned
+  containers for the project.
+
+- ``COMPOSE_PARALLEL_LIMIT``. the number of operations Compose can execute in
+  parallel. default 64.
+
+- ``COMPOSE_INTERACTIVE_NO_CLI``. boolean. If set, Compose doesn’t attempt to
+  use the Docker CLI for interactive run and exec operations.
+
+- ``DOCKER_*``: env variables supported by docker engine.
+
 compose file
 ============
 
@@ -2594,6 +2623,12 @@ python
 ------
 - ``docker`` module.
 
+design patterns
+===============
+
+- docker 的很多组件都对环境变量有很好的支持, 通过环境变量来传递配置参数有
+  很强的灵活性和便利性. 例如 docker run, docker-compose, dockerfile,
+  composefile.
 
 References
 ==========

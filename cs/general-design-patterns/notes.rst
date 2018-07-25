@@ -226,6 +226,10 @@
 
   参考的例子有 pip, udev, systemd, sysctl, git 等的配置设计.
 
+- 充分利用环境变量以及 env file 来传递配置参数, 对提高配置灵活性有很大帮助. 很
+  多工具和框架都对这种配置传递方式有很好的支持. 例如 docker, docker-compose,
+  dockerfile, composefile, direnv, python virtualenv, pyenv, etc.
+
 - 无论使用哪种程序部署逻辑, 一定要设置机制以保证整个程序不依赖于放置在某个绝对的文件
   系统位置. 例如, 如果写的是 python module, 只需保证能够安装到 site-packages 下即可;
   如果写的是一套完整的程序, 可以通过判断主文件所在位置或通过 environ variable 来确定
