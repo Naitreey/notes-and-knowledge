@@ -47,16 +47,21 @@ identifier                     value           control operator             redi
     underscores, and beginning with a letter or underscore. Names are used as
     shell variable and function names.
 
--   operator. A control operator or redirection operator. Operators consist of
-    one or more unquoted metacharacter.
-
--   control operator. A token that performs execution controls.
-
 -   metacharacter. A character that, when unquoted, separates words. the followings
     are metacharacters:
 
     ```sh
      (blank: space or tab) | & ; ( ) < >
+    ```
+
+-   operator. A control operator or redirection operator. Operators consist of
+    one or more unquoted metacharacter.
+
+-   control operator. A token that performs execution controls. the followings are
+    control operators
+
+    ```sh
+    (newline) || && & ; ;; ;& ;;& | |& ( )
     ```
 
 -   blank. a space or tab char.
@@ -129,8 +134,83 @@ sleep 10 && foo=1 systemctl poweroff&            # 7 tokens: 5 words, 2 operator
 # quoting <a id="quoting"></a>
 
 -   不该将 quoted words 称为字符串. 在 shell language 中, 所有 words 都是字符串,
-    语言本身不包含其他任何数据类型. 所以只存在 quoted/unquoted 的字符串的区分,
-    而不存在字符串和其他数据类型的区分.
+    语言本身不包含其他任何数据类型.  并不存在所谓字符串和其他数据类型的区分.
+
+-   在 shell language 中, quoting 的主要目的是转义, 而不是创建 (并不存在的) 字
+    符串. 也就是说, 将 metacharacter 转义为 literal 字符, 从而影响 shell 对
+    input 的 tokenization 结果.
+
+    *   这带来的一个用法是, 使用 quoting 跳过对 alias 的替换. 例如
+
+        ```sh
+        \rm /path
+        ```
+
+-   shell 识别三个 quoting character, 注意它们不是 metacharacter, 所以不会
+    separate words:
+
+    ```sh
+    \ ' "
+    ```
+
+-   shell 提供了 5 种 quoting 机制. 分别是: escaping, single quotes, double quotes,
+    ANSI-C quoting, locale-specific translation.
+
+## escaping
+
+-   `\\`  preserves the literal value of the next character that follows.
+
+-   注意到 `\\` 并不是 metacharacter.
+
+-   For ``newline``, because the literal meaning of ``newline`` is just generating
+    a newline, without its control operator effect, 因此 ``\newline`` 的效果是
+    line continuation.
+
+## single quotes
+
+-   All characters between a pair of single quotes preserve their literal meanings.
+    Including `'` itself, therefore any `'` char terminates a single quoted
+    sequence.
+
+## double quotes
+
+-   All characters except for `$`, `\``, `\\` and `!` between double quotes preserve
+    their literal meanings.
+
+-   注意 `$`, `\``, and `!` 并不是 metacharacter.
+
+-   `\\` 平时在 double quotes 里面其实仍保持 literal meaning, 只有当位于 `$`,
+    `\``, `"`, `\\`, `newline` 这些具有特殊意义的字符前面时, 具有 escaping 的作用.
+
+    ```sh
+    echo "\n" # print two chars
+    ```
+
+-   The backslash preceding the ‘!’ is not removed.
+
+## ANSI-C quotes
+```sh
+$'string'
+```
+
+-   Characters remains their literal meanings, except that `\<char>` escape
+    sequences are replaced by actual escape character according to C standard
+    (with extensions). Rather than leaving as two separate characters.
+
+    ```sh
+    echo 'You piece of shit\U1F644'
+    echo $'You piece of shit\U1F644'
+    ```
+
+-   notable escape sequences.
+
+    *   `\nnn`
+
+    *   `\xHH`
+
+    *   `\uHHHH` BMP chars. leading zeros can be omitted.
+
+    *   `\UHHHHHHHH`. leading zeros can be omitted.
 
 # commands
 
@@ -219,6 +299,13 @@ declare x; x=1
 # analysis by examples
 
 ```sh
+grep pattern file >file
+
+cat ~/Documents/'Bash 'Reference\ Manual.pdf
+
+alias rm='rm -i'
+\rm /tmp/a
+
 read -r name version _ < <(uname -sv)
 
 tot() { IFS=$'\n' read -d "" -ra pkgs < <("$@");((packages+="${#pkgs[@]}"));pac "${#pkgs[@]}"; }
