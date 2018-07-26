@@ -833,8 +833,11 @@ ModelFormMixin
 - ModelFormMixin 和一些 form 类型的 view 结合, 成为具体的
   CreateView, UpdateView.
 
-file upload
-===========
+File handling
+=============
+
+- 文件不一定是用户上传的, 只要是存储在数据库之外的文件体都可以用这个
+  模块处理.
 
 * 上传文件都是 ``UploadedFile`` instance.
 
@@ -846,13 +849,238 @@ file upload
   - 默认 ``MemoryFileUploadHandler`` 和 ``TemporaryFileUploadHandler``.
     效果是小文件读入内存, 大文件写入硬盘.
 
-* settings.
+file classes
+------------
 
-  - ``FILE_UPLOAD_MAX_MEMORY_SIZE``
+File
+^^^^
+- ``django.core.files.File``.
 
-  - ``FILE_UPLOAD_TEMP_DIR``
+- wrapper around file-like object.
 
-  - ``MEDIA_ROOT``
+class attributes
+""""""""""""""""
+- DEFAULT_CHUNK_SIZE. 64KB.
+
+constructor
+""""""""""
+- ``file``. underlying file-like object.
+
+- ``name``. filename. If not defined, use ``file.name``.
+
+attributes
+""""""""""
+- ``file``. file-like object.
+
+- ``name``
+
+- ``size``. file size.
+
+- ``mode``. file mode.
+
+- underlying file-like object's attributes.
+
+methods
+"""""""
+
+- ``__str__()``. return ``File.name`` or empty string if name is None.
+
+- ``__len__()`` check ``File.size``.
+
+- ``__bool__()`` check ``bool(File.name)``
+
+- ``__enter__()``, ``__exit__``. context manager. close underlying file when
+  exiting.
+
+- ``open(mode=None)``. open or re-open ``File.name`` with optionally new mode.
+  return self.
+
+- ``close()``. close file.
+
+- ``chunks(chunk_size=None)``. returns a generator yielding file content by
+  ``chunk_size`` or ``File.DEFAULT_CHUNK_SIZE``.
+
+- ``multiple_chunks(chunk_size=None)`` whether requiring multiple chunks to
+  exhaust the file.
+
+- ``__iter__()``. iterate file content by line. like file object.
+
+- exposed underlying file-like object's methods.
+
+ContentFile
+^^^^^^^^^^^
+- File subclass.
+
+- operates on in-memory string or byte sequences, without a backing file.
+
+constructor
+""""""""""
+- ``content``. initial string or bytes.
+
+- ``name``.
+
+ImageFile
+^^^^^^^^^
+- File subclass.
+
+- need pillow to get image dimensions.
+
+attributes
+""""""""""
+- width.
+
+- height.
+
+FieldFile
+^^^^^^^^^
+- File subclass.
+
+- FileField 使用的文件体对象. FieldFile 是 File 的子类. 具有 file-like object
+  API.  区别在于 FieldFile is a wrapper around the result of the
+  ``Storage.open()`` method.
+
+attributes
+""""""""""
+
+* url.
+
+methods
+"""""""
+
+* file-like object methods.
+
+* ``save(name, content, save=True)``. save file to storage backend. 更新
+  ``FieldFile.name`` 为保存文件后 storage backend 返回的名称. 如果原来文件已经
+  保存, 这里不会删除或替换, 而是简单地创建一个新文件. 并更新 model instance 上
+  的列属性为新保存的文件路径.
+
+  - ``name`` 一般为 ``FieldFile.name``
+
+  - ``content`` 一般为 ``FieldFile.file``. 必须为 File instance, 而不是文件内容
+    本身.
+
+  - ``save``. 是否调用 ``Model.save`` 保存关联的 model instance.
+  
+  在保存 model instance 时自动调用该方法以保存文件至 storage backend (在
+  ``Field.pre_save`` hook 中调用).
+
+* ``delete(save=True)``. delete file from storage backend, set model instance
+  上列属性为 None, 下次获取该列时, 根据 FileDescriptor 逻辑更新为一个空的
+  FieldFile. 若 ``save=True``, 调用 ``Model.save`` 更新 model instance.
+
+ImageFieldFile
+^^^^^^^^^^^^^^
+
+file storage
+------------
+
+model fields
+------------
+- 注意在删除 model instance 时, file-related field 对应的文件实体不会自动删除.
+  需要单独处理.
+
+FileField
+^^^^^^^^^
+
+- 文件列. 这是文件体的抽象. 而不仅仅是文件路径, 后者是 FilePathField 的事.
+ 
+- FileField 在数据库中保存文件路径为字符串. 虽然它对应的数据库列是 file path
+  string, 但它对应的 model instance attribute 是 ``FieldFile`` 文件体 object.
+
+  * 对于 mysql, 使用 varchar 来存储.
+
+- 数据库中保存的是文件的相对路径, 由 ``upload_to`` + filename 组成, 或者根据
+  ``upload_to`` callable 生成. 这是 FieldFile.name
+
+- 在 model instance 上, 通过一个特殊的 FileDescriptor 实现了:
+  
+  * set ``File.name`` string 或者 None 或者 File/FieldFile instance 都可以.
+
+  * get 该列属性得到 FieldFile instance. 由于 getter 的逻辑, 即使文件列属性
+    设置为 None, 获取时也会转换成一个 (empty) FieldFile instance.
+
+- 在 model instance 保存至数据库时, 该列包含的 FieldFile 会通过 storage backend
+  存储.
+
+options
+"""""""
+
+* ``upload_to``.  若是 string, a relative directory string, with
+  ``datetime.datetime.strftime()`` format specifiers. 文件体会保存在该目录下.
+  若是 callable, 直接生成文件体的最终保存路径. 接受提供的参数.
+
+* ``storage``. file storage instance for handling actual storage-related
+  operations.
+
+* ``max_length`` is default to 100.
+
+* ``null``. null 选项对 FileField 没有实际意义. 最好设置 False. 因为:
+
+  - FileDescriptor 在值为 None 时生成 empty FieldFile.
+
+  - FileField.get_prep_value 对于 FieldFile 通过 ``str()`` 转换为文件路径.
+
+  - File instance 在 name is None 时给出 string form 为空字符串.
+
+  可以看出, FileField 的数据库值不可能为 NULL, 一定为字符串, 并以 empty string
+  代表无文件.
+
+checkings
+"""""""""
+
+* 检查不能设置 primary_key 参数.
+
+* 检查 upload_to 必须是相对路径, 不是绝对路径.
+
+methods
+""""""""
+- ``get_prep_value(value)``. If None, return None. 一般不会遇到这个逻辑. 否则
+  给出 ``str(value)``. 一般情况下 ``value`` 是 FileField instance, 所以这里
+  给出的就是 file name. 由此可知 file field 在数据库交互时转换为文件路径.
+
+ImageField
+^^^^^^^^^^
+
+- subclass of FileField, 包含 FileField 的一切功能和相关处理逻辑. 它对应的
+  model instance 属性为 ``ImageFieldFile``.
+
+- 它对应的 forms.ImageField 会校验 binary data is valid image. 但 ImageField 本
+  身不会校验. 文件处理逻辑和 FileField 相同.
+
+- 使用该列的 model 可以设置相关联的保存图像宽度和高度的列. 这便于获取合适的分辨
+  率图像.  例如 preview 和 full image 的区别. height/width fields 的值会根据
+  ImageFieldFile 属性自动设置.
+
+options
+"""""""
+
+* ``height_field``, ``width_field``. name of field on model where to store
+  image height and width.
+
+checkings
+"""""""""
+
+* 检查 pillow library 已经安装.
+
+context processors
+------------------
+- ``django.template.context_processors.media``. 提供 ``MEDIA_URL``.
+
+settings
+--------
+
+- ``MEDIA_ROOT``. 保存用户文件的目录, absolute path. Default ``""``
+  (current workding directory). Must differ from ``STATIC_ROOT``.
+
+- ``MEDIA_URL``. serve user files. must end in a slash if set to a non-empty
+  value. default ``""``.
+
+- ``DEFAULT_FILE_STORAGE``. Default file storage class to be used for any
+  file-related operations that don’t specify a particular storage system
+
+- ``FILE_UPLOAD_MAX_MEMORY_SIZE``
+
+- ``FILE_UPLOAD_TEMP_DIR``
 
 template
 ========
@@ -973,6 +1201,9 @@ context processors
   ``LANGUAGES``, ``LANGUAGE_CODE``
 
 - ``django.template.context_processors.media``:
+  ``MEDIA_URL``
+
+- ``django.template.context_processors.static``:
   ``STATIC_URL``
 
 - ``django.template.context_processors.csrf``:
@@ -1612,6 +1843,10 @@ static files
   - ``get_static_prefix``, 获取 STATIC_URL, 自定义 url 补全, 支持 ``as``.
 
   - ``get_media_prefix``
+
+* context processors
+
+  - ``django.template.context_processors.static``. 提供 ``STATIC_URL``.
 
 * 静态文件的放置:
 
@@ -3617,84 +3852,9 @@ field types
 
   * ``allow_files`` ``allow_foleders`` 不能都是 False.
 
-- ``FileField``. 文件列.
-  
-  这是文件体的抽象. 而不仅仅是文件路径, 后者是 FilePathField 的事.
-  虽然它对应的数据库列是 file path string, 但它对应的 model instance attribute
-  是 FieldFile 文件体 object.
+- ``FileField``. see `model fields`_ in `File handling`_.
 
-  数据库中保存的是文件的相对路径, 由 ``upload_to`` + filename 组成, 或者
-  根据 ``upload_to`` callable 生成.
-
-  options.
-
-  * ``upload_to``.
-    
-    若是 string, a relative directory string, with ``time.strftime()``
-    format specifiers. 文件体会保存在该目录下.
-    若是 callable, 直接生成文件体的最终保存路径. 接受提供的参数.
-
-  * ``storage``. file storage object for handling file storage.
-
-  * ``max_length`` is default to 100.
-
-  checkings.
-
-  * 检查不能设置 primary_key 参数.
-
-  * 检查 upload_to 必须是相对路径.
-
-  在 model instance 上, get 该列属性得到的是 FieldFile object, 可以 set
-  path string 或者 File object. 这是通过一个特殊的 descriptor 实现的.
-  这样提供了对文件体和属性的方便访问.
-
-  在 model instance 保存至数据库时, 该列包含的 FieldFile 会通过 storage backend
-  存储.
-
-  ``FieldFile`` 文件体对象. FieldFile 是 File 的子类. 具有 file-like object API.
-  区别在于 FieldFile is a wrapper around the result of the Storage.open() method.
-
-  attributes.
-
-  * file-like object attributes.
-
-  * size.
-
-  * url.
-
-  * file. underlying file object.
-
-  methods.
-
-  * file-like object methods.
-
-  * open().
-
-  * save(). save file data to storage backend. 保存 model instance 时自动调用.
-
-  * delete(). delete file from storage backend. 注意删除 model instance 时
-    不会自动调用.
-
-- ``ImageField``.
-
-  subclass of FileField, 包含 FileField 的一切功能和相关处理逻辑. 它对应的
-  model instance 属性为 ImageFieldFile.
-
-  它对应的 forms.ImageField 会校验 binary data is valid image. 但 ImageField
-  本身不会校验. 文件处理逻辑和 FileField 相同.
-
-  使用该列的 model 可以设置保存图像宽度和高度的列. 这便于获取合适的分辨率图像.
-  例如 preview 和 full image 的区别. height/width fields 的值会根据 ImageFieldFile
-  属性自动设置.
-
-  options.
-
-  * ``height_field``, ``width_field``. name of field on model where to store
-    image height and width.
-
-  checkings.
-
-  * 检查 pillow library 已经安装.
+- ``ImageField``. see `model fields`_ in `File handling`_.
 
 - ``JSONField``. postgresql 可以使用 native JSONField, 对于 mysql 5.7+ 可以使用
   django-mysql module 提供的 JSONField.

@@ -443,11 +443,12 @@ unit test
   
   有些时候, SUT 与它的依赖或者说它外部的东西的界限不是那么清晰的, 例如当使用
   framework 时. 这时, 不可避免地, unit test 变成了一定程度上的 integration
-  test. 这是一个相对模糊的事情, 而没有清晰的界限.
+  test. 这没有绝对清晰的界限. 只能说, 能保证独立时尽量保证独立.
 
 - 如果要写保证具有完善的独立性的单元测试, 不可避免地需要接触和了解一定程度的
-  implementation details. 这一点, 尤其是当自己的代码与 framework 交互时尤其
-  显著. 此时, 我们需要了解一些 framework 本身的实现细节.
+  implementation details, 以保证自己的代码之外的逻辑能及时切断. 这一点, 尤其是
+  当自己的代码与 framework 交互时尤其显著. 此时, 我们需要了解一些 framework 本
+  身的实现细节.
 
 - 如何组织单元测试?
 
