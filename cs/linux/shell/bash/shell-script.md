@@ -212,9 +212,73 @@ $'string'
 
     *   `\UHHHHHHHH`. leading zeros can be omitted.
 
+# comments
+
+Line comments `#` is enabled in
+
+- non-interactive shell
+
+- interactive shell with `interactive_comments` shopt set.
+
 # commands
 
+Commands 分两类
+
+*   command lists
+
+    -   一个 command list 包含一个或多个 pipeline.
+
+    -   一个 pipeline 包含一个或多个 simple commands.
+
+    -   一个 simple command 是一个 compound command 或者是一个命令和它的参数的
+        组合.
+
+*   compound commands
+
+    -   一个 compound command 包含一个或多个 command lists.
+
 ## simple commands <a id="simple-commands"></a>
+-   a simple command is a sequence of words separated by blanks, terminated by
+    control operators.
+
+-   a simple command's exit status.
+
+    *   若命令自行结束, exit status 根据 waitpid(3) 得到. 即 0~255.
+
+    *   若命令 is killed by a signal, exit status 是 128+signum.
+
+-   examples:
+
+    ```sh
+    ls -ld abc
+    ```
+
+## pipelines
+-   A pipeline is a sequence of simple commands, separated by control operator
+    `|` or `|&`.
+
+    ```sh
+    [time [-p]] [!] simple_command [ | or |& simple_command ]*
+    ```
+
+    注意, `time` is bash keyword, rather than builtin.
+
+-   `|&` 等价于 `2>&1 |`.
+
+-   在一个 pipeline 中,
+
+    *   如果两个命令通过 `|` 连接, 前一个命令的 stdout 与后一个命令的 stdin
+        通过 pipe 连接. This connection is performed before any redirections
+        specified by the command.
+
+    *   如果两个命令通过 `|&` 连接, 前一个命令的 stdout 和 stderr 都通过 pipe
+        与后一个命令的 stdin 连接. 由于它本质上是 `2>&1 |`, 所以可以看出,
+        `2>&1` 部分是在 `|` 以及 command 本身的 redirection 之后才进行的.
+
+-   注意, 当 redirection 出现在 pipeline 中的时候, 最后应用的 pipe/redirection
+    才是决定最终效果的.
+
+## command lists
 
 ## compound compands <a id="compound-commands"></a>
 
@@ -262,6 +326,35 @@ declare x; x=1
 
 # redirections <a id="redirections"></a>
 
+-   注意 redirection 是从左至右来执行的.
+
+-   要清楚 redirection 的本质:
+
+    *   对于 `n>&m`, 本质是:
+
+        ```c
+        dup2(m, n);
+        close(m);
+        ```
+
+    *   对于 `n>file`, 本质是:
+
+        ```c
+        m = open(file, mode)
+        dup2(m, n);
+        close(m);
+        ```
+
+-   例如
+
+    ```sh
+    echo a 1>&2 2>/dev/null
+    ```
+
+    仍然会有输出, 因为从左至右先把 stderr fd 对应的 file description 赋给了 stdout fd,
+    此时这个 file description 仍然是某个 tty; 后把 /dev/null 文件打开后生成的 file
+    description 赋给了 stderr fd. 如果把两个 redirection 反过来才是正确的.
+
 # functions <a id="functions"></a>
 
 # flow control
@@ -306,6 +399,9 @@ cat ~/Documents/'Bash 'Reference\ Manual.pdf
 alias rm='rm -i'
 \rm /tmp/a
 
+echo a 1>&2 2>/dev/null
+echo a 2>/dev/null 1>&2
+
 read -r name version _ < <(uname -sv)
 
 tot() { IFS=$'\n' read -d "" -ra pkgs < <("$@");((packages+="${#pkgs[@]}"));pac "${#pkgs[@]}"; }
@@ -328,6 +424,43 @@ mpc &>/dev/null && song="$(mpc -f '%artist% \n %album% \n %title%' current)"
 
 [[ "$image_backend" != "off" ]] && ! type -p convert &>/dev/null && \
     { image_backend="ascii"; err "Image: Imagemagick not found, falling back to ascii mode."; }
+
+case "$os" in
+    "Linux" | "BSD" | "iPhone OS" | "Solaris")
+        # Package Manager Programs.
+        has "pacman-key" && tot pacman -Qq --color never
+        has "tazpkg"     && tot tazpkg list && ((packages-=6))
+
+        # Other (Needs complex command)
+        has "kpm-pkg" && ((packages+="$(kpm  --get-selections | grep -cv deinstall$)"))
+
+        case "$kernel_name" in
+            "FreeBSD") has "pkg"     && tot pkg info ;;
+            "SunOS")   has "pkginfo" && tot pkginfo -i ;;
+            *)
+                has "pkg" && dir /var/db/pkg/*
+
+                ((packages == 0)) && \
+                    has "pkg" && tot pkg list
+            ;;
+        esac
+
+        # Snap hangs if the command is run without the daemon running.
+        # Only run snap if the daemon is also running.
+        has "snap" && ps -e | grep -qFm 1 "snapd" >/dev/null && tot snap list && ((packages-=1))
+    ;;
+
+    "Windows")
+        case "$kernel_name" in
+            "CYGWIN"*) has "cygcheck" && tot cygcheck -cd ;;
+            "MSYS"*)   has "pacman"   && tot pacman -Qq --color never ;;
+        esac
+
+        # Count chocolatey packages.
+        [[ -d "/cygdrive/c/ProgramData/chocolatey/lib" ]] && \
+            dir /cygdrive/c/ProgramData/chocolatey/lib/*
+    ;;
+esac
 ```
 
 # job control
