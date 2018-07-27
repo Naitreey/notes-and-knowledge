@@ -990,7 +990,7 @@ Storage
 - base storage class.
 
 methods
-""""""""
+"""""""
 - ``get_valid_name(name)``. get a file name based on ``name`` that is suitable
   for this storage backend. 基本上就是在做 normalization.
 
@@ -1029,16 +1029,44 @@ methods
 
 - ``url(name)``. get file's absolute url.
 
-- ``get_created_time(name)``. get creation time of name, as datetime.
+- ``get_created_time(name)``. get creation time or last changed time of name
+  (depending on OS), as datetime.
 
 - ``get_modified_time(name)``. get last modified time of name, as datetime.
 
 - ``get_accessed_time(name)``. get last access time of name, as datetime.
 
-- ``listdir(path)``. list path. return a 2-tuple of lists.
+- ``listdir(path)``. list path. return a 2-tuple of lists, the first is
+  directories under ``path``, the second is other files. This is non-recursive.
 
 FileSystemStorage
 ^^^^^^^^^^^^^^^^^
+
+constructor
+""""""""""""
+- ``location``. absolute path to the directory of this storage. default
+  ``MEDIA_ROOT``.
+
+- ``base_url``. absolute base url of files in this storage. default
+  ``MEDIA_URL``.
+
+- ``file_permissions_mode``. file's permissions when saving. default
+  ``FILE_UPLOAD_PERMISSIONS``.
+
+- ``directory_permissions_mode``. permissions of the necessary intermediate
+  directories when it's created. default ``FILE_UPLOAD_DIRECTORY_PERMISSIONS``.
+
+attributes
+""""""""""
+- ``base_location``. original value of location.
+
+- ``location``. absolutified value of location.
+
+- ``base_url``.
+
+- ``file_permissions_mode``
+
+- ``directory_permissions_mode``
 
 model fields
 ------------
@@ -1143,6 +1171,20 @@ settings
 
 - ``DEFAULT_FILE_STORAGE``. Default file storage class to be used for any
   file-related operations that don’t specify a particular storage system
+
+- ``FILE_UPLOAD_PERMISSIONS``. a number representing file permissions when
+  saving to storage. normally something like ``0oNNN``. default None. thus
+  file permission depends on OS behavior, e.g. umask.
+
+  These permissions are not applied to files in ``FILE_UPLOAD_TEMP_DIR``.
+
+  These are also default file permissions of ``collectstatic``.
+
+- ``FILE_UPLOAD_DIRECTORY_PERMISSIONS``. permissions of the directories
+  in storage. default None. thus file permission depends on OS behavior, e.g.
+  umask.
+
+  These are also default directory permissions of ``collectstatic``.
 
 - ``FILE_UPLOAD_MAX_MEMORY_SIZE``
 
