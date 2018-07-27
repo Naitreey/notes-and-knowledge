@@ -974,6 +974,72 @@ ImageFieldFile
 file storage
 ------------
 
+utilities
+^^^^^^^^^
+
+- ``get_storage_class(import_path=None)``. get ``DEFAULT_FILE_STORAGE`` class
+  or storge of import path string.
+
+- ``default_storage`` stores an instance of ``DefaultStorage`` lazy object,
+  which resolves to ``DEFAULT_FILE_STORAGE``.
+
+- ``DefaultStorage`` class.
+
+Storage
+^^^^^^^
+- base storage class.
+
+methods
+""""""""
+- ``get_valid_name(name)``. get a file name based on ``name`` that is suitable
+  for this storage backend. 基本上就是在做 normalization.
+
+- ``generate_filename(filename)``. like ``get_valid_name()`` but for file path.
+  The filename argument may include a path as returned by
+  ``FileField.upload_to``.
+
+- ``get_available_name(name, max_length=None)``. get an available name based on
+  ``name``, without exceeding ``max_length``. If ``name`` is already taken, an
+  underscore plus a random 7 character alphanumeric string is appended to the
+  filename before the extension.
+
+- ``open(name, mode="rb")``. open file from storage by name and mode.
+  Returns an instance of File or its subclass.
+
+- ``path(name)``. local filesystem path where the file can be opened using Python
+  standard ``open()``. if not possible, just don't implement this.
+
+- ``save(name, content, max_length=None)``. save a new file to storage.
+  
+  * ``name`` is used as file name if not already taken or illegal. Otherwise
+    it's modified accordingly to generate an unique name. In any way, the real
+    file name is returned as a result of successful file storing operation.
+
+  * ``content`` is an instance of File or a file-like object that is wrappable
+    thereof.
+
+  * ``max_length`` is the same as ``get_available_name()``
+
+- ``delete(name)``. delete the file referenced by name. If deletion is
+  unsupported, just don't implement this.
+
+- ``exists(name)``. check name exists in storage.
+
+- ``size(name)``. file size in bytes.
+
+- ``url(name)``. get file's absolute url.
+
+- ``get_created_time(name)``. get creation time of name, as datetime.
+
+- ``get_modified_time(name)``. get last modified time of name, as datetime.
+
+- ``get_accessed_time(name)``. get last access time of name, as datetime.
+
+- ``listdir(path)``. list path. return a 2-tuple of lists.
+
+FileSystemStorage
+^^^^^^^^^^^^^^^^^
+
 model fields
 ------------
 - 注意在删除 model instance 时, file-related field 对应的文件实体不会自动删除.
