@@ -839,15 +839,8 @@ File handling
 - 文件不一定是用户上传的, 只要是存储在数据库之外的文件体都可以用这个
   模块处理.
 
-* 上传文件都是 ``UploadedFile`` instance.
-
-* 使用 ``.chunk()`` method 或者 ``.read(<size>)`` 来渐进地读取文件内容,
-  避免大文件占用过多内存.
-
-* upload handler.
-
-  - 默认 ``MemoryFileUploadHandler`` 和 ``TemporaryFileUploadHandler``.
-    效果是小文件读入内存, 大文件写入硬盘.
+- 用户文件的下载在生产时应通过前端服务器来处理, 在研发时通过 django 来处理. 用
+  户文件的上传则始终通过 django 来处理.
 
 file classes
 ------------
@@ -903,7 +896,8 @@ methods
 - ``multiple_chunks(chunk_size=None)`` whether requiring multiple chunks to
   exhaust the file.
 
-- ``__iter__()``. iterate file content by line. like file object.
+- ``__iter__()``. iterate file content by line. like file object. 这里识别 CR,
+  CRLF, LF 三种 line endings. 这是为了便于处理来自不同 client OS 的文件.
 
 - exposed underlying file-like object's methods.
 
@@ -989,25 +983,44 @@ Storage
 ^^^^^^^
 - base storage class.
 
+- Storage subclasses must be deconstructible. 因为要作为 ``FileField`` 参数.
+
+constructor
+""""""""""""
+- For subclasses, all constructor parameters must be optional. If required,
+  must be taken from settings.
+
 methods
 """""""
 - ``get_valid_name(name)``. get a file name based on ``name`` that is suitable
-  for this storage backend. 基本上就是在做 normalization.
+  for this storage backend. ``name`` 是一个 potentially invalid name for this
+  storage backend. 基本上就是在做 normalization. default implementation retains
+  only ``[[:alnum:]._]``.
 
 - ``generate_filename(filename)``. like ``get_valid_name()`` but for file path.
   The filename argument may include a path as returned by
   ``FileField.upload_to``.
 
 - ``get_available_name(name, max_length=None)``. get an available name based on
-  ``name``, without exceeding ``max_length``. If ``name`` is already taken, an
-  underscore plus a random 7 character alphanumeric string is appended to the
-  filename before the extension.
+  ``name``, without exceeding ``max_length``. . The name argument passed to
+  this method will have already cleaned to a filename valid for the storage
+  system, according to the ``get_valid_name()`` method. If ``name`` is already
+  taken, an underscore plus a random 7 character alphanumeric string is
+  appended to the filename before the extension.
+
+  If a free unique filename cannot be found, a SuspiciousFileOperation
+  exception is raised.
 
 - ``open(name, mode="rb")``. open file from storage by name and mode.
   Returns an instance of File or its subclass.
 
-- ``path(name)``. local filesystem path where the file can be opened using Python
-  standard ``open()``. if not possible, just don't implement this.
+- ``_open(name, mode="rb")``. Required for subclasses. Called by ``open()``.
+  Actual mechanism the storage class use to open the file. Must return a File
+  instance.
+
+- ``path(name)``. Required for subclasses that provide local file storage.
+  This returns local filesystem path where the file can be opened using Python
+  standard ``open()``.
 
 - ``save(name, content, max_length=None)``. save a new file to storage.
   
@@ -1019,6 +1032,10 @@ methods
     thereof.
 
   * ``max_length`` is the same as ``get_available_name()``
+
+- ``_save(name, content)``. Required. Called by ``save()``. ``name`` is supposed
+  to be already valid, 但是根据存储机制的不同, 仍然可能造成冲突. ``content`` is
+  a File instance. Return the actual saved name.
 
 - ``delete(name)``. delete the file referenced by name. If deletion is
   unsupported, just don't implement this.
@@ -1067,6 +1084,145 @@ attributes
 - ``file_permissions_mode``
 
 - ``directory_permissions_mode``
+
+file uploading
+--------------
+- uploaded files are instances of ``UploadedFile`` and its subclasses, as
+  stored in ``HttpRequest.FILES``.
+
+file classes
+^^^^^^^^^^^^
+
+UploadedFile
+""""""""""""
+
+- subclass of File.
+
+attributes
+
+- ``content_type``. The content-type header uploaded with the file.
+
+- ``content_type_extra``. A dictionary containing extra parameters passed to
+  the content-type header. This is front-faced-server-specific.
+
+- ``charset``. For ``text/*`` content-type.
+
+- ``size`` overrides ``File.size``.
+
+TemporaryUploadedFile
+""""""""""""""""""""""
+- subclass of UploadedFile.
+
+- represents file uploaded to a temporary file on disk.
+
+methods
+""""""""
+- ``temporary_file_path()``. return full path to the temporary file.
+
+InMemoryUploadedFile
+""""""""""""""""""""
+- subclass of UploadedFile.
+
+- represents file uploaded to memory directly.
+
+upload handlers
+^^^^^^^^^^^^^^^
+
+- Django's default file upload policy is to read small files into memory and
+  large files onto disk. based on ``FILE_UPLOAD_MAX_MEMORY_SIZE``.
+
+FileUploadHandler
+"""""""""""""""""
+
+attributes
+
+- ``chunk_size``. controls the size of chunks fed into
+  ``FileUploadHandler.receive_data_chunk``. default 64KB.
+
+  When there are multiple chunk sizes provided by multiple handlers, Django
+  will use the smallest chunk size defined by any handler.
+
+  chunk size should be divisible by 4 and should not exceed 2GB.
+
+methods
+
+- ``handle_raw_input(input_data, META, content_length, boundary, encoding)``.
+  Allows an upload handler to completely override the parsing of the raw HTTP
+  input, and do it all alone. 这个方法是在对整个 post data 的处理之前进行的.
+ 
+  Return None if upload handling should continue normally, or a tuple of
+  ``(POST, FILES)`` if the handler should return the new data structures
+  suitable for the request directly.
+
+  * ``input_data`` a file-like object containing post stream.
+
+  * ``META`` is request.META.
+
+  * ``content_length`` length of ``input_data``.
+
+  * ``boundary``. MIME boundary for post data in content-type header.
+
+  * ``encoding``. post data's encoding.
+
+- ``new_file(field_name, file_name, content_type, content_length, charset, content_type_extra)``.
+  optional. hook to be called when one file upload is starting. 注意一个 post
+  data 中可以包含多个文件上传. called before any data has been fed to any
+  handlers.
+
+  * ``field_name`` input field name of the file.
+
+  * ``file_name`` filename provided
+  by browser.
+  
+  * ``content_type`` content-type provided by browser.
+
+  * ``content_length`` file length provided by browser. None if not provided.
+
+  * ``charset``. None if not provided.
+
+  * ``content_type_extra``. extra info from content-type header.
+
+  raise StopFutureHandlers to prevent subsequent handlers from handling this
+  file.
+
+- ``receive_data_chunk(raw_data, start)``. Required. receive a chunk of data
+  ``raw_data`` from one upload, for this handler. ``start`` is the position
+  in the file where this chunk begins.
+
+  * Returns data to be fed into the subsequent handler's ``receive_data_chunk``
+    method. 这可以当作 data filter 使用. Return None to short-circuit remaining
+    upload handlers from getting this chunk.
+
+  * Raise StopUpload or SkipFile when appropriate.
+
+- ``file_complete(file_size)``. Required. hook method called after one file has
+  finished uploading. ``file_size`` corresponds to the actual size accumulated
+  by all the chunks.
+
+  Returns an UploadedFile that will be stored in request.FILES. Return None to
+  indicate UploadedFile instance should come from subsequent handlers.
+
+- ``upload_complete()``. hook to be called when all file uploads are completed.
+
+MemoryFileUploadHandler
+"""""""""""""""""""""""
+- upload file in memory.
+
+TemporaryFileUploadHandler
+""""""""""""""""""""""""""
+- upload file to temp file on disk.
+
+exceptions
+^^^^^^^^^^
+upload handlers can raise the following exceptions.
+
+- StopUpload. raise when upload handler wants to abort entire file uploading
+  and post data parsing.
+
+- SkipFile. raise when upload handler wants to skip the current file upload.
+
+- StopFutureHandlers. raise when upload handler do not want future handlers to
+  handle a file upload.
 
 model fields
 ------------
@@ -1186,9 +1342,21 @@ settings
 
   These are also default directory permissions of ``collectstatic``.
 
-- ``FILE_UPLOAD_MAX_MEMORY_SIZE``
+- ``FILE_UPLOAD_MAX_MEMORY_SIZE``. 会保存在内存中的上传文件的体积上限. 超出
+  时, 该文件上传保存在文件系统中. default 2.5MB.
 
-- ``FILE_UPLOAD_TEMP_DIR``
+- ``FILE_UPLOAD_TEMP_DIR``. 当文件上传需要临时保存在文件系统中时, 使用的目录.
+  默认 None, based on OS. For linux this is ``/tmp``.
+
+  由于 ``/tmp`` 可能还是在内存中, 这样 TemporaryFileUploadHandler 就没什么意义
+  了. 可以修改目录为 ``/var/tmp``.
+
+serve files during development
+------------------------------
+
+- use ``django.conf.urls.static.static`` to generate urlpatterns suitable for
+  serving user files under ``MEDIA_ROOT`` during development. 这个 helper 
+  function 只在 DEBUG mode 下管用. 所以在生产中没事.
 
 template
 ========
