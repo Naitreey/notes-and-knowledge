@@ -1319,6 +1319,14 @@ context processors
 ------------------
 - ``django.template.context_processors.media``. 提供 ``MEDIA_URL``.
 
+template tags
+-------------
+- in ``django.templatetags.static``
+
+get_media_prefix
+^^^^^^^^^^^^^^^^
+- return ``MEDIA_URL``
+
 settings
 --------
 
@@ -2109,6 +2117,13 @@ static files
   为只有研发时才需要通过 django 去 serve static files, 生产时通过前端服务器
   serve static files.
 
+app configs
+-----------
+
+``django.contrib.staticfiles.apps.StaticFilesConfig`` 包含了以下设置
+
+- ``ignore_patterns``. 默认的 ignore patterns.
+
 settings
 --------
 
@@ -2187,6 +2202,11 @@ serve static files
     urlpatterns += [
         *static(prefix=settings.STATIC_URL, view=serve)
     ]
+    # or
+
+    from django.contrib.staticfiles.urls import urlpatterns as staticfiles_urls
+
+    urlpatterns += staticfiles_urls
 
   无论哪种, staticfiles 会调用 ``STATICFILES_FINDERS`` 来获取静态文件. 这种方式在
   寻找静态文件时具有比较好的灵活性, 适合源代码仓库使用.
@@ -2195,6 +2215,93 @@ serve static files
   使用 nginx 来高效地 serve 静态文件.
   
   还可以使用其他非 filesystem-based static file storage backend, 例如 CDN.
+
+finders
+-------
+- ``django.contrib.staticfiles.finders.searched_locations`` saves a list of
+  searched paths for static files.
+
+storage backends
+----------------
+
+StaticFilesStorage
+^^^^^^^^^^^^^^^^^^
+- subclass of ``django.core.files.storage.FileSystemStorage``
+
+- ``STATIC_ROOT`` as ``FileSystemStorage.location``
+
+- ``STATIC_URL`` as ``FileSystemStorage.base_url``
+
+- 对原有的 FileSystemStorage 改动比较小, 效果是
+  
+  * 在 ``STATIC_ROOT`` 中保存的文件即 ``collectstatic`` 收集到的文件
+    
+  * 目录权限使用 ``FILE_UPLOAD_PERMISSIONS`` 和 ``FILE_UPLOAD_DIRECTORY_PERMISSIONS``.
+
+ManifestStaticFilesStorage
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+- subclass of StaticFilesStorage, with ManifestFilesMixin.
+
+- 对它保存的每一个文件, 保存一份文件名包含 MD5 hash 的 copy, 并且替换部分文件内
+  容, 保证静态文件中引用的其他本地静态文件路径也是包含 hash 的版本.
+
+- During ``post_process()`` of ``collectstatic``, the storage backend
+  automatically replaces the paths found in the saved files matching other
+  saved files with the path of the cached copy.
+
+- The purpose of this storage is to keep serving the old files in case some
+  pages still refer to those files, e.g. because they are cached by you or a
+  3rd party proxy server. Additionally, it’s very helpful if you want to apply
+  far future Expires headers to the deployed files to speed up the load time
+  for subsequent page visits.
+
+- ``post_process()`` 最后会保存原始文件名路径至 hashed 文件路径的映射至
+  ``STATIC_ROOT/staticfiles.json``. 这样在 runtime 渲染模板时才能生成正确的
+  静态文件路径.
+
+class attributes
+""""""""""""""""
+- ``patterns``. 包含需要替换的文件 glob pattern 以及需要替换的内容 re patterns.
+  默认是替换 css 文件中的 ``@import`` and ``url()`` rules.
+
+- ``max_post_process_passes``. 如果每次遍历都对某些文件进行了修改, 对所有文件最
+  多遍历这么多次.
+
+- ``manifest_strict``. default True. 此时, 若在 runtime 要求获取的文件不在
+  ``staticfiles.json`` 中, raise ValueError. 否则, 给出原始文件路径.
+
+attributes
+""""""""""
+- ``hashed_files``. 保存源文件路径至 hashed 文件路径的映射. storage 初始化时,
+  从 ``staticfiles.json`` 中读取已知的映射关系至内存.
+
+methods
+""""""""
+
+- ``url(name, force=False)``. overrides ``FileSystemStorage.url()``. 在 DEBUG
+  mode 下, 且 ``force=False`` (即一般外部调用方式), 给出 unhashed path url. 否
+  则给出对应于 hashed path 的 url.
+
+- ``file_hash(name, content=None)``. create the hash of ``name`` containing
+  ``content``. subclass can override this to use a custom hash.
+
+CachedStaticFilesStorage
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+- subclass of StaticFilesStorage, with CachedFilesMixin.
+
+- 类似于 ManifestStaticFilesStorage, 但是使用 cache framework 来存储等价于
+  ``staticfiles.json`` 的一个映射关系.
+
+- 这个 storage backend 比 ManifestStaticFilesStorage 要慢, 因为它每次读写都需要
+  访问 cache, 就要走网络.
+
+- 若在 ``settings.CACHES`` 可设置 ``staticfiles`` 即单独给静态文件使用的 cache,
+  否则 fallback to ``default``.
+
+attributes
+""""""""""
+- ``hashed_files``. 这是一个 proxy object to cache. 读写都会去访问 cache.
 
 template tags
 -------------
@@ -2216,11 +2323,52 @@ context processors
 
 - ``django.template.context_processors.static``. 提供 ``STATIC_URL``.
 
+template tags
+-------------
+- ``django.templatetags.static``
+
+- 需要 ``{% load static %}``
+
+static
+^^^^^^
+* return url corresponding the specified static file.
+
+* 若没有使用 staticfiles package, 直接 prefix path with ``STATIC_URL``.
+
+* 若有使用 staticfiles package, delegate to ``{STATICFILES_STORAGE}.url()``.
+
+get_static_prefix
+^^^^^^^^^^^^^^^^^
+- return ``STATIC_URL``
+
+views
+-----
+- ``django.contrib.staticfiles.views.serve(request, path, insecure=False, **kwargs)``
+
+  * view static files that are findable by ``STATICFILES_FINDERS``.
+
+  * intended as a local development helper, only works in DEBUG mode or
+    ``insecure=True``.
+
+  * calls ``django.views.static.serve()`` view internally.
+
+- ``django.views.static.serve(request, path, document_root=None, show_indexes=False)``
+
+  * use ``mimetypes`` to guess mimetype.
+
 testing
 -------
+- ``django.contrib.staticfiles.testing``
 
-django.contrib.staticfiles.testing.StaticLiveServerTestCase
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+StaticLiveServerTestCase
+^^^^^^^^^^^^^^^^^^^^^^^^
+- subclass of ``django.test.LiveServerTestCase``.
+
+class attributes
+""""""""""""""""
+- ``static_handler``. override parent's setting. 使用与 ``runserver``
+  相同的 ``StaticFilesHandler``, 后者使用 ``serve`` view. 从而可以 serve
+  finders 能找到的静态文件.
 
 management commands
 -------------------
@@ -2242,7 +2390,49 @@ collectstatic
 
 - files are collected according to ``STATICFILES_FINDERS``.
 
-- 
+- The collectstatic management command calls the ``post_process()`` method of
+  the ``STATICFILES_STORAGE`` after each run and passes a list of paths that
+  have been found by the management command.
+
+- options.
+
+  * ``--ignore PATTERN``, ``-i PATTERN``. ignore matched files/directories
+    during collectstatic. can be specified multiple times.
+
+  * ``--dry-run``, ``-n``.
+
+  * ``--clear``, ``-c``. clear existing files before collecting new files.
+
+  * ``--link``, ``-l``. symlink instead of copying. only useful for local
+    storage.
+
+  * ``--no-post-process``. do not call ``post_process()`` of storage backend.
+
+  * ``--no-default-ignore``. 不要忽略一些默认的常见 glob pattern, 例如备份
+    文件.
+
+findstatic
+^^^^^^^^^^
+::
+
+  ./manage.py findstatic staticfile [staticfile ...]
+
+- all matching locations are found.
+
+- options.
+
+  * ``--first``. get first only.
+
+runserver
+^^^^^^^^^
+- override django.core.management 提供的 ``runserver`` command, 提供
+  自动 serve 以 ``MEDIA_URL`` 为 prefix 的静态文件请求.
+
+- options.
+
+  * ``--nostatic``. disable serving static files.
+
+  * ``--insecure``. serve static files even if DEBUG is false.
 
 admin site
 ==========
