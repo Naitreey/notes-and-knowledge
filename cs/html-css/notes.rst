@@ -168,6 +168,8 @@ document metadata
 
       对应的 ``content`` 值是 a list of ``key=val`` pairs.
 
+      See also `viewport meta tag`_.
+
   * ``http-equiv``, 设置一个 http header 的名字, ``content`` 是内容.
 
   * ``content``, ``http-equiv`` or ``name`` 属性对应的值.
@@ -2889,8 +2891,52 @@ concetps
   can be seen.  The rendered page may be larger than the viewport, in which
   case a browser provides scrollbars to view content that couldn't fit in.
 
-- 桌面端浏览器的 viewport 一般是比浏览器窗口略小, 从而一定比显示器小. 移动端
-  浏览器的 viewport 可能是
+- 桌面端浏览器的 viewport 一般是浏览器窗口的实际尺寸, 比浏览器窗口略小.
+  
+- 移动端浏览器的一般把自己的 viewport 设置得比较大 (virtual viewport), 大于屏幕
+  长宽 (in pixels), then shrink the rendered result down so it can all be seen
+  at once. This is done because many pages are not mobile optimized, and break
+  when rendered at a small viewport width.
+
+- But virtual viewport is not so good for pages that are optimized for narrow
+  screens using media queries. ``viewport`` meta tag 就是用于解决这个问题的.
+
+- 在移动端, 如果屏幕分辨率很高, 浏览器经常 translating multiple hardware pixels
+  to one CSS "pixel".
+
+viewport meta tag
+^^^^^^^^^^^^^^^^^
+::
+
+  <meta name="viewport" content="..."/>
+
+- ``content`` is a comma separated list of ``key=val``.
+
+- typical settings::
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+keys
+""""
+
+- ``width``. control the width of viewport. value can be
+
+  * a specific number of pixels.
+
+  * ``device-width``
+
+- ``height``. ditto. 相对少见. 因为一般不需考虑 height.
+
+  * ``device-height``.
+
+- ``initial-scale``. initial ratio between the device width and the viewport
+  size.
+
+- ``maximum-scale``.
+
+- ``minimum-scale``.
+
+- ``user-scalable``. yes or no.
 
 Web Components
 ==============
