@@ -2878,6 +2878,20 @@ global values
 
   No stable UA support yet!!
 
+Mobile
+======
+viewport
+--------
+
+concetps
+^^^^^^^^
+- viewport. The browser's viewport is area of the window in which web content
+  can be seen.  The rendered page may be larger than the viewport, in which
+  case a browser provides scrollbars to view content that couldn't fit in.
+
+- 桌面端浏览器的 viewport 一般是比浏览器窗口略小, 从而一定比显示器小. 移动端
+  浏览器的 viewport 可能是
+
 Web Components
 ==============
 
