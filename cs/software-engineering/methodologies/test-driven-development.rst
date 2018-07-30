@@ -409,6 +409,8 @@ functional test (FT)
 integration test
 ----------------
 
+- 集成测试同样也可以 drive 模块的设计和实现.
+
 - 在 Outside-In TDD 流程中, 集成测试可以由两部分构成:
   
   * 简单地将各个实现层的单元测试的 mock 全部去掉, 成为一部分功能性测试.
