@@ -1109,6 +1109,9 @@ attributes
 
 - ``size`` overrides ``File.size``.
 
+- ``name``. overrides ``File.name``. a property. 只保留 constructor 输入的
+  ``name`` 参数的 basename 部分, 并 truncate 至 255 字符长度.
+
 TemporaryUploadedFile
 """"""""""""""""""""""
 - subclass of UploadedFile.
@@ -2100,50 +2103,118 @@ request and response
 
 static files
 ============
+- package ``django.contrib.staticfiles``.
 
-- contrib package, not core functionality. 因为只有研发时才需要通过 django
-  去 serve static files: ``django.contrib.staticfiles``.
+- django 的静态文件功能属于 contrib package, 而不是 core functionality, 这是因
+  为只有研发时才需要通过 django 去 serve static files, 生产时通过前端服务器
+  serve static files.
 
-- static file namespace 与 template namespace 机制类似.
+settings
+--------
 
-* template tags.
+- ``STATIC_URL``. the base url for identifying static file requests. This can
+  be used in both development and production, but in different ways.
+  default None.
 
-  - 使用 ``static`` template tag 来自动根据 ``STATIC_URL`` 生成 static file
-    的 url, 不要把静态文件的 url 写死在 html 里. 这样, 真正的 url 会根据
-    ``STATICFILES_STORAGE`` 的机制去生成, 这样只需要设置
-    ``StaticFilesStorage`` 或 某个 CDN 的 storage 实现, 就可以轻易切换所有
-    url 的指向, 真正做到了单一变量没有重复.
+- ``STATICFILES_FINDERS``. a list of finders used by staticfiles. Default is
+  ``'django.contrib.staticfiles.finders.FileSystemFinder'`` and
+  ``django.contrib.staticfiles.finders.AppDirectoriesFinder``. 前者负责
+  ``STATICFILES_DIRS``, 后者负责每个 app 中的 ``static`` directory.
 
-    ``static`` tag 支持 ``as``, 只赋值不输出.
+- ``STATICFILES_DIRS``. The directories the ``FileSystemFinder`` will use to
+  find static files. 这些目录用于放置 non-app-specific static files.
 
-  - ``get_static_prefix``, 获取 STATIC_URL, 自定义 url 补全, 支持 ``as``.
+  This is a list of directory strings or a list of ``(namespace, directory)``
+  tuples. 第二种语法用于定义 namespace. 否则的话, ``STATICFILES_DIRS`` 中的每个
+  路径同属于一个 namespace 下.
+  
+  default is empty list.
 
-  - ``get_media_prefix``
+- ``STATICFILES_STORAGE``. file storage engine to use for ``collectstatic``
+  management command. default ``django.contrib.staticfiles.storage.StaticFilesStorage``.
 
-* context processors
+- ``STATIC_ROOT``. This is the root directory where ``StaticFilesStorage`` and
+  subclasses will use to store collected static files.  Ready to be served by
+  django or other web server. 这个需要配合 ``STATICFILES_STORAGE`` 使用.
+  
+  注意这个目录不是源代码目录里保存静态文件的.
 
-  - ``django.template.context_processors.static``. 提供 ``STATIC_URL``.
+  default None.
 
-* 静态文件的放置:
+placement of static files
+-------------------------
+如果使用默认的 ``STATICFILES_FINDERS``, 则执行以下静态文件放置策略:
 
-  - app-specific 的静态文件要放在 ``<app>/static/<app>/<filename>``.
-    这样一个 app 的静态文件和它的代码在一起, 模块化更好.
+- app-specific 的静态文件要放在 ``<app>/static/<app>/<filename>``.
+  这样一个 app 的静态文件和它的代码在一起, 模块化更好.
 
-  - 全局的静态文件可以选择两种放置方法:
+- 全局的静态文件可以选择两种放置方法:
 
-    * 放在全局的 ``STATICFILES_DIRS`` 中, 例如 ``$BASE_DIR/static``.
+  * 放在全局的 ``STATICFILES_DIRS`` 中, 例如 ``$BASE_DIR/static``.
 
-    * 放在项目 app 中.
+  * 放在项目 app 中, ``<project-name>/static/<filename>``.
 
-* serve static files.
+serve static files
+------------------
+- 在研发时, 如果没有使用 ``django.contrib.staticfiles``, 则只能 serve 固定目录
+  下的静态文件, 例如 ``STATIC_ROOT`` 下的静态文件.
 
-  - 在开发时, 使用 builtin server 即可 serve 各个 app 下的静态文件.
+  需要手动添加必要的 urlpatterns 来 serve static files:
 
-  - 在项目部署时, 执行 ``collectstatic`` 将静态文件集合在一起放在 ``STATIC_ROOT``,
-    使用 nginx 来高效地 serve 静态文件.
+  .. code:: python
 
-- 全局性质的 (属于整个 project 而不属于某个 app 的) templates 和 static files 应该放在
-  ``$BASE_DIR/<project-name>/{templates,static}``.
+    from django.conf.urls.static import static
+
+    urlpatterns += [
+        *static(prefix=settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+    ]
+
+- 在研发时, 如果有在使用 ``django.contrib.staticfiles``, 则有两种 serve static
+  files 的方式:
+
+  1) 使用 staticfiles 提供的 ``runserver`` command 来运行研发服务器的话, 无需
+  手动配置静态文件相关的 urlpatterns. runserver command 会自动截取 ``STATIC_URL``
+  prefix 的请求.
+
+  2) 若没有使用它提供的 ``runserver`` 来运行研发服务器, 且还需 django serve static
+  files, 可类似上述配置 urlpatterns, 手动添加 ``STATIC_URL`` 至 urlconf:
+
+  .. code:: python
+
+    from django.conf.urls.static import static
+    from django.contrib.staticfiles.views import serve
+
+    urlpatterns += [
+        *static(prefix=settings.STATIC_URL, view=serve)
+    ]
+
+  无论哪种, staticfiles 会调用 ``STATICFILES_FINDERS`` 来获取静态文件. 这种方式在
+  寻找静态文件时具有比较好的灵活性, 适合源代码仓库使用.
+
+- 在生产时, 使用 ``collectstatic`` 将静态文件聚集在一起放在 ``STATIC_ROOT``,
+  使用 nginx 来高效地 serve 静态文件.
+  
+  还可以使用其他非 filesystem-based static file storage backend, 例如 CDN.
+
+template tags
+-------------
+
+- 使用 ``static`` template tag 来自动根据 ``STATIC_URL`` 生成 static file
+  的 url, 不要把静态文件的 url 写死在 html 里. 这样, 真正的 url 会根据
+  ``STATICFILES_STORAGE`` 的机制去生成, 这样只需要设置
+  ``StaticFilesStorage`` 或 某个 CDN 的 storage 实现, 就可以轻易切换所有
+  url 的指向, 真正做到了单一变量没有重复.
+
+  ``static`` tag 支持 ``as``, 只赋值不输出.
+
+- ``get_static_prefix``, 获取 STATIC_URL, 自定义 url 补全, 支持 ``as``.
+
+- ``get_media_prefix``
+
+context processors
+------------------
+
+- ``django.template.context_processors.static``. 提供 ``STATIC_URL``.
 
 testing
 -------
@@ -2151,6 +2222,27 @@ testing
 django.contrib.staticfiles.testing.StaticLiveServerTestCase
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+management commands
+-------------------
+
+collectstatic
+^^^^^^^^^^^^^
+::
+
+  ./manage.py collectstatic
+
+- collect static files based on ``STATICFILES_FINDERS``, and put them in
+  ``STATICFILES_STORAGE``.
+
+- If there are duplicated files in the same namespace, the first found is used.
+
+- By default, If ``STATIC_ROOT`` is not empty, files are copied only if they
+  have a modified timestamp greater than the timestamp of the corresponding
+  file in ``STATIC_ROOT``. Use ``--clear`` to remove existing files.
+
+- files are collected according to ``STATICFILES_FINDERS``.
+
+- 
 
 admin site
 ==========
@@ -3723,9 +3815,8 @@ to the parent class and then don’t use them later on.
 - ``db_tablespace``, 若建立索引, 索引所在的 tablespace. 默认为
   ``settings.DEFAULT_INDEX_TABLESPACE`` 或 ``Meta.db_tablespace``.
 
-- ``validators``.
-  指定 validators. 这些 validators 会在 form validation 或 model instance
-  validation 的时候生效.
+- ``validators``. 指定 validators. 这些 validators 会在 form validation 或
+  model instance validation 的时候生效.
 
 attributes
 ^^^^^^^^^^
@@ -7123,6 +7214,9 @@ only pass on records when ``settings.DEBUG`` is False.
 RequireDebugTrue
 ^^^^^^^^^^^^^^^^
 
+i18n
+====
+
 testing
 =======
 
@@ -7147,9 +7241,15 @@ testing
 
 test databases
 --------------
+- 测试数据库在测试开始时创建, 测试结束后自动删除. 除非使用了 ``--keepdb`` option.
+
+- 创建数据库后, 自动应用 migrations.
+
+test database definitions
+^^^^^^^^^^^^^^^^^^^^^^^^^
 - 对于每个 ``settings.DATABASES`` 中配置的数据库, 测试时单独创建一个相应的测试
   数据库.
-  
+
 - 这些数据库依据各自的 ``TEST`` dictionary 进行创建. 默认配置大致相当于::
 
     {
@@ -7157,12 +7257,15 @@ test databases
         # other configs from parent dict
     }
 
-  对于 sqlite, 默认使用 in-memory database. (因为 sqlite 每个数据库就是一个文件,
-  没有 server, 所以这里创建一个 in-memory db file 是最合适的.)
+mysql
+"""""
+- 关于 charset & collation 的设置, 见 mysql sections of `connection settings`_ of
+  `database definitions`_.
 
-- 测试数据库在测试开始时创建, 测试结束后自动删除. 除非使用了 ``--keepdb`` option.
-
-- 创建数据库后, 自动应用 migrations.
+sqlite
+""""""
+- 默认使用 in-memory database. (因为 sqlite 每个数据库就是一个文件, 没有
+  server, 所以这里创建一个 in-memory db file 是最合适的.)
 
 test classes
 ------------
@@ -7270,6 +7373,22 @@ test runners
   一个 test runner 在 setup/teardown test environment 时打开和关闭浏览器.
   `code <snippets/browser_test_runner.py>`_
 
+DiscoverRunner
+^^^^^^^^^^^^^^
+
+methods
+""""""""
+- ``add_arguments(parser)``. add command line arguments to ``parser``.
+  DiscoverRunner 定义了以下选项:
+
+  * ``--keepdb``. Preserve test database between ``./manage.py test`` runs.
+    测试数据库和相关 migrations 若已经存在则不会重新创建, 测试运行完后也不会
+    销毁测试数据库. 每次执行时检查是否有 unapplied migrations, 若有则应用.
+    这可以极大地提高单元测试执行速度.
+
+  * ``--pattern <pattern>``. discover any file under the current working
+    directory matching ``<pattern>``. It defaults to ``test*.py``.
+
 management commands
 -------------------
 ::
@@ -7284,9 +7403,6 @@ management commands
     test method, to discover tests under that namespace.
 
   * a directory to discover tests under that directory.
-
-- ``--pattern <pattern>``. discover any file under the current working
-  directory matching ``<pattern>``. It defaults to ``test*.py``.
 
 - Abort testing.
 
@@ -7323,6 +7439,37 @@ design patterns
 
 - integration test 时才使用 django 的那些跨越多个模块层的工具, 写单元测试时
   不要使用.
+
+- 单元测试时, 可以设置 ``LANGUAGE_CODE`` 为默认的 ``en-us``. 这样便于测试
+  一些字符串相关的输出情况.
+
+- 如何提高 django 单元测试的执行速度.
+
+  * 数据库方面.
+    
+    1) 如果没有使用 database-specific features, 例如 django 的
+    ``django.contrib.postgres`` package, django-mysql, 则可以在测试时替换
+    为使用 sqlite. 这有很大的速度提升. 这是因为首先 sqlite overhead is low,
+    其次 django 在内存中创建 sqlite 测试库. 但如果使用了与数据库相关的功能,
+    这个方法就不太可行了.
+
+    2) 在保证隔离的单元测试中, 若不需要访问数据库, 完全可以 skip migrations.
+    这可以通过 ``django-test-without-migrations`` plugin 方便地实现.
+
+    3) 如果必须使用 mysql, postgres 等 full-feature 数据库, 且可能需要访问
+    数据库, 使用 ``--keepdb`` option 仍然可以极大地提高单元测试效率.
+
+- 关于对模板和页面的测试.
+  
+  * 不要单元测试 template logic. 很难做到去将依赖项剥离, 去独立测试 template
+    rendering. 这可以在集成测试中进行检测. 同时, 在功能性测试中也会涉及对页
+    面的元素存在性的测试.
+
+  * 对模板渲染的集成测试只测试一些关键的点, 不要测试 style, 而要测试功能.
+    避免 test too brittle.
+
+  * 对页面的 FT 同样不要测试 style, 而要测试功能. 只需保证基本的页面元素
+    和样式是否加载即可. Avoid brittle tests.
 
 django-admin
 ============
