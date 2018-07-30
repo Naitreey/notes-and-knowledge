@@ -2223,6 +2223,7 @@ finders
 
 storage backends
 ----------------
+- all static storage backends are based on ``django.core.files.storage.Storage``
 
 StaticFilesStorage
 ^^^^^^^^^^^^^^^^^^
@@ -7511,8 +7512,8 @@ django.test.LiveServerTestCase
 
 - 注意 django core 的 runserver command 不提供 serve static files 的功能.
   相应地 ``LiveServerTestCase`` 只是为了方便, 提供了 serve ``STATIC_ROOT``
-  下静态文件的功能. 若要方便测试时 serve 各个 app 下的静态文件, 使用
-  ``django.contrib.staticfiles.testing.StaticLiveServerTestCase``.
+  下静态文件的功能. 若要方便测试时 serve 源代码目录下的静态文件, 使用
+  `StaticLiveServerTestCase`_.
 
 test client
 -----------
