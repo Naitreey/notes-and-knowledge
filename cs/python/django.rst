@@ -6764,6 +6764,13 @@ Password validator API.
 
 - ``password_changed()``. optional.
 
+about testing
+-------------
+- 在使用 factory boy 创建 fake user 时, 需要处理 raw password 至
+  hashed password 的转换. 如果密码是 random password, 还需要保存
+  生成的随机密码至 user instance 上. See `snippets/user_factories.py`
+
+
 middleware
 ==========
 

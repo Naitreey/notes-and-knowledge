@@ -108,11 +108,22 @@ Meta options
 
 - ``strategy``. factory's default strategy.
 
+- ``exclude``. a list of attributes to exclude when creating model instances.
+  例如当 factory class 中定义的一些列属性只是作为 helper attributes. 这与
+  `Parameters`_ 有类似之处.
+
 Parameters
 ^^^^^^^^^^
+- Factory's ``Params`` inner-class 用于设置生成 model field 所依赖的参数.
+
+- Parameters can be accessed during attribute resolution.
+
+- 例如, 当多个 model field value 的生成具有一定的相关性, 依赖于几个共同的参数,
+  则可以通过 Params class 来指定. 然后设置 field 使用 ``LazyAttribute`` 来生成.
 
 Traits
 ^^^^^^
+
 
 declarations
 ------------
@@ -133,11 +144,18 @@ LazyFunction
 
 LazyAttribute
 """""""""""""
-
 - When the value of a field is determined dynamically and related to the
   specific instance.
 
-- ``lazy_attribute()`` decorator.
+- It takes as argument a function to call; that function should accept the
+  object being built as sole argument, and return a value suitable for the
+  field.
+
+- 注意 the passed-in object is not an instance of model class, but a
+  ``Resolver`` instance.
+
+- The ``lazy_attribute()`` decorator is similar. The decorated function is
+  the function to be called.
 
 Sequence
 ^^^^^^^^
