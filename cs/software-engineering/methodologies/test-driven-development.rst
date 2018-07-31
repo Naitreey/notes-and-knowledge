@@ -406,6 +406,10 @@ functional test (FT)
   捷径, 访问实现细节进行更方便、更高效的 baseline setup. 这需要根据具体情况
   分析决定.
 
+- 由于 FT 相对肯定比 UT 执行起来慢一些, 为了提高 TDD cycle 速度, 可以适当地
+  只执行与当前开发功能相关的 FTs, 不执行全部 FTs. 将执行全部研发阶段的 FTs
+  的任务留给构建服务器去完成.
+
 integration test
 ----------------
 

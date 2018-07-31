@@ -141,8 +141,14 @@ functional testing
     相对迅速的反馈, 以支持下一步研发. 研发阶段也需要功能性测试是因为这是唯一能
     够证明功能整体符合需求的测试.
 
-  * 在持续继承阶段以及人工测试阶段进行的功能性测试, 这种测试需要全面, 可以很慢.
+  * 在构建阶段以及人工测试阶段进行的功能性测试, 这种测试需要全面, 可以很慢.
     它必须运行在整个系统之上, 不能存在 isolation.
+
+- 在 CI 过程中运行的 FTs, 如果以 failure 方式结束, 应该记录一些信息以便 debug.
+  例如, 出错时的浏览器截图, 此时实际的 html 页面.
+
+  * 对于截图和 html dump, 记录以下 metadata: test file, test class, test
+    method, window id, time.
 
 smoke testing
 -------------
