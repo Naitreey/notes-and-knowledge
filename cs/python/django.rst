@@ -7551,6 +7551,14 @@ testing-purpose HttpResponse attributes
 
 - ``resolver_match``.
 
+test tags
+---------
+- ``django.test.tag``
+
+- 对不同类型的测试用例添加相应的 tag, 例如 ``ut`` for unit test, ``it`` for
+  integration test, ``ft`` for functional test. 这样有助于在命令行上迅速选择需
+  要执行的测试集. 无需写冗长的目录层级以及遍历所有 apps.
+
 test fixtures
 -------------
 - 避免使用 json test fixtures. It makes test
