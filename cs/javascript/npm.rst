@@ -35,11 +35,21 @@ global mode
 
 local mode
 """"""""""
+- This is the default mode.
+
 - installs packages into the current project directory, which defaults to
   the current working directory. Packages are installed to ``./node_modules``,
   and bins are installed to ``./node_modules/.bin``.
 
-- This is the default mode.
+invocations
+""""""""""""
+::
+
+  npm install <name>[@<version>]
+
+- When installing packages, if version is not specified, a ``package.json`` in
+  current directory is consulted if present, otherwise the latest version is
+  installed.
 
 npm ls
 ^^^^^^
