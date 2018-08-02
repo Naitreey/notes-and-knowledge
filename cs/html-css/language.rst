@@ -2015,28 +2015,28 @@ at-rule
 
 box model
 ---------
-每个 html element 都是由一个 invisible box 包裹起来的.
+- 每个 html element 都是由一个 invisible box 包裹起来的.
 
-A box has 4 parts:
+- A box has 4 parts:
 
-- content area. bounded by content edges.
-  html 元素内的的所有内容全都在 content area 中.
+  * content area. bounded by content edges.
+    html 元素内的的所有内容全都在 content area 中.
+  
+  * padding area. between content edges and padding edges.
+    box background 覆盖 content area + padding area.
+  
+  * border area. between padding edges and border edges.
+  
+  * margin area. between border edges and margin edges.
+    元素之间的分隔区域. 实际效果与 margin collapsing 有关.
 
-- padding area. between content edges and padding edges.
-  box background 覆盖 content area + padding area.
+- 对于 non-replaced inline elements, 所占据的高度由 parent block-level element
+  的 line-height property 决定, 而不论元素本身的 height 以及 padding, border,
+  margin 的高度部分设置的值是什么.
 
-- border area. between padding edges and border edges.
-
-- margin area. between border edges and margin edges.
-  元素之间的分隔区域. 实际效果与 margin collapsing 有关.
-
-当 ``box-sizing`` property 为 ``content-box`` 时, 各种 box width 和 height
-属性限制的都是 content area 的宽度和高度; ``border-box`` 时, 这些属性限制
-的是 content + padding + border 部分的宽度和高度.
-
-对于 non-replaced inline elements, 所占据的高度由 parent block-level
-element 的 line-height property 决定, 而不论元素本身的 height 以及 padding,
-border, margin 的高度部分设置的值是什么.
+- 当 ``box-sizing`` property 为 ``content-box`` 时, 各种 box width 和 height 属
+  性限制的都是 content area 的宽度和高度; ``border-box`` 时, 这些属性限制的是
+  content + padding + border 部分的宽度和高度.
 
 margin collapsing
 ^^^^^^^^^^^^^^^^^
@@ -2356,6 +2356,37 @@ text
 
 box
 ^^^
+
+specifying box model
+""""""""""""""""""""
+- ``box-sizing``. 规定该元素上的 width/height 属性指定的是哪个 box 的
+  width/height. 从而影响 user agent 如何确定一个元素的整体 dimension.
+
+  non-inherited property.
+
+  initial vlaue: content-box.
+
+  specified value:
+
+  * content-box. The width and height properties include the content, but does
+    not include the padding, border, or margin.
+
+  * border-box. The width and height properties include the content, padding,
+    and border, but do not include the margin.
+
+  For modern responsive design, 人们一般通过 percentage 的方式限制元素的
+  dimension, 而不设置绝对尺寸. 此时, width/height 值为 border-box 就方便很多.
+  推荐做法 [CSSTrickBoxSizing]_:
+
+  .. code:: css
+
+    html {
+      box-sizing: border-box;
+    }
+    *, *:before, *:after {
+      box-sizing: inherit;
+    }
+
 content box
 """""""""""
 - width.
@@ -2968,3 +2999,6 @@ misc
 
   有很多开源的 CMS 框架, 方便快速构建 CMS. 现今最流行的 CMS 框架是 wordpress.
 
+references
+==========
+.. [CSSTrickBoxSizing] `Box Sizing <https://css-tricks.com/box-sizing/>`_
