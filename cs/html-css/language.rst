@@ -60,7 +60,7 @@ syntax
 - whitespace collapsing. 文档中多个连续的 whitespace chars 会合并成一个.
 
 inline-level and block-level elements
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - block-level element 占据多个整行 -- 一个 block. Browsers typically display
   the block-level element with a newline both before and after the element.
@@ -85,7 +85,7 @@ inline-level and block-level elements
   同时是这两种类型.
 
 comment
-~~~~~~~
+^^^^^^^
 
 - ``<!-- comment -->``
 
@@ -120,7 +120,7 @@ elements
   一组默认的 css 样式设置, 符合该元素的 conventional 表现形式.
 
 main root
-~~~~~~~~~
+^^^^^^^^^
 
 - ``<html>``, 表示里面都是 html code. the only root element. All must be
   descendant of it.
@@ -132,7 +132,7 @@ main root
     XML parsers, and optional in text/html documents.
 
 document metadata
-~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^
 
 - ``<head>``, general information or metadata.
   里面必须有一个 ``<title>`` element. 除非是 iframe srcdoc.
@@ -222,7 +222,7 @@ document metadata
   * ``title``, 定义该 style definition 所属的 alternative stylesheet set.
 
 sectioning root
-~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^
 
 - ``<body>``, body 里的内容才显示在页面上.
 
@@ -231,7 +231,7 @@ sectioning root
   * 一系列 callback function 定义.
 
 content sectioning
-~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^
 
 - ``<article>``, a self-contained composition in a page. 常用于表示各种文章内容
   主体. h1-h6 一般在 article 内部用于 section heading.
@@ -281,7 +281,7 @@ content sectioning
   address element.
 
 text content
-~~~~~~~~~~~~
+^^^^^^^^^^^^
 
 - ``<main>``, semantic main content, central functionality, etc. of the document,
   or application. 如果一个页面需要多个 article 构成主体, main 中可以有多个 article.
@@ -394,7 +394,7 @@ text content
   * ``value``, value of content of this element.
 
 inline text semantics
-~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^
 
 - ``<b>`` 注意 html5 中, b 不是样式上加粗而已. 而是代表 bold 语义, 具体
   是什么样式, 要靠 CSS 定义. 如果仅是为了加粗, 可定义 CSS font-weight.
@@ -599,7 +599,7 @@ inline text semantics
   span 应该在没有其他合适的 semantic elements 的情况下使用.
 
 document edits
-~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^
 
 - ``<del>``, 表示内容删除. 里面可以是任何的内容, flow content, phrasing content,
   whatever. 都会被 (默认) strike-through. 遵循 transparent content model, 它的
@@ -616,7 +616,7 @@ document edits
 - ``<ins>``, 表示内容是插入的, 默认以下划线表示. 其他 ditto.
 
 image and multimedia
-~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^
 
 - ``<img>``, image.
 
@@ -747,7 +747,7 @@ image and multimedia
   optionally associates it with a hypertext link. 好像已经很少使用了.
 
 table content
-~~~~~~~~~~~~~
+^^^^^^^^^^^^^
 
 - ``<table>``, table.
 
@@ -798,7 +798,7 @@ table content
   * ``rowspan``
 
 forms
-~~~~~
+^^^^^
 
 - ``<form>``
   form 里可以有任何 flow content. submit 时 form 里的各层所有
@@ -1312,7 +1312,7 @@ forms
   * ``name``
 
 interactive elements
-~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^
 
 - ``<menu>``, 定义一个用于交互的列表.
 
@@ -1341,7 +1341,7 @@ interactive elements
   * ``open``, boolean, 存在则默认出现.
 
 embedded content
-~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^
 
 - ``<iframe>``, 将另一个 html document 嵌入外层的 html document. 这种嵌套构建了
   nested browsing context. 每个 browsing context 有它自己的 session history.
@@ -1400,7 +1400,7 @@ embedded content
   曾经用于 flash, svg 等, 现在基本没啥用.
 
 web components
-~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^
 
 
 global attributes
@@ -1772,7 +1772,7 @@ selectors
 按逻辑显然必须依附于一定的 basic selectors.
 
 basic selectors
-~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^
 - universal selector. ``*``
 
   添加 css namespace 后, 成为:
@@ -1812,7 +1812,7 @@ basic selectors
   * ``[attr operator value i|I]``, any above but case-insensitive.
 
 combinators
-~~~~~~~~~~~
+^^^^^^^^^^^
 
 - child combinator. ``a > b``
 
@@ -1823,7 +1823,7 @@ combinators
 - general sibling combinator. ``a ~ b``
 
 pseudo-classes
-~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^
 - 作用: 在 selector 后面加上 ``:<...>``, 用于在已经选定的元素中进一步只选择
   它的某个子状态.
 
@@ -1862,7 +1862,7 @@ pseudo-classes
 - ``:active``, match an element when it's being activated by pointing device.
 
 pseudo-elements
-~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^
 - 作用: 在 selector 后附加 ``::<...>`` 语法, 用于在已经选定的元素中进一步限定
   只选择它的某个子部分.
 
@@ -1909,7 +1909,7 @@ when to put css definitions at element-inline, document-level, external, etc.?
    使用初始值.
 
 cascade
-~~~~~~~
+^^^^^^^
 
 - cascade 是通过 css 定义的重要性和来源进行筛选的算法.
 
@@ -1955,7 +1955,7 @@ cascade
       rule.
 
 specificity
-~~~~~~~~~~~
+^^^^^^^^^^^
 
 - specificity 定义一个 css declaration 的权重.
 
@@ -1990,7 +1990,7 @@ specificity
   先后顺序决定使用哪个规则.
 
 inheritance
-~~~~~~~~~~~
+^^^^^^^^^^^
 
 - 属性分为两类: inherited property & non-inherited property.
 
@@ -2039,7 +2039,7 @@ element 的 line-height property 决定, 而不论元素本身的 height 以及 
 border, margin 的高度部分设置的值是什么.
 
 margin collapsing
-~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^
 A behavior when the margin of adjacent blocks are combined into a single
 margin whose size the largest the two.
 
@@ -2065,7 +2065,7 @@ three types of margin collapsing:
   因此实际中 margin collapsing 只会发生在 top/bottom margin 之间.
 
 自动计算属性
-~~~~~~~~~~~~
+^^^^^^^^^^^^
 对于 non-float block element, margin edge 一定会覆盖整行. 它的 left, right 
 margin 根据 width, padding, border 等方面的属性值的设置综合计算得到.
 
@@ -2073,7 +2073,7 @@ properties
 ----------
 
 text
-~~~~~
+^^^^^
 - color. 负责元素的 text content and text decoration 部分的颜色.
 
   specified value 是 a value of ``<color>`` data type.
@@ -2355,9 +2355,9 @@ text
   pairs.
 
 box
-~~~
+^^^
 content box
-'''''''''''
+"""""""""""
 - width.
   width of element's context area (normally).
 
@@ -2428,7 +2428,7 @@ content box
   is not absolutely positioned, the percentage value is treated as none.
 
 padding
-'''''''
+"""""""
 - padding-top.
 
   non-inherited.
@@ -2453,7 +2453,7 @@ padding
   shorthand for all above.
 
 border
-''''''
+""""""
 - border-top-width.
 
   non-inherited property.
@@ -2568,7 +2568,7 @@ border
 - border-left.
 
 margin
-''''''
+""""""
 - margin-top.
 
   non-inherited.
@@ -2607,7 +2607,7 @@ margin
   更方便的元素水平和竖直居中问题, 使用 flexbox 解决.
 
 overflow
-''''''''
+""""""""
 - overflow.
   What to do when an element's content is too large to fit in its block
   formatting context. shorthand for overflow-x and overflow-y.
@@ -2639,7 +2639,7 @@ overflow
   一般只有通过某种方式限制了 box height 时, 才会有纵向的 overflow.
 
 white space
-'''''''''''
+"""""""""""
 - white-space.
   控制元素内的 whitespace collapsing algorithm.
 
@@ -2688,7 +2688,7 @@ white space
     绝对效果而不是相对效果也比较合理.
 
 pseudo-element
-~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^
 - content.
   和 ``::before`` ``::after`` 一起使用. 通过这种方式生成的元素是
   anonymous replaced elements.
@@ -2717,7 +2717,7 @@ pseudo-element
   除了 none, normal 两个 keyword, 其他内容可以同时指定任意次数. 所以可以非常复杂.
 
 counter
-~~~~~~~
+^^^^^^^
 Counters 可以用于 auto-numbering headers 等.
 相关属性和值: ``counter-reset``, ``counter-increment``, ``content``,
 ``<counter>``.
@@ -2763,7 +2763,7 @@ A new instance of the counter is automatically created in child elements.
 
 
 special
-~~~~~~~
+^^^^^^^
 - all. a shorthand property representing all properties, apart from
   ``unicode-bidi`` and ``direction``.
 
@@ -2859,7 +2859,7 @@ value data types
     string 是每层 counter value 之间的分隔符.
 
 global values
-~~~~~~~~~~~~~
+^^^^^^^^^^^^^
 
 - initial. 明确使用该属性的 initial value.
 
