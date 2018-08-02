@@ -2696,6 +2696,9 @@ white space
   * pre-line. 效果和 normal 一样, 除了一点: newline char 也会 wrap line, 而不会
     collapse.
 
+background
+""""""""""
+
 - background-color
 
 - opacity. opacity 指定的不透明性对一个元素和它所有 dom children nodes 一起生效.
@@ -2717,6 +2720,14 @@ white space
 
   * rgba 等值经常设置在 inherited property 上. 由于子元素默认继承, 逻辑上是
     绝对效果而不是相对效果也比较合理.
+
+positioning
+""""""""""""
+- z-index. specify the z-axis order of the positioned elements, when they
+  overlap each other. The element with higher z-index generally covers a lower
+  one.
+
+  ``z-index`` only works for an element with ``position`` other than ``static``.
 
 pseudo-element
 ^^^^^^^^^^^^^^
