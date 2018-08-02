@@ -104,3 +104,30 @@ APIs
 
 - The version of each of Bootstrap’s jQuery plugins can be accessed via the
   ``VERSION`` property of the plugin’s constructor.
+
+layout
+======
+
+breakpoints
+-----------
+
+- 
+
+containers
+----------
+- containers can be nested, but for most layouts it's not needed.
+
+types of containers
+^^^^^^^^^^^^^^^^^^^
+
+- fixed-width container:
+
+  * class: ``.container``
+ 
+  * ``max-width`` changes at each breakpoint.
+
+- full-width container: 
+
+  * class: ``.container-fluid``
+
+  * spanning the entire width of the viewport.
