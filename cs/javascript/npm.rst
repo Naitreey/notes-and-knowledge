@@ -42,7 +42,7 @@ local mode
   and bins are installed to ``./node_modules/.bin``.
 
 invocations
-""""""""""""
+"""""""""""
 ::
 
   npm install <name>[@<version>]
@@ -50,6 +50,38 @@ invocations
 - When installing packages, if version is not specified, a ``package.json`` in
   current directory is consulted if present, otherwise the latest version is
   installed.
+
+- When installing new packages, any new packages specified on commandline will
+  be saved to package.json.  By default, ``^<ver>`` is used as version number
+  specifier.
+
+  * ``--save-prod`` default. save dependencies under ``dependencies`` key.
+
+  * ``--save-dev`` save under ``devDependencies``.
+
+  * ``--save-optional`` save under ``optionalDependencies``.
+
+  * ``--no-save`` prevent saving as dependencies.
+
+  * ``--save-exact`` save exact version number.
+
+  * ``--save-bundle`` also save dependencies as bundled dependencies.
+
+npm update
+^^^^^^^^^^
+::
+
+  npm update [-g] [<pkg>...]
+
+- aliases: up, upgrade
+
+- Update listed packages or all packages to the latest version that satisfying
+  version specifier as defined in ``package.json``.
+
+- Use ``-g`` flag to update globally installed packages. If no package is
+  specified, all packages are updated.
+
+- Use ``--dev`` flag to update dev dependencies.
 
 npm ls
 ^^^^^^
@@ -64,6 +96,35 @@ npm adduser
 - create a new user or login a user to the specified registry.
 
 - When logged in, user's credentials are saved to ``.npmrc``.
+
+npm init
+^^^^^^^^
+- init a project by creating package.json. It operates by calling ``npx``
+  or use legacy init behavior.
+
+extensible mode
+"""""""""""""""
+::
+
+  npm init @<scope> [options]            # npx @<scope>/create
+  npm init [@<scope>/]<name> [options]   # npx [@<scope>/]create-<name>
+
+- create and initialize package according the specified initializer.
+
+- additional options are passed to corresponding ``npx`` command.
+
+legacy mode
+"""""""""""
+::
+
+  npm init [--force|-f|--yes|-y|--scope]
+
+- By default, the following fields are initialized: name, version, description,
+  main, scripts, keywords, author, license, bugs, homepage.
+
+- the default value of init fields can be customized by configuration.
+
+- The package.json questionnaire can be customized by ``~/.npm-init.js``
 
 configuration
 -------------
@@ -82,6 +143,45 @@ configuration
 
 package file and package locks
 ------------------------------
+
+- package.json 与 package-lock.json 各自的作用.
+
+  * package.json 指定一个 package/project/etc. 的直接依赖, 它指定的版本依赖
+    情况可以是相对灵活的. 也就是说, package.json 用于 package 发布. 用于指定
+    一个 package 能够正常工作的依赖版本范围. 它相当于 python 中的 setup.py.
+
+  * package-lock.json 指定一次安装的 snapshot. 它指定完全固定的版本. 也就是说
+    package-lock.json 用于项目部署. 用于可重复安装. 它相当于 python 中的
+    requirements.txt.
+
+package.json
+^^^^^^^^^^^^
+- ``package.json`` is a complete specification of a node package.
+
+- It's a json object.
+
+- use ``npm init`` to create a package.json.
+
+contents
+""""""""
+- ``name``. package's name. required. lowercase, no space, only ``-`` and ``_``
+  are allowed as separator between ASCII letters.
+
+- ``version``. package's version. must follow semver.
+
+- ``dependencies``. for production.
+
+- ``devDependencies``. for development and testing.
+
+- ``bundledDependencies``. for dependencies that should be bundled with the
+  project source.
+
+  When to use bundled dependencies [SONPMBundledDep]_:
+
+  * packages that doesn't come from a npm registry, that has to be installed
+    manually.
+
+  * corporate private modules without a private registry.
 
 package-lock.json
 ^^^^^^^^^^^^^^^^^
@@ -117,6 +217,23 @@ package-lock.json
   * For installation of certain dependency, the ``resolved`` package file is
     used if available, otherwise falling back to normal package resolution using
     ``version`` key.
+
+- 如何使用 package-lock.json.
+
+  * save package-lock.json into VCS in a single commit. 这样可以保证对项目的
+    所有部署都是一致的. 这对 CI 和部署是重要的.
+
+  * any npm command that modifies a project/package's dependency in any way,
+    will update package-lock.json accordingly by default.
+
+  * the diffs of package-lock.json will inform you of any changes of transitive
+    dependencies.
+
+  * When two branches caused merge conflict on package.json and/or
+    package-lock.json, manually fix package.json conflicts, then ``npm install``
+    will automatically resolve any conflicts for you and write a merged package
+    lock that includes all the dependencies from both branches in a reasonable
+    tree.
 
 package registry
 ================
@@ -158,3 +275,8 @@ analysis dimensions
 - maintenance. ranks according to the attention given by developers.
 
 - optimal. combines the three other criteria in a meaningful way.
+
+
+references
+==========
+.. [SONPMBundledDep] `Advantages of bundledDependencies over normal dependencies in NPM <https://stackoverflow.com/a/25044361/1602266>`_
