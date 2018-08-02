@@ -4,7 +4,9 @@
 
 - 代码比 commit history 重要得多
 
-- 每次 commit 都要写清晰地足够说明问题的 commit message
+- 每次 commit 都要写清晰地足够说明问题的 commit message. 判断一个 commit
+  message 是否足够好的标准: After reading the commit message, the code
+  changes should not make surprises and being quite obvious.
 
 - 开发过程中及时进行 commit history 的梳理
 

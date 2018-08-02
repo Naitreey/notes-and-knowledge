@@ -68,20 +68,55 @@ npm adduser
 configuration
 -------------
 
-cli options
-^^^^^^^^^^^
+- There are 5 levels of configurations involved with npm:
 
-environment variables
-^^^^^^^^^^^^^^^^^^^^^
+  * cli options
+  
+  * environment variables
+  
+  * user configs
+  
+  * global configs
+  
+  * default configs
 
-user configs
-^^^^^^^^^^^^
+package file and package locks
+------------------------------
 
-global configs
-^^^^^^^^^^^^^^
+package-lock.json
+^^^^^^^^^^^^^^^^^
+- why does npm need package locks?
 
-default configs
-^^^^^^^^^^^^^^^
+  package lock 的作用相当于是对一次 specific installation of dependencies 保存
+  快照. 这是为了保证能够在未来的时间、在不同的环境下能够完全重复与此次相同的安
+  装结果.
+
+  注意 ``package.json`` 不能保证这种完全的可重复性. 这是因为:
+
+  * ``package.json`` 中对依赖的版本指定可以是一个范围, 而不是确定的版本.
+
+  * ``package.json`` 一般只指定 direct dependencies, 可能出现直接依赖没有改变,
+    但间接依赖更新版本的情况.
+
+  因此, 我们需要一种能够明确声明当前安装的所有 packages 的方法.
+
+- ``package-lock.json`` 的作用相当于 python 中 ``pip freeze`` 的输出.
+
+- package lock 的特点在于:
+
+  * exact
+
+  * reproducible.
+
+- Package installation process with the presence of ``package-lock.json``.
+
+  * Once ``package-lock.json`` is present, any future installation will base
+    its work off this file, instead of recalculating dependency versions off
+    ``package.json``.
+
+  * For installation of certain dependency, the ``resolved`` package file is
+    used if available, otherwise falling back to normal package resolution using
+    ``version`` key.
 
 package registry
 ================
