@@ -2041,7 +2041,16 @@ box model
 margin collapsing
 ^^^^^^^^^^^^^^^^^
 A behavior when the margin of adjacent blocks are combined into a single
-margin whose size the largest the two.
+margin whose size is determined based on the following conditions:
+
+* for both positive margins, use the largest of the two.
+
+* for one positive and one negative margins, the size of the collapsed margin
+  is the sum of the largest positive margin and the smallest (most negative)
+  negative margin.
+
+* When both margins are negative, the size of the collapsed margin is the
+  smallest (most negative) margin.
 
 three types of margin collapsing:
 
@@ -2054,7 +2063,9 @@ three types of margin collapsing:
   在 parent element 的外边.
 
 - empty element. 对于一个 empty block element, 如果它的 top margin 和 bottom
-  margin 之间没有任何东西隔在中间, 则它的 top/bottom margins 会合成一个.
+  margin 之间没有任何东西隔在中间 (border, padding, inline part, block
+  formatting context created, or clearance), 则它的 top/bottom margins 会合成一
+  个.
 
 注意:
 
@@ -2068,6 +2079,56 @@ three types of margin collapsing:
 ^^^^^^^^^^^^
 对于 non-float block element, margin edge 一定会覆盖整行. 它的 left, right 
 margin 根据 width, padding, border 等方面的属性值的设置综合计算得到.
+
+margin box
+^^^^^^^^^^
+- negative margin. 在不考虑 margin collapsing 的情况下, 若某个元素有 negative
+  margin,
+
+  * it will pull the adjacent element's margin box inwards.
+
+  * 若该元素是 first/last child of its parent element, it pushes the element's
+    border box into parent element's padding area. 因为一定是 margin box 与
+    parent element 的 content box 衔接.
+
+properties
+""""""""""
+- margin-top.
+
+  non-inherited.
+
+  initial value: 0.
+
+  specified value:
+
+  * ``<length>``
+
+  * ``<percentage>``
+    relative to the width of the containing block.
+
+  * auto.
+    The browser selects a suitable margin to use.
+
+- margin-right.
+
+- margin-bottom.
+
+- margin-left.
+
+- margin.
+  shorthand for all above.
+
+  对于 non-float block element, 为了将元素占满整行, 会自动设置合适的 margin
+  进行填充. 此时 margin-left, margin-right 只具有参考意义.
+
+  任意一个或多个方向的 margin 设置 auto 时, 由浏览器决定如何设置相应的 margin.
+  当相对的两个 margin 都是 auto 时, 会给这两个 margin 设置相等的数值. 这可以用于
+  将 block element 的 border area 在 containing block 中水平居中 (对于 inline
+  element, 不占据一整行, 没有所谓居中. 但可以 text-align 为 center).
+  在竖直方向, 由于 block element 没有占据尽可能多的 vertical space 的要求, 因此
+  margin-top/bottom 设置 auto 只会让相应 margin 为 0.
+
+  更方便的元素水平和竖直居中问题, 使用 flexbox 解决.
 
 flexbox layout
 --------------
@@ -2190,8 +2251,13 @@ flex item properties
 - order. By default, flex items are laid out in the source order. This
   redefines the order in which they appear in the flex container.
 
-- flex-grow. the ability for a flex item to grow if necessary. It accepts a
-  unitless value that serves as a proportion.
+- flex-grow. the ability for a flex item to grow and take remaining spaces if
+  necessary. It accepts a unitless value that serves as a proportion relative
+  to other flex item's flex-grow value.
+
+  specified value: ``<number>``
+
+  initial value: 0. meaning do not grow.
 
 - flex-shrink. the ability for a flex item to shrink if necessary.
 
@@ -2199,6 +2265,21 @@ flex item properties
   distributed.
 
 - flex. shorthand for flex-grow, flex-shrink and flex-basis.
+
+  specified values:
+
+  * none. equals to 0 0 auto.
+
+  * 1 value:
+    
+    - a unitless number, interpreted as flex-grow;
+
+    - any valid value for flex-basis;
+
+  * 2 values: first value is for flex-grow; second value is for flex-shrink if
+    it is unitless number, or for flex-basis if it is valid value for that.
+
+  * 3 values: for 3 properties respectively.
 
 - align-self. override this item's alignment at cross axis direction as defined
   by ``align-items``.
@@ -2746,45 +2827,6 @@ border
 
 - border-left.
 
-margin
-""""""
-- margin-top.
-
-  non-inherited.
-
-  initial value: 0.
-
-  specified value:
-
-  * ``<length>``
-
-  * ``<percentage>``
-    relative to the width of the containing block.
-
-  * auto.
-    The browser selects a suitable margin to use.
-
-- margin-right.
-
-- margin-bottom.
-
-- margin-left.
-
-- margin.
-  shorthand for all above.
-
-  对于 non-float block element, 为了将元素占满整行, 会自动设置合适的 margin
-  进行填充. 此时 margin-left, margin-right 只具有参考意义.
-
-  任意一个或多个方向的 margin 设置 auto 时, 由浏览器决定如何设置相应的 margin.
-  当相对的两个 margin 都是 auto 时, 会给这两个 margin 设置相等的数值. 这可以用于
-  将 block element 的 border area 在 containing block 中水平居中 (对于 inline
-  element, 不占据一整行, 没有所谓居中. 但可以 text-align 为 center).
-  在竖直方向, 由于 block element 没有占据尽可能多的 vertical space 的要求, 因此
-  margin-top/bottom 设置 auto 只会让相应 margin 为 0.
-
-  更方便的元素水平和竖直居中问题, 使用 flexbox 解决.
-
 overflow
 """"""""
 - overflow.
@@ -2962,8 +3004,8 @@ special
 
   non-inherited property.
 
-value data types
-----------------
+data types of values
+--------------------
 - ``<color>`` value, in sRGB color space, with optionally alpha-channel
   transparency value.
 
