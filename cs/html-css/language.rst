@@ -2069,6 +2069,154 @@ three types of margin collapsing:
 对于 non-float block element, margin edge 一定会覆盖整行. 它的 left, right 
 margin 根据 width, padding, border 等方面的属性值的设置综合计算得到.
 
+flexbox layout
+--------------
+
+overview
+^^^^^^^^
+- flexible box layout, providing a more efficient way to lay out, align and
+  distribute space among items in a container, even when their size is unknown
+  and/or dynamic.
+
+- Main idea: give the container the ability to alter its items' width/height
+  (and order) to best fill the available space.
+
+- flexbox layout 中, 不存在对 vertical and horizontal direction 在意义上的区分.
+  两个方向是同质的, 可相互转换. 而在传统 layout 中, vertical 为 block element
+  排列的方向, horizontal 为 inline element 排列的方向.
+
+concepts
+^^^^^^^^
+
+- For a complete flexbox layout, some properties are set to flex container,
+  some properties are set to flex items.
+
+- the flex layout is based on the flex-flow direction.
+
+- main axis. the primary axis along which flex items are laid out. It's
+  determined by ``flex-direction``.
+
+- main-start, main-end. main axis 的起始端和结束端. items are placed from
+  starting side to ending side.
+
+- main size. flex item's dimension on main axis's direction. could be its
+  width or height.
+
+- cross axis. the axis perpendicular to the main axis.
+
+- cross-start, cross-end. cross axis 的起始端和结束端. lines of flex items
+  are placed from starting side to ending side of cross axis.
+
+- cross size. flex item's dimension on cross axis's direction.
+
+flex container properties
+^^^^^^^^^^^^^^^^^^^^^^^^^
+- ``display`` must be ``flex``.
+
+- flex-direction. defines the main axis's orientation and its direction.
+
+  specified values:
+
+  * row.
+
+  * row-reverse.
+
+  * column.
+
+  * column-reverse.
+
+- flex-wrap. defines whether flex items should wrap into multiple flex
+  lines if they don't fit in oneline.
+
+  specified values:
+
+  * nowrap
+
+  * wrap
+
+  * wrap-reverse.
+
+- flex-flow. shorthand for flex-direction and flex-wrap.
+
+- justify-content. items' alignment along the main axis. This is achieved by
+  distributing extra free space left over when either all the flex items on a
+  line are inflexible, or are flexible but have reached their maximum size.
+
+  specified values:
+
+  * flex-start
+
+  * flex-end
+
+  * center
+
+  * space-between
+
+  * space-around
+
+  * space-evenly
+
+- align-items. On one flex line, this determines the alignment of flex items in
+  cross axis direction.
+
+  * flex-start
+
+  * flex-end
+
+  * center
+
+  * baseline
+
+  * stretch
+
+- align-content. 决定多个 flex line 在 cross axis 方向上, 如何去布局. 如果只有
+  一行 flex items 则没有效果.
+
+  * flex-start
+
+  * flex-end
+
+  * center
+
+  * space-between
+
+  * space-around
+
+  * stretch
+
+flex item properties
+^^^^^^^^^^^^^^^^^^^^
+
+- order. By default, flex items are laid out in the source order. This
+  redefines the order in which they appear in the flex container.
+
+- flex-grow. the ability for a flex item to grow if necessary. It accepts a
+  unitless value that serves as a proportion.
+
+- flex-shrink. the ability for a flex item to shrink if necessary.
+
+- flex-basis. the default size of an element before the remaining space is
+  distributed.
+
+- flex. shorthand for flex-grow, flex-shrink and flex-basis.
+
+- align-self. override this item's alignment at cross axis direction as defined
+  by ``align-items``.
+
+  specified values:
+
+  * auto 
+   
+  * flex-start 
+   
+  * flex-end 
+   
+  * center 
+   
+  * baseline 
+   
+  * stretch
+
 properties
 ----------
 
