@@ -2170,6 +2170,18 @@ concepts
 
 - cross size. flex item's dimension on cross axis's direction.
 
+working with margin
+^^^^^^^^^^^^^^^^^^^
+- When auto margins are applied to a flex item, it will automatically extend
+  its specified margin to occupy the extra space in the flex container,
+  depending on the direction in which the auto-margin is applied.
+
+  See also: [FlexMarginAuto]_
+
+- If you don’t specify a direction, simply applying ``margin: auto``, a flex
+  item would evenly distribute any extra space on either side of the itself
+  equally.
+
 flex container properties
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 - ``display`` must be ``flex``.
@@ -2217,8 +2229,12 @@ flex container properties
 
   * space-evenly
 
-- align-items. On one flex line, this determines the alignment of flex items in
+- align-items. On a flex line, this determines the alignment of flex items in
   cross axis direction.
+
+  specified values:
+
+  * normal. For flex items, behaves like ``stretch``.
 
   * flex-start
 
@@ -2229,6 +2245,8 @@ flex container properties
   * baseline
 
   * stretch
+
+  initial value: normal.
 
 - align-content. 决定多个 flex line 在 cross axis 方向上, 如何去布局. 如果只有
   一行 flex items 则没有效果.
@@ -3203,3 +3221,4 @@ misc
 references
 ==========
 .. [CSSTrickBoxSizing] `Box Sizing <https://css-tricks.com/box-sizing/>`_
+.. [FlexMarginAuto] `Flexbox’s Best-Kept Secret <https://hackernoon.com/flexbox-s-best-kept-secret-bd3d892826b6>`_
