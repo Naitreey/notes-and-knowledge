@@ -142,6 +142,43 @@ breakpoints are defined in px, because viewport is computed in pixel.
 
   * 1200px - inf.
 
+grid variables in Sass
+----------------------
+::
+
+  $grid-columns:      12;
+  $grid-gutter-width: 30px;
+
+  $grid-breakpoints: (
+    // Extra small screen / phone
+    xs: 0,
+    // Small screen / phone
+    sm: 576px,
+    // Medium screen / tablet
+    md: 768px,
+    // Large screen / desktop
+    lg: 992px,
+    // Extra large screen / wide desktop
+    xl: 1200px
+  );
+
+  $container-max-widths: (
+    sm: 540px,
+    md: 720px,
+    lg: 960px,
+    xl: 1140px
+  );
+
+grid mixins in Sass
+-------------------
+::
+
+  make-row
+  make-container
+  make-col-ready
+  make-col
+  make-col-offset
+
 media queries
 -------------
 
@@ -226,8 +263,39 @@ rows
 
 - The direct children of a row must be a set of columns.
 
-- the margins on rows and paddings on columns can be removed by ``.no-gutters``
-  class.
+alignment of columns
+""""""""""""""""""""
+- vertical and horizontal alignments of columns in a row are achieved by
+  flexbox alignments.
+
+- classes to control vertical alignment of columns in a row.
+
+  * ``.align-items-start``. set ``align-items: flex-start``
+
+  * ``.align-items-center``. similar.
+
+  * ``.align-items-end``
+
+- classes to control horizontal alignment of columns in a row.
+
+  * ``.justify-content-start``
+
+  * ``.justify-content-center``
+
+  * ``.justify-content-end``
+
+  * ``.justify-content-around``
+
+  * ``.justify-content-between``
+
+no gutters
+""""""""""
+- the -15px margins on rows and paddings on their contained columns can be
+  removed by ``.no-gutters`` class::
+
+    <div class="row no-gutter">
+        ...
+    </div>
 
 columns
 ^^^^^^^
@@ -257,20 +325,494 @@ columns
 
 column classes
 """"""""""""""
-- class format::
+- auto-layout columns::
 
-  .col[-{breakpoint}]-{width}
+    .col[-{breakpoint}]
 
-- breakpoint 对应于 `breakpoints`_ 定义的 5 类宽度范围.
+  * 当 viewport 宽度大于 breakpoint 时, auto layout 才生效, 否则每个 column
+    的宽度是 100%, 即对于 narrow viewport 呈现 stacking 效果.
+
+  * 对于 xs, 不指定 breakpoint, 因为是从 0 开始. 此时, 对任何宽度的 viewport 都
+    有效.
+
+  * 所有使用该 class 的 column 自动 expand to an equal width for the rest of
+    the row. 这是由 ``flex-grow: 1`` 实现的.
+
+  * auto layout columns 可以与 responsive column classes 一起使用, 按照 flexbox
+    layout, auto layout columns 会均分 responsive column classes 剩下的区域.
+
+- variable width columns::
+
+    .col[-{breakpoint}]-auto
+
+  * 宽度由内容宽度决定. 这是 ``flex-basis: auto`` 的效果.
+
+  * ``breakpoint`` 限制了只有宽度大于该 breakpoint 时这才生效. 否则宽度为 100%.
+
+- proportional columns::
+
+    .col[-{breakpoint}]-{width}
+
+  * breakpoint 对应于 `breakpoints`_ 定义的 5 类宽度范围.
+    
+  * 该 class 的意义为当 viewport 宽度大于相应 breakpoint 的宽度值时, ``{width}``
+    所指定的 flexbox proportional 效果才得到应用. 否则, column 占到 viewport 的全
+    部宽度.
   
-- 该 class 的意义为当 viewport 宽度大于相应 breakpoint 的宽度值时, ``{width}``
-  所指定的 flexbox proportional 效果才得到应用. 否则, column 占到 viewport 的全
-  部宽度.
+  * 对于 xs, 不指定 breakpoint, 因为是从 0 开始. 此时, ``{width}`` proportional
+    效果总是成立, 而无论 viewport 宽度是多少.
+  
+  * ``{width}`` 最大是 12.
 
-- 对于 xs, 不指定 breakpoint, 因为是从 0 开始. 此时, ``{width}`` proportional
-  效果总是成立.
+column wrapping
+""""""""""""""""
+- 如果某个 row 中的 columns 总宽度大于 12, 超出 12 的那些 columns 会自动 wrap
+  至下一个 flex line. 由于每个 column 的宽度比例本质上是 flex-basis, 所以是
+  仍然以 row 的宽度为单位来缩放.
 
-- ``{width}`` 最大是 12.
+column break
+""""""""""""
+- add a div with ``.w-100`` class to force break columns into multiple lines::
+
+    <div class="w-100"></div>
+
+- This is can combined with responsive display utilities to make the column
+  break responsive.::
+
+    <div class="w-100 d-none d-md-block"></div>
+
+mix column classes
+""""""""""""""""""
+- 可以给一组 column 设置多个 column classes, 分别应对不同宽度下的不同 layout 行
+  为. 本质即在不同宽度下, 不同的 media query 生效.
+
+  例如, 以下保证在 viewport 达不到 ``col-sm`` 时, 按照 ``col-*`` 的布局来分配宽
+  度.::
+
+    <div class="row">
+      <div class="col-12 col-md-8">.col-12 .col-md-8</div>
+      <div class="col-6 col-md-4">.col-6 .col-md-4</div>
+    </div>
+
+column self alignment
+"""""""""""""""""""""
+- a column can overrides its vertical and horizontal alignments stipulated by
+  the containing row (a flex container).
+
+- vertical alignment
+
+  * ``.align-self-start``
+
+  * ``.align-self-center``
+
+  * ``.align-self-end``
+
+column ordering
+"""""""""""""""
+- Use ``.order-`` classes for controlling the visual order of your content.::
+
+    .order[-{breakpoint}]-{N}
+
+  本质上使用了 ``order`` flexbox property.
+
+- order 可以是 1-12. 注意若没有设置, 该 flex item 的默认值是 0, 导致总是第一个.
+
+- special classes to enforce first and last order::
+
+    .order[-{breakpoint}]-first
+    .order[-{breakpoint}]-last
+
+  they use order -1 and order 13 under the hood.
+
+column offset
+"""""""""""""
+- responsive column offsets::
+
+    .offset[-{breakpoint}]-{N}
+    .offset[-{breakpoint}]-0
+
+- 这些 offset 实际是创建了 left margin.
+  
+- 对于 ``N=0``, 是在 viewport 大于这个 breakpoint 时, reset offset 至 0. 例如::
+
+    <div class="col-sm-6 col-md-5 col-lg-6"></div>
+    <div class="col-sm-6 col-md-5 offset-md-2 col-lg-6 offset-lg-0"></div>
+
+- column offset and `margin utilities`_ 可用于创建 responsive heterogenous
+  layout.
+
+nesting
+^^^^^^^
+- nesting rows inside columns is possible.
+
+- 外层 column 中可以有其他内容, 例如 inline content.
+
+media object
+============
+- media object is an image (or other media content) to the left, with
+  descriptive content to the right. E.g., a tweet.
+
+basic layout
+------------
+- To create a media object, the following structure: ``.media`` wrapper, a
+  media element as the first child, ``.media-body`` as the second child.::
+
+    <div class="media">
+      <img class="mr-3" src="..." alt="...">
+      <div class="media-body">
+      ...
+      </div>
+    </div>
+
+- ``.media`` is a flex container. media element and ``.media-body`` are flex
+  items.  ``.media-body`` is growable but media element is not.
+
+nesting
+-------
+- Media objects can be infinitely nested. Place nested ``.media`` within the
+  ``.media-body`` of a parent media object.
+
+alignment
+---------
+- The two flex items by default has horizontal and vertical alignment to
+  flex-start.
+
+- use normal column alignment classes to change default behavior.
+
+media list
+----------
+
+- Use ``<ul>`` to create media list.
+
+  * remove list's default style by ``.list-unstyled``
+
+  * add ``.media`` to ``<li>``.
+
+components
+==========
+
+forms
+-----
+- bootstrap form controls are based on Reboot's customization on tags.  It
+  basically provides a set of classes to style input components.
+
+- Use an appropriate ``type`` of input, to take advantage of different device's
+  customizations.
+
+form layout
+^^^^^^^^^^^
+
+stacked
+"""""""
+- Most of bootstrap form controls by default have ``display: block``, therefore
+  they stack vertically by default (在没有任何 wrapper 或其他自定义的情况下).
+
+- form group.
+  
+  A form control and its label, its help text, form validation messages, etc.
+  can be grouped into a ``.form-group``. ``.form-group`` 只提供了一个 bottom
+  margin.
+
+  * ``.form-group`` can be a ``<div>`` ``<fieldset>`` etc.
+
+  * 这也可以看到, layout 更多的取决于 form control, label, etc. 上面的设定.
+
+  * 注意, ``.form-group`` wrapper 不是必须的存在, 如果只有 form control, 而没有
+    其他相关的元素例如 label, 则可以没有 ``.form-group`` wrapper.
+
+  * 若 form 的某一行使用了 ``.form-group``, 所有其他行也应该以某种方式使用
+    ``.form-group``, 以保证 margin-bottom 带来的 layout 一致性.
+
+grid
+""""
+- use row/columns grid layout in form, to build complex form layout.
+
+  * just add row divs inside form as direct children.
+
+  * 只要 ``<form>`` 本身没有margin, padding etc., form 里面的 row 就会
+    与 form 外面的比如 column 或 container 的 padding 抵消, 不会造成多余的
+    indent. 这与 `flexbox grid system`_ 中的讨论是一致的.
+
+- use ``.form-row`` instead of ``.row`` to get more tight layout.
+
+  * ``.form-row`` 给出的 margin 只有 -5px. 它里面的 ``.col*`` 的 padding 也
+    只有 5px. 这样 gutter 是 10px.
+
+- row/form-row 不是 ``.form-group`` 的替代品. 需要 form-group 时就还是需要.
+  form-group 在 row 里面时, 需要配合恰当的 column classes 以保证 flexbox
+  layout.
+
+horizontal form
+"""""""""""""""
+- Make labels and form controls as flex items, to build a horizontal form.  To
+  do this, use ``.row`` and ``.form-group`` classes together on wrapper
+  element.
+
+- Use ``.col*`` classes on label and form controls for sizing. Add
+  ``.col-form-label`` to your ``<label>`` as well so they’re vertically
+  centered with their associated form controls.
+
+inline form
+"""""""""""
+- Use ``.form-inline`` class on ``<form>`` to make its contents inline.  此时
+  ``<form>`` 成为了 flex container. 里面是 flex items or inline elements.
+
+- 感觉 inline form 不是很必要, 因为我们有 grid form, horizontal form 等都是
+  基于 flexbox 的, 可以做成 inline 的样子.
+
+- form controls 之间的 spacing 通过 spacing and flexbox utilities 来设置.
+
+- Controls and input groups receive ``width: auto`` to override the Bootstrap
+  default ``width: 100%``. 这样根据内容来确定宽度.
+
+- Controls only appear inline in viewports that are at least 576px wide to
+  account for narrow viewports on mobile devices.
+
+- In inline form, ``.form-group`` becomes an inner flex container.
+
+help text
+^^^^^^^^^
+- Create help text with ``<small>``, ``<span>`` etc.
+
+- block-level help text, add ``.form-text`` class, which makes it block-level.
+  Add block-level help text below form control.
+
+- For inline help text, 不需要额外的 layout classes.
+
+- Add utilities classes to style the help text, like ``.text-muted``.
+
+textual form controls
+^^^^^^^^^^^^^^^^^^^^^
+- Textual form controls, like ``<input>``, ``<select>``, and ``<textarea>`` are
+  styled with the ``.form-control`` class.
+
+file inputs
+^^^^^^^^^^^
+- Basic file input, use ``.form-control-file``.
+
+range inputs
+^^^^^^^^^^^^
+- For ``input[type="range"]``, use::
+
+    .form-control-range
+
+  效果是将 range input 变成 block-level element, 并占据 parent element 的
+  全部宽度.
+
+checkboxes and radios
+^^^^^^^^^^^^^^^^^^^^^
+- wrapper's class for stacked checkbox and radio input::
+
+    .form-check
+
+  * 这作为 block-level element 保证一行一个 checkbox/radio.
+
+  * 注意 ``.form-check`` wrapper 不能替代 ``.form-group``.
+
+- additional wrapper class for inline checkbox and radio input::
+
+    .form-check-inline
+
+  这将 display 改成 inline-flex.
+
+- class for checkboxes and radios::
+
+    .form-check-input
+
+- Add following class to checkbox and radio that don’t have any label text::
+
+    .position-static
+
+- class for their labels::
+
+    .form-check-label
+
+custom form controls
+^^^^^^^^^^^^^^^^^^^^
+checkboxes and radios
+"""""""""""""""""""""
+- 用 ``.custom-control`` 替换 ``.form-check``, 添加 ``.custom-check`` or
+  ``.custom-radio`` for checkbox or radio respectively.
+
+  For inline layout, add another ``.custom-control-inline`` class.
+
+- Inside ``.custom-control``, place a checkbox or radio input as would
+  normally do.
+
+- For label, 用 ``.custom-control-label`` 替换 ``.form-check-label``.
+
+selects
+""""""""
+- Add ``.custom-select`` class to ``<select>``.
+
+- Control sizing by adding ``.custom-select-{sm|lg}``
+
+ranges
+""""""
+- Add ``.custom-range`` class to ``<input type="range">``.
+
+file inputs
+"""""""""""
+- Use the following::
+
+    <div class="custom-file">
+      <input type="file" class="custom-file-input">
+      <label class="custom-file-label">Choose file</label>
+    </div>
+
+customization
+^^^^^^^^^^^^^
+
+sizing
+""""""
+- Add the following additional class to customize sizing of form controls::
+
+    .form-control-{sm|lg}
+
+  注意只负责 sizing 部分, form control 的 styling 要靠各自的 main class 来实现.
+
+- Add the following additional class to customize sizing of labels to match
+  that of form controls in horizontal forms::
+
+    .col-form-label-{sm|lg}
+
+form input as plain text
+""""""""""""""""""""""""
+- useful if you want to have ``<input readonly>`` elements in your form styled
+  as plain text::
+
+    .form-control-plaintext
+
+  不该再添加 ``.form-control`` class, 因为 style overriding.
+
+form validation
+^^^^^^^^^^^^^^^
+- 两种 form validation, 即 browser default validation feedback or bootstrap's
+  custom validation feedback. 只能二选一, 不然会很奇怪的.
+
+- 避免使用 browser default validation feedback, 因为内容、样式等难以自定义, 与
+  整体风格不协调, 并且它的校验逻辑比较基础, 并不一定能满足业务需求.
+
+validation and styling logic
+""""""""""""""""""""""""""""
+- 根据当前输入值是否 valid, form 中的各个 form control 总是处于 ``:valid`` or
+  ``:invalid`` 两个 pseudo class 状态中的一个. 只要值发生变化, 这个校验就会重新
+  进行.
+
+- ``<form>`` 设置 ``novalidate``, 禁止在提交 form 时显示 browser default
+  feedback tooltips, 禁止浏览器因为数据不合法而阻止提交. 但是这并不会禁用浏览器
+  自动进行的 validation.
+
+- Bootstrap scopes the ``:invalid`` and ``:valid`` styles to parent
+  ``.was-validated`` class. 这样, 根据是否在 form 上有这个 class, 决定是否显示
+  validation messages.
+  
+  这个 class 一般通过 submit event handler 设置. 这样避免了在用户尝试提交之前,
+  尤其是用户还没开始填写表单时, 就显示 validation message.
+
+- 使用 constraint validation API 进行自定义校验.
+
+validation messages
+"""""""""""""""""""
+- Use ``.valid-feedback`` and ``.invalid-feedback`` divs for valid and invalid
+  input messages.
+
+- 这些 divs 需要作为 ``.form-control`` 或者 ``.form-check-input`` 等 form control
+  element 的 next siblings.
+
+- bootstrap css 根据相应的 form control 的 pseudo class 状态选择 display valid
+  or invalid feedback div.
+
+validation tooltips
+"""""""""""""""""""
+- Use ``.valid-tooltip`` and ``.invalid-tooltip`` for validation message as
+  a tooltip.
+
+- By default, tooltip will be at the bottom of the form control.
+
+- Be sure to have a parent with ``position: relative`` on it for tooltip
+  positioning, e.g., column classes.
+
+server side validation
+""""""""""""""""""""""
+- Add ``is-valid`` or ``.is-invalid`` to corresponding form controls during
+  server side validation.
+
+- 这些 classes 不需要 form 上设置 ``.was-validated``. 可以独立生效.
+
+- form control 设置了这些 classes 时, 它们的 next siblings ``.valid-feedback``
+  and ``.invalid-feedback`` divs 会根据恰当的 css 规则进行显示.
+
+input groups
+^^^^^^^^^^^^
+- input group 的作用是对 form control 进行扩展, 例如添加 text, button, etc., 或
+  者进行分段输入, 等等.
+
+- 注意 input group wraps form control and its addon elements, 它替代原来 form
+  control element 所在的位置.
+
+- For selects and file inputs, only bootstrap's custom versions are supported.
+
+structure
+""""""""""
+- One ``.input-group`` wrapper.
+  
+  * This wrapper is a flex container.
+
+  * 在 input group 中, form control 作为 flex item 会自动 flex-grow 至 input
+    group 内剩余宽度.
+
+- Inside of it, add a ``.input-group-prepend`` and/or ``.input-group-append``
+  div for prepending and appending content.
+  
+  * These are flex containers.
+
+- Inside of ``.input-group-{prepend|append}``, put in what the fuck you need.
+
+text
+""""
+- 在 addon 区域中, 添加 ``.input-group-text`` element.
+
+  * 一般就是 span element.
+
+  * It's a flex container.
+
+  * text is vertically centered by default.
+
+checkbox and radio
+""""""""""""""""""
+- Place any checkbox or radio option within ``.input-group-text`` in place of
+  text.
+
+buttons and dropdowns
+""""""""""""""""""""""
+- just put your buttons and dropdowns inside of ``.input-group-{prepend|append}``.
+
+multiple inputs
+""""""""""""""""
+- just add multiple inputs inside a input group.
+
+  * border radius will be taken care of.
+
+- Only supported visually, validation styles are only available for input
+  groups with a single input.
+
+multiple addons
+"""""""""""""""
+- just add multiple shit inside of ``.input-group-{prepend|append}``, since
+  it's a flex container.
+
+sizing
+""""""
+
+- 在 ``.input-group`` 上添加 ``.input-group-{sm|lg}`` 即可, 里面的 addon 以及
+  form control 会自动改变大小, 无需再次设置.
+
+utilities
+=========
+
+margin utilities
+----------------
 
 references
 ==========
