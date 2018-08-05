@@ -779,6 +779,9 @@ text
 
   * text is vertically centered by default.
 
+- 是 ``.input-group-text`` 而不是 ``.input-group-{prepend|append}`` 给予了
+  addon 区域灰色调.
+
 checkbox and radio
 """"""""""""""""""
 - Place any checkbox or radio option within ``.input-group-text`` in place of

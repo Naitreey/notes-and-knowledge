@@ -802,7 +802,8 @@ manipulation
 
 - ``split([separator[, limit]])``
 
-- ``trim()``.
+- ``trim()``. removes whitespace from both ends of a string, return the new
+  string.
 
 - ``trimStart()``, ``trimLeft()``. those are aliases (WTFJS_).
 
