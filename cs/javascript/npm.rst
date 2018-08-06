@@ -67,6 +67,27 @@ invocations
 
   * ``--save-bundle`` also save dependencies as bundled dependencies.
 
+npm uninstall
+^^^^^^^^^^^^^
+::
+
+  npm uninstall [@<scope>/]<pkg>[@<version>]...
+
+- aliases: remove, rm, r, un, unlink
+
+- uninstall a package, by default also modify package.json and
+  package-lock.json accordingly.
+
+  * ``--save`` default. remove the package from ``dependencies`` key.
+
+  * ``--save-dev``. remove the package from ``devDependencies`` key.
+
+  * ``--save-optional``. remove from ``optionalDependencies`` key.
+
+  * ``--no-save``. do not modify package.json and package-lock.json.
+
+- Use ``-g`` to uninstall global package.
+
 npm update
 ^^^^^^^^^^
 ::
@@ -125,6 +146,27 @@ legacy mode
 - the default value of init fields can be customized by configuration.
 
 - The package.json questionnaire can be customized by ``~/.npm-init.js``
+
+package management
+------------------
+- npm 只区分 local packages and global packages. 并不存在对 system-wide package
+  与 user package 的区分. 对 npm 而言, ``$prefix`` 指向哪里, 哪里就是 global
+  packages 的位置.
+
+system-wide packages
+^^^^^^^^^^^^^^^^^^^^
+- 在 linux 下, global nodejs packages 一般不通过 package manager 安装. 而是通过
+  npm 命令的全局模式进行管理.
+
+- 默认的 ``$prefix`` 一般是 ``/usr``.
+
+- system-wide packages 位于 ``$prefix/lib/node_modules``.
+
+user packages
+^^^^^^^^^^^^^
+- 由于默认不存在 npm user packages 概念, 需要修改 ``$prefix`` 配置. 例如::
+
+    export npm_config_prefix=~/.node_modules
 
 configuration
 -------------
