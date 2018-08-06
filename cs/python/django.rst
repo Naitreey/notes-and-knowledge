@@ -5348,14 +5348,21 @@ subclass ``django.db.models.Manager`` 以进行自定义.
   * 是否应该将 ORM 操作封装成 manager 的 helper method 仍然要根据具体情况去
     具体分析. (Does it worth the effort?)
 
+- 一些常见的 custom manager method.
+
+  * ``get_by_natural_key(...)``. 该方法的输入是能够 uniquely identify
+    ``Manager.model`` 的一条数据的信息, 输出是 model instance.
+
 - customize initial queryset. override ``get_queryset()`` method.
   ``Manager.all()`` method 的返回值与之一致.
 
-若自定义了 QuerySet 的 methods, 然后希望这些方法也 expose 到 manager 中,
-需要使用 ``QuerySet.as_manager`` classmethod 创建 manager class. 它调用
-``BaseManager.from_queryset`` class method. 注意, 使用 ``QuerySet.as_manager()``
-而不是直接使用 ``Manager.from_queryset()``. 前者会保证 migration 过程中,
-重新构建 model 时还使用这个 QuerySet 和 Manager.
+.. FIXME
+   若自定义了 QuerySet 的 methods, 然后希望这些方法也 expose 到 manager 中, 需要使
+   用 ``QuerySet.as_manager`` classmethod 创建 manager instance. 它调用
+   ``BaseManager.from_queryset`` class method. 注意, 使用
+   ``QuerySet.as_manager()`` 而不是直接使用 ``Manager.from_queryset()`` 创建
+   manager class 再实例化. 前者会保证 migration 过程中, 重新构建 model 时还使用这
+   个 QuerySet 和 Manager. 从而能够在 migration 过程中使用 custom QuerySet methods.
 
 自定义的 manager class 必须能够 shallow copied by ``copy.copy()``.
 
@@ -7557,7 +7564,18 @@ test tags
 
 - 对不同类型的测试用例添加相应的 tag, 例如 ``ut`` for unit test, ``it`` for
   integration test, ``ft`` for functional test. 这样有助于在命令行上迅速选择需
-  要执行的测试集. 无需写冗长的目录层级以及遍历所有 apps.
+  要执行的测试集 ``./manage.py test --tag``. 无需写冗长的目录层级以及遍历所有
+  apps.
+
+- 注意必须要避免测试代码中出现 module level error. 这会影响给测试用例打 tag.
+  
+  当测试代码存在 module level error 时 (例如在文件顶部发生 import error), 会导
+  致 tag 无法生效 (因为根本没有执行). 这样, 在 ``./manage.py test --tag`` 对执
+  行 tag 执行测试时, 就会直接过滤掉这些加载失败的测试代码. 这导致看上去新增的测
+  试用例没有执行. 然而, 如果执行全部测试用例时 (不过滤), 则发现这些测试代码发生
+  了 module level error.
+
+  所以从这点来看, test tags 还是一个很蛋疼的功能.
 
 test fixtures
 -------------
