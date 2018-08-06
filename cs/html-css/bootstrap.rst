@@ -811,6 +811,121 @@ sizing
 - 在 ``.input-group`` 上添加 ``.input-group-{sm|lg}`` 即可, 里面的 addon 以及
   form control 会自动改变大小, 无需再次设置.
 
+tooltips
+--------
+- rely on popper.js
+
+- Triggering tooltips on hidden elements will not work.
+
+- When triggered from hyperlinks that span multiple lines, tooltips will be
+  centered. Use ``white-space: nowrap;`` on your ``<a>`` to avoid this
+  behavior.
+
+- Tooltips must be hidden before their corresponding elements have been removed
+  from the DOM.
+
+setup
+^^^^^
+- add ``data-toggle="tooltip"`` to any element to make a tooltip over it.
+
+- ``title`` attribute specifies its content.  Tooltips with zero-length titles
+  are never displayed.
+
+- tooltip options can all be specified as ``data-*`` attributes and their
+  values as string.
+
+- Every tooltip must be initialized separately. To initialize a tooltip::
+
+    $(selector).tooltip({/* options */});
+
+disabled elements
+^^^^^^^^^^^^^^^^^
+- Tooltips for ``.disabled`` or ``disabled`` elements must be triggered on a
+  wrapper element.
+
+initialization options
+^^^^^^^^^^^^^^^^^^^^^^
+- animation.
+
+- container. Appends the tooltip to a specific element.
+  Specify ``container: 'body'`` option to avoid rendering problems in more
+  complex components.
+
+- delay. Delay showing and hiding the tooltip.
+
+- html. Allow HTML in the tooltip.
+
+- placement. position the tooltip at top/bottom/left/right/auto.
+
+- selector. delegate tooltip to the specified element.
+
+- template. tooltip's html structure template.
+
+- title. default title if ``title`` attribute is not present.
+  
+  If a function is given, it will be called with its this reference set to the
+  element that the tooltip is attached to. 这可用于设置动态的 title text.
+
+- trigger. how tooltip is triggered, a space separated combination of
+  click/hover/focus/manual. manual means to trigger why js API.
+
+- offset. offset of the tooltip relative to its target.
+
+- fallbackPlacement.
+
+- boundary.
+
+JS APIs
+^^^^^^^
+- All API methods are asynchronous and start a transition. They return to the
+  caller as soon as the transition is started. A method call on a transitioning
+  component will be ignored.
+
+- format ``.tooltip(<method>)``
+
+show
+""""
+- Reveals an element’s tooltip. Returns to the caller before the tooltip has
+  actually been shown, i.e. before the ``shown.bs.tooltip`` event occurs.
+
+hide
+""""
+- Hides an element’s tooltip. rest dito.
+
+toggle
+""""""
+- toggle show/hide.
+
+dispose
+""""""""
+- Hides and destroys an element’s tooltip.
+
+enable
+""""""
+- Gives an element’s tooltip the ability to be shown. Tooltips are enabled by
+  default.
+
+disable
+""""""""
+- Removes the ability for an element’s tooltip to be shown.
+
+toggleEnable
+""""""""""""
+- Toggles the ability for an element’s tooltip to be shown or hidden.
+
+update
+""""""
+- Updates the position of an element’s tooltip.
+
+events
+^^^^^^
+- ``{show|shown}.bs.tooltip``
+
+- ``{hide|hidden}.bs.tooltip``
+
+- ``inserted.bs.tooltip`` fired after the show.bs.tooltip event when the
+  tooltip template has been added to the DOM.
+
 utilities
 =========
 
