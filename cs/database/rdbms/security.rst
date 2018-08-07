@@ -1,5 +1,8 @@
 SQL injection
 =============
+- SQL injection is a type of attack that tries to perform actions on a database
+  used by the target web site.
+
 - 各种 sql injection 其实都是类似的, 本质上都可以通过 ORM + prepared statement +
   escaping 去解决.
 
