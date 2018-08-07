@@ -1,3 +1,9 @@
+- random notes:
+
+  * use innerHTML/outerHTML virtual attribute to test text in source.
+
+  * 不要检测过细致的内容. 只进行功能点存在或生效方面的检测.
+
 components
 ==========
 
