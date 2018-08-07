@@ -1,3 +1,108 @@
+web components
+==============
+
+web form
+--------
+
+- GET and POST are the only HTTP methods to use when dealing with forms.
+
+  submit form 的时候不一定是 POST, 也有 GET 的 form. 到底是 GET or POST
+  取决于 form 提交后是否修改服务系统状态. 例如, 搜索栏就是一个 GET form,
+  配置页面就是一个 POST form. 此外, GET would also be unsuitable for
+  a password form, for large quantities of data, or for binary data,
+  such as an image.
+
+- 尽量使用同一个 url 去获取 form 和处理 form data. 无论 GET/POST form.
+
+- 在 server-side, 若收到 post data 中包含多个相同 name 项, 程序逻辑应该能够
+  将之组成一个 value list. 即一个 name key 对应一个 value list.
+
+- 如果 form 中包含敏感信息, 例如密码, 用户身份信息等, 则整个 form data
+  应该通过 https 传输. 如今浏览器对 insecure login forms 都有警告.
+
+- form data validation:
+
+  client-side validation 和 server-side validation 都需要, 但两者的用途不同.
+
+  * client-side validation 属于易用性设计, 理论上讲, 可以没有. 它旨在给用户
+    提供即刻的错误反馈, 以帮助用户纠正输入错误, 比如非法字符啦, 格式错误啦,
+    迅速在 input 附近提示一下, 这种提示的要点是快速, 方便, 不需要访问服务端.
+    client-side validation 不能防止 data tampering, 即绕过 form
+    验证机制直接向服务端提交请求.
+
+  * server-side validation 属于合法性设计. 旨在为数据合法性做最终的把关.
+    这是必须有的.
+
+- Post/Redirect/Get (PRG) pattern.
+
+  * 流程: 需要用 POST method 的 form 在提交后, server 应返回 302/303
+    redirection 提供 user agent 接下来要访问的 location, UA 随后 GET 该 url
+    获取 form submission 的结果页面.
+
+  * 302/303 redirection 是关键. 无论是 302 Found, 303 See other, 主要效果是
+    告诉浏览器, all references to the POST url should be temporarily replaced
+    by the ``Location`` header's url. Side effect 是浏览器会自动 GET 这个
+    location url, 最终完成工作流.
+
+  * RFC 规定使用 303 See other 作为 PRG 中的 redirection response code. 用于
+    消除与 302 Found 的含义混淆情况. 但是实际中 302 才是使用最广且兼容性最好
+    的 PRG redirection code.
+
+  * 意义:
+
+    1) 刷新按钮可以正常工作, 且不会造成 form resubmission. 这是因为, 
+    GET 之后, 刷新的就是 GET request (form submission 的结果页面), 无副作用.
+    而直接 POST 返回结果页面的设计则存在 resubmission 问题. 此时, 刷新重放的
+    是当前的请求, 即 POST 操作.
+
+    注意, 如果在 POST 尚未接受到响应期间就 refresh, 则还是会 resubmit.
+
+    2) 后退按钮可以正常工作. 即按预期返回 GET form 的页面. 这是因为, POST
+    request 的 302/303 响应让浏览器记得该 POST 请求应该 被后面的 GET 替换.
+    也就是说, 在浏览器历史中, 不存在 POST 了, 只有前一个 GET 和后一个
+    GET.[HttpWatchBackBtn]_ 对于直接 POST 的情况, 在后退时可能造成 resubmission
+    或者浏览器会为了避免 resubmission 而拒绝加载页面.
+
+    3) 让 POST request 的结果页面能够 bookmark. 因为此时记录的是最后一个 GET 的
+    结果 url. 对于直接 POST 的情况, 记录的是 POST 的 url. 而 bookmark 的访问
+    只会是 GET, 这样保存的就不是想要的结果页面, 而可能是一个 empty form.
+
+- file uploading.
+
+  * 文件大小不是问题. 无论多大的文件都可以统一地处理. 唯一要注意的是, server 接
+    受文件上传时, 若文件大于某个 threshold, 需要把文件写入硬盘. 避免占用太多内
+    存.
+
+  * 文件上传时, 需设置 ``<form enctype="multipart/form-data">``.
+    
+  * 文件上传时, request header 中包含::
+   
+     Content-Type: multipart/form-data; boundary=...
+    
+    并在文件的 "part" 部分包含以下 headers::
+
+      Content-Disposition: form-data; name="..."; filename="..."
+      Content-Type: ...
+
+    注意必须有 ``filename`` directive 才能识别为文件上传.
+
+user authentication
+-------------------
+- logout should be GET or POST?
+
+  我觉得应该是 post. 这是从安全性 (CSRF) 角度考虑, 以及与 login post 操作对应.
+  但是 post 的 logout 确实处理起来不太方便 (要 ajax), 一个办法是做成 hiddenform,
+  含 csrf token hidden input.
+
+  很多网站都用的是 get, 也有很多用的是 post.
+
+REST design
+===========
+- It's not necessary or even possible to design your web service sticking
+  strictly to REST rules. But they are great guidelines for that matter.
+
+- REST suggests that we have a URL structure that matches our data structure.
+
 security
 ========
 
@@ -16,12 +121,37 @@ HTTPS
 
 SOP & CORS
 ----------
+- Same Orgin Policy 指的是 protocol schema, FQDN/hostname, port number 三者
+  必须相同, 才认为是同一个 origin. 注意 FQDN 必须是完全相同, 例如根域名不匹配
+  子域名.
+
+- 默认情况下脚本发起的 http 请求必须满足 Same Origin policy, 因此 cross origin
+  的请求不能成功. 若要进行 cross origin request, 必须遵守 CORS 请求的规则.  如
+  果服务端没有给出 CORS 机制预期的响应, 则会报错, 抛弃响应.
+
 - SOP 限制了默认情况下 AJAX 不能 make cross-origin request. 但是这不影响
   ``window.location`` 向其他 origin 的修改, 静态文件 url 的不同来源, POST form
   ``action`` 的不同来源之类的 cross-origin 操作.
 
   只要攻击者的服务端实现了 CORS 机制, cross-orgin request 照样会成功, 所以
   SOP 不能防止 XSS 攻击.
+
+- Cross Origin Resource Sharing.
+
+  一个网页可以包含来自其他 origin 的一些种类的 resource, 这包含各种静态文件
+  (css, img, script, video) 以及 iframes. 但是 cross-origin 的 ajax 请求则默认
+  情况下是禁止的 (根据 SOP).
+
+  CORS 对脚本发起的 http request 的规定: request 包含 ``Origin`` header (即请求
+  的来源), response 包含 ``Access-Control-Allow-Origin: ...``. 只有响应中这个
+  header 的域名列表包含了 ``Origin`` 的值时浏览器才认为请求合法, 把结果返回给脚
+  本.
+
+  对于非 GET 类型的跨域请求, 还有一个 preflight request. 这个请求通过
+  ``OPTIONS`` method 进行, 加上 ``Access-Control-Request-Method`` 和
+  ``Access-Control-Request-Headers`` headers. 只有响应中
+  ``Access-Control-Allow-Origin`` ``Access-Control-Allow-Methods``
+  ``Access-Control-Allow-Headers`` 包含请求中的值时浏览器才允许接下来的真正请求.
 
 密码传输和存储
 --------------
@@ -57,14 +187,22 @@ CSRF & XSS attacks
   XSS vulnerabilities already let an attacker do anything a CSRF vulnerability
   allows and much worse.
 
+  XSS 在实现时就是在 js 代码中进行 cross-origin request. 它需要通过 CORS 机制
+  进行.
+
 * CSRF 和 XSS attack 的区别:
 
   - CSRF 的形式不一定是脚本请求, 或者说往往不是脚本请求, 它往往是通过某种方式
     伪装一个 GET url, 例如 img, link 等; 或者伪装一个 POST form.
     XSS 特指的是通过脚本发起的跨域请求.
 
-  - CSRF 一般是伪造向用户信任的站点的请求, 以企图冒充用户实现某种行为;
-    XSS 一般是向 attacker 自己的站点发送请求, 包含从用户端收集到的敏感信息.
+  - CSRF & XSS 的请求目标不同. CSRF 一般是伪造向用户信任的站点的请求, 以企图冒
+    充用户实现某种行为; XSS 一般是向 attacker 自己的站点发送请求, 包含从用户端
+    收集到的敏感信息.
+
+  - CSRF & XSS 利用的信任不同. XSS attacks exploit the trust a user has for a
+    web site, while CSRF attacks exploit the trust a web site has for its
+    users.
 
 * CSRF attack 的应对方式:
 
