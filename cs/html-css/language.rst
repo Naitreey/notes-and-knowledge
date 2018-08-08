@@ -807,13 +807,16 @@ forms
   如果一个 form 中需要多个部分, 这些部分一般是通过 ``<section>`` 配合 ``<hN>``
   进行划分. 也可以通过 ``<fieldset>`` 划分.
 
+  在 form submission 时, browser loads the URL where the data was sent, which
+  means the browser window navigates with a full page load by ``method``.
+
   attributes.
 
   * ``accept-charset``, server 端接受的 character encodings. 默认是
     ``UNKNOWN``, 表示使用与当前文档相同的编码.
 
-  * ``action``, uri where to send form data. form 里的 input/button
-    的 ``formaction`` attribute 会 override this.
+  * ``action``, uri where to send form data. form 里的 input/button 的
+    ``formaction`` attribute 会 override this.
 
     如果 ``<form>`` element 没有 ``action`` attribute 或者是空的值, 且内部没有
     ``<button>`` 有 ``formaction`` attribute, 则浏览器默认 action uri 是当前
@@ -944,7 +947,8 @@ input in general
   * ``minlength``, minimum number of characters user can enter. for
     text, email, search, password, tel, url.
 
-  * ``maxlength``, ditto.
+  * ``maxlength``, ditto. 注意在 input UI 中, 这将限制用户根本不能输入大于
+    这个值的字符串, 会自动 truncate.
 
   * ``multiple``, user can enter more than one value. for email, file.
 
@@ -1892,6 +1896,8 @@ pseudo-classes
 
 - 一个 selector 中可以出现多个 pseudo-classes.
 
+link status
+"""""""""""
 - ``:link``. match every ``<a>`` element that has a href attribute. 也就是说
   是个真正的 link 的 anchor element.
   (实际上还匹配同样的 ``<area>`` & ``<link>`` elements, 但这没用啊.)
@@ -1913,6 +1919,8 @@ pseudo-classes
   modified with :visited. Thus, if you want to modify the other properties,
   you'll need to give them a base value outside the :visited selector.
 
+selection status
+""""""""""""""""
 - ``:hover``, match an element when pointing device is hovering upon it.
   注意是对任何元素都可用.
 
@@ -1921,6 +1929,20 @@ pseudo-classes
   selects it with the keyboard's "tab" key. 例如常用于 form controls.
 
 - ``:active``, match an element when it's being activated by pointing device.
+
+validation status
+""""""""""""""""""
+- ``:valid``
+
+- ``:invalid``
+
+- ``:required``
+
+- ``:optional``
+
+- ``:in-range``
+
+- ``:out-of-range``
 
 pseudo-elements
 ^^^^^^^^^^^^^^^
@@ -2326,6 +2348,8 @@ flex container properties
 
 flex item properties
 ^^^^^^^^^^^^^^^^^^^^
+- ``display``. 注意 flex item 的 ``display`` 可以是任何值, 并没有限制. 最终效果
+  由 display, flex, width/height 等属性联合决定.
 
 - order. By default, flex items are laid out in the source order. This
   redefines the order in which they appear in the flex container.
@@ -2342,6 +2366,10 @@ flex item properties
 
 - flex-basis. the default size of an element before the remaining space is
   distributed.
+
+  specified values:
+
+  * auto. default size is determined by the element's width and height property.
 
 - flex. shorthand for flex-grow, flex-shrink and flex-basis.
 
@@ -2908,9 +2936,15 @@ border
 
 overflow
 """"""""
-- overflow.
-  What to do when an element's content is too large to fit in its block
-  formatting context. shorthand for overflow-x and overflow-y.
+- overflow. What to do when an element's content is too large to fit in its
+  block formatting context. shorthand for overflow-x and overflow-y.
+
+  关于 viewport 的 overflow 情况. ``<html>`` root element 决定整个 viewport 的
+  scrollbar 情况. 作为 root element, spec 规定: If overflow on ``<body>`` is
+  visible, overflow on ``<html>`` must be interpreted as auto. Otherwise
+  ``<html>`` use what is specified on ``<body>``. 这导致, 最终效果是, viewport
+  只能有 scrollbar 或者在相应方向上 hide overflowed content, 而不存在
+  ``visible`` 值带来的效果. [SOBodyOverflow]_
 
   non-inherited.
 
@@ -3283,3 +3317,4 @@ references
 ==========
 .. [CSSTrickBoxSizing] `Box Sizing <https://css-tricks.com/box-sizing/>`_
 .. [FlexMarginAuto] `Flexbox’s Best-Kept Secret <https://hackernoon.com/flexbox-s-best-kept-secret-bd3d892826b6>`_
+.. [SOBodyOverflow] `body tag overflow (auto, visible?) <https://stackoverflow.com/questions/36794306/body-tag-overflow-auto-visible>`_

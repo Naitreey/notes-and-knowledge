@@ -838,13 +838,8 @@ setup
 
     $(selector).tooltip({/* options */});
 
-disabled elements
-^^^^^^^^^^^^^^^^^
-- Tooltips for ``.disabled`` or ``disabled`` elements must be triggered on a
-  wrapper element.
-
 initialization options
-^^^^^^^^^^^^^^^^^^^^^^
+""""""""""""""""""""""
 - animation.
 
 - container. Appends the tooltip to a specific element.
@@ -874,6 +869,11 @@ initialization options
 - fallbackPlacement.
 
 - boundary.
+
+disabled elements
+^^^^^^^^^^^^^^^^^
+- Tooltips for ``.disabled`` or ``disabled`` elements must be triggered on a
+  wrapper element.
 
 JS APIs
 ^^^^^^^
@@ -926,6 +926,163 @@ events
 - ``inserted.bs.tooltip`` fired after the show.bs.tooltip event when the
   tooltip template has been added to the DOM.
 
+modals
+------
+- modals are positioned over everything else.
+
+- Only one modal window at a time, nested modal is not supported.
+
+- modals position themself using ``position: fixed``. 这是为了直接相对于
+  viewport 进行 positioning. 为了避免一些 parent element 影响 fixed
+  positioning, 最好把 modals 都放在 top-level, 作为 body's direct child.
+
+- When a modal is triggered, it adds ``.modal-open`` to the ``<body>`` to
+  override default scrolling behavior, setting it to ``hidden`` (这样 scroll 时
+  滚动的就是 modal window), and generates a ``.modal-backdrop`` to provide a
+  click area for dismissing shown modals when clicking outside the modal.
+
+- modal with long content is scrollable.
+
+setup
+^^^^^
+- a modal window's structure::
+
+    <div class="modal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">...</h5>
+                    <button type="button" class="close"
+                            data-dismiss="modal"
+                            aria-label="Close">
+                      <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                ...
+                </div>
+                <div class="modal-footer">
+                ...
+                </div>
+            </div>
+        </div>
+    </div>
+
+  * ``.modal`` div 覆盖整个 viewport. 它是 fixed position 的.
+
+  * ``.modal-dialog`` 是 modal window 的可见部分. 它具有 auto left/right margin
+    所以左右居中. 它是 modal window 的真正 wrapper. 修改 modal window 的宽度应该
+    修改这个元素的宽度 (它相对于 ``.modal``).[UnderstandModal]_
+
+  * ``.modal-content`` tells ``bootstrap.js`` where to look for the contents of
+    the modal.
+
+  * ``.modal-header``, ``.modal-body``, ``.modal-footer`` 是 modal 的三个部分.
+
+  * header 中, title 应用 ``.modal-title``.
+
+  * modal 中应该设置至少一个 ``<button>``/``<a>`` etc., 具有 ``data-dismiss="modal"``.
+    用于关闭 modal window.
+
+- trigger a modal via one of the following methods.
+  
+  * A controller element to trigger modal window.::
+
+      <... data-toggle="modal" data-target="modal-selector"...>
+
+    - ``data-target`` is the selector to modal window.
+
+  * Via javascript::
+
+    $(<modal-selector>).modal({/* options */});
+
+- modal options can be passed as ``data-*`` attributes or js object.
+
+initialization options
+""""""""""""""""""""""
+- backdrop. true/false/'static'. For ``static``, the backdrop doesn't close the
+  modal on click. default true.
+
+- keyboard. close modal when esc is pressed. default true.
+
+- focus. focus modal when initialized. default true.
+
+- show. show modal when initialized. default true.
+
+grid inside modal
+^^^^^^^^^^^^^^^^^
+- To use bootstrap grid system inside modal, nesting ``.container-fluid`` div
+  within the ``.modal-body``.
+
+centering
+^^^^^^^^^
+- Add ``.modal-dialog-centered`` to ``.modal-dialog`` to vertically center the
+  modal.
+
+fade in modal
+^^^^^^^^^^^^^
+- Add ``.fade`` to ``.modal`` div.
+
+modal as a template
+^^^^^^^^^^^^^^^^^^^
+- 如果需要根据从不同 ``data-toggle`` element 触发的 modal 来填入不同的内容, 可以
+  使用 ``show.bs.modal`` event 的 ``relatedTarget`` 来自定义. 将需要填入的内容
+  放在 ``data-*`` attributes 上, 在 ``show.bs.modal`` event handler 中填入内容.
+
+dynamic height
+^^^^^^^^^^^^^^
+- When changing a modal's height while it's open, call ``$().modal('handleUpdate')``
+  to adjust its position.
+
+sizing
+^^^^^^
+- Add the following class to ``.modal-dialog`` for large and small responsive modal::
+
+    .modal-{sm|lg}
+
+API methods
+^^^^^^^^^^^
+::
+
+  $().modal(<method>)
+
+- methods are async.
+
+toggle
+""""""
+- toggle modal.
+
+show
+""""
+- show modal.
+
+hide
+""""
+- hide modal.
+
+handleUpdate
+""""""""""""
+- adjust the modal’s position.
+
+dispose
+""""""""
+- destroy modal.
+
+events
+^^^^^^
+All modal events are fired at the modal itself (div with ``.modal``).
+
+For all following events, the triggering element (if there's one) is available
+as the ``relatedTarget`` property of the event.
+
+- show.bs.modal. 
+
+- shown.bs.modal.
+
+- hide.bs.modal.
+
+- hidden.bs.modal.
+
 utilities
 =========
 
@@ -936,3 +1093,4 @@ references
 ==========
 
 .. [WhyBS3GridWorks] `The Subtle Magic Behind Why the Bootstrap 3 Grid Works <http://www.helloerik.com/the-subtle-magic-behind-why-the-bootstrap-3-grid-works>`_
+.. [UnderstandModal] `Understanding Bootstrap Modals <https://www.sitepoint.com/understanding-bootstrap-modals/>`_
