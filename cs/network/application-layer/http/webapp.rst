@@ -1,8 +1,8 @@
 web components
 ==============
 
-web form
---------
+form
+----
 
 - GET and POST are the only HTTP methods to use when dealing with forms.
 
@@ -22,16 +22,43 @@ web form
 
 - form data validation:
 
-  client-side validation 和 server-side validation 都需要, 但两者的用途不同.
+  * client-side validation 和 server-side validation 都需要, 但两者的用途不同.
 
-  * client-side validation 属于易用性设计, 理论上讲, 可以没有. 它旨在给用户
-    提供即刻的错误反馈, 以帮助用户纠正输入错误, 比如非法字符啦, 格式错误啦,
-    迅速在 input 附近提示一下, 这种提示的要点是快速, 方便, 不需要访问服务端.
-    client-side validation 不能防止 data tampering, 即绕过 form
-    验证机制直接向服务端提交请求.
+    - client-side validation 属于易用性设计, 理论上讲, 可以没有. 它旨在给用户
+      提供即刻的错误反馈, 以帮助用户纠正输入错误, 比如非法字符啦, 格式错误啦,
+      迅速在 input 附近提示一下, 这种提示的要点是快速, 方便, 不需要访问服务端.
+      client-side validation 不能防止 data tampering, 即绕过 form
+      验证机制直接向服务端提交请求.
 
-  * server-side validation 属于合法性设计. 旨在为数据合法性做最终的把关.
-    这是必须有的.
+    - server-side validation 属于合法性设计. 旨在为数据合法性做最终的把关.
+      这是必须有的.
+
+  * client-side validation 使用自定义的 validation feedback 逻辑和展示方式, 除
+    非是十分简单的需求, 否则避免使用 html5 builtin validation feedback.
+
+    - automatic generated feedback 的缺点:
+      
+      * 对每次用户提交, Built-in validation feedback 只显示第一个 invalid
+        field 相应的错误提示.
+    
+      * no standard way to change their look and feel with CSS.
+    
+      * 信息只能通过 js API 去自定义, 不能写在 html 中.
+    
+      * 信息输出的语言可能与页面语言不一致.
+    
+    - 自定义 feedback 机制和信息显示方式, 参考 bootstrap.
+
+- form submission.
+
+  * standard form submission 会直接加载 form submission 的 url, 将请求的响应
+    body 作为结果页面显示. 这可能导致 flickering, 并由于 network lag 等原因
+    造成长时间的等待. 从而最终效果是不够平滑的页面加载体验.
+
+    Many modern UIs only use HTML forms to collect input from the user. When
+    the user tries to send the data, the application takes control and
+    transmits the data asynchronously in the background, updating only the
+    parts of the UI that require changes.
 
 - Post/Redirect/Get (PRG) pattern.
 

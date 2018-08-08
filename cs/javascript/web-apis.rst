@@ -30,6 +30,19 @@ setTimeout()
 form
 ====
 
+form data structure
+-------------------
+- ``FormData`` 是 form 数据的封装. 本质上, it represents a set of key/value
+  pairs such as form fields and their values. 但显然不限于 form data, 而是
+  任何格式相符的数据.
+
+- It uses the same format a form would use if the encoding type were set to
+  ``multipart/form-data``.
+
+- Usage:
+
+  * conveniently build form data and send via ajax requests.
+
 form validation
 ---------------
 
@@ -66,7 +79,7 @@ and validation attributes.
 
   * pattern is suitable for text-like inputs.
 
-  * mimlength/maxlength is suitable for text-like inputs and textarea.
+  * minlength/maxlength is suitable for text-like inputs and textarea.
 
   * min, max, step is suitable for number-like and date-like inputs.
 
@@ -91,8 +104,9 @@ methods.
 - ``checkValidity()``. true if valid, false otherwise. An ``invalid`` event is
   also fired if the input is invalid.
 
-- ``setCustomValidity(message)``. Sets a custom error message to the element
-  when it's considered invalid. The specified error is displayed. If the
+- ``setCustomValidity(message)``. Sets a custom error message to the element's
+  ``validationMessage``. This also makes the input invalid. The specified
+  message is displayed when form's ``reportValidity()`` is called. If the
   argument is the empty string, the custom error is cleared.
 
 form element APIs
@@ -101,6 +115,12 @@ properties.
 
 - ``noValidate``. boolean as to html attribute.
 
+  ``noValidate`` attribute 决定在 form submission 时, 是否 ``reportValidity()``
+  以及如果 validation failed 的话, 是否 suppress form submission. 它不影响其他
+  任何方面, 例如不影响每个 field 的实时 validation check 以及相应的
+  pseudo-class 状态应用. 即使 ``noValidate``, 仍然可以在 js 中 call this
+  method and triggers feedback.
+
 methods.
 
 - ``checkValidity()``. true if all form controls are valid, false otherwise.
@@ -108,30 +128,31 @@ methods.
   constraints; such controls are considered invalid if the event is not
   canceled.
 
+- ``reportValidity()``. similar to ``checkValidity()``, 同时会立即显示 form
+  control 的 validation feedback.
 
 validation process
 ^^^^^^^^^^^^^^^^^^
-- Constraint validation can be done on a single form element individually or at
-  the entire form level.
+- 对每个 form control, 在页面加载完成时, 以及在 ``input`` event 发生时, 会自动
+  检查输入合法性. If an element's input data satisfies validation constraints,
+  the element matches ``:valid`` css pseudo-class, otherwise it matches
+  ``:invalid`` pseudo-class.
 
-- If an element's input data satisfies validation constraints, the element
-  matches ``:valid`` css pseudo-class, otherwise it matches ``:invalid``
-  pseudo-class.
+  这可通过 ``input`` event handler 以及 constraint validation API 来自定义.
 
-- When user submits the form, the browser only allows form submission if all
-  form control elements are valid.  Otherwise the form submission is blocked
-  and built-in form validation message feedback is displayed on related fields.
+- When user submits the form, 浏览器自动检查每个 form control 的合法性. It only
+  allows form submission if all form control elements are valid. Otherwise the
+  form submission is blocked and built-in form validation message feedback is
+  displayed on related fields.
 
-- automatic generated feedback 的缺点:
-  
-  * 对每次用户提交, Built-in validation feedback 只显示第一个 invalid
-    field 相应的错误提示.
+  这可通过 ``submit`` event handler 以及 constraint validation API 来自定义.
 
-  * no standard way to change their look and feel with CSS.
+client-server communication
+===========================
 
-  * 信息只能通过 js API 去自定义, 不能写在 html 中.
-
-  * 信息输出的语言可能与页面语言不一致.
+AJAX
+----
+- ajax 最初设计时以 xml 为传输使用的数据格式, 后来一般化了, 什么格式都可以.
 
 Console
 =======
