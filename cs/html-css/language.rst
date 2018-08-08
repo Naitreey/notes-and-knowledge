@@ -955,8 +955,9 @@ input in general
   * ``value``, 注意它是 input 的初始值. form 里实际输入的值也不会更新到这里.
     若没默认值可以不设置.
 
-  * ``pattern``, 在各个 type 的基本格式要求之外, 详细的 validation 要求.
-    regexp. 使用 ``title`` attribute 添加对 pattern 的输入提示.
+  * ``pattern``, 在各个 type 的基本格式要求之外, 详细的 validation 要求.  格式
+    为 javascript RegExp literal. 使用 ``title`` attribute 添加对 pattern 的输
+    入提示.
 
   * ``placeholder``, 提示用户可输入的内容.
 
