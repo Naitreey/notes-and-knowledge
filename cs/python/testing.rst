@@ -40,6 +40,10 @@ unittest.mock
   * patch 直接使用的地方, 这样是最可靠的, 而且是影响最小的; 不要 patch 定义的地方,
     因为不可靠, 在使用处的 import 可能比 patch 应用要早, 这样就会 patch 失败.
 
+  * 当需要 patch module level 和 top-level class attributes 等内容时, 要避免
+    ImportError. 如果依赖项不存在, 至少要创建一个相应的 placeholder, 否则就会
+    有 ImportError, 导致单元测试逻辑无法进行.
+
 factory boy
 ===========
 

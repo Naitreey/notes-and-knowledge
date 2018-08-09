@@ -45,6 +45,16 @@ why testing in general and why TDD
 
   这种方式, 有助于达到一个使用起来更自然更合理的设计.
 
+  确实是这样, 由于需要先写测试, 即先定义一个模块的功能要求. 这样甚至有助于优化
+  功能设计, 以及在设计阶段摒弃一开始看上去是合理的、但实际上是不合理的设计.
+
+  例如: 功能要求检测上传的是文本文件, 一开始想到两层考虑: Content-Type 与 body
+  检查. 若 Content-Type 不是 ``text/*`` 就不需要检查 body. 这样一共有 4 个测试.
+  但又想到实际上 Content-Type 不是 ``text/*`` 不能说明 body 也不是文本, 例如
+  json. 这样就可以直接忽略 Content-Type. 测试减少为 2 个. 相应的功能实现也会
+  简单. 重点是我们是在使用测试 (的名称) 来思考和完善设计. 而不是等到代码都写完
+  了才想到需要修改的地方, 再返工.
+
 - 接上, 这种流程强制程序员写出易于测试的代码. 因为必须已经知道相关代码要怎么
   测试了, 已经知道它会怎么去使用了, 才会去写代码本身. 相反, 如果实现之后再写
   测试, 有可能代码本身是不易于测的, 因为没有测试代码去做规范.
@@ -81,6 +91,10 @@ why testing in general and why TDD
 
 - TDD 的功能性测试和单元测试还可以在 interface review 上发挥作用. Interface
   review 比 code review 重要.
+
+- 测试用例可以作为 TODO 来使用. 当我们在开发一个模块时, 可能突然想到其他地方需要
+  一些修改, 那就可以迅速地在相关测试代码中添加一个 placeholder test case (make
+  it fail). 然后 test failure will remind you of unfinishing works.
 
 questions and concerns
 ----------------------
@@ -462,6 +476,14 @@ unit test
 
   * 对每个 class 和 function, 至少有一个 unit test, 即使只是 placeholder test.
     (See `questions and concerns`_ for reason.)
+
+- 区分清晰模块功能的归属关系才能避免单元测试的重复.
+
+  例如, module A depends on module B. 作为一个整体, AB 面对 3 种输入有三种输出.
+  然而, 这三种情况实际上完全是由于 B 存在 3 种情况. 而 A 只是对 B 的输入输出进
+  行预处理. 所以对 A 单独而言, 并不存在 3 种情况. 那么对 A 的单元测试只需测试预
+  处理逻辑部分即可. 对 B 的单元测试则需要测试 3 种情况. 不该对 A 测试 3 种情况,
+  再重复对 B 测试相同的三种情况.
 
 design patterns
 ===============

@@ -1098,6 +1098,20 @@ UploadedFile
 
 - subclass of File.
 
+constructor.
+
+- ``file=None``. underlying file-like object.
+ 
+- ``name=None``.
+ 
+- ``content_type=None``.
+ 
+- ``size=None``.
+ 
+- ``charset=None``
+ 
+- ``content_type_extra=None``
+
 attributes
 
 - ``content_type``. The content-type header uploaded with the file.
@@ -1107,7 +1121,8 @@ attributes
 
 - ``charset``. For ``text/*`` content-type.
 
-- ``size`` overrides ``File.size``.
+- ``size`` overrides ``File.size``. 上传的文件的大小由 FileUploadHandler 在
+  完成上传后设置. FileUploadHandler 知道自己接收了多少 bytes.
 
 - ``name``. overrides ``File.name``. a property. 只保留 constructor 输入的
   ``name`` 参数的 basename 部分, 并 truncate 至 255 字符长度.
@@ -1127,6 +1142,14 @@ InMemoryUploadedFile
 - subclass of UploadedFile.
 
 - represents file uploaded to memory directly.
+
+SimpleUploadedFile
+""""""""""""""""""
+- A InMemoryUploadedFile subclass.
+
+- 输入 file content in bytes, file name, file size, content type.
+
+- Mainly useful for testing.
 
 upload handlers
 ^^^^^^^^^^^^^^^
@@ -7575,8 +7598,6 @@ test tags
   试用例没有执行. 然而, 如果执行全部测试用例时 (不过滤), 则发现这些测试代码发生
   了 module level error.
 
-  所以从这点来看, test tags 还是一个很蛋疼的功能.
-
 test fixtures
 -------------
 - 避免使用 json test fixtures. It makes test
@@ -7694,6 +7715,10 @@ design patterns
 
   * 对页面的 FT 同样不要测试 style, 而要测试功能. 只需保证基本的页面元素
     和样式是否加载即可. Avoid brittle tests.
+
+- 如何单元测试 ``ModelForm``?
+
+  .. TODO
 
 django-admin
 ============
