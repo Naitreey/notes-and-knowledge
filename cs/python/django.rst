@@ -1197,8 +1197,7 @@ methods
 
   * ``field_name`` input field name of the file.
 
-  * ``file_name`` filename provided
-  by browser.
+  * ``file_name`` filename provided by browser.
   
   * ``content_type`` content-type provided by browser.
 
@@ -3118,12 +3117,14 @@ cleaning & validation
   该方法 return cleaned field value, or raise ValidationError.
 
 - ``clean()``. Custom Form 若要进行 form-level 的 clean & validation (而不是
-  form field-level), 可自定义这个方法. Return a new ``cleaned_data`` or None
-  (``cleaned_data`` is modified in-place).
+  form field-level), 可自定义这个方法. 
 
   这里的验证应该满足以下原则: 当所需的各个 fields 已经通过 field-level
   clean & validation 时, 也即在 ``cleaned_data`` 中存在时, 才进行验证.
   否则直接返回原数据即可.
+
+  If valid, return a new ``cleaned_data`` or None (``cleaned_data`` is modified
+  in-place). If invalid, raise ValidationError, 它会加入 NON_FIELD_ERRORS.
 
 - ``non_field_errors()``.
 
@@ -7718,7 +7719,10 @@ design patterns
 
 - 如何单元测试 ``ModelForm``?
 
-  .. TODO
+  * 只测试你自己的 customization.
+
+  * 无需 mock model. 在 TDD 时, 只需要写一个 placeholder model 在那里放着
+    让 ModelForm 使用即可.
 
 django-admin
 ============
