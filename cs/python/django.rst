@@ -7724,6 +7724,10 @@ design patterns
   * 无需 mock model. 在 TDD 时, 只需要写一个 placeholder model 在那里放着
     让 ModelForm 使用即可.
 
+  * 但别忘了在集成测试时要覆盖到对 modelform 整体逻辑的测试.
+
+  * see also: https://stackoverflow.com/questions/51763138/tdd-in-django-how-to-unit-test-my-modelform/51781735#51781735
+
 django-admin
 ============
 
@@ -8286,3 +8290,4 @@ References
 ==========
 .. [SODjTemplateDebug] `Django debug display all variables of a page <https://stackoverflow.com/a/21205925/1602266>`_
 .. [SODjSettings] `How to manage local vs production settings in Django? <https://stackoverflow.com/questions/1626326/how-to-manage-local-vs-production-settings-in-django>`_
+.. [SODjModelFormTDD] `TDD in Django, how to unit test my modelform? <https://stackoverflow.com/questions/51763138/tdd-in-django-how-to-unit-test-my-modelform/51781735#51781735>`_
