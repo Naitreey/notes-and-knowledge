@@ -95,11 +95,19 @@ parse_qs
 - parse query string into a dict. The dictionary keys are the unique query
   variable names and the values are lists of values for each name.
 
+- For query string ``q``, the following is True::
+
+    q == urlencode(parse_qs(q, keep_blank_values=True), doseq=True)
+
 parse_qsl
 ^^^^^^^^^
 
 - parse query string into a list of key-value pairs. Values of duplicate
   keys are not combined into a list.
+
+- For query string ``q``, the following is True::
+
+    q == urlencode(parse_qs(q, keep_blank_values=True))
 
 urlencode
 ^^^^^^^^^
