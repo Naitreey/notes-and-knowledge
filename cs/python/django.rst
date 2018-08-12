@@ -944,9 +944,12 @@ methods
 * file-like object methods.
 
 * ``save(name, content, save=True)``. save file to storage backend. 更新
-  ``FieldFile.name`` 为保存文件后 storage backend 返回的名称. 如果原来文件已经
-  保存, 这里不会删除或替换, 而是简单地创建一个新文件. 并更新 model instance 上
-  的列属性为新保存的文件路径.
+  ``FieldFile.name`` 为保存文件后 storage backend 返回的名称, 这就是文件的最终
+  名称或路径. 如果原来文件已经保存, 这里不会删除或替换, 而是简单地创建一个新文
+  件. 并更新 model instance 上的列属性为新保存的文件路径.
+
+  这个方法单独来使用时, 可以用于更新文件名. 这时应该使用 ``save=True``, 则在
+  storage backend 中以及数据库中的列值都会一起更新.
 
   - ``name`` 一般为 ``FieldFile.name``
 
@@ -1277,12 +1280,25 @@ FileField
 - 在 model instance 保存至数据库时, 该列包含的 FieldFile 会通过 storage backend
   存储.
 
+- 如果需要一次性地修改文件保存的路径, 可以 set ``FieldFile.name``, 然后再
+  save model instance. 如果需要系统性地修改, 则使用 ``upload_to`` callable
+  form.
+
 options
 """""""
 
-* ``upload_to``.  若是 string, a relative directory string, with
-  ``datetime.datetime.strftime()`` format specifiers. 文件体会保存在该目录下.
-  若是 callable, 直接生成文件体的最终保存路径. 接受提供的参数.
+* ``upload_to``. 两种形式.
+ 
+  - 若是 string, a directory string relative to ``MEDIA_ROOT`` (if using
+    ``FileSystemStorage``), with ``datetime.datetime.strftime()`` format
+    specifiers. 文件体会保存在该目录下.
+
+  - 若是 callable, 应该直接可传入 storage backend 的 ``Storage.save()`` 的文件
+    名或路径. 接受以下参数:
+
+    * ``instance``, current model instance.
+
+    * ``filename``, original value of ``FieldFile.name``.
 
 * ``storage``. file storage instance for handling actual storage-related
   operations.
@@ -1309,6 +1325,10 @@ checkings
 
 methods
 """"""""
+- ``pre_save(model_instance, add)``. 在这里进行保存文件至 storage backend.
+  参考 ``FieldFile.save()`` 进行的一系列操作. 并返回 FieldFile instance 的
+  最终形态 (这个 FieldFile 后面在 ``get_prep_value`` 中给出文件路径).
+
 - ``get_prep_value(value)``. If None, return None. 一般不会遇到这个逻辑. 否则
   给出 ``str(value)``. 一般情况下 ``value`` 是 FileField instance, 所以这里
   给出的就是 file name. 由此可知 file field 在数据库交互时转换为文件路径.
@@ -3918,18 +3938,33 @@ model meta options
 model field
 -----------
 
-``django.db.models.Field``. field base class. Field 是 ``RegisterLookupMixin``
-的子类.
+- ``django.db.models.Field``. field base class. Field 是
+  ``RegisterLookupMixin`` 的子类.
 
 options
 ^^^^^^^
 
-Many of Django’s model fields accept options that they don’t do anything with.
+- Many of Django’s model fields accept options that they don’t do anything with.
 This behavior simplifies the field classes, because they don’t need to
 check for options that aren’t necessary. They just pass all the options
 to the parent class and then don’t use them later on.
 
-这些 options 作为 constructor kwargs, 实例化后成为 field instance attributes.
+- 这些 options 作为 constructor kwargs, 实例化后成为 field instance attributes.
+
+- 对于任何需要使用 callable 作为 field option value 时, 必须保证 callable 满足
+migration framework 的 serialization 要求.
+
+  * 若需要根据参数动态生成 callable, 不能使用 wrapper function return another
+    function 的方式. 这样不可 serialize. 必须创建一个 deconstrucible callable
+    class.
+
+    .. code:: python
+
+      @deconstructible
+      class Factory:
+
+        def __call__(self, ...):
+          return ...
 
 - ``primary_key=True``.
   设置某个 field 为 primary key, 否则 django 自动给 model 添加 id field
@@ -4345,8 +4380,15 @@ field types
 
     ``auto_now``, ``auto_now_add`` 和 ``default`` 是互斥的.
 
-    设置这两个参数, 意味着该列不能手动修改. 即自动设置
-    ``editable=False`` 和 ``blank=True``.
+    设置这两个参数, 意味着该列不能手动修改. 即使手动设置了特别的值, 在
+    ``Model.save()`` 时也会修改为当前时间. 并会自动设置 ``editable=False`` 和
+    ``blank=True``.
+
+    在单元测试时, ``auto_now`` 和 ``auto_now_add`` 会阻碍手动构建任意时间. 此时,
+    一个解决方案是在创建 model instance 之后再单独更新一次时间. 使用 UPDATE 类的
+    语句, 避开 ``Model.save``. 对于 factory boy, 完全他妈没有解决办法, 因为
+    ``_after_postgeneration`` 会再保存一次我日. 我以后再也不他妈用这两个傻逼参
+    数了. 我操你妈 django.
 
   * 所在的 model class 会添加 ``get_previous_by_<name>`` 和 ``get_next_by_<name>``
     两个 method.
@@ -7574,7 +7616,9 @@ testing-purpose HttpResponse attributes
 
 - ``context``.
 
-- ``json(**kwargs)``
+- ``json(**kwargs)``. parse content as json. works only if Content-Type is
+  ``application/json``, otherwise ValueError is raised. ``kwargs`` are passed
+  to ``json.loads()``.
 
 - ``status_code``.
 
@@ -7707,9 +7751,10 @@ design patterns
 
 - 关于对模板和页面的测试.
   
-  * 不要单元测试 template logic. 很难做到去将依赖项剥离, 去独立测试 template
-    rendering. 这可以在集成测试中进行检测. 同时, 在功能性测试中也会涉及对页
-    面的元素存在性的测试.
+  * 对 template 的测试, 很难做到去将依赖项剥离, 去独立测试 template rendering.
+    这是因为所有依赖项都需要在模板中去使用. 它本质就是一个集成点. 所以模板渲染
+    的测试应该在集成测试中进行. 同时, 在功能性测试中也会涉及对页面的元素存在性
+    的测试.
 
   * 对模板渲染的集成测试只测试一些关键的点, 不要测试 style, 而要测试功能.
     避免 test too brittle.
