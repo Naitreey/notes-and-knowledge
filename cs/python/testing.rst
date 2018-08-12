@@ -40,9 +40,10 @@ unittest.mock
   * patch 直接使用的地方, 这样是最可靠的, 而且是影响最小的; 不要 patch 定义的地方,
     因为不可靠, 在使用处的 import 可能比 patch 应用要早, 这样就会 patch 失败.
 
-  * 当需要 patch module level 和 top-level class attributes 等内容时, 要避免
-    ImportError. 如果依赖项不存在, 至少要创建一个相应的 placeholder, 否则就会
-    有 ImportError, 导致单元测试逻辑无法进行.
+  * 关于对 module level 和 top-level class attributes 等依赖的处理. 如果需要考
+    察相应依赖的行为, 则需要 mock, 否则就没必要 mock. 无论是否要 mock, 必须首先
+    要避免 ImportError. 如果依赖项还不存在, 至少要创建一个相应的 placeholder,
+    否则就会有 ImportError, 导致单元测试逻辑无法进行.
 
 factory boy
 ===========
@@ -101,6 +102,8 @@ methods
   a namespace object with declared attributes.
 
 - ``build_batch(n, **kwargs)``. build a batch of objects.
+
+- ``create_batch(n, **kwargs)``.
 
 Meta options
 ^^^^^^^^^^^^
@@ -255,6 +258,12 @@ DjangoModelFactory
   attributes, the base object will be ``.save()``-ed again to update fields
   possibly modified by post-generation hooks.
 
+  * 这发生在 ``_after_postgeneration()``.
+
+  * 有时候这会导致一些问题. 例如在 post generation hook 中调用
+    ``QuerySet.update()`` 来更新列值的话, 必须记得刷新 model instance
+    ``.refresh_from_db()``. 否则在 post generation hook 中的修改就会被覆盖.
+
 DjangoOptions
 """""""""""""
 DjangoModelFactory automatically use DjangoOptions as its Meta inner class.
@@ -382,6 +391,69 @@ internet
 - ``company_email()``. domain 随机生成.
 
 - ``ascii_company_email()``.
+
+file
+^^^^
+
+- ``file_path(depth=1, category=None, extension=None)``.
+  depth is the level of directories.  Provide an extension or determine
+  extension by category (audio, image, office, text, video). If both are
+  None, use random one.
+
+- ``file_name(category=None, extension=None)``. ditto without directory.
+
+- ``file_extension(category)``. ditto with only extension (no leading dot).
+
+- ``mime_type(category=None)``. category can be application, audio, image,
+  message, model, multipart, text, video.
+
+- ``unix_device(prefix=None)``. prefix if not provided is chosen from be sd,
+  vd, xvd.
+
+- ``unix_partition(prefix=None)``. ditto with partition number.
+
+date_time
+^^^^^^^^^
+
+- ``date_time_this_century(before_now=True, after_now=False, tzinfo=None)``.
+  A datetime instance within current century. ``tzinfo`` if provided must be a
+  ``datetime.tzinfo`` instance. That'll make an aware datetime.
+
+- ``date_time_this_decade(before_now=True, after_now=False, tzinfo=None)``.
+  ditto for current decade.
+
+- ``date_time_this_year(before_now=True, after_now=False, tzinfo=None)``.
+  ditto for current year.
+
+- ``date_time_this_month(before_now=True, after_now=False, tzinfo=None)``.
+  ditto for current month.
+
+- ``date_time_between(start_date="-30y", end_date="now", tzinfo=None)``.
+  A datetime between ``start_date`` and ``end_date``, with optional timezone.
+  ``start_date`` and ``end_date`` can be:
+
+  * datetime.datetime object
+
+  * datetime.date object
+
+  * datetime.timedelta object, as relative to current time.
+
+  * an integer, interpreted as ``timedelta(n)`` relative to current time, i.e.,
+    days relative to current time.
+
+  * a text string:
+
+    - ``now``. current time.
+
+    - a string of format::
+     
+        [{+|-}<int>y][{+|-}<int>w][{+|-}<int>d][{+|-}<int>h][{+|-}<int>m][{+|-}<int>s]
+
+      每个部分相应于 timedelta 的 constructor params 意义: years, weeks, days,
+      hours, minutes, seconds. years 会和 days 合并.
+
+- ``past_datetime(start_date="-30d", tzinfo=None)``. A datetime between start date and
+  1second ago. start date is the same as ``date_time_between()``
 
 misc
 ^^^^
