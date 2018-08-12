@@ -798,7 +798,36 @@ manipulation
 - ``concat(str1, str2, ...)``. concatenate string with the argument strings.
   Why not use addition operator?
 
-- ``replace(regexp|substr, replacement|function)``.
+- ``replace(regexp|substr, replacement|function)``. returns a new string with
+  replacements.
+
+  * With ``regexp``, use ``g`` flag to perform a global search and replace.
+
+  * When using ``substr``, it is treated as a verbatim string, and only the
+    first occurrence will be replaced.
+
+  * In ``replacement`` string, the following ``$``-patterns are recognized:
+
+    - ``$$`` literal $.
+
+    - ``$&`` the entire matched substring.
+
+    - ``$n`` nth (1-based) submatch group.
+
+    - ``$``` the portion of the string that precedes the matched substring.
+
+    - ``$'`` the portion of the string that follows the matched substring.
+
+  * For ``function``, its return value is used as replacement string.
+    its arguments are as follows:
+
+    - ``match``. the entire matched substring.
+
+    - ``p1``, ``p2``, ... nth submatch group.
+
+    - ``offset``. offset of matched substring relative to the entire string.
+
+    - ``string``. the entire string being examined.
 
 - ``split([separator[, limit]])``
 
