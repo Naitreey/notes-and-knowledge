@@ -615,8 +615,10 @@ ARG
   使用 ``docker build --build-arg``.
 
 - predefined ARGs::
+
     HTTP_PROXY, http_proxy, HTTPS_PROXY, https_proxy, FTP_PROXY, ftp_proxy,
     NO_PROXY, no_proxy
+
   它们无需在 dockerfile 中声明可以直接赋值和引用.
   为避免信息泄露, by default, these pre-defined variables are excluded from the
   output of docker history. (注意在 docker history 中, ``ARG var=default`` 会
