@@ -4390,6 +4390,8 @@ field types
     ``_after_postgeneration`` 会再保存一次我日. 我以后再也不他妈用这两个傻逼参
     数了. 我操你妈 django.
 
+    另一个方案是写一个自定义的 datetime field. See `snippets/datetimefield.py`
+
   * 所在的 model class 会添加 ``get_previous_by_<name>`` 和 ``get_next_by_<name>``
     两个 method.
 
