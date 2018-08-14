@@ -1,11 +1,41 @@
 character set
 =============
 
-- A character set consists of a character repertoire and their encodings.
+terms
+-----
 
-- The repertoire of a character set is the collection of characters in the set.
+- character: A character is a minimal unit of text.
 
-- Encodings is a map from character symbols to numerical representations.
+- character set: A character set is a collection of characters defined by a
+  defining purpose.
+
+- coded character set: A character set with each of its characters having an
+  corresponding unique number to identify it.
+
+- character repertoire: An abstract set of characters in a character set.
+
+- code point: A code point is a number corresponding to a character in
+  a coded character set.
+
+character encoding
+==================
+
+terms
+-----
+- character encoding: An system that is used to represent the repertoire of a
+  character set in a specific form. In general, it encodes code points into
+  some kind of "form", depending on the specific field of application.
+
+  In digital computing, a character encoding encodes code points into bytes for
+  serialization. In signal processing, a character encoding encodes code points
+  into electrical plulses.
+
+- code unit: A code unit is a bit sequence used to encode each character of
+  a repertoire within a given character encoding.
+
+  For example, A code unit in US-ASCII consists of 7 bits; A code unit in
+  UTF-8, EBCDIC and GB18030 consists of 8 bits; A code unit in UTF-16 consists
+  of 16 bits; A code unit in UTF-32 consists of 32 bits.
 
 collation
 =========
@@ -18,25 +48,3 @@ collation
 
 - case-insensitive collation: uppercase and lowercase characters are compared
   equal.
-
-Unicode
-=======
-
-characters
-----------
-
-- In unicode, each character is identified by an unique name and integer number
-  pair. The number representing a character is its code point.
-
-planes
-------
-
-- A character plane is any of ``xy0000 - xyFFFF``, which contains 2**16 chars
-  in total. There are currently 17 planes.
-
-- Basic Multilingual Plane (BMP): U+0000 - U+FFFF
-
-  * ASCII: U+0000 - U+007F.
-
-- supplementary planes: U+10000 - U+10FFFF. So there are the 16 supplementary
-  planes.
