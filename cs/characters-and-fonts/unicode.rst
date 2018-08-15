@@ -63,9 +63,24 @@ characters
 
 - Representation: ``U+<hex-code-point>``
 
+- combining character. A combining character is not a full character by itself.
+  It is an accent or other diacritical mark that is added to the previous
+  character. The combining-character mechanism allows one to add accents and
+  other diacritical marks to any character.
+
+- precomposed character. The most important accented characters, like those
+  used in the orthographies of common languages, have codes of their own in UCS
+  to ensure backwards compatibility with older character sets. 
+
 relation with Unicode
 ---------------------
-- The Unicode standard is in sync with ISO/IEC 10646.
+- The Unicode standard and ISO/IEC 10646 are two different standards published
+  by different organizations that essentially defines the same character set.
+  Their code tables are always in sync.
+
+- ISO 10646 is not much more than a simple character set table. While Unicode
+  standard contains some useful additional information, including algorithms
+  for rendering scripts, for sorting and string comparisons, etc.
 
 UTF-8
 =====
