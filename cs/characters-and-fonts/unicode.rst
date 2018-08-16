@@ -45,9 +45,9 @@ planes
 - UCS planes: A UCS plane is a subset of 2**16 characters in the 31-bit UCS
   character set. In other words, any of ``xy0000 - xyFFFF``.
   
-- Current plans are that there will never be characters assigned outside the
-  21-bit code space from 0x000000 to 0x10FFFF. In total, these are currently 17
-  planes.
+- RFC 3629 defines that there will never be characters assigned outside the
+  21-bit code space from 0x000000 to 0x10FFFF. An anything outside of this
+  range is invalid unicode code point. In total, these are currently 17 planes.
 
   - Basic Multilingual Plane (BMP), Plane 0.
     
@@ -89,6 +89,11 @@ characters
 - precomposed character. The most important accented characters, like those
   used in the orthographies of common languages, have codes of their own in UCS
   to ensure backwards compatibility with older character sets. 
+
+special characters
+^^^^^^^^^^^^^^^^^^
+- replacement character (U+FFFD): �. used to replace an unknown, unrecognized
+  or unrepresentable character
 
 relation with Unicode
 ---------------------
@@ -142,9 +147,10 @@ scheme
 
   * 避免任何一个 byte 是 null char.
 
-  * 由于 ASCII 以外字符的编码保证每个 code unit 最高位都是 1, 这样不会误将
-    ASCII 字符识别为其他字符的一部分. (注意到 utf-8 没有固定的编码长度, 所以需
-    要这种机制避免误识别.)
+  * 由于 ASCII 以外字符的编码保证每个 code unit 最高位都是 1, 这样合法的
+    multibyte encoding 中不会包含任何与 ASCII 相同的 byte subsequence. 这样限制
+    的目的是, 如果一个程序本身不支持 utf-8, 只支持 ascii, 也能 safely process
+    utf-8 encoded text. 不会错将一个 multibyte 编码的字符看作是多个 ascii.
 
 - The first byte of encoding of a non-ASCII character is always in the range of
   0xC0 and 0xFD (62 个 code unit); all further bytes in a multibyte sequence
@@ -152,12 +158,25 @@ scheme
 
   注意到在一个 encoding 中,
   
-  * 第一个 byte 是 ``11xxxxxx``, 后续的所有 bytes 都是 ``10xxxxxx``. 这样根据
-    bit pattern 就可以判断出字符起止. 而无需记录一个编码有几个 byte.
+  * 第一个 byte (leading byte) 是 ``11xxxxxx``, 后续的所有 bytes (continuation
+    byte) 都是 ``10xxxxxx``. 这样根据 bit pattern 就可以判断出字符起止. 而无需
+    记录一个编码有几个 byte.
 
-  * 第一个 byte 的 leading 1 bit 数目, 等于整个编码的 byte 数目.
+- 第一个 byte 每增加一位 leading 1, 相应的 trailing bytes 就增加一个. 也就是说,
+  the number of leading 1 bit in the first byte, 等于整个编码的 byte 数目.
 
-- The bytes 0xFE and 0xFF are never used.
+  由此也可以得到:
+
+  * 一个 bytes, 可编码: ``2**7`` (128) 个.
+
+  * 两个 bytes, 可编码: ``2**5 * 2**6`` (2048) 个.
+
+  * 三个 bytes, 可编码: ``2**4 * (2**6)**2`` (65536) 个.
+
+  * 四个 bytes, 可编码: ``2**3 * (2**6)**3`` (2097152) 个.
+
+- The bytes 0xFE and 0xFF are never used. 这是为了避免与 UTF-16/32 使用的
+  BOM (U+FEFF) 冲突. 将 UTF-16/32 text 误认为是 UTF-8 text.
 
 - 长度与表示范围:
   
@@ -179,12 +198,44 @@ scheme
   实际上在 Unix 系统中, 更是禁止这样去做. 否则大量基本命令需要考虑处理 BOM; 并
   且对于 script file, 内核寻找 shebang line 时也需要考虑 BOM.
 
-advantages over UTF-16/32
-^^^^^^^^^^^^^^^^^^^^^^^^^
-- backward-compatible with ASCII. Suitable for Unix environment. See below.
+features and advantages
+^^^^^^^^^^^^^^^^^^^^^^^
+- backward-compatible with ASCII (Thus suitable for Unix environment. See
+  below).
+
+  This was the main driving force behind the design of UTF-8.
+
+  * In UTF-8, single bytes with values in the range of 0 to 127 map directly to
+    Unicode code points in the ASCII range, as they do in ASCII encoding.
+
+  * 7-bit bytes (bytes where the most significant bit is 0) never appear in a
+    multi-byte sequence, and no valid multi-byte sequence decodes to an ASCII
+    code-point.
+
+  * many text processors, parsers, protocols, file formats, text display
+    programs etc., which use ASCII characters for formatting and control
+    purposes will continue to work as intended by treating the UTF-8 byte
+    stream as a sequence of single-byte characters, without decoding the
+    multi-byte sequences.
 
 - avoiding the complications of endianness and byte-order marks in UTF-16 and
   UTF-32.
+
+- Self-synchronization. The leading bytes and the continuation bytes do not
+  share values.  这带来的 implications:
+
+  * a search will not accidentally find the sequence for one character starting
+    in the middle of another character.
+
+  * a shorter sequence will never appear inside a longer one.
+
+  * the start of a character can be found from a random position by backing up
+    at most 3 bytes to find the leading byte.
+
+  * An incorrect character will not be decoded if a stream starts mid-sequence.
+
+- Sorting order. a list of UTF-8 strings can be sorted in code point order by
+  sorting the corresponding byte sequences.
 
 UTF-8 and Unix environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
