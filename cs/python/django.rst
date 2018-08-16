@@ -5528,31 +5528,46 @@ database connection
 
 persistent connection
 ^^^^^^^^^^^^^^^^^^^^^
-``settings.DATABASES.CONN_MAX_AGE`` 设置数据库连接的最大持续时间. 即
-persistent connection.
+- ``settings.DATABASES.CONN_MAX_AGE`` 设置数据库连接的最大持续时间. 即
+  persistent connection.
 
-默认值为 0. 效果是, 对每个请求开启一次连接, 即 nonpersistent connection.
-具体而言, 当处理请求中需要访问数据库时, 开启一个数据库连接; 然后在
-请求处理结束时把连接关掉.
+  默认值为 0. 效果是, 对每个请求开启一次连接, 即 nonpersistent connection.  具
+  体而言, 当处理请求中需要访问数据库时, 开启一个数据库连接; 然后在请求处理结束
+  时把连接关掉.
 
-对每个数据库, 每个线程 (或进程, 取决于 server 的机制) 最多开一个连接即可.
-因线程已经是最小的并行处理单元, 每个线程中同时只能处理一个请求 (即使是
-使用 coroutine 进行异步处理). django 服务端最多同时保持的数据库连接数目
-取决于服务器线程数 (或进程数).
+  设置为 None 则永不关闭连接.
 
-persistent connection 的好处是, 在高并发 (大量客户端请求) 情况下, 避免每个
-请求重连数据库带来的效率损耗.
+  注意 persistent connection 的时长必须与数据库方面的相关 timeout 设置相匹配
+  才可以. 对于 mysql, 相关设置为 ``wait_timeout``.
 
-persistent connection 的坏处是, 提高了数据库服务器的负担. 若数据库服务器
-需要同时去 serve 多个 web 应用. 某个应用建立了很多 persistent connection
-就意味着别的应用可用的资源少了. 所以如果: 1)该应用的流量并不太大, 2)或者
-由于 cache 等原因, 实际数据库访问并不很频繁, 3)数据库需要 serve 多个应用,
-则可以缩短 persistent connection 的时长, 或使用 nonpersistent connection.
+- 对每个数据库, 每个线程 (或进程, 取决于 server 的机制) 最多开一个连接即可.  因
+  线程已经是最小的并行处理单元, 每个线程中同时只能处理一个请求 (即使是使用
+  coroutine 进行异步处理). django 服务端最多同时保持的数据库连接数目取决于服务
+  器线程数 (或进程数).
 
-注意, 对于流量非常小的情况, persistent connection 可能长时间处于 wait 状态,
-db server 端可能连接等待超时断开, 并记录错误日志. 此时没必要设置 persistent
-connection. 或者 CONN_MAX_AGE 应该设置为小于 timeout 时长. 对于大流量网站,
-则没有这个问题.
+- persistent connection 的好处是, 在高并发 (大量客户端请求) 情况下, 避免每个请
+  求重连数据库带来的效率损耗.
+
+- persistent connection 的坏处是, 提高了数据库服务器的负担. 若数据库服务器需要
+  同时去 serve 多个 web 应用. 某个应用建立了很多 persistent connection 就意味着
+  别的应用可用的资源少了. 所以如果: 1)该应用的流量并不太大, 2)或者由于 cache 等
+  原因, 实际数据库访问并不很频繁, 3)数据库需要 serve 多个应用, 则可以缩短
+  persistent connection 的时长, 或使用 nonpersistent connection.
+
+- 注意, 对于流量非常小的情况, persistent connection 可能长时间处于 wait 状态,
+  db server 端会等待超时断开, 并记录错误日志 (for mysql)::
+  
+    Aborted connection ... Got timeout reading communication packets
+   
+  而 django db 连接层会因连接异常断开而报错 (for mysql)::
+
+    2013, 'Lost connection to MySQL server during query
+ 
+  反映到 HTTP 层为 500 Internal Server Error. 这种情况下不该设置 persistent
+  connection. 对于大流量网站, 则没有这个问题.
+
+  .. TODO 但是我不理解为什么 close_if_unusable_or_obsolete 没有检测到该关闭
+  这个连接了????
 
 connection management
 ^^^^^^^^^^^^^^^^^^^^^
