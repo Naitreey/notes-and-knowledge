@@ -694,6 +694,14 @@ design patterns
 
   * 功能性测试按需求点和用户故事来分类.
 
+- Page object pattern in FTs.
+
+  * Page objects are an alternative which encourage us to store all the
+    information and helper methods about the different types of pages on our
+    site in a single place.
+
+  * The idea behind the Page pattern is that it should capture all the information about a particular page in your site, so that if, later, you want to go and make changes to that page—even just simple tweaks to its HTML layout, for example—you have a single place to go to adjust your functional tests, rather than having to dig through dozens of FTs.
+
 Techniques
 ==========
 
