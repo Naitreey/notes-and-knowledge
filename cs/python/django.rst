@@ -7615,7 +7615,8 @@ django.test.LiveServerTestCase
 test client
 -----------
 - ``django.test.Client`` is an integration testing tool, not a unit testing
-  tool.
+  tool. 因为它跨越了太多的功能层和模块, 包含 middleware, url resolution,
+  view wrappers, etc., 然后才到 view callable.
 
 Client
 ^^^^^^
@@ -7728,6 +7729,23 @@ design patterns
 
 - Every layers of code must be unit-tested in isolation. Template, view, form,
   model etc. Use mocks to ensure test isolation.
+
+  * 严格来说, 对于 model layer 的 UT, 数据库是一个外部依赖, 应该 mock 掉. 但
+    实际上不太需要这么做, 而是保持一点 integration 的意味. 这是因为, mock
+    掉 db 层, 带来的好处是提高了 UT 执行效率; 而代价是, 需要对 db 层进行复杂
+    的 mock, 而且不能检测 model layer 真实应用到数据库中可能产生的意料之外的
+    问题.
+
+- model layer test 除非必要, 尽量不碰数据库. 数据库会极大降低 UT 的执行速度.
+
+  * use in-memory model instance whenever possible.
+
+- Avoid database test fixtures.
+
+  * django test fixtures are loaded and purged between each test methods.
+    所以会非常慢.
+
+  * schema changes needs to modify test fixtures accordingly.
 
 - 区分清晰哪部分属于 SUT, 哪部分属于外部依赖, 这样才能确定什么东西是需要 mock
   掉的. 例如, 在一个功能中, 不仅仅 form 层是 view 层的依赖; 在 view 层代码中,

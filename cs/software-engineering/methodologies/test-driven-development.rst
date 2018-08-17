@@ -20,16 +20,48 @@ overview
   行为等价于本质. 对行为的约束会自然形成恰当的内部结构. 所以软件行为的定义和
   验证的重要性是很高的, 然后才是设计实现.
 
-why testing in general and why TDD
-----------------------------------
+why testing in general
+----------------------
 
-- 单独来讲, 自动化的 unit tests, functional tests, acceptance tests 等等最大的
-  价值是, 它们提供了低成本高效率可重复的 bug detection mechanism. 这对避免
-  regression 问题有很大价值.
+correctness
+^^^^^^^^^^^
 
-- 接上, 由于 regression test 很容易, 所以可以放心地做代码重构.
+- 自动化的 unit tests, functional tests, acceptance tests 等等最大的
+  价值是, 它们提供了低成本高效率可重复的 bug detection mechanism.
+
+- 在研发一个功能时, 这个 bug detection system 有助于保证代码实现总是与预期是一
+  致的.  这是一个正确性方面的保证. 也是开发者对程序信心的基础.
+  
+- 在研发新功能或重构原有功能时, 这个 bug detection system 对避免 regression 问
+  题有很大价值.
+
+clean, maintainable code
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+- 由于 regression test 变得很容易, 所以开发者愿意放心地做代码重构, 不会有心理
+  障碍. 他知道如果 refactor 出了问题, 测试集会告诉他.
+
+- Since we can confidently refactor our application constantly, we’re never
+  scared to try to improve its design, it's more likely to end up with clean,
+  maintainable code.
+
+productive workflow
+^^^^^^^^^^^^^^^^^^^
+
+- Tests can give us feedback about our work really quickly.
+
+- They help us iterate fastly.
+
+joy
+^^^
 
 - 自动化的测试有助于提高程序员的对程序信心和编码过程的愉悦.
+
+- They help take some of the stress out of development.
+
+
+why TDD
+-------
 
 - TDD 的思想和方法, 最重要的特点是将测试提前到实现之前. 而不是先实现, 再根据
   实现来写测试. 通过测试代码来具体化需求, 将需求呈现为一个个可以检验的指标. 
@@ -466,22 +498,52 @@ functional test (FT)
 
 integration test
 ----------------
+- An integration test tests the interaction of modules, whether they give the
+  expected result.
+
+- 在执行效率上 integration test 要与 unit test 类似地能够迅速执行, 提供 quick
+  feedback.
 
 - 集成测试同样也可以 drive 模块的设计和实现.
-
-- 在 Outside-In TDD 流程中, 集成测试可以由两部分构成:
-  
-  * 简单地将各个实现层的单元测试的 mock 全部去掉, 成为一部分功能性测试.
-
-  * 单独进行一些相对整体的操作和检验.
-
-- 把单元测试的 mock 去掉后, 测试的独立性就完全消除了. 模块之间进行了真实的
-  相互调用, 这就达到了集成测试的目的.
 
 - 在 TDD 流程中, 集成测试位于单元测试与研发阶段的功能性测试之间, 它的主要作用
   是 provide a faster feedback cycle, and help you identify more clearly what
   integration problems you suffer from, 以打通各个层. 因其快速, 可以快速检验.
   这是功能性测试不够合适的地方.
+
+- 注意 integration test 测试的是一个服务/组件的各个代码模块之间的集成情况. 而不
+  是跨服务、跨语言的测试, 那是 system test 的职责.[SOITExAPI]_
+
+  * 当涉及与外部服务的交互时, 集成测试同样需要把这个 API mock 掉. 你只测试自己的
+    代码, 不测试你依赖的外部应用/服务.
+
+  * 对于外部服务 API, 你需要做的是: 弄清这个 API 在各种情况下的输入和输出.  并
+    根据这些不同的情况, 设计相应的测试用例来测试你的代码在不同用例中的应对情况.
+
+  * 信任外部服务 will act according to its API specification, 如果涉及到外部
+    服务的 API 封装和抽象层, 则信任这些封装和抽象. 同样地, 不测试这些封装和
+    抽象, mock 掉, 只测试你自己的代码.
+
+- Integrated tests are most useful when starting at the boundaries of a system—
+  at the points where our code integrates with external systems, like a
+  database, filesystem, or UI components, then testing inwards -- towards your
+  code.
+
+- 集成测试是必要的, 因为独立的单元测试只能测试模块本身的逻辑, 不能测试各个模块
+  之间的集成是否通畅.
+
+- ITs 与 FTs 在检测内容上会有一定的重叠, 这是正常的. 然而它们测试的目的, 范围,
+  以及实现方式是不同的.
+
+- Integration tests will try to drive the integration points to a minimum
+  amount and in a consistent way. We should minimise the amount of our code
+  that has to deal with boundaries, isolate our core logic and business from
+  integration points (ports and adapters).
+
+- 功能逻辑与集成测试之间的映射关系:
+
+  * There should be at least one test case for each logical path from the
+    boundary of your application.
 
 unit test
 ---------
@@ -489,18 +551,20 @@ unit test
   the programmer (about the interactions of the internal components of
   application).
 
-- Test program logic, flows, configuration, etc. that changes. Don't test
-  constants, because it's useless -- constants nevers changes it's written as
-  is and works as is.
+- UT tests the correctness of the program logic.
+  
+- UT should test only logic, flows, configuration, etc. that changes, of a SUT.
+  Don't test constants, because it's useless -- constants nevers changes it's
+  written as is and works as is.
 
   这里 constant 的含义是广泛的, 不仅仅是写死在代码中的常量, 还包含例如不变的
   模板文件等不会变的固定的 entity.
 
 - 在单元测试中, 需要仔细考虑什么是变的, 什么是不变的, 才能只对变化的部分做测试.
 
-- 单元测试应该尽量保证独立性, 只测试 SUT 本身, 而不测试它的依赖. 这需要使用
-  mock 来达成.
-  
+- 单元测试应该尽量保证独立性, 只测试 SUT 本身, 而不测试它的依赖. 一个独立的单元
+  测试的成功和失败不依赖于任何外部依赖. 这需要使用 mock 来达成.
+
   有些时候, SUT 与它的依赖或者说它外部的东西的界限不是那么清晰的, 例如当使用
   framework 时. 这时, 不可避免地, unit test 变成了一定程度上的 integration
   test. 这没有绝对清晰的界限. 只能说, 能保证独立时尽量保证独立.
@@ -509,6 +573,16 @@ unit test
   implementation details, 以保证自己的代码之外的逻辑能及时切断. 这一点, 尤其是
   当自己的代码与 framework 交互时尤其显著. 此时, 我们需要了解一些 framework 本
   身的实现细节.
+
+- UT 应当保证足够迅速, it must be fast. 独立的单元测试则可以尽可能地保证这一点.
+  保证快速的 UT 的意义是
+  
+  * 所有的实现细节都是由 UT 来驱动开发的. UT 必须频繁执行, 所以只有快速, 才能保
+    证一个快速的 fedback cycle, 从而维持一个灵活的 (敏捷的) 开发节奏. (注意
+    Faster UT doesn't make a faster development, but an agile development.)
+
+  * If UTs are slow, you’ll start to avoid running your tests, which may lead
+    to bugs getting through.
 
 - 如何组织单元测试?
 
@@ -527,6 +601,16 @@ unit test
 
 - 由于单元测试时, SUT 的依赖全部都被 mock 掉了. 一定要配合集成测试和功能性测试
   来保证模块之间的协作是通畅的. 否则可能会导致 API 输入或输出与实际不符的 bug.
+
+- UTs might not catch unexpected bugs, because they are isolated out of SUT.
+
+- 代码逻辑映射与单元测试之间映射的一些 rules of thumb:
+
+  * Every function/method should have at least one test case.
+
+  * Any ``if`` statement means an extra test.
+
+  * Any ``try/catch`` exception handling means an extra test.
 
 design patterns
 ===============
@@ -644,12 +728,6 @@ design patterns
   developers) not to do something deliberately stupid, but not something
   accidentally stupid. (If not, you have a much bigger problem.)
 
-- 代码逻辑映射与单元测试之间映射的一些 rules of thumb:
-
-  * Any ``if`` statement means an extra test.
-
-  * Any ``try/catch`` exception handling means an extra test.
-
 - Readability vs duplication for unit tests.[SODupUT]_
 
   * 对单元测试, 易读性是更重要的特性. If a test fails, you want the problem to
@@ -674,14 +752,6 @@ design patterns
   * 保证测试数据的可重复性. 如果使用随机数据, 应保证每次独立执行的测试, 都使用
     相同的 seed.
 
-- Rule of thumb for different type of tests in a project.
-
-  * unit test. 70%.
-
-  * integration test. 20%.
-
-  * UI test (functional test). 10%.
-
 - TDD 是先写测试再写实现的. 这要求作者必须对功能的实现细节先规划好. 一开始这是
   不适应的, 并且对相对复杂的模块会比较困难. 这要求作者能够对功能如何实现有良好
   的把握.
@@ -700,7 +770,39 @@ design patterns
     information and helper methods about the different types of pages on our
     site in a single place.
 
-  * The idea behind the Page pattern is that it should capture all the information about a particular page in your site, so that if, later, you want to go and make changes to that page—even just simple tweaks to its HTML layout, for example—you have a single place to go to adjust your functional tests, rather than having to dig through dozens of FTs.
+  * The idea behind the Page pattern is that it should capture all the
+    information about a particular page in your site, so that if, later, you
+    want to go and make changes to that page—even just simple tweaks to its
+    HTML layout, for example—you have a single place to go to adjust your
+    functional tests, rather than having to dig through dozens of FTs.
+    
+    In other words, to stay DRY.
+
+- Write enough FTs to ensure the application really works from the user's
+  perspective. Write enough UTs to ensure the SUT handles all edge cases
+  correctly.
+
+- UTs 的设计应该能够为重构提供保障, 但又不会过度地干预实现细节, 从而变成重构的
+  阻碍.
+
+- Identify the boundaries of your system—the points at which your code
+  interacts with external systems, like the database or the filesystem, or the
+  internet, or the UI—and trying to keep them separate from the core business
+  logic of your application.
+
+- Your architecture to some extent dictates the types of tests that you need.
+  The more you can separate your business logic from your external
+  dependencies, and the more modular your code, the closer you’ll get to a nice
+  balance between unit tests, integration tests and functional tests.
+
+  Rule of thumb for different type of tests in a project (for an Ports/adapters
+  architecture project).
+
+  * unit test. 70%.
+
+  * integration test. 20%.
+
+  * UI test (functional test). 10%.
 
 Techniques
 ==========
@@ -739,6 +841,10 @@ mock
 
 - 在一个功能的单元测试中, 对 mock 调用情况的检测不可避免地是在测试功能的实现细节,
   而不是它的 API. 因此, 过分地对 mock 的测试可能导致测试用例与功能实现细节强耦合.
+  If you’re not careful, this can start to work against one of the supposed
+  benefits of having tests, which was to encourage refactoring. You can find
+  yourself having to change dozens of mocky tests and contract tests when you
+  want to change an internal API.
 
   而另一方面, 对 mock 调用的检验却也是必不可少的. 因为我们在单元测试时, 人为地将
   外部服务从功能代码中切断, 硬生生地切出来第三组 (输入输出之外) 接口. 少了真实
@@ -789,7 +895,7 @@ mock
   只应该 mock dependency 与 SUT 交互处的 API. 而不该去 mock 更多的东西. 例如,
   SUT 调用另一个模块中的 ``cls.method``, 只应该 mock ``cls.method``, 而不该去
   mock ``cls`` 整体.
-https://www.youtube.com/watch?v=wf-BqAjZb8M
+
 test fixtures
 -------------
 - A test fixture is a fixed state of a set of objects used as a baseline for
@@ -809,3 +915,4 @@ test fixtures
 references
 ==========
 .. [SODupUT] `Is duplicated code more tolerable in unit tests? <https://stackoverflow.com/questions/129693/is-duplicated-code-more-tolerable-in-unit-tests>`_
+.. [SOITExAPI] `How are integration tests written for interacting with external API? <https://stackoverflow.com/questions/7564038/how-are-integration-tests-written-for-interacting-with-external-api>`_

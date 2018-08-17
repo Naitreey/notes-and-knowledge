@@ -88,20 +88,8 @@ unit testing
 integration testing
 -------------------
 
-- Testing the collection and interface modules to check whether they give the
-  expected result.
-
-- 注意 integration test 测试的是一个服务的各个代码模块之间的继承. 而不是跨服务、
-  跨语言的测试, 后者是 system test 的职责.
-
 - It is a low level testing performed after unit testing.
   
-- 在执行效率上 integration test 要与 unit test 类似地能够迅速执行, 提供 quick
-  feedback.
-
-- Only Functional testing is performed to check whether the two modules when
-  combined give correct outcome.
-
 - It is both black box and white box testing approach so it requires the
   knowledge of the two modules and the interface.
 
@@ -112,8 +100,9 @@ integration testing
 
 system testing
 --------------
-- Testing the completed product to check if it meets the specification
-  requirements.
+- A system test checks the integration of multiple systems in your application.
+  例如, 测试当 web server, db server, queue, static file server, etc. 全部接通
+  时, 整个系统是否按照预期行为运行.
 
 - Both functional and non-functional testing are covered like sanity,
   usability, performance, stress an load.
@@ -133,6 +122,10 @@ system testing
 
 functional testing
 ------------------
+- A functional test or acceptance test is meant to test that our system works
+  from the point of view of the user.
+
+- A FT is often a full-stack, end-to-end test.
 
 - 功能性测试可以分两种:
 

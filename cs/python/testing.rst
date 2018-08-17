@@ -27,6 +27,10 @@ unittest
     finished written a test case, fail method can be used to signify unconditional
     failure.
 
+  * ``setUp``, ``tearDown``. If not ALL test methods in a TestCase needs those
+    setup/teardown logic, you should either setup/teardown in those methods who
+    need this; or move those who don't into another TestCase.
+
 unittest.mock
 =============
 
