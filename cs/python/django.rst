@@ -7683,6 +7683,7 @@ test runners
 
 DiscoverRunner
 ^^^^^^^^^^^^^^
+- For fast UTs, parallel actually makes the whole suite slower to run.
 
 methods
 """"""""
@@ -7727,8 +7728,8 @@ management commands
 design patterns
 ---------------
 
-- Every layers of code must be unit-tested in isolation. Template, view, form,
-  model etc. Use mocks to ensure test isolation.
+- Every layers of code must be unit-tested in isolation. view, form, model etc.
+  Use mocks to ensure test isolation.
 
   * 严格来说, 对于 model layer 的 UT, 数据库是一个外部依赖, 应该 mock 掉. 但
     实际上不太需要这么做, 而是保持一点 integration 的意味. 这是因为, mock
@@ -7778,11 +7779,13 @@ design patterns
     其次 django 在内存中创建 sqlite 测试库. 但如果使用了与数据库相关的功能,
     这个方法就不太可行了.
 
-    2) 在保证隔离的单元测试中, 若不需要访问数据库, 完全可以 skip migrations.
-    这可以通过 ``django-test-without-migrations`` plugin 方便地实现.
+    2) 在保证隔离的单元测试中, 若不需要访问数据库, 可以完全 skip database
+    setup.  例如通过自定义 test runner, override ``setup_databases``,
+    ``teardown_databases``. See `snippets/browser_test_runner.py`.
 
     3) 如果必须使用 mysql, postgres 等 full-feature 数据库, 且可能需要访问
-    数据库, 使用 ``--keepdb`` option 仍然可以极大地提高单元测试效率.
+    数据库, 使用 ``--keepdb`` option 仍然可以极大地提高单元测试效率. 事实上,
+    与 ``--keepdb`` 相比, 完全 skip database setup 并不能提高多少速度.
 
 - 关于对模板和页面的测试.
   
@@ -7797,6 +7800,9 @@ design patterns
   * 对页面的 FT 同样不要测试 style, 而要测试功能. 只需保证基本的页面元素
     和样式是否加载即可. Avoid brittle tests.
 
+  * 对于 template tags/filters 等的测试则可以做到 UT, 例如通过构建 minimal
+    template example.
+
 - 如何单元测试 ``ModelForm``?
 
   * 只测试你自己的 customization.
@@ -7806,7 +7812,7 @@ design patterns
 
   * 但别忘了在集成测试时要覆盖到对 modelform 整体逻辑的测试.
 
-  * see also: https://stackoverflow.com/questions/51763138/tdd-in-django-how-to-unit-test-my-modelform/51781735#51781735
+  * see also: [SODjModelFormTDD]_
 
 django-admin
 ============

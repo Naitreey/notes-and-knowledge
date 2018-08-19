@@ -49,6 +49,12 @@ unittest.mock
     要避免 ImportError. 如果依赖项还不存在, 至少要创建一个相应的 placeholder,
     否则就会有 ImportError, 导致单元测试逻辑无法进行.
 
+  * autospec is useful to enforce the correct contract between boundaries. 这是
+    对 isolation 导致的集成问题的一部分解决方案 (另一部分解决方案则是更加整体性
+    的测试. 对于 UT 导致的 isolation 问题, 则需要 IT 去解决. IT 导致的
+    isolation 问题通过 ST 解决). 无论这个 boundary 是模块之间的 boundary
+    (mocked in UTs), 还是服务和组件之间的 boundary (mocked in ITs).
+
 factory boy
 ===========
 

@@ -45,6 +45,9 @@ clean, maintainable code
   scared to try to improve its design, it's more likely to end up with clean,
   maintainable code.
 
+- Trying to improve the speed of your test suite and try to make it more
+  effective, will ultimately deliver a better code quality.
+
 productive workflow
 ^^^^^^^^^^^^^^^^^^^
 
@@ -307,6 +310,15 @@ Outside-In and Inside-Out
   等一系列过程, 最终达到一个很好的结果. 这是一个灵活的随机应变的过程. 即 agile
   的本质. 但总体来讲, 目前我倾向于整体上以 Outside-In TDD 为主.
 
+- Neither of the approaches is the one and only; they both have their place
+  depending on your situation. In large, enterprise solutions, where parts of
+  the design come from architects (or exists upfront) one might start with
+  "London style" approach. On the other hand, when you face a situation where
+  you're not certain how your code should look (or how it should fit within
+  other parts of your system), it might be easier to start with some low-end
+  component and let it evolve as more tests, refactorings and requirements are
+  introduced.[SETDDOutsideInInsideOut]_
+
 Outside-In TDD
 ^^^^^^^^^^^^^^
 - Outside-In TDD 的思路是由外至内地去实现 -- (由宏观需求触发) 交互/展示/UI 层,
@@ -547,12 +559,9 @@ integration test
 
 unit test
 ---------
-- Unit tests test the application from the inside, from the point of view of
-  the programmer (about the interactions of the internal components of
-  application).
+- Unit test verifies the correctness of the logic of a single module of your
+  application.
 
-- UT tests the correctness of the program logic.
-  
 - UT should test only logic, flows, configuration, etc. that changes, of a SUT.
   Don't test constants, because it's useless -- constants nevers changes it's
   written as is and works as is.
@@ -574,12 +583,19 @@ unit test
   当自己的代码与 framework 交互时尤其显著. 此时, 我们需要了解一些 framework 本
   身的实现细节.
 
+- An ideal unit test, when it fails, you don't need to dig into traceback, you
+  can see what exact point is failing just by looking at the test case's name.
+  当然, 这种理想情况可能实际中很难达到, 但这是每个单元测试应该去努力的方向.
+
 - UT 应当保证足够迅速, it must be fast. 独立的单元测试则可以尽可能地保证这一点.
   保证快速的 UT 的意义是
   
   * 所有的实现细节都是由 UT 来驱动开发的. UT 必须频繁执行, 所以只有快速, 才能保
     证一个快速的 fedback cycle, 从而维持一个灵活的 (敏捷的) 开发节奏. (注意
     Faster UT doesn't make a faster development, but an agile development.)
+
+    In other words, 如果要实践 TDD 这个开发方法, UTs 必须要快. 这对 UT suites
+    的设计、实现与优化等方面, 具有一定的要求.
 
   * If UTs are slow, you’ll start to avoid running your tests, which may lead
     to bugs getting through.
@@ -745,6 +761,15 @@ design patterns
   * 此外, (错误地) 检测被测功能的实现而不是它的 API, 也会导致多处重复, 这
     本来就是该避免的. 避免测试实现细节, 除非涉及外部服务接口处.
 
+- About engineering the test.
+
+  * You should engineer the tests to make it run faster and more effectively.
+
+  * You can build tools to achieve the above goals.
+
+  * You can refactor and encapsulate your tests to make it more DRY, as long
+    as its readability is not compromised.
+
 - fake data.
 
   * 测试时可以使用比较符合实际的 fake data.
@@ -779,8 +804,8 @@ design patterns
     In other words, to stay DRY.
 
 - Write enough FTs to ensure the application really works from the user's
-  perspective. Write enough UTs to ensure the SUT handles all edge cases
-  correctly.
+  perspective. Write enough ITs to ensure the modules works well together.
+  Write enough UTs to ensure the SUT handles all edge cases correctly.
 
 - UTs 的设计应该能够为重构提供保障, 但又不会过度地干预实现细节, 从而变成重构的
   阻碍.
@@ -803,6 +828,16 @@ design patterns
   * integration test. 20%.
 
   * UI test (functional test). 10%.
+
+- Rescuing legacy code with tests.
+
+  * 不要一上来就根据原始代码行为写一堆单元测试, 因为这样实际上就是在固化 legacy
+    code 本身的模样. 这样不会让代码更好, 反而让后续的重构等优化更费力 (因为还需
+    修改相应的 UTs).
+
+  * 从 high-level 下手, 使用 FTs, ITs 等先将宏观的确定是预期的行为固定下来. 然后
+    再慢慢细化, 对各个模块进行重构, 并用 TDD 或单纯的 UT 去优化和固定其行为.
+    注意重点是不要固化原有的可能糟糕的实现, 而是固化经过思考、重构的实现.
 
 Techniques
 ==========
@@ -916,3 +951,4 @@ references
 ==========
 .. [SODupUT] `Is duplicated code more tolerable in unit tests? <https://stackoverflow.com/questions/129693/is-duplicated-code-more-tolerable-in-unit-tests>`_
 .. [SOITExAPI] `How are integration tests written for interacting with external API? <https://stackoverflow.com/questions/7564038/how-are-integration-tests-written-for-interacting-with-external-api>`_
+.. [SETDDOutsideInInsideOut] `TDD - Outside In vs Inside Out <https://softwareengineering.stackexchange.com/questions/166409/tdd-outside-in-vs-inside-out>`_

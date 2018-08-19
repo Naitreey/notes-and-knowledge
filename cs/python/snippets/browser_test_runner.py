@@ -48,8 +48,9 @@ def quit_browser_driver():
 
 class BrowserRunner(DiscoverRunner):
 
-    def __init__(self, browserdriver=None, *args, **kwargs):
+    def __init__(self, skip_database, browserdriver=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.skip_database = skip_database
         self.browserdriver = browserdriver
 
     @classmethod
@@ -60,6 +61,11 @@ class BrowserRunner(DiscoverRunner):
             help="Use specified browser driver class instead of the default "
                  "TEST_BROWSER_DRIVER setting.",
         )
+        parser.add_argument(
+            "--skip-database", "-n", action="store_true", dest="skip_database",
+            help="Skip database setup and teardown procedures. This is useful "
+                 "if your tests are isolated from database completely.",
+        )
 
     def setup_test_environment(self, **kwargs):
         super().setup_test_environment(**kwargs)
@@ -68,3 +74,13 @@ class BrowserRunner(DiscoverRunner):
     def teardown_test_environment(self, **kwargs):
         super().teardown_test_environment(**kwargs)
         quit_browser_driver()
+
+    def setup_databases(self, *args, **kwargs):
+        if self.skip_database:
+            return
+        return super().setup_databases(*args, **kwargs)
+
+    def teardown_databases(self, *args, **kwargs):
+        if self.skip_database:
+            return
+        super().teardown_databases(*args, **kwargs)
