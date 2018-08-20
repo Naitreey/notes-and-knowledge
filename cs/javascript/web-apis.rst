@@ -159,3 +159,65 @@ Console
 
 log()
 -----
+
+Event Model
+===========
+
+DOM Event Architecture
+----------------------
+
+Event dispatch
+^^^^^^^^^^^^^^
+- Event dispatch is the process of creating an event with appropriate
+  attributes and methods and propagating it through the DOM tree.
+
+- Event can be dispatched by UA or by ``EventTarget.dispatchEvent()`` method.
+  After dispatch, the event object is propagated throught the DOM tree as
+  determined by the DOM event flow.
+
+DOM event flow
+^^^^^^^^^^^^^^
+- A dispatched event is propagated through a propagation path, which is an
+  ordered list of current event targets through which an event object will pass
+  sequentially on the way to and back from the event target.
+
+  The last item in the list is the event target, and the preceding items in the
+  list are referred to as the target’s ancestors, with the immediately preceding
+  item as the target’s parent.
+
+- There are 3 phases during an event propagation.
+
+  * capture phase. The event object propagates through the target’s ancestors
+    from the ``Window`` to the target’s parent.
+
+  * target phase. The event object arrives at the event object’s event target.
+
+  * bubble phase. The event object propagates through the target’s ancestors in
+    reverse order, starting with the target’s parent and ending with the
+    Window.
+
+  Some of the phases can be skipped by setting ``Event`` object's attributes or by
+  calling ``Event.stopPropagation()`` method.
+  
+- As the event propagates, each current event target in the propagation path is
+  in turn set as the ``currentTarget``.
+
+Cancelable events and their default actions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- A cancelable event is an event which has a cancelable default action.
+  注意不是说 event itself can be canceled, 而是说它关联的默认行为 can be
+  canceled.
+
+  an event object is cancelable if ``Event.cancelable`` is true.
+
+- An event's default action is a supplementary behavior that UA performs
+  in combination with the dispatch of the event object.
+  
+  Each event type defines its default action, if it has one.
+
+- To cancel an event's default action, call ``Event.preventDefault()`` method.
+
+References
+==========
+
+.. [W3DOMUIEvents] `UI Events W3C Working Draft, 04 August 2016 <https://www.w3.org/TR/DOM-Level-3-Events/#event-flow-default-cancel>`_
