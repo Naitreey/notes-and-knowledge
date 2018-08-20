@@ -276,6 +276,15 @@ general and detailed workflow
 关于步骤的说明
 --------------
 
+* 当开始实现一个设计时, split work out into small, achievable tasks. 抑制
+  一次实现所有设计的冲动. 每实现一部分功能时, 一定要先写测试.
+
+- 当重构时, move step-by-step, from working state to working state. Being
+  the testing goat, not the refactoring cat. Our natural urge is often to dive
+  in and fix everything at once... But if we’re not careful, we’ll end up
+  like Refactoring Cat, in a situation with loads of changes to our code and
+  nothing working again.
+
 * FT 描述的新功能需要在软件的哪个部分添加功能实现, 就在这个部分中写单元测试和
   进行实现. 每个部分所用的语言可能是不同的, 所用的单元测试框架也可以是不同的.
   注意 FT 的实现与具体的单元测试 (和实现) 是独立的.
@@ -495,8 +504,8 @@ design pattern
 
 - 如何组织功能性测试?
 
-  * 对每个 feature, 单独创建一个 test file. 这个 test file 中包含一个或多个
-    相关的 test class.
+  * 功能测试按需求点和 user story 来分类. 每个 test file 中包含一个或多个相关的
+    test class.
 
   * 每个 feature 可能需要多个 user stories 从不同方面具体化. 对应于一个 test
     class 的多个 test method. 每个 test method 表达一个完整的 user story.
@@ -505,11 +514,43 @@ design pattern
   specification in an programmatical way. The specification can be made more
   explicit by comments etc.
 
-- 功能性测试代码应当是与实现独立的, 功能性测试不直接引用实现细节 (只检验实现).
-  它是从外部观测. 功能性测试与所测试功能的实现完全可以在两种不同的语言中写.
+- 功能性测试代码应当尽可能与实现独立. 功能性测试尽量不直接引用实现细节 (只检验
+  实现). 它是从外部观测. 功能性测试与所测试功能的实现理论上可以在两种不同的语言
+  中写. 然而, 由于这是研发阶段的测试, 在恰当的时候, 可以走一些捷径, 访问实现细
+  节进行更方便、更高效的 baseline setup. 这需要根据具体情况分析决定.
 
 - functional tests 校验应用对外的功能, 只要应用的功能逻辑不变, functional tests
   的逻辑就应该是不变的.
+
+- About testing on design and layout.
+
+  基本原则: Don't test aesthetics in automated tests.
+  
+  这是因为: 1) 样式设计都是在静态文件中固定写好的, 这相当于常量的地位; 2) 对
+  style 的测试容易比较 brittle, 需要经常修改; 3) 样式设计最好是由人类去辨别.
+  
+  但是, 进行某些基本的 style checking 还是可以的, 以保证比如静态文件正确加载,
+  预期的效果大致达成. It is valuable to have some kind of minimal "smoke test"
+  which checks that your static files and CSS are working.
+
+  Try to write the minimal tests that will give you confidence that your design
+  and layout is working, without testing what it actually is. Aim to leave
+  yourself in a position where you can freely make changes to the design and
+  layout, without having to go back and adjust tests all the time.
+
+- Page object pattern.
+
+  * Page objects are an alternative which encourage us to store all the
+    information and helper methods about the different types of pages on our
+    site in a single place.
+
+  * The idea behind the Page pattern is that it should capture all the
+    information about a particular page in your site, so that if, later, you
+    want to go and make changes to that page—even just simple tweaks to its
+    HTML layout, for example—you have a single place to go to adjust your
+    functional tests, rather than having to dig through dozens of FTs.
+    
+    In other words, to stay DRY.
 
 integration test
 ----------------
@@ -554,7 +595,9 @@ design patterns
     服务的 API 封装和抽象层, 则信任这些封装和抽象. 同样地, 不测试这些封装和
     抽象, mock 掉, 只测试你自己的代码.
 
-- 功能逻辑与集成测试之间的映射关系:
+- 集成测试的组织形式:
+
+  * 集成测试按照对服务/组件测试的不同测试角度来分类.
 
   * There should be at least one test case for each logical path from the
     boundary of your application.
@@ -587,7 +630,7 @@ design patterns
 
 - 单元测试的组织形式.
 
-  * 一般情况下, 每个源代码文件对应一个单元测试文件.
+  * 每个源代码模块对应一个单元测试文件.
 
   * 对每个 class 和 function, 至少有一个 unit test, 即使只是 placeholder test.
     (See `questions and concerns`_ for reason.)
@@ -646,6 +689,9 @@ design patterns
 - unit tests 校验程序模块对内的功能, 只要模块 API 不变, unit tests 的逻辑就应该
   不变.
 
+- UTs 的设计应该能够为重构提供保障, 但又不会过度地干预实现细节, 从而变成重构的
+  阻碍.
+
 design patterns
 ===============
 
@@ -688,12 +734,6 @@ design patterns
     结果返回, 让异步变成同步. 不能让异步操作就那么溜过去. 设置尽量小的 polling
     interval, 并设置 polling upper bound. (Avoid hardcode single sleep.)
 
-- Do not actually access external services in unit and functional tests.
-  External services are not in developer's control, thus introduces
-  non-determinism. Also, accesssing external services is usually slow, which
-  slows down TDD development cycle. Mock their APIs, so that they are in our
-  control and fast.
-
 - Ensure tests are deterministic.
   
   A test is non-deterministic when it passes sometimes and fails sometimes,
@@ -721,36 +761,8 @@ design patterns
     及时处理. A danger here is that tests keep getting thrown into quarantine
     and forgotten, which means your bug detection system is eroding.
 
-- 当开始实现一个设计时, split work out into small, achievable tasks. 抑制
-  一次实现所有设计的冲动. 每实现一部分功能时, 一定要先写测试.
-
-- 当重构时, move step-by-step, from working state to working state. Being
-  the testing goat, not the refactoring cat. Our natural urge is often to dive
-  in and fix everything at once... But if we’re not careful, we’ll end up
-  like Refactoring Cat, in a situation with loads of changes to our code and
-  nothing working again.
-
 - YAGNI. You ain’t gonna need it! Avoid the temptation to write code that you
   think might be useful, just because it suggests itself at the time.
-
-- About testing on design and layout.
-
-  基本原则: Don't test aesthetics in automated tests.
-  
-  这是因为: 1) 样式设计都是在静态文件中固定写好的, 这相当于常量的地位; 2) 对
-  style 的测试容易比较 brittle, 需要经常修改; 3) 样式设计最好是由人类去辨别.
-  
-  但是, 进行某些基本的 style checking 还是可以的, 以保证比如静态文件正确加载,
-  预期的效果大致达成. It is valuable to have some kind of minimal "smoke test"
-  which checks that your static files and CSS are working.
-
-  Try to write the minimal tests that will give you confidence that your design
-  and layout is working, without testing what it actually is. Aim to leave
-  yourself in a position where you can freely make changes to the design and
-  layout, without having to go back and adjust tests all the time.
-
-- Sometimes it's useful to skip on a test which is testing something you
-  haven't written yet. 但注意及时 unskip it.
 
 - Do not test for developer's stupidity. You should trust yourself (and fellow
   developers) not to do something deliberately stupid, but not something
@@ -793,34 +805,7 @@ design patterns
   不适应的, 并且对相对复杂的模块会比较困难. 这要求作者能够对功能如何实现有良好
   的把握.
 
-- 测试代码的分类和命名:
-
-  * 单元测试按模块来分类.
-
-  * 集成测试从功能整体上的不同测试涵盖面来分类.
-
-  * 功能性测试按需求点和用户故事来分类.
-
-- Page object pattern in FTs.
-
-  * Page objects are an alternative which encourage us to store all the
-    information and helper methods about the different types of pages on our
-    site in a single place.
-
-  * The idea behind the Page pattern is that it should capture all the
-    information about a particular page in your site, so that if, later, you
-    want to go and make changes to that page—even just simple tweaks to its
-    HTML layout, for example—you have a single place to go to adjust your
-    functional tests, rather than having to dig through dozens of FTs.
-    
-    In other words, to stay DRY.
-
-- Write enough FTs to ensure the application really works from the user's
-  perspective. Write enough ITs to ensure the modules works well together.
-  Write enough UTs to ensure the SUT handles all edge cases correctly.
-
-- UTs 的设计应该能够为重构提供保障, 但又不会过度地干预实现细节, 从而变成重构的
-  阻碍.
+- 测试用例的名字不怕长, 就怕不知道测的功能点是什么. 所以只要把测试点写清楚就好.
 
 - Identify the boundaries of your system—the points at which your code
   interacts with external systems, like the database or the filesystem, or the
