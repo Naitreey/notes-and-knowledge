@@ -2793,6 +2793,8 @@ Language driver
 mysqlclient
 -----------
 
+- mysqlclient 在连接时, socket object 会设置 ``SO_KEEPALIVE`` option.
+
 mysql data types in python
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 

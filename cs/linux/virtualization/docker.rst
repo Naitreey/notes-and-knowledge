@@ -1413,6 +1413,9 @@ service
 - docker service update. update a running service.
   更新服务还可以通过修改 compose file, 然后 re-deploy stack.
 
+  * ``--force``. force update service even if no changes are required.  This
+    causes the service’s tasks to be shut down and replaced with new ones.
+
 - docker service logs. 可以查看一个服务的整体日志, 按照 task 分开显示.
 
 config
@@ -2108,6 +2111,23 @@ swarm problems
 - 类似上述, docker swarm 更新 volume 也麻烦, 需要更新版本号. 正在使用
   的 volume (即使相关容器没有运行) 不能删除.
 
+- 当前, docker swarm 下, ``docker service`` 不支持很多关键的 privilege, ulimit,
+  kernel 等相关配置, 这些配置在 ``docker run`` 时都能够很好地支持. 这导致很多系
+  统层的参数配置无法方便地进行. See also [MobyIssue25209]_ [MobyIssue25303]_.
+  相比之下 kubernetes 应该可以支持.
+
+  * 关于 kernel parameters, 可以采用以下方式 workaround. Mount ``/proc`` into
+    services in another location other than ``/proc``, because Docker will
+    remount ``/proc/sys``, among others, as read-only for non-privileged
+    containers. In stack compose file, 添加 bind mount::
+
+      - type: bind
+        source: /proc
+        target: /writable-proc
+    
+    然后通过某种方法修改 kernel parameters, 例如在 entrypoint 中.
+    See also [ProcWritableWorkaround]_
+
 stack
 =====
 
@@ -2294,6 +2314,38 @@ ingress overlay network vs user-defined overlay network
 
 - VIP 在 user-defined overlay network 内部服务之间也可以使用, 对于 ingress
   不能, 只能从外部访问时使用.
+
+issues
+^^^^^^
+- TCP connection on overlay network ends up broken after certain amount of
+  time being idle.
+
+  overlay network 使用 Linux Virtual Server (LVS), 或者准确讲主要是 IPVS
+  kernel module 来做负载均衡. 在每个容器的 netns 中, 保持着相关的 iptables
+  规则和 ipvs 负载均衡配置. 可分别通过以下命令了解详细情况::
+
+    ip netns exec $ns iptables -t mangle -nvL
+    ip netns exec $ns iptables -t nat -nvL
+    ip netns exec $ns ipvsadm -l
+
+  ipvs 保持的 tcp session 具有 idle timeout. 查看 ipvs 的默认超时配置::
+
+    ip netns exec $ns ipvsadm -l --timeout
+
+  输出的第一项为 idle TCP session 的超时时间. 默认为 900s (15min).
+  所以如果 TCP session 保持 idle 达到 timeout 时间就会断掉.
+
+  解决办法:
+
+  * 若应用层的 socket 连接支持设置 tcp keepalive (或者默认就开启), 可通过
+    缩短 ``net.ipv4.tcp_keepalive_time`` 时长至 ipvs timeout 之内来解决.
+
+  * 若应用层协议支持自身的 keepalive 机制, 例如 ssh keepalive, 可以使用这些.
+
+  * 应用层连接设置一个长连接保持时间, 超时自动重连. 这个时间需要小于 ipvs 的
+    timeout.
+
+  See also [MobyIssue31208]_ [DockerIPVSTimeout]_
 
 host network
 ------------
@@ -2635,3 +2687,8 @@ design patterns
 References
 ==========
 .. [SOExecSwarm] `execute a command within docker swarm service <https://stackoverflow.com/questions/39362363/execute-a-command-within-docker-swarm-service>`_
+.. [MobyIssue25303] `[epic] add more options to service create / service update <https://github.com/moby/moby/issues/25303>`_
+.. [MobyIssue25209] `Add support for --security-opt, --syscall, --ulimit...to swarm mode <https://github.com/moby/moby/issues/25303>`_
+.. [ProcWritableWorkaround] `Add support for --security-opt, --syscall, --ulimit...to swarm mode <https://github.com/moby/moby/issues/25303#issuecomment-361989766>`_
+.. [MobyIssue31208] `Idle connections over overlay network ends up in a broken state after 15 minutes <https://github.com/moby/moby/issues/31208>`_
+.. [DockerIPVSTimeout] `IPVS connection timeout issue <https://success.docker.com/article/ipvs-connection-timeout-issue>`_
