@@ -11,12 +11,35 @@ overview
 
 Window
 ======
+- ``Window`` is main object root, the global object in a browser.
+  A ``Window`` is also the root of the DOM tree.
+
+- Window defines the properties of browser window/tab.
 
 prompt()
 --------
 
 alert()
 -------
+
+document
+========
+
+- ``Document`` is a direct child of ``Window``. Available as ``Window.document``,
+  therefore also bare ``document``.
+
+- A document is the main object of the visible DOM (in combination with
+  iframes, etc.). It is loaded inside a ``Window``.
+
+attributes
+----------
+
+- ``documentElement``. The root element of the ``Document``. For a html doc, it's
+  ``<html>`` DOM element.
+
+- ``head``
+
+- ``body``
 
 WindowOrWorkerGlobalScope
 =========================
@@ -194,13 +217,18 @@ DOM event flow
 
   * bubble phase. The event object propagates through the target’s ancestors in
     reverse order, starting with the target’s parent and ending with the
-    Window.
+    ``Window``.
 
   Some of the phases can be skipped by setting ``Event`` object's attributes or by
   calling ``Event.stopPropagation()`` method.
   
 - As the event propagates, each current event target in the propagation path is
-  in turn set as the ``currentTarget``.
+  in turn set as the ``currentTarget``. ``Event.target`` is the initiating
+  event target.
+  
+- When an event propagates through an element, the related event handlers are
+  run in order. In event handler body, ``this`` is bound to the current
+  element, which is the element the handler bound to.
 
 Cancelable events and their default actions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
