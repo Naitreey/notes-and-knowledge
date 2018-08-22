@@ -1,11 +1,45 @@
 overview
 ========
-- Testing Goat. the unofficial mascot of TDD in the Python testing community.
 
-  * Stubborn: 告诉你一定要先写测试, 保证测试 fails, 然后再写功能代码.
+terminology
+-----------
 
-  * One step at a time, so that never falls. 每新增一小块功能, 就按照
-    test/implement/test cycle 去循环地实现.
+- expected failure. When a test fails in an expected way. 这可能是因为实现还不
+  充分.
+
+- unexpected failure. When a test fails in a way we weren’t expecting. This
+  either means that we’ve made a mistake in our tests, or that the tests have
+  helped us find a regression, and we need to fix something in our code.
+
+- user story.
+
+  * A concrete instance of user's interaction with the application. It
+    describes how the application will work from the point of view of the user.
+
+  * It is used to structure a functional test.
+
+  * A user story has to be a story. So it phrases a complete session of user
+    interaction with the software, in a natural language.
+
+- microstepping. test/code cycle must be tiny.
+
+- SUT. system under test.
+
+- UUT. unit under test.
+
+TDD
+===
+- TDD 是一种软件开发方法论, 它描述的是一种基于自动化测试的研发流程. 在这个流程
+  中, 需求转化为测试用例, 功能实现以通过测试用例为主要标准. 从而, 用测试来 "驱
+  动" 开发.
+
+- TDD 的思想, 最重要的特点是将测试提前到实现之前. 而不是先实现, 再根据实现来写
+  测试. 通过测试代码来具体化需求, 将需求呈现为一个个可以检验的指标. 也就是说,
+  测试定义软件整体的行为和各个模块的 API, 以达到驱动软件整体以及各个模块的设计
+  和实现的效果.
+
+  In TDD, The tests tell you what to do, what to do next, when you are done.
+  They tell you what the design is, what the API is going to be.
 
 - TDD 的软件开发方法就像物理学中研究事物的方法. 在物理学中, 我们认识事物的
   唯一方式是通过观测和实验. 如果对一个事物的观测结果或实验数据符合我们对某种
@@ -20,59 +54,8 @@ overview
   行为等价于本质. 对行为的约束会自然形成恰当的内部结构. 所以软件行为的定义和
   验证的重要性是很高的, 然后才是设计实现.
 
-why testing in general
-----------------------
-
-correctness
-^^^^^^^^^^^
-
-- 自动化的 unit tests, functional tests, acceptance tests 等等最大的
-  价值是, 它们提供了低成本高效率可重复的 bug detection mechanism.
-
-- 在研发一个功能时, 这个 bug detection system 有助于保证代码实现总是与预期是一
-  致的.  这是一个正确性方面的保证. 也是开发者对程序信心的基础.
-  
-- 在研发新功能或重构原有功能时, 这个 bug detection system 对避免 regression 问
-  题有很大价值.
-
-clean, maintainable code
-^^^^^^^^^^^^^^^^^^^^^^^^
-
-- 由于 regression test 变得很容易, 所以开发者愿意放心地做代码重构, 不会有心理
-  障碍. 他知道如果 refactor 出了问题, 测试集会告诉他.
-
-- Since we can confidently refactor our application constantly, we’re never
-  scared to try to improve its design, it's more likely to end up with clean,
-  maintainable code.
-
-- Trying to improve the speed of your test suite and try to make it more
-  effective, will ultimately deliver a better code quality.
-
-productive workflow
-^^^^^^^^^^^^^^^^^^^
-
-- Tests can give us feedback about our work really quickly.
-
-- They help us iterate fastly.
-
-joy
-^^^
-
-- 自动化的测试有助于提高程序员的对程序信心和编码过程的愉悦.
-
-- They help take some of the stress out of development.
-
-
 why TDD
 -------
-
-- TDD 的思想和方法, 最重要的特点是将测试提前到实现之前. 而不是先实现, 再根据
-  实现来写测试. 通过测试代码来具体化需求, 将需求呈现为一个个可以检验的指标. 
-  也就是说, 它定义软件整体的行为和各个模块的 API, 以达到驱动软件整体以及各个
-  模块的设计和实现的效果.
-
-  In TDD, The tests tell you what to do, what to do next, when you are done.
-  They tell you what the design is, what the API is going to be.
 
 - TDD 强制先设计, 再实现. 先考虑怎么用, 再考虑怎么做. 这是由于要先写出测试代码,
   所以程序员要设计程序的整体行为 (即程序如何和外部交互), 以及各个模块的 API (即
@@ -105,9 +88,16 @@ why TDD
   实现更好的代码质量. 因为要求可测性, 因而有清晰的 API 和功能行为. 这样的功能
   模块达到 high cohesion low coupling. You can bind it to the rest of the
   project as easily as you can test it.
-  
+
+- TDD can lead to more modularized, flexible, and extensible code. This effect
+  often comes about because the methodology requires that the developers think
+  of the software in terms of small units that can be written and tested
+  independently and integrated together later. This leads to smaller, more
+  focused classes, looser coupling, and cleaner interfaces.
+
 - TDD 有助于更有目的地做事, 构建出最小可用的实现, 提高开发效率, 避免不必要的
-  复杂度.
+  复杂度. -- YAGNI. You ain’t gonna need it! Avoid the temptation to write code
+  that you think might be useful, just because it suggests itself at the time.
 
 - TDD 时, functional tests and acceptance tests 可以做需求文档的具体实例 (user
   story). 而所有测试代码, 尤其是 unit tests 可以作为 API documentation.
@@ -187,7 +177,7 @@ questions and concerns
 
   .. TODO 理论, 工具, 实践, 解决问题, 熟练
 
-- TDD 与研发效率:
+- 自动化测试与研发效率:
 
   * 原来每天 python 300+ loc, 使用 TDD 后每天 600-700. 一半以上是测试代码.
     所以从纯代码量角度来看, 效率并没有下降或仅有轻微下降.
@@ -197,35 +187,18 @@ questions and concerns
     除了原来需要花在单独手工测试、集成、调试所花的时间. 所以从整体效率来看, 是
     提高的.
 
-  * 并且要考虑到写好的测试是可以在多次迭代中重复使用的. 所以长期效益带来的效率
-    是累计提高的.
+  * extensive tests 有助于在研发早期就发现和解决 bug. bug 在越早的研发阶段发现,
+    越早解决解决, 整体成本越低. 等到上线后才发现问题, 修复成本会变得很高.
 
-terminology
------------
+  * 并且要考虑到写好的测试是可以在多次迭代中重复使用的. 长期效益带来的效率是累
+    计提高的.
 
-- expected failure. When a test fails in an expected way. 这可能是因为实现还不
-  充分.
+- TDD 是先写测试再写实现的. 这要求作者必须对功能的实现细节先规划好. 一开始这是
+  不适应的, 并且对相对复杂的模块会比较困难. 这要求作者能够对功能如何实现有良好
+  的把握.
 
-- unexpected failure. When a test fails in a way we weren’t expecting. This
-  either means that we’ve made a mistake in our tests, or that the tests have
-  helped us find a regression, and we need to fix something in our code.
-
-- user story.
-
-  * A concrete instance of user's interaction with the application. It
-    describes how the application will work from the point of view of the user.
-
-  * It is used to structure a functional test.
-
-  * A user story has to be a story. So it phrases a complete session of user
-    interaction with the software, in a natural language.
-
-- microstepping. test/code cycle must be tiny.
-
-- SUT. system under test.
-
-workflow
-========
+TDD workflow
+============
 
 general and detailed workflow
 -----------------------------
@@ -233,7 +206,7 @@ general and detailed workflow
 
 - in general:
   
-  * test/implement/test[/refactor] cycle.
+  * test/implement/test[/refactor] cycle or Red/Green/Refactor cycle.
 
   * be absolutely sure that each bit of code is justified by a test.
 
@@ -265,8 +238,6 @@ general and detailed workflow
 
   4. Think about whether the code needs refactoring. If so, go back to step 2
      and refactor the code. Ensure it passes the functional and unit tests.
-
-  以上步骤也称为 Red/Green/Refactor cycle.
 
 - 这种小步伐的 test/code cycle 还有助于 keep development progress. 注意到所有
   的 development expectation 都在 functional tests and unit tests 中得到记录.
@@ -538,6 +509,10 @@ design pattern
   yourself in a position where you can freely make changes to the design and
   layout, without having to go back and adjust tests all the time.
 
+- 浏览器的响应相对于测试代码对浏览器的操作, 是一个异步的行为. 测试代码必须实现
+  某种 polling 机制, 将异步转化为同步. 也就是说, 对于每个交互操作, 等待浏览器的
+  响应出现、并进行检查后, 再进行下一步操作.
+
 - Page object pattern.
 
   * Page objects are an alternative which encourage us to store all the
@@ -610,16 +585,16 @@ unit test
 - Unit test verifies the correctness of the logic of a single module of your
   application.
 
-- 由于单元测试时, SUT 的依赖全部都被 mock 掉了. 一定要配合集成测试和功能性测试
+- 由于单元测试时, UUT 的依赖全部都被 mock 掉了. 一定要配合集成测试和功能性测试
   来保证模块之间的协作是通畅的. 否则可能会导致 API 输入或输出与实际不符的 bug.
 
-- UTs might not catch unexpected bugs, because they are isolated out of SUT.
+- UTs might not catch unexpected bugs, because they are isolated out of UUT.
 
 design patterns
 ^^^^^^^^^^^^^^^
 
 - 单元测试只对 "变" 的东西进行测试, 不测试 "不变" 的东西. UT should test only
-  logic, flows, configuration, etc. that changes, of a SUT.  Don't test
+  logic, flows, configuration, etc. that changes, of a UUT.  Don't test
   constants, because it's useless -- constants nevers changes it's written as
   is and works as is.
 
@@ -665,10 +640,10 @@ design patterns
   * If UTs are slow, you’ll start to avoid running your tests, which may lead
     to bugs getting through.
 
-- 单元测试应该尽量保证独立性, 只测试 SUT 本身, 而不测试它的依赖. 一个独立的单元
+- 单元测试应该尽量保证独立性, 只测试 UUT 本身, 而不测试它的依赖. 一个独立的单元
   测试的成功和失败不依赖于任何外部依赖. 这需要使用 mock 来达成.
 
-  有些时候, SUT 与它的依赖或者说它外部的东西的界限不是那么清晰的, 例如当使用
+  有些时候, UUT 与它的依赖或者说它外部的东西的界限不是那么清晰的, 例如当使用
   framework 时. 这时, 不可避免地, unit test 变成了一定程度上的 integration
   test. 这没有绝对清晰的界限. 只能说, 能保证独立时尽量保证独立.
 
@@ -677,20 +652,73 @@ design patterns
   当自己的代码与 framework 交互时尤其显著. 此时, 我们需要了解一些 framework 本
   身的实现细节.
 
-- 同一个行为点尽量避免在不同的单元测试中重复测试. 区分清晰模块功能的归属关系才
-  能避免单元测试的重复.
+- 同一个行为点尽量避免在不同的单元测试中重复测试.
+  
+  * 区分清晰模块功能的归属关系才能避免单元测试的重复.
 
-  例如, module A depends on module B. 作为一个整体, AB 面对 3 种输入有三种输出.
-  然而, 这三种情况实际上完全是由于 B 存在 3 种情况. 而 A 只是对 B 的输入输出进
-  行预处理. 所以对 A 单独而言, 并不存在 3 种情况. 那么对 A 的单元测试只需测试预
-  处理逻辑部分即可. 对 B 的单元测试则需要测试 3 种情况. 不该对 A 测试 3 种情况,
-  再重复对 B 测试相同的三种情况.
+    例如, module A depends on module B. 作为一个整体, AB 面对 3 种输入有三种输
+    出.  然而, 这三种情况实际上完全是由于 B 存在 3 种情况. 而 A 只是对 B 的输入
+    输出进行预处理. 所以对 A 单独而言, 并不存在 3 种情况. 那么对 A 的单元测试只
+    需测试预处理逻辑部分即可. 对 B 的单元测试则需要测试 3 种情况. 不该对 A 测试
+    3 种情况, 再重复对 B 测试相同的三种情况.
+
+  * 如果好几个测试用例都在测试相似的内容, 那么它们本身应该合并为一个测试用例.
+
+- 清晰哪些是公有 API, 哪些是内部实现细节. 避免测试实现细节 (除非涉及依赖调用处
+  需要 mock).
+  
+  * (错误地) 检测被测功能的实现而不是它的 API, 会导致多处重复.
+
+  * 检测实现细节会让测试与实现强耦合, 提高代码重构成本.
 
 - unit tests 校验程序模块对内的功能, 只要模块 API 不变, unit tests 的逻辑就应该
   不变.
 
 - UTs 的设计应该能够为重构提供保障, 但又不会过度地干预实现细节, 从而变成重构的
   阻碍.
+
+why testing
+-----------
+
+correctness
+^^^^^^^^^^^
+
+- 自动化的 UT/IT/FT 等最大的价值是, 它们提供了低成本高效率可重复的 bug
+  detection mechanism.
+
+- 在研发一个功能时, 这个 bug detection system 有助于保证代码实现总是与预期是一
+  致的.  这是一个正确性方面的保证. 也是开发者对程序信心的基础.
+  
+- 在研发新功能或重构原有功能时, 这个 bug detection system 对避免 regression 问
+  题有很大价值.
+
+clean, maintainable code
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+- 由于 regression test 变得很容易, 所以开发者愿意放心地做代码重构, 不会有心理
+  障碍. 他知道如果 refactor 出了问题, 测试集会告诉他.
+
+- Since we can confidently refactor our application constantly, we’re never
+  scared to try to improve its design, it's more likely to end up with clean,
+  maintainable code.
+
+- Trying to improve the speed of your test suite and try to make it more
+  effective, will ultimately deliver a better code quality.
+
+productive workflow
+^^^^^^^^^^^^^^^^^^^
+
+- Tests can give us feedback about our work really quickly.
+
+- They help us iterate fastly.
+
+joy
+^^^
+
+- 自动化的测试有助于提高程序员的对程序信心和编码过程的愉悦.
+
+- They help take some of the stress out of development.
+
 
 design patterns
 ===============
@@ -732,7 +760,7 @@ design patterns
 
   * Normal solution: Polling the result of async operation. Caller 必须等着
     结果返回, 让异步变成同步. 不能让异步操作就那么溜过去. 设置尽量小的 polling
-    interval, 并设置 polling upper bound. (Avoid hardcode single sleep.)
+    frequency, 并设置 polling upper bound. (Avoid hardcode single sleep.)
 
 - Ensure tests are deterministic.
   
@@ -761,29 +789,22 @@ design patterns
     及时处理. A danger here is that tests keep getting thrown into quarantine
     and forgotten, which means your bug detection system is eroding.
 
-- YAGNI. You ain’t gonna need it! Avoid the temptation to write code that you
-  think might be useful, just because it suggests itself at the time.
-
 - Do not test for developer's stupidity. You should trust yourself (and fellow
   developers) not to do something deliberately stupid, but not something
   accidentally stupid. (If not, you have a much bigger problem.)
 
-- Readability vs duplication for unit tests.[SODupUT]_
+- Do not test for code performance or timing.
 
-  * 对单元测试, 易读性是更重要的特性. If a test fails, you want the problem to
-    be obvious.
+- Readability vs DRY for tests.[SODupUT]_
 
-  * 适当地 refactor 和抽象有助于保持单元测试的清晰可读, as long as it doesn't
+  * 对测试, 易读性是更重要的特性. If a test fails, you want the problem to be
+    obvious.
+
+  * 适当地 refactor 和抽象有助于保持测试的清晰可读, as long as it doesn't
     obscure anything, and eliminating the duplication in your tests may lead to
-    a better API. 但太多抽象和 DRY 会损害单元测试结果的易读性. Developer
-    shouldn't have to wade through a lot of heavily factored test code to
-    determine exactly what failed.
-
-  * 不同的测试用例可能会有一些重复, 这是允许的. 但同时也要警惕, 如果好几个
-    测试用例都在测试相同的内容, 那它们本身应该合并为一个测试.
-
-  * 此外, (错误地) 检测被测功能的实现而不是它的 API, 也会导致多处重复, 这
-    本来就是该避免的. 避免测试实现细节, 除非涉及外部服务接口处.
+    a better API. 但太多抽象和 DRY 会损害测试结果的易读性. Developer shouldn't
+    have to wade through a lot of heavily factored test code to determine
+    exactly what failed.
 
 - About engineering the test.
 
@@ -801,23 +822,9 @@ design patterns
   * 保证测试数据的可重复性. 如果使用随机数据, 应保证每次独立执行的测试, 都使用
     相同的 seed.
 
-- TDD 是先写测试再写实现的. 这要求作者必须对功能的实现细节先规划好. 一开始这是
-  不适应的, 并且对相对复杂的模块会比较困难. 这要求作者能够对功能如何实现有良好
-  的把握.
-
 - 测试用例的名字不怕长, 就怕不知道测的功能点是什么. 所以只要把测试点写清楚就好.
 
-- Identify the boundaries of your system—the points at which your code
-  interacts with external systems, like the database or the filesystem, or the
-  internet, or the UI—and trying to keep them separate from the core business
-  logic of your application.
-
-- Your architecture to some extent dictates the types of tests that you need.
-  The more you can separate your business logic from your external
-  dependencies, and the more modular your code, the closer you’ll get to a nice
-  balance between unit tests, integration tests and functional tests.
-
-  Rule of thumb for different type of tests in a project (for an Ports/adapters
+- Rule of thumb for different type of tests in a project (for an Ports/adapters
   architecture project).
 
   * unit test. 70%.
@@ -826,13 +833,23 @@ design patterns
 
   * UI test (functional test). 10%.
 
+  Your architecture to some extent dictates the types of tests that you need.
+  The more you can separate your business logic from your external
+  dependencies, and the more modular your code, the closer you’ll get to a nice
+  balance between unit tests, integration tests and functional tests.
+
+  Identify the boundaries of your system—the points at which your code
+  interacts with external systems, like the database or the filesystem, or the
+  internet, or the UI—and trying to keep them separate from the core business
+  logic of your application.
+
 - Rescuing legacy code with tests.
 
-  * 不要一上来就根据原始代码行为写一堆单元测试, 因为这样实际上就是在固化 legacy
+  * 不要一上来就根据原始代码实现写一堆单元测试, 因为这样实际上固化了 legacy
     code 本身的模样. 这样不会让代码更好, 反而让后续的重构等优化更费力 (因为还需
     修改相应的 UTs).
 
-  * 从 high-level 下手, 使用 FTs, ITs 等先将宏观的确定是预期的行为固定下来. 然后
+  * 从宏观功能角度入手, 使用 FTs, ITs 等先将宏观的确定是预期的行为固定下来. 然后
     再慢慢细化, 对各个模块进行重构, 并用 TDD 或单纯的 UT 去优化和固定其行为.
     注意重点是不要固化原有的可能糟糕的实现, 而是固化经过思考、重构的实现.
 
@@ -859,16 +876,16 @@ mock
 
 - The usage of mocks.
 
-  * to eliminate dependencies for a SUT.
+  * to eliminate dependencies for a UUT.
 
   * When a dependency has no return value. (behavior verification)
 
-  * Ease the testing of different SUT logic branches. 有时候一些逻辑分支很难
+  * Ease the testing of different UUT logic branches. 有时候一些逻辑分支很难
     在真实情况下构建, 使用 mock 则可以轻易地伪造实际中难以测试的情况.
 
   * eliminate dependency on database calls, to speed up unit testing.
 
-  * Don't have to wait for implementing SUT's dependency to test the SUT.
+  * Don't have to wait for implementing UUT's dependency to test the UUT.
     (Outside-In TDD)
 
 - 在一个功能的单元测试中, 对 mock 调用情况的检测不可避免地是在测试功能的实现细节,
@@ -923,9 +940,9 @@ mock
 - 很多语言已经提供方便的 mock library, 一般无需手动构建替代的 mock function, 也
   无需手动替换方法和调用.
 
-- 在 mock 时, 一定要正确地判断 SUT 依赖的 API 是什么, 即它与外部交互的点是什么.
-  只应该 mock dependency 与 SUT 交互处的 API. 而不该去 mock 更多的东西. 例如,
-  SUT 调用另一个模块中的 ``cls.method``, 只应该 mock ``cls.method``, 而不该去
+- 在 mock 时, 一定要正确地判断 UUT 依赖的 API 是什么, 即它与外部交互的点是什么.
+  只应该 mock dependency 与 UUT 交互处的 API. 而不该去 mock 更多的东西. 例如,
+  UUT 调用另一个模块中的 ``cls.method``, 只应该 mock ``cls.method``, 而不该去
   mock ``cls`` 整体.
 
 test fixtures
