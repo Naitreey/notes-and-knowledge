@@ -208,44 +208,63 @@ general and detailed workflow
   
   * test/implement/test[/refactor] cycle or Red/Green/Refactor cycle.
 
-  * be absolutely sure that each bit of code is justified by a test.
-
   * Working incrementally and step-by-step, with each of them should be small.
 
 - detail (Double-Loop TDD).
 
   |tdd-workflow|
 
-  1. Write a functional test, describing the new functionality from the user’s
-     point of view. Run the test to make sure it fails.
+1. 将需求具体化为用户故事, 将用户故事转化为 FT. 执行 FT 以保证测试不通过. (Red)
 
-  2. write minimal code to implement the functionality.
+2. 写出最小可通过 FT 的功能实现.
 
-     a. Think about how to write code that can get it to pass (or at least to
-     get past its current failure). Write some unit tests to define how we want
-     our code to behave—the idea is that each line of production code we write
-     should be tested by (at least) one of our unit tests. Run the unit tests
-     to make sure they fails.
+   在实现功能时, 首先进行架构设计. 考虑该功能需要哪些模块, 有哪些功能层. 然后
+   一个一个功能模块去实现. 对每个模块的实现, 遵循以下子步骤:
 
-     b. Write the smallest amount of application code we can, just enough to
-     get the unit tests to pass.
+   1. 考虑这个模块要如何设计, 它的 API 如何, 它的结构如何, 它的行为如何. 写下
+      相应的 UT 去定义这些 API 和 API 的行为. 执行这些 UT 以保证测试不通过. (Red)
 
-     c. Think about whether the code needs refactoring. If so, refactor the
-     code and ensure it passes the unit tests.
+   2. 写出最小可通过 UT 的模块功能实现. 执行 UT 以保证测试通过. (Green)
 
-  3. Rerun our functional tests and see if they pass, or get a little further.
-     That may prompt us to go back to step 2.
+   3. 考虑代码实现是否需要优化和重构. 若需要, 进行重构, 优化代码质量. 执行 UT
+      以保证测试通过. (Refactor)
 
-  4. Think about whether the code needs refactoring. If so, go back to step 2
-     and refactor the code. Ensure it passes the functional and unit tests.
+   在所有相关模块都实现完成, 并且所有相关单元测试都通过了情况下, 执行 FT, 检查
+   FT 是否通过. 若否, 再次深入实现层, 按照以上子步骤调整模块实现或者添加新模块.
+   若 FT 通过, 则该功能实现完成. (Green)
+
+3. 考虑功能实现是否需要架构设计方面的优化和重构. 若需要, 进行调整, 并返回第 2
+   步实现调整后的功能. 最终保证所有 FT/UT 全部通过. (Refactor)
+
+关于步骤的说明
+--------------
+- 以上步骤其实强调了两个概念: "层" 和 "循环".
+
+  * 在宏观的功能层, 我们有功能测试来定义实现的模样. 在微观的模块层, 我们有单元
+    测试来定义实现的模样.
+
+  * 无论是宏观的功能层还是微观的模块层, 开发都是通过 Red-Green-Refactor 这个循
+    环来推进的.
+
+- 在实现一个功能所需的各个模块时, 具有两种思路:
+
+  * 按由内层模块至外层模块的顺序进行 (Inside-Out), 也即先实现数据层, 再实现
+    展示层.
+  * 按由外层模块至内层模块的顺序进行 (Outside-In), 也即先实现展示层, 再实现
+    数据层.
+
+  这实际上是 TDD 的两个所谓 "门派", 即 London School TDD and Detroit School TDD.
+  这两种思路在实际使用中各有其用途, 没有必要坚持只使用由外至内的顺序或者反之.
+  这在下面会详述.
+
+- 关于怎么样的实现是 "最小" 的实现. 我并没有深究这个问题. 因为我不太认可我看
+  过的 TDD 书籍中所推崇的那种 "minimal code" 做法. 在实践中, 我只是依据 UT 去
+  自然地去写出我认为是该模块的最佳实现 (并配合重构).
 
 - 这种小步伐的 test/code cycle 还有助于 keep development progress. 注意到所有
   的 development expectation 都在 functional tests and unit tests 中得到记录.
   如果忘记上次开发到哪里了, 只需跑一轮测试, 哪里不通过, 就知道开发到哪里了 (因为
   每次一小步, 已经实现的代码部分都相应地测试通过了.)
-
-关于步骤的说明
---------------
 
 * 当开始实现一个设计时, split work out into small, achievable tasks. 抑制
   一次实现所有设计的冲动. 每实现一部分功能时, 一定要先写测试.
