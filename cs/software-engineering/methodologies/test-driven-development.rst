@@ -63,15 +63,8 @@ why TDD
 
   这种方式, 有助于达到一个使用起来更自然更合理的设计.
 
-  确实是这样, 由于需要先写测试, 即先定义一个模块的功能要求. 这样甚至有助于优化
-  功能设计, 以及在设计阶段摒弃一开始看上去是合理的、但实际上是不合理的设计.
-
-  例如: 功能要求检测上传的是文本文件, 一开始想到两层考虑: Content-Type 与 body
-  检查. 若 Content-Type 不是 ``text/*`` 就不需要检查 body. 这样一共有 4 个测试.
-  但又想到实际上 Content-Type 不是 ``text/*`` 不能说明 body 也不是文本, 例如
-  json. 这样就可以直接忽略 Content-Type. 测试减少为 2 个. 相应的功能实现也会
-  简单. 重点是我们是在使用测试 (的名称) 来思考和完善设计. 而不是等到代码都写完
-  了才想到需要修改的地方, 再返工.
+- 在写测试用例定义模块的行为的过程中, 有时候还会发现一些功能设计不合理的地方,
+  这样及时纠正了功能设计, 不用等到功能实现完了再返工.
 
 - 接上, 这种流程强制程序员写出易于测试的代码. 因为必须已经知道相关代码要怎么
   测试了, 已经知道它会怎么去使用了, 才会去写代码本身. 相反, 如果实现之后再写
@@ -116,6 +109,11 @@ why TDD
 
 - TDD 的功能性测试和单元测试还可以在 interface review 上发挥作用. Interface
   review 比 code review 重要.
+
+- 这种小步伐的 test/code cycle 还有助于 keep development progress. 注意到所有
+  的 development expectation 都在 functional tests and unit tests 中得到记录.
+  如果忘记上次开发到哪里了, 只需跑一轮测试, 哪里不通过, 就知道开发到哪里了 (因为
+  每次一小步, 已经实现的代码部分都相应地测试通过了.)
 
 - 测试用例可以作为 TODO 来使用. 当我们在开发一个模块时, 可能突然想到其他地方需要
   一些修改, 那就可以迅速地在相关测试代码中添加一个 placeholder test case (make
@@ -163,39 +161,55 @@ questions and concerns
 
   或者说, TDD 不该抑制创造性和更好的设计.
 
-- TDD 及单元测试能否做好要看多方面的因素.
+- TDD 及自动化测试能否做好要看多方面的因素.
   
-  * 个人因素: 学习的意愿和能力, 能持续做下去的毅力, 面对问题能够坚持原则冷静认
-    真地去分析和解决、而非浮躁和草率地处理.
+  * 个人因素: 愿意尝试新思路、新的做事方法, 学习的意愿和学习的能力, 能坚持做下
+    去的毅力, 面对问题能够冷静认真地去分析和解决、而非浮躁和草率地处理.
 
-  * 团队因素: 愿意花时间去实施, 即使最终效果可能不够理想, 包括上手阶段的学习所
-    花费的时间与平时研发所花费的额外时间.
+    TDD 是先写测试再写实现的. 这要求作者必须对功能的实现细节先规划好. 一开始这
+    是不适应的, 并且对相对复杂的模块会比较困难. 这要求作者能够对功能如何实现有
+    良好的把握.
+
+  * 团队因素: 相信 TDD 和自动化测试有潜力带来价值, 解决问题; 愿意花时间去尝试,
+    即使最终效果可能不够理想, 包括上手阶段的学习所花费的时间与平时研发所花费的
+    额外时间.
     
   * 条件因素: 包括现有工具集是否丰富、能否满足测试需求, 是否需要自制一些工具.
 
-- TDD 及单元测试是有一定的学习曲线的. 它需要至少在以下方面进行深入:
+- TDD 及自动化测试是有一定的学习曲线的. 它需要至少在以下方面进行深入:
 
-  .. TODO 理论, 工具, 实践, 解决问题, 熟练
+  * 理论学习: 学习各种测试的概念和方法, 学习 TDD 方法论.
 
-- 自动化测试与研发效率:
+  * 工具: 各种自动化测试工具, 包括但不限于: 单元测试 library, mock library,
+    假数据生成 library, 浏览器操作工具 (例如 WebDriver, Selenium).
 
-  * 原来每天 python 300+ loc, 使用 TDD 后每天 600-700. 一半以上是测试代码.
-    所以从纯代码量角度来看, 效率并没有下降或仅有轻微下降.
+  * 框架源代码: 当 SUT 需要使用框架时, 可能需要对框架的底层 API 和执行逻辑有一
+    定了解, 以保证单元测试的独立性.
 
-  * 然而带来的价值是所有这些代码都是测试过的, 可用的. 原来是每天 300+ 没测试过
-    的代码, 现在是几乎同样量的代码, 却全部是已经 UT/IT/FT 测试通过的. 这几乎消
-    除了原来需要花在单独手工测试、集成、调试所花的时间. 所以从整体效率来看, 是
-    提高的.
+  * 实践: 大量的实践, 并能够冷静地解决实际中遇到的问题和挑战 (因为一定会遇到很
+    多很多问题). 所谓 "纸上得来终觉浅，绝知此事要躬行". 只有在实践中遇到足够多
+    种的情况, 解决了足够多种的问题, 才能说 "熟练".
 
-  * extensive tests 有助于在研发早期就发现和解决 bug. bug 在越早的研发阶段发现,
+- TDD & 自动化测试与研发效率的问题.
+
+  * 在学习和上手阶段, TDD 带来的是短期研发效率的下降, 这是必然的. 学习任何新技
+    能都会有相应的影响. 这也是团队和个人最容易放弃的阶段.
+
+  * 根据我个人的经验, 我原来每天可以写 300+ 行未经测试的 python 代码. 当使用
+    TDD 比较熟练之后, 后每天的总代码量可达到 600-700. 这里面大约 50-60% 是测试
+    代码. 所以从纯代码量角度来看, 研发效率并没有下降或仅有轻微下降.
+
+  * 然而这带来的价值是: 所有这些代码都是测试过的, 可用的. 注意原来是每天 300+
+    行未测试过的代码, 而现在是几乎同样 (或略少) 数量的代码, 却全部是经过
+    UT/IT/FT 测试通过的. 它们消除了绝大部分原来需要花在单独手工测试、集成、调试
+    上的时间. 而且原来手动测试的覆盖度远不如自动化的测试集全面. 所以从整体效益
+    来看, 是提高的.
+
+  * 并且注意到自动化测试集是可以在多次迭代中重复使用的. 这对回归测试的效率是很大
+    的提升. 长期效益是累计提高的.
+
+  * 此外, 全面的测试有助于在研发早期就发现和解决 bug. Bug 在越早的研发阶段发现,
     越早解决解决, 整体成本越低. 等到上线后才发现问题, 修复成本会变得很高.
-
-  * 并且要考虑到写好的测试是可以在多次迭代中重复使用的. 长期效益带来的效率是累
-    计提高的.
-
-- TDD 是先写测试再写实现的. 这要求作者必须对功能的实现细节先规划好. 一开始这是
-  不适应的, 并且对相对复杂的模块会比较困难. 这要求作者能够对功能如何实现有良好
-  的把握.
 
 TDD workflow
 ============
@@ -246,48 +260,44 @@ general and detailed workflow
   * 无论是宏观的功能层还是微观的模块层, 开发都是通过 Red-Green-Refactor 这个循
     环来推进的.
 
-- 在实现一个功能所需的各个模块时, 具有两种思路:
+- 在上述第 2 步中, 实现一个功能所需的各个模块时, 具有两种思路:
 
   * 按由内层模块至外层模块的顺序进行 (Inside-Out), 也即先实现数据层, 再实现
     展示层.
+
   * 按由外层模块至内层模块的顺序进行 (Outside-In), 也即先实现展示层, 再实现
     数据层.
 
-  这实际上是 TDD 的两个所谓 "门派", 即 London School TDD and Detroit School TDD.
-  这两种思路在实际使用中各有其用途, 没有必要坚持只使用由外至内的顺序或者反之.
-  这在下面会详述.
+  这实际上是 TDD 的两个所谓 "门派", 即 London School TDD and Detroit School
+  TDD.  但无论是 Outside-In 还是 Inside-Out, 这些都是方法. 我们的目的是达成一个
+  合理的设计和优质的实现.  在实践中, 这两种思路各有其用途, 没有必要坚持只使用由
+  外至内的顺序或者反之.  我们可能会 out-in, in-out, out-in, etc.  等一系列过程,
+  最终达到一个很好的结果. 这是一个灵活的随机应变的过程. 即 agile 的本质.
+
+  In large, enterprise solutions, where parts of the design come from
+  architects (or exists upfront) one might start with "London style" approach.
+  On the other hand, when you face a situation where you're not certain how
+  your code should look (or how it should fit within other parts of your
+  system), it might be easier to start with some low-end component and let it
+  evolve as more tests, refactorings and requirements are
+  introduced.[SETDDOutsideInInsideOut]_
 
 - 关于怎么样的实现是 "最小" 的实现. 我并没有深究这个问题. 因为我不太认可我看
   过的 TDD 书籍中所推崇的那种 "minimal code" 做法. 在实践中, 我只是依据 UT 去
   自然地去写出我认为是该模块的最佳实现 (并配合重构).
 
-- 这种小步伐的 test/code cycle 还有助于 keep development progress. 注意到所有
-  的 development expectation 都在 functional tests and unit tests 中得到记录.
-  如果忘记上次开发到哪里了, 只需跑一轮测试, 哪里不通过, 就知道开发到哪里了 (因为
-  每次一小步, 已经实现的代码部分都相应地测试通过了.)
-
-* 当开始实现一个设计时, split work out into small, achievable tasks. 抑制
-  一次实现所有设计的冲动. 每实现一部分功能时, 一定要先写测试.
-
-- 当重构时, move step-by-step, from working state to working state. Being
-  the testing goat, not the refactoring cat. Our natural urge is often to dive
-  in and fix everything at once... But if we’re not careful, we’ll end up
-  like Refactoring Cat, in a situation with loads of changes to our code and
-  nothing working again.
-
 * FT 描述的新功能需要在软件的哪个部分添加功能实现, 就在这个部分中写单元测试和
   进行实现. 每个部分所用的语言可能是不同的, 所用的单元测试框架也可以是不同的.
   注意 FT 的实现与具体的单元测试 (和实现) 是独立的.
 
-* 由于 FT 相对肯定比 UT 执行起来慢一些, 为了提高 TDD cycle 速度, 可以适当地
-  只执行与当前开发功能相关的 FTs, 不执行全部 FTs. 将执行全部研发阶段的 FTs
-  的任务留给构建服务器去完成.
+* 关于 FT 的执行. 由于 FT 执行起来可能比较慢 (要调用浏览器等), 为了提高 TDD
+  cycle 速度, 可以根据具体情况选择只执行与当前功能相关的 FT, 不执行全部 FT.  将
+  执行全部研发阶段的 FTs 的任务留给构建服务器去完成.
 
-* Initial tentative design and implementation. 很多时候, 在一个功能或模块 API
-  的最初设计和实现过程中, 我们设想的设计在实现时才发现需要调整的地方. 因此,
-  不可避免地需要反过来调整设计, 调整测试代码. 在这个尝试性的阶段, 同时修改代码
-  实现和测试用例是允许的. 当初始设计基本确定之后, 需要保证不同时修改测试和实现,
-  进入 Red/Green/Refactor 流程.
+* 在研发过程中的尝试性设计与实现阶段. 对具有难点的新功能的设计和实现, 往往难以
+  一次性就作出正确的决策, 或者需要一些尝试与原型实现. 在这种情况下, 没必要严格
+  执行 TDD 流程, 同时修改代码实现和测试用例是允许的. 甚至可以暂时不使用 TDD. 当
+  设计与实现已经有了一个可行的基本思路后, 再进入 Red-Green-Refactor 循环.
 
 * 在实践中, 可能存在从测试用例 (设计) 至实现, 再由实现扩展测试用例 (设计). 这样
   交替的、相互影响的过程.
@@ -299,35 +309,43 @@ general and detailed workflow
 
   但前提是这个完善的实现是恰好的、符合需求的, 而不是过分复杂的. YAGNI.
 
-* 警惕一次通过 (多个) 测试的代码实现. 更有可能是某些环节出了问题, 导致测试没有
-  起效.
+* 在完成功能实现、执行测试校验结果时, 警惕一次性通过所有测试的代码实现. 因为更
+  有可能是某些环节出了问题, 导致而测试没有生效.
 
-Outside-In and Inside-Out
--------------------------
-- 在实践 double-loop TDD 时, 有了宏观的需求以及功能性测试后, 对一个功能可能需
-  要实现模块化解耦合的多个层级. 构建这个层级可以由外至内 (outside-in), 也可以由
-  内至外 (inside-out).
+- 关于安全地重构.
+  
+  * 当重构时, move step-by-step, from working state to working state. Being the
+    testing goat, not the refactoring cat. Our natural urge is often to dive in
+    and fix everything at once... But if we’re not careful, we’ll end up like
+    Refactoring Cat, in a situation with loads of changes to our code and
+    nothing working again.
 
-- 注意无论是 Outside-In 还是 Inside-Out, 这些都是方法. 我们的目的是达成一个合
-  理的设计和优质的实现. 所以实践中, 我们可能就会 out-in, in-out, out-in, etc.
-  等一系列过程, 最终达到一个很好的结果. 这是一个灵活的随机应变的过程. 即 agile
-  的本质. 但总体来讲, 目前我倾向于整体上以 Outside-In TDD 为主.
+  * When refactoring, the code should starts with working state, then move
+    incrementally to another working state. 步伐尽量可控, 过程中每一步都要保证
+    测试通过, 不要一次性做一大堆修改然后扯着蛋.
+  
+    The step-by-step approach, in which you go from working code to working
+    code, is really counterintuitive. 甚至中间的一些 working state 极其错误, 完
+    全不合理. 但这完全是为了不破坏已经建立的局面, 然后一步一步向更好的局面发展.
 
-- Neither of the approaches is the one and only; they both have their place
-  depending on your situation. In large, enterprise solutions, where parts of
-  the design come from architects (or exists upfront) one might start with
-  "London style" approach. On the other hand, when you face a situation where
-  you're not certain how your code should look (or how it should fit within
-  other parts of your system), it might be easier to start with some low-end
-  component and let it evolve as more tests, refactorings and requirements are
-  introduced.[SETDDOutsideInInsideOut]_
+  * You can begin refactoring only when you know you are safe to refactor. 也就
+    是说, 例如我们已经完成一个功能还没有开始新功能的开发, 或者至少我们现在位于
+    working state. 不要在半截上开始 refactor, 此时应该先记下稍后需要 refactor.
+  
+  * Don’t refactor code against failing tests, except for the test you are
+    currently working on.
 
 Outside-In TDD
-^^^^^^^^^^^^^^
+--------------
 - Outside-In TDD 的思路是由外至内地去实现 -- (由宏观需求触发) 交互/展示/UI 层,
-  view/controller layer, model layer 等 -- 每一个外层都为它所依赖的内层提需求, 
-  每一个内层的实现都完全是为了满足已知的需求而实现, 而不是 trying to anticipate
-  the usage pattern, trying to anticipate the upper layer's requirement.
+  view/controller layer, model layer 等.
+
+- 为什么要由外至内的顺序去实现? 因为内层该具有什么样的 API 本质上应该由外层需要
+  如何使用来决定. 也就是说, 每个外层都为它所依赖的内层提需求, 而每一个内层的实现
+  都完全是为了满足外层的使用需求而实现. 这样更容易达成一个恰好够用的设计 (YAGNI).
+  相反, 如果按照最直观的实现思路, 即先内层后外层的实现, 内存 trying to
+  anticipate the usage pattern, trying to anticipate the upper layer's
+  requirement, 这样可能预测出错, 需要返工.
 
 - Outside-In TDD is also called "programming by wishful thinking". We start
   writing code at the higher levels based on what we wish we had at the lower
@@ -340,7 +358,7 @@ Outside-In TDD
   在写这种 isolated test case 时, 它会自动 drive 我们将功能按照不同层去考虑, 将
   不属于被测功能层的内容解耦合至其他模块.
 
-- Isolated test 只测试该功能层的逻辑, 这包括它自身的 API 以及依赖调用. 不测试任
+  Isolated test 只测试该功能层的逻辑, 这包括它自身的 API 以及依赖调用. 不测试任
   何其他层的逻辑和 side effects. 并且这种该测试什么、不该测试什么实际上由 mock
   来强制执行了, 因为依赖全部被 mock 掉了, 没办法去测试其他层的逻辑和副作用.
 
@@ -350,30 +368,23 @@ Outside-In TDD
   note that there is now an implicit contract between the layers, and that a
   mock on one layer should probably translate into a test at the layer below.
 
-- Listen to your tests. If a "dependency is hard to mock, then it's
-  definitely hard to use for the object that'll actually be using it."
-
-  换句话说, 如果在测试代码中发现被测功能的某个依赖 mock 起来比较费劲,
-  那说明它的 API 不太容易使用, 可能需要重构这个依赖的 API.
-
-- 如果一个测试用例需要很多 mock 才能保证被测功能与它的依赖隔离开来, 才能
-  保证仅仅是在测试该层的功能逻辑, 则说明代码实现可能可以优化, 降低耦合.
-
 - 使用 Outside-In TDD 时, 需要尽量保证测试代码对被测功能的细节访问仅限于其他
   层 API 部分. 避免太多耦合. London-school TDD routinely provides feedback
   about whether each unit's usage is awkward under real-world conditions.
 
 - Outside-In TDD 的缺点:
 
-  * Outside-In TDD 的最大缺点是为了测试隔离 (通过 mock), 对一个实现层的测试, 必
-    须要清楚被测实现层的底层依赖, 以及清楚被测实现层是如何使用底层 API 的. 这样
-    测试不可避免地与被测功能的实现细节有一定的耦合. 从而提高了重构的成本.
+  * Outside-In TDD 的最大缺点是为了保证单元测试的独立性, UUT 的测试测试, 必须要
+    清楚 UUT 的底层依赖是什么, 以及 UUT 是如何使用这些底层依赖的 (需要 mock 掉
+    这些集成点). 这导致测试代码不可避免地与被测模块的实现细节有一定的耦合. 从而
+    提高了重构的成本.
  
-  * 让程序员关注于那些对用户直接可见的功能部分, 要小心不要忽视了 不对用户直接可
-    见的功能部分, 例如 security features. 对于这些功能, 必须提醒 自己要去实现.
+  * Outside-In TDD 让研发人员关注于对用户直接可见的功能部分, 这样可能会忽略其他
+    不直接对用户可见、却对系统完整性仍然至关重要的功能部分, 例如安全性考量. 因
+    此, 研发人员需要在设计时考虑全面, 提醒自己那些隐藏的功能点.
 
 Inside-Out TDD
-^^^^^^^^^^^^^^
+--------------
 - Inside-Out TDD. the natural way most people intuitively work before they
   encounter TDD. After coming up with a design, the natural inclination is to
   implement it starting with the innermost, lowest-level components first.
@@ -392,24 +403,6 @@ Inside-Out TDD
   than we actually need, which is a waste of time. It may build inner
   components' APIs that is incompetent for upper layer's use. Even worse,
   the lower level components might not even solve the upper layer's problem.
-
-With refactoring
-----------------
-- When refactoring, the code should starts with working state, then move
-  incrementally to another working state. 步伐尽量可控, 过程中每一步都要
-  保证测试通过, 不要一次性做一大堆修改然后扯着蛋.
-
-  The step-by-step approach, in which you go from working code to working code,
-  is really counterintuitive. 甚至中间的一些 working state 极其错误, 完全不合理.
-  但这完全是为了不破坏已经建立的局面, 然后一步一步向更好的局面发展.
-
-- You can begin refactoring only when you know you are safe to refactor.
-  也就是说, 例如我们已经完成一个功能还没有开始新功能的开发, 或者至少我们现在
-  位于 working state. 不要在半截上开始 refactor, 此时应该先记下稍后需要
-  refactor.
-
-- Don’t refactor code against failing tests, except for the test you are
-  currently working on.
 
 TDD on deployment
 -----------------
@@ -906,6 +899,15 @@ mock
 
   * Don't have to wait for implementing UUT's dependency to test the UUT.
     (Outside-In TDD)
+
+- Listen to your tests. If a "dependency is hard to mock, then it's
+  definitely hard to use for the object that'll actually be using it."
+
+  换句话说, 如果在测试代码中发现被测功能的某个依赖 mock 起来比较费劲,
+  那说明它的 API 不太容易使用, 可能需要重构这个依赖的 API.
+
+- 如果一个测试用例需要很多 mock 才能保证被测功能与它的依赖隔离开来, 才能
+  保证仅仅是在测试该层的功能逻辑, 则说明代码实现可能可以优化, 降低耦合.
 
 - 在一个功能的单元测试中, 对 mock 调用情况的检测不可避免地是在测试功能的实现细节,
   而不是它的 API. 因此, 过分地对 mock 的测试可能导致测试用例与功能实现细节强耦合.
