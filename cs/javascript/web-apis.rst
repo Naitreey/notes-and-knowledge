@@ -226,9 +226,17 @@ DOM event flow
   in turn set as the ``currentTarget``. ``Event.target`` is the initiating
   event target.
   
-- When an event propagates through an element, the related event handlers are
-  run in order. In event handler body, ``this`` is bound to the current
-  element, which is the element the handler bound to.
+- Event handler and event flow.
+  
+  * When an event propagates through an element, the related event handlers are
+    run in order. In event handler body, ``this`` is bound to the current
+    element, which is the element the handler bound to.
+
+  * 一般情况下 event handlers are bound to target and bubble phase, 除非使用
+    ``EventTarget.addEventHandler()`` 的第三个参数指定 capture phase. 这很少使
+    用.
+
+  * handlers on both capture and bubble phases trigger at target phase.
 
 Cancelable events and their default actions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -244,6 +252,18 @@ Cancelable events and their default actions
   Each event type defines its default action, if it has one.
 
 - To cancel an event's default action, call ``Event.preventDefault()`` method.
+
+Event
+-----
+
+methods
+^^^^^^^
+- ``stopPropagation()``. stop event propagation along the DOM tree. Event
+  Bubbling is convenient. Don’t stop it without a real need, because we can’t
+  really be sure we won’t need it above.
+
+- ``stopImmediatePropagation()``. stop calling any other event handlers on the
+  same element, and stop event propagation as well.
 
 References
 ==========
