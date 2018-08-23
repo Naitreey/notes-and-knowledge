@@ -7519,11 +7519,7 @@ testing
 
 - directory organization:
   
-  * unit test files should be put in ``tests.py`` module or subpackage in each
-    django app.
-
-  * functional test files should be put in global app's ``functional_tests.py``
-    or subpackage. Add Called separately via ``./manage.py test ...``.
+  * FT/IT/UT 分别放在 ``<app_name>/fts``, ``<app_name>/its``, ``<app_name>/uts``.
 
 - Run test: ``./manage.py test``.
 
@@ -7663,12 +7659,17 @@ test tags
 
 test fixtures
 -------------
-- 避免使用 json test fixtures. It makes test
+- 避免使用 json test fixtures.
   
-  * less readable (because fixture's content is opaque in test code)
+  * django test fixtures are loaded and purged between each test methods.
+    所以会非常慢.
 
-  * less maintainable (如果多个 test case 需要使用类似的却不完全相同的
+  * It makes test less readable (because fixture's content is opaque in test code)
+
+  * It makes test less maintainable (如果多个 test case 需要使用类似的却不完全相同的
     json fixtures, 则需要复制整个 json file. 再做修改.)
+
+  * schema changes needs to modify test fixtures accordingly.
 
   最好在 test case 中配置 fixture data, 使用例如 ``unittest.TestCase.setUp()``,
   ``django.TestCase.setUpTestData()``. 以及使用 factory boy.
@@ -7740,13 +7741,6 @@ design patterns
 - model layer test 除非必要, 尽量不碰数据库. 数据库会极大降低 UT 的执行速度.
 
   * use in-memory model instance whenever possible.
-
-- Avoid database test fixtures.
-
-  * django test fixtures are loaded and purged between each test methods.
-    所以会非常慢.
-
-  * schema changes needs to modify test fixtures accordingly.
 
 - 区分清晰哪部分属于 SUT, 哪部分属于外部依赖, 这样才能确定什么东西是需要 mock
   掉的. 例如, 在一个功能中, 不仅仅 form 层是 view 层的依赖; 在 view 层代码中,
