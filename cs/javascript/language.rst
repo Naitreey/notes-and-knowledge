@@ -3600,6 +3600,12 @@ weird designs
 
 WTFJS-related weird language designs are labeled WTFJS.
 
+javascript core features
+========================
+- "object"-oriented (prototype-based).
+
+- event-driven architecture and asynchronous processing.
+
 references
 ==========
 .. [SOnamedFuncExp1] `Why use named function expressions? <https://stackoverflow.com/a/15336541/1602266>`_

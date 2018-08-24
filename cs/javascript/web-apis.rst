@@ -185,6 +185,10 @@ log()
 
 Event Model
 ===========
+- Event-driven 是 JS 的核心特征之一.
+
+- 在不同的 host environment 中, 以及和不同的框架交互时, 会有不同的 event 类型
+  和处理机制. 例如在浏览器中, 就是 DOM 相关的一套机制.
 
 DOM Event Architecture
 ----------------------
@@ -253,6 +257,45 @@ Cancelable events and their default actions
 
 - To cancel an event's default action, call ``Event.preventDefault()`` method.
 
+event handlers
+^^^^^^^^^^^^^^
+- An event handler is a defined reaction to an event. What's the point of event
+  without reactions?
+
+- Three ways to specify handlers to events:
+
+  * Set element's html attributes ``on<event>``, whose value is event handler
+    code wrapped in double-quotes. Event handler code is wrapped by an
+    anonymous function::
+
+      function (event) {
+        // handler code
+      }
+
+  * Set element's DOM attributes ``on<event>``, whose value is an event handler
+    callable.
+
+    To remove a handler, set attribute to ``null``.
+
+  * Use ``EventTarget.addEventListener()`` to register possibly multiple
+    handlers for the same event.
+
+    Use ``EventTarget.removeEventListener()`` to remove handlers.
+
+  Notes:
+  
+  * Don't use ``Element.setAttribute()`` for handlers, because attributes
+    are always strings. This would coerce handler to string.
+
+  * All events can be set with ``addEventListener()``, but not all can be set
+    with ``on<event>``.
+
+  * ``on<event>`` attribute 设置的 handler 与 ``addEventListener()`` 的不会
+    冲突, 会一起生效.
+
+- The value of ``this`` inside a handler function is the element whose handler
+  is called (除非对于 arrow function 则是 lexical ``this``).
+
 Event
 -----
 
@@ -264,6 +307,91 @@ methods
 
 - ``stopImmediatePropagation()``. stop calling any other event handlers on the
   same element, and stop event propagation as well.
+
+interfaces
+----------
+
+EventTarget
+^^^^^^^^^^^
+
+methods
+"""""""
+
+- ``addEventListener(type, listener[, options_or_usecapture])``.
+
+  * ``listener``. an object implementing the ``EventListener`` interface, or a
+    function.
+
+event types
+-----------
+
+document events
+^^^^^^^^^^^^^^^
+- DOMContentLoaded. when the initial HTML document has been completely loaded
+  and parsed, without waiting for stylesheets, images, and subframes to finish
+  loading.
+
+  This is different from ``load`` event fired on ``document``, which detects a
+  fully-loaded page.
+
+CSS events
+^^^^^^^^^^
+- transitionend.
+
+mouse events
+^^^^^^^^^^^^
+- click.
+
+- contextmenu. right click.
+
+- mouseenter/mouseleave. triggered when a pointing device entering/leaving the
+  element's boundary. 这包含该元素包裹的全部区域, 包含它的所有子元素. 只有在进
+  入/离开外边界时才会触发. These events does not bubble.
+
+- mouseover/mouseout. triggered when pointing device entering/leaving the
+  element's boundary.  并且 mouseover/mouseout 都会在 entering AND leaving direct
+  child element 时触发. These events does bubble.
+
+- mousedown/mouseup. when a mouse button is pressed/released.
+
+- mousemove.
+
+form events
+^^^^^^^^^^^
+- submit.
+
+- change.
+
+- reset.
+
+focus events
+^^^^^^^^^^^^
+- focus.
+
+- blur.
+
+keyboard events
+^^^^^^^^^^^^^^^
+- keydown.
+
+- keyup.
+
+design patterns
+---------------
+- event delegation. If we have a lot of elements with event handled in a
+  similar way, then instead of assigning a handler to each of them – we put a
+  single handler on their common ancestor.
+
+  benefits:
+
+  * Simplifies initialization and saves memory (no need to add many handlers).
+
+  * less code and better consistency.
+
+  limitations:
+
+  * the event must be bubbling. low-level handlers should not
+    ``Event.stopPropagation()``.
 
 References
 ==========
