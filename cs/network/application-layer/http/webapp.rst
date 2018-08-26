@@ -113,6 +113,16 @@ form
 
     注意必须有 ``filename`` directive 才能识别为文件上传.
 
+navigation
+----------
+- Use ``<a>`` link rather than ``<button>`` for nav items. Reason:
+
+  * links are able to be "right-click" opened in a new tab/window.
+
+  * for SEO. Search engines follow links while indexing.
+
+  Using ``<a>`` with non-trivial page transition requires JS event handling.
+
 user authentication
 -------------------
 - logout should be GET or POST?

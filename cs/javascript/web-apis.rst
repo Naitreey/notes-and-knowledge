@@ -229,7 +229,48 @@ DOM event flow
 - As the event propagates, each current event target in the propagation path is
   in turn set as the ``currentTarget``. ``Event.target`` is the initiating
   event target.
+
+Event chaining
+^^^^^^^^^^^^^^
+- Certain events cause additional events to be dispatched.
+
+  * E.g., mousedown event on input field leads to dispatch of focus event,
+    which gets input field focused.
+
+- Canceling the former event causes the latter event not dispatched.
+
+Cancelable events and default actions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- A cancelable event is an event which has a cancelable default action.
+  注意不是说 event itself can be canceled, 而是说它关联的默认行为 can be
+  canceled.
+
+  an event object is cancelable if ``Event.cancelable`` is true.
+
+- An event's default action is a supplementary behavior that browser performs
+  in combination with the dispatch of the event object.
   
+  Each event type defines its default action (in W3C specification), if it has
+  one.
+
+  Default action is taken after event propagation is completed and handlers at
+  various level of relevant DOM tree are executed.
+
+- 注意 default actions 只有 builtin event 才会具有, 并且不可修改, 是由浏览器实
+  现并自动执行的.
+
+- Preventing an event's default action
+ 
+  * call ``Event.preventDefault()`` method in event handler.
+
+  * Return false from handlers assigned by ``on<event>`` attributes.
+
+
+event handlers
+^^^^^^^^^^^^^^
+- An event handler is a defined reaction to an event. (What's the point of event
+  without reactions?)
+
 - Event handler and event flow.
   
   * When an event propagates through an element, the related event handlers are
@@ -241,26 +282,6 @@ DOM event flow
     用.
 
   * handlers on both capture and bubble phases trigger at target phase.
-
-Cancelable events and their default actions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-- A cancelable event is an event which has a cancelable default action.
-  注意不是说 event itself can be canceled, 而是说它关联的默认行为 can be
-  canceled.
-
-  an event object is cancelable if ``Event.cancelable`` is true.
-
-- An event's default action is a supplementary behavior that UA performs
-  in combination with the dispatch of the event object.
-  
-  Each event type defines its default action, if it has one.
-
-- To cancel an event's default action, call ``Event.preventDefault()`` method.
-
-event handlers
-^^^^^^^^^^^^^^
-- An event handler is a defined reaction to an event. What's the point of event
-  without reactions?
 
 - Three ways to specify handlers to events:
 
@@ -296,17 +317,71 @@ event handlers
 - The value of ``this`` inside a handler function is the element whose handler
   is called (除非对于 arrow function 则是 lexical ``this``).
 
+event classes
+-------------
+
 Event
------
+^^^^^
+- Event is the base class of all native and custom event classes.
+
+constructor
+""""""""""""
+::
+
+  new Event(type[, options])
+
+- ``type``. the name of the event.
+
+- ``options``. an object with following fields:
+
+  * ``bubbles``. a Boolean for whether the event bubbles. default false.
+
+  * ``cancelable``. a Boolean for whether the event can be canceled. default
+    false.
+
+  * ``composed``. a Boolean for whether the event will propagate across the
+    shadow DOM boundary into the standard DOM. default false.
+
+- Event subclasses could define more fields in ``options``.
+
+attributes
+""""""""""
+- ``defaultPrevented``. whether or not ``preventDefault()`` has been called.
+  这与 event delegation 配合时很有用.
+
+- ``isTrusted``. whether or not the event was initiated by the browser or by a
+  script.
 
 methods
-^^^^^^^
+""""""""
 - ``stopPropagation()``. stop event propagation along the DOM tree. Event
   Bubbling is convenient. Don’t stop it without a real need, because we can’t
   really be sure we won’t need it above.
 
 - ``stopImmediatePropagation()``. stop calling any other event handlers on the
   same element, and stop event propagation as well.
+
+- ``preventDefault()``. Tells UA the predefined default action should not be
+  executed and set ``defaultPrevented`` to true. It doesn't stop event
+  propagation or invoking other handlers on the element.
+
+  对于 custom events, 没有浏览器的默认行为, 但是仍然可以有 JS 代码定义的 "默认"
+  行为. 此时 ``preventDefault()`` 的意义在于告诉 ``dispatchEvent()`` 的 js 脚本
+  某个 handler 要求不执行这个行为.
+
+CustomEvent
+^^^^^^^^^^^
+- custom events 应该使用这个 Event subclass 作为基类.
+
+- Custom events with our own names are often generated for architectural
+  purposes, to signal what happens inside a custom UI component.
+
+constructor
+""""""""""""
+
+- additional option fields:
+
+  * ``detail``. arbitrary information.
 
 interfaces
 ----------
@@ -321,6 +396,20 @@ methods
 
   * ``listener``. an object implementing the ``EventListener`` interface, or a
     function.
+
+- ``dispatchEvent(event)``. dispatch ``event`` at the target element. The
+  ``EventTarget`` element became the ``Event.target`` of the ``event``.
+  *Synchronously* going through event propagation process and invoking all
+  handlers along the way.
+
+  Return false if event is cancelable and its ``Event.preventDefault()`` has
+  been called by handlers, otherwise true.
+
+  Native DOM events 由 DOM 触发, 触发后进入 event loop 的 event queue, handlers
+  are run asynchronously. 也就是说 DOM 触发 event 后会继续执行下面的逻辑, 不会
+  blocking 等待所有 handlers 完成执行 (假如是单线程 event loop 这样还会导致
+  deadlock). 但由 JS 代码 ``dispatchEvent()`` 触发的 event, 其执行是同步的. 它
+  内部会直接走完整个处理流程再返回.
 
 event types
 -----------
@@ -338,24 +427,6 @@ CSS events
 ^^^^^^^^^^
 - transitionend.
 
-mouse events
-^^^^^^^^^^^^
-- click.
-
-- contextmenu. right click.
-
-- mouseenter/mouseleave. triggered when a pointing device entering/leaving the
-  element's boundary. 这包含该元素包裹的全部区域, 包含它的所有子元素. 只有在进
-  入/离开外边界时才会触发. These events does not bubble.
-
-- mouseover/mouseout. triggered when pointing device entering/leaving the
-  element's boundary.  并且 mouseover/mouseout 都会在 entering AND leaving direct
-  child element 时触发. These events does bubble.
-
-- mousedown/mouseup. when a mouse button is pressed/released.
-
-- mousemove.
-
 form events
 ^^^^^^^^^^^
 - submit.
@@ -372,9 +443,40 @@ focus events
 
 keyboard events
 ^^^^^^^^^^^^^^^
-- keydown.
+- keydown. a key is pressed down.
+
+  * If the key is associated with a character, the default action is to
+    dispatch a beforeinput event followed by an input event.
 
 - keyup.
+
+mouse events
+^^^^^^^^^^^^
+- click.
+
+- contextmenu. when right click or the context menu key is pressed.
+
+  default action: showing browser's context menu.
+
+- mouseenter/mouseleave. triggered when a pointing device entering/leaving the
+  element's boundary. 这包含该元素包裹的全部区域, 包含它的所有子元素. 只有在进
+  入/离开外边界时才会触发. These events does not bubble.
+
+- mouseover/mouseout. triggered when pointing device entering/leaving the
+  element's boundary.  并且 mouseover/mouseout 都会在 entering AND leaving
+  direct child element 时触发. These events does bubble. 使用 event delegation
+  pattern 时, 应该使用这两个事件.
+
+- mousedown/mouseup. when a mouse button is pressed/released.
+  mousedown starts selection.
+
+- mousemove.
+
+wheel events
+^^^^^^^^^^^^
+- wheel. roll the wheel.
+
+  * default action. scroll or zoom the document.
 
 design patterns
 ---------------
