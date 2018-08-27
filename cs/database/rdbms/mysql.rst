@@ -1036,6 +1036,27 @@ COMMIT
 ROLLBACK
 ^^^^^^^^
 
+statements causing implicit commit
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Some statements are handled in its own special transaction, such that they
+implicitly end any transaction active in the current session (as if with
+``COMMIT``) and also cause an implicit commit after executing (除了 transaction
+control and locking statements).
+
+- DDL statements that define or modify database objects (with some additional
+  details).
+
+- Statements that implicitly use or modify tables in the ``mysql`` database.
+  E.g., account system admin statements.
+
+- Transaction-control and locking statements (with some additional details).
+  这些语句不会在执行后再 commit 一次.
+
+- Some admin statements: ANALYZE TABLE, CACHE INDEX, CHECK TABLE, FLUSH, LOAD
+  INDEX INTO CACHE, OPTIMIZE TABLE, REPAIR TABLE, RESET.
+
+- Replication control statements.
+
 Character set and collation
 ===========================
 
