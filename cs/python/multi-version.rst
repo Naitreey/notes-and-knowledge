@@ -23,10 +23,22 @@ virtual environment
 
 venv
 ----
-.. code:: sh
 
-    python3 -m venv <dir>
-    . .venv/bin/activate
+usage
+^^^^^
+- create new virtual environment.
+
+  .. code:: sh
+  
+      python3 -m venv <dir>
+      . .venv/bin/activate
+
+- upgrade an existing virtual environment to new version of python.
+  但这不会迁移在旧版本中安装的 modules.
+
+  .. code:: sh
+
+      python3 -m venv --upgrade <dir>
 
 virtualenv
 ----------
