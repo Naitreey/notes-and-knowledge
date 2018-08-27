@@ -2709,31 +2709,42 @@ overview
   individual migration files - analogous to commits - and ``migrate`` is
   responsible for applying those to your database.
 
-- Workflow to change database models.
-  
-  * Make changes to your models.
-    
-  * run ``makemigrations``. Models will be scanned and compared to the versions
-    currently contained in migration files, and then a new set of migrations
-    will be written out.
-
-  * After the model and migration are tested and run as expected, commit the
-    migration and the models change to your version control system *as a single
-    commit*. (理想情况如此, 实际上不容易做到. 因为 data model 是否合适, 是需要在
-    业务逻辑中使用中才能切实体会出来的.)
-
-  * 在极端情况下, 例如对 app models 的修改积累的 migration files 已经非常多,
-    例如几千个以上, 可以用 ``squashmigrations`` 将历史整合.
-
 - Migration system is backward-compatible. 旧版本 django 中生成的 migration
   files 保证能在新版 django 中使用.
 
-- django 生成的 migrations 需要仔细检查, 对于复杂的数据库修改, 不能保证不出错,
-  必要时需要手动修改甚至手动创建 migrations. 对于自动生成的 migrations, 尤其是
-  ``squashmigrations`` 生成的 migration file, 一定要测试可用.
+- django 生成的 migrations 需要仔细检查, 对于复杂的数据库修改, 不能保证与预期完
+  全相符, 必要时需要人工修改甚至人工创建 migrations. 对于自动生成的 migrations,
+  尤其是 ``squashmigrations`` 生成的 migration file, 一定要测试可用.
+
+- Django will make migrations for any change to your models or fields - even
+  options that don’t affect the database. It's the only way it can reconstruct
+  a field correctly is to have all the changes in the history.
+
+migration workflow
+------------------
+
+* Make changes to your models.
+
+* run ``makemigrations``. Models will be scanned and compared to the versions
+  currently contained in migration files, and then a new set of migrations
+  will be written out.
+
+* 检查生成的 migration file 中操作是否符合预期.
+
+* After the model and migration are tested and run as expected, commit the
+  migration and the models change to your version control system *as a single
+  commit*. (理想情况如此, 实际上必须配合单元测试和/或集成测试才能做到, 因为
+  data model 是否合适, 是需要在业务逻辑中使用中才能切实体会出来的.)
+
+* 在极端情况下, 例如对 app models 的修改积累的 migration files 已经非常多,
+  例如几千个以上, 可以用 ``squashmigrations`` 将历史整合.
 
 migration files
 ---------------
+- Migration files are used to declare migration operations.
+
+- Migration file 名字中的序号部分对 django 并无意义, 只对人类有用. Django order
+  migration files by dependencies specified in each file.
 
 - migration files 中的 string literal 要统一使用 unicode string 或 bytestring.
   这不仅是一般的 py2py3 统一性要求. 在 django 中, 若要 app 同时兼容 py2py3.
@@ -2752,19 +2763,17 @@ migration files
 
 migration definition
 ^^^^^^^^^^^^^^^^^^^^
+- A ``Migration`` class in migration file, which is a subclass of
+  ``django.db.migrations.Migration``.
 
-* 每个 migration 必须是名为 ``Migration`` 的 class, 且为
-  ``django.db.migrations.Migration`` 的子类. 其中包含 ``dependencies``
-  ``operations`` 等 class attributes.
+- Each migration operation is an instance of  ``Operation`` class.
 
-* 每个 migration operation 是 ``Operation`` class (子类的) 实例.
-
-* 在 migration 中无法访问 model 中定义的 methods. 解决办法是在 migration 中
+- 在 migration 中无法访问 model 中定义的 methods. 解决办法是在 migration 中
   再定义一遍. 由于 migration 只代表在确定历史状态下的操作, 所以这种重复不造成
   问题.
 
 migration operations
---------------------
+^^^^^^^^^^^^^^^^^^^^
 
 - migration 过程中从 ``ModelState`` 重建 model. 这样重建的 model 不同于
   当前源代码中记录的 model. 这导致的问题包括:
@@ -2775,13 +2784,60 @@ migration operations
   * signal handlers are not called properly. 因为注册的 ``sender`` model
     与重建的实际上并不是一个.
 
+database backend notes
+----------------------
+
+MySQL
+^^^^^
+- schema migration (DDL) 与 data migration (DML) 应该放在不同的 migration 中执
+  行. 避免在一个 migration 中同时包含 DDL & DML 操作.
+
+  因为 DDL statements will implicitly commit transactions, 这导致如果一个
+  migration 先 DML, 再 DDL, 但是 DDL 部分 failed, 则需要手动 rollback
+  DML 做的修改.
+
 management commands
 -------------------
 
-- ``makemigrations`` 和 ``migrate`` 操作一般不要限制 ``app_label``, 要对所有
+makemigrations
+^^^^^^^^^^^^^^
+::
+
+  ./manage.py makemigrations [<app_label>]...
+
+- 执行原理.
+  
+  * 首先检查数据库中的 migration history 是否与 migration subpackage 的一致.
+
+    检查的数据库包含所有配置的数据库 (如果具有 db router 配置) 或 default.
+    检查的内容包括: 数据库中已经应用的 migration 部分是完整的, 与 migration
+    subpackage 中保存的应用顺序 (即依赖关系) 是相符的. (并不要求数据库中已经
+    应用了全部 migration.)
+
+  * 根据 migration subpackage 中的全部修改历史, 重新构建出一套已经记录的最新
+    models 情况在内存中. 与 ``models.py`` 中的当前 models 状态进行比较, 生成
+    合适的 migration 操作以能够达到当前 models 状态, 保存在 migration files 中.
+
+- Providing one or more app names as arguments will limit the migrations
+  created to the app(s) specified *and any dependencies needed*.
+
+  提供 app name 还可用于创建 app 的 ``migrations/`` directory. 如果一个 app 还
+  没有 ``migrations/`` directory, 默认会在 makemigrations 时自动跳过这个 app.
+
+  ``makemigrations`` 和 ``migrate`` 操作一般不要限制 ``app_label``, 要对所有
   apps 同时进行. 因为 model 之间经常是相互依赖的. 如果只对某个 model 更新数据库
-  状态可能 break dependency.  在特殊情况下, 需要限制 migration file 修改在某个
-  app 中, 此时采用 app label.
+  状态可能 break dependency.
+
+- ``--dry-run`` 可用来检查当前记录的数据库结构 (通过 migration files 来体现)
+  是否和 models 里的模型代码保持一致.
+
+- ``--empty`` create an empty migration file, for manual editting. 这经常用于
+  data migration.
+
+- ``--name``. specify name of the generated migration file. 可用于指定该
+  migration 的目的、内容等, 常用于 data migration.
+
+- ``--merge``. Fix migration conflict.
 
 migrate
 ^^^^^^^
@@ -2789,19 +2845,19 @@ migrate
 
   ./manage.py migrate [<app_label>] [<migration_name>]
 
+- apply migration, forward or backward.
+
+- 操作原理.
+
+  * 
+
+- 在正向 migration 时, 一般应避免指定 app name. 这有可能导致非直接依赖的数据库
+  结构没有得到应用. 造成数据库状态不完整.
+
 - ``--database``. 在多数据库情况下, 指定使用的数据库.
 
 - 若指定了 ``migration_name``, 是将数据库状态确定在某个 migration 相应的状态上.
   若当前状态已经新于指定的状态, 则 unapply necessary migrations.
-
-makemigrations
-^^^^^^^^^^^^^^
-
-首先检查数据库中的 migration history 是否与 migration files 中的一致.
-一般只检查 default database, 但会考虑 ``Router.allow_migrate``.
-
-- ``--dry-run`` 可用来检查当前记录的数据库结构 (通过 migration files 来体现)
-  是否和 models 里的模型代码保持一致.
 
 squashmigrations
 ^^^^^^^^^^^^^^^^
@@ -2834,6 +2890,15 @@ then remove the old files, commit and do a second release.
 
 当数据库结构之间的关系非常复杂时, 慎用 squash migration. 最好检查 squash
 的结果是否符合当前 models 结构.
+
+settings
+--------
+- ``MIGRATION_MODULES``. a dict of app name to migration subpackage path.  When
+  specifying app name in ``makemigrations``, the corresponding subpackage will
+  be created if not exist.
+
+  If subpackage path is None, Django will skip the app's migration altogether
+  even if it has one.
 
 recipes
 -------
