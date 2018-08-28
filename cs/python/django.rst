@@ -2780,6 +2780,11 @@ migration definition
   再定义一遍. 由于 migration 只代表在确定历史状态下的操作, 所以这种重复不造成
   问题.
 
+Migration
+"""""""""
+
+- ``dependencies``.
+
 migration operations
 ^^^^^^^^^^^^^^^^^^^^
 
@@ -2933,35 +2938,53 @@ migrate
 
 squashmigrations
 ^^^^^^^^^^^^^^^^
+::
 
-squash migration 十分有用. 可以用来将过多的 migration 历史合并成一个等价的
-初始版本.
+  ./manage.py squashmigrations <app_label> [start_migration] <end_migration>
 
-These files are marked to say they replace the previously-squashed migrations,
-so they can coexist with the old migration files, and Django will intelligently
-switch between them depending where you are in the history. If you’re still
-part-way through the set of migrations that you squashed, it will keep using
-them until it hits the end and then switch to the squashed history, while new
-installs will just use the new squashed migration and skip all the old ones.
+- Squash the migrations of app name, starting from the initial migration or
+  the ``start_migration`` until ``end_migration`` (included).
 
-The recommended process is to squash, keeping the old files, commit and
-release, wait until all systems are upgraded with the new release, and
-then remove the old files, commit and do a second release.
-只有当所有项目的实例都已经更新到 squashed migration 的结束点之后时, 才能
-删除它替代的那些原始文件.
+- ``squashmigrations`` 主要用来将过多的 migration 历史合并成一个等价的
+  "squashed" 版本. Squashing is the act of reducing an existing set of many
+  migrations down to one (or sometimes a few) migrations which still represent
+  the same changes.
 
-最终, 使用 squashed migration file 替代一系列原始文件的方法是:
+- The recommended workflow for squashing migration:
 
-- Deleting all the migration files it replaces.
+  * squash, keeping the old files, commit and release
+   
+  * wait until all systems are upgraded with the new release.
+   
+  * Deleting all the migration files it replaces.
+  
+  * Updating all migrations that depend on the deleted migrations to depend
+    on the squashed migration instead.
+  
+  * Removing the ``replaces`` attribute in the Migration class of the squashed
+    migration.
 
-- Updating all migrations that depend on the deleted migrations to depend
-  on the squashed migration instead.
+- squash 逻辑.
 
-- Removing the ``replaces`` attribute in the Migration class of the squashed
-  migration.
+- migration 逻辑.  The squashed migration's ``replaces`` attribute says what
+  migrations it replaces.  They can coexist with the squashed migration files.
+  Django will intelligently switch between the original migrations and the
+  squashed migration depending 根据当前项目实例的 migration 执行进度来决定. If
+  the instance is still part-way through the set of migrations that were
+  squashed, it will keep using them until it hits the end and then switch to
+  the squashed history, while new installs will just use the new squashed
+  migration and skip all the old ones.
 
-当数据库结构之间的关系非常复杂时, 慎用 squash migration. 最好检查 squash
-的结果是否符合当前 models 结构.
+- 当数据库结构之间的关系比较复杂时, 慎用 squash migration. 最好检查 squash 的结
+  果是否符合当前 models 结构.
+
+- options.
+
+  * ``--no-optimize``. disable optimization. useful if django's optimization is
+    incorrect.
+
+  * ``--squashed-name``. specify the name of the squashed migration. default use
+    ``<start_migration>_squashed_<end_migration>``.
 
 recipes
 -------
