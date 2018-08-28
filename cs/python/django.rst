@@ -2761,6 +2761,14 @@ migration files
 
   - data migrations 必须手写, 涉及例如 ``RunPython``, ``RunSQL`` 等操作.
 
+  schema migrations & data migrations 最好分成不同的 migration file 来写. 这样
+  的好处是: 1) 清晰 (显然); 2) 对于 mysql 等 backend, schema change 会强制开启
+  一个单独的 transaction, 从而破坏一个 migration file 本来预期的 atomicity.
+  所以最好分开.
+
+* Initial migration. The “initial migrations” for an app are the migrations
+  that create the first version of that app’s tables.
+
 migration definition
 ^^^^^^^^^^^^^^^^^^^^
 - A ``Migration`` class in migration file, which is a subclass of
@@ -2775,14 +2783,38 @@ migration definition
 migration operations
 ^^^^^^^^^^^^^^^^^^^^
 
-- migration 过程中从 ``ModelState`` 重建 model. 这样重建的 model 不同于
-  当前源代码中记录的 model. 这导致的问题包括:
+- migration 文件中涉及 model 的操作, 应该使用根据 migration file 记录的修改历史
+  来重建的 model, 这样才符合相应历史点的数据库状态. 这样重建的 model 不同于当前
+  源代码中声明的 model.
+
+  * 生成的 model 具有相应历史点的 fields, relationships, managers (包括
+    ``use_in_migrations``) 以及 Meta options.
+
+  * Functions in field options, custom model managers (``use_in_migrations``),
+    custom model fields, 以及 model class 的 concrete base model 是以 reference
+    形式引用的. So the functions and classes will need to be kept around for as
+    long as there is a migration referencing them.
+    
+    若后续需要修改相应的源代码, 原始版本要保存下来, 例如直接扔到要使用它的
+    migration file 里面; 如果后续完全不再需要相应的 function or class, 可以
+    squashmigrations, 消除 migration 中对它们的引用, 然后从源代码中删除掉.
 
   * Custom class attributes and methods are not restored and thus not
-    accessible.
+    accessible. 这是因为不能 serialize arbitrary python code.
 
   * signal handlers are not called properly. 因为注册的 ``sender`` model
     与重建的实际上并不是一个.
+
+RunPython
+""""""""""
+- ``code``. a callable accepting two positionals:
+
+  * a ``django.apps.registry.Apps`` instance that has the historical versions
+    of all your models loaded into it to match where in your history the
+    migration sits;
+
+  * a ``SchemaEditor`` that can be used to manually effect database schema
+    changes.
 
 database backend notes
 ----------------------
@@ -2795,6 +2827,35 @@ MySQL
   因为 DDL statements will implicitly commit transactions, 这导致如果一个
   migration 先 DML, 再 DDL, 但是 DDL 部分 failed, 则需要手动 rollback
   DML 做的修改.
+
+Migration
+---------
+
+class attributes
+^^^^^^^^^^^^^^^^
+- ``initial``. Whether the migration is an initial migration. There can be
+  more than one initial migration for an app, in case of complex model 
+  dependencies, etc.
+
+  default is None. migration will be considered “initial” if it is the first
+  migration in the app.
+
+  makemigrations 生成的 initial migration 具有 ``initial=True``.
+
+migration checkings
+-------------------
+- Checking history consistency. 如果数据库中保存的 applied migrations history
+  与根据 migration files 生成的 migration directed graph 对比后, 发现有些已经
+  应用的 migration 的依赖项反而没有应用, 则认为存在 consistency problem.
+
+settings
+--------
+- ``MIGRATION_MODULES``. a dict of app name to migration subpackage path.  When
+  specifying app name in ``makemigrations``, the corresponding subpackage will
+  be created if not exist.
+
+  If subpackage path is None, Django will skip the app's migration altogether
+  even if it has one.
 
 management commands
 -------------------
@@ -2847,17 +2908,28 @@ migrate
 
 - apply migration, forward or backward.
 
-- 操作原理.
-
-  * 
-
 - 在正向 migration 时, 一般应避免指定 app name. 这有可能导致非直接依赖的数据库
   结构没有得到应用. 造成数据库状态不完整.
 
-- ``--database``. 在多数据库情况下, 指定使用的数据库.
-
 - 若指定了 ``migration_name``, 是将数据库状态确定在某个 migration 相应的状态上.
   若当前状态已经新于指定的状态, 则 unapply necessary migrations.
+
+- 操作原理 (大致).
+
+  * 首先检查数据库中的 migration history 是否与 migration subpackage 的一致.
+
+  * 根据命令行生成 migration plan. forward or backward, 是否指定了应用范围 (
+    app name 和 migration name). migration plan 根据从 migration subpackage 构
+    建的 migration directed graph 数据结构得出.
+
+  * 按照顺序应用每个 ``Migration``. 对于每个 Migration, 依次执行定义的
+    ``operations``. 对每个 ``Operation``, 定义了一系列执行逻辑.
+
+- ``--database``. 在多数据库情况下, 指定使用的数据库.
+
+- ``--fake-initial``. 如果 apps' initial migrations 对应的表名已经存在,
+  则不真正应用 initial migration, 假装已经应用了. Make sure that the current
+  database schema matches your initial migration before using this flag.
 
 squashmigrations
 ^^^^^^^^^^^^^^^^
@@ -2890,15 +2962,6 @@ then remove the old files, commit and do a second release.
 
 当数据库结构之间的关系非常复杂时, 慎用 squash migration. 最好检查 squash
 的结果是否符合当前 models 结构.
-
-settings
---------
-- ``MIGRATION_MODULES``. a dict of app name to migration subpackage path.  When
-  specifying app name in ``makemigrations``, the corresponding subpackage will
-  be created if not exist.
-
-  If subpackage path is None, Django will skip the app's migration altogether
-  even if it has one.
 
 recipes
 -------
@@ -3947,6 +4010,8 @@ unmanaged model
 model meta options
 ------------------
 
+* ``apps``. specify the app registry to use. default use ``django.apps.apps``.
+
 * ``abstract``, whether is abstract model.
 
 * ``app_label``, 定义 model 所属的 app.
@@ -4006,18 +4071,18 @@ model field
 - ``django.db.models.Field``. field base class. Field 是
   ``RegisterLookupMixin`` 的子类.
 
-options
-^^^^^^^
+constructor
+^^^^^^^^^^^
 
-- Many of Django’s model fields accept options that they don’t do anything with.
-This behavior simplifies the field classes, because they don’t need to
-check for options that aren’t necessary. They just pass all the options
-to the parent class and then don’t use them later on.
+- Many of Django’s model fields accept options that they don’t do anything
+  with.  This behavior simplifies the field classes, because they don’t need to
+  check for options that aren’t necessary. They just pass all the options to
+  the parent class and then don’t use them later on.
 
 - 这些 options 作为 constructor kwargs, 实例化后成为 field instance attributes.
 
 - 对于任何需要使用 callable 作为 field option value 时, 必须保证 callable 满足
-migration framework 的 serialization 要求.
+  migration framework 的 serialization 要求.
 
   * 若需要根据参数动态生成 callable, 不能使用 wrapper function return another
     function 的方式. 这样不可 serialize. 必须创建一个 deconstrucible callable
@@ -4206,8 +4271,16 @@ fields 需要设置这些属性.
 - ``remote_field``.
   该列在 ``related_model`` 上的对应列 (实际存在或虚拟的列).
 
+以下参数用于处理 custom field 的 deprecation and removal process. 当一个 field
+已经完全不再支持时, 唯一的价值在于支持 historical migrations.
+
+- ``system_check_deprecated_details``. a dict of ``msg``, ``hint``, ``id``.
+
+- ``system_check_removed_details``. ditto.
+
 methods
 ^^^^^^^
+
 db data type related APIs
 """"""""""""""""""""""""""
 
@@ -4325,6 +4398,9 @@ field checkings
   * 检查 validators 都是 callable.
 
   * backend-specific field checks.
+
+  * 检查 field class 是否 pending deprecation 或者已经 removed. 若此, 输出相应
+    的警告或错误信息.
 
 model clean & validation
 """"""""""""""""""""""""
@@ -5397,7 +5473,13 @@ Manager
 
 BaseManager
 ^^^^^^^^^^^
-attributes.
+
+class attributes
+""""""""""""""""
+- ``use_in_migrations``. Serialize the manager and use it during migration.
+
+attributes
+""""""""""
 
 * ``auto_created``. 该 manager 是否是自动创建, 而不是在 model class 中明确定义的.
 
@@ -5405,7 +5487,8 @@ attributes.
 
 * ``db``. 使用的数据库.
 
-methods.
+methods
+"""""""
 
 * ``db_manager()``. 生成一个使用指定数据库的 manager instance.
 
@@ -5423,7 +5506,8 @@ methods 都 attach 到这个 manager class 上. 它的本质是从 manager objec
 任何 queryset method 的时候, 都立即创建一个 QuerySet object, 然后就是正常的
 queryset methods 操作.
 
-methods.
+methods
+"""""""
 
 - 从 QuerySet 复制过来的各种 methods. 复制标准:
 
@@ -5488,14 +5572,6 @@ subclass ``django.db.models.Manager`` 以进行自定义.
 
 - customize initial queryset. override ``get_queryset()`` method.
   ``Manager.all()`` method 的返回值与之一致.
-
-.. FIXME
-   若自定义了 QuerySet 的 methods, 然后希望这些方法也 expose 到 manager 中, 需要使
-   用 ``QuerySet.as_manager`` classmethod 创建 manager instance. 它调用
-   ``BaseManager.from_queryset`` class method. 注意, 使用
-   ``QuerySet.as_manager()`` 而不是直接使用 ``Manager.from_queryset()`` 创建
-   manager class 再实例化. 前者会保证 migration 过程中, 重新构建 model 时还使用这
-   个 QuerySet 和 Manager. 从而能够在 migration 过程中使用 custom QuerySet methods.
 
 自定义的 manager class 必须能够 shallow copied by ``copy.copy()``.
 
