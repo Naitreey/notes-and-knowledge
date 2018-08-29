@@ -33,8 +33,8 @@ django release
   而是连续的演进. 只是版本号规范的重新定义.
 
 
-project and app
-===============
+project and application
+=======================
 
 - project vs app.
 
@@ -2845,6 +2845,11 @@ RunPython
 
   * a ``SchemaEditor`` that can be used to manually effect database schema
     changes.
+    
+    实际上一般不该使用这个参数. 因为不该在 data migration 中做手动的 schema
+    changes. 这样的修改不是由 DDL 类型的 Operation 声明的, migration framework
+    在生成 historical model state 时不会考虑, 这可能导致数据库状态与 migration
+    subpackage 记录不一致.
 
 database backend notes
 ----------------------
@@ -4295,6 +4300,10 @@ constructor
   ``field=None`` 时. 后者情况是指定了该列, 但值是 null. 默认情况下
   ``default=None``, 但是否能顺利使用该 default value, 还要看该列是否允许
   null, 即 ``null=`` 的配置.
+
+  对于 model field 设置的默认值, django 并不应用到数据库表定义中. 而是维持在
+  django 层. 这是为了保证 default value 的灵活性 (e.g., callable 而不是固定值).
+  所以在写数据时, 对于默认值列还是会与其他列数据一同发给数据库.
 
   .. TODO read with form
 
@@ -6068,6 +6077,15 @@ class attributes
 """"""""""""""""
 - A lot of DDL SQL statement templates.
 
+instance attributes
+"""""""""""""""""""
+- ``connection``. db connection.
+
+- ``collect_sql``. 是否只是记录要执行的 sql statements, used by ``sqlmigrate``.
+
+- ``atomic_migration``. schema changes (DDL statement) 是否在一个 transaction
+  中执行. (由 context manager 创建.)
+
 methods
 """""""
 
@@ -6079,7 +6097,8 @@ utilities
 operations
 
 - ``create_model(model)``. Create model table, all columns, constraints,
-  indexes, local M2M intermediate tables, etc. 
+  indexes, local M2M intermediate tables, etc. 注意列的默认值不会包含在
+  数据库表的定义中.
 
 - ``delete_model(model)``. Delete model table, including local M2M intermediate
   tables.
@@ -6091,6 +6110,28 @@ operations
 - ``alter_unique_together(model, old_unique_together, new_unique_together)``.
   两个 unique together 分别是原来的和预期的 ``Meta.unique_together``. 这里
   删除多余的, 添加缺少的. 最终达到 new 的效果.
+
+- ``alter_index_together(model, old_index_together, new_index_together)``.
+  ditto for ``Meta.index_together``.
+
+- ``alter_db_table(model, old_db_table, new_db_table)``. rename old table name
+  to new name.
+
+- ``alter_db_tablespace(model, old_db_tablespace, new_db_tablespace)``. move
+  model's table between tablespaces.
+
+- ``add_field(model, field)``. add field instance to model. 对于 M2M field 创建
+  intermediate table; 生成 ALTER TABLE statement, 如果定义了非 None 的默认值,
+  这里首先会包含在列定义中应用到数据库, 这样是为了给 existing rows 填充默认值,
+  然后再 drop default (因为 django 一般使用 django 层的默认值, 不使用数据库层
+  default); 添加 table-level index, FK etc.
+
+- ``remove_field(model, field)``. remove field from model. 删除 M2M intermediate
+  table, and all related constraints.
+
+- ``alter_field(model, old_field, new_field, strict=False)``. alter various
+  aspects of old field matching new field. If strict is True, raise error if
+  the old db column definition does not match old field.
 
 authentication and authorization
 ================================
