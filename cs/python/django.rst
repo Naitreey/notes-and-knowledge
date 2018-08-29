@@ -2709,9 +2709,6 @@ overview
   individual migration files - analogous to commits - and ``migrate`` is
   responsible for applying those to your database.
 
-- Migration system is backward-compatible. 旧版本 django 中生成的 migration
-  files 保证能在新版 django 中使用.
-
 - django 生成的 migrations 需要仔细检查, 对于复杂的数据库修改, 不能保证与预期完
   全相符, 必要时需要人工修改甚至人工创建 migrations. 对于自动生成的 migrations,
   尤其是 ``squashmigrations`` 生成的 migration file, 一定要测试可用.
@@ -2719,6 +2716,12 @@ overview
 - Django will make migrations for any change to your models or fields - even
   options that don’t affect the database. It's the only way it can reconstruct
   a field correctly is to have all the changes in the history.
+
+compatibility
+^^^^^^^^^^^^^
+- Migration system is backward-compatible according to the same policy as
+  django. 即同一个 major version 下的能保证向后兼容. 旧版本生成的 migration
+  file 能在新版本中使用, 但反之没有保证.
 
 migration workflow
 ------------------
@@ -2783,10 +2786,32 @@ migration definition
 Migration
 """""""""
 
-- ``dependencies``.
+- ``initial``. Whether the migration is an initial migration. There can be
+  more than one initial migration for an app, in case of complex model 
+  dependencies, etc.
 
-migration operations
-^^^^^^^^^^^^^^^^^^^^
+  default is None. migration will be considered “initial” if it is the first
+  migration in the app.
+
+  makemigrations 生成的 initial migration 具有 ``initial=True``.
+
+- ``dependencies``. a list of 2-tuple of ``(app_name, migration_name)`` that
+  it depends on.
+
+- ``operations``. a list of ``Operation`` performed by this Migration.
+
+- ``run_before``. a list of 2-tuple of ``(app_name, migration_name)`` that
+  depends on this Migration. 这是用于, 当不能修改 child migration 的依赖关系
+  的时候. 例如 child migration 实际上是 third party library 提供的.
+
+- ``replaces``. a list of 2-tuple of ``(app_name, migration_name)`` that this
+  Migration replaces. 如果这是一个 squashed migration.
+
+- ``atomic``. whether to wrap the whole migration in a transaction. default
+  True.
+
+operations
+^^^^^^^^^^
 
 - migration 文件中涉及 model 的操作, 应该使用根据 migration file 记录的修改历史
   来重建的 model, 这样才符合相应历史点的数据库状态. 这样重建的 model 不同于当前
@@ -2833,19 +2858,85 @@ MySQL
   migration 先 DML, 再 DDL, 但是 DDL 部分 failed, 则需要手动 rollback
   DML 做的修改.
 
-Migration
----------
+deconstruction and serialization
+--------------------------------
+- 生成 migration file, 需要将内存中的 model changes (注意对比的是从 python
+  source code 解析至内存中的 python 对象和数据结构) 反向 serialize 成 python 源
+  代码. 由于并不存在对 python object 序列化的通用标准 (注意序列化的要求是等价性
+  , 无信息损失), django 只对有限的、容易序列化的对象定义了 serialization 逻辑.
 
-class attributes
-^^^^^^^^^^^^^^^^
-- ``initial``. Whether the migration is an initial migration. There can be
-  more than one initial migration for an app, in case of complex model 
-  dependencies, etc.
+- 这些可序列化的值具有的特点大致分为以下几类:
 
-  default is None. migration will be considered “initial” if it is the first
-  migration in the app.
+  * 具有 literal form 的, 这主要是 builtin types.
 
-  makemigrations 生成的 initial migration 具有 ``initial=True``.
+  * 可直接 import 的定义. 例如 class, function.
+
+  * 可获取对象包含的数据值, 并可通过 constructor 直接重建的.
+
+  * 包含 deconstruct API 的对象.
+
+- 可 serialize 的值:
+
+  * values of builtin python types.
+
+  * datetime instances.
+
+  * decimal.Decimal instances.
+
+  * enum.Enum instances.
+
+  * uuid.UUID instances.
+
+  * functools.partial, functools.partialmethod instances with serializable
+    function and args/kwargs.
+
+  * django LazyObject wrapping serializable value.
+
+  * django model field instances.
+
+  * Any function or (unbound or bound) method reference. 注意 instance is
+    lost. 只剩下 class. Must be accessible from module top-level scope.
+
+  * Any class. Must be accessible from module top-level scope.
+
+  * Anything with a ``deconstruct()`` method.
+
+- 不可 serialize 的值:
+
+  * inner class. (找不到)
+
+  * arbitrary class instance. (无法保证序列化后信息无损, 除非作者通过
+    ``deconstruct()`` 来告诉 django 怎样的信息是足够重建原实例.)
+
+  * lambda. (找不到定义)
+
+deconstructible protocol
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+- ``deconstruct()``. 具有这个 method 的任意 object, django 会去 deconstruct.
+  在 class 中定义这个方法就是告诉 django 这个类的实例都是 deconstructible 的.
+
+  Returns a 3-tuple ``(path, args, kwargs)``. ``path`` is import path to class;
+  ``args`` is a list of positionals and ``kwargs`` is a dict of kwargs to pass
+  to class constructor. Each subvalue must be serializable.
+
+  这是用于 deconstruct 任意 class instance 的, 而 ``Field.deconstruct()`` 
+  returns 4-tuple.
+
+- ``__eq__(other)``. called by Django’s migration framework to detect changes
+  between states. A new migration is generated if the instances are not equal.
+  注意并不是在任何 migration 相关的地方使用 deconstructible instance 时, 都会
+  通过 ``__eq__`` 来判断相等.
+
+decorator
+^^^^^^^^^
+
+- ``@deconstructible(klass=None, path=None)``. class decorator. overrides
+  original class's ``__new__`` to capture args and kwargs; provides a
+  ``deconstruct()`` method.
+
+  只要 original class 的 constructor params 全部 deconstrucible, 就可以使用
+  这个 decorator. 省去一些麻烦.
 
 migration checkings
 -------------------
@@ -2864,6 +2955,22 @@ settings
 
 management commands
 -------------------
+
+showmigrations
+^^^^^^^^^^^^^^
+::
+
+  ./manage.py showmigrations [app_label]...
+
+- show all migrations in a project.
+
+- options.
+
+  * ``--list`` list migrations organized by app. This is default.
+
+  * ``--plan`` show migrations in the order they'll be applied, with verbosity
+    of 2 and above, all dependencies of a migration will also be shown. This
+    looks very useful.
 
 makemigrations
 ^^^^^^^^^^^^^^
@@ -2964,7 +3071,16 @@ squashmigrations
   * Removing the ``replaces`` attribute in the Migration class of the squashed
     migration.
 
-- squash 逻辑.
+  * Once you’ve squashed a migration, you should not then re-squash that
+    squashed migration until you have fully transitioned it to a normal
+    migration.
+
+- squash 逻辑. 根据起止 Migration (即 directed graph 上的两个 vertex), 从
+  directed graph 中得出需要 squash 的 migration list. 提取所有 Operation.  传入
+  optimizer, 进行优化. 优化时, 对每个 operation, 尝试与它后面的所有 operation
+  依次优化合并. 对于每个 operation, 调用 ``Operation.reduce()``. 反复执行直到优
+  化结果不再变化. 将优化结果写入新的 migration file, 成为 squashed migration.
+  在写 migration 的过程中, 涉及对 Operation 的 deconstruction & serialization.
 
 - migration 逻辑.  The squashed migration's ``replaces`` attribute says what
   migrations it replaces.  They can coexist with the squashed migration files.
@@ -2985,6 +3101,20 @@ squashmigrations
 
   * ``--squashed-name``. specify the name of the squashed migration. default use
     ``<start_migration>_squashed_<end_migration>``.
+
+sqlmigrate
+^^^^^^^^^^
+::
+
+  ./manage.py sqlmigrate app_label migration_name
+
+- Prints the SQL for the named migration.
+
+- options.
+
+  * ``--backwards``. Print SQL for unapply the migration.
+
+  * ``--database DATABASE``. specify database to generate SQL.
 
 recipes
 -------
@@ -4093,6 +4223,15 @@ model field
 
 - ``django.db.models.Field``. field base class. Field 是
   ``RegisterLookupMixin`` 的子类.
+
+design
+^^^^^^
+- model instance 的属性只是 field value, 而不是 Field instance. Field instance
+  是一个模型, 它表达列应具有的行为, 并在需要的时候进行相关列的操作. 但它本身
+  并不保存状态. 也就是说, model field instance is basically immutable, 它不包含
+  数据状态, 只包含定义和声明.
+
+- Field 无状态的一个意义是让它可以 deconstruct & serialize into migration.
 
 constructor
 ^^^^^^^^^^^
