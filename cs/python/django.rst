@@ -2709,13 +2709,13 @@ overview
   individual migration files - analogous to commits - and ``migrate`` is
   responsible for applying those to your database.
 
+- Django will make migrations for any change to your models or fields - even
+  options that don’t affect the database. the only way it can reconstruct a
+  field correctly is to have all the changes in the history.
+
 - django 生成的 migrations 需要仔细检查, 对于复杂的数据库修改, 不能保证与预期完
   全相符, 必要时需要人工修改甚至人工创建 migrations. 对于自动生成的 migrations,
   尤其是 ``squashmigrations`` 生成的 migration file, 一定要测试可用.
-
-- Django will make migrations for any change to your models or fields - even
-  options that don’t affect the database. It's the only way it can reconstruct
-  a field correctly is to have all the changes in the history.
 
 compatibility
 ^^^^^^^^^^^^^
@@ -6035,6 +6035,62 @@ settings
   默认值. 默认为空. 此时依赖 backend 自己选择 tablespace 处理方式.
 
 - settings.DEFAULT_INDEX_TABLESPACE. index 的 tablespace 默认值.
+
+schema
+------
+- database schema changes is executed by SchemaEditor (``DatabaseSchemaEditor``).
+
+- Each database backend in Django supplies its own version of SchemaEditor.
+
+usage
+^^^^^
+::
+
+  with connection.schema_editor() as editor:
+      # operations
+
+- A schema editor corresponding to a database connection can be created by
+  ``.schema_editor()`` method of a database connection wrapper.
+
+- DatabaseSchemaEditor must be used as a context manager, as this allows it to
+  manage things like transactions and deferred SQL (e.g., constraints that
+  requires multiple tables to be present, like FK).
+
+- It exposes all possible operations as methods, that should be called in the
+  order you wish changes to be applied.
+
+BaseDatabaseSchemaEditor
+^^^^^^^^^^^^^^^^^^^^^^^^
+- A base DatabaseSchemaEditor for relatively standard SQL-based relational
+  databases. It implements all standard schema operations.
+
+class attributes
+""""""""""""""""
+- A lot of DDL SQL statement templates.
+
+methods
+"""""""
+
+utilities
+
+- ``execute(sql, params=())``. execute sql using cursor, or just collect
+  them into a list (useful for ``sqlmigrate`` management command).
+
+operations
+
+- ``create_model(model)``. Create model table, all columns, constraints,
+  indexes, local M2M intermediate tables, etc. 
+
+- ``delete_model(model)``. Delete model table, including local M2M intermediate
+  tables.
+
+- ``add_index(model, index)``.
+
+- ``remove_index(model, index)``.
+
+- ``alter_unique_together(model, old_unique_together, new_unique_together)``.
+  两个 unique together 分别是原来的和预期的 ``Meta.unique_together``. 这里
+  删除多余的, 添加缺少的. 最终达到 new 的效果.
 
 authentication and authorization
 ================================
