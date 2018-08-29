@@ -213,9 +213,18 @@ instantiation
 ^^^^^^^^^^^^^
 以下属性在 class & metaclass 上有.
 
-- ``class.__new__(cls, ...)``. static method. 实例化时
-  调用该方法创建 ``cls`` 的新实例. 剩下的参数定义就是 constructor 的参数
-  signature. 返回 new object instance.
+- ``class.__new__(cls, ...)``. static method. 实例化时调用该方法创建 ``cls`` 的
+  新实例. 剩下的参数定义就是 constructor 的参数 signature. 返回 new object
+  instance. 如果定义时未使用 ``@staticmethod`` decorator, 解释器会自动将之转换
+  为 static method.
+
+  注意 ``__new__`` 是一个 static method, 而不是 class method. 因此, 调用时需要
+  传入要实例化的 ``cls`` object. 它是 static method 的原因是为了解决以下两个
+  应用场景 [SOPyNew]_:
+
+  * explicitly call parent class ``__new__`` without using ``super()``.
+
+  * Allows to create an instance of subclass.
 
 - ``class.__init__(self, ...)``. Must return None.
 
@@ -1612,3 +1621,4 @@ References
 .. [SOPyRecur] `Using Y combinator to optimize tail recursion in Python <https://stackoverflow.com/a/18506625/1602266>`_
 .. [TCO] `TCO module <https://github.com/baruchel/tco>`_
 .. [SOPyChangeClass] `How dangerous is setting self.__class__ to something else? <https://stackoverflow.com/questions/13280680/how-dangerous-is-setting-self-class-to-something-else>`_
+.. [SOPyNew] `Why isn't __new__ in Python new-style classes a class method? <https://stackoverflow.com/questions/9092072/why-isnt-new-in-python-new-style-classes-a-class-method>`_
