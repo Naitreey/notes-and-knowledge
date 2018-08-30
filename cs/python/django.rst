@@ -36,76 +36,126 @@ django release
 project and application
 =======================
 
-- project vs app.
-
-  一个 project 就是一个 project, 一个项目. 一个项目可以是一个组相互关联的事物、
-  事情和功能的集合, 它们构成一个抽象整体.
-
-  一个 app 就是这个 project 中的一件事情, 一个功能, 一个模块等. 它可以单独存在,
-  具有自洽的逻辑和组成. 也可以是更大整体 (即 project) 的组成部分.
-
-  注意适当地按模块化思路将 project 拆成 apps. Your apps don't have to be reusable,
-  they can depend on each other, but they should do one thing.
-
-  Try to answer question: "What does my application do?". If you cannot answer
-  in a single sentence, then maybe you can split it into several apps with cleaner
-  logic.
-
-  对于仅有一个功能模块的项目, 可以简单地将 project 直接应用为 app.
-
 project
 -------
+- 在 django 语境下, 一个 project 就是一个 web project, 一个项目. 一个项目可以是
+  一个组相互关联的事物、事情和功能的集合, 它们构成一个抽象整体, well a web app.
 
+project structure
+^^^^^^^^^^^^^^^^^
+- 所有第一方的 django apps.
+
+- docs.
+
+- env files and/or directories.
+
+- other files.
+
+distribution
+^^^^^^^^^^^^
 * 由于 django 设计的 project 代码 import 逻辑 -- 即 project 目录需要在 ``sys.path``
   中, 导致 django project 不适合整个打包为 python package 然后用 pip 安装至
   site-packages 目录. 因为这样的效果是在 ``sys.path`` 中包含 site-packages 的子目录.
   结果就是 import 时可能存在覆盖问题.
 
-  整个 django project 适合打包成 rpm/deb, 放在 ``/usr/lib`` 下.
+- 整个 django project 适合打包成 rpm/deb, 放在 ``/usr/lib`` 下. 或者对于只需单次
+  部署, 非 package 发布形式的话, 完全可以放在任意一个目录下, 例如 ``$HOME``.
 
-  然而, 一个 django project 中的每个 app, 都应该可以打包成 python package 用 pip
-  安装.
-
-* project 目录可以作为一个全局 app 来使用. 全局的模板, 全局的静态文件, 全局的 url,
-  全局的管理命令等, 都可以放在这个全局 app 中.
-
-* project structure.
+- 一个 django project 中的每个 reusable app, 都应该可以打包成 python package 用
+  pip 安装.
 
 app
 ---
 
-* In essence, a Django application is just a Python package that is specifically
+- 一个 app 就是这个 project 中的一件事情, 一个功能, 一个模块等. 它可以单独存在,
+  具有自洽的逻辑和组成. 也可以是更大整体 (即 project) 的组成部分.
+
+  In essence, a Django application is just a Python package that is specifically
   intended for use in a Django project.
 
-* django 提供了很多方便的功能使得 project 在 app 尺度的模块化十分容易, 例如
-  模块化的 URLconf, ``include()``. 每个 app 可以独立存在, 又可以在整个项目中
-  plug-and-play (PnP). 与 app 模块化配合的是 RESTful url 的模块化, 并要求
-  url 层级清晰. 每个 app 的 URLconf 自成体系, 有 index, 有 object, 有 method.
+- django 提供了很多方便的功能使得 project 在 app 尺度的模块化十分容易, 例如模块
+  化的 URLconf, ``include()``. 每个 app 可以独立存在, 又可以在整个项目中
+  plug-and-play (PnP). 与 app 模块化配合的是 RESTful url 的模块化, 并要求 url
+  层级清晰. 每个 app 的 URLconf 自成体系, 有 index, 有 object, 有 method.
 
-* 理想情况下, app 应该可以独立发布成 python package. 然后在任何 django 项目
+distribution
+^^^^^^^^^^^^
+- 理想情况下, app 应该可以独立发布成 python package. 然后在任何 django 项目
   中按照标准 django 方式 (import 等) 即可使用, 成为新项目的一个 app.
 
-* It’s often useful to prepend ``django-`` to your module name when creating
+- It’s often useful to prepend ``django-`` to your module name when creating
   a package to distribute. This helps others looking for Django apps identify
   your app as Django specific.
 
+app structure
+^^^^^^^^^^^^^
+- views.
+
+- forms.
+
+- models.
+
+- urls.
+
+- migrations
+
+- templates.
+
+- static.
+
+- ``template_tags``
+
+- apps
+
+- ``fields.py``. 放置所有自定义的 model fields.
+
+- ``mixins.py``. 所有在本 app 中定义的 mixin classes. 这些 mixins 可能不仅仅
+  是 views 会用到, forms, models 等也可能使用. 所以单独拿出来.
+
+- ``tasks.py``. 需要使用 task queue 时, 放置所有任务.
+
+- ``validators.py``. 放置所有自定义的 forms/models validators.
+
+- ``signals.py``
+
+- fts, its, uts.
+
+- validators.
+
+- admin
+
+project app
+^^^^^^^^^^^
+- project 子目录是一个 project global app. 全局的模板, 全局的静态文件, 全局的
+  url, 全局的管理命令等, 都应该放在这个 app 中.
+
+- There’s no restriction that a project app can’t also be considered an
+  application and have models, etc. 但若是如此, 则需要添加进入
+  ``INSTALLED_APPS``.
+
+- structure.
+
+app config
+----------
+- Each application has an AppConfig, which contains the application's
+  configuration during app loading and also works for retrospection.
+
+application registry
+--------------------
 * 若需要在代码中获取当前安装的 django apps, 应该使用 ``django.apps.apps``
   application registry, 而不是直接访问 ``settings.INSTALLED_APPS``.
 
-* app structure.
+design patterns
+---------------
 
-  - ``mixins.py``. 所有在本 app 中定义的 mixin classes. 这些 mixins 可能不仅仅
-    是 views 会用到, forms, models 等也可能使用. 所以单独拿出来.
+- 注意适当地按模块化思路将 project 拆成 apps. Your apps don't have to be
+  reusable, they can depend on each other, but they should do one thing.
 
-  - ``tasks.py``. 需要使用 task queue 时, 放置所有任务.
+  Try to answer question: "What does my application do?". If you cannot answer
+  in a single sentence, then maybe you can split it into several apps with
+  cleaner logic.
 
-  - ``validators.py``. 放置所有自定义的 forms/models validators.
-
-  - ``fields.py``. 放置所有自定义的 model fields.
-
-* special global app.
-
-  - structure.
+  对于仅有一个功能模块的项目, 可以简单地将 project 直接应用为 app.
 
 management commands
 -------------------
