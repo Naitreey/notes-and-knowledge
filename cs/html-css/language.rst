@@ -1643,192 +1643,216 @@ type of stylesheets
 syntax
 ------
 
-- CSS statement:
-  a css statement begins with any non-space characters and ends at the first
+statement
+^^^^^^^^^
+- a css statement begins with any non-space characters and ends at the first
   closing brace or semi-colon.
 
-  一个 css 文件由多个 css statement 构成.
+- 一个 css 文件由多个 css statement 构成.
 
-  css statement 包含两类: at-rules & rulesets.
+- css statement 包含两类: at-rules & rulesets.
 
-- css ruleset:
-  一个 css ruleset (or simply rule) 由 a group of selectors + declaration block
+ruleset
+^^^^^^^
+- ruleset 的作用是给 html 元素设置样式和布局.
+
+- 一个 css ruleset (or simply rule) 由 a group of selectors + declaration block
   构成.
 
   * selector group:
     a selector group 由 a comma separated list of selectors 构成. selectors are
     case-sensitive.
-
+  
   * declaration block:
     一个 declaration block 整体由一组 braces 包裹, 里面包含 0 或多个 declarations,
     由 semicolon 分隔. 最后一个 declaration 理论上没必要以 semicolon 结尾.
-
+  
   * declaration:
     一个 declaration 由 property + value 构成. property 和 value 以 colon 分隔.
     property & value are case-insensitive.
 
-- shorthand property. a css property that let you set the values of several
-  other css properties simultaneously. This is to make css declarations more
-  concise and readable.
+property
+^^^^^^^^
 
-  * 在 shorthand property 中, 对于未设置值的子项, 将自动设置值为它的 initial value.
-    这意味着, 对于在 shorthand property 中省略的子项, 并不是自动使用了其他地方设置
-    的值, 而是设置了一个新值为 initial. 这个值是否最终会生效, 仍然要靠 cascade,
-    specificity, inheritance 等算法计算给出结果.
+shorthand property
+""""""""""""""""""
+a css property that let you set the values of several
+other css properties simultaneously. This is to make css declarations more
+concise and readable.
 
-  * shorthand property 在参与 cascade/specificity/inheritance 等计算时, 会先拆成它
-    所代表的各项属性后才输入的.
+* 在 shorthand property 中, 对于未设置值的子项, 将自动设置值为它的 initial value.
+  这意味着, 对于在 shorthand property 中省略的子项, 并不是自动使用了其他地方设置
+  的值, 而是设置了一个新值为 initial. 这个值是否最终会生效, 仍然要靠 cascade,
+  specificity, inheritance 等算法计算给出结果.
 
-  * shorthand property 中的子项的值不能是 inherit/initial, 只能说整体属性的值是
-    inherit/initial.
+* shorthand property 在参与 cascade/specificity/inheritance 等计算时, 会先拆成它
+  所代表的各项属性后才输入的.
 
-  * 当 shorthand property 中的各项值的类型不同时, 子项值的书写顺序并不重要, 解析
-    时会自动识别值与属性的对应关系. 但对于各项值的类型相同时, 子项值的位置具有
-    重要性.
+* shorthand property 中的子项的值不能是 inherit/initial, 只能说整体属性的值是
+  inherit/initial.
 
-    - 与 box 四边相关的属性, 可以指定 1-4 个值. 赋值是从 top 开始顺时针进行的.
+* 当 shorthand property 中的各项值的类型不同时, 子项值的书写顺序并不重要, 解析
+  时会自动识别值与属性的对应关系. 但对于各项值的类型相同时, 子项值的位置具有
+  重要性.
 
-      * 一个值 (top, right, bottom, left): 1, 1, 1, 1.
+  - 与 box 四边相关的属性, 可以指定 1-4 个值. 赋值是从 top 开始顺时针进行的.
 
-      * 两个值: 1, 2, 1, 2 (未指定的对边相同).
+    * 一个值 (top, right, bottom, left): 1, 1, 1, 1.
 
-      * 三个值: 1, 2, 3, 2 (未指定的对边相同).
+    * 两个值: 1, 2, 1, 2 (未指定的对边相同).
 
-      * 四个值: 1, 2, 3, 4.
+    * 三个值: 1, 2, 3, 2 (未指定的对边相同).
 
-    - 与 box 四角相关的属性, 可以指定 1-4 个值. 赋值是从左上角开始顺时针进行的.
+    * 四个值: 1, 2, 3, 4.
 
-      * 一个值 (LT, RT, RB, LB): 1, 1, 1, 1.
+  - 与 box 四角相关的属性, 可以指定 1-4 个值. 赋值是从左上角开始顺时针进行的.
 
-      * 两个值: 1, 2, 1, 2.
+    * 一个值 (LT, RT, RB, LB): 1, 1, 1, 1.
 
-      * 三个值: 1, 2, 3, 2.
+    * 两个值: 1, 2, 1, 2.
 
-      * 四个值: 1, 2, 3, 4.
+    * 三个值: 1, 2, 3, 2.
 
-    - ``font`` shorthand property 在指定 font-size & line-height 时使用
-      ``<font-size>/<line-height>`` 形式.
+    * 四个值: 1, 2, 3, 4.
 
-- at-rules:
-  starts with an at sign, followed by an identifier and then continuing up to
+  - ``font`` shorthand property 在指定 font-size & line-height 时使用
+    ``<font-size>/<line-height>`` 形式.
+
+at-rules
+^^^^^^^^
+- 与 ruleset 相比, at-rules 的作用是 instruct how CSS behaves. 也就是说, 
+  ruleset statement 是控制 HTML 样式的, at-rule statement 是控制 CSS 逻辑的.
+
+- starts with an at sign, followed by an identifier and then continuing up to
   the next semi-colon outside of a block or the end of the next block.
 
-  若 at-rule 后面是 block, 可能里面是一系列 descriptor/value pairs, 也可能是
+- 若 at-rule 后面是 block, 可能里面是一系列 descriptor/value pairs, 也可能是
   别的.
 
-- comment. c-style ``/* */``.
+- 一些 at-rule 可以 nested, 即构成 nested at-rules.
 
-- value definition syntax (类似 BNF notation, 用于定义 property 的允许值).
+comment
+^^^^^^^
+- c-style ``/* */``.
 
-  * value types.
+property value
+^^^^^^^^^^^^^^
+value definition syntax
+""""""""""""""""""""""""
 
-    - keywords. a word with a predefined meaning that appears literally,
-      without quotation marks.
+类似 BNF notation, 用于定义 property 的允许值.
 
-      所有 css properties 都支持 inherit, initial, unset 三个 keyword values.
+* value types.
 
-    - literals. ``/``, ``,`` 等在 value 中 literally 出现的字符.
+  - keywords. a word with a predefined meaning that appears literally,
+    without quotation marks.
 
-    - data types.
+    所有 css properties 都支持 inherit, initial, unset 三个 keyword values.
 
-      * basic data types.
+  - literals. ``/``, ``,`` 等在 value 中 literally 出现的字符.
 
-      * non-terminal data types.
+  - data types.
 
-  * value combinators.
+    * basic data types.
 
-    - brackets ``[]``.
+    * non-terminal data types.
 
-    - juxtaposition ``' '``. Placing several keywords, literals or data types,
-      next to one another, only separated by one or several spaces. All
-      juxtaposed components are mandatory and should appear in the exact order.
+* value combinators.
 
-    - double ampersand ``&&``. the components are mandatory but may appear in any order.
+  - brackets ``[]``.
 
-    - double bar ``||``. at least one of the components must be present, and they may
-      appear in any order.
+  - juxtaposition ``' '``. Placing several keywords, literals or data types,
+    next to one another, only separated by one or several spaces. All
+    juxtaposed components are mandatory and should appear in the exact order.
 
-    - single bar ``|``. exactly one of these options must be present.
+  - double ampersand ``&&``. the components are mandatory but may appear in any order.
+
+  - double bar ``||``. at least one of the components must be present, and they may
+    appear in any order.
+
+  - single bar ``|``. exactly one of these options must be present.
 
 
-  * value multipliers.
+* value multipliers.
 
-    - no multiplier. exactly 1.
+  - no multiplier. exactly 1.
 
-    - asterisk ``*``. 0 or more.
+  - asterisk ``*``. 0 or more.
 
-    - plus ``+``. one or more.
+  - plus ``+``. one or more.
 
-    - hash mark ``#``. one or more, separated by comma.
+  - hash mark ``#``. one or more, separated by comma.
 
-    - question mark ``?``. 0 or 1.
+  - question mark ``?``. 0 or 1.
 
-    - curly braces ``{A,B}``. at least A, at most B times.
+  - curly braces ``{A,B}``. at least A, at most B times.
 
-    - exclamation point ``!`` (after the brackets group). the group is
-      required, and must produce at least one value; even if the grammar of the
-      items within the group would otherwise allow the entire contents to be
-      omitted.
+  - exclamation point ``!`` (after the brackets group). the group is
+    required, and must produce at least one value; even if the grammar of the
+    items within the group would otherwise allow the entire contents to be
+    omitted.
 
-  * precedences.
+* precedences.
 
-    - value multipliers have precedence over all value combinators.
+  - value multipliers have precedence over all value combinators.
 
-    - Juxtaposition has precedence over the double ampersand. e.g.,
-    ``bold thin && <length>`` equals to ``[ bold thin ] && <length>``.
+  - Juxtaposition has precedence over the double ampersand. e.g.,
+  ``bold thin && <length>`` equals to ``[ bold thin ] && <length>``.
 
-    - The double ampersand has precedence over the double bar. e.g.,
-    ``bold || thin && <length>`` is equivalent to ``bold || [ thin && <length> ]``.
+  - The double ampersand has precedence over the double bar. e.g.,
+  ``bold || thin && <length>`` is equivalent to ``bold || [ thin && <length> ]``.
 
-    - the double bar has precedence over the single bar, meaning that
-      ``bold | thin || <length>`` is equivalent to ``bold | [ thin || <length> ]``.
+  - the double bar has precedence over the single bar, meaning that
+    ``bold | thin || <length>`` is equivalent to ``bold | [ thin || <length> ]``.
 
-- various property values.
+property value types
+""""""""""""""""""""
 
-  * initial value. a property's default value, as listed in its definition table.
-    对于任何元素, 可以通过 ``initial`` keyword 明确指定使用 initial value.
+* initial value. a property's default value, as listed in its definition table.
+  对于任何元素, 可以通过 ``initial`` keyword 明确指定使用 initial value.
 
-  * specified value. the value it receives from the document's style sheet.
-    就是经过 cascade/specificity/inheritance 等算法后得到的最终定义数值.
-    注意这组数值是根据各 css declaration 得到的最终定义值, 还不是最终使用值.
+* specified value. the value it receives from the document's style sheet.
+  就是经过 cascade/specificity/inheritance 等算法后得到的最终定义数值.
+  注意这组数值是根据各 css declaration 得到的最终定义值, 还不是最终使用值.
 
-    注意一个 css property 的 specified value 仍然是它定义中允许的任何值. 这
-    与 computed value 不同.
+  注意一个 css property 的 specified value 仍然是它定义中允许的任何值. 这
+  与 computed value 不同.
 
-  * computed value. 根据 specified value 进行计算, 解析 inherit, initial,
-    unset, revert 等特殊值至具体的值, 将所有 specified value 转换成属性定义
-    允许的 computed value.
+* computed value. 根据 specified value 进行计算, 解析 inherit, initial,
+  unset, revert 等特殊值至具体的值, 将所有 specified value 转换成属性定义
+  允许的 computed value.
 
-    The computed value of a CSS property is the value that is transferred from
-    parent to child during inheritance. 这是 computed value & specified value
-    & used value 的重要区别.
+  The computed value of a CSS property is the value that is transferred from
+  parent to child during inheritance. 这是 computed value & specified value
+  & used value 的重要区别.
 
-  * used value. 这些值是从将 computed value 再解析成绝对数值可直接在页面中使用
-    以确定各元素布局和位置等等绝对信息的值.
+* used value. 这些值是从将 computed value 再解析成绝对数值可直接在页面中使用
+  以确定各元素布局和位置等等绝对信息的值.
 
-    注意 used value 这里已经是绝对值, 由于绝对值很多时候不适合去继承, 所以有
-    computed value & used value 的区分.
+  注意 used value 这里已经是绝对值, 由于绝对值很多时候不适合去继承, 所以有
+  computed value & used value 的区分.
 
-    computed value & used value 只有当该属性与 layout 相关时才可能有区别.
-    这是因为, computed value 可以是百分数等相对值, 而 used value 需要根据
-    layout 去解析成绝对值. 除此之外, 两个值是相同的. 事实上, DOM API
-    ``getComputedStyle()`` 会返回绝对数值, 即根据属性不同可能返回的是 computed
-    value 或 used value. 所以从这个角度看, 两个值在实现中就是一个.
+  computed value & used value 只有当该属性与 layout 相关时才可能有区别.
+  这是因为, computed value 可以是百分数等相对值, 而 used value 需要根据
+  layout 去解析成绝对值. 除此之外, 两个值是相同的. 事实上, DOM API
+  ``getComputedStyle()`` 会返回绝对数值, 即根据属性不同可能返回的是 computed
+  value 或 used value. 所以从这个角度看, 两个值在实现中就是一个.
 
-  * actual value. the used value of that property after any necessary
-    approximations have been applied by user agent. 这些值是最终浏览器使用的值,
-    在考虑到具体环境的局限性等因素后的完全真实值.
+* actual value. the used value of that property after any necessary
+  approximations have been applied by user agent. 这些值是最终浏览器使用的值,
+  在考虑到具体环境的局限性等因素后的完全真实值.
 
-- replaced & non-replaced elements
+replaced & non-replaced elements
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-  * replaced element 是具有 intrinsic dimension 的元素. 它的意思是这些元素的内容
-    具有本征的长宽等尺寸 (这些内容替换了 tag 本身, 故命名 replaced). 这些尺寸不受
-    css 控制.
+* replaced element 是具有 intrinsic dimension 的元素. 它的意思是这些元素的内容
+  具有本征的长宽等尺寸 (这些内容替换了 tag 本身, 故命名 replaced). 这些尺寸不受
+  css 控制.
 
-    常见 replaced elements:
-    iframe, video, embed, img, ``<input type="image">``;
-    content property value: anonymous replaced elements;
-    一些情况下的 audio, canvas, object, applet.
+  常见 replaced elements:
+  iframe, video, embed, img, ``<input type="image">``;
+  content property value: anonymous replaced elements;
+  一些情况下的 audio, canvas, object, applet.
 
 selectors
 ---------
@@ -2091,10 +2115,6 @@ inheritance
 - 无论 inherited or non-inherited property, 都可以指定 value 为 ``inherit`` 来
   明确要求继承 parent element value.
 
-at-rule
--------
-
-- 一些 at-rule 可以 nested, 即构成 nested at-rules.
 
 box model
 ---------
@@ -2405,6 +2425,175 @@ flex item properties
    
   * stretch
 
+animation
+---------
+overview
+^^^^^^^^
+- Used for animate the transition process of CSS style configuration.
+
+- A CSS animation definition consists of two parts:
+
+  * a style describing the CSS animation, with ``animation``-related
+    properties.
+
+  * a set of ``@keyframes`` that indicate the start, intermediate waypoints
+    and end states of the animation's style.
+
+- advantages over JS-based animation.
+
+  * better performance.
+
+keyframes
+^^^^^^^^^
+- Each keyframe describes how the animated element should render at a given
+  time during the animation sequence.
+
+- The timing is specified as a ``<percentage>``. Two special timing point.
+
+  * 0%, from. the start of the animation.
+
+  * 100%, to. the end of the animation.
+
+  If from/0% or to/100% is not specified, the browser starts or finishes the
+  animation using the computed values of all attributes.
+
+properties
+^^^^^^^^^^
+对于控制 animation 执行的各个属性, 如果 accepts a list of values, 这些值
+是循环应用到每个 animation-name 指定的动画效果上的.
+
+- animation-name. The name of the animation to be applied.
+
+  initial value: none.
+
+  non-inherited property.
+
+  specified values:
+
+  * none. no keyframes. deactivate an animation.
+
+  * a comma separated list of ``<custom-ident>``. 也就是说可以同时应用多个
+    animation.
+
+- animation-duration. The period of one animation.
+
+  non-inherited.
+
+  initial value: 0s.
+
+  specified value.
+
+  * a comma separated list of ``<time>``. units can be seconds or milliseconds.
+
+- animation-timing-function. A function of the form ``x = f(t)``, where ``t``
+  is the timing ratio in ``[0, 1]``, ``x`` is the property value ratio in
+  ``[0, 1]``. 该函数定义 animated css property 的值如何随时间变化.
+
+  该属性可以应用在整个 animation 的过程中, 或者只局限于从某个 keyframe 开始
+  的一系列 keyframes. A keyframe's timing function is applied from the keyframe
+  on which it is specified until the next keyframe specifying that property, or
+  until the end of the animation.
+
+  non-inherited.
+
+  initial value: ease
+
+  specified value:
+
+  * a comma separated list of ``<timing-function>``
+
+- animation-delay. when an animation should start.
+
+  non-inherited.
+
+  initial value: 0s.
+
+  specified value:
+
+  * a comma separated list of ``<time>``.
+    
+    A positive value indicates that the animation should begin after the
+    specified amount of time has elapsed.
+
+    0s means starting immediately.
+
+    A negative value causes the animation to begin immediately, but partway
+    through its cycle. 注意这个负值是取在 animation 的整个过程中的时间点,
+    这包含 animation-duration and animation-iteration-count.
+
+- animation-iteration-count. The number of times the animation should be
+  played.
+
+  non-inherited.
+
+  initial: 1.
+
+  specified value: a list of followings
+
+  * infinite.
+
+  * ``<number>``. specify non-integer values to play part of an animation cycle.
+
+- animation-direction. an animation should play forwards or backwards. 这指的是
+  animation 的各帧是正着放还是倒着放.
+
+  non-inherited.
+
+  initial: normal.
+
+  specified value: a list of followings
+
+  * normal. plays forwards during each cycle. After each cycle, the animation
+    will reset to the beginning state and start over again.
+
+  * reverse. plays backwards during each cycle. After each cycle, the animation
+    will reset to the end state and start over again.  Animation steps and
+    timing functions are both reversed.
+
+  * alternate. 交替方向. 第一次正向.
+
+  * alternate-reverse. 交替方向. 第一次反向.
+
+- animation-fill-mode. element 在 animation 开始之前和结束之后是否保持
+  animation 过程中设置的 styles 以及如何保持.
+
+  non-inherited.
+
+  initial: none.
+
+  specified value: a list of followings
+
+  * forwards. The target will retain the computed values set by the last
+    keyframe encountered during execution.
+
+  * backwards. The animation will apply the values defined in the first
+    relevant keyframe as soon as it is applied to the target, and retain this
+    during the animation-delay period.
+
+  * both. both forwards and backwards.
+
+- animation-play-state. Specify whether an animation is running or paused.
+  修改该属性就可以 pause/resume animation.
+
+  initial: running.
+
+  specified value: a list of followings
+
+  * running
+
+  * paused.
+
+- animation. shorthand for all above.
+
+  specified value: a comma separated list of animation configs.
+
+  each animation configs is a space separated list of:
+
+  * 0 or 1 occurrences of all animation longhand properties.
+
+  若有 2 个 ``<time>`` value, 第一个赋值给 animation-duration, 第二个
+  赋值给 animation-delay.
+
 properties
 ----------
 
@@ -2470,23 +2659,20 @@ text
 
   字体值:
 
-  * relative-size keywords:
+  * xx-small, x-small, small, medium, large, x-large, xx-large. Absolute-size
+    keywords, based on user's default font size (usually 16px) which is medium.
 
-    - xx-small, x-small, small, medium, large, x-large, xx-large. 这些大小
-      是基于 medium 值进行放大和缩小的. medium 的值是用户设置的浏览器默认
-      字体大小 (which is usually 16px).
+  * larger, smaller. Relative-size keywords. Relative to parent element's font
+    size.
 
-    - larger, smaller. 比 parent element 字体大或者小. 比例与 small/medium/large
-      等变化比例一致.
+  * ``<length>``. absolute or relative length values.
+    
+    For relative length units (``em``, ``ex``, etc.), relative to
+    parent element's font size. For relative length unit ``rem``, relative to
+    root.  rem 相对于 root html element. rem 相比 em 的好处是, 前者不存在叠加效
+    应. 即结果是稳定的 (因相对的是 root, 是确定的元素).
 
-  * relative ``<percentage>`` or ``<length>``, 与 parent element 或 root element
-    的 font-size 的关系.
-
-    对于单位是 ``em`` ``rem`` ``ex`` 的长度 em, ex 相对于 parent element, rem
-    相对于 root html element. rem 相比 em 的好处是, 前者不存在叠加效应. 即结果
-    是稳定的 (因相对的是 root, 是确定的元素).
-
-  * absolute ``<length>``, 绝对长度.
+  * ``<percentage>``. relative to the parent element's font size.
 
   root element 的 initial value 是 medium. 因此对于 relative font-size, 若没有在
   任何 parent element 设置 font-size, 则结果就是相对于 medium, 即浏览器默认字体
@@ -3202,6 +3388,16 @@ data types of values
 
   * ``counters(name, string[, style])``. 输出每层的同名 counter 的值.
     string 是每层 counter value 之间的分隔符.
+
+- ``<custom-ident>``. an arbitrary user-defined valid CSS identifier.
+  But it's case-sensitive.
+
+  根据 identifier 作为哪个 property 的值, 相应地具有一些 identifier 是不能
+  使用的. 这是为了避免与 property 的 predefined keyword value 冲突.
+
+- ``<time>``::
+
+    [+|-]?<number>[s|ms]
 
 global values
 ^^^^^^^^^^^^^
