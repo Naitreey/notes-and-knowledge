@@ -2504,6 +2504,10 @@ python
 mode::
   ENV PYTHONUNBUFFERED=1
 
+用 pip 安装应用依赖时, 要避免生成 pip cache directory::
+
+  pip3 install --no-cache-dir ...
+
 nginx
 -----
 - ``nginx-debug`` binary produces verbose output when using higher log levels.
