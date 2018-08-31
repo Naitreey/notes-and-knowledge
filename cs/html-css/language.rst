@@ -2665,6 +2665,41 @@ properties
   若有 2 个 ``<time>`` value, 第一个赋值给 animation-duration, 第二个
   赋值给 animation-delay.
 
+transition vs animation
+-----------------------
+See also [TransitionVSAnimation]_
+
+- trigger.
+
+  * A transition is triggered 当指定的 property 的值通过某种机制发生了改变.
+    无论是 pseudo-class state, or via JS code. 也就是说, transition needs a
+    trigger to run.
+
+  * An animation doesn't need a trigger to run. They can run automatically
+    after page load.
+
+- state specification.
+
+  * transition 只能定义两个状态: 即初态和终态. 过程由 UA 根据其他参数自动计算生
+    成. 这样, transition 适合比较简单的动画效果.
+
+  * animation 可以指定任意数目的中间态. 因此会灵活许多.
+
+- execution direction.
+
+  * transition 只有一个方向. 从 old state to new state. 以及 possibly 在一些情
+    况下还会发生从 new state reversely to old state. 但这本质是一回事.
+
+  * animation 可以配置执行方向, 以及执行次数等等.
+
+- usage.
+
+  * 在实际中, 很多时候只需要简单的动画效果, 涉及两个状态及一个 trigger, 此时
+    transition 足够了. 只有需要更加复杂灵活的效果时, 才需要 animation.
+
+  * Reach for transitions first and reach for CSS animations when you want to
+    create something you can’t create with transitions alone.
+
 properties
 ----------
 
@@ -3588,3 +3623,4 @@ references
 .. [CSSTrickBoxSizing] `Box Sizing <https://css-tricks.com/box-sizing/>`_
 .. [FlexMarginAuto] `Flexbox’s Best-Kept Secret <https://hackernoon.com/flexbox-s-best-kept-secret-bd3d892826b6>`_
 .. [SOBodyOverflow] `body tag overflow (auto, visible?) <https://stackoverflow.com/questions/36794306/body-tag-overflow-auto-visible>`_
+.. [TransitionVSAnimation] `Transition or Animation: Which One Should You Use? <http://www.adobepress.com/articles/article.asp?p=2300569>`_
