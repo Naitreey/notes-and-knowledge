@@ -2425,6 +2425,77 @@ flex item properties
    
   * stretch
 
+
+transition
+----------
+- CSS transition provides a way to control transitioning between old value and
+  new value when changing CSS properties.
+
+- 对于 transition, 每次 transition-property 覆盖到的属性值改变时, 都会进行相应
+  的 transition effect.
+
+- 当需要使用 JS 改变元素的一些属性时, 配合 transition effect 会让效果更顺畅. 
+
+properties
+^^^^^^^^^^
+对于控制 transition 的各个属性, 如果 accepts a list of values, 这些值是循环应用
+到每个 transition-property 指定的属性上面.
+
+- transition-property. Specify properties to be transitioned. If you specify a
+  shorthand property, all of its longhand sub-properties that can be animated
+  will be.
+
+  non-inherited.
+
+  initial: none.
+
+  specified values:
+
+  * none. no transition.
+
+  * all.
+
+  * a list of ``<custom-ident>``, each of which specifies a property name.
+
+- transition-duration. transition time.
+
+  non-inherited.
+
+  initial: 0s.
+
+  specified values: a comma separated list of followings
+
+  * ``<time>``
+
+- transition-timing-function. see also animation-timing-function.
+
+  non-inherited.
+
+  initial value: ease.
+
+  specified value: a comma separated list of followings
+
+  * ``<timing-function>``
+
+- transition-delay. time to delay before starting transitioning.
+
+  non-inherited.
+
+  initial: 0s.
+
+  specified values: a comma separated list of followings
+
+  * ``<time>``. see also animation-delay.
+
+- transition. shorthand for all above.
+
+  specified value: a comma separated list of transition configs,
+  each for a single property.
+
+  Each transition config can be a combination of above property
+  values. For two time values, the first is duration, the second
+  is delay.
+
 animation
 ---------
 overview
@@ -2528,7 +2599,7 @@ properties
 
   initial: 1.
 
-  specified value: a list of followings
+  specified value: a comma separated list of followings
 
   * infinite.
 
@@ -2541,7 +2612,7 @@ properties
 
   initial: normal.
 
-  specified value: a list of followings
+  specified value: a comma separated list of followings
 
   * normal. plays forwards during each cycle. After each cycle, the animation
     will reset to the beginning state and start over again.
@@ -2561,7 +2632,7 @@ properties
 
   initial: none.
 
-  specified value: a list of followings
+  specified value: a comma separated list of followings
 
   * forwards. The target will retain the computed values set by the last
     keyframe encountered during execution.
@@ -2577,7 +2648,7 @@ properties
 
   initial: running.
 
-  specified value: a list of followings
+  specified value: a comma separated list of followings
 
   * running
 
@@ -3131,6 +3202,9 @@ overflow
   ``<html>`` use what is specified on ``<body>``. 这导致, 最终效果是, viewport
   只能有 scrollbar 或者在相应方向上 hide overflowed content, 而不存在
   ``visible`` 值带来的效果. [SOBodyOverflow]_
+
+  When parent element's overflow is hidden, all child elements is hidden
+  together with parent.
 
   non-inherited.
 
