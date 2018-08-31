@@ -64,6 +64,32 @@ distribution
 - 一个 django project 中的每个 reusable app, 都应该可以打包成 python package 用
   pip 安装.
 
+initialization
+^^^^^^^^^^^^^^
+- Django 初始化项目的流程由 ``django.setup()`` 控制.
+
+  * load settings.
+  
+  * setup logging.
+  
+  * Populate default app registry with ``INSTALLED_APPS``.
+
+- ``setup()`` is called automatically when
+
+  * running HTTP server via dev server or wsgi handler.
+  
+  * executing management command.
+
+- Django app's root package ``__init__`` and the modules that define
+  application configuration classes shouldn’t import any models at
+  module-level, even indirectly.
+
+Use a django project in standalone script
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- define ``DJANGO_SETTINGS_MODULE`` environ to settings module.
+
+- call ``django.setup()`` to complete project setup.
+
 app
 ---
 
@@ -89,11 +115,14 @@ distribution
 
 app structure
 ^^^^^^^^^^^^^
+A django application should not be a namespaced package. All modules should be
+in one filesystem path.
+
 - views.
 
 - forms.
 
-- models.
+- models. 可以是 subpackage, 若此, 需要在 ``__init__`` 中 import 所有 models.
 
 - urls.
 
@@ -135,15 +164,123 @@ project app
 
 - structure.
 
-app config
-----------
+AppConfig
+---------
 - Each application has an AppConfig, which contains the application's
   configuration during app loading and also works for retrospection.
 
-application registry
---------------------
-* 若需要在代码中获取当前安装的 django apps, 应该使用 ``django.apps.apps``
+- 由于包含配置和 models 等信息, 从 ``INSTALLED_APPS`` 中加载的实际上就是这个类
+  的路径.
+
+- AppConfig vs settings.py
+
+  * AppConfig 用于保存一个 django app 的 metadata 性质的 configuration.
+    It's not meant to be changed easily and frequently.
+
+  * settings.py 用于保存功能配置. It's designed be changed easily and
+    frequently.
+
+- AppConfig 一般放在 ``apps.py`` 中. 无论 AppConfig 放在哪里, 它所在的 module
+  一定不能存在 module-level 对 models 的 import/reference. 这是因为, 在创建
+  model class 时, 依赖于 app configs 已经 populated. 所以 model-level early
+  import will break this precondition.
+
+class attributes
+^^^^^^^^^^^^^^^^
+- ``name``. python import path to the app this AppConfig is configuring. 需要这
+  个 name 是因为 AppConfig 理论上可以放在任何地方, 所以需要指定它所配置的 app
+  的所在位置. Required, must be unique across django project.
+
+- ``label``. 这是各处使用的 app label 的来源. 默认为 ``name``'s last part.
+  This attribute allows relabeling an application when two applications have
+  conflicting labels.
+
+- ``verbose_name``. app's human-readable name. 例如 admin site 会使用. default
+  ``label.title()``
+
+- ``path``. app's filesystem path. default use app module's path.
+
+instance attributes
+^^^^^^^^^^^^^^^^^^^
+- ``module``. application module object.
+
+- ``apps``. ref to belonging to app registry.
+
+- ``models_module``. app's ``models`` module object.
+
+- ``models``. app's all models. an OrderedDict of model name to model object.
+
+class methods
+^^^^^^^^^^^^^
+- ``create(entry)``. 创建 AppConfig for entry.
+
+  * entry should be import path to app's AppConfig class.
+ 
+  * Backward compatibility. If entry is the dotted path to an application
+    module, Django checks for a ``default_app_config`` variable in that module,
+    which should be an import path to an AppConfig class. If
+    ``default_app_config`` is not available, base AppConfig is used.
+
+methods
+^^^^^^^
+- ``get_models(include_auto_created=False, include_swapped=False)``.
+  Return an iterator of app's models.
+
+- ``get_model(model_name, require_ready=True)``.
+  Return model class by name (case-insensitive).
+
+- ``ready()``. hook to run when app loading is ready during django setup.
+  如果需要, 可以在这里访问 models, 因为此时 models 都已经加载完毕.
+
+  ``ready()`` method implementation must be idempotent. 在某些情况下可能
+  被调用多次.
+
+Apps
+----
+- ``django.apps.registry.Apps``
+
+- application registry
+
+default registry
+^^^^^^^^^^^^^^^^
+- 若需要在代码中获取当前安装的 django apps, 应该使用 ``django.apps.apps``
   application registry, 而不是直接访问 ``settings.INSTALLED_APPS``.
+
+- 在项目初始化阶段, django 会调用 ``django.apps.apps.populate()`` 加载所有
+  apps.
+
+instance attributes
+^^^^^^^^^^^^^^^^^^^
+- ``ready``
+
+methods
+^^^^^^^
+
+- ``populate(installed_apps=None)``. load application configuration and models.
+  For each entry of ``installed_apps``, 加载逻辑为:
+
+  * If it's AppConfig instance, 直接使用, 否则调用 ``AppConfig.create()`` 进行
+    加载.
+   
+    Set ``apps_ready`` flag. 到此为止 app 相关的 metadata configs 都已经确定.
+    这样在创建 model class 时, app label 等才能有所归属.
+
+  * import 每个 app 的 ``models`` module.
+
+    Set ``models_ready`` flag. 到此为止 models 都已加载完毕.
+
+  * call each ``AppConfig.ready()`` hook.
+
+    set ``ready`` flag. 到此为止所有 apps 加载完毕.
+
+- ``get_app_configs()``. Return an iterable of ``AppConfig``.
+
+- ``get_app_config(app_label)``. get one app config.
+
+- ``is_installed(app_name)``. Whether or not an app is installed. app name is
+  ``AppConfig.name``.
+
+- ``get_model(app_label, model_name, require_ready=True)``. Return model class.
 
 design patterns
 ---------------
@@ -8476,16 +8613,6 @@ to indicate that something has gone wrong in the execution of a command.
 bash completion
 ---------------
 django source repo 里提供了 bash completion script.
-
-在独立的程序或脚本中使用 django
-===============================
-
-- 使用当前项目完整配置.
-
-  .. code:: python
-
-    os.environ['DJANGO_SETTINGS_MODULE'] = "<project>.settings"
-    import django; django.setup()
 
 plugins
 =======
