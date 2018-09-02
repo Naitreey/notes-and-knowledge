@@ -3508,6 +3508,65 @@ data types of values
 
     [+|-]?<number>[s|ms]
 
+- ``<timing-function>``. A function that defines how value changes during
+  transition/animation. A timing function is defined as::
+
+    x = f(t)
+
+  边界条件::
+
+    0 = f(0)
+    1 = f(1)
+
+  where x 的值是值变化的比例, 即 ``change/(v2 - v1)``. 根据具体函数, 该值可能小
+  于 0 或大于 1; t 是时间比例, 即 ``time/duration``, 定义域为 ``[0, 1]``.
+ 
+  CSS supports mainly two classes of timing functions:
+
+  * cubic Bézier curves (三阶贝塞尔曲线), a.k.a., easing functions. They are
+    smooth (连续而处处可导). 三阶 Bezier 需要 4 个 control point 定义. 在时域
+    实际上已经有两个 control point 是确定的即边界条件 ``(0, 0), (1, 1)``.
+    这里只需要指定两个中间的控制点::
+
+      cubic-bezier(x1, y1, x2, y2)
+
+    x1, x2 必须在 ``[0, 1]`` 之内. 这是为了保证对 P1, P2 控制点的选取导致生成的
+    cubic bezier curve 是合法函数.  这需要保证 P1, P2 的横座标在 ``[0, 1]`` 之
+    内 (四个点的凸包不能跨越 ``t = 0``, ``t = 1`` 座标线). 而对纵座标没有要求.
+    事实上, 如果纵座标在 ``[0, 1]`` 之外 , 能制造出 bouncing effect.
+
+  * step functions. 阶跃函数.::
+
+      steps(n[, direction])
+
+    ``n`` is the number of steps, positive ``<integer>``, 这是指从起点开始, 需要
+    走几步到达终点, 也就是说每步之间的时间间隔是 ``1/n``, 在函数上, 点的数目是
+    ``n+1``; ``direction`` 是 ``start`` or ``end``, 指函数在每个阶跃点是左连续
+    还是右连续, 也就是说开始时立即走第一步还是等待 ``1/n`` 间隔后再走. 默认是
+    ``end``.
+
+  CSS 以 keyword 形式提供了一些常用 timing function:
+
+  * 3-n bezier curves:
+
+    - linear. ``cubic-bezier(0,0,1,1)``
+
+    - ease. 开始慢, 中间快, 最后慢. 开始时比 ease-in 要快一些.
+      ``cubic-bezier(0.25, 0.1, 0.25, 1.0)``
+
+    - ease-in. 开始慢, 逐渐提速, 突然停止. ``cubic-bezier(0.42, 0.0, 1.0, 1.0)``
+
+    - ease-out. 开始快, 逐渐减速, 慢慢停止. ``cubic-bezier(0.0, 0.0, 0.58, 1.0)``
+
+    - ease-in-out. 开始慢, 中间快, 最后慢. 相当于 ease-in + ease-out.
+      ``cubic-bezier(0.42, 0.0, 0.58, 1.0)``
+
+  * step functions:
+
+    - step-start. 开始时直接跳到终态, 保持不变. ``step(1, start)``.
+
+    - step-end. 保持初态, 到最后一刻跳到终态. ``step(1, end)``.
+
 global values
 ^^^^^^^^^^^^^
 
