@@ -1405,8 +1405,11 @@ methods
   in the file where this chunk begins.
 
   * Returns data to be fed into the subsequent handler's ``receive_data_chunk``
-    method. 这可以当作 data filter 使用. Return None to short-circuit remaining
-    upload handlers from getting this chunk.
+    method. 这可以当作 data filter 使用.
+    
+  * Return None to short-circuit remaining upload handlers from getting this
+    chunk. 例如 MemoryFileUploadHandler 和 TemporaryFileUploadHandler 都有利用
+    return None 来避免后面的 handler 重复保存上传的数据.
 
   * Raise StopUpload or SkipFile when appropriate.
 
@@ -2166,7 +2169,21 @@ request and response
       设置的特定 header 的值判断出这个请求走的 https 协议. 这个加密的请求在
       上游服务器解密后以 plain http 的形式传递给 django server.
 
-    * ``body``. raw request body as bytes string.
+    * ``body``. raw request body as bytes string, 这会把 request body 全部
+      读入内存. 如果已知 request body 可能非常大, 例如文件上传情况, 则应该避免
+      直接访问 raw request body. 反正该处理的 django 的 file uploader 都处理完
+      了.
+
+      如果 request body 长度大于 ``DATA_UPLOAD_MAX_MEMORY_SIZE`` 会 raise
+      ``RequestDataTooBig`` exception (subclass of SuspiciousOperation).
+
+      ``body`` property 主要用于 raw body handling. 对同一个 HttpRequest,
+      只能在以下两种方式中选择一种 body 处理方式:
+      
+      - 访问 raw ``body``, 进行 manual parsing.
+        
+      - 使用 ``POST``/``FILES`` 等 property. django 会自动去做 body parsing.
+        这包含处理 form data, file upload saving, etc.
 
     * ``path``. url full path.
 
