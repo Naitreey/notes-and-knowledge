@@ -504,6 +504,9 @@ RUN
 - 应当考虑设置常用的 shell options, 避免一些 pitfalls. 
   例如, 对于 commands involving pipelines, 设置 ``pipefail`` option.
 
+- RUN instruction 只支持任何能放在单行上的命令. 不支持给 bash 传递 newline. 所以
+  不支持 here document 等语法.
+
 ENTRYPOINT
 ^^^^^^^^^^
 ::
@@ -1573,6 +1576,14 @@ registry
 - A production-ready registry must be protected by TLS and should ideally use
   an access-control mechanism.
 
+- To use a registry mirror by default, add the following lines to ``/etc/docker/daemon.json``::
+
+    {
+      "registry-mirrors": ["https://<my-docker-mirror-host>"]
+    }
+
+  这样就不用总是有长串的 url.
+
 compose
 =======
 docker compose is a tool for defining and running multi-container Docker
@@ -2478,6 +2489,18 @@ need to install, thus reducing the overall size of all images on your system.
 alpine
 ------
 那么小的 alpine 镜像里面居然有 ip, ping etc.
+
+timezone settings
+^^^^^^^^^^^^^^^^^
+- alpine 默认不带 ``/usr/share/zoneinfo`` 目录. 只有 UTC 时区.  若需要其他时区,
+  必须单独安装 ``tzdata`` package. 这就需要构建镜像. 这是不方便的一点.::
+
+    apk add --no-cache tzdata \
+      && cp /usr/share/zoneinfo/$TZ /etc/localtime \
+      && apk del tzdata
+  
+  而 debian-based 镜像由于自带全部时区文件, 可通过直接修改 ``TZ`` 环境变量
+  值方便地修改时区. 无需构建镜像.
 
 python
 ------
