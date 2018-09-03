@@ -2969,15 +2969,16 @@ migration files
   - data migrations 必须手写, 涉及例如 ``RunPython``, ``RunSQL`` 等操作.
 
   schema migrations & data migrations 最好分成不同的 migration file 来写. 这样
-  的好处是: 1) 清晰 (显然); 2) 对于 mysql 等 backend, schema change 会强制开启
-  一个单独的 transaction, 从而破坏一个 migration file 本来预期的 atomicity.
-  所以最好分开.
+  的好处是: 1) 清晰 (显然); 2) 对每个 Migration, MigrationExecutor 会将它包裹在
+  SchemaEditor 的 context 下, 后者会在在 exit context 时执行一些 defered sql,
+  如果没有 raised exception 的话.  若 backend 不支持 transactional DDL, 而
+  data migration 中出错, 就可能导致 schema change 不完整.
 
 * Initial migration. The “initial migrations” for an app are the migrations
   that create the first version of that app’s tables.
 
 migration definition
-^^^^^^^^^^^^^^^^^^^^
+--------------------
 - A ``Migration`` class in migration file, which is a subclass of
   ``django.db.migrations.Migration``.
 
@@ -2988,7 +2989,10 @@ migration definition
   问题.
 
 Migration
-"""""""""
+^^^^^^^^^
+
+class attributes
+""""""""""""""""
 
 - ``initial``. Whether the migration is an initial migration. There can be
   more than one initial migration for an app, in case of complex model 
@@ -3012,35 +3016,97 @@ Migration
   Migration replaces. 如果这是一个 squashed migration.
 
 - ``atomic``. whether to wrap the whole migration in a transaction. default
-  True.
+  True. 但是, 注意如果 backend (e.g., mysql) 不支持 transactional DDL, 则
+  SchemaEditor 还是不会使用 transaction.
 
-operations
-^^^^^^^^^^
+migration operations
+--------------------
+- Operation 实例有三个主要功能:
 
-- migration 文件中涉及 model 的操作, 应该使用根据 migration file 记录的修改历史
-  来重建的 model, 这样才符合相应历史点的数据库状态. 这样重建的 model 不同于当前
-  源代码中声明的 model.
+  * 负责将自身所包含的操作映射为对 model state 的修改. 从而完成 model state 历
+    史的正向和反向演进. 这个 model state 的保持对自动生成新的 migration 和
+    squash migration 等操作都是关键的. 这主要通过调用 ProjectState methods 完成.
 
-  * 生成的 model 具有相应历史点的 fields, relationships, managers (包括
-    ``use_in_migrations``) 以及 Meta options.
+  * 负责将自身所包含的操作映射为对数据库状态的修改. 从而完成真正的正向和反向数
+    据库操作. 这主要通过调用 SchemaEditor 完成.
 
-  * Functions in field options, custom model managers (``use_in_migrations``),
-    custom model fields, 以及 model class 的 concrete base model 是以 reference
-    形式引用的. So the functions and classes will need to be kept around for as
-    long as there is a migration referencing them.
-    
-    若后续需要修改相应的源代码, 原始版本要保存下来, 例如直接扔到要使用它的
-    migration file 里面; 如果后续完全不再需要相应的 function or class, 可以
-    squashmigrations, 消除 migration 中对它们的引用, 然后从源代码中删除掉.
+  * 负责在 squashmigrations 时生成 squashed operation.
 
-  * Custom class attributes and methods are not restored and thus not
-    accessible. 这是因为不能 serialize arbitrary python code.
+Operation
+^^^^^^^^^
+- base class of all Migration Operations.
 
-  * signal handlers are not called properly. 因为注册的 ``sender`` model
-    与重建的实际上并不是一个.
+attributes
+""""""""""
+- ``reversible``. whether the operation can be run in reverse. 若不能, 应设置
+  False.
+
+- ``reduces_to_sql``. whether the operation can be represented as a SQL
+  statement. RunPython can not, because it may involves arbitrarily complex
+  logic.
+
+- ``atomic``. Whether it should be forced to wrap the operation in an atomic
+  transaction. 例如, mysql 不支持 transactional DDL, 所以默认情况下每个 Migration
+  并没有创建单独的 transaction. 而对于 data migraiton, 我们最好使用 transaction.
+  这时需要设置这个为 True.
+
+- ``elidable``. 在 squash migration 时, 这个 operation 与其他进行优化时, 能否直
+  接忽略这个 Operation.
+
+methods
+""""""""
+- ``deconstruct()``. Operation must be deconstructible. 因为在 squashmigrations 时
+  需要重新写入.
+
+- ``state_forwards(app_label, state)``. Mutate ProjectState forwards. After
+  mutation, ProjectState matches what this migration would perform.
+
+  * ``app_label`` is the app belonged.
+
+  * ``state`` is a ProjectState.
+
+- ``database_forwards(app_label, schema_editor, from_state, to_state)``. mutate
+  database state forwards.
+
+  * ``app_label``. the app belonged to.
+
+  * ``schema_editor``.
+
+  * ``from_state``. ProjectState before this operation.
+
+  * ``to_state``. expected ProjectState after this operation.
+
+- ``database_backwards(app_label, schema_editor, from_state, to_state)``. ditto
+  backwards.
+
+- ``describe()``. a description of what this operation does. output during
+  makemigrations.
+
+- ``references_model(name, app_label=None)``. for squashmigrations.
+
+- ``references_field(model_name, name, app_label=None)``. for squashmigrations.
+
+- ``allow_migrate_model(connection_alias, model)``.
+
+- ``reduce(operation, in_between, app_label=None)``. Return a list of
+  Operations this operation and the passed in operation should be squashed
+  into. Or True/False indicates 是否可以跳过这个 ``operation`` 继续尝试后面的
+  operations 继续优化.
+
+model operations
+^^^^^^^^^^^^^^^^
+
+CreateModel
+"""""""""""
+
+special operations
+^^^^^^^^^^^^^^^^^^
 
 RunPython
 """"""""""
+
+constructor.
+
 - ``code``. a callable accepting two positionals:
 
   * a ``django.apps.registry.Apps`` instance that has the historical versions
@@ -3054,6 +3120,51 @@ RunPython
     changes. 这样的修改不是由 DDL 类型的 Operation 声明的, migration framework
     在生成 historical model state 时不会考虑, 这可能导致数据库状态与 migration
     subpackage 记录不一致.
+
+  需要访问 model 时, 应该使用从当前 ProjectState 生成的 Apps registry. 这样才符
+  合相应历史点的状态. 但这样获取的 model 具有一定限制. See `project state`_.
+
+- ``reverse_code=None``. ditto for backwards migration.
+
+- ``hints``. a dict of hints passed to ``allow_migrate()`` of db router.
+
+- ``elidable``. whether elidable.
+
+attributes.
+
+- ``reversible`` is True if ``reverse_code`` is not None.
+
+methods.
+
+- ``states_forwards()``. does nothing. no state change for
+  RunPython.
+
+- ``database_forwards()``. execute ``code``
+
+- ``database_backwards()``. execute ``reverse_code`` if there is one.
+
+project state
+-------------
+
+ProjectState 重建的 model 不同于当前源代码中声明的 model.
+
+* 生成的 model 具有相应历史点的 fields, relationships, managers (包括
+  ``use_in_migrations``) 以及 Meta options.
+
+* Functions in field options, custom model managers (``use_in_migrations``),
+  custom model fields, 以及 model class 的 concrete base model 是以 reference
+  形式引用的. So the functions and classes will need to be kept around for as
+  long as there is a migration referencing them.
+  
+  若后续需要修改相应的源代码, 原始版本要保存下来, 例如直接扔到要使用它的
+  migration file 里面; 如果后续完全不再需要相应的 function or class, 可以
+  squashmigrations, 消除 migration 中对它们的引用, 然后从源代码中删除掉.
+
+* Custom class attributes and methods are not restored and thus not
+  accessible. 这是因为不能 serialize arbitrary python code.
+
+* signal handlers are not called properly. 因为注册的 ``sender`` model
+  与重建的实际上并不是一个.
 
 database backend notes
 ----------------------
@@ -3146,6 +3257,7 @@ decorator
 
   只要 original class 的 constructor params 全部 deconstrucible, 就可以使用
   这个 decorator. 省去一些麻烦.
+
 
 migration checkings
 -------------------
