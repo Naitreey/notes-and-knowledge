@@ -91,3 +91,12 @@ Timezone is determined by calling tzset(3) function. See tzset(3) for details.
 - If TZ is defined but not recognized, UTC is used.
 
 - Otherwise, the specified TZ is used.
+
+Java-specific notes
+^^^^^^^^^^^^^^^^^^^
+- Java reads ``/etc/timezone``, which contains a timezone name, which should be
+  the path to a file relative to ``/usr/share/zoneinfo``. [SETimezone]_
+
+References
+==========
+.. [SETimezone] `What is /etc/timezone used for? <https://unix.stackexchange.com/questions/452559/what-is-etc-timezone-used-for>`_
