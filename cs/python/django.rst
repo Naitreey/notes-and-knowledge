@@ -3141,9 +3141,7 @@ constructor.
 
 - ``reverse_code=None``. ditto for backwards migration.
 
-- ``atomic=None``. 注意不是 False. 默认是 None. 这样, RunPython operation 在
-  默认的 ``Migration.atomic=True`` 情况下会在 transaction 中执行. 为了明确表示
-  atomic 要求, 最好 explicitly pass in True/False.
+- ``atomic=None``. 注意不是 False. 默认是 None.
 
 - ``hints``. a dict of hints passed to ``allow_migrate()`` of db router.
 
