@@ -1111,10 +1111,19 @@ celery beat
 
 timezone
 ========
-- All times and dates, internally and in messages uses the UTC timezone.
+- All times and dates, internally and in messages uses the UTC timezone
+  (``enable_utc=True``).
 
 - UTC time from/to local time conversion is based on ``timezone`` setting.
-  (For django, ``TIME_ZONE`` setting.)
+  (For django, ``TIME_ZONE`` setting is *supposed* to be respected. 但是
+  并不管用, 可能是 bug?)
+
+settings
+--------
+- ``enable_utc``. If enabled dates and times in messages will be converted to
+  use the UTC timezone.
+
+- ``timezone``. default UTC if ``enable_utc=True`` otherwise local timezone.
 
 Configuration
 =============
@@ -1270,6 +1279,21 @@ signals
 
 由于 bulk create/update/delete 操作时不会触发 signal, 此时需要手动
 更新时间.
+
+timezone
+""""""""
+- 修改 django ``TIME_ZONE`` 之后, 当前 periodic tasks 在数据库中保存
+  的 ``last_run_at`` 时间并没有变. 所以下次执行是否 due 的判断会出错.
+  需要手动重置任务执行时间.
+
+  .. code:: python
+
+    from django_celery_beat.models import PeriodicTask, PeriodicTasks
+    PeriodicTask.objects.all().update(last_run_at=None)
+    for task in PeriodicTask.objects.all():
+        PeriodicTasks.changed(task)
+
+
 
 celery CLI
 ==========
