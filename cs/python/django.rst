@@ -2969,10 +2969,16 @@ migration files
   - data migrations 必须手写, 涉及例如 ``RunPython``, ``RunSQL`` 等操作.
 
   schema migrations & data migrations 最好分成不同的 migration file 来写. 这样
-  的好处是: 1) 清晰 (显然); 2) 对每个 Migration, MigrationExecutor 会将它包裹在
-  SchemaEditor 的 context 下, 后者会在在 exit context 时执行一些 defered sql,
-  如果没有 raised exception 的话.  若 backend 不支持 transactional DDL, 而
-  data migration 中出错, 就可能导致 schema change 不完整.
+  的好处是:
+  
+  1) 清晰 (显然);
+  
+  2) 对每个 Migration, MigrationExecutor 会将它包裹在 SchemaEditor 的 context
+  下. 这个 context 对于 transactional DDL backend 生成一个 transaction. 对于
+  postgresql, 若一个 transaction 中同时有 schema change 和数据修改, 会报错. 而
+  对于 nontransactional DDL backend, 虽不会生成 transaction, 但在 context exit
+  时仍需要执行一些 defered sql, 若在 data migration 中出错 raised exception, 就
+  可能导致 schema change 不完整.
 
 * Initial migration. The “initial migrations” for an app are the migrations
   that create the first version of that app’s tables.
@@ -3115,16 +3121,29 @@ constructor.
 
   * a ``SchemaEditor`` that can be used to manually effect database schema
     changes.
-    
-    实际上一般不该使用这个参数. 因为不该在 data migration 中做手动的 schema
-    changes. 这样的修改不是由 DDL 类型的 Operation 声明的, migration framework
-    在生成 historical model state 时不会考虑, 这可能导致数据库状态与 migration
-    subpackage 记录不一致.
+
+    当在 RunPython 中使用 SchemaEditor 时, 只该做以下两类操作:
+   
+    - django 本身的 schema migration 系统功能之外的 schema 或其他数据库结构改动.
+      例如创建存储过程.
+
+    - 当需要进行特殊的 schema change 与 ProjectState mutation, 这些修改无法用
+      builtin django migration operations 来表达. 而且更可能是一次性的 (否则何
+      不封装一个 custom Operation subclass).
+
+    避免在 RunPython 中做手动的在 django 管理范围内的 schema changes. 这样的修
+    改不是由 DDL Operation 声明的, migration framework 在生成 historical model
+    state 时不会考虑, 这会导致数据库状态与 migration subpackage 记录不一致,
+    MigrationAutodetector will fail to work.
 
   需要访问 model 时, 应该使用从当前 ProjectState 生成的 Apps registry. 这样才符
   合相应历史点的状态. 但这样获取的 model 具有一定限制. See `project state`_.
 
 - ``reverse_code=None``. ditto for backwards migration.
+
+- ``atomic=None``. 注意不是 False. 默认是 None. 这样, RunPython operation 在
+  默认的 ``Migration.atomic=True`` 情况下会在 transaction 中执行. 为了明确表示
+  atomic 要求, 最好 explicitly pass in True/False.
 
 - ``hints``. a dict of hints passed to ``allow_migrate()`` of db router.
 
@@ -3134,6 +3153,11 @@ attributes.
 
 - ``reversible`` is True if ``reverse_code`` is not None.
 
+static methods.
+
+- ``noop(apps, schema)``. provides a convenient noop operation to make this
+  operation reversible.
+
 methods.
 
 - ``states_forwards()``. does nothing. no state change for
@@ -3142,6 +3166,18 @@ methods.
 - ``database_forwards()``. execute ``code``
 
 - ``database_backwards()``. execute ``reverse_code`` if there is one.
+
+About transaction.
+
+- If SchemaEditor is not atomic (either because backend does not support DDL
+  transaction or ``migration.atomic=False``), but the operation is deemed
+  atomic (``operation.atomic or (migration.atomic and operation.atomic is not False)``),
+  a transaction is opened for RunPython exclusively.
+
+- Otherwise no additional transaction is opened.
+  
+因此在 postgres 中, 默认不会单独创建 RunPython 自己的 transaction. 使用 Migration
+level 的 transaction.
 
 project state
 -------------
