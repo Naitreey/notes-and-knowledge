@@ -562,6 +562,8 @@ ENTRYPOINT
   su/sudo 只是 fork 要执行的命令, 自己作为父进程, 导致它们在容器中是 PID1, 造成
   不必要的麻烦.
 
+  为保证 non-root 可运行 entrypoint, 一般设置成 0755 以上的权限.
+
 CMD
 ^^^
 ::
@@ -2638,7 +2640,10 @@ mysql
   * MYSQL_DATABASE. db to create on startup.
 
   * MYSQL_USER, MYSQL_PASSWORD. user to create. will be granted all
-    perms on MYSQL_DATABASE.
+    perms on MYSQL_DATABASE. **不要使用 root 作为 MYSQL_USER**. 这
+    会导致创建用户失败 (``root@%`` 已经存在), 然后根据 entrypoint.sh
+    的逻辑将导致脚本退出, 重启, 但会跳过 ``/docker-entrypoint-initdb.d/``
+    的数据恢复.
 
   * ...
 
@@ -2710,6 +2715,11 @@ design patterns
 - docker 的很多组件都对环境变量有很好的支持, 通过环境变量来传递配置参数有
   很强的灵活性和便利性. 例如 docker run, docker-compose, dockerfile,
   composefile.
+
+- entrypoint.
+
+  * 为方便地 debug entrypoint script, 可通过 bind mount 将脚本 bind mount
+    至容器中, 并设置它为 entrypoint, 并配合 custom command.
 
 References
 ==========
