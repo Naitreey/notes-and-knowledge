@@ -3038,6 +3038,12 @@ migration operations
 
   * 负责在 squashmigrations 时生成 squashed operation.
 
+- 了解 Operation 的意义在于两方面:
+
+  * 会写 data migration 和其他更复杂的情况处理.
+
+  * 会读自动生成的 schema migration, 能够判断是否正确. 若否, 能够纠错.
+
 Operation
 ^^^^^^^^^
 - base class of all Migration Operations.
@@ -3104,6 +3110,62 @@ model operations
 
 CreateModel
 """""""""""
+- During migration, create a model in ProjectState, and a corresponding table
+  in database.
+
+- constructor.
+
+  * ``name``. model class name.
+
+  * ``fields``. a list of 2-tuples of ``(fieldname, field_instance)``.
+
+  * ``options=None``. a dict of model's Meta options.
+
+  * ``bases=None``. a list of base concrete models. can be actual model class
+    or those in string format (to use historical version). If None, use django
+    Model.
+
+    This is normally None if no explicit base other than Model is defined.
+
+  * ``managers=None``. a list of 2-tuples of ``(manager_name, manager_instance)``
+    to use during migration (``use_in_migrations``). The first one is default
+    manager during migration. If None, a default is created normally during
+    migration as normal.
+
+    This is normally None if no explicit manager is defined.
+
+DeleteModel
+"""""""""""
+- Delete a model from ProjectState and table from db.
+
+- constructor.
+
+  ``name``. model name.
+
+RenameModel
+"""""""""""
+- Rename model and its table.
+
+- constructor.
+
+  * ``old_name``
+
+  * ``new_name``
+
+- 如果 MigrationAutodetector 将 rename 操作识别成了 DeleteModel + CreateModel,
+  则需要手动改成这个.
+
+AlterModelTable
+""""""""""""""""
+- Change only ``db_table`` of Meta option.
+
+- constructor.
+
+  * ``name``.
+
+  * ``table``.
+
+.. TODO can not fully comprehend its meanings
 
 special operations
 ^^^^^^^^^^^^^^^^^^
