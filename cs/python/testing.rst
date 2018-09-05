@@ -8,11 +8,8 @@ overview
 unittest
 ========
 
-- What tests are put in one TestCase? What counts a new ``test_`` function?
-  When to create a new TestCase? How to classify tests?
-
-- why use ``assert*`` methods instead of assert statement?
-
+overview
+--------
 - random notes:
 
   * Any method starts with ``test_`` is a test method.
@@ -30,6 +27,77 @@ unittest
   * ``setUp``, ``tearDown``. If not ALL test methods in a TestCase needs those
     setup/teardown logic, you should either setup/teardown in those methods who
     need this; or move those who don't into another TestCase.
+
+test cases
+----------
+- In unittest, A ``TestCase`` is a set of related tests that collectively tests
+  certain functionality. 而对于该功能的各方面的具体测试, 则写成 test method.
+
+- A testcase is created by subclassing TestCase. Each test of a test case is
+  a method whose name starts with ``TestLoader.testMethodPrefix``.
+
+assertion methods
+^^^^^^^^^^^^^^^^^
+- unittest 使用 custom assertion methods 而不是 ``assert`` statement 来更方便
+  地控制 assertion 的执行和结果收集.
+
+test fixtures
+-------------
+- In unittest, test fixtures are defined by ``setUp*``/``tearDown*`` functions
+  and methods.
+
+test suite
+----------
+- In unittest, a ``TestSuite`` is a collection of test cases, or a mixture of
+  hierarchical test suites and test cases.
+
+test runner
+-----------
+- A test runner is a component which orchestrates the execution of tests and
+  provides the outcome to the user.
+
+CLI
+---
+
+testing module as script
+^^^^^^^^^^^^^^^^^^^^^^^^
+.. code:: python
+
+  if __name__ == "__main__":
+      unittest.main()
+
+unittest as cli tool
+^^^^^^^^^^^^^^^^^^^^
+::
+
+  python3 -m unittest [test]...
+
+- Each ``test`` positional can be a testing module or file path to testing
+  module, fully qualified name to test case classes and test methods.
+
+  * When zero ``test`` is specified, test discovery is initiated.
+
+  * When using file path as ``test`` target, The file specified must still be
+    importable as a module. The path is converted to a module name by removing
+    the ‘.py’ and converting path separators into ‘.’
+
+  * 由于允许使用 file path, 所以 specifying shell glob is possible.
+
+- options.
+
+  * ``-v``. verbose output including test method name, import path, and result.
+
+  * ``-c``. first ctrl-c waits current test completion then reports results so
+    far. A second ctrl-c aborts execution immediately.
+
+  * ``-f``. fail fast.
+
+  * ``-k <pattern>``. Only run test methods and classes that match the pattern.
+    A pattern is a substring containing ``*`` metachar, which matches against
+    the fully qualified test method name as imported by the test loader.
+
+  * ``--locals``. show locals in traceback. useful when rerunning tests aren't
+    easy, e.g. in CI environment.
 
 unittest.mock
 =============

@@ -8490,19 +8490,20 @@ test tags
   试用例没有执行. 然而, 如果执行全部测试用例时 (不过滤), 则发现这些测试代码发生
   了 module level error.
 
-test fixtures
--------------
+json test fixtures
+------------------
 - 避免使用 json test fixtures.
   
-  * django test fixtures are loaded and purged between each test methods.
+  * json test fixtures are loaded and purged between each test methods.
     所以会非常慢.
 
-  * It makes test less readable (because fixture's content is opaque in test code)
+  * It makes test less readable (because json fixture's content is opaque in
+    test code)
 
   * It makes test less maintainable (如果多个 test case 需要使用类似的却不完全相同的
     json fixtures, 则需要复制整个 json file. 再做修改.)
 
-  * schema changes needs to modify test fixtures accordingly.
+  * schema changes needs to modify json fixtures accordingly.
 
   最好在 test case 中配置 fixture data, 使用例如 ``unittest.TestCase.setUp()``,
   ``django.TestCase.setUpTestData()``. 以及使用 factory boy.
