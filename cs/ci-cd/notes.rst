@@ -17,3 +17,7 @@ workflow
 - 构建后自动在 staging environment 运行一套 staging system.
   
 - 然后执行完善的自动化功能性测试.
+
+design patterns
+---------------
+- 贵在坚持, 难在坚持. Keep CI build green.
