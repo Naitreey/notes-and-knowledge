@@ -1282,18 +1282,9 @@ signals
 
 timezone
 """"""""
-- 修改 django ``TIME_ZONE`` 之后, 当前 periodic tasks 在数据库中保存
-  的 ``last_run_at`` 时间并没有变. 所以下次执行是否 due 的判断会出错.
-  需要手动重置任务执行时间.
-
-  .. code:: python
-
-    from django_celery_beat.models import PeriodicTask, PeriodicTasks
-    PeriodicTask.objects.all().update(last_run_at=None)
-    for task in PeriodicTask.objects.all():
-        PeriodicTasks.changed(task)
-
-
+- 默认情况下, periodic tasks 在数据库中保存的 ``last_run_at`` 时间是 UTC 时间或
+  aware datetime. 修改 django ``TIME_ZONE`` 不影响程序对时间的判断, 并不需要手
+  动重置任务执行时间. 这与文档描述不同.
 
 celery CLI
 ==========
