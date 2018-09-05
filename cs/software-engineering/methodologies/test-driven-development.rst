@@ -173,7 +173,7 @@ questions and concerns
   * 团队因素: 相信 TDD 和自动化测试有潜力带来价值, 解决问题; 愿意花时间去尝试,
     即使最终效果可能不够理想, 包括上手阶段的学习所花费的时间与平时研发所花费的
     额外时间.
-    
+
   * 条件因素: 包括现有工具集是否丰富、能否满足测试需求, 是否需要自制一些工具.
 
 - TDD 及自动化测试是有一定的学习曲线的. 它需要至少在以下方面进行深入:
@@ -210,6 +210,8 @@ questions and concerns
 
   * 此外, 全面的测试有助于在研发早期就发现和解决 bug. Bug 在越早的研发阶段发现,
     越早解决解决, 整体成本越低. 等到上线后才发现问题, 修复成本会变得很高.
+
+- 坚持进行测试, 坚持 TDD. 就像做一切事情, 贵在坚持, 难在坚持.
 
 TDD workflow
 ============
@@ -826,6 +828,9 @@ design patterns
 
   * You can refactor and encapsulate your tests to make it more DRY, as long
     as its readability is not compromised.
+
+  * Your testing code should be as respectable as your main code. Do it out of
+    a sense of duty and professionalism.
 
 - fake data.
 
