@@ -50,11 +50,26 @@ multi-version
 pyenv
 -----
 
-- installation: see https://github.com/pyenv/pyenv#installation
+installation
+^^^^^^^^^^^^
+see https://github.com/pyenv/pyenv#installation
 
-- usage.
+usage
+^^^^^
 
-  .. code:: sh
+.. code:: sh
 
-    pyenv install <version>
-    pyenv global|local|shell <version>
+  pyenv install <version>
+  pyenv global|local|shell <version>
+
+python version precedence
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+1. shell: ``PYENV_VERSION`` environ
+
+2. directory-specific local: ``.python-version`` file at the current directory
+   or any of its parent directory.
+
+3. global: ``$(pyenv root)/version`` file
+
+4. system version
