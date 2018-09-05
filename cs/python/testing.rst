@@ -7,44 +7,118 @@ overview
 
 unittest
 ========
-
-overview
---------
 - random notes:
-
-  * Any method starts with ``test_`` is a test method.
-
-  * ``test_`` method needs descriptive name for what it tests. Length is not
-    a concern here.
-
-  * setUp and tearDown is like context manager. If setUp raises exception,
-    tearDown does not run.
 
   * ``fail`` method fails a test case unconditionally. When author hasn't
     finished written a test case, fail method can be used to signify unconditional
     failure.
 
-  * ``setUp``, ``tearDown``. If not ALL test methods in a TestCase needs those
-    setup/teardown logic, you should either setup/teardown in those methods who
-    need this; or move those who don't into another TestCase.
+
+terms
+-----
+- test failure and test error.
+
+  * failure. a known assertion error (likely AssertionError), meaning the test
+    failed.
+
+  * error. an unknown logical error (anything else), meaning the test aborted.
+
+test structure
+--------------
+- test hierarchy.
+
+  * A ``TestSuite`` is a collection of test cases that tests all functionalities,
+    features of a module.
+  
+  * A ``TestCase`` is a set of related tests that collectively tests certain
+    unit (which probably implements a functionality/feature).
+
+  * A test method is a single test that checks whether the UUT passes a
+    particular criterion.
+
+而对于该功能的各方面的具体测试, 则写成 test method.
+
+- A testcase is created by subclassing ``TestCase`` or instantiate
+  ``FunctionTestCase``.
+
+  * Each test of a test case is a method whose name starts with
+    ``TestLoader.testMethodPrefix``.
+
+  * In test methods, ``assert*`` methods are invoked to actually test stuffs.
 
 test cases
 ----------
-- In unittest, A ``TestCase`` is a set of related tests that collectively tests
-  certain functionality. 而对于该功能的各方面的具体测试, 则写成 test method.
 
-- A testcase is created by subclassing TestCase. Each test of a test case is
-  a method whose name starts with ``TestLoader.testMethodPrefix``.
+TestCase
+^^^^^^^^
 
 assertion methods
-^^^^^^^^^^^^^^^^^
+"""""""""""""""""
 - unittest 使用 custom assertion methods 而不是 ``assert`` statement 来更方便
   地控制 assertion 的执行和结果收集.
+
+FunctionTestCase
+^^^^^^^^^^^^^^^^
+- A TestCase subclass, used to wrap an existing "legacy" test function so that
+  it can be run by unittest.
+
+- 注意 FunctionTestCase 不能直接 import 进入 test module 的 global namespace,
+  因为它是 TestCase subclass, 这样会被认为是一个需要执行的 test case.
+
+- FunctionTestCase 应该用在 test setup module 中, 而不是 test case modules 中.
+  它的使用必须配合 manually created test suite and test runner. 例如:
+
+  .. code:: python
+
+    from test_module import testfunc
+
+    TextTestRunner().run(TestSuite([FunctionTestCase(testfunc)]))
+
+design patterns
+^^^^^^^^^^^^^^^
+- Isolation.
+  
+  * Each test (by TestCase method) must be self-contained and independent from
+    other tests so that it can be run in isolation and mixed in any order with
+    other tests.
+
+  * Each test case must also be isolated from other test cases.
+
+- Test methods.
+  
+  * Test methods need descriptive names for what they test. Length is not a
+    concern here.
 
 test fixtures
 -------------
 - In unittest, test fixtures are defined by ``setUp*``/``tearDown*`` functions
   and methods.
+
+test method level fixtures
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+- ``TestCase.setUp()``
+
+- ``TestCase.tearDown()``
+
+Exceptions raised in setup/teardown phase of a test method results in failure
+or error of the related test.
+
+``setUp()`` and ``tearDown()`` works like enter/exit of a context manager:
+
+* If ``setUp()`` succeeded, ``tearDown()`` is run regardless of the result of
+  the test method.
+
+* If ``setUp()`` failed, ``tearDown()`` does not run.
+
+design patterns
+^^^^^^^^^^^^^^^
+- Use proper `test fixtures`_ to prepare environment common to *all* tests
+  under a specific scope (test method level, test case level, test suite level,
+  etc.)
+
+- If not *all* test methods in a TestCase needs a common setup/teardown logic,
+  you should either setup/teardown in those methods who need this; or move
+  those who don't into another TestCase.
 
 test suite
 ----------
@@ -68,6 +142,8 @@ testing module as script
 
 unittest as cli tool
 ^^^^^^^^^^^^^^^^^^^^
+run individual testing modules
+""""""""""""""""""""""""""""""
 ::
 
   python3 -m unittest [test]...
@@ -99,6 +175,33 @@ unittest as cli tool
   * ``--locals``. show locals in traceback. useful when rerunning tests aren't
     easy, e.g. in CI environment.
 
+test discovery
+""""""""""""""
+::
+
+  python3 -m unittest discover [<start-directory>] [<pattern>] [<top-directory>]
+
+- all of the test files must be modules or packages (including namespace
+  packages) importable from the top-level directory.
+
+- options.
+
+  * all options from parent ``unnitest`` parser.
+
+  * ``-s <directory>``. starting directory. default cwd. This option is the
+    same as the positional arg.
+
+  * ``-p <pattern>``. pattern matching test files to be discovered. This option
+    is the same as the positional arg.
+
+  * ``-t <directory>``. top-level directory used as the root directory of
+    package/module import. 也就是说, top-level directory 加入 ``sys.path`` 中.
+    这对 relative import 的解析是关键的. default to start directory. This
+    option is the same as the positional arg.
+
+- The start directory can also be an importable module name, regardless where
+  it is on the filesystem, as long as it can be imported by python in cwd.
+
 unittest.mock
 =============
 
@@ -122,6 +225,14 @@ unittest.mock
     的测试. 对于 UT 导致的 isolation 问题, 则需要 IT 去解决. IT 导致的
     isolation 问题通过 ST 解决). 无论这个 boundary 是模块之间的 boundary
     (mocked in UTs), 还是服务和组件之间的 boundary (mocked in ITs).
+
+
+doctest
+=======
+
+integration with unittest
+-------------------------
+DocTestSuite
 
 factory boy
 ===========
