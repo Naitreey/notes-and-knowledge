@@ -640,13 +640,17 @@ reverse url resolution
 Class-based views
 -----------------
 
-- class-based views 相对于 function-based views 的一些好处
+- class-based views 相对于 function-based views 的一些好处.
 
-  * Organization of code related to specific HTTP methods (GET, POST, etc.) can
-    be addressed by separate methods instead of conditional branching.
+  * Class-based (OOP-based) code reuse and abstraction is much more powerful
+    and convenient than function-based (procedure-based) code reuse. 这是 CBV
+    的最本质价值.
 
   * Object oriented techniques such as mixins (multiple inheritance) can be used
     to factor code into reusable components.
+
+  * Organization of code related to specific HTTP methods (GET, POST, etc.) can
+    be addressed by separate methods instead of conditional branching.
 
 - 处理每个 request, View class 都会实例化一个新的 instance. 所以在
   写 view class 时不要担心状态存留问题.
@@ -6170,16 +6174,33 @@ in model inheritance
 database
 ========
 
-database definitions
---------------------
-``settings.DATABASES`` 定义项目需要使用的数据库. 项目可以使用多个数据库.
-注意多个数据库可以使用相同或不同的 database engine.
+settings
+--------
+- ``settings.DATABASES`` 定义项目需要使用的数据库. 项目可以使用多个数据库.  注
+  意多个数据库可以使用相同或不同的 database engine.
 
-一般使用 ``default`` database 即可. Django uses the database with the alias of
-default when no other database has been selected.
+- 一般使用 ``default`` database 即可. Django uses the database with the alias
+  of default when no other database has been selected.
 
-connection settings
-^^^^^^^^^^^^^^^^^^^
+subsettings
+^^^^^^^^^^^
+
+- ``TIME_ZONE``. 其值与 ``settings.TIME_ZONE`` 形式相同. 用于指定该数据库内的
+  datetime values 所使用的时区 (当 datetime field 不支持时区时).
+
+  对于 django 维护的数据库, 不该设置这个参数. 使用默认值 None 即可. 这是因为
+  默认 django 转换时间至 UTC 来保存 (对于不支持时区的 db backend), 保证了
+  timezone-agnostic. 可在 django 层方便地转换成所需时区.
+
+  * 若 ``USE_TZ``, 且 db backend 不支持 aware datetime, datetime is converted
+    to this timezone if set or UTC if not set.
+
+  * 若 ``USE_TZ`` 且 db backend 支持 aware datetime, 设置该参数会报错.
+
+  * 若根本不 ``USE_TZ``, 设置该参数会报错, 因全部 datetime 使用原始时间.
+
+backend-specific notes
+^^^^^^^^^^^^^^^^^^^^^^
 mysql
 """"""
 
@@ -8619,6 +8640,16 @@ design patterns
   * 但别忘了在集成测试时要覆盖到对 modelform 整体逻辑的测试.
 
   * see also: [SODjModelFormTDD]_
+
+- about testing schema migrations and data migrations.
+
+  * 一般情况下不需要单独测试. 在执行 ``test`` management command 时就自动测试了.
+
+  * migration 基于数据库和数据的一定历史状态, 也难以保证在软件的生命周期中始终
+    能够测试通过.
+
+  * 也许对一些复杂的 data migration 的 (不依赖于某个历史状态的) 局部逻辑可能
+    需要单元测试.
 
 django-admin
 ============
