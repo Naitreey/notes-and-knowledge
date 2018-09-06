@@ -30,10 +30,10 @@ test structure
   * A ``TestSuite`` is a collection of test cases that tests all functionalities,
     features of a module.
   
-  * A ``TestCase`` is a set of related tests that collectively tests certain
-    unit (which probably implements a functionality/feature).
+  * A ``TestCase`` is a set of related test cases that collectively tests
+    certain unit (which probably implements a functionality/feature).
 
-  * A test method is a single test that checks whether the UUT passes a
+  * A test method is a single test case that checks whether the UUT passes a
     particular criterion.
 
 而对于该功能的各方面的具体测试, 则写成 test method.
@@ -52,10 +52,189 @@ test cases
 TestCase
 ^^^^^^^^
 
-assertion methods
-"""""""""""""""""
-- unittest 使用 custom assertion methods 而不是 ``assert`` statement 来更方便
-  地控制 assertion 的执行和结果收集.
+logic
+"""""
+- 当定义 TestCase 时, 一个 TestCase 是一系列实际要执行的 test cases (以 method
+  形式定义) 的集合. 这是一个抽象 grouping 级别.
+
+- 当实例化后, 每个 TestCase instance 实际上只执行 class body 中定义的一个 test
+  method. (这证明了 TestCase 只是一个方便的抽象集合.) 所有相关的 fixture 等
+  utils 只为这一个 test method 服务.
+
+constructor
+"""""""""""
+- ``methodName='runTest'``. 当 TestCase 实例化时, 它要测试的 test method.
+
+class attributes
+""""""""""""""""
+- ``failureException``. the exception class of assertion error.
+
+- ``longMessage``. True is the default value. In this case, the custom message
+  is appended to the end of the standard failure message. When set to False,
+  the custom message replaces the standard message.
+
+  can be overridden in individual test methods by assigning an instance attribute.
+  It gets reset before each test call.
+
+- ``maxDiff``. maximum length of diffs output. default 80*8. set None for
+  unlimited.
+
+running test
+""""""""""""
+- ``run(result=None)``. run tests. collect test results into ``result`` if
+  passed in, or return a new TestResult.
+
+fixture methods
+""""""""""""""""
+- see `test fixtures`_.
+
+common assertion methods
+""""""""""""""""""""""""
+unittest 使用 custom assertion methods 而不是 ``assert`` statement, 这是为了
+更方便地控制 assertion 的执行和结果收集.
+
+- ``assertEqual(a, b, msg=None)``. For arguments of known types, dispatch
+  equality checkings to `type-specific assertion methods`_.
+
+- ``assertNotEqual(a, b, msg=None)``
+
+- ``assertAlmostEqual(a, b, places=7, msg=None, delta=None)`` and
+  ``assertNotAlmostEqual(a, b, places=7, msg=None, delta=None)``.
+  The difference of a and b, is smaller than ``places`` decimal places
+  (``10^-n``) or ``delta``. Only one of ``places`` and ``delta`` can be
+  specified. ``delta`` is useful when the difference is not a real number.
+
+- ``assertGreater(a, b, msg=None)``,
+  ``assertGreaterEqual(a, b, msg=None)``,
+  ``assertLess(a, b, msg=None)``,
+  ``assertLessEqual(a, b, msg=None)``.
+
+- ``assertTrue(x, msg=None)``
+
+- ``assertFalse(x, msg=None)``
+
+- ``assertIs(a, b, msg=None)``
+
+- ``assertIsNot(a, b, msg=None)``
+
+- ``assertIsNone(x, msg=None)``
+
+- ``assertIsNotNone(x, msg=None)``
+
+- ``assertIn(a, b, msg=None)``
+
+- ``assertNotIn(a, b, msg=None)``
+
+- ``assertIsInstance(a, b, msg=None)``
+
+- ``assertNotIsInstance(a, b, msg=None)``
+
+- ``assertRegex(text, re, msg=None)``, ``assertNotRegex(text, re, msg=None)``.
+  The ``re`` can be regex object or string.
+
+- ``assertCountEqual(a, b, msg=None)``. Test two sequence (of any type) contain
+  the same number of corresponding elements, regardless of order.
+
+message assertion methods
+"""""""""""""""""""""""""
+- ``assertRaises(exc, func, *args, **kwargs)`` or  ``assertRaises(exc, msg=None)``.
+  The test passes if the expected exception is raised, is an error if another
+  exception is raised, or fails if no exception is raised.
+
+  * ``exc`` can be a tuple of exception classes.
+
+  * the second form returns a context manager. Its ``__enter__`` returns the
+    context manager itself. After the context, it has the following attributes:
+
+    - ``exception``. the caught exception.
+
+- ``assertRaisesRegex(exc, r, func, *args, **kwargs)`` or ``assertRaisesRegex(exc, r, msg=None)``.
+  ditto, but also tests ``r`` matches the string form of the raised exception.
+  ``r`` can be a regex object or a string. ``r`` is ``re.search``-ed.
+
+- ``assertWarns(warn, func, *args, **kwargs)`` or ``assertWarnsRegex(warn, msg=None)``.
+  ditto for warnings.
+
+  * context manager's attributes:
+
+    - ``warning``. the caught warning.
+
+    - ``filename``. the source file triggered the warning.
+
+    - ``lineno``. the line number.
+
+- ``assertWarnsRegex(warn, r, func, *args, **kwargs)`` or ``assertWarnsRegex(warn, r, msg=None)``.
+  ditto with regex tests for warning messages.
+
+- ``assertLogs(logger=None, level=None)``. at least one message is logged on
+  the logger or one of its children, with at least the given level.
+  ``logger`` is a Logger or its name string, default is root logger.
+  ``level`` is a numeric logging level or its string equivalent, default
+  is INFO.
+
+  * context manager's attributes:
+
+    - ``records``. A list of matched LogRecord.
+
+    - ``output``. A list of matched output messages.
+
+type-specific assertion methods
+"""""""""""""""""""""""""""""""
+- ``addTypeEqualityFunc(typeobj, function)``. register a function to check
+  equality of instances of typeobj (not including subclasses).
+
+- ``assertMultiLineEqual(a, b, msg=None)``. for comparing string. A diff
+  is generated if differ.
+
+- ``assertListEqual(a, b, msg=None)``, ``assertTupleEqual(a, b, msg=None)``.
+  for list, tuple comparison.
+
+- ``assertSetEqual(a, b, msg=None)``. for set, frozenset comparison.
+
+- ``assertDictEqual(a, b, msg=None)``. for dict.
+
+- ``assertSequenceEqual(a, b, msg=None, seq_type=None)``. for generic
+  sequences.
+
+utils
+"""""
+- ``fail(msg=None)``. fail the test unconditionally.
+
+- ``addCleanup(function, *args, **kwargs)``. add an additional cleanup method
+  at runtime. 用于当只有某个 test 需要的单独的或条件性的 cleanup 操作. It'll
+  be called after ``tearDown()``. Functions will be called in reverse order to
+  the order they are added.
+
+- ``TestCase.subTest(msg=None, **kwargs)`` context manager.
+
+  Used when some of your tests differ only by a some very small differences,
+  for instance some parameters. 此时, 在一个 test method 中使用多个 subTest, 在
+  测试结果中将一个 test method 展成多个测试结果, 每个对应一个 ``kwargs`` 的值.
+  ``kwargs`` 的值会输出在相应的测试结果后面.
+
+  在 subTest context manager 中, assertion error 不会 abort 这个 test method,
+  只会退出这个 context, 执行下面的逻辑.
+
+  subTest can be nested.
+
+- ``skipTest(reason)``. see `skipping`_.
+
+- ``debug()``.
+
+internal APIs
+"""""""""""""
+- ``doCleanups()``. called unconditionally after ``tearDown()``, or after
+  ``setUp()`` if ``setUp()`` raises an exception.
+
+- ``countTestCases()``. the number of tests represented by this test case.
+  Always 1 for TestCase instances.
+
+- ``defaultTestResult()``. return a TestResult for ``run()``.
+
+- ``id()``. a string identifying the TestCase instance. ``module.class.method``
+
+- ``shortDescription()``. A description of the test. default first line of
+  docstring of test method.
 
 FunctionTestCase
 ^^^^^^^^^^^^^^^^
@@ -96,9 +275,11 @@ test fixtures
 
 test method level fixtures
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
-- ``TestCase.setUp()``
+- ``TestCase.setUp()``. called immediately before calling the test method.
 
-- ``TestCase.tearDown()``
+- ``TestCase.tearDown()``. called immediately after calling the test method.
+  在 tearDown 中 raise 出来的 unexpected exception 会认为是一个额外的 error,
+  这会增加 error count, 并在输出结果中增加一条 traceback.
 
 Exceptions raised in setup/teardown phase of a test method results in failure
 or error of the related test.
@@ -110,6 +291,36 @@ or error of the related test.
 
 * If ``setUp()`` failed, ``tearDown()`` does not run.
 
+test case level fixtures
+^^^^^^^^^^^^^^^^^^^^^^^^
+- ``TestCase.setUpClass()``. a class method.
+
+- ``TestCase.tearDownClass()``. ditto.
+
+When the test suite encounters a test from a new class then ``tearDownClass()``
+from the previous class (if there is one) is called, followed by ``setUpClass()``
+from the new class.
+
+If there are any exceptions raised during setup of the case level fixture
+functions the entire test case is not run, and teardown is not run.
+
+The failed fixture method is reported as an error.
+
+test suite level fixtures
+^^^^^^^^^^^^^^^^^^^^^^^^^
+- ``setUpModule()``
+
+- ``tearDownModule()``
+
+If a test is from a different module from the previous test then
+``tearDownModule()`` from the previous module is run, followed by
+``setUpModule()`` from the new module.
+
+If there are any exceptions raised during setup of the suite level fixture
+functions the entire test suite is not run, and teardown is not run.
+
+The failed fixture function is reported as an error.
+
 design patterns
 ^^^^^^^^^^^^^^^
 - Use proper `test fixtures`_ to prepare environment common to *all* tests
@@ -117,13 +328,103 @@ design patterns
   etc.)
 
 - If not *all* test methods in a TestCase needs a common setup/teardown logic,
-  you should either setup/teardown in those methods who need this; or move
-  those who don't into another TestCase.
+  you should either setup/teardown in those methods who need this (例如使用
+  manual setup/teardown, 以及使用 ``TestCase.addCleanup()``); or move those who
+  don't into another TestCase.
+
+- Shared fixtures (test case level and test suite level fixtures) are not
+  intended to work with suites with non-standard ordering. If you randomize the
+  order, so that tests from different modules and classes are adjacent to each
+  other, then these shared fixture functions may be called multiple times in a
+  single test run.
+
+- Shared fixtures break test isolation. They should be used with care.
+
+skipping tests and expected failures
+------------------------------------
+- 这些 decorator 都可以 decorate a single test method or an entire test case.
+
+skipping
+^^^^^^^^
+- ``@skip(reason)``. A decorator that marks the decorated test method or test
+  case should be skipped unconditionally. 这是当你需要 disable 一个测试的时候
+  来使用. 可能是因为短期内没时间去处理相应的问题, 或者其他原因, 你选择让这个
+  测试先跳过. ``reason`` 是提供你决定 skip test 的原因. 在 verbose mode 中,
+  ``reason`` is printed.
+
+- ``@skipIf(condition, reason)``. ditto for conditional skipping. 这用于根据环
+  境情况来选择是否执行某些测试. 例如当软件需要兼容多个环境, 而一些测试是
+  environment-specific 的时候.
+
+- ``@skipUnless(condition, reason)``. ditto, in reverse.
+
+- ``SkipTest(reason)``. skip a test when this exception is raised. 
+  
+  唯一需要 Explicitly raise this exception 的情况是在 at module level. 这样会
+  skip the entire test suite.
+
+- ``TestCase.skipTest(reason)``. fine-grained skipping at test runtime.
+
+  这主要用在 test method body 中, 根据 runtime 情况选择性地 skip current test.
+
+- test fixture with ``SkipTest``.
+  
+  * 使用 decorator 来标记要 skip 的 test method/case 时, skipped test
+    method/case will not have setup/teardown fixtures run around them.
+
+  * 在 module-level raise ``SkipTest`` exception 时, 该 module 整个 test suite
+    的 ``setUpModule()`` and ``tearDownModule()`` won't run.
+
+  * 在 test fixture 中, raise ``SkipTest`` 会 skip 当前的 test
+    method/case/suite.
+
+expected failure
+^^^^^^^^^^^^^^^^
+- ``@expectedFailure``. A decorator that marks the test is an expected failure.
+  如果 test fails, 则在结果中 mark 为 expected failure; 如果 test 没有 fail, 则
+  mark 为 unexpected success.
+
+design patterns
+^^^^^^^^^^^^^^^
+
+- Skipping 用于当作者决定在测试集中 skip a test method/case 的时候.  这个 skip
+  不是因为测试没完成或者对应的实现还没完成, 而是基于一种考虑、选择和设计.
+
+- ``@expectedFailure`` 用于当需要临时标记 failure is expected 的时候, 例如当
+  test body 还没有完成时. 注意你是准备要完成测试以及对应的功能实现的. 也就是说
+  你是准备将 expected failure 变成 expected success 的, 你准备当一切都完成之后
+  将这个 decorator 去掉.
 
 test suite
 ----------
 - In unittest, a ``TestSuite`` is a collection of test cases, or a mixture of
   hierarchical test suites and test cases.
+
+TestSuite
+^^^^^^^^^
+- A test suite can be run in the same way as a test case by test runner.
+  They are used to aggregate tests into groups of tests that should be run
+  together. 
+
+- Running a TestSuite instance is the same as iterating over the suite, running
+  each test individually.
+
+constructor
+"""""""""""
+- ``tests``. a sequence of test cases and test suites to be added to this
+  test suite initially.
+
+methods
+"""""""
+- ``addTest(test)``. Add a TestCase or TestSuite.
+
+- ``addTests(tests)``.
+
+- ``run(result)``. same as TestCase.
+
+- ``debug()``. same as TestCase.
+
+- ``countTestCases()``. the number of test cases in this suite, recursively.
 
 test runner
 -----------
