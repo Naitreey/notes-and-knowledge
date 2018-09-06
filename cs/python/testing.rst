@@ -426,6 +426,25 @@ methods
 
 - ``countTestCases()``. the number of test cases in this suite, recursively.
 
+- ``__iter__()``. iterate the tests in this suite.
+
+test loader
+-----------
+TestLoader
+^^^^^^^^^^
+- TestLoader is used to load test suites from modules.
+
+test result
+-----------
+- stores the results of a set of tests.
+
+TestResult
+^^^^^^^^^^
+
+attributes
+""""""""""
+- ``errors``.
+
 test runner
 -----------
 - A test runner is a component which orchestrates the execution of tests and
