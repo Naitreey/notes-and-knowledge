@@ -7,13 +7,6 @@ overview
 
 unittest
 ========
-- random notes:
-
-  * ``fail`` method fails a test case unconditionally. When author hasn't
-    finished written a test case, fail method can be used to signify unconditional
-    failure.
-
-
 terms
 -----
 - test failure and test error.
@@ -27,8 +20,8 @@ test structure
 --------------
 - test hierarchy.
 
-  * A ``TestSuite`` is a collection of test cases that tests all functionalities,
-    features of a module.
+  * A ``TestSuite`` is a grouping of related test cases and test suites. It can
+    be all tests in a TestCase, or a test module.
   
   * A ``TestCase`` is a set of related test cases that collectively tests
     certain unit (which probably implements a functionality/feature).
@@ -59,7 +52,7 @@ logic
 
 - 当实例化后, 每个 TestCase instance 实际上只执行 class body 中定义的一个 test
   method. (这证明了 TestCase 只是一个方便的抽象集合.) 所有相关的 fixture 等
-  utils 只为这一个 test method 服务.
+  utils 只为这一个 test method 服务. 这些 test cases 实例组成一个 test suite.
 
 constructor
 """""""""""
@@ -198,7 +191,8 @@ type-specific assertion methods
 
 utils
 """""
-- ``fail(msg=None)``. fail the test unconditionally.
+- ``fail(msg=None)``. fail the test case unconditionally. 可以用于在某种情况下
+  强制 test failure.
 
 - ``addCleanup(function, *args, **kwargs)``. add an additional cleanup method
   at runtime. 用于当只有某个 test 需要的单独的或条件性的 cleanup 操作. It'll
@@ -267,6 +261,14 @@ design patterns
   
   * Test methods need descriptive names for what they test. Length is not a
     concern here.
+
+- 继承. 允许将 helper functions and other common stuffs 抽象到基类和 mixins 中.
+  但只要是不准备直接实例化的 TestCase subclasses, 就不能包含任何 test methods.
+
+- 可以使用 ``TestCase.fail()`` 配合 ``@expectedFailure`` 来标记尚未完成的
+  tests.  在未完成的 test method 中添加 ``fail()``. 当我们还不想处理 TODO 时,
+  避免 failure clutter output, 使用 ``@expectedFailure`` 先隐藏 traceback, 只留
+  下 dotted indication.
 
 test fixtures
 -------------
@@ -434,6 +436,35 @@ TestLoader
 ^^^^^^^^^^
 - TestLoader is used to load test suites from modules.
 
+attributes
+^^^^^^^^^^
+- ``testMethodPrefix``. valid prefix of test methods.
+
+- ``sortTsetMethodsUsing``. function used to sort test methods.
+
+- ``suiteClass``. test suite class.
+
+- ``testNamePatterns``. test method name patterns to match.
+
+methods
+"""""""
+- ``loadTestsFromTestCase(testCaseClass)``. returns a test suite containing
+  all test cases in a TestCase class.
+
+- ``loadTestsFromModule(module, pattern=None)``. returns a test suite
+  containing test suites from a test module.
+
+- ``loadTestsFromName(name, module=None)``. return a suite of test suites/cases
+  given a dotted name, which can be a module, a TestCase, a test method, a
+  test suite instance, a callable that returns a TestCase or TestSuite instance.
+
+- ``loadTestsFromNames(names, module=None)``.
+
+- ``getTestCaseNames(testCaseClass)``. get test method names from a TestCase.
+
+- ``discover(start_dir, pattern='test*.py', top_level_dir=None)``. support
+  test discovery. return a test suite.
+
 test result
 -----------
 - stores the results of a set of tests.
@@ -443,15 +474,115 @@ TestResult
 
 attributes
 """"""""""
-- ``errors``.
+- ``errors``. a list of 2-tuples of TestCase instance and traceback string.
+  This is about test errors.
+
+- ``failures``. ditto for test failures.
+
+- ``expectedFailures``. ditto for expected failures.
+
+- ``skipped``. a list of 2-tuples of TestCase instance and reason of skipping.
+
+- ``unexpectedSuccesses``. a list of TestCases of unexpected success.
+
+- ``testsRun``. the number of tests have been run.
+
+- ``shouldStop``
+
+- ``buffer``
+
+- ``failfast``
+
+- ``tb_locals``
+
+methods
+"""""""
+- ``wasSuccessful()``. True if tests are successful so far.
+
+- ``stop()``
+
+- ``startTest(test)``
+
+- ``stopTest(test)``
+
+- ``startTestRun()``
+
+- ``stopTestRun()``
+
+- ``addError(test, error)``
+
+- ``addFailure(test, error)``
+
+- ``addSuccess(test)``
+
+- ``addSkip(test, reason)``
+
+- ``addExpectedFailure(test, error)``
+
+- ``addUnexpectedSuccess(test)``
+
+- ``addSubTest(test, subtest, outcome)``
+
+TextTestResult
+^^^^^^^^^^^^^^
+- TestResult subclass, used by TextTestRunner.
+
+- formatting:
+
+  * success: "."
+
+  * failure: "F"
+
+  * error: "E"
+
+  * skip: "s"
+
+  * expected failure: "x"
+
+  * unexpected success: "u"
 
 test runner
 -----------
 - A test runner is a component which orchestrates the execution of tests and
   provides the outcome to the user.
 
+- It runs a test suite and collect results into test result object.
+
+TextTestRunner
+^^^^^^^^^^^^^^
+- A runner that outputs result to a text stream. default is stderr.
+
+methods
+"""""""
+- ``run(test)``. run a test case/suite.
+
+load_tests protocol
+-------------------
+- Customize tests loading from module and packages.
+
+- used during normal test runs and also test discovery.
+
+- protocol. A callable that has a signature of::
+
+    load_tests(loader, standard_tests, pattern)
+
+  returns a test suite for this module or package (defining in
+  ``__init__.py``).
+
+- If discovery is started in a directory containing a package, ``__init__.py``
+  will be checked for load_tests. If that function does not exist, discovery
+  will recurse into the package as though it were just another directory.
+  Otherwise, discovery of the package’s tests will be left up to
+  ``load_tests``.
+
 CLI
 ---
+
+TestProgram
+^^^^^^^^^^^
+- The ``unittest.main.TestProgram`` is both used to make a test module
+  conveniently executable and also serve as the CLI entrypoint of unittest
+  module.
 
 testing module as script
 ^^^^^^^^^^^^^^^^^^^^^^^^
