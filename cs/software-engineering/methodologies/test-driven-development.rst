@@ -27,6 +27,8 @@ terminology
 
 - UUT. unit under test.
 
+- AUT. application under test.
+
 TDD
 ===
 - TDD 是一种软件开发方法论, 它描述的是一种基于自动化测试的研发流程. 在这个流程
@@ -527,6 +529,15 @@ design pattern
   某种 polling 机制, 将异步转化为同步. 也就是说, 对于每个交互操作, 等待浏览器的
   响应出现、并进行检查后, 再进行下一步操作.
 
+- UI Map.
+
+  * Store all the locators for a test suite in one place for easy modification
+    when identifiers or paths to UI elements change in the application under
+    test.
+
+  * 这样便于保持单一变量. 如果需要修改页面布局和 markup, 只需修改 UI map 中
+    的值即可.
+
 - Page object pattern.
 
   * Page objects are an alternative which encourage us to store all the
@@ -540,6 +551,19 @@ design pattern
     functional tests, rather than having to dig through dozens of FTs.
     
     In other words, to stay DRY.
+
+  * 当实现 page object pattern 时, 注意 page object 的定义只提供页面服务和操作,
+    封装 page-specific layouts and locators etc. No code related to what is
+    being tested should be within the page object.
+    
+  * There is one, single, verification which can, and should, be within the
+    page object and that is to verify that the page, and possibly critical
+    elements on the page, were loaded correctly.
+
+  * A page object does not necessarily need to represent an entire page. The
+    Page Object design pattern could be used to represent components on a page.
+    If a page in the AUT has multiple components, it may improve
+    maintainability if there is a separate page object for each component.
 
 integration test
 ----------------
