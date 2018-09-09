@@ -935,6 +935,48 @@ mock
   换句话说, 如果在测试代码中发现被测功能的某个依赖 mock 起来比较费劲,
   那说明它的 API 不太容易使用, 可能需要重构这个依赖的 API.
 
+  例如, 以下 API 根据一个文件的内容生成一些数据.
+
+  .. code:: python
+
+    @classmethod
+    def all_swaps(cls):
+        entries = []
+        with open(cls.swapinfo, "r") as f:
+            # skip first line
+            f.readline()
+            for line in f:
+                name, type, size, used, priority = line.strip().split()
+                entries.append(cls.swap_entry_class(
+                    name, type, int(size), int(used), int(priority)
+                ))
+        return entries
+
+  假如我们现在不想引入 fixture 文件, 为保证测试独立性, 需要 mock 掉调用 IO 的过
+  程. 但 builtin ``open()`` 没那么容易 mock. 这就要求我们封装一个 IO 调用的抽象
+  函数, 与数据生成逻辑隔离开来.
+
+  .. code:: python
+
+    @classmethod
+    def all_swaps(cls):
+        entries = []
+        for line in cls.iter_swaps():
+            name, type, size, used, priority = line.strip().split()
+            entries.append(cls.swap_entry_class(
+                name, type, int(size), int(used), int(priority)
+            ))
+        return entries
+
+    @classmethod
+    def iter_swaps(cls):
+        with open(cls.swapinfo, "r") as f:
+            # skip first line
+            f.readline()
+            yield from f
+
+  事实上整个代码结构还更清晰了.
+
 - 如果一个测试用例需要很多 mock 才能保证被测功能与它的依赖隔离开来, 才能
   保证仅仅是在测试该层的功能逻辑, 则说明代码实现可能可以优化, 降低耦合.
 
