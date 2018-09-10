@@ -56,29 +56,172 @@ WebElement
 
 - ``submit()``
 
+- ``send_keys()``
+
+  * input file path to upload file, better use absolute path.
+
 Locating elements
 =================
-- 5 ways to locate an element: id, name, link text, CSS selector, XPath.
+
+python
+------
+- The following APIs are available on ``WebDriver`` and ``WebElement``.
+
+id
+^^
+
+- ``find_element_by_id()``
+
+- ``find_elements_by_id()``
+
+name
+^^^^
+- ``find_element_by_name()``
+
+- ``find_elements_by_name()``
+
+tag name
+^^^^^^^^
+- ``find_element_by_tag_name()``
+
+- ``find_elements_by_tag_name()``
+
+class name
+^^^^^^^^^^
+- ``find_element_by_class_name()``
+
+- ``find_elements_by_class_name()``
 
 link text
----------
+^^^^^^^^^
+- ``find_element_by_link_text()``
+
+- ``find_elements_by_link_text()``
+
+- ``find_element_by_partial_link_text()``
+
+- ``find_elements_by_partial_link_text()``
 
 xpath
------
-- If there’s more than one element that matches the query, then only the first
-  will be returned.
+^^^^^
+- ``find_element_by_xpath()``
+
+- ``find_elements_by_xpath()``
+
+selector
+^^^^^^^^
+- ``find_element_by_css_selector()``
+
+- ``find_elements_by_css_selector()``
+
+generic methods
+^^^^^^^^^^^^^^^
+- ``find_element()``
+
+- ``find_elements()``
+
+- 这些方法实现了上述具体 APIs, 通过 ``selenium.webdriver.common.by.By`` class.
 
 design pattern
 --------------
 - Which one to choose when selecting a element:
   
-  * focusing first on id and link text, then CSS, and leveraging XPath only
-    when you need it (e.g. walking up the DOM).
+  * focusing first on simple locators, then CSS, and leveraging XPath only when
+    you need it (e.g. walking up the DOM).
 
   * Choose CSS selector and XPath when you need to ensure element hierarchy.
 
 Waits
 =====
+
+explicit waits
+--------------
+- An explicit wait is a code you define to wait for a certain condition to
+  occur before proceeding further in the code. examples of explicit waits:
+
+  * ``time.sleep()``
+    
+  * selenium's expected conditions.
+
+  * custom wait polling helpers.
+
+- 在 explicit wait 过程中, selenium polls the DOM on a fixed frequency, 直到
+  condition is fullfilled or timeout is reached.
+
+expected conditions
+^^^^^^^^^^^^^^^^^^^
+
+python
+""""""
+- definition: A expected condition is a callable that:
+
+  * accepts a ``WebDriver`` instance.
+
+  * returns False when the condition is not satisfied.
+
+- predefined expected conditions: ``selenium.webdriver.support.exepcted_conditions``
+
+title
+~~~~~
+- ``title_is``
+
+- ``title_contains``
+
+presence
+~~~~~~~~
+- ``presence_of_element_located``
+
+- ``presence_of_all_elements_located``
+
+visibility
+~~~~~~~~~~
+- ``visibility_of_element_located``
+
+- ``invisibility_of_element_located``
+
+- ``visibility_of``
+
+text
+~~~~
+- ``text_to_be_present_in_element``
+
+- ``text_to_be_present_in_element_value``
+
+frame
+~~~~~
+- ``frame_to_be_available_and_switch_to_it``
+
+click
+~~~~~
+- ``element_to_be_clickable``
+
+stale
+~~~~~
+- ``staleness_of``
+
+selection
+~~~~~~~~~
+- ``element_to_be_selected``
+
+- ``element_located_to_be_selected``
+
+- ``element_selection_state_to_be``
+
+- ``element_located_selection_state_to_be``
+
+alert
+~~~~~
+- ``alert_is_present``
+
+implicit waits
+--------------
+- Apply an overall polling mechanism when trying to find any element (or
+  elements) not immediately available.
+
+- 避免使用 implicit wait, 因为指定何时需要等待、何时不需要等待这属于程序
+  行为定义的一部分. 是需要检测的.
+
+- ``WebDriver.implicitly_wait(timeout)``
 
 design patterns
 ---------------
@@ -105,6 +248,14 @@ actions
 
 ActionChains
 ^^^^^^^^^^^^
+
+exceptions
+==========
+python
+------
+- module: ``selenium.common.exceptions``
+
+
 
 language bindings
 =================

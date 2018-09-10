@@ -1,6 +1,12 @@
 overview
 ========
-- WebDriver protocol is a W3C standard.
+- WebDriver is a tool designed for writing automated tests of websites.
+  It aims to mimic the behaviour of a real user.
+
+- The WebDriver protocol is a W3C standard.
+
+- WebDriver controls the browser itself. This means that it can take advantage
+  of any facilities offered by the native platform.
 
 architecture
 ============
