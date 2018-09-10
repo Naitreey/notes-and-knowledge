@@ -393,9 +393,9 @@ design patterns
   不是因为测试没完成或者对应的实现还没完成, 而是基于一种考虑、选择和设计.
 
 - ``@expectedFailure`` 用于当需要临时标记 failure is expected 的时候, 例如当
-  test body 还没有完成时. 注意你是准备要完成测试以及对应的功能实现的. 也就是说
-  你是准备将 expected failure 变成 expected success 的, 你准备当一切都完成之后
-  将这个 decorator 去掉.
+  test body 还没有完成时进行标记. 当 test method/case 完成后, 这个测试就不再是
+  expected failure 了, 而是 expected success (by implementing corresponding
+  functionality). 此时就要把这个 decorator 去掉.
 
 test suite
 ----------

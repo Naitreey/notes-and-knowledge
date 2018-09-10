@@ -552,9 +552,9 @@ design pattern
     
     In other words, to stay DRY.
 
-  * 当实现 page object pattern 时, 注意 page object 的定义只提供页面服务和操作,
-    封装 page-specific layouts and locators etc. No code related to what is
-    being tested should be within the page object.
+  * 当实现 page object pattern 时, 注意 page object 的定义只提供页面操作 (UI
+    services), 封装 page-specific layouts and locators etc. No code related to
+    what is being tested should be within the page object.
     
   * There is one, single, verification which can, and should, be within the
     page object and that is to verify that the page, and possibly critical
