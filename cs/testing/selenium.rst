@@ -122,6 +122,10 @@ generic methods
 
 - 这些方法实现了上述具体 APIs, 通过 ``selenium.webdriver.common.by.By`` class.
 
+By
+^^
+- ``selenium.webdriver.common.by.By``.
+
 design pattern
 --------------
 - Which one to choose when selecting a element:
@@ -235,6 +239,10 @@ keys
 ----
 - python: ``selenium.webdriver.common.keys``
 
+Keys
+^^^^
+- Constants for special keys.
+
 UI helpers
 ----------
 - python: ``selenium.webdriver.support.ui``
@@ -248,14 +256,117 @@ actions
 
 ActionChains
 ^^^^^^^^^^^^
+- a way to automate low level interactions such as mouse movements, mouse
+  button actions, key press, and context menu interactions. 
+
+- useful for doing complex actions.
+
+- Actions are queued in ActionChains object until ``perform()`` is called.
+
+- operation methods can be chained. All of them return the ActionChains object
+  itself.
+
+constructor
+"""""""""""
+- ``driver``. the browser driver to perform actions.
+
+operations
+""""""""""
+- ``click(on_element=None)``. Click an element. if None, click the current mouse
+  position.
+
+- ``click_and_hold(on_element=None)``.
+
+- ``context_click(on_element=None)``. right click.
+
+- ``double_click(on_element=None)``.
+
+- ``drag_and_drop(source, target)``. drag source to target.
+
+- ``drag_and_drop_by_offset(source, xoffset, yoffset)``. drag source to the
+  offset location.
+
+- ``key_down(value, element=None)``. send key-down to the element, without
+  releasing it. If element is None, send to currently focused element.
+  Useful for control key.
+
+- ``key_up(value, element=None)``. release it.
+
+- ``send_keys(*keys)``. send keys to current focused element.
+
+- ``send_keys_to_element(element, *keys)``. send keys to element.
+
+- ``move_by_offset(xoffset, yoffset)``. move mouse by offset.
+
+- ``move_to_element(to_element)``. move mouse to the middle of an element.
+
+- ``move_to_element_with_offset(to_element, xoffset, yoffset)``. move mouse to
+  element, by offset relative to the top-left corner of the element.
+
+- ``pause(seconds)``. an operation that idles for the specified seconds.
+
+- ``release(on_element=None)``. Releasing a held mouse button on an element.
+
+apis
+""""
+- ``perform()``.
+
+- ``reset_actions()``. clear queued actions.
+
+touch actions
+-------------
+
+TouchActions
+^^^^^^^^^^^^
+- works like ActionChains, for touch actions.
+
+alerts
+------
+
+Alert
+^^^^^
+- browser alert manipulation.
+
+attributes
+""""""""""
+- ``text``. get the text of the alert.
+
+methods
+"""""""
+- ``accept()``. like press Ok.
+
+- ``dismiss()``. like any dismiss.
+
+- ``authenticate(username, password)``. 401 authentication dialog.
+
+- ``send_keys(text)``. send text to alert.
+
+proxy
+-----
+- proxy settings.
+
+service
+-------
+- used to manage webdriver server.
+
+application cache
+-----------------
+
+misc utils
+----------
+- misc internal utils.
 
 exceptions
 ==========
 python
 ------
-- module: ``selenium.common.exceptions``
+module: ``selenium.common.exceptions``
 
+- WebDriverException. base web driver exception.
 
+desired capabilities
+====================
+- for interacting with remote webdriver.
 
 language bindings
 =================
