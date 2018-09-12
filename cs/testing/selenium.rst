@@ -80,19 +80,7 @@ info
 
 switching
 """""""""
-- ``switch_to``. object to switch focus.
-
-  * ``active_element``. switch to the element that has focus.
-
-  * ``alert``. switch to alert dialogue.
-
-  * ``default_content()``. switch to default frame.
-
-  * ``frame(reference)``. switch focus to the specified frame.
-
-  * ``parent_frame()``. switch focus to parent frame.
-
-  * ``window(name)``. switch focus to window name.
+- ``switch_to``. object to switch focus. See `SwitchTo`_.
 
 navigation
 """"""""""
@@ -356,6 +344,26 @@ Remote Connection
 Command
 ^^^^^^^
 - constants for WebDriver commands.
+
+SwitchTo
+^^^^^^^^
+- ``selenium.webdriver.remote.switch_to``.
+
+attributes
+""""""""""
+* ``active_element``. the the element that currently holds focus.
+
+* ``alert``. alert dialogue.
+
+methods
+"""""""
+* ``default_content()``. switch to default frame.
+
+* ``frame(reference)``. switch focus to the specified frame.
+
+* ``parent_frame()``. switch focus to parent frame.
+
+* ``window(name)``. switch focus to window name.
 
 error handler
 ^^^^^^^^^^^^^
