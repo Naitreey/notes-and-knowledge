@@ -2003,18 +2003,27 @@ tags
   若要在父或子模板中使用, 需要重新加载. 支持 ``from``, 从 module 中加载指定
   的 tag/filter. ``load fil1 tag1 from module``.
 
-- ``block``, parent template 中定义的 blocks 越多越好. 这样增加了页面区域的
-  模块化, child template 只需覆盖或扩展需要修改的 blocks.
+- ``block``.
 
   * 对于扩展而非覆盖整个 block, 可以用 ``block.super`` tag 引用父模板中的同名
     block 内容.
 
+  * 在一个模板文件中, block definition can be nested. 在 child template 中, 只
+    需 overrides/extends parent template 声明的 block 即可. 对于 child template
+    中没有重定义的 block, fallback 至使用 parent template 中同名 block 的内容.
+
+  * child template 中对一个 block 的重定义, 可以定义新的 sub block. 从而 grand
+    child template 可以选择性重定义 sub block or top-level block.
+
+  * child template 中声明的 top-level block, 若在 parent template 中没有定义,
+    则没有作用. 即在预处理时直接被忽略.
+
   * 使用 ``{% endblock <name> %}`` 增加可读性.
 
-  * template blocks 表达的是模板结构的继承关系, 所有的 block 在 compile time
-    resolve 成为模板代码 (类似 cpp 和 c 的关系). 此后再也没有 block tag.  在
-    runtime, 模板代码去 render context, 生成页面. 因此, 不能通过某种 runtime
-    条件判断让 block 出现、消失或重定义.
+  * template blocks 表达的是模板结构的继承关系, 它本质上是 template language 的
+    一个 preprocessing directive. 所有的 block 在 compile time resolve 成为模板
+    代码. 此后再也没有 block tag.  在 runtime, 模板代码去 render context, 生成
+    页面. 因此, 不能通过某种 runtime 条件判断让 block 出现、消失或重定义.
 
   * 接上, 若要根据 runtime 条件判断是否重新定义一个 block, 可以用以下方法:
 
