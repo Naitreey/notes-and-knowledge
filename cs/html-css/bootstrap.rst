@@ -438,7 +438,7 @@ column offset
     <div class="col-sm-6 col-md-5 col-lg-6"></div>
     <div class="col-sm-6 col-md-5 offset-md-2 col-lg-6 offset-lg-0"></div>
 
-- column offset and `margin utilities`_ 可用于创建 responsive heterogenous
+- column offset and `spacing utilities`_ 可用于创建 responsive heterogenous
   layout.
 
 nesting
@@ -1087,7 +1087,14 @@ navs
 ----
 base nav
 ^^^^^^^^
-- usage.
+- usage. any navigation-like components, including:
+
+  * navigation bar (`navbar`_ is based on this).
+
+  * sidebar.
+
+  注意这里的 class/elements 等往往需要配合其他自定义结构, 才能组成最终的
+  navigation component.
 
 setup
 """""
@@ -1267,11 +1274,122 @@ hidden.bs.tab
 """"""""""""""
 two attributes ditto.
   
+navbar
+------
+
+- usage. bootstrap navbar is used for building header bar.
+
+- Navbars and their contents are fluid by default. I.e., they expands to full
+  width of its containing block.
+
+setup
+^^^^^
+- a ``.navbar`` wrapper (normally ``<nav>``) with following additional classes:
+
+  * ``.navbar-expand[-sm|-md|-lg|xl]`` for responsive collapsing.
+
+  * color scheme.
+
+- sub-components.
+
+  * logo: ``.navbar-brand``.
+
+  * navigation item list: ``.navbar-nav``.
+
+  * inline form: ``.form-inline``.
+
+  * plain text: ``.navbar-text``.
+
+  * element to collapse navigation list: ``.navbar-toggler``
+
+  * grouping components to be collapsed: ``.collapse.navbar-collapse``
+
+navigation
+^^^^^^^^^^
+- works like `navs`_, but adjusted for navbar.
+
+- use ``.navbar-nav`` instead of normal ``.nav`` for navigation list
+  inside navbar.
+
+  * 与 ``.nav`` 的区别是默认的 flex-direction is column.
+
+- 与 `tabs`_ and `pills`_ 
+
+logo
+^^^^
+- add ``.navbar-brand`` to any element, but works best for ``<a>``,
+  ``<span>`` etc.
+
+  * make it inline block.
+
+  * adjust padding and margin.
+
+container
+^^^^^^^^^
+- Use optional containers to limit navbar's horizontal width.
+
+printing
+^^^^^^^^
+- Navbars are hidden by default when printing. Force them to be printed by
+  adding .d-print to the .navbar.
+
+
 utilities
 =========
 
-margin utilities
-----------------
+spacing utilities
+-----------------
+- used to modify an element's margin and padding, probably responsively.
+
+notation
+^^^^^^^^
+::
+
+  {property}[sides][-{breakpoint}]-{size}
+
+- property.
+
+  * m. for margin.
+
+  * p. for padding.
+
+- sides.
+
+  * t. for top.
+
+  * b. for bottom.
+
+  * l. for left.
+
+  * r. for right.
+
+  * x. for left and right.
+
+  * y. for top and bottom.
+
+  * omit. for all sides.
+
+- breakpoint. 与 `breakpoints`_ 定义一致, 遵守以下规则:
+
+  * 对于应用于全部宽度的设置 (即 xs), 不包含 breakpoint abbreviation.
+
+  * 对于大于 xs 的, 即 breakpoint 可以是 sm, md, lg, xl.
+
+- size. where ``$spacer`` is 1rem by default.
+
+  * 0. set to 0.
+
+  * 1. set to ``$spacer * 0.25``
+
+  * 2. set to ``$spacer * 0.5``
+
+  * 3. set to ``$spacer``
+
+  * 4. set to ``$spacer * 1.5``
+
+  * 5. set to ``$spacer * 3.0``
+
+  * auto. set to auto, only for margin.
 
 flex utilities
 --------------
