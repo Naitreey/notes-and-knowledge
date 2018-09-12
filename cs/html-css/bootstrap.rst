@@ -69,7 +69,7 @@ data api
   namespaced with ``data-api``. to target a specific plugin, just include the
   plugin’s name as a namespace along with the ``data-api`` namespace.
 
-evnets
+events
 ======
 
 - Custom events for most plugins’ unique actions.
@@ -1083,11 +1083,199 @@ as the ``relatedTarget`` property of the event.
 
 - hidden.bs.modal.
 
+navs
+----
+base nav
+^^^^^^^^
+- usage.
+
+setup
+"""""
+* styling classes.
+
+  - ``.nav`` element, 作为 navigation 的 wrapper.
+  
+    * ``.nav`` class 设置 flexbox display. 从而让 links 成为方便布局的一行或一列.
+  
+    * ``.nav`` class removes list styles.
+  
+    * ``.nav`` class overrides default ``<ul>`` styling on padding and margin.
+  
+  - ``.nav-item`` element. 一般为 ``<li>``.
+  
+  - ``<a>`` link with ``.nav-link``.
+  
+    * ``.nav-link`` 设置 ``<a>`` 为 block element, 从而可以加上 padding.
+  
+    * ``.nav-link`` 设置了一定的 padding.
+
+* html structure.
+  
+  * ``<ul>`` + ``<li>`` + ``<a>``
+
+  * ``<nav>`` + ``<a>``.
+
+  * 对于 ``<nav>``-based structure, 在适当时需要将 ``.nav-item`` & ``.nav-link``
+    同时应用在 ``<a>`` 上面.
+
+styling
+^^^^^^^
+
+flexbox adjustments
+"""""""""""""""""""
+- Add ``.nav-fill`` to ``.nav`` for justification based on link width.
+
+  * 这个只是给 ``.nav-item`` 添加了 ``flex: 1 1 auto``. 所以各个 item 的宽度
+    是不一定相同的.
+
+- Add ``.nav-justified`` to ``.nav`` for justification with equal width.
+
+  * 给 ``.nav-item`` 添加了 ``flex-grow: 1, flex-basis: 0``
+
+- For more flexibility, use `flex utilities`_ to change navigation list's
+  direction (horizontal/vertical) and alignment.
+
+tabs
+""""
+- Add ``.nav-tabs`` to ``.nav`` for a tabbed interface.
+
+  * 设置 border bottom 1px.
+
+  * ``.nav-tabs`` 中的 ``.nav-item`` 具有 -1px 的 margin bottom. 这样让
+    ``.nav-link`` 的 border 与 ``.nav-tabs`` 的 border bottom 重合. 制造
+    tab 效果.
+
+  * ``.nav-tabs`` 中的 ``.nav-link`` 具有 border 1px transparent, 以及
+    border radius on top left/right.
+
+  * ``.nav-tabs`` 中的 ``.nav-link`` 在 ``.active`` 时具有 non-transparent
+    border on top/left/right, bottom bottom is white.
+
+  * ``.nav-tabs`` 中的 ``.nav-link`` 在 ``:hover`` state 时具有浅一些的
+    border.
+
+pills
+"""""
+- Add ``.nav-pills`` to ``.nav`` for a filled style.
+
+  * 这个比较简单, 只是在 ``.active`` 的 ``.nav-link`` 上添加 background color
+    and border radius.
+
+with dropdown
+^^^^^^^^^^^^^
+- ``.nav-item`` can be a ``.dropdown`` structure.
+
+tabbable panes on one page
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+- use `tabs`_ or `pills`_ with bootstrap js to create tabbable panes on one
+  page.
+
+setup via pure markup
+""""""""""""""""""""""
+
+* tab navigation setup
+
+  - Add ``data-toggle="tab"`` or ``data-toggle="pill"`` to ``.nav-link`` element.
+  
+  - Add ``href="..."`` to related tab pane.
+
+* tab pane setup::
+  
+    <div class="tab-content">
+      <div class="tab-pane active" id="..." role="tabpanel" aria-labelledby="...">...</div>
+      <div class="tab-pane" id="..." role="tabpanel" aria-labelledby="...">...</div>
+      <div class="tab-pane" id="..." role="tabpanel" aria-labelledby="...">...</div>
+    </div>
+  
+  - ``.tab-content`` wraps a set of tab panes.
+  
+  - ``.tab-pane`` is normally ``display: none``.
+  
+  - ``.tab-pane.active`` is displayed.
+
+setup via js
+""""""""""""
+- 这种方式不需要前述的 ``data-toggle`` attribute, 但其他都是需要的.
+
+- bind event handler via tab API:
+
+  .. code:: javascript
+
+    $('#myTab a').on('click', function (e) {
+      e.preventDefault()
+      $(this).tab('show')
+    })
+
+fade effect
+"""""""""""
+- add ``.fade`` to ``.tab-pane``
+
+  * ``.fade`` 添加 opacity 属性的 transition 效果, 应用于 fade-in/fade-out 时.
+
+  * ``.fade`` makes element by default has ``opacity: 0``.
+
+- initially shown tab should have additional ``.show`` class.
+
+  * ``.show`` class makes ``opacity: 1``.
+
+  * ``.fade`` + ``.show`` 效果是 fade-in/fade-out.
+
+JS APIs
+^^^^^^^
+
+show
+""""
+::
+
+  $(<nav-link>).tab("show")
+
+- Selects the given tab and shows its associated pane. Any other tab that was
+  previously selected becomes unselected and its associated pane is hidden.
+
+dispose
+"""""""
+
+events
+^^^^^^
+- event firing order during switching active tab.
+
+  * ``hide.bs.tab`` on current tab
+
+  * ``show.bs.tab`` on target tab
+
+  * ``hidden.bs.tab`` on previous tab
+
+  * ``shown.bs.tab`` on target tab
+
+show.bs.tab
+""""""""""""
+- ``event.target``. to-be-active nav-item
+
+- ``event.relatedTarget``. previous nav-item
+
+shown.bs.tab
+""""""""""""
+two attributes ditto.
+
+hide.bs.tab
+""""""""""""
+- ``event.target``. to-be-hidden nav-item
+
+- ``event.relatedTarget``. to-be-active nav-item
+
+hidden.bs.tab
+""""""""""""""
+two attributes ditto.
+  
 utilities
 =========
 
 margin utilities
 ----------------
+
+flex utilities
+--------------
+
 
 references
 ==========
