@@ -1112,9 +1112,9 @@ setup
   
   - ``<a>`` link with ``.nav-link``.
   
-    * ``.nav-link`` 设置 ``<a>`` 为 block element, 从而可以加上 padding.
+    * ``.nav-link`` 设置 ``<a>`` 为 block element. 这样方便根据布局扩展 link 的点击面积.
   
-    * ``.nav-link`` 设置了一定的 padding.
+    * ``.nav-link`` 设置了一定的 padding. 增加点击面积.
 
 * html structure.
   
@@ -1466,6 +1466,60 @@ notation
 
 flex utilities
 --------------
+- firstly needs a flex container (display flex). This is achieved
+  probably by ``.d[-{breakpoint}][-inline]-flex`` class.
+
+direction
+^^^^^^^^^
+::
+
+  .flex[-{breakpoint}]-{row|column}[-reverse]
+
+alignment
+^^^^^^^^^
+- along main axis::
+
+    .justify-content[-{breakpoint}]-{start|end|center|between|around}
+
+- along cross axis::
+
+    .align-items[-{breakpoint}]-{start|end|center|baseline|stretch}
+
+- align self::
+
+    .align-self[-{breakpoint}]-{start|end|center|baseline|stretch}
+
+- align content::
+
+    .align-content[-{breakpoint}]-{start|end|center|between|around|stretch}
+
+grow and shrink
+^^^^^^^^^^^^^^^
+- fill available space proportional to element's width::
+
+    .flex[-{breakpoint}]-fill
+
+  * 设置了: ``flex: 1 1 auto``.
+
+- grow if necessary::
+
+    .flex[-{breakpoint}]-grow-{0|1}
+
+- shrink if necessary::
+
+    .flex[-{breakpoint}]-shrink-{0|1}
+
+wrap
+^^^^
+::
+
+  .flex[-{breakpoint}]-{wrap|nowrap|wrap-reverse}
+
+order
+^^^^^
+::
+
+  .order[-{breakpoint}]-{0,...,12}
 
 collapse utilities
 ------------------

@@ -2310,16 +2310,8 @@ type of positioning
 
   * Usage. sticky element can be used for header bar, navigation, etc.
 
-value precedence
-^^^^^^^^^^^^^^^^
-
-- When both ``top`` and ``bottom`` are not auto, ``top`` prevails.
-
-- When both ``left`` and ``right`` are not auto, ``left`` prevails if
-  ``direction`` property is ``ltr``; otherwise ``right`` prevails.
-
 properties
-^^^^^^^^^^
+""""""""""
 - position. ``position`` defines how the element is positioned in a document.
   It determines how left/right/top/bottom properties are interpreted.
 
@@ -2327,11 +2319,68 @@ properties
 
   specified values: static/relative/absolute/fixed/sticky.
 
+floating
+^^^^^^^^
+- A floating element is one where the computed value of float is not ``none``.
+
+- ``float`` property specify the placement of an element inside its containing
+  block, allowing text and other inline elements to wrap around it.
+
+- A floating element is still part of flow of its containing block, but
+  removed from the normal content flow. 这是一种介于 non-positioned element 与
+  positioned element (absolutely or relatively) 之间的状态.
+
+- Floating element 只能是从 normal content flow 中抽离出来, 相对于它原本的位置
+  进行 left or right floating. 不能向上或向下移动. 所以没有 positioned element
+  的自由度.
+
+- floating implies using block layout. Specifying ``float`` property modifies
+  the computed value of the ``display`` values automatically.
+
+  * inline, inline-block, table-row, table-row-group, table-column,
+    table-column-group, table-cell, table-caption, table-header-group,
+    table-footer-group: changed to ``block``.
+
+  * inline-table: changed to ``table``.
+
+  * flex and inline-flex are not changed.
+
+properties
+""""""""""
+- float.
+
+stacking
+^^^^^^^^
+- In addition to horizontal and vertical position, each box has a position
+  along the z-axis. It controls the stacking of elements.
+
+- default stacking order. bottom up:
+
+  * root element
+
+  * non-positioned descendant blocks of root element, in order of appearance in
+    source.
+
+  * floating blocks.
+
+  * positioned descendant blocks of root element, in order of appearance in
+    source.
+
+properties
+""""""""""
 - z-index. specify the z-axis order of the positioned elements, when they
   overlap each other. The element with higher z-index generally covers a lower
   one.
 
   ``z-index`` only works for an element with ``position`` other than ``static``.
+
+value precedence
+^^^^^^^^^^^^^^^^
+
+- When both ``top`` and ``bottom`` are not auto, ``top`` prevails.
+
+- When both ``left`` and ``right`` are not auto, ``left`` prevails if
+  ``direction`` property is ``ltr``; otherwise ``right`` prevails.
 
 Flexbox Layout
 --------------
@@ -2384,6 +2433,9 @@ working with margin
 - If you don’t specify a direction, simply applying ``margin: auto``, a flex
   item would evenly distribute any extra space on either side of the itself
   equally.
+
+- 注意 auto margin 对 main axis 和 cross axis 上都可以应用. 配合
+  justify-content 与 align-content, etc.
 
 flex container properties
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -2476,6 +2528,9 @@ flex item properties
 
 - order. By default, flex items are laid out in the source order. This
   redefines the order in which they appear in the flex container.
+
+  When order property modifies the order of appearance of flex items, it also
+  modifies their orders in stacking context.
 
 - flex-grow. the ability for a flex item to grow and take remaining spaces if
   necessary. It accepts a unitless value that serves as a proportion relative
