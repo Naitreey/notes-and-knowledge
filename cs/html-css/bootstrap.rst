@@ -1172,6 +1172,9 @@ with dropdown
 ^^^^^^^^^^^^^
 - ``.nav-item`` can be a ``.dropdown`` structure.
 
+- 此时注意 ``.nav-item`` 是整个 ``.dropdown`` structure, ``.nav-link`` 是
+  ``.dropdown-toggle``.
+
 tabbable panes on one page
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 - use `tabs`_ or `pills`_ with bootstrap js to create tabbable panes on one
@@ -1304,6 +1307,26 @@ setup
 
   * grouping components to be collapsed: ``.collapse.navbar-collapse``
 
+navbar
+^^^^^^
+- Add ``.navbar`` to ``<nav>``.
+
+  * this makes a flexbox.
+
+  * item's alignment along cross axis is center.
+
+  * item's alignment along main axis is space-between.
+
+- Add ``.navbar-expand[-sm|-md|-lg|xl]`` for responsive collapsing.
+
+  * make flex direction to row.
+
+  * make flexbox don't wrap.
+
+  * make alignment along main axis to flex-start.
+
+  注意 ``.navbar-expand`` 的效果是 never collapse.
+
 navigation
 ^^^^^^^^^^
 - works like `navs`_, but adjusted for navbar.
@@ -1311,9 +1334,11 @@ navigation
 - use ``.navbar-nav`` instead of normal ``.nav`` for navigation list
   inside navbar.
 
-  * 与 ``.nav`` 的区别是默认的 flex-direction is column.
+  * 与 ``.nav`` 的区别是默认的 flex-direction is column. 并根据 parent
+    ``.navbar-expand*`` 来 override 至 row direction.
 
-- 与 `tabs`_ and `pills`_ 
+- 与 `tabs`_ and `pills`_ 类似, 使用 ``.active`` 表示 active link. 但
+  这里的默认效果是修改字体颜色.
 
 logo
 ^^^^
@@ -1324,15 +1349,63 @@ logo
 
   * adjust padding and margin.
 
+  * make font-size bigger.
+
+text
+^^^^
+- add ``.navbar-text`` to ``<span>`` etc.
+
+  * make it inline block.
+
+  * add padding top/bottom.
+
+inline form
+^^^^^^^^^^^
+- simply add ``.form-inline`` form inside ``.navbar``.
+
+colorscheme
+^^^^^^^^^^^
+- ``.navbar-light`` and ``.navbar-dark`` theme.
+
+  * 它们本身并不修改 navbar 的颜色, 而是作为 semantic class, 当应用后, navbar
+    里面的 components 会自动调整颜色来配合 light/dark theme.
+
+- 使用 `color utilities`_ 来设置 navbar color.
+
 container
 ^^^^^^^^^
-- Use optional containers to limit navbar's horizontal width.
+- Navbar is by default fluid, always thus expands to full width of viewport.
+  Wrap ``.navbar`` inside a ``.container`` div to
+  
+  * limit navbar's horizontal width.
+
+  * 由于此时 navbar 的宽度是固定的, 可能短于 viewport width, 这还有 center 的
+    效果.
+
+placement
+^^^^^^^^^
+- Use `position utilities`_ to create non-static navbars.
+
+collapse and toggle
+^^^^^^^^^^^^^^^^^^^
+- A toggler ``<button>`` with ``.navbar-toggler``.
+
+  * 配合 ``.navbar-expand*`` 使用时, 当 viewport width 大于 breakpoint 时,
+    display none 即不显示.
+
+  * 只有当小于 breakpoint, media query 失效时, 才显示.
+
+- Wrap components of navbar inside a ``.navbar-collapse.collapse`` div.
+
+  * 当 viewport 大于 breakpoint 时, ``.navbar-collapse`` creates a flexbox.
+
+  * ``.collapse`` 在 collapse 起效时 (即 ``.navbar-expand*`` 不起效时), 配合
+    ``.show`` 控制整个 wrapper 是否显示. 即收起和展开的切换.
 
 printing
 ^^^^^^^^
 - Navbars are hidden by default when printing. Force them to be printed by
-  adding .d-print to the .navbar.
-
+  adding ``.d-print`` to the ``.navbar``.
 
 utilities
 =========
@@ -1394,6 +1467,72 @@ notation
 flex utilities
 --------------
 
+collapse utilities
+------------------
+::
+
+  <div class="pos-f-t">
+    <div class="collapse" id="navbarToggleExternalContent">
+      ...
+    </div>
+    <nav class="navbar navbar-dark bg-dark">
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggleExternalContent">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+    </nav>
+  </div>
+
+- toggler button 属性::
+
+    data-toggle="collapse" data-target="<selector>"
+
+- collapse element 根据 ``.collapse`` and ``.show`` 属性来进行显示和隐藏 (display none/block).
+
+  * 当只有 ``.collapse`` 时隐藏.
+
+  * 添加 ``.show`` 显示.
+
+  * 当过渡时应用了 ``.collapsing``, 具有 transition 效果.
+
+position utilities
+------------------
+- classes.
+
+  * ``.position-static``
+  * ``.position-relative``
+  * ``.position-absolute``
+  * ``.position-fixed``
+  * ``.position-sticky``
+
+- convenience classes.
+
+  * ``.fixed-top``. Position an element at the top of the viewport.
+
+  * ``.fixed-bottom``. ditto at bottom.
+
+  * ``.sticky-top``. like ``.fixed-top`` but only when scrolled past it.
+
+
+color utilities
+---------------
+
+text color
+^^^^^^^^^^
+- semantic classes.
+
+  see demo.
+
+- 对于 ``<a>`` 在 hover/focus 时, 有额外的 darker 效果. Note that the
+  ``.text-white`` and ``.text-muted`` class has no additional link styling
+  beyond underline.
+
+background color
+^^^^^^^^^^^^^^^^
+- semantic classes.
+
+  see demo.
+
+- 对于 ``<a>`` 在 hover/focus 时, 有额外的 darker 效果.
 
 references
 ==========

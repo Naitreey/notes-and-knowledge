@@ -2233,7 +2233,107 @@ properties
 
   更方便的元素水平和竖直居中问题, 使用 flexbox 解决.
 
-flexbox layout
+Positioned Layout
+-----------------
+- A CSS module that defines how to position elements on the page.
+
+type of positioning
+^^^^^^^^^^^^^^^^^^^
+- A static element.
+
+  * positioned according to document flow.
+  
+  * ``static`` element can not be positioned.
+
+  * top/bottom/left/right/z-index have no effect.
+
+- A positioned element is one whose ``position`` is computed to be anything
+  other than ``static``.  
+
+  * positioned according to document flow.
+
+  * left/right/top/bottom/z-index 属性只对 positioned element 有用.
+
+- relatively positioned element:
+
+  * computed position is ``relative``.
+
+  * The element's original position according to document flow is kept.
+
+  * left/right/top/bottom is relative to the element's normal position.
+
+  * The offset does not affect the position of any other elements.
+
+  * This creates a new stacking context when the value of ``z-index`` is not
+    auto.
+
+- absolutely positioned element:
+
+  * computed position is ``absolute`` or ``fixed``.
+
+  * The element is removed from the normal document flow, and no space is
+    created for the element in the page layout.
+
+  * left/right/top/bottom is relative to the element's containing block.
+
+  * For ``absolute``, the element's containing block is its parent containing
+    block. For ``fixed``, the element's containing block is initial containing
+    block.
+
+  * non-replaced, absolutely positioned element can be made to fill the
+    available horizontal/vertical space, by setting left and right, or top and
+    bottom, and leaving width/height to auto.
+
+  * ``absolute`` element creates a new stacking context when the value of
+    z-index is not auto. ``fixed`` element always creates a new stacking
+    context.
+
+  * The margin of ``absolute`` element do not collapse with other margins.
+
+  * The display of absolutely positioned element can not be ``inline`` or
+    ``inline-block``.
+
+- stickily positioned element:
+
+  * computed position is ``sticky``.
+
+  * This is a mix of relative positioning and fixed positioning.
+
+  * left/right/top/bottom is relative to initial containing block.
+    
+  * Normally the element is positioned as a relatively positioned element with
+    0 offset at all sides. 当 scroll 时, 如果 element 与 initial containing
+    block 的距离小于指定的 left/right/top/bottom, 则变为 fixed position, until
+    it reaches the boundary of its containing block.
+
+  * Sticky element always creates a new stacking context.
+
+  * Usage. sticky element can be used for header bar, navigation, etc.
+
+value precedence
+^^^^^^^^^^^^^^^^
+
+- When both ``top`` and ``bottom`` are not auto, ``top`` prevails.
+
+- When both ``left`` and ``right`` are not auto, ``left`` prevails if
+  ``direction`` property is ``ltr``; otherwise ``right`` prevails.
+
+properties
+^^^^^^^^^^
+- position. ``position`` defines how the element is positioned in a document.
+  It determines how left/right/top/bottom properties are interpreted.
+
+  initial: static.
+
+  specified values: static/relative/absolute/fixed/sticky.
+
+- z-index. specify the z-axis order of the positioned elements, when they
+  overlap each other. The element with higher z-index generally covers a lower
+  one.
+
+  ``z-index`` only works for an element with ``position`` other than ``static``.
+
+Flexbox Layout
 --------------
 
 overview
@@ -2326,7 +2426,10 @@ flex container properties
 
   * center
 
-  * space-between
+  * space-between. items are evenly distributed along main axis. The spacing
+    between each pair of adjacent items is the same. *The first item is flush
+    with the main-start edge, and the last item is flush with the main-end
+    edge* (所以如果只有一个 item, 将位于 main-start edge).
 
   * space-around
 
@@ -3318,14 +3421,6 @@ background
 
   * rgba 等值经常设置在 inherited property 上. 由于子元素默认继承, 逻辑上是
     绝对效果而不是相对效果也比较合理.
-
-positioning
-""""""""""""
-- z-index. specify the z-axis order of the positioned elements, when they
-  overlap each other. The element with higher z-index generally covers a lower
-  one.
-
-  ``z-index`` only works for an element with ``position`` other than ``static``.
 
 pseudo-element
 ^^^^^^^^^^^^^^
