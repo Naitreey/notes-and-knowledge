@@ -3334,15 +3334,15 @@ overflow
 - overflow. What to do when an element's content is too large to fit in its
   block formatting context. shorthand for overflow-x and overflow-y.
 
+  When parent element's overflow is hidden, all child elements is hidden
+  together with parent.
+
   关于 viewport 的 overflow 情况. ``<html>`` root element 决定整个 viewport 的
   scrollbar 情况. 作为 root element, spec 规定: If overflow on ``<body>`` is
   visible, overflow on ``<html>`` must be interpreted as auto. Otherwise
   ``<html>`` use what is specified on ``<body>``. 这导致, 最终效果是, viewport
   只能有 scrollbar 或者在相应方向上 hide overflowed content, 而不存在
   ``visible`` 值带来的效果. [SOBodyOverflow]_
-
-  When parent element's overflow is hidden, all child elements is hidden
-  together with parent.
 
   non-inherited.
 
@@ -3363,8 +3363,12 @@ overflow
 - overflow-x.
   overflow settings at x axis only.
 
-  一般只有 ``white-space`` 设置以及无法合适地自动 line break 时, 水平
-  方向上才会超出 context edge.
+  主要在两种情况下会出现 overflow:
+
+  * block-level child element 的 width/height 大于 parent element, 导致凸出去.
+
+  * inline child element, 当设置的 white-space 属性为 nowrap 等影响 layout
+    engine 自动换行算法时, 或者文字内容难以自动换行时.
 
 - overflow-y.
 
