@@ -1287,6 +1287,8 @@ navbar
 
 setup
 ^^^^^
+- ``.navbar`` 作为 header bar 使用时, 应该放在 ``.container`` 的外面.
+
 - a ``.navbar`` wrapper (normally ``<nav>``) with following additional classes:
 
   * ``.navbar-expand[-sm|-md|-lg|xl]`` for responsive collapsing.
@@ -1388,7 +1390,8 @@ placement
 
 collapse and toggle
 ^^^^^^^^^^^^^^^^^^^
-- A toggler ``<button>`` with ``.navbar-toggler``.
+- A toggler ``<button>`` with ``.navbar-toggler``. See `collapse utilities`_
+  for attributes.
 
   * 配合 ``.navbar-expand*`` 使用时, 当 viewport width 大于 breakpoint 时,
     display none 即不显示.

@@ -2334,6 +2334,14 @@ floating
   进行 left or right floating. 不能向上或向下移动. 所以没有 positioned element
   的自由度.
 
+- 当一个 element float 之后, 它后面的 elements 会向前移动, 填补原来元素所占空间
+  .  这个 floating element 后面的 inline elements (包含后面的 block elements 中
+  嵌套的 inline elements), 会围绕 floating element 排布.
+
+- the floating element is floated left or right until it touches another
+  floating element, until they filled the containing box, after which they
+  would wrap to the next line.
+
 - floating implies using block layout. Specifying ``float`` property modifies
   the computed value of the ``display`` values automatically.
 
@@ -2345,9 +2353,68 @@ floating
 
   * flex and inline-flex are not changed.
 
+- clearfix.
+
+  * If an element contains only floated elements, its height collapses to
+    nothing.
+
+  * If it's required for the element to contain the floating elements inside
+    it, apply a clearfix::
+
+      #container::after { 
+        content: "";
+        display: block; 
+        clear: both;
+      }
+
 properties
 """"""""""
 - float.
+
+  non-inherited.
+
+  initial: none.
+
+  specified values:
+
+  * left.
+
+  * right.
+
+  * none. not floating.
+
+  * inline-start. language-direction-agnostic version of left.
+
+  * inline-end.
+
+- clear. 当一个元素的 previous sibling 是 floating element 时, 是否向前移动填补
+  空白, 或者 to be "cleared" below them. 这应该用于 block-level elements.
+
+  When applied to floating elements, the margin edge of the bottom element is
+  moved below the margin edge of all relevant floats. This affects the position
+  of later floats, since later floats cannot be positioned higher than earlier
+  ones.
+
+  The floats that are relevant to be cleared are the earlier floats within the
+  same block formatting context.
+
+  non-inherited.
+
+  initial: none.
+
+  specified values:
+
+  * none. not cleared.
+
+  * left. clear down below the left floats.
+
+  * right. clear down below the right floats.
+
+  * both. clear down below both left and right floats.
+
+  * inline-start. see float.
+
+  * inline-end. see float.
 
 stacking
 ^^^^^^^^
@@ -2366,11 +2433,17 @@ stacking
   * positioned descendant blocks of root element, in order of appearance in
     source.
 
+- z-index 控制 elements 所在的 rendering layer.  layer 0 is the default
+  rendering layer. 具有相同 z-index 值的元素位于一个 rendering layer 中.
+  在一个 render layer 中的各个元素, 遵从上述的 default stacking order.
+
+- stacking context. A stacking context is formed, anywhere in the document, by
+  any element in the following scenarios:
+
 properties
 """"""""""
-- z-index. specify the z-axis order of the positioned elements, when they
-  overlap each other. The element with higher z-index generally covers a lower
-  one.
+- z-index. specify the custom z-axis order of the positioned elements. The
+  element with higher z-index generally covers a lower one.
 
   ``z-index`` only works for an element with ``position`` other than ``static``.
 
