@@ -1589,11 +1589,22 @@ numeric types
     1..is_integer # OK
     1.1.is_integer # Ok
 
+mapping types
+-------------
+
+dict
+^^^^
+- In Python 3.7+, Dictionaries preserve insertion order. Updating a key does
+  not affect the order. Keys re-added after deletion are inserted at the end.
+
+- Because dict preserves key's insertion order, ``collections.OrderedDict``
+  is no longer necessary.
+
 descriptor types
-^^^^^^^^^^^^^^^^
+----------------
 
 property
-""""""""
+^^^^^^^^
 
 - property and its alikes (``cached_property``, etc.) 是 python 对 attribute
   getter/setter methods 的一个清晰而简洁的解决方案.
