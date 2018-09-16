@@ -2421,31 +2421,100 @@ stacking
 - In addition to horizontal and vertical position, each box has a position
   along the z-axis. It controls the stacking of elements.
 
-- default stacking order. bottom up:
+stacking mechanism
+""""""""""""""""""
+- stacking with stacking context.
+ 
+  stacking context 是一组沿着 z-axis 的抽象的 html 元素的叠加层.
 
-  * root element
+  * 每个 element 都属于一个 stacking context. 该元素在符合条件时, 还会创建一个
+    新的 stacking context. 从而构成一个 stacking context hierarchy. root
+    element 是顶层的 stacking context.
 
-  * non-positioned descendant blocks of root element, in order of appearance in
-    source.
+  * 在一个 stacking context 中, 元素通过 z-index 指定的 rendering layer 值进行
+    stacking. 一个元素的 z-index 值只在它所处于的 stacking context 中有意义. 也
+    就是说, z-index 值不具有全局的绝对意义.
 
-  * floating blocks.
+  * Each stacking context is self-contained: after the element's contents are
+    stacked, the whole element is considered in the stacking order of the
+    parent stacking context.
 
-  * positioned descendant blocks of root element, in order of appearance in
-    source.
+  * 当一个元素本身不创建 stacking context 时, 我们说这个元素 is assimilated to
+    the stacking context it belongs. 这样, 一个元素的子元素可以创建新的
+    stacking context, 造成 overlay 的效果.
 
-- z-index 控制 elements 所在的 rendering layer.  layer 0 is the default
-  rendering layer. 具有相同 z-index 值的元素位于一个 rendering layer 中.
-  在一个 render layer 中的各个元素, 遵从上述的 default stacking order.
+  * A sibling stacking context 不一定是 sibling elements. 关键是两个 sibling
+    stacking context 是否属于一个 parent stacking context. 但反之, parent/child
+    elements, 只能构成 parent/child stacking context.
 
-- stacking context. A stacking context is formed, anywhere in the document, by
-  any element in the following scenarios:
+  A stacking context is formed in the following scenarios:
+
+  * root element.
+
+  * position is ``absolute`` or ``relative``, with z-index specified (other
+    than ``auto``).
+
+  * position is ``fixed`` or ``sticky``.
+
+  * flex items, with z-index specified (other than ``auto``).
+
+  * element with opacity less than 1.
+
+  * element with ``transform`` specified.
+
+  * etc.
+
+- stacking with z-index.
+
+  * z-index 的值对应于 rendering layer 的层叠关系. 从负数至正数, 对应于由远至近
+    的方向.
+
+  * 当 z-index is not specified or ``auto``, elements are rendered at layer 0,
+    It's the default rendering layer.
+
+  * 在一个 stacking context 内, 相同 z-index 值的元素全部属于一个 rendering
+    layer.
+
+  * 在同一个 rendering layer 中, elements are stacked according to the default
+    stacking order as stated subsequently.
+
+  * 注意一个 rendering layer 可以跨越多个 z-index 相同的 sibling stacking
+    context.
+
+- default stacking order.
+  
+  * 对于每个元素, 按照源代码顺序排列, 后面的覆盖前面的.
+
+  * 对于每个元素, 它所有的子元素与该元素作为一个整体来考虑 stacking.
+
+  * 在任一个元素内部,
+
+    - non-positioned descendant blocks of root element, in order of appearance
+      in source.
+
+    - floating blocks.
+
+    - positioned descendant blocks of root element, in order of appearance in
+      source.
 
 properties
 """"""""""
-- z-index. specify the custom z-axis order of the positioned elements. The
-  element with higher z-index generally covers a lower one.
+- z-index. specify the custom rendering layer order of the positioned elements.
+  Note z-index can only be used on positioned elements.
 
-  ``z-index`` only works for an element with ``position`` other than ``static``.
+  non-inherited.
+
+  initial: auto.
+
+  specified values:
+
+  * auto. use default rendering layer of current stacking context. Do not
+    explicitly specify a rendering layer. This also prevents creating a
+    stacking context by itself (assimilated to base layer of parent stacking
+    context).
+
+  * ``<integer>``. the order of rendering layer of the element in current
+    stacking context.
 
 value precedence
 ^^^^^^^^^^^^^^^^
