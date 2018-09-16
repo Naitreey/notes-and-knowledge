@@ -8450,17 +8450,47 @@ django.test.LiveServerTestCase
   下静态文件的功能. 若要方便测试时 serve 源代码目录下的静态文件, 使用
   `StaticLiveServerTestCase`_.
 
-test client
------------
-- ``django.test.Client`` is an integration testing tool, not a unit testing
-  tool. 因为它跨越了太多的功能层和模块, 包含 middleware, url resolution,
-  view wrappers, etc., 然后才到 view callable.
+
+
+request and response
+--------------------
+
+RequestFactory
+^^^^^^^^^^^^^^
+
+constructor
+""""""""""""
+- ``json_encoder=DjangoJSONEncoder``. json encoder used when posting json data.
+
+- ``**defaults``. default wsgi request environs. can be overriden by calls of
+  each request methods.
 
 Client
 ^^^^^^
+- ``django.test.Client``.
 
-- ``Client.request()`` method initiates a request , returns a HttpResponse
-  object.
+- test client is an integration testing tool. 因为它跨越了太多的功能层和模块,
+  包含 middleware, url resolution, view wrappers, etc., 然后才到 view callable.
+
+  Test client is neither suitable for unit testing nor functional testing.  它
+  不适合 FT 是因为: 1) 它直接访问了 django 的内部结构来进行请求, 不具有外部视角;
+  2) 它不具备浏览器的功能, 不能渲染页面, 从而不能测试最终效果, 只生成 response
+  object 结束.
+
+constructor
+"""""""""""
+- ``enforce_csrf_checks=False``. By default Client disables csrf checks.
+  这是通过 CsrfViewMiddleware 提供的一个 hack 来实现的.
+
+- ``json_encoder=DjangoJSONEncoder``. see RequestFactory.
+
+- ``**defaults``. See RequestFactory.
+
+methods
+"""""""
+- ``request()`` process a request, returns a HttpResponse object. 它直接调用
+  request wsgi handler 去处理请求, 所以 ``path`` 只需要是 absolute url 即可, 不
+  需要 domain 部分.
 
 testing-purpose HttpResponse attributes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
