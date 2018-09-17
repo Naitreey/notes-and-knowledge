@@ -8356,14 +8356,8 @@ testing
 - 注意在写单元测试时, 要避免使用 django 提供的各种非模块化的、跨越多个实现层
   的那些工具.
 
-- django 默认使用 unittest module 实现单元测试. 但提供与多种单元测试
-  框架集成的方式.
-
-- directory organization:
-  
-  * FT/IT/UT 分别放在 ``<app_name>/fts``, ``<app_name>/its``, ``<app_name>/uts``.
-
-- Run test: ``./manage.py test``.
+- django 默认使用 unittest module 实现自动化测试. 但提供与多种单元测试框架集成
+  的方式.
 
 test databases
 --------------
@@ -8457,6 +8451,16 @@ request and response
 
 RequestFactory
 ^^^^^^^^^^^^^^
+- 用于生产 mock HttpRequest objects. 这主要用于对 view 进行单元测试时, 传递进入
+  view.
+  
+- 说它是 mock request, 是因为这样生成的 HttpRequest, 可以具有 view 交互所需的
+  api & attributes, 但并不与真实的 HttpRequest 完全相同. 这符合 mock 的实质. 
+  RequestFactory 的意义是封装了对这种很复杂的 mock object 的构建流程. 否则每次
+  手工去构建的话, 根本不可能.
+
+- 它的各个 request methods 只是生成相应的 fake HttpResponse object 即返回, 并不
+  进行真正的 request processing 流程. 这由它的子类 Client 来实现.
 
 constructor
 """"""""""""
@@ -8467,7 +8471,7 @@ constructor
 
 Client
 ^^^^^^
-- ``django.test.Client``.
+- ``django.test.Client``. subclass of RequestFactory.
 
 - test client is an integration testing tool. 因为它跨越了太多的功能层和模块,
   包含 middleware, url resolution, view wrappers, etc., 然后才到 view callable.
@@ -8488,9 +8492,20 @@ constructor
 
 methods
 """""""
+- ``get(path, data=None, follow=False, secure=False, **extra)``.
+
+  * ``data`` is a dict of query string payload.
+
 - ``request()`` process a request, returns a HttpResponse object. 它直接调用
   request wsgi handler 去处理请求, 所以 ``path`` 只需要是 absolute url 即可, 不
   需要 domain 部分.
+
+FakePayload
+^^^^^^^^^^^
+A wrapper around BytesIO that restricts what can be read since data from the
+network can't be seeked and cannot be read outside of its content length. This
+makes sure that views can't do anything under the test client that wouldn't
+work in real life.
 
 testing-purpose HttpResponse attributes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -8601,6 +8616,9 @@ management commands
 
 design patterns
 ---------------
+- directory organization:
+  
+  * FT/IT/UT 分别放在 ``<app_name>/fts``, ``<app_name>/its``, ``<app_name>/uts``.
 
 - Every layers of code must be unit-tested in isolation. view, form, model etc.
   Use mocks to ensure test isolation.
