@@ -1390,7 +1390,7 @@ placement
 
 collapse and toggle
 ^^^^^^^^^^^^^^^^^^^
-- A toggler ``<button>`` with ``.navbar-toggler``. See `collapse utilities`_
+- A toggler ``<button>`` with ``.navbar-toggler``. See `collapse`_
   for attributes.
 
   * 配合 ``.navbar-expand*`` 使用时, 当 viewport width 大于 breakpoint 时,
@@ -1409,6 +1409,34 @@ printing
 ^^^^^^^^
 - Navbars are hidden by default when printing. Force them to be printed by
   adding ``.d-print`` to the ``.navbar``.
+
+collapse
+--------
+::
+
+  <div class="pos-f-t">
+    <div class="collapse" id="navbarToggleExternalContent">
+      ...
+    </div>
+    <nav class="navbar navbar-dark bg-dark">
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggleExternalContent">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+    </nav>
+  </div>
+
+- toggler button 属性::
+
+    data-toggle="collapse" data-target="<selector>"
+
+- collapse element 根据 ``.collapse`` and ``.show`` 属性来进行显示和隐藏 (display none/block).
+
+  * 当只有 ``.collapse`` 时隐藏.
+
+  * 添加 ``.show`` 显示.
+
+  * 当过渡时应用了 ``.collapsing``, 具有 transition 效果.
+
 
 utilities
 =========
@@ -1523,33 +1551,6 @@ order
 ::
 
   .order[-{breakpoint}]-{0,...,12}
-
-collapse utilities
-------------------
-::
-
-  <div class="pos-f-t">
-    <div class="collapse" id="navbarToggleExternalContent">
-      ...
-    </div>
-    <nav class="navbar navbar-dark bg-dark">
-      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggleExternalContent">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-    </nav>
-  </div>
-
-- toggler button 属性::
-
-    data-toggle="collapse" data-target="<selector>"
-
-- collapse element 根据 ``.collapse`` and ``.show`` 属性来进行显示和隐藏 (display none/block).
-
-  * 当只有 ``.collapse`` 时隐藏.
-
-  * 添加 ``.show`` 显示.
-
-  * 当过渡时应用了 ``.collapsing``, 具有 transition 效果.
 
 position utilities
 ------------------
