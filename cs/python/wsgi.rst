@@ -135,32 +135,74 @@ server-specific variables
 
 start_response callable
 -----------------------
+- The ``start_response()`` callable is used to begin the HTTP response.
+
 - the application must invoke the start_response callable using positional
-  arguments
+  arguments.
 
-- signature.
+signature
+^^^^^^^^^
 
-  * ``status``. A string in the form ``status_code message`` as in http raw
-    response.
+* ``status``. A string in the form ``status_code message`` as in http raw
+  response.
 
-  * ``response_headers``. response headers, in form of a list of 2-tuple of
-    ``(header_name, header_value)``.
+* ``response_headers``. response headers, in form of a ``list`` of 2-tuple of
+  ``(header_name, header_value)``. The server may change the list in any way
+  it desires.
 
-  * ``exc_info=None``. used only when the application has trapped an error and
-    is attempting to display an error message to the browser.
+  - If the application omits a header required by HTTP (or other relevant
+    specifications that are in effect), the server or gateway must add it.
 
-  Returns a ``write(body_data)`` callable that takes one positional parameter:
+  - ``start_response`` must not actually transmit the response headers.
+    Instead, it must store them for the server or gateway to transmit only
+    after the first iteration of the application return value.
+  
+    This delaying of response header transmission is to ensure that buffered
+    and asynchronous applications can replace their originally intended output
+    with error output, up until the last possible moment.
+
+* ``exc_info=None``. A ``sys.exec_info()`` tuple. used only when the
+  application has trapped an error and is attempting to display an error
+  message to the browser.
+
+  - This argument should be supplied by the application only if
+    ``start_response`` is being called by an error handler.
+
+  - The application must not trap any exceptions raised by ``start_response``,
+    if it called ``start_response`` with ``exc_info``.
+
+  - The application may call ``start_response`` more than once, if and only if
+    the ``exc_info`` argument is provided.
+  
+* Returns a ``write(body_data)`` callable that takes one positional parameter:
   a bytestring to be written as part of the HTTP response body. This return
   value is for compatibility only and should be avoided if possible.
 
+Handling Content-Length of response
+-----------------------------------
+- If the application supplies a ``Content-Length`` header, the server should
+  not transmit more bytes to the client than the header allows, and should stop
+  iterating over the response when enough data has been sent
+
+Handling unicode
+----------------
+- HTTP does not directly support Unicode, neither does WSGI. all strings passed
+  to or from the server must consist of ISO-8859-1 characters.
+
 WSGI implementation examples
 ----------------------------
-* 这些 web server 可能直接作为前端 http 服务器, 或者还需要负载均衡, 或者它们本
-  身不是 http server, 还需要前端 http 服务器转译和转发.
-  
-  例子: gunicorn 等用 python 写的 server, uwsgi 等 C 写的 server (可调用 python
-  代码).
 
+server/gateway side
+^^^^^^^^^^^^^^^^^^^
+- 直接作为前端 http 服务器. e.g., gunicorn.
+ 
+- 配合 load balancer. e.g., bottle.py + haproxy.
+ 
+- 本身不是 http server, 还需要前端 http 服务器转译和转发. e.g., uwsgi.
+
+- C 写的, embed cpython interpreter, 加载 python web application/framework.
+  e.g., uwsgi.
+  
 uWSGI
 =====
 
