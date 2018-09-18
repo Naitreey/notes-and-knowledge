@@ -8490,12 +8490,87 @@ constructor
 
 - ``**defaults``. See RequestFactory.
 
-methods
-"""""""
+attributes
+""""""""""
+- ``cookies``. 保存客户端 cookies. 对于每个, ``HttpResponse.cookies`` 全部同步
+  到 Client 上. Client 在每次请求时, 都将保存的 cookies 加入 ``HTTP_COOKIE``
+  header.
+
+- ``session``. 直接访问 session backend 获取对应于当前客户端的 SessionStore.
+
+request methods
+""""""""""""""""
 - ``get(path, data=None, follow=False, secure=False, **extra)``.
 
-  * ``data`` is a dict of query string payload.
+  * ``path`` is absolute url target.
 
+  * ``data`` is a dict of query string payload. query string can be added
+    in ``path`` directly. If both ``path`` and ``data`` is present, ``data``
+    takes precedence.
+
+  * ``follow``. whether or not follow redirection. If so, a ``redirect_chain``
+    is added to response object, which is a list of 2-tuple of intermediate
+    ``(url, status)``.
+
+  * ``secure``. emulate https request.
+
+  * ``extra``. extra WSGI environ items. E.g., extra http headers, cgi variables.
+
+- ``post(path, data=None, content_type=MULTIPART_CONTENT, follow=False, secure=False, **extra)``
+
+  * ``path``, ``follow``, ``secure``, ``extra``. ditto.
+    post 时, query string 只能加在 ``path`` 上面.
+
+  * ``data`` is a dict of post data.
+    
+  * ``content_type``.
+
+    - If ``multipart/form-data; boundary=...``, data is treated as form data.
+      此时, value in data can be string (coerced to bytes), file-like object
+      (``.read()`` is called once), an iterable (当一个 key 有多个值时).
+
+    - If ``application/json``, data is serialized as json data, by ``json_encoder``.
+
+    - 对于其他 content-type, data is converted to bytes and used as is.
+
+- ``head(path, data=None, follow=False, secure=False, **extra)``. like get, 
+  except response body is empty.
+
+- ``options(path, data='', content_type='application/octet-stream', follow=False, secure=False, **extra)``.
+  if data is provided, it's used as-is, no parsing.
+
+- ``put(path, data='', content_type='application/octet-stream', follow=False, secure=False, **extra)``
+  data is encoded according to ``content_type``.
+
+- ``patch(path, data='', content_type='application/octet-stream', follow=False, secure=False, **extra)``
+  data is encoded according to ``content_type``.
+
+- ``delete(path, data='', content_type='application/octet-stream', follow=False, secure=False, **extra)``
+  data is encoded according to ``content_type``.
+
+- ``trace(path, follow=False, secure=False, **extra)``
+
+authentication
+""""""""""""""
+
+- ``login(**credentials)``. simulate user login, manually, without making an
+  actual login post request. 由于不走 request-response cycle, 这里需要单独调用
+  相关的 session, cookie 等设置逻辑. 调用该方法后, Client instance 的 ``cookies``
+  中包含 session cookie. 后端的 session 也设置完毕.
+
+  Return True/False for login success/failure.
+
+- ``force_login(user, backend=None)``. log user in, skipping authentication.
+  除了跳过认证阶段之外, 其他与 ``Client.login()`` 一致.
+
+  The user will have its ``backend`` attribute set to the value of the backend
+  argument (which should be a dotted Python path string), or to
+  ``settings.AUTHENTICATION_BACKENDS[0]`` if a value isn’t provided.
+
+- ``logout()``. logout current user. clear Client's cookie.
+
+utilities
+"""""""""
 - ``request()`` process a request, returns a HttpResponse object. 它直接调用
   request wsgi handler 去处理请求, 所以 ``path`` 只需要是 absolute url 即可, 不
   需要 domain 部分.
@@ -8511,11 +8586,17 @@ testing-purpose HttpResponse attributes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 - ``client``.
 
-- ``request``. Parameters of the initiating request.
+- ``request``. All parameters of the initiating request.
 
-- ``wsgi_request``. The HttpRequest object. Actually a WSGIRequest object.
+- ``wsgi_request``. The WSGIRequest object that django http processing code
+  actually sees.
 
-- ``context``.
+- ``template``. A list of Template instances used to render the final content,
+  in the order they were rendered.
+
+- ``context``. A template context object or a ``ContextList`` of template
+  context objects, in the order in which they were rendered. Regardless,
+  the template variable can be accessed via key.
 
 - ``json(**kwargs)``. parse content as json. works only if Content-Type is
   ``application/json``, otherwise ValueError is raised. ``kwargs`` are passed
@@ -8523,9 +8604,9 @@ testing-purpose HttpResponse attributes
 
 - ``status_code``.
 
-- ``template``.
+- ``resolver_match``. An instance of ResolverMatch for the requested url.
 
-- ``resolver_match``.
+- ``redirect_chain``. available when redirection is followed.
 
 test tags
 ---------
