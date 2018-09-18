@@ -48,7 +48,8 @@ application/framework side
 
   * ``start_response``. A callable see `start_response callable`_.
 
-  Returns an iterable yielding zero or more bytestrings.
+  Returns an iterable yielding zero or more bytestrings corresponding to
+  response body.
 
 * The same application object must be able to be invoked repeatedly.
 
@@ -125,6 +126,21 @@ WSGI-required variables
   will only be invoked once during the life of its containing process.
   Normally, this will only be true for a gateway based on CGI.
 
+- ``wsgi.file_wrapper``. server/gateway may expose high-performance file
+  transmission facilities (possibly provided by OS) via this key. An
+  application may use this "file wrapper" to convert a file or file-like object
+  into an iterable that it then returns as result.
+
+  The file wrapper callable has the following signature:
+
+  * ``filelike``. the file-like object to be sent. required.
+
+  * ``block``. block size suggestion. optional.
+
+  The callable must return an iterable object, and must not perform any data
+  transmission until and unless the server/gateway actually receives the
+  iterable as a return value from the application.
+
 server-specific variables
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 - should be named using only lower-case letters, numbers, dots, and
@@ -189,11 +205,35 @@ Handling unicode
 - HTTP does not directly support Unicode, neither does WSGI. all strings passed
   to or from the server must consist of ISO-8859-1 characters.
 
+Handling error
+--------------
+- applications should try to trap their own, internal errors, and display a
+  helpful message in the browser. 
+
+- If no output has been written when an exception occurs, the call to
+  ``start_response`` will return normally, and the application will return an
+  error body to be sent to the browser.
+  
+- If any output has already been sent to the browser, ``start_response`` will
+  reraise the provided exception.  This exception should not be trapped by the
+  application, and so the application will abort. The server or gateway can
+  then trap this (fatal) exception and abort the response.
+
+- Servers should trap and log any exception that aborts an application or the
+  iteration of its return value. If a partial response has already been written
+  to the browser when an application error occurs, the server or gateway may
+  attempt to add an error message to the output, if the already-sent headers
+  indicate a ``text/*`` content type that the server knows how to modify
+  cleanly.
+
 WSGI implementation examples
 ----------------------------
 
 server/gateway side
 ^^^^^^^^^^^^^^^^^^^
+- 作为被调用的脚本, e.g., apache CGI script. (这是设计使用环境变量传递来输入的
+  原因.)
+
 - 直接作为前端 http 服务器. e.g., gunicorn.
  
 - 配合 load balancer. e.g., bottle.py + haproxy.
