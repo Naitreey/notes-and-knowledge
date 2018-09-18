@@ -8387,30 +8387,98 @@ sqlite
 - 默认使用 in-memory database. (因为 sqlite 每个数据库就是一个文件, 没有
   server, 所以这里创建一个 in-memory db file 是最合适的.)
 
-test classes
-------------
+test cases
+----------
 
-django.test.SimpleTestCase
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+SimpleTestCase
+^^^^^^^^^^^^^^
+- Won't running tests in database transactions, therefore won't enforce test
+  isolation of database state.
 
-methods
-""""""""
+class attributes
+""""""""""""""""
+- ``allow_database_queries=False``. disable db queries by default. Because
+  transaction isn't enforced between tests.
 
-- ``assertTemplateUsed(response=None, template_name=None, msg_prefix='', count=None)``.
+- ``client_class=Client``.
+
+assertions
+""""""""""
+- ``assertFieldOutput(fieldclass, valid, invalid, field_args=None, field_kwargs=None, empty_value="")``
+  test form field behavior. 用于简化 custom form field validation 方面的测试?
+
+- ``assertRaisesMessage(expected_exception, expected_message)`` or
+  ``assertRaisesMessage(expected_exception, expected_message, callable, *args, **kwargs)``.
+  A simpler form of ``TestCase.assertRaisesRegex``. 这里简单检测 exception 的
+  string form 中是否包含 message.
+
+- ``assertWarnsMessage(expected_warning, expected_message)`` or
+- ``assertWarnsMessage(expected_warning, expected_message, callable, *args, **kwargs)``.
+  ditto for ``TestCase.assertWarnsRegex()``
+
+- ``assertHTMLEqual(html1, html2, msg=None)``. compare equality based on html
+  semantics. see docs for what is considered equal.
+
+- ``assertHTMLNotEqual(html1, html2, msg=None)``.
+
+- ``assertInHTML(needle, haystack, count=None, msg_prefix="")``
+  "in" checking based on html semantics.
+
+- ``assertXMLEqual(xml1, xml2, msg=None)``
+
+- ``assertXMLNotEqual(xml1, xml2, msg=None)``
+
+- ``assertJSONEqual(json1, json2, msg=None)``. two json are dumpped string form.
+
+- ``assertTemplateUsed(response, template_name, msg_prefix='', count=None)`` or
+  ``assertTemplateUsed(template_name)``.
+
+  * 作为 context manager 使用时, 无需生成 response, 因此可以进行任何单元级别的
+    template rendering 相关检测.
+
+  * ``template_name`` 是 ``Template.name``, 一般是从 root namespace 定位
+    template 时使用的相对路径.
+
+  * ``count``, the number of time the template should be rendered, as occurred
+    in ``response.template_names``.
 
   * 注意如果要验证的模板在所有模板搜索路径中存在重复, 即刻意的
-    overriding/extending, 只通过 ``template_name`` 校验不能完全保证正确加载,
-    还需校验 ``Template.origin.name``. 这可通过::
+    overriding/extending, 只通过 ``template_name`` 校验不能完全保证正确加载, 还
+    需校验 ``Template.origin.name``. 这可通过::
 
       self.assertTrue(any("..." in t.source.name for t in response.templates))
 
-django.test.TransactionTestCase
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- ``assertTemplateNotUsed(response, template_name, msg_prefix="")``.
+
+- ``assertContains(response, text, count=None, status_code=200, msg_prefix="", html=False)``
+  check response's status code, text occurs in its content (for exact count
+  times if provided), ``html`` see ``assertHTMLEqual()``
+
+- ``assertNotContains(response, text, status_code=200, msg_prefix="", html=False)``
+  注意要求 status code 匹配、text 不匹配.
+
+- ``assertRedirects(response, expected_url, status_code=302, target_status_code=200, msg_prefix="", fetch_redirect_response=True)``
+
+  * If response is not a followed response, check response has ``status_code``,
+    and redirects to ``expected_url``. If ``fetch_redirect_response``, then the
+    response is followed in this method, the ``target_status_code`` is checked.
+
+  * If response is a followed response, check the final point of redirect chain
+    matches ``expected_url`` and ``target_status_code``.
+
+modify settings
+"""""""""""""""
+
+TransactionTestCase
+^^^^^^^^^^^^^^^^^^^
 
 - subclass of ``SimpleTestCase``.
 
+- It resetting the database to a known state at the beginning of each test to
+  ease testing and using the ORM.
+
 methods
-""""""""
+"""""""
 
 - ``assertQuerysetEqual(qs, values, transform=repr, ordered=True, msg=None)``.
 
