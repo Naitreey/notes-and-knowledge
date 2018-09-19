@@ -8370,7 +8370,7 @@ test database definitions
 - 对于每个 ``settings.DATABASES`` 中配置的数据库, 测试时单独创建一个相应的测试
   数据库.
 
-- 这些数据库依据各自的 ``TEST`` dictionary 进行创建. 默认配置大致相当于::
+- 每个数据库依据各自的 ``TEST`` dictionary 进行创建. 默认配置大致相当于::
 
     {
         "NAME": f"test_{NAME}",
@@ -8392,8 +8392,10 @@ test cases
 
 SimpleTestCase
 ^^^^^^^^^^^^^^
-- Won't running tests in database transactions, therefore won't enforce test
-  isolation of database state.
+- 默认情况下禁止访问数据库. 如果测试用例不需要使用数据库, 则可以使用这个
+  test case class 来强制禁止.
+
+- 这里也显然不会去处理 db 状态在测试之间的一致性.
 
 class attributes
 """"""""""""""""
@@ -8401,6 +8403,12 @@ class attributes
   transaction isn't enforced between tests.
 
 - ``client_class=Client``.
+
+attributes
+""""""""""
+- ``client``. test client instance. 由于每个 test case instance 只有一个 test
+  method to run. 所以 client 实际上为单个 method 服务. 不存在 test method 之间
+  client state 的问题.
 
 assertions
 """"""""""
@@ -8466,32 +8474,84 @@ assertions
   * If response is a followed response, check the final point of redirect chain
     matches ``expected_url`` and ``target_status_code``.
 
-modify settings
-"""""""""""""""
+override settings
+"""""""""""""""""
+- ``settings(**options)``. like ``django.test.utils.override_settings``. Normally used as context manager.
+
+- ``modify_settings(**option_configs)``. like ``django.test.utils.modify_settings``.
+  But normally as context manager.
 
 TransactionTestCase
 ^^^^^^^^^^^^^^^^^^^
-
 - subclass of ``SimpleTestCase``.
 
-- It resetting the database to a known state at the beginning of each test to
-  ease testing and using the ORM.
+- TransactionTestCase 不是说把每个 test wraps 到一个 transaction 中. 而是说,
+  它适合测试 transaction 相关的功能点. 它本身并没有自动使用 transaction.
 
-methods
-"""""""
+  例如, 当一个功能点的行为根据是否在 transaction 中具有不同表现, 则无法使用
+  ``django.test.TestCase`` 进行测试, 因它总是在 transaction 中执行 test case.
 
+- json fixture loading. TransactionTestCase 保证每个 test case 数据库状态的方式
+  是,
+  
+  * 在每个 test case 执行之前, load test fixture into database
+  (``./manage.py loaddata``);
+  
+  * test case 执行之后, flush database (``./manage.py flush``), 恢复到 migration
+    执行后的状态.
+
+  这是在 ``unittest.TestCase.__call__`` 的外面来执行的. 因此在 method level
+  的 ``setUp()`` 之前与 ``tearDown()`` 之后.
+
+class attributes
+""""""""""""""""
+- ``multi_db=False``. 默认只使用对应于 default db 的测试数据库. True 则使用
+  所有数据库. 这造成的影响包括:
+  
+  * json fixture 会 load into all dbs.
+
+  * flush data 时会 flush 所有数据库.
+
+assertions
+""""""""""
 - ``assertQuerysetEqual(qs, values, transform=repr, ordered=True, msg=None)``.
 
-django.test.TestCase
-^^^^^^^^^^^^^^^^^^^^
+TestCase
+^^^^^^^^
 
 - subclass of ``TransactionTestCase``.
 
 - Suitable for tests that rely on database access. It runs each test inside a
   transaction to provide isolation.
 
-django.test.LiveServerTestCase
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- All test methods are wrapped in an overall transaction (由 ``setUpClass`` 设
+  置); each test method is wrapped in an individual savepoint (由
+  ``_fixture_setup`` 设置).
+
+- json fixture loading. 与 TransactionTestCase 不同, TestCase 只在 ``setUpClass``
+  中加载一次 json fixture. 在 ``setUpTestData()`` 之前.
+
+class methods
+"""""""""""""
+- ``setUpTestData()``. Setup test data common to the entire test class.  这些数
+  据在 ``tearDownClass()`` 中随其他数据一起被 rollback. 这用于 class-level test
+  data setup. 这个方法在 json fixture loading 之后执行.
+
+LiveServerTestCase
+^^^^^^^^^^^^^^^^^^
+- Subclass of ``TransactionTestCase``. 因此注意它保证数据库状态一致性的方式
+  并没有使用 transaction.
+
+- 它的逻辑是, 单开线程运行 threaded dev server. 从主线程中发请求 (而不是直接
+  访问 django 内部) 至 server socket, 由 OS 转发至 server thread. 后者按照
+  标准的服务端处理流程进行响应.
+
+  除此之外, LiveServerTestCase 与 TransactionTestCase 的功能一致.
+
+- 它不是 subclass of ``TestCase``. 原因: TestCase 需要共享 class-level atomic
+  blocks (``TestCase.cls_atomics``). 由于 TestCase class 是全局的, 将导致各个线
+  程共享 transaction. 而这里, 我们需要 server thread 自己做线程和 transaction
+  管理 (就像一个标准 web server 那样). 所以不能使用 TestCase.
 
 - 配合外部测试工具使用. 当外部测试工具需要进行 functional tests, 进行真实的
   服务端访问时, 必须要有一个 web server 在运行, 不能使用 ``django.test.Client``
@@ -8504,15 +8564,76 @@ django.test.LiveServerTestCase
   server thread, 这样自动使用了已经使用 ``TEST`` 部分配置好的数据库连接, 只会
   访问测试数据库.
 
-- bind to localhost and some ephemeral port (0). Can be accessed via
-  ``live_server_url``.
-
 - 注意 django core 的 runserver command 不提供 serve static files 的功能.
   相应地 ``LiveServerTestCase`` 只是为了方便, 提供了 serve ``STATIC_ROOT``
   下静态文件的功能. 若要方便测试时 serve 源代码目录下的静态文件, 使用
   `StaticLiveServerTestCase`_.
 
+- Server thread is launched during test class setup, shut down during test
+  class teardown.
 
+class attribute
+"""""""""""""""
+- ``host='localhost'``.
+
+- ``port=0``. default 0. ephemeral port.
+
+- ``server_thread_class=LiveServerThread``
+
+- ``static_handler``. handler for serving static files.
+
+- ``live_server_url``. 默认设置 server thread bind to localhost and some
+  ephemeral port (0). 所以需要访问这个属性获取实际的 url.
+
+StaticLiveServerTestCase
+^^^^^^^^^^^^^^^^^^^^^^^^
+- See `StaticLiveServerTestCase`_.
+
+json test fixtures
+^^^^^^^^^^^^^^^^^^
+- 避免使用 json test fixtures.
+  
+  * json test fixtures are loaded and purged between each test methods.
+    所以会非常慢.
+
+  * It makes test less readable (because json fixture's content is opaque in
+    test code)
+
+  * It makes test less maintainable (如果多个 test case 需要使用类似的却不完全相同的
+    json fixtures, 则需要复制整个 json file. 再做修改.)
+
+  * schema changes needs to modify json fixtures accordingly.
+
+- 准备 test data 的更好方式.
+  
+  * test method 中配置 fixture data.
+    
+  * test method level common fixture data, ``setUp()``, ``tearDown()``.
+
+  * test class level common fixture data ``setUpTestData()``, ``setUpClass()``.
+    
+  配合 factory boy, faker 等使用.
+
+override settings
+^^^^^^^^^^^^^^^^^
+- ``override_settings(**options)``. temporarily overrides a list of settings
+  passed in as kwargs. 相关的 setting 的值被直接替换掉.
+  
+  Can be used as context manager, function/class decorator etc.
+
+- ``modify_settings(**option_configs)``. 当要修改的 setting 的值是多项时, 直接
+  替换不方便. 使用这个来做部分修改. value of each key is a dict with three
+  optional keys:
+
+  * ``append``
+
+  * ``prepend``
+
+  * ``remove``
+
+  whose value can be a string or a list of values.
+
+  Can be used as context manager, function/class decorator etc.
 
 request and response
 --------------------
@@ -8693,24 +8814,6 @@ test tags
   试用例没有执行. 然而, 如果执行全部测试用例时 (不过滤), 则发现这些测试代码发生
   了 module level error.
 
-json test fixtures
-------------------
-- 避免使用 json test fixtures.
-  
-  * json test fixtures are loaded and purged between each test methods.
-    所以会非常慢.
-
-  * It makes test less readable (because json fixture's content is opaque in
-    test code)
-
-  * It makes test less maintainable (如果多个 test case 需要使用类似的却不完全相同的
-    json fixtures, 则需要复制整个 json file. 再做修改.)
-
-  * schema changes needs to modify json fixtures accordingly.
-
-  最好在 test case 中配置 fixture data, 使用例如 ``unittest.TestCase.setUp()``,
-  ``django.TestCase.setUpTestData()``. 以及使用 factory boy.
-
 test runners
 ------------
 
@@ -8781,6 +8884,23 @@ design patterns
 - model layer test 除非必要, 尽量不碰数据库. 数据库会极大降低 UT 的执行速度.
 
   * use in-memory model instance whenever possible.
+
+- 选择使用合适的 test case class:
+
+  * ``unittest.TestCase``. 对于单元测试, 为保证测试的独立性, 可以选择不使用
+    django test case classes. 这样避免了访问 django 提供的集成测试工具.
+  
+  * ``SimpleTestCase``. 适合测试不需要使用数据库时, 这样可以完全禁止访问数据库.
+    适合单元测试, 不适合集成和功能测试.
+
+  * ``TransactionTestCase``. 适合测试需要手动构建 db transaction 的情况, 无论
+    是单元还是集成.
+
+  * ``TestCase``. 适合需要访问数据库时, 保证数据库状态一致性, 单元测试和集成测
+    试.
+
+  * ``LiveServerTestCase``, ``StaticLiveServerTestCase``. 因开启 server, 适合功
+    能测试.
 
 - 区分清晰哪部分属于 SUT, 哪部分属于外部依赖, 这样才能确定什么东西是需要 mock
   掉的. 例如, 在一个功能中, 不仅仅 form 层是 view 层的依赖; 在 view 层代码中,
