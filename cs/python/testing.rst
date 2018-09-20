@@ -356,7 +356,8 @@ skipping
 
 - ``@skipIf(condition, reason)``. ditto for conditional skipping. 这用于根据环
   境情况来选择是否执行某些测试. 例如当软件需要兼容多个环境, 而一些测试是
-  environment-specific 的时候.
+  environment-specific 的时候; 当一些测试是在包含 optional dependencies 的情况下
+  执行.
 
 - ``@skipUnless(condition, reason)``. ditto, in reverse.
 

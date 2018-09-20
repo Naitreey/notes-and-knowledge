@@ -2847,6 +2847,14 @@ settings
 
 * ``UST_TZ`` determines whether datetime objects are naive.
 
+signals
+-------
+
+setting_changed
+^^^^^^^^^^^^^^^
+django 在以下位置设置了相关的 event handler:
+
+
 design pattern
 --------------
 - the section describes how to design django settings in a flexible way that
@@ -8350,15 +8358,6 @@ i18n
 testing
 =======
 
-- django 提供的各种测试工具, 包括 ``TestCase``, ``Client`` 等工具, 对写集成
-  测试很有帮助. 它们中的一部分也适合去写单元测试.
-
-- 注意在写单元测试时, 要避免使用 django 提供的各种非模块化的、跨越多个实现层
-  的那些工具.
-
-- django 默认使用 unittest module 实现自动化测试. 但提供与多种单元测试框架集成
-  的方式.
-
 test databases
 --------------
 - 测试数据库在测试开始时创建, 测试结束后自动删除. 除非使用了 ``--keepdb`` option.
@@ -8387,8 +8386,8 @@ sqlite
 - 默认使用 in-memory database. (因为 sqlite 每个数据库就是一个文件, 没有
   server, 所以这里创建一个 in-memory db file 是最合适的.)
 
-test cases
-----------
+writing test cases
+------------------
 
 SimpleTestCase
 ^^^^^^^^^^^^^^
@@ -8415,6 +8414,12 @@ assertions
 - ``assertFieldOutput(fieldclass, valid, invalid, field_args=None, field_kwargs=None, empty_value="")``
   test form field behavior. 用于简化 custom form field validation 方面的测试?
 
+- ``assertFormError(response, form, field, errors, msg_prefix="")``.
+  并没有什么用. 集成测试级别的输入, 单元测试级别的检测, 乱七八糟.
+
+- ``assertFormsetError(response, formset, form_index, field, errors, msg_prefix='')``.
+  ditto.
+
 - ``assertRaisesMessage(expected_exception, expected_message)`` or
   ``assertRaisesMessage(expected_exception, expected_message, callable, *args, **kwargs)``.
   A simpler form of ``TestCase.assertRaisesRegex``. 这里简单检测 exception 的
@@ -8436,7 +8441,10 @@ assertions
 
 - ``assertXMLNotEqual(xml1, xml2, msg=None)``
 
-- ``assertJSONEqual(json1, json2, msg=None)``. two json are dumpped string form.
+- ``assertJSONEqual(json, expected_data, msg=None)``. json is in dumpped string
+  form.
+
+- ``assertJSONNotEqual(json, expected_data, msg=None)``
 
 - ``assertTemplateUsed(response, template_name, msg_prefix='', count=None)`` or
   ``assertTemplateUsed(template_name)``.
@@ -8456,7 +8464,8 @@ assertions
 
       self.assertTrue(any("..." in t.source.name for t in response.templates))
 
-- ``assertTemplateNotUsed(response, template_name, msg_prefix="")``.
+- ``assertTemplateNotUsed(response, template_name, msg_prefix="")`` or
+- ``assertTemplateNotUsed(template_name)``.
 
 - ``assertContains(response, text, count=None, status_code=200, msg_prefix="", html=False)``
   check response's status code, text occurs in its content (for exact count
@@ -8480,6 +8489,14 @@ override settings
 
 - ``modify_settings(**option_configs)``. like ``django.test.utils.modify_settings``.
   But normally as context manager.
+
+hooks
+"""""
+- ``_pre_setup()``. 这里做了以下事情:
+
+  * 每个 test case 执行之前新建一个 ``client`` instance.
+
+  * 每个 test case 执行之前清空 ``mail.outbox``.
 
 TransactionTestCase
 ^^^^^^^^^^^^^^^^^^^
@@ -8515,6 +8532,17 @@ class attributes
 assertions
 """"""""""
 - ``assertQuerysetEqual(qs, values, transform=repr, ordered=True, msg=None)``.
+  qs is transformed by ``transform``, then compared with values.
+
+  * If unordered, item counts are compared.
+
+  * If ordered, they must be a list of the same items. 在考虑顺序的比较时, if
+    qs is not ordered, ValueError is raised.
+
+- ``assertNumQueries(num, func, *args, using=DEFAULT_DB_ALIAS, **kwargs)`` or
+- ``assertNumQueries(num, using=DEFAULT_DB_ALIAS)``
+  assert the number of db queries are made in ``func(*args, **kwargs)`` or in
+  the context.
 
 TestCase
 ^^^^^^^^
@@ -8631,9 +8659,34 @@ override settings
 
   * ``remove``
 
-  whose value can be a string or a list of values.
+  whose value can be a string or a list of values. 注意, keys 的顺序影响操作结果.
+  所以要考虑清楚.
 
   Can be used as context manager, function/class decorator etc.
+
+- 临时删除配置项.
+
+  * 使用 ``override_settings()`` without args. ``override_settings`` 本身会创建
+    一个 new settings 临时替换 original settings.
+
+  * 在 test 过程中, 访问 settings, 删除所需属性.
+
+- 以上修改 settings 的 procedure, 会在正向和反向修改结束后都 trigger
+  ``setting_changed`` signal.
+
+email handing
+^^^^^^^^^^^^^
+- test runner transparently replaces the normal email backend with an in-memory
+  noop backend ``locmem.EmailBackend``. See `locmem`_ for details.
+
+- ``mail.outbox``.
+
+  * a list of ``EmailMessage`` accumulated during test method running.
+
+  * 该属性只在测试时存在.
+  
+  * 对于 SimpleTestCase, 每个 test method 执行之前会清空 outbox. 通过设置
+    ``mail.outbox = []`` 来手动清空.
 
 request and response
 --------------------
@@ -8799,12 +8852,18 @@ testing-purpose HttpResponse attributes
 
 test tags
 ---------
-- ``django.test.tag``
+- ``@tag(*tags)``. 应用于 test class/method 上. Subclasses inherit tags from
+  superclasses, and methods inherit tags from their class.
 
-- 对不同类型的测试用例添加相应的 tag, 例如 ``ut`` for unit test, ``it`` for
+  object's tags is kept in its ``obj.tags`` attribute, as a set.
+
+- 对不同类型的测试用例应添加相应的 tag, 例如 ``ut`` for unit test, ``it`` for
   integration test, ``ft`` for functional test. 这样有助于在命令行上迅速选择需
-  要执行的测试集 ``./manage.py test --tag``. 无需写冗长的目录层级以及遍历所有
-  apps.
+  要执行的测试集::
+ 
+    ./manage.py test [--tag <tag1>]... [--exclude-tag <tag>]...
+
+  无需写冗长的目录层级以及遍历所有 apps.
 
 - 注意必须要避免测试代码中出现 module level error. 这会影响给测试用例打 tag.
   
@@ -8813,6 +8872,19 @@ test tags
   行 tag 执行测试时, 就会直接过滤掉这些加载失败的测试代码. 这导致看上去新增的测
   试用例没有执行. 然而, 如果执行全部测试用例时 (不过滤), 则发现这些测试代码发生
   了 module level error.
+
+skipping tests
+--------------
+- ``@skipIfDBFeature(*features)``. decorator to class or method. skip if
+  db supports at least one of the named features. A feature is an attribute
+  name of ``connection.features``, as in ``DatabaseFeatures`` of each db
+  backend.
+
+- ``@skipUnlessDBFeature(*features)``. Skip a test unless a database has all
+  the named features.
+
+- ``@skipUnlessAnyDBFeature(*features)``. Skip a test unless a database has any
+  of the named features.
 
 test runners
 ------------
@@ -8824,37 +8896,68 @@ test runners
 
 DiscoverRunner
 ^^^^^^^^^^^^^^
-- For fast UTs, parallel actually makes the whole suite slower to run.
+- 基于 unittest discovery 来构建 test suites. 因此, test files 可以根据任何项目
+  合理的方式去组织.
+
+- 对 CLI 上 ``test_label`` 的解释:
+
+  * 可以是 unittest 接受的单个 module, class, method, etc. 但不能是 file path.
+
+  * 可以是 unittest discover 接受的目录, for discovery.
+
+  * 若不指定, 相当于从当前目录开始 test discovery.
 
 methods
-""""""""
+"""""""
 - ``add_arguments(parser)``. add command line arguments to ``parser``.
   DiscoverRunner 定义了以下选项:
+
+  * ``--pattern <pattern>``. same option to unittest discovery cli. It defaults
+    to ``test*.py``.
+
+  * ``--top-level-directory``. same option to unittest discovery cli.
 
   * ``--keepdb``. Preserve test database between ``./manage.py test`` runs.
     测试数据库和相关 migrations 若已经存在则不会重新创建, 测试运行完后也不会
     销毁测试数据库. 每次执行时检查是否有 unapplied migrations, 若有则应用.
     这可以极大地提高单元测试执行速度.
 
-  * ``--pattern <pattern>``. discover any file under the current working
-    directory matching ``<pattern>``. It defaults to ``test*.py``.
+  * ``--reverse``. sort test cases in reverse order. 可用于调试 test isolation
+    问题.
+
+  * ``--debug-mode``. 一般测试时 ``DEBUG=False``. 这里强制设置为 True, 可
+    用于调试测试中遇到的问题.
+
+  * ``--debug-sql``. 使用 CursorDebugWrapper, 将 sql logging 同 unittest 对每个
+    test case 的信息一同输出. 在与 django 默认日志配置相兼容的 ``LOGGING_CONFIG``
+    配置下, 这里会默认只对 failing test 输出 sql log; 当 ``--verbosity`` >= 2
+    时, 对所有 test 都输出.
+
+  * ``--parallel [N]``. run tests in parallel. If N is omitted, use host's
+    number of logical cores.
+
+    Each process gets its own database. You must ensure that different test
+    cases don’t access the same external resources.
+
+    To display traceback, require tblib. 即使这样也可能出问题. 因此只能说
+    如果希望很快执行一遍, 可以尝试这个. 但不保证可靠.
+
+  * ``--tag <tag>``. run specified tag. may be specified multiple times.
+
+  * ``--exclude-tag <tag>``. this takes precedence over ``--tag``. may be
+    specified multiple times.
 
 management commands
 -------------------
+
+test
+^^^^
 ::
-  test [<test_label>]...
+  ./manage.py test [<test_label>]...
 
-- Test discovery based on unittest's test discovery.
+- 对 ``test_label`` 的解析取决于 test runner. See `test runners`_.
 
-- test labels can be supplied to run the specific tests. Each test label can
-  be
-  
-  * a full Python dotted path to a package, module, TestCase subclass, or
-    test method, to discover tests under that namespace.
-
-  * a directory to discover tests under that directory.
-
-- Abort testing.
+- Abort testing. similar to unittest's behavior.
 
   * press Ctrl-C once. the test runner will wait for the currently running test
   to complete and then exit gracefully. During a graceful exit the test
@@ -8866,11 +8969,28 @@ management commands
   No details of the tests run before the interruption will be reported, and
   any test databases created by the run will not be destroyed.
 
+- options.
+
+  * ``--failfast``. same option of unittest
+
+  * ``--testrunner``. specify a test runner class to use, instead of
+    ``settings.TEST_RUNNER``.
+
+- also accepts other options defined by test runner class.
+  See `test runners`_.
+
+integration with testing frameworks
+-----------------------------------
+- django 默认基于 unittest module 实现自动化测试的诸多功能. 但提供与多种单元测
+  试框架集成的方式.
+
 design patterns
 ---------------
-- directory organization:
+- test directory organization:
   
   * FT/IT/UT 分别放在 ``<app_name>/fts``, ``<app_name>/its``, ``<app_name>/uts``.
+
+  * 由于使用 unittest discovery 机制, 目录名称不固定.
 
 - Every layers of code must be unit-tested in isolation. view, form, model etc.
   Use mocks to ensure test isolation.
@@ -8977,6 +9097,12 @@ design patterns
 
   * 也许对一些复杂的 data migration 的 (不依赖于某个历史状态的) 局部逻辑可能
     需要单元测试.
+
+- 对 management commands 进行功能测试.
+
+  * 使用 ``call_command()``
+
+  * 将输出转入 in-memory file-like object, e.g., StringIO.
 
 django-admin
 ============
