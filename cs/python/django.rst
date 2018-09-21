@@ -8358,34 +8358,6 @@ i18n
 testing
 =======
 
-test databases
---------------
-- 测试数据库在测试开始时创建, 测试结束后自动删除. 除非使用了 ``--keepdb`` option.
-
-- 创建数据库后, 自动应用 migrations.
-
-test database definitions
-^^^^^^^^^^^^^^^^^^^^^^^^^
-- 对于每个 ``settings.DATABASES`` 中配置的数据库, 测试时单独创建一个相应的测试
-  数据库.
-
-- 每个数据库依据各自的 ``TEST`` dictionary 进行创建. 默认配置大致相当于::
-
-    {
-        "NAME": f"test_{NAME}",
-        # other configs from parent dict
-    }
-
-mysql
-"""""
-- 关于 charset & collation 的设置, 见 mysql sections of `connection settings`_ of
-  `database definitions`_.
-
-sqlite
-""""""
-- 默认使用 in-memory database. (因为 sqlite 每个数据库就是一个文件, 没有
-  server, 所以这里创建一个 in-memory db file 是最合适的.)
-
 writing test cases
 ------------------
 
@@ -8885,6 +8857,34 @@ skipping tests
 
 - ``@skipUnlessAnyDBFeature(*features)``. Skip a test unless a database has any
   of the named features.
+
+test databases
+--------------
+- 测试数据库在测试开始时创建, 测试结束后自动删除. 除非使用了 ``--keepdb`` option.
+
+- 创建数据库后, 自动应用 migrations.
+
+test database definitions
+^^^^^^^^^^^^^^^^^^^^^^^^^
+- 对于每个 ``settings.DATABASES`` 中配置的数据库, 测试时单独创建一个相应的测试
+  数据库.
+
+- 每个数据库依据各自的 ``TEST`` dictionary 进行创建. 默认配置大致相当于::
+
+    {
+        "NAME": f"test_{NAME}",
+        # other configs from parent dict
+    }
+
+mysql
+"""""
+- 关于 charset & collation 的设置, 见 mysql sections of `connection settings`_ of
+  `database definitions`_.
+
+sqlite
+""""""
+- 默认使用 in-memory database. (因为 sqlite 每个数据库就是一个文件, 没有
+  server, 所以这里创建一个 in-memory db file 是最合适的.)
 
 test runners
 ------------
