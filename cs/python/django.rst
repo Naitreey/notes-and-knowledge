@@ -6219,7 +6219,7 @@ subsettings
 backend-specific notes
 ^^^^^^^^^^^^^^^^^^^^^^
 mysql
-""""""
+"""""
 
 * 对于 mysql, 配置值加载顺序. (优先级低至高.)
 
@@ -6260,10 +6260,10 @@ mysql
   charset 通信. 由于不能保证 django server 运行的环境中有 mysql 配置文件, 因此
   需要在这里配置.
 
-* 对于测试数据库, 也需要保证默认 charset 为 utf8mb4, 以及合适的 collation. 如果
-  mysqld system variable 已经设置 ``character_set_server`` 为 utf8mb4, 并设置了
-  合适的 ``collation_server``, 则不需要单独设置.  否则的话, 需要单独设置一个
-  ``TEST`` dict::
+* 对于测试数据库, 需要保证创建数据库时使用的 charset 为 utf8mb4, 以及合适的
+  collation. 如果 mysqld system variable 已经设置 ``character_set_server`` 为
+  utf8mb4, 并设置了合适的 ``collation_server``, 则不需要单独设置.  否则的话, 需
+  要单独设置一个 ``TEST`` dict::
 
     'TEST': {
         'CHARSET': "utf8mb4",
@@ -8492,6 +8492,18 @@ TransactionTestCase
   这是在 ``unittest.TestCase.__call__`` 的外面来执行的. 因此在 method level
   的 ``setUp()`` 之前与 ``tearDown()`` 之后.
 
+- 对初始数据的注意事项.
+
+  * TransactionTestCase 本身没有自动应用 transaction, 为恢复数据库状态, 采用的方法
+    是 test case 后 flush database. 然而这也会丢失在 migration phase 应用的 data
+    migration 数据.
+
+  * 这就是为什么说当直接使用 TransactionTestCase 时, 只应该用于测试 transaction.
+    而 SimpleTestCase/TestCase 在单元或集成测试中一般都是更好的选择.
+
+  * 对于需要 TransactionTestCase 保留初始数据的情况, 应设置 ``serialized_rollback``.
+    LiveServerTestCase, StaticLiveServerTestCase 等就是这样.
+
 class attributes
 """"""""""""""""
 - ``multi_db=False``. 默认只使用对应于 default db 的测试数据库. True 则使用
@@ -8500,6 +8512,12 @@ class attributes
   * json fixture 会 load into all dbs.
 
   * flush data 时会 flush 所有数据库.
+
+- ``serialized_rollback=False``. Reload initial data applied during migration
+  phase (data migration), on a per-testcase basis. 这是为了避免, TransactionTestCase
+  在 test case 执行完后 flush database 导致的初始数据丢失.
+
+  这个选项要配合 ``SERIALIZE=True``.
 
 assertions
 """"""""""
@@ -8541,6 +8559,9 @@ LiveServerTestCase
 ^^^^^^^^^^^^^^^^^^
 - Subclass of ``TransactionTestCase``. 因此注意它保证数据库状态一致性的方式
   并没有使用 transaction.
+
+  * 注意必须设置 ``serialized_rollback=True``, 以保证 data migration 不被
+    flush 掉. 并且考虑到 FT 对效率不太敏感.
 
 - 它的逻辑是, 单开线程运行 threaded dev server. 从主线程中发请求 (而不是直接
   访问 django 内部) 至 server socket, 由 OS 转发至 server thread. 后者按照
@@ -8667,21 +8688,29 @@ RequestFactory
 ^^^^^^^^^^^^^^
 - 用于生产 mock HttpRequest objects. 这主要用于对 view 进行单元测试时, 传递进入
   view.
-  
+
 - 说它是 mock request, 是因为这样生成的 HttpRequest, 可以具有 view 交互所需的
   api & attributes, 但并不与真实的 HttpRequest 完全相同. 这符合 mock 的实质. 
   RequestFactory 的意义是封装了对这种很复杂的 mock object 的构建流程. 否则每次
   手工去构建的话, 根本不可能.
 
-- 它的各个 request methods 只是生成相应的 fake HttpResponse object 即返回, 并不
-  进行真正的 request processing 流程. 这由它的子类 Client 来实现.
-
 constructor
-""""""""""""
+"""""""""""
 - ``json_encoder=DjangoJSONEncoder``. json encoder used when posting json data.
 
 - ``**defaults``. default wsgi request environs. can be overriden by calls of
   each request methods.
+
+request methods
+"""""""""""""""
+- ``get()``, ``post()``, ``put()``, ``delete()``, ``head()``, ``options()``,
+  ``trace()``.
+  
+- see `Client`_ for signatures. They have the same signature except for
+  ``follow``.
+
+- 它的各个 request methods 只是生成相应的 fake HttpResponse object 即返回, 并不
+  进行真正的 request processing 流程. 这由它的子类 Client 来实现.
 
 Client
 ^^^^^^
@@ -8860,26 +8889,58 @@ skipping tests
 
 test databases
 --------------
-- 测试数据库在测试开始时创建, 测试结束后自动删除. 除非使用了 ``--keepdb`` option.
+
+workflow
+^^^^^^^^
+- 测试时对数据库的配置操作由 test runner 定义. 以下描述适用于 DiscoverRunner.
+
+- 对于每个 ``settings.DATABASES`` 中配置的数据库, 测试时单独创建一个相应的测试
+  数据库.
+
+  * 测试数据库在测试开始时创建, 测试结束后自动删除. 除非使用了 ``--keepdb`` option.
+
+  * 创建测试库的顺序由 ``TEST.DEPENDENCIES`` key 决定.
 
 - 创建数据库后, 自动应用 migrations.
 
 test database definitions
 ^^^^^^^^^^^^^^^^^^^^^^^^^
-- 对于每个 ``settings.DATABASES`` 中配置的数据库, 测试时单独创建一个相应的测试
-  数据库.
+- 每个数据库依据各自的 ``TEST`` dictionary 进行创建. 注意 TEST dict 只进行测试库
+  定义, 而连接参数仍然使用 parent db settings dict.
 
-- 每个数据库依据各自的 ``TEST`` dictionary 进行创建. 默认配置大致相当于::
+- 测试时使用的数据库用户必须有创建、删除数据库的权限.
 
-    {
-        "NAME": f"test_{NAME}",
-        # other configs from parent dict
-    }
+keys
+""""
+- ``NAME``. test db name. default ``test_${NAME}``.
+
+  * for sqlite, use a in-memory db, rather than this name.
+
+- ``CHARSET``. 创建测试库使用的 charset. 注意到 ``DATABASES`` connection dict
+  中没有这一项, 这是因为生产库不是由 django 创建的. 在那里, 只需要配置连接参数.
+  而这里是建库参数. 默认使用 db-specific default.
+
+  * 对于 mysql, fallback to ``character_set_server``
+
+- ``COLLATION``. ditto.
+
+  * 只对 mysql 有效, fallback to ``collation_server``
+
+- ``SERIALIZE``. serialize database state into in-memory JSON, attached to db
+  connection, used to restore database state between tests in TransactionTestCase.
+  default True.
+
+- ``DEPENDENCIES``. test db creation dependency. default ``['default']``.
+
+- ``MIRROR``. 配置该测试数据库为某个 alias 的 mirror. 这是在当 parent dict 实际
+  上是作为某个 primary 数据库的 replica 时来使用. 设置 mirror 后, 该测试库并不
+  单独创建, the connection to replica will be redirected to point the database
+  it mirrors. 这样就模拟了 replication.
 
 mysql
 """""
-- 关于 charset & collation 的设置, 见 mysql sections of `connection settings`_ of
-  `database definitions`_.
+- 关于 charset & collation 的设置, 见 mysql sections of `backend-specific notes`_
+  of `database`_.
 
 sqlite
 """"""
@@ -8889,26 +8950,15 @@ sqlite
 test runners
 ------------
 
-- 在功能性测试中, 一般需要浏览器. 常见的处理方法是在每个 test class 的
-  setup/teardown 中打开和关闭浏览器. 这带来的问题是太慢了. 我这里写了
-  一个 test runner 在 setup/teardown test environment 时打开和关闭浏览器.
-  `code <snippets/browser_test_runner.py>`_
-
 DiscoverRunner
 ^^^^^^^^^^^^^^
-- 基于 unittest discovery 来构建 test suites. 因此, test files 可以根据任何项目
-  合理的方式去组织.
 
-- 对 CLI 上 ``test_label`` 的解释:
+setup/teardown
+""""""""""""""
+- 为保证测试与生产情况符合, runner 会在 setup 过程中设置 ``DEBUG=False``.
 
-  * 可以是 unittest 接受的单个 module, class, method, etc. 但不能是 file path.
-
-  * 可以是 unittest discover 接受的目录, for discovery.
-
-  * 若不指定, 相当于从当前目录开始 test discovery.
-
-methods
-"""""""
+cli handling
+""""""""""""
 - ``add_arguments(parser)``. add command line arguments to ``parser``.
   DiscoverRunner 定义了以下选项:
 
@@ -8946,6 +8996,33 @@ methods
 
   * ``--exclude-tag <tag>``. this takes precedence over ``--tag``. may be
     specified multiple times.
+
+- 对 CLI 上 ``test_label`` 的解释:
+
+  * 可以是 unittest 接受的单个 module, class, method, etc. 但不能是 file path.
+
+  * 可以是 unittest discover 接受的目录, for discovery.
+
+  * 若不指定, 相当于从当前目录开始 test discovery.
+
+test discovery
+""""""""""""""
+- 基于 unittest discovery 来构建 test suites. 因此, test files 可以根据任何项目
+  合理的方式去组织.
+
+- discovered test suite is filtered by tags.
+
+- discovered test suite is reordered into the following running order.
+
+  1. ``django.test.TestCase`` instances.
+
+  2. ``django.test.SimpleTestCase`` instances (including TransactionTestCase).
+
+  3. ``unittest.TestCase`` instances.
+
+  这是按照对测试数据库状态的可能影响的持续程度来排序的.
+
+  .. TODO 不知道这样会不会 break module-level setup/teardown?
 
 management commands
 -------------------
@@ -9014,7 +9091,7 @@ design patterns
     适合单元测试, 不适合集成和功能测试.
 
   * ``TransactionTestCase``. 适合测试需要手动构建 db transaction 的情况, 无论
-    是单元还是集成.
+    是单元还是集成. 但除此之外, 一般不该直接使用这个 class.
 
   * ``TestCase``. 适合需要访问数据库时, 保证数据库状态一致性, 单元测试和集成测
     试.
@@ -9061,6 +9138,9 @@ design patterns
     数据库, 使用 ``--keepdb`` option 仍然可以极大地提高单元测试效率. 事实上,
     与 ``--keepdb`` 相比, 完全 skip database setup 并不能提高多少速度.
 
+  * run tests in parallel. 但这不一定可靠. See `management commands`_ for
+    detail.
+
 - 关于对模板和页面的测试.
   
   * 对 template 的测试, 很难做到去将依赖项剥离, 去独立测试 template rendering.
@@ -9103,6 +9183,11 @@ design patterns
   * 使用 ``call_command()``
 
   * 将输出转入 in-memory file-like object, e.g., StringIO.
+
+- 在 web app 的功能性测试中, 一般需要浏览器. 常见的处理方法是在每个 test class
+  的 setup/teardown 中打开和关闭浏览器. 这带来的问题是太慢了. 我这里写了一个
+  test runner 在 setup/teardown test environment 时打开和关闭浏览器.
+  `code <snippets/browser_test_runner.py>`_
 
 django-admin
 ============

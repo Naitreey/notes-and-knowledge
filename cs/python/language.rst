@@ -1600,6 +1600,8 @@ dict
 - Because dict preserves key's insertion order, ``collections.OrderedDict``
   is no longer necessary.
 
+- dict 可以直接用来实现 ``OrderedSet`` 数据结构.
+
 descriptor types
 ----------------
 
