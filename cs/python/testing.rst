@@ -1096,6 +1096,12 @@ date_time
 - ``past_datetime(start_date="-30d", tzinfo=None)``. A datetime between start date and
   1second ago. start date is the same as ``date_time_between()``
 
+phone_number
+^^^^^^^^^^^^
+- ``phone_number()``.
+
+- ``msisdn()``. Mobile Station International Subscriber Directory Number.
+
 misc
 ^^^^
 

@@ -9201,13 +9201,19 @@ design patterns
     其次 django 在内存中创建 sqlite 测试库. 但如果使用了与数据库相关的功能,
     这个方法就不太可行了.
 
-    2) 在保证隔离的单元测试中, 若不需要访问数据库, 可以完全 skip database
+    2) 如果必须使用 mysql, postgres 等 full-feature 数据库, 且可能需要访问
+    数据库, 使用 ``--keepdb`` option 仍然可以极大地提高单元测试效率. 事实上,
+    与 ``--keepdb`` 相比, 完全 skip database setup 并不能提高多少速度.
+
+  * 单元测试书写方面.
+
+    1) 在保证隔离的单元测试中, 若不需要访问数据库, 可以完全 skip database
     setup.  例如通过自定义 test runner, override ``setup_databases``,
     ``teardown_databases``. See `snippets/browser_test_runner.py`.
 
-    3) 如果必须使用 mysql, postgres 等 full-feature 数据库, 且可能需要访问
-    数据库, 使用 ``--keepdb`` option 仍然可以极大地提高单元测试效率. 事实上,
-    与 ``--keepdb`` 相比, 完全 skip database setup 并不能提高多少速度.
+    2) 在保证隔离的单元测试中, 若不需要访问数据库, 可以使用 SimpleTestCase, 或
+    者 unittest.TestCase. 由于避免了 fixture setup, db transaction management
+    等 overheads, 这样可以提高数倍的单元测试执行效率.
 
   * run tests in parallel. 但这不一定可靠. See `management commands`_ for
     detail.

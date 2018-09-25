@@ -493,6 +493,9 @@ design pattern
 
   * 功能测试按需求点分测试文件, 按 user story 来组织每个文件中的测试. 每个 test
     file 中包含一个或多个用户故事组成的 test cases.
+    
+  * 在测试文件中若需要测试类, 可以按照用户类型去封装, 即对特定类型用户进行多个
+    用户故事测试. 若只有一种用户类型, 则按照其他角度来分类.
 
   * 每个 feature 可能需要多个 user stories 从不同方面具体化. 对应于一个 test
     class 的多个 test method. 每个 test method 表达一个完整的 user story.

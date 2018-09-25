@@ -64,6 +64,7 @@ bit-value literals
 ^^^^^^^^^^^^^^^^^^
 ::
 
+  [_<charset>] b'<bin>' [COLLATE <collation>]
   [_<charset>] B'<bin>' [COLLATE <collation>]
   [_<charset>] 0b<bin> [COLLATE <collation>]
   
