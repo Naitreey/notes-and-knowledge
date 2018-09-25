@@ -491,11 +491,15 @@ design pattern
 
 - 如何组织功能性测试?
 
-  * 功能测试按需求点和 user story 来分类. 每个 test file 中包含一个或多个相关的
-    test class.
+  * 功能测试按需求点分测试文件, 按 user story 来组织每个文件中的测试. 每个 test
+    file 中包含一个或多个用户故事组成的 test cases.
 
   * 每个 feature 可能需要多个 user stories 从不同方面具体化. 对应于一个 test
     class 的多个 test method. 每个 test method 表达一个完整的 user story.
+
+  * 对 index 页面, navigation bar 等的专门功能测试, 只需要测试个大概即可.
+    因为它们属于交互框架部分, 所以实际上在各个用户故事的测试过程中, 对相关
+    的具体内容都有涉及. 这样组织起来更有调理.
 
 - An application's functional tests should tell the user story or covers the
   specification in an programmatical way. The specification can be made more

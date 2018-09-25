@@ -6583,6 +6583,23 @@ operations
   aspects of old field matching new field. If strict is True, raise error if
   the old db column definition does not match old field.
 
+test database creation
+----------------------
+- ``django.db.connection.creation`` exposes test database creation/destruction
+  operations related to current connection.
+
+- ``django.db.backends.<backend>.creation`` Encapsulate backend-specific
+  operations pertaining to creation and destruction of the test database.
+
+BaseDatabaseCreation
+^^^^^^^^^^^^^^^^^^^^
+
+methods
+"""""""
+- ``create_test_db(verbosity=1, autoclobber=False, serialize=True, keepdb=False)``.
+
+- ``destroy_test_db(old_database_name=None, verbosity=1, keepdb=False, suffix=None)``
+
 authentication and authorization
 ================================
 - django auth module: ``django.contrib.auth``.
@@ -7078,8 +7095,8 @@ authenticate & login/logout
 
 - settings.
 
-  ``settings.LOGIN_URL``, default ``/accounts/login/``. 该值可以设置为
-  url pattern name.
+  ``settings.LOGIN_URL``, The URL where requests are redirected for login.
+  default ``/accounts/login/``. 该值可以设置为 url pattern name.
 
   ``settings.LOGIN_REDIRECT_URL``, 登录后的默认跳转路径.
 
@@ -8519,6 +8536,9 @@ class attributes
 
   这个选项要配合 ``SERIALIZE=True``.
 
+- ``reset_sequences=False``. reset all sequences before before running each
+  test cases.
+
 assertions
 """"""""""
 - ``assertQuerysetEqual(qs, values, transform=repr, ordered=True, msg=None)``.
@@ -8914,7 +8934,7 @@ keys
 """"
 - ``NAME``. test db name. default ``test_${NAME}``.
 
-  * for sqlite, use a in-memory db, rather than this name.
+  * for sqlite, by default use a in-memory db.
 
 - ``CHARSET``. 创建测试库使用的 charset. 注意到 ``DATABASES`` connection dict
   中没有这一项, 这是因为生产库不是由 django 创建的. 在那里, 只需要配置连接参数.
@@ -8927,8 +8947,8 @@ keys
   * 只对 mysql 有效, fallback to ``collation_server``
 
 - ``SERIALIZE``. serialize database state into in-memory JSON, attached to db
-  connection, used to restore database state between tests in TransactionTestCase.
-  default True.
+  connection, used to restore database state between tests in TransactionTestCase
+  with ``serialized_rollback=True``.  default True.
 
 - ``DEPENDENCIES``. test db creation dependency. default ``['default']``.
 
@@ -8942,20 +8962,61 @@ mysql
 - 关于 charset & collation 的设置, 见 mysql sections of `backend-specific notes`_
   of `database`_.
 
-sqlite
-""""""
-- 默认使用 in-memory database. (因为 sqlite 每个数据库就是一个文件, 没有
-  server, 所以这里创建一个 in-memory db file 是最合适的.)
-
 test runners
 ------------
+- test runner 实际上封装了 django test 的完整流程. ``test`` management
+  command 的全部行为由 test runner 定义.
+
+- test runner 的 API 要求:
+  
+  * ``run_tests(test_labels)``. Accept an iterable of test labels passed on cli
+    as positionals. return the number of failed tests.
+
+  * ``add_arguments(cls, parser)``. class method. optional. add CLI definitions
+    to ``test`` command.
 
 DiscoverRunner
 ^^^^^^^^^^^^^^
+DiscoverRunner 的工作流程, see `DiscoverRunner run_tests`_.
+
+run tests
+""""""""""
+.. _DiscoverRunner run_tests:
+
+- ``run_tests(test_labels, extra_tests=None, **kwargs)``.
+
+  * ``extra_tests`` a list of extra ``unittest.TestCase`` instances to be 
+    added to the discovered test suite.
+
+  workflow.
+
+  * setup test environment. see `setup/teardown`_.
+  
+  * build test suite by test discovery. see `test discovery`_.
+  
+  * setup test databases. see `setup/teardown`_.
+  
+  * running system checks.
+  
+  * running test suite.
+  
+  * tear down test databases. see `setup/teardown`_.
+  
+  * tear down test environment. see `setup/teardown`_.
+  
+  * return the number of test failure and errors.
 
 setup/teardown
 """"""""""""""
-- 为保证测试与生产情况符合, runner 会在 setup 过程中设置 ``DEBUG=False``.
+- ``setup_test_environment(**kwargs)``. call ``django.test.utils.setup_test_environment``.
+
+  * 为保证测试与生产情况符合, 默认 runner 会在 setup 过程中设置 ``DEBUG=False``.
+
+- ``teardown_test_environment(**kwargs)``. call ``django.test.utils.teardown_test_environment``.
+
+- ``setup_databases(**kwargs)``. call ``django.test.utils.setup_databases``.
+
+- ``teardown_databases(old_config, **kwargs)``. call ``django.test.utils.teardown_databases``.
 
 cli handling
 """"""""""""
@@ -9001,7 +9062,7 @@ cli handling
 
   * 可以是 unittest 接受的单个 module, class, method, etc. 但不能是 file path.
 
-  * 可以是 unittest discover 接受的目录, for discovery.
+  * 可以是 unittest discover 接受的目录, 或 import path, for discovery.
 
   * 若不指定, 相当于从当前目录开始 test discovery.
 
@@ -9023,6 +9084,16 @@ test discovery
   这是按照对测试数据库状态的可能影响的持续程度来排序的.
 
   .. TODO 不知道这样会不会 break module-level setup/teardown?
+
+test utilities
+--------------
+- assist in the creation of your own test runner. used by DiscoverRunner.
+
+settings
+--------
+- ``TEST_RUNNER``. 定义 ``test`` management command 使用的 runner.
+
+- ``DATABASES[alias].TEST``. see `test database definitions`_.
 
 management commands
 -------------------
