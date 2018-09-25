@@ -1410,6 +1410,11 @@ printing
 - Navbars are hidden by default when printing. Force them to be printed by
   adding ``.d-print`` to the ``.navbar``.
 
+
+dropdowns
+---------
+
+
 collapse
 --------
 ::

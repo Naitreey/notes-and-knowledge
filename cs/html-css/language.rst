@@ -1575,9 +1575,9 @@ link types
 
 - help. help materials for the element or the whole page.
 
-- icon. 指定显示在 tab 上的 icon. The ``media``, ``type`` and ``sizes``
-  attributes allow the browser to select the most appropriate icon for its
-  context.
+- icon. 指定显示在 tab 上的 icon (即 favicon). The ``media``, ``type`` and
+  ``sizes`` attributes allow the browser to select the most appropriate icon
+  for its context.
 
   iOS 的特殊情况要求使用 apple-touch-icon & apple-touch-startup-image.
 
