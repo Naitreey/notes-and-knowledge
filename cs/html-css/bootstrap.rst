@@ -548,9 +548,9 @@ horizontal form
   do this, use ``.row`` and ``.form-group`` classes together on wrapper
   element.
 
-- Use ``.col*`` classes on label and form controls for sizing. Add
-  ``.col-form-label`` to your ``<label>`` as well so they’re vertically
-  centered with their associated form controls.
+- Use ``.col*`` classes on label and wrap form controls inside ``.col*``
+  wrapper for sizing. Add ``.col-form-label`` to your ``<label>`` as well so
+  they’re vertically centered with their associated form controls.
 
 inline form
 """""""""""
