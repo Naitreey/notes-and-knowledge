@@ -974,6 +974,8 @@ to override this to add more members to the dictionary.
 
 - ``get_context_data()`` 自定义 context.
 
+  .. TODO 了解各个子类是如何 override 这个方法的.
+
 SingleObjectMixin
 """"""""""""""""""
 provides a get_object() method that figures out the object based on the
@@ -1791,9 +1793,15 @@ django template system & language
 * template namespace. 每个 app 下可以有 ``templates/`` 目录, 不同 app 的 templates
   目录在一个 namespace 中, 因此会相互覆盖. 所以需要再创建 ``templates/<app>`` 子目录.
 
-* string literal. 模板的 tag 中出现的 string literal 将原样出现在 html 中,
-  注意这些 string literal 是 verbatim 出现在 html 中, python string 的各种
-  ``\`` 转义是不支持的. 或者说, 这些字符串相当于 python raw string.
+* literals.
+
+  * 支持 scalar literals. 例如 string, integer, float, etc.
+
+  * string literal. 模板的 tag 中出现的 string literal 将原样出现在 html 中, 注
+    意这些 string literal 是 verbatim 出现在 html 中, python string 的各种
+    ``\`` 转义是不支持的. 或者说, 这些字符串相当于 python raw string.
+
+  * 不支持 list, tuple, dict 等 compound literal values.
 
 * 为了结构清晰, 应该把不同 app 的模板放在各自目录下的 ``templates/<app>/`` 下面.
 
@@ -2005,8 +2013,8 @@ tags
 
 - ``block``.
 
-  * 对于扩展而非覆盖整个 block, 可以用 ``block.super`` tag 引用父模板中的同名
-    block 内容.
+  * 对于扩展而非覆盖整个 block, 可以用 ``block.super`` variable 引用父模板中的
+    同名 block 内容.
 
   * 在一个模板文件中, block definition can be nested. 在 child template 中, 只
     需 overrides/extends parent template 声明的 block 即可. 对于 child template

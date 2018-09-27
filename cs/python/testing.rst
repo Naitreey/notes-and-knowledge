@@ -705,6 +705,10 @@ overview
 
 - Multiple factories per class support, including inheritance.
 
+- factory boy, faker 等假数据工具不该用于一般的单元测试, 也不该用于 model-level
+  单元测试. 在 model-level 单元测试中, 应手动构建 model instance, 使用 factory
+  boy 会太耗时.
+
 Factory
 -------
 
