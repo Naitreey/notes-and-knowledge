@@ -3146,7 +3146,7 @@ super keyword
 
     class C extends P {
         foo() {
-            super();
+            super.foo();
         }
     }
 

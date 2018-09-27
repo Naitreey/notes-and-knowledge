@@ -431,7 +431,11 @@ form events
 ^^^^^^^^^^^
 - submit.
 
-- change.
+- change. when a change to the element's value is committed by the user. Unlike
+  the input event, the change event is not necessarily fired for each change to
+  an element's value.
+
+- input. fired synchronously when the value of form control is changed.
 
 - reset.
 
