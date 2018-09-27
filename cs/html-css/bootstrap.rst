@@ -521,7 +521,8 @@ stacked
     其他相关的元素例如 label, 则可以没有 ``.form-group`` wrapper.
 
   * 若 form 的某一行使用了 ``.form-group``, 所有其他行也应该以某种方式使用
-    ``.form-group``, 以保证 margin-bottom 带来的 layout 一致性.
+    ``.form-group``, 以保证 margin-bottom 带来的 layout 一致性. 例如, 此时单行
+    的 button 也该放在一个 form group 中.
 
 grid
 """"

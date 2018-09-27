@@ -3531,6 +3531,10 @@ overflow
 - overflow. What to do when an element's content is too large to fit in its
   block formatting context. shorthand for overflow-x and overflow-y.
 
+  注意一个 element 符合触发 overflow 行为的标准是, 它的 children 是否比元素本身
+  的尺寸大. 而元素本身的尺寸不一定随 viewport 的变化而变化 (只有 ``<html>`` 才
+  默认会随 viewport 变化).
+
   When parent element's overflow is hidden, all child elements is hidden
   together with parent.
 
