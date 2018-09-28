@@ -109,7 +109,7 @@ why TDD
   those tests. It doesn't mean we don't plan things, design things, do
   architecture. It does mean we got a tool to support incremental development.
 
-- TDD 的功能性测试和单元测试还可以在 interface review 上发挥作用. Interface
+- TDD 的功能测试和单元测试还可以在 interface review 上发挥作用. Interface
   review 比 code review 重要.
 
 - 这种小步伐的 test/code cycle 还有助于 keep development progress. 注意到所有
@@ -149,7 +149,7 @@ questions and concerns
   * 最后, 既然逻辑 trivial, 测试 trivial, 何不少说废话直接写了得了呢?
 
 - TDD 不是不注重设计. 相反, 前期对需求的分析和功能设计的仔细考虑并没有任何改变.
-  只有当相对宏观的设计已经想清楚了, 才开始将需求和设计具体化为功能性测试用例.
+  只有当相对宏观的设计已经想清楚了, 才开始将需求和设计具体化为功能测试用例.
   此时, 才开始 TDD 的流程 (即开始开发).
 
   如果对于能通过测试的实现 (green), 如果不够清晰合理, 及时 refactor. 不是说
@@ -446,8 +446,8 @@ test classifications
 functional test (FT)
 --------------------
 
-- functional test, 在 TDD 只关注于研发阶段, 这里主要指的是研发阶段的功能性测试,
-  这不同于集成测试或系统测试时的功能性测试.
+- functional test, 在 TDD 只关注于研发阶段, 这里主要指的是研发阶段的功能测试,
+  这不同于集成测试或系统测试时的功能测试.
 
 - FTs test how application *functions* from the user's point of view.
 
@@ -463,17 +463,17 @@ functional test (FT)
 - When creating a new FT, we can write the comments first, to capture the key
   points of the user story or specification.
 
-- 即使需求通过 specification 的形式呈现, 一组功能性测试本身必然是基于某个
+- 即使需求通过 specification 的形式呈现, 一组功能测试本身必然是基于某个
   具体的 user story 来呈现和校验的 (user story 是 specification 的具体呈现). We
   use comments to explain the User Story in our functional tests, by forcing us
   to make a coherent story out of the test, it makes sure we’re always testing
   from the point of view of the user.
 
-- 功能性测试中可以测试 style design 是否按预期加载, 但不严格测试 style 本身.
+- 功能测试中可以测试 style design 是否按预期加载, 但不严格测试 style 本身.
   例如对前端页面, 测试方法可以是: 大致地测试一下某个页面组件是否在预期位置附近,
   以确定 style 文件被加载 (smoke test for css file loading).
 
-- 注意 TDD 使用的 functional tests 是不同于集成测试或系统测试中的功能性测试.
+- 注意 TDD 使用的 functional tests 是不同于集成测试或系统测试中的功能测试.
   
   * TDD 时的 FT 目的是 drive design, testing design during development.
     而集成和系统测试的目的就是测试, 而且是对开发完毕后的软件进行测试.
@@ -481,7 +481,7 @@ functional test (FT)
   * TDD 时的 FT 必须执行迅速, 快速给出反馈, 若涉及 external services, 可以
     mock. 而集成测试和系统测试必须是在真实的服务上进行测试.
 
-- 功能性测试因为是从用户角度进行测试, 这样的测试应该尽量保证与 SUT 的实现细节
+- 功能测试因为是从用户角度进行测试, 这样的测试应该尽量保证与 SUT 的实现细节
   相独立. 即黑盒测试. 然而, 由于这是研发阶段的测试, 在恰当的时候, 可以走一些
   捷径, 访问实现细节进行更方便、更高效的 baseline setup. 这需要根据具体情况
   分析决定.
@@ -489,7 +489,7 @@ functional test (FT)
 design pattern
 ^^^^^^^^^^^^^^
 
-- 如何组织功能性测试?
+- 如何组织功能测试?
 
   * 功能测试按需求点分测试文件, 按 user story 来组织每个文件中的测试. 每个 test
     file 中包含一个或多个用户故事组成的 test cases.
@@ -504,12 +504,26 @@ design pattern
     因为它们属于交互框架部分, 所以实际上在各个用户故事的测试过程中, 对相关
     的具体内容都有涉及. 这样组织起来更有调理.
 
+- 涉及外部的、不可控的系统时, 功能测试是否应该 mock?
+
+  * 在研发阶段对外部服务集成的功能测试, 有两种方式: 1) 可以手动进行, 只测试是否
+    通畅等, 在测试人员的测试中再详尽地做; 2) 确实去连接外部服务, 进行测试. 这样
+    可能很慢, 或对执行环境、条件、时机等因素具有一定的限制.
+
+  * 对于研发阶段的功能测试, 可能需要适时去与外部服务独立开来, 否则难以进行.
+    这完全是为了方便研发而进行的.
+    
+    从概念上我们实际上是划分了可控的系统部分 (我们开发的系统), 与不可控的系统部
+    分 (依赖的外部系统). 只对我们的系统进行测试.
+    
+  * 如果需要隔离外部服务, 则也需要 mock 与外部服务的相关集成点.
+
 - An application's functional tests should tell the user story or covers the
   specification in an programmatical way. The specification can be made more
   explicit by comments etc.
 
-- 功能性测试代码应当尽可能与实现独立. 功能性测试尽量不直接引用实现细节 (只检验
-  实现). 它是从外部观测. 功能性测试与所测试功能的实现理论上可以在两种不同的语言
+- 功能测试代码应当尽可能与实现独立. 功能测试尽量不直接引用实现细节 (只检验
+  实现). 它是从外部观测. 功能测试与所测试功能的实现理论上可以在两种不同的语言
   中写. 然而, 由于这是研发阶段的测试, 在恰当的时候, 可以走一些捷径, 访问实现细
   节进行更方便、更高效的 baseline setup. 这需要根据具体情况分析决定.
 
@@ -579,10 +593,10 @@ integration test
 
 - 集成测试同样也可以 drive 模块的设计和实现.
 
-- 在 TDD 流程中, 集成测试位于单元测试与研发阶段的功能性测试之间, 它的主要作用
+- 在 TDD 流程中, 集成测试位于单元测试与研发阶段的功能测试之间, 它的主要作用
   是 provide a faster feedback cycle, and help you identify more clearly what
   integration problems you suffer from, 以打通各个层. 因其快速, 可以快速检验.
-  这是功能性测试不够合适的地方.
+  这是功能测试不够合适的地方.
 
 - 注意 integration test 测试的是一个服务/组件的各个代码模块之间的集成情况. 而不
   是跨服务、跨语言的测试, 那是 system test 的职责.[SOITExAPI]_
@@ -630,7 +644,7 @@ unit test
 - Unit test verifies the correctness of the logic of a single module of your
   application.
 
-- 由于单元测试时, UUT 的依赖全部都被 mock 掉了. 一定要配合集成测试和功能性测试
+- 由于单元测试时, UUT 的依赖全部都被 mock 掉了. 一定要配合集成测试和功能测试
   来保证模块之间的协作是通畅的. 否则可能会导致 API 输入或输出与实际不符的 bug.
 
 - UTs might not catch unexpected bugs, because they are isolated out of UUT.
@@ -771,7 +785,7 @@ design patterns
 - Each test should only test one thing. Just like each function should only
   does one thing.
 
-  * 对于功能性测试, 一个 test case 只测试一个 user story. 注意到一个 user story 
+  * 对于功能测试, 一个 test case 只测试一个 user story. 注意到一个 user story 
     可能很长, 需要检测很多个功能点.
 
   * 对于单元测试, 一个 test case 只测试被测对象的一个行为点. 对一个行为点的

@@ -8621,6 +8621,15 @@ LiveServerTestCase
 - Server thread is launched during test class setup, shut down during test
   class teardown.
 
+- 测试服务器以线程方式与功能测试运行在一个进程中, 还有一个必要性:
+
+  * 研发阶段的功能测试可能需要 mock 不方便的外部依赖. 这样, test method 必须
+    与 dev server 在一个进程中, 共享全局对象. 这样 test method 中对全局量的
+    修改, 在 dev server 线程中才能可见.
+
+  * 注意到, 这也给出了一个功能测试时进行 mock 的限制: 只能 mock 多线程都可见
+    的全局量.
+
 class attribute
 """""""""""""""
 - ``host='localhost'``.
@@ -9146,16 +9155,20 @@ design patterns
   
   * FT/IT/UT 分别放在 ``<app_name>/fts``, ``<app_name>/its``, ``<app_name>/uts``.
 
-  * 由于使用 unittest discovery 机制, 目录名称不固定.
+  * 由于使用 unittest discovery 机制, 目录名称不需要固定.
 
 - Every layers of code must be unit-tested in isolation. view, form, model etc.
   Use mocks to ensure test isolation.
 
   * 严格来说, 对于 model layer 的 UT, 数据库是一个外部依赖, 应该 mock 掉. 但
-    实际上不太需要这么做, 而是保持一点 integration 的意味. 这是因为, mock
-    掉 db 层, 带来的好处是提高了 UT 执行效率; 而代价是, 需要对 db 层进行复杂
-    的 mock, 而且不能检测 model layer 真实应用到数据库中可能产生的意料之外的
-    问题.
+    实际上需要看情况处理.
+   
+  * 如果相关数据库操作容易 mock (只涉及固定的一两个数据库操作), 则可以 mock 掉.
+    这样可以极大地提高该 UT 执行效率 (可以做到测试用例执行时间在 0.002s 以下).
+    
+  * 如果不容易 mock, 则可以保持一点 integration 的意味. 这样避免了需要对 db 层
+    进行复杂的 mock, 可以检测到 model layer 真实应用到数据库中可能产生的意料之
+    外的问题.
 
 - model layer test 除非必要, 尽量不碰数据库. 数据库会极大降低 UT 的执行速度.
 
@@ -9269,6 +9282,8 @@ design patterns
   的 setup/teardown 中打开和关闭浏览器. 这带来的问题是太慢了. 我这里写了一个
   test runner 在 setup/teardown test environment 时打开和关闭浏览器.
   `code <snippets/browser_test_runner.py>`_
+
+- 如果在 FT 中需要 mock 掉外部依赖,
 
 django-admin
 ============
