@@ -1106,6 +1106,39 @@ phone_number
 
 - ``msisdn()``. Mobile Station International Subscriber Directory Number.
 
+
+company
+^^^^^^^
+- ``bs()``. business/bullshit word?
+
+- ``company()``. company name
+
+- ``company_suffix()`` company suffix, such as Inc., Ltd.
+
+- ``catch_phrase()``.
+
+lorem
+^^^^^
+- ``word(ext_word_list=None)``. generate a random word,
+  optionally from the provided list.
+
+- ``words(nb=3, ext_word_list=None)``. generate a list of
+  words. default is 3.
+
+- ``sentence(nb_words=6, variable_nb_words=True, ext_word_list=None)``.
+  a random sentence. ``nb_words`` 应包含的单词数目. ``variable_nb_words``
+  对返回的单词数目进行一定的漂移.
+
+- ``sentences(nb=3, ext_word_list=None)``. a list of sentences.
+
+- ``paragraph(nb_sentences=3, variable_nb_sentences=True, ext_word_list=None)``.
+
+- ``paragraphs(nb=3, ext_word_list=None)``
+
+- ``text(max_nb_chars=200, ext_word_list=None)``. a string.
+  Depending on the ``max_nb_chars``, returns a string made of words,
+  sentences, or paragraphs.
+
 misc
 ^^^^
 
