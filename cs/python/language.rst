@@ -1594,6 +1594,11 @@ mapping types
 
 dict
 ^^^^
+- Dictionaries compare equal if and only if they have the same ``(key, value)``
+  pairs. 这说明:
+
+  * key 之间和 value 之间的比较是通过 equality (``==``) 进行的.
+
 - In Python 3.7+, Dictionaries preserve insertion order. Updating a key does
   not affect the order. Keys re-added after deletion are inserted at the end.
 

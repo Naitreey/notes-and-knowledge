@@ -7948,7 +7948,14 @@ builtin signals
 
 两种方式.
 
-- ``Signal.connect()``
+- ``Signal.connect()``.
+
+  * ``weak=True``. Signals handlers are stored by default as weak references.
+
+    这是考虑到使用一个 local object 的 method 作为 signal handler 时, 希望当
+    object 的 scope 结束后, object 能够被正常 gc (handler 也自动消失).
+
+    see also: [SODjSignalWeakRef]_.
 
 - ``django.dispatch.receiver()`` decorator.
 
@@ -9838,3 +9845,4 @@ References
 .. [SODjTemplateDebug] `Django debug display all variables of a page <https://stackoverflow.com/a/21205925/1602266>`_
 .. [SODjSettings] `How to manage local vs production settings in Django? <https://stackoverflow.com/questions/1626326/how-to-manage-local-vs-production-settings-in-django>`_
 .. [SODjModelFormTDD] `TDD in Django, how to unit test my modelform? <https://stackoverflow.com/questions/51763138/tdd-in-django-how-to-unit-test-my-modelform/51781735#51781735>`_
+.. [SODjSignalWeakRef] `Why does Django's signal handling use weak references for callbacks by default? <https://stackoverflow.com/questions/1110668/why-does-djangos-signal-handling-use-weak-references-for-callbacks-by-default>`_
