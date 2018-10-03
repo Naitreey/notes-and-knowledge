@@ -828,6 +828,19 @@ Subscriptions & slicing
 
 slicing (包含 subscription) 是通过 ``__getitem__`` 实现.
 
+
+Calls
+-----
+- 当 function call 中使用了 iterable unpacking ``*iterable`` syntax, the
+  following operation is performed on ``iterable`` to obtain the necessary
+  information and values to be passed to the call:
+
+  * ``__iter__`` is called to get an iterator to generating values.
+
+  * ``__len__`` is called to inspect the number of values that is available
+    here. 这用于计算传入的 args 数目, 与 function signature 进行比较. (当
+    args 数目大于 function 接受的 positional 数量, 则 raise TypeError.)
+
 comparisons
 -----------
 - comparison operators::
@@ -1078,8 +1091,8 @@ function definitions
   
   * 将递归逻辑转变成循环逻辑来实现.
 
-  * 使用一个修改的 Y combinator 将递归算法转变成非递归算法[SOPyRecur]_, 将运算结果以
-    函数返回, 再循环 unwrap 每层函数. See also tco module[TCO]_.
+  * 使用一个修改的 Y combinator 将递归算法转变成非递归算法 [SOPyRecur]_, 将运算结果以
+    函数返回, 再循环 unwrap 每层函数. See also tco module [TCO]_.
 
 
 class definitions

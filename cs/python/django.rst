@@ -191,7 +191,7 @@ class attributes
   个 name 是因为 AppConfig 理论上可以放在任何地方, 所以需要指定它所配置的 app
   的所在位置. Required, must be unique across django project.
 
-- ``label``. 这是各处使用的 app label 的来源. 默认为 ``name``'s last part.
+- ``label``. 这是各处使用的 ``app_label`` 的来源. 默认为 ``name``'s last part.
   This attribute allows relabeling an application when two applications have
   conflicting labels.
 
@@ -3390,6 +3390,15 @@ migration checkings
   与根据 migration files 生成的 migration directed graph 对比后, 发现有些已经
   应用的 migration 的依赖项反而没有应用, 则认为存在 consistency problem.
 
+migration signals
+-----------------
+
+post_migrate
+^^^^^^^^^^^^
+- sent at the end of ``migrate`` and ``flush`` management commands.
+
+- 对于每个 registered app, 发送一次这个 signal.
+
 settings
 --------
 - ``MIGRATION_MODULES``. a dict of app name to migration subpackage path.  When
@@ -4627,7 +4636,7 @@ model meta options
 * ``db_tablespace``. 该 table 所在的 tablespace. 默认为 settings.DEFAULT_TABLESPACE.
 
 * ``default_related_name``, 对于 relation field, ``related_name`` 的默认值.
-  默认是 ``<model>_set``. 同时也是 ``related_query_name`` 的默认值.
+  默认是 ``<model>_set``.
 
 * ``get_latest_by``, ``QuerySet.latest()`` ``QuerySet.earliest()`` 默认
   使用的 field name.
@@ -7959,6 +7968,10 @@ builtin signals
 
 - ``django.dispatch.receiver()`` decorator.
 
+``INSTALLED_APPS`` 的顺序会影响 signal handlers 的加载顺序, 从而影响触发
+事件时, signal handler 的执行顺序. 当 signal handler 之间存在依赖关系时,
+需要注意这一点.
+
 signal 相关代码应该放在哪
 -------------------------
 
@@ -9290,7 +9303,14 @@ design patterns
   test runner 在 setup/teardown test environment 时打开和关闭浏览器.
   `code <snippets/browser_test_runner.py>`_
 
-- 如果在 FT 中需要 mock 掉外部依赖,
+- 如果在 FT 中需要 mock 掉外部依赖, 必须使用 LiveServerTestCase (and
+  subclasses).
+
+- 关于 QuerySet. 当模块中使用到 queryset 以及其他 django db 层的方法时, 这些全
+  部是你的模块与 django 逻辑的集成点, 也是代码逻辑与数据库的集成点. 因此, 在模
+  块设计中, 需要构造一些方法, 将这些集成点封装起来. 将集成的面缩小至最小, 隐藏
+  细节. 这样不但是更好的设计, 更可读的代码, 也更容易进行单元测试. 只需在 UT 中
+  mock 这些封装的集成点即可.
 
 django-admin
 ============
@@ -9310,20 +9330,8 @@ CLI usage
 
   否则 django 无法初始化 project.
 
-execution logic
-----------------
-
-执行 management 命令时的基本步骤:
-
-- ``django-admin`` 和 ``manage.py`` 执行 ``execute_from_command_line()``,
-  实例化 ``ManagementUnity``.
-
-- ``ManagementUnity`` 配置项目, 加载所有 commands. 加载并实例化指定的
-  management ``BaseCommand`` subclass. 将命令行参数传递给它.
-
-- ``BaseCommand`` 构建 ArgumentParser 以及命令行. 解释传入的命令行参数.
-  最终调用 ``handle()`` 执行所需操作.
-
+writing management commands
+---------------------------
 对于某个 app, 创建 management commands 的方式:
 
 - 创建 ``<app>/management/commands`` 目录, 创建必要的 ``__init__.py``
@@ -9340,6 +9348,20 @@ execution logic
   出来.
 
 - 实现 ``add_arguments()`` method 添加命令行参数.
+
+execution logic
+----------------
+
+执行 management 命令时的基本步骤:
+
+- ``django-admin`` 和 ``manage.py`` 执行 ``execute_from_command_line()``,
+  实例化 ``ManagementUnity``.
+
+- ``ManagementUnity`` 配置项目, 加载所有 commands. 加载并实例化指定的
+  management ``BaseCommand`` subclass. 将命令行参数传递给它.
+
+- ``BaseCommand`` 构建 ArgumentParser 以及命令行. 解释传入的命令行参数.
+  最终调用 ``handle()`` 执行所需操作.
 
 commands
 --------
@@ -9441,23 +9463,26 @@ BaseCommand
 
 options
 
-- ``help``. command description.
+- ``help``. command description. default empty string.
 
 - ``missing_args_message``. 对于 subcommand 定义了 required positionals 时,
   若未提供, 输出该信息, 而不是 argparse 默认的一般化信息.
 
 - ``output_transaction``. 若 ``handle()`` 返回一组 sql, 设置作为 transaction
-  自动添加 BEGIN/END.
+  自动添加 BEGIN/END. default False.
 
 - ``require_migrations_checks``. 检查 migration files 是否与数据库中的历史一致.
+  default False.
 
-- ``require_system_checks``. django system checking.
+- ``require_system_checks``. django system checking. default True.
 
 - ``leave_locale_alone``.
 
-- ``stealth_options``. 一组不在 management command line 定义的 options.
-  它们用于在 ``call_command()`` 时传递一些额外的参数. 例如 stdout/stderr
-  redirection.
+- ``base_stealth_options``. a tuple of common stealth options. including:
+  ``skip_checks``, ``stdout``, ``stderr``.
+
+- ``stealth_options``. 一组不在 management command line 定义的 options. 它们用
+  于在 ``call_command()`` 时传递一些额外的参数. 例如 stdout/stderr redirection.
 
 attributes
 
@@ -9485,7 +9510,8 @@ methods
   * ``stdout``, ``stderr`` options 可进行 redirection.
 
 - ``handle(*args, **options)``. main execution logic. return value is printed
-  to stdout.
+  to stdout. returned output 应该用于输出某种执行结果数据. 对于过程中的 generic
+  output 直接写入 ``self.stdout``, ``self.stderr`` streams 即可.
 
 - ``check()``. system check.
 
