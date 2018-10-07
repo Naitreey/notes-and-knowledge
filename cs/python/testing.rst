@@ -29,8 +29,6 @@ test structure
   * A test method is a single test case that checks whether the UUT passes a
     particular criterion.
 
-而对于该功能的各方面的具体测试, 则写成 test method.
-
 - A testcase is created by subclassing ``TestCase`` or instantiate
   ``FunctionTestCase``.
 
@@ -38,6 +36,13 @@ test structure
     ``TestLoader.testMethodPrefix``.
 
   * In test methods, ``assert*`` methods are invoked to actually test stuffs.
+
+- 对于多个 TestCase class 公共的部分, 可以抽象至 base class. 这样的 base class
+  最好放在单独的 python module 中, 其文件名设置应避免被 unittest discovery 机制
+  加载.
+
+  若准备将 base class 放置于 test module 中, 则需要避免包含
+  ``TestLoader.testMethodPrefix`` 的 method name.
 
 test cases
 ----------
