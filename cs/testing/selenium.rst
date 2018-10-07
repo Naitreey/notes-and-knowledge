@@ -418,6 +418,12 @@ link text
 
 xpath
 ^^^^^
+xpath 在一些复杂的定位场景下, css selector 并不能满足需求. 此时需要 xpath. 例如,
+locate by element text.
+
+WebDriver API 和 WebElement API 上的以下方法, 对 ``.//`` 部分的解析是不同的. 一个
+是相对于 root element, 另一个是相对于 current element.
+
 - ``find_element_by_xpath()``
 
 - ``find_elements_by_xpath()``
@@ -625,13 +631,6 @@ keys
 Keys
 ^^^^
 - Constants for special keys.
-
-UI helpers
-----------
-- python: ``selenium.webdriver.support.ui``
-
-Select
-^^^^^^
 
 actions
 -------

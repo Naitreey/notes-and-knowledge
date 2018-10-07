@@ -7832,15 +7832,21 @@ applications
 
 配置 app
 --------
-settings.INSTALLED_APPS 中一定要写 path to AppConfig class, 即
-``<app>.apps.<app>Config``. 这是应用自定义 app config 的最佳方式.
+- ``settings.INSTALLED_APPS``.
+  
+  * 一定要写 path to AppConfig class, 即 ``<app>.apps.<app>Config``. 这是应用自
+    定义 app config 的最佳方式.
 
-若 INSTALLED_APPS 中只有 app module path, 则 django checks for
-``<module>.default_app_config`` for app config class. 这仅用作
-向后兼容.
+    若 INSTALLED_APPS 中只有 app module path, 则 django checks for
+    ``<module>.default_app_config`` for app config class. 这仅用作向后兼容.
+    
+    若没找到自定义的 app config, fallback 至 ``django.apps.AppConfig``.  但这样
+    就无法使用 custom app config.
 
-若没找到自定义的 app config, fallback 至 ``django.apps.AppConfig``.
-但这样就无法使用 custom app config.
+  * 要注意考虑 apps 在列表中放置的顺序. 这会影响:
+
+    - Apps registry 的 population order. 从而影响 ``AppConfig.ready()`` 的执行
+      顺序.  这会影响: signal handlers 的注册以及执行顺序.
 
 messages framework
 ==================
