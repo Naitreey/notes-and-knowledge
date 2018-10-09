@@ -574,13 +574,11 @@ design pattern
     In other words, to stay DRY.
 
   * 当实现 page object pattern 时, 注意 page object 的定义只提供页面操作 (UI
-    services), 封装 page-specific layouts and locators etc. No code related to
-    what is being tested should be within the page object.
+    services), 封装 page-specific layouts and locators etc. 如果需要在 page
+    object 提供的服务内部进行 checking/assertion, 仅限于为了封装和提供服务而进
+    行的相关检测. No code related to what is being tested should be within the
+    page object.
     
-  * There is one, single, verification which can, and should, be within the
-    page object and that is to verify that the page, and possibly critical
-    elements on the page, were loaded correctly.
-
   * A page object does not necessarily need to represent an entire page. The
     Page Object design pattern could be used to represent components on a page.
     If a page in the AUT has multiple components, it may improve

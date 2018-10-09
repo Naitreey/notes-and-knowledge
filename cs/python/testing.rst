@@ -44,6 +44,10 @@ test structure
   若准备将 base class 放置于 test module 中, 则需要避免包含
   ``TestLoader.testMethodPrefix`` 的 method name.
 
+  在 test module 中加载 base TestCase subclass 时, 最好不让 base TestCase 直接
+  位于 global namespace. 这样避免了 TestLoader 在加载 TestCase subclass 时误将
+  base class 实例化成 test case.
+
 test cases
 ----------
 
