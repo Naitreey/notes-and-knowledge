@@ -1857,8 +1857,10 @@ replaced & non-replaced elements
 selectors
 ---------
 
-任何一种 basic selector 可以单独出现. 而 pseudo-class, pseudo-element 等
-按逻辑显然必须依附于一定的 basic selectors.
+- 任何一种 basic selector 可以单独出现. basic selectors 可以按照一定顺序连写,
+  表示 AND 关系, 即匹配所有 basic selectors 都匹配的元素.
+ 
+- pseudo-class, pseudo-element 等按逻辑显然必须依附于一定的 basic selectors.
 
 basic selectors
 ^^^^^^^^^^^^^^^
@@ -1910,6 +1912,8 @@ combinators
 - adjacent sibling combinator. ``a + b``
 
 - general sibling combinator. ``a ~ b``
+
+- logical OR combinator. ``a, b``. 表示 a 或 b selector 能匹配的元素之集合.
 
 pseudo-classes
 ^^^^^^^^^^^^^^
