@@ -5434,7 +5434,13 @@ concrete forward relations.
       option 来指定单独创建的 through model, 这可用于在 through model 中加入额外的
       状态信息等列.
 
-      ``.through`` 属性在 field instance 是一个 RelatedManager to through model.
+      ``.through`` 属性在 field instance 是 through model class.
+
+      through model 的定义遵从常规 model 的全部规则. 例如, 在 through model 中
+      创建的用于 M2M 关联的 FK fields, 也会在反向创建 related manager
+      attribute.
+
+      别忘了一般情况下 through table 应保证两个 FK 列是 unique together 的.
 
 reverse virtual relation fields.
 
