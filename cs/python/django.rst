@@ -5442,6 +5442,10 @@ concrete forward relations.
 
       别忘了一般情况下 through table 应保证两个 FK 列是 unique together 的.
 
+      定义 through model 后, add, create, set, remove 这些 related manager
+      methods 都不能用了. 这导致必须手动模拟这些方法的操作, 例如需要手动触发
+      ``m2m_changed`` signal. 这可以通过设置 custom related manager 来实现.
+
 reverse virtual relation fields.
 
 model index
@@ -6091,13 +6095,6 @@ methods.
 Manager
 -------
 
-- related manager. 一对多、多对多关系中, 正向的 manager object (如果有) 是属性名,
-  逆向的 manager object 默认是 ``<lower_model>_set``, 可通过 ``related_name``
-  自定义. 在一对一的关系中, 正反向都是对称直接访问的.
-
-- ``RelatedManager`` 的一些方法: ``add()``, ``create()``, ``remove()``,
-  ``clear()``, ``set()``. 这些操作都是立即在数据库生效的.
-
 BaseManager
 ^^^^^^^^^^^
 
@@ -6171,9 +6168,11 @@ specify manager in model
 
   * 作用. 相比于 default manager, base manager 一般不进行任何过滤. 可以默认
     认为它提供该 model 最全的数据集. 例如, 当通过一个 model instance 访问
-    related objects 时, 会使用 related model 的 ``_base_manager`` 获取 queryset
-    (再筛选出关联的 entries), 而不是使用 ``_default_manager``. 这是因为 default
-    manager 可能进行了一些过滤和限制.
+    FK/O2O 类型的 related object 时, 会使用 related model 的 ``_base_manager``
+    获取 queryset (再筛选出关联的 entries), 而不是使用 ``_default_manager``. 这
+    是因为 default manager 可能进行了一些过滤和限制.
+
+    注意对于 M2M 类型的 related manager 仍然是 default manager 的 subclass.
 
 custom manager
 ^^^^^^^^^^^^^^
@@ -6202,6 +6201,19 @@ subclass ``django.db.models.Manager`` 以进行自定义.
 
 自定义的 manager class 必须能够 shallow copied by ``copy.copy()``.
 
+related manager
+^^^^^^^^^^^^^^^
+- related manager. 一对多、多对多关系中, 正向的 manager object (如果有) 是属性名,
+  逆向的 manager object 默认是 ``<lower_model>_set``, 可通过 ``related_name``
+  自定义. 在一对一的关系中, 正反向都是对称直接访问的.
+
+- ``RelatedManager`` 的一些方法: ``add()``, ``create()``, ``remove()``,
+  ``clear()``, ``set()``. 这些操作都是立即在数据库生效的.
+
+- 在访问 related objects, 如需使用 custom related manager, 可以
+  通过 ``RelatedManager.__call__`` 来指定想要使用的 custom manager.
+
+
 in model inheritance
 ^^^^^^^^^^^^^^^^^^^^
 - model 继承 parent model 定义的 managers. 标准的 python inheritance 机制.
@@ -6210,6 +6222,15 @@ in model inheritance
 
 - default manager 若没指定, 使用该 model 中定义的第一个 manager 或 parent
   model 的 default manager.
+
+
+signals
+-------
+- ``m2m_changed``
+
+  * ``pk_set``. 不能保证这只包含确实需要添加或删除的 pks, 只能保证是
+    ``.add()``, ``.remove()`` 等方法传入的一个子集. 所以如果必须, 应该
+    在 signal handler 中进行检查.
 
 database
 ========
