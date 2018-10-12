@@ -1098,6 +1098,29 @@ function definitions
 class definitions
 -----------------
 
+- class lexical scope 的内容对 inner scope 从来不会直接可见. 在除了 class
+  lexical scope 本身的任何地方, 访问 class scope 的内容, 都必须通过直接或间接
+  访问 class namespace 本身, 然后再 resolve 至其中的内容.
+
+  例如,
+
+  .. code:: python
+
+    class A:
+        x = 1
+
+        class B:
+            # NameError
+            print(x)
+            # ok
+            print(A.x)
+
+        def y(self):
+            # ok
+            print(self.x)
+
+  ``A.x`` 是直接访问, ``self.x`` 是间接访问.
+
 - 什么时候应该规定使用 factory function 来获取类实例, 什么时候不需要这层封装
   只简单地对类进行实例化就行?
 
