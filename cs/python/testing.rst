@@ -134,8 +134,8 @@ unittest 使用 custom assertion methods 而不是 ``assert`` statement, 这是�
 - ``assertRegex(text, re, msg=None)``, ``assertNotRegex(text, re, msg=None)``.
   The ``re`` can be regex object or string.
 
-- ``assertCountEqual(a, b, msg=None)``. Test two sequence (of any type) contain
-  the same number of corresponding elements, regardless of order.
+- ``assertCountEqual(a, b, msg=None)``. Test two containers (of any type)
+  contain the same number of corresponding elements, regardless of order.
 
 message assertion methods
 """""""""""""""""""""""""
