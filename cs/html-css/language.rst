@@ -1278,6 +1278,14 @@ description of the list.
 
   * ``checked``
 
+  * ``required``. 关于 radio group 的 ``required`` attribute: To avoid
+    confusion as to whether a radio button group is required or not, authors
+    are encouraged to specify the attribute on all the radio buttons in a
+    group. Indeed, in general, authors are encouraged to avoid having radio
+    button groups that do not have any initially checked controls in the first
+    place, as this is a state that the user cannot return to, and is therefore
+    generally considered a poor user interface.
+
 datetime input
 """"""""""""""
 - ``<input type="date">``
@@ -1884,23 +1892,23 @@ basic selectors
 
   * ``[attr]``, match when attr is present.
 
-  * ``[attr=value]``, value of attr is exactly ``value``.
+  * ``[attr="value"]``, value of attr is exactly ``value``.
 
-  * ``[attr~=value]``, attr whose value is a whitespace-separated list of
+  * ``[attr~="value"]``, attr whose value is a whitespace-separated list of
     words, one of which is exactly value.
 
-  * ``[attr|=value]``, attr whose value can be exactly value or can begin with
+  * ``[attr|="value"]``, attr whose value can be exactly value or can begin with
     value immediately followed by a hyphen. It is often used for language
     subcode matches.
 
-  * ``[attr^=value]``, attr whose value is prefixed by value.
+  * ``[attr^="value"]``, attr whose value is prefixed by value.
 
-  * ``[attr$=value]``, attr whose value is suffixed by value.
+  * ``[attr$="value"]``, attr whose value is suffixed by value.
 
-  * ``[attr*=value]``, attr whose value contains at least one occurrence of
+  * ``[attr*="value"]``, attr whose value contains at least one occurrence of
     value within the string.
 
-  * ``[attr operator value i|I]``, any above but case-insensitive.
+  * ``[attr operator "value" i|I]``, any above but case-insensitive.
 
 combinators
 ^^^^^^^^^^^

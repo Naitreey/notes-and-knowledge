@@ -679,8 +679,8 @@ sizing
 
 form input as plain text
 """"""""""""""""""""""""
-- useful if you want to have ``<input readonly>`` elements in your form styled
-  as plain text::
+- useful if you want to have ``<input readonly|disabled>`` elements in your
+  form styled as plain text::
 
     .form-control-plaintext
 
