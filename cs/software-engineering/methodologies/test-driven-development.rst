@@ -852,6 +852,9 @@ design patterns
 
 - Do not test for code performance or timing.
 
+- 保证你的测试代码确实测试到了你想要测试的点. 即要保证测试代码本身的正确性. 否
+  则测试没通过都不知道.
+
 - Readability vs DRY for tests.[SODupUT]_
 
   * 对测试, 易读性是更重要的特性. If a test fails, you want the problem to be
