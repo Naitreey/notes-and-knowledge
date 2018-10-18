@@ -5369,6 +5369,9 @@ concrete forward relations.
   * ``related_query_name``, 在 field lookup syntax 中, 从 related model
     向这个 model 反向查询时, 使用的名字. 若有设置 related_name 或
     Meta.default_related_name, 默认使用它们中的一个, 否则默认为 model name.
+    最好明确定义一个 singular name 作为 related query name 的值, 因为
+    ``related_name`` 若明确设置了的话一般是复数形式. 这样在反向查询时比较
+    别扭.
 
   * ``to_field``, 关联的 model 的 field, 默认是 primary key. 关联的 field
     必须有 unique constraint.
@@ -5954,16 +5957,9 @@ Syntax: ``<field>[__<field>...][__<lookuptype>]=value``.
   实例进行比较; 2. FK 列 与 FK 值进行比较; 3. 使用 ``<FK>_id`` 虚拟的列
   和 FK 值进行比较.
 
-* 对 many-to-many 关系进行 lookup 时, 由于实质上是在 through table 中对
-  FK 指向的 entry 进行匹配, 所以虽然起点处写的是 plural 形式, 但实际上是
-  单行的匹配概念: 对这个对象关联的所有对象进行单行的匹配, 只要有一行匹配
-  上了, 就认为 main object 符合条件. e.g.,
-
-  - ``Group.objects.filter(users=jack)``, 筛选包含 jack 的组. 对每个组 join
-    through table, 然后进行单行匹配筛选.
-
-  - ``Group.objects.filter(users__in=[jack, michael, jane])``, 筛选包含这些
-    用户的组.
+* 对 many-to-many 关系进行 lookup 时, 由于实质上是在 through table 中对 FK 指向
+  的 entry 进行匹配. 即进行单行的匹配: 对这个对象关联的所有对象进行单行的匹配,
+  只要有一行匹配上了, 就认为 main object 符合条件. e.g.,
 
   注意, 由于 table JOIN 操作, 这样的匹配很容易在结果集中出现重复的 object,
   所以需要对结果去重.
