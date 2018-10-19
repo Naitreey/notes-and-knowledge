@@ -37,6 +37,9 @@ test structure
 
   * In test methods, ``assert*`` methods are invoked to actually test stuffs.
 
+- 对于一个 TestCase 中的公共部分, 应抽象成 utility methods, 这些 method 应该放
+  在所有 test method 的前面. 因为新增的 test case 总会向下罗列.
+
 - 对于多个 TestCase class 公共的部分, 可以抽象至 base class. 这样的 base class
   最好放在单独的 python module 中, 其文件名设置应避免被 unittest discovery 机制
   加载.
