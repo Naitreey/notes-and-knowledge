@@ -285,7 +285,8 @@ attributes
 
 - ``tag_name``. element's tag name.
 
-- ``text``. element's text content.
+- ``text``. element's text content. 这包含所有 subelements 的 text 内容, 但不包
+  含任何 markup 部分.
 
 - ``location``. element location.
 
