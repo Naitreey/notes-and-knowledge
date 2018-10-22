@@ -8232,8 +8232,14 @@ JSON
 
 - DjangoJSONEncoder 在 ``json.JSONEncoder`` 基础上, 额外支持:
 
-  * datetime.datetime,
+  * datetime.datetime. 在 serialization 时,
     
+    - 采用 iso format.
+      
+    - 若包含 microseconds, 只保留前 3 位.
+
+    - 若包含时区 offset 部分, 保留. 若 offset 为 ``+00:00``, 转换成 ``Z``.
+
   * datetime.date,
     
   * datetime.time,
