@@ -130,7 +130,9 @@ methods.
 - ``setCustomValidity(message)``. Sets a custom error message to the element's
   ``validationMessage``. This also makes the input invalid. The specified
   message is displayed when form's ``reportValidity()`` is called. If the
-  argument is the empty string, the custom error is cleared.
+  argument is the empty string, the custom error is cleared. 注意 clear custom
+  error 不等于 clear error, 而是说清除掉了强制设置的 custom error, 恢复根据预定
+  义的 constraints 的检查结果来设置 valid/invalid 状态.
 
 form element APIs
 """""""""""""""""

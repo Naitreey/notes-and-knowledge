@@ -705,11 +705,15 @@ validation and styling logic
   自动进行的 validation.
 
 - Bootstrap scopes the ``:invalid`` and ``:valid`` styles to parent
-  ``.was-validated`` class. 这样, 根据是否在 form 上有这个 class, 决定是否显示
-  validation messages.
+  ``.was-validated`` class. 这样, 根据是否在 parent element 上有这个 class, 决
+  定是否显示相关的 validation messages. 这样避免了用户还没开始填写表单时, 就显
+  示 validation message.
   
-  这个 class 一般通过 submit event handler 设置. 这样避免了在用户尝试提交之前,
-  尤其是用户还没开始填写表单时, 就显示 validation message.
+  * 若需要 submit 时才校验表单和显示 validtion 信息, 则可以在 form level 设置
+    这个 class. 此时, 一般通过 submit event handler 设置. 
+
+  * 若需要对每个 field 单独显示 validation 信息, 则可以在 ``.form-control``
+    级别设置. 此时, 可以通过 change/input event handler 设置.
 
 - 使用 constraint validation API 进行自定义校验.
 

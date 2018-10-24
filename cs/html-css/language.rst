@@ -1917,9 +1917,9 @@ combinators
 
 - descendant combinator. ``a b``
 
-- adjacent sibling combinator. ``a + b``
+- adjacent next sibling combinator. ``a + b``
 
-- general sibling combinator. ``a ~ b``
+- general next sibling combinator. ``a ~ b``
 
 - logical OR combinator. ``a, b``. 表示 a 或 b selector 能匹配的元素之集合.
 
