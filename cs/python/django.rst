@@ -5964,6 +5964,10 @@ Syntax: ``<field>[__<field>...][__<lookuptype>]=value``.
   注意, 由于 table JOIN 操作, 这样的匹配很容易在结果集中出现重复的 object,
   所以需要对结果去重.
 
+* 对于 FK/M2M 等关系列, 如果需要指定该关系是否存在 (即是否有关联的 related
+  object) 时, 可使用 ``related_field=None``. 这对应于 SQL 里 JOIN 之后筛选
+  IS NULL 之类的操作.
+
 * 对于表达关系的列, 可以从多至一的方向深入被指向的模型进行筛选, 这抽象了各种
   SQL ``JOIN``.
 
