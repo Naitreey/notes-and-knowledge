@@ -1,7 +1,12 @@
-general
-=======
+Virtualization 分类
+===================
 
-- QEMU/KVM 与 virtualbox 比较.
+- full virtualization.
+
+- os-level virtualization.
+
+QEMU/KVM 与 virtualbox 比较
+===========================
 
   不同的应用场景使用不同的 hypervisor 工具.
 
@@ -15,3 +20,4 @@ general
   QEMU/KVM 是两个不同的 hypervisor 的搭配. QEMU 是 type-2, KVM 作为 kernel module
   是 type-1. KVM 相对 virtualbox 具有一定速度优势. 并且 QEMU/KVM 更加底层, 可编程
   性更强大. virtualbox 相对上层, 是直接面向终端用户的.
+
