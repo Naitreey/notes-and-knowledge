@@ -1391,6 +1391,16 @@ convert utf8mb3 to utf8mb4
 
      恢复数据后按照 1 中的方式修改恢复的数据库和表中的 charset.
 
+
+Stored Programs and Views
+=========================
+
+view
+----
+- 对于定义的 view, 只保存了创建这个 view 的 SQL 语句. 在每次查询 view 时, 执行
+  SQL, 生成相应的数据. 所以本质上, view 只是将复杂的 SQL 保存了下来, 以方便重用
+  而已.
+
 Optimization
 ============
 

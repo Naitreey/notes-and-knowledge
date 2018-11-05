@@ -3268,6 +3268,11 @@ About transaction.
 因此在 postgres 中, 默认不会单独创建 RunPython 自己的 transaction. 使用 Migration
 level 的 transaction.
 
+RunSQL
+""""""
+.. XXX 对于 schema change, 什么时候使用 RunSQL, 什么时候使用 RunPython 的
+   schema editor?
+
 project state
 -------------
 
