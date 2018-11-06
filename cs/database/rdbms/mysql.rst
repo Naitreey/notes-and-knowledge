@@ -1404,6 +1404,16 @@ view
 Optimization
 ============
 
+order by
+--------
+.. XXX 确认以下说法
+
+- 当 order by 的列组合不能充分确定行的顺序时, 对于每个欠排序的部分中的多行, 其
+  输出顺序貌似是 undefined. 对于实体表, 似乎可以保证这个输出顺序在跨 session 多
+  次查询时的一致性 (也许是对应于 index 或 file sort 给出的顺序); 对于 UNION 等
+  涉及临时生成的表, 无法保证跨 session 多次查询时的一致性 (也许因为 UNION 本身
+  给出 an unordered set of rows), 只能保证一个 session 内部多次查询的一致性.
+
 index
 -----
 - Create right index to answer the required question. 不要创建不必要的
