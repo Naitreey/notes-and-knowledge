@@ -78,3 +78,4 @@ references
 .. [AppKitFuncKeys] `Function-Key Unicodes <https://developer.apple.com/documentation/appkit/1535851-function-key_unicodes?language=objc>`_
 .. [KeyBindingSelectors] `Usable Selectors for Cocoa Key Bindings <http://www.hcs.harvard.edu/~jrus/site/selectors.html>`_
 .. [DefaultKeyBindings] `DefaultKeyBinding.dict <https://web.archive.org/web/20161104151247/http://osxnotes.net/keybindings.html>`_
+.. [EmuateEmacs] http://www.hcs.harvard.edu/~jrus/site/KeyBindings/Emacs%20Opt%20Bindings.dict

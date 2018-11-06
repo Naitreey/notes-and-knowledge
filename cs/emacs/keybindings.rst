@@ -20,9 +20,23 @@ Motion
 
 - ``C-n``. move to next line.
 
+- ``M-b``. move to previous word.
+
+- ``M-f``. move to next word.
+
+- ``M-<``. move to beginning of buffer.
+
+- ``M->``. move to end of buffer.
+
+- ``M-v``. scroll to previous screen.
+
+- ``C-v``. scroll to next screen.
+
 killing
 =======
 - ``C-w``. kill region.
+
+- ``M-w``. copy region to kill ring.
 
 - ``M-DEL``. kill word backard.
 
@@ -51,3 +65,11 @@ Incremental Search
 - ``C-r``. search backward.
 
 - ``C-g``. abort current search.
+
+Case Change
+===========
+- ``M-u``. uppercase word
+
+- ``M-l``. lowercase word
+
+- ``M-c``. capitalize word
