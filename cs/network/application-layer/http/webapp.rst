@@ -133,6 +133,11 @@ user authentication
 
   很多网站都用的是 get, 也有很多用的是 post.
 
+table
+-----
+- sorting. 当排序列不能充分地对数据行进行排序时, 应该用主键等唯一字段进行补充排
+  序.
+
 REST design
 ===========
 - It's not necessary or even possible to design your web service sticking

@@ -3273,6 +3273,8 @@ RunSQL
 .. XXX 对于 schema change, 什么时候使用 RunSQL, 什么时候使用 RunPython 的
    schema editor?
 
+- 对于 Schema change, 如果能够提供相应的 state operations, 则应该提供.
+
 project state
 -------------
 
@@ -5211,6 +5213,10 @@ field types
   auto-generated form field. However it is not enforced at the model or
   database level. 
 
+  MySQL 作为后端时, TextField 不能在 model 中直接定义索引. 因为 mysql 要求
+  TEXT/BLOB 上的索引必须指定长度. 而 django 不提供指定索引长度. 解决办法是
+  使用 RunSQL 创建索引和执行相关 state operation.
+
 - ``EmailField``
 
   validations.
@@ -5471,6 +5477,15 @@ index 通过 ``Model.Meta.indexes`` option 指定, a list of Index objects.
 * ``db_tablespace``. 指定该 index 所在的 tablespace. 对于 single field index,
   fallback 至 field's db_tablespace; 若未指定或是复合索引, fallback 至
   model ``Meta.db_tablespace``.
+
+单列的索引在 ``Field.db_index`` 定义还是在 ``Model.Meta`` 中定义?
+
+* 如果继承了 abstract parent model, 而存在给继承了的 field 添加索引的需求,
+  则为了统一应该将索引创建在 ``Model.Meta`` 中.
+
+* 如果存在复合索引, 则为了统一应该将索引创建在 ``Model.Meta`` 中.
+
+* 其他随意.
 
 model instance clean & validation
 ---------------------------------
@@ -6236,6 +6251,22 @@ signals
   * ``pk_set``. 不能保证这只包含确实需要添加或删除的 pks, 只能保证是
     ``.add()``, ``.remove()`` 等方法传入的一个子集. 所以如果必须, 应该
     在 signal handler 中进行检查.
+
+design pattern
+--------------
+- 假如对于一个复杂查询, 难以映射映射成基于现有模型的 ORM 操作, 需要使用 raw
+  SQL, 如果这个查询的每行结果实际上可以看作是某种 model 的实例, 则可以考虑将这
+  个逻辑写成 database view, 在 django 应用中设计相应的 unmanaged model. 从而转
+  化为 ORM 操作.
+
+  这样做至少有以下好处:
+
+  * 无需手动处理数据库读操作. 只有初始的 view 创建写死了 SQL. 其他操作都可基于
+    ORM. 挽救了一定的灵活性.
+   
+  * 无需手动进行数据库和 python 数据类型的转换.
+
+  * 该模型可作为基础, 提供更多的操作可能性.
 
 database
 ========
