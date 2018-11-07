@@ -32,6 +32,10 @@ Motion
 
 - ``C-v``. scroll to next screen.
 
+- ``M-{``. move to beginning of paragraph.
+
+- ``M-}``. move to end of paragraph.
+
 killing
 =======
 - ``C-w``. kill region.
@@ -50,6 +54,8 @@ Transposing
 ===========
 - ``C-t``. transpose chars.
 
+- ``M-t``. transpose words.
+
 Error Recovery
 ==============
 - ``C-_``. undo a change.
@@ -57,6 +63,8 @@ Error Recovery
 Marking
 =======
 - ``C-@``. set mark here.
+
+- ``C-x C-x``. exchange point and mark.
 
 Incremental Search
 ==================
@@ -73,3 +81,7 @@ Case Change
 - ``M-l``. lowercase word
 
 - ``M-c``. capitalize word
+
+references
+==========
+.. [EmacsRefCard] `GNU Emacs Reference Card <https://www.gnu.org/software/emacs/refcards/pdf/refcard.pdf>`_
