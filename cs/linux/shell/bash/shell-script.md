@@ -648,85 +648,79 @@ esac
     set +a
     ```
 
-# shell 初始化文件的执行流程
+# initialization files
 
-* bash 初始化文件的执行.
+## For bash
 
-  - login shell:
+*   interactive shell (无论 login 或 nonlogin) 的初始化结果是基本相同的, 他
+    们都执行了 /etc/profile.d/*.sh, ~/.bashrc, /etc/bashrc 或
+    /etc/bash.bashrc.
+*   non-interactive shell 对于 login 和 nonlogin 初始化结果不同. 前者与
+    interactive shell 相同, 后者基本不执行初始化.
 
-    * interactive:
+### login shell
 
-      - /etc/profile
-      - ~/.bash_profile | ~/.bash_login | ~/.profile
+#### interactive
 
-      logout 时, 执行 ~/.bash_logout
+-   /etc/profile
+    *   /etc/profile.d/*.sh
+    *   /etc/bash.bashrc
+        -   /usr/share/bash-completion/bash_completion
 
-    * non-interactive:
+-   ~/.bash_profile | ~/.bash_login | ~/.profile
+    *   ~/.bashrc
+        -   /etc/bashrc (RHEL)
 
-      - /etc/profile
-      - ~/.bash_profile | ~/.bash_login | ~/.profile
-      - BASH_ENV
+logout 时, 执行 ~/.bash_logout
 
-      logout 时, 执行 ~/.bash_logout
+#### non-interactive
 
-  - nonlogin shell:
+-   /etc/profile
+-   ~/.bash_profile | ~/.bash_login | ~/.profile
+-   BASH_ENV
 
-    * interactive:
+logout 时, 执行 ~/.bash_logout
 
-      - ~/.bashrc
+### nonlogin shell
 
-    * non-interactive:
+#### interactive
 
-      - BASH_ENV
+-   /etc/bash.bashrc (一些版本的 bash 首先要读, 一般注意系统中是否有该文件即可
+    判断.) [See this][unix.SE bash.bashrc]
+-   ~/.bashrc
 
-* sh 初始化文件的执行.
+[unix.SE bash.bashrc]: https://unix.stackexchange.com/questions/187369/when-is-etc-bash-bashrc-invoked
 
-  - login shell:
+#### non-interactive
 
-    * interactive:
+- BASH_ENV
 
-      - /etc/profile
-      - ~/.profile
-      - ENV
+## sh emulation mode
 
-    * non-interactive:
+*   login shell 会执行 /etc/profile 全局初始化.
+*   对于 nonlogin shell 基本不会执行初始化.
 
-      - /etc/profile
-      - ~/.profile
+### login shell
 
-  - nonlogin shell:
+#### interactive
 
-    * interactive:
+-   /etc/profile
+-   ~/.profile
+-   ENV
 
-      - ENV
+#### non-interactive
 
-    * non-interactive: nothing.
+-   /etc/profile
+-   ~/.profile
 
-* 各初始化文件的执行流程:
+### nonlogin shell
 
-  - /etc/profile -> /etc/profile.d/*.sh
+#### interactive
 
-  - ~/.bash_profile -> ~/.bashrc
+-   ENV
 
-  - ~/.bashrc -> -> /etc/bashrc -> /etc/profile.d/*.sh (nonlogin shell)
-
-  以下文件不存在: ~/.bash_login, ~/.bash_logout, ~/.profile
-
-* 总结:
-
-  - 对于 bash
-
-    * interactive shell (无论 login 或 nonlogin) 的初始化结果是基本相同的,
-      他们都执行了 /etc/profile.d/*.sh, ~/.bashrc, /etc/bashrc .
-
-    * non-interactive shell 对于 login 和 nonlogin 初始化结果不同. 前者与
-      interactive shell 相同, 后者基本不执行初始化.
-
-  - 对于 sh
-
-    * login shell 会执行 /etc/profile 全局初始化.
-
-    * 对于 nonlogin shell 基本不会执行初始化.
+#### non-interactive
+nothing
 
 # mock shell script
 - 我见过的 shell script 大部分都很 messy.
