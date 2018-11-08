@@ -1,35 +1,3 @@
-Arch-based
-==========
-
-Arch Linux
-----------
-
-installation
-^^^^^^^^^^^^
-- packages to install at bootstrap. base base-devel gnome lightdm
-  lightdm-gtk-greeter iw wpa_supplicant gvim
-
-Debian-based
-============
-
-Debian
-======
-
-Ubuntu
-======
-
-Redhat-based
-============
-
-RHEL
-----
-
-CentOS
-------
-
-Fedora
-------
-
 * Pros
 
   - RHEL, CentOS upstream, 接近 production system
@@ -59,12 +27,3 @@ Fedora
     * xdotool 仅有部分功能可用, 例如向指定窗口和位置发点击等操作, 但
       无法发送 key 值, 几乎残废.
 
-Gentoo Linux
-============
-
-Alpine Linux
-============
-
-- alpine linux features small, simple and secure.
-
-- alpine 常用于作为容器基镜像, 或者其他需要 minimal linux environment 的情况.
