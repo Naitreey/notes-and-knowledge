@@ -4040,6 +4040,10 @@ constructor options
   的 ``initial`` 参数, 即作为 Form 的初始值. ``initial`` 的值 overrides
   ``instance`` 上的值.
 
+  注意, instance 上原来的列值不会作为 form field 的默认值. form 上 required
+  以及有默认值的列等等仍然必须按照 form 本身的要求进行填充. instance 上原来
+  的列值是用于维持不在 model form 中进行修改的属性的值.
+
 class attributes
 ^^^^^^^^^^^^^^^^
 

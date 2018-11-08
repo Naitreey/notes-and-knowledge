@@ -499,10 +499,9 @@ methods
 - ``until(method, message="")``. wait unitl method's return value is truthy.
   return method's value or raise TimeoutException.
 
-- ``until(method, message="")``. wait until method's return value is falsy
-  or one of the ignored exceptions is raised.
-  return method's value or True (if ignored exception raised), or raise
-  TimeoutException.
+- ``until_not(method, message="")``. wait until method's return value is falsy
+  or one of the ignored exceptions is raised.  return method's value or True
+  (if ignored exception raised), or raise TimeoutException.
 
 expected conditions
 ^^^^^^^^^^^^^^^^^^^
