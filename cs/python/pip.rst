@@ -1,3 +1,11 @@
+overview
+========
+
+release and versioning
+======================
+- *always keep your pip up-to-date*. 不要忽略 pip 关于版本的警告. 否则可能在安
+  装时遇到未知问题.
+
 requirements file
 =================
 
