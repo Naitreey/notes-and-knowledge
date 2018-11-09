@@ -322,6 +322,20 @@ declare x; x=1
 
 -   第三个 statement 是标准的先声明再赋值.
 
+
+## special variables
+
+-   `PROMPT_COMMAND`. a command to execute before each time `$PS1` is printed.
+    该变量的用处:
+    *   设置需要在 PS1 中引用的参数. 注意不该在 `PROMPT_COMMAND` 中直接设置 PS1 
+        的值.
+    *   执行任意命令, 这取决于 shell plugin 的功能. 例如 autojump 更新路径数据库.
+    *   设置 terminal title.
+    `PROMPT_COMMAND` generally should not be used to print characters directly
+    to the prompt. Characters printed outside of PS1 are not counted by Bash,
+    which will cause it to incorrectly place the cursor and clear characters.
+    See also [this](#prompt-command).
+
 # expansions <a id="shell-expansions"></a>
 
 # redirections <a id="redirections"></a>
@@ -686,10 +700,8 @@ logout 时, 执行 ~/.bash_logout
 #### interactive
 
 -   /etc/bash.bashrc (一些版本的 bash 首先要读, 一般注意系统中是否有该文件即可
-    判断.) [See this][unix.SE bash.bashrc]
+    判断.) [See this](#bash.bashrc)
 -   ~/.bashrc
-
-[unix.SE bash.bashrc]: https://unix.stackexchange.com/questions/187369/when-is-etc-bash-bashrc-invoked
 
 #### non-interactive
 
@@ -740,5 +752,10 @@ nothing
 	- not at all
 
 # references
-<a id="interpreted">[interpreted]</a> [Is bash an interpreted language?](https://stackoverflow.com/a/30156987/1602266)
-<a id="SEBashSuid">[SEBashSuid]</a> [Setuid bit seems to have no effect on bash](https://unix.stackexchange.com/questions/74527/setuid-bit-seems-to-have-no-effect-on-bash)
+<span id="interpreted">[interpreted]</span> [Is bash an interpreted language?](https://stackoverflow.com/a/30156987/1602266)
+
+<span id="SEBashSuid">[SEBashSuid]</span> [Setuid bit seems to have no effect on bash](https://unix.stackexchange.com/questions/74527/setuid-bit-seems-to-have-no-effect-on-bash)
+
+<span id="prompt-command">bash prompt command</span> [What is the difference between PS1 and PROMPT_COMMAND](https://stackoverflow.com/questions/3058325/what-is-the-difference-between-ps1-and-prompt-command)
+
+<span id="bash.bashrc">bash.bashrc</span> [When is /etc/bash.bashrc invoked?](https://unix.stackexchange.com/questions/187369/when-is-etc-bash-bashrc-invoked)
