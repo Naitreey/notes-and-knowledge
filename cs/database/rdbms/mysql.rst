@@ -170,6 +170,8 @@ keywords and reserved words
 - Keywords are words that have significance in SQL. Keywords may be reserved
   or nonreserved.
 
+- Keywords are case-insensitive.
+
 - ``information_schema.keywords`` table lists all keywords and their reservation
   state.
 
@@ -222,6 +224,12 @@ comment syntax
 
     /*+ <hints> */
  
+statement syntax
+----------------
+- Statement is terminated by semicolon.
+
+- Statements can be in free-format.
+
 Data types
 ==========
 
@@ -883,8 +891,8 @@ JSON type
 - storage. 基本相当于 LONGBLOB. 即所需存储空间基本相当于把 JSON stringified
   形式所需存储. 但有一些为了便于更新和查询等的额外 metadata 带来的 overhead.
 
-SQL statements
-==============
+SQL main statements
+===================
 
 Data Definition Language (DDL)
 ------------------------------
@@ -926,6 +934,19 @@ SHOW CREATE DATABASE
 
 - default charset and collation 也会输出. 如果 collation 部分
   没有显示, 说明使用的是相应 charset 默认的 collation.
+
+SHOW DATABASES
+^^^^^^^^^^^^^^
+::
+
+  SHOW {DATABASES | SCHEMAS} [LIKE <pattern> | WHERE <expr>]
+
+- You see only those databases for which you have some kind of privilege,
+  unless you have the global ``SHOW DATABASES`` privilege. 如果
+  ``--skip-show-database`` option is specified by server, 则必须要有这个
+  global 权限才能 show databases.
+
+- The output corresponds to INFORMATION_SCHEMA SCHEMATA table.
 
 Data Manipulation Language (DML)
 --------------------------------
@@ -1446,6 +1467,9 @@ index
 
   * Hash index.
 
+
+
+
 InnoDB storage engine
 =====================
 InnoDB is fully transactional and supports foreign key references.
@@ -1570,6 +1594,165 @@ SHOW GRANTS
 
 - ``USING`` clause enables you to examine the privileges associated with roles
   for the user.
+
+
+Access Privilege System
+-----------------------
+
+Privilege types
+^^^^^^^^^^^^^^^
+
+Static privileges
+"""""""""""""""""
+Administrative privileges can only be granted at global level, other static
+privileges can be granted at all level.
+
+- ALL PRIVILEGES. Grant all privileges at specified access level, except
+  GRANT OPTION and PROXY.
+
+  * ALL PRIVILEGES at the global level grants all static global privileges and
+    all currently registered dynamic privileges. A dynamic privilege registered
+    subsequent to execution of the GRANT statement is not granted retroactively
+    to any account.
+
+- USAGE. synonym to "no privileges". useful for grant ``WITH GRANT OPTION``.
+
+- GRANT OPTION. enable privileges to be granted to or removed from other
+  accounts.
+
+  * When you grant a user the GRANT OPTION privilege at a particular privilege
+    level, any privileges the user possesses at that level can also be granted
+    by that user to other users.
+
+  * 由于该权限不是一个权限 per se, 而是关于授予其他权限. 所以它的语法是
+    ``WITH GRANT OPTION``, 与其他权限不同.
+
+Dynamic privileges
+""""""""""""""""""
+Dynamic privileges are all global and can only be granted globally.
+
+Privilege levels
+^^^^^^^^^^^^^^^^
+- global level.
+
+  * MySQL stores global privileges in the ``mysql.user`` system table.
+
+  * When granting, use ``*.*``.
+
+- database level.
+
+  * MySQL stores database privileges in the ``mysql.db`` system table.
+
+  * When granting, ``*`` represents the current default database, rather than
+    global level.
+
+- table level.
+
+  * MySQL stores table privileges in the ``mysql.tables_priv`` system table.
+
+  * When granting, a unqualified ``tablename`` represents a table in the
+    current default database.
+
+  * They can be granted to tables and views.
+
+- column level.
+
+  * MySQL stores column privileges in the ``mysql.columns_priv`` system table.
+
+- routine level.
+
+  * MySQL stores routine-level privileges in the ``mysql.procs_priv`` system
+    table.
+
+- proxy user privilege.
+
+  * MySQL stores proxy privileges in the ``mysql.proxies_priv`` system table.
+
+SQL statements
+^^^^^^^^^^^^^^
+GRANT
+"""""
+- grant privileges::
+
+    GRANT
+      <priv_type> [(<column_list>)] [, <priv_type> [(<column_list>)]]...
+      ON [<object_type>] <priv_level>
+      TO <user_or_role> [, <user_or_role>]
+      [WITH GRANT OPTION]
+
+    object_type: TABLE | FUNCTION | PROCEDURE
+
+- grant roles::
+
+    GRANT <role> [, <role>] ...
+      TO <user_or_role> [, <user_or_role>] ...
+      [WITH ADMIN OPTION]
+
+- To grant a privilege, you must have the GRANT OPTION privilege, and you must
+  have the privileges that you are granting.
+
+- GRANT is atomic -- it either succeeds for all named users and roles or rolls
+  back and has no effect if any error occurs. The statement is written to the
+  binary log only if it succeeds for all named users and roles.
+
+- In GRANT statements, the ``ALL [PRIVILEGES]`` or ``PROXY`` privilege must be
+  named by itself and cannot be specified along with other privileges.
+
+- Account name:
+ 
+  * account name 可以是 ``username@hostname`` 形式. The host name part of the
+    account or role name, if omitted, defaults to '%'. 注意 ``@`` 不能 quote 起
+    来. 它是识别两个部分的分隔符.
+
+  * You can specify wildcards in the host name, but NOT in username.
+
+  * If host is omitted, it fallback to ``%``.
+
+  * Anonymous user is specified by ``''``. Does NOT exist by default.
+
+- Quoting:
+
+  * Quote the user name and host name separately.
+
+  * If a username or hostname value in an account name is legal as an unquoted
+    identifier, you need not quote it.
+
+  * quotation marks are necessary to specify a username/hostname string
+    containing chars that is not part of legal identifier.
+
+  * Quote database, table, column, and routine names as identifiers.
+
+  * Quote user names and host names as identifiers or as strings.
+
+  * 当授予关于 database-level objects 的权限时, metacharacters are permitted,
+    所以在授予单个数据库权限时, 数据库名若包含 ``_``, ``%`` 字符, 应该 escape.
+
+  * When a database name not is used to grant privileges at the database level,
+    but as a qualifier for granting privileges to some other object such as a
+    table or routine, wildcard characters are treated as normal characters.
+
+- You can grant privileges on databases or tables that do not exist. For
+  tables, the privileges to be granted must include the CREATE privilege.
+  这是为了便于管理员预先分配权限, 而后再创建数据库等 objects.
+
+- The WITH GRANT OPTION clause gives the user the ability to give to other
+  users any privileges the user has at the specified privilege level.
+
+- Granting roles:
+  
+  * You can grant a role to another role.
+
+  * If the GRANT statement includes the WITH ADMIN OPTION clause, each named
+    user becomes able to grant the named roles to other users or roles, or
+    revoke them from other users or roles. This includes the ability to use
+    WITH ADMIN OPTION itself.
+
+Performance implication
+^^^^^^^^^^^^^^^^^^^^^^^
+- If you are using table, column, or routine privileges for even one user, the
+  server examines table, column, and routine privileges for all users and this
+  slows down MySQL a bit. Similarly, if you limit the number of queries,
+  updates, or connections for any users, the server must monitor these values.
 
 Server mechanism
 ================
@@ -2658,6 +2841,29 @@ replication info
 - ``xtrabackup_binlog_info`` file contains coordinate of the exact point in the
   binary log to which the prepared backup corresponds.
 
+
+test database
+=============
+- The test database often is available as a workspace for users to try things
+  out.
+
+
+Utility Statements
+==================
+
+USE
+---
+::
+
+  USE <database>
+
+- use the specified database as the default (current) database for subsequent
+  statements.
+
+- This statement is special in that it does not require a semicolon.
+
+- It must be given on a single line.
+
 CLI
 ===
 
@@ -2742,7 +2948,6 @@ Client Programs
 mysql
 ^^^^^
 
-
 options
 """""""
 - ``-p`` 指定密码时不能有空格. 或者使用 ``--password=<pass>``.
@@ -2751,17 +2956,45 @@ options
 
 interactive mode
 """"""""""""""""
-- ``\g`` ``\G`` 可以执行语句, 相当于 ``;``. 后者将结果列以竖排的形式输出, 比较方便.
+- 语句执行:
+  
+  * ``;``, ``\g``, ``\G`` 标识一个 statement 的结束.  mysql collects input
+    lines but does not send them to server until it sees the terminating token.
+    
+  * ctrl-c 和 ``\c`` 可以终止当前语句.
 
-- ctrl-c 和 ``\c`` 都可以终止当前语句.
+  * ``;``, ``\g`` 以 tabular form 输出结果.
 
-- mysql client 会给出执行时间, 这个时间是在客户端算出的从发出请求到收到结果的 wall
-  clock time.
+  * ``\G`` 将结果列以竖排的形式输出.
 
-- 支持输入 mutiline 的 string 和 identifier. 直接加回车即可.
+- 结果显示:
+  
+  * 显示形式:
+    
+    - tabular form: 第一行是表的列名或表达式. 下面的是 query results.
 
-- mysql client 对不同的 multiline 模式给出不同的 prompt string, 甚至包含 string,
-  identifier 和 block comment 的多行输入模式. ``">``, ``'>``, ``\`>``, ``/*>``.
+  * 最后显示:
+    
+    - 结果行数.
+      
+    - 执行时间, 这个时间是在客户端算出的, 所以并不精确. 它大致等于从发出请求到
+      收到结果的全程 wall clock time. 若需要精确的执行实现, 使用 ``SHOW PROFILES``.
+
+- prompts:
+
+  * ``mysql>``. ready for new input.
+
+  * ``">``. waiting for completion of a string that began with a double quote
+    ("). 
+
+  * ``'>``. waiting for completion of a string that began with a single quote
+    (').
+
+  * ``\`>``. waiting for completion of a backtick-quoted identifier.
+
+  * ``/*>``. waiting for completion of a multiline comment.
+
+  如需输入 mutiline 的 string 和 identifier, 直接加回车即可.
 
 - ``QUIT``, ``\q`` or ctrl-d to quit.
 
@@ -2772,6 +3005,9 @@ non-interactive mode
 
 Utility Programs
 ----------------
+
+mysqlshow
+^^^^^^^^^
 
 mysqlbinlog
 ^^^^^^^^^^^
