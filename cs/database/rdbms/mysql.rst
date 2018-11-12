@@ -1392,6 +1392,18 @@ convert utf8mb3 to utf8mb4
      恢复数据后按照 1 中的方式修改恢复的数据库和表中的 charset.
 
 
+Functions and Operators
+=======================
+
+Date and Time Functions
+-----------------------
+- ``CURDATE()``, ``CURRENT_DATE()``. format: ``YYYY-MM-DD``.
+
+Information Functions
+---------------------
+- ``VERSION()``. mysql server version, in utf-8 encoding. see also ``version``
+  system variable.
+
 Stored Programs and Views
 =========================
 
@@ -2730,6 +2742,15 @@ Client Programs
 mysql
 ^^^^^
 
+
+options
+"""""""
+- ``-p`` 指定密码时不能有空格. 或者使用 ``--password=<pass>``.
+
+- 可以在连接时指定要使用的数据库, 或者用 ``USE`` 切换.
+
+interactive mode
+""""""""""""""""
 - ``\g`` ``\G`` 可以执行语句, 相当于 ``;``. 后者将结果列以竖排的形式输出, 比较方便.
 
 - ctrl-c 和 ``\c`` 都可以终止当前语句.
@@ -2742,10 +2763,10 @@ mysql
 - mysql client 对不同的 multiline 模式给出不同的 prompt string, 甚至包含 string,
   identifier 和 block comment 的多行输入模式. ``">``, ``'>``, ``\`>``, ``/*>``.
 
-- 可以在连接时指定要使用的数据库, 或者用 ``USE`` 切换.
+- ``QUIT``, ``\q`` or ctrl-d to quit.
 
-- cmdline 参数 ``-p`` 指定密码时不能有空格. 或者使用 ``--password=<pass>``.
-
+non-interactive mode
+""""""""""""""""""""
 - In non-interactive mode, read input sql from stdin, print results to stdout.
   For processing convenience, such output is tab-delimited for each column.
 
@@ -2841,19 +2862,6 @@ mysql data types in python
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - BIT(N): bytes
-
-mysql vs postgresql
-===================
-
-- default isolation level.
-
-  mysql 使用 repeatable read. postgresql 使用 read committed.
-
-  后者才是一般预期的行为, 是除了 mysql 之外所有其他数据库的默认行为.
-  这两个 isolation level 的差异, 会导致应用程序的一些 subtle bugs.
-
-- mysql does not support DDLs in transaction. DDL statements are
-  non-transactional and break transactions (cause implicit commit etc.).
 
 References
 ==========
