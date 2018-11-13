@@ -1360,6 +1360,15 @@ stack
 
 - docker stack services. list services in the stack.
 
+  * ``--filter key=val``. multiple filter options are OR-ed.
+    defined ``key``:
+    
+    - id/ID
+     
+    - name
+     
+    - label: ``--filter label=key=val``.
+
 service
 ^^^^^^^
 - docker service create. create a service.
