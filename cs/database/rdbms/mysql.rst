@@ -901,13 +901,17 @@ CREATE DATABASE
 ^^^^^^^^^^^^^^^
 ::
 
-  CREATE DATABASE [IF NOT EXISTS] <name>
+  CREATE {DATABASE|SCHEMA} [IF NOT EXISTS] <name>
       [[DEFAULT] CHARACTER SET [=] charset_name]
       [[DEFAULT] COLLATE [=] collation_name]
 
 - privilege: CREAT for the specified database.
 
 - database definition is recorded in INFORMATION_SCHEMA.SCHEMATA.
+
+- 一个数据库就是 mysql 数据目录下的一个子目录. 该语句就是创建了一个目录.
+  If a database name contains special characters, the name for the database
+  directory contains encoded versions of those characters.
 
 ALTER DATABASE
 ^^^^^^^^^^^^^^
@@ -946,7 +950,25 @@ SHOW DATABASES
   ``--skip-show-database`` option is specified by server, 则必须要有这个
   global 权限才能 show databases.
 
-- The output corresponds to INFORMATION_SCHEMA SCHEMATA table.
+- The output corresponds to INFORMATION_SCHEMA.SCHEMATA table.
+
+SHOW TABLES
+^^^^^^^^^^^
+::
+
+  SHOW [EXTENDED] [FULL] TABLES
+    [{FROM|IN} <db_name>] [LIKE <pattern> | WHERE <expr>]
+
+- base tables and views are listed. temporary tables are not listed.
+
+- EXTENDED shows also hidden tables created by failed ALTER TABLE statements.
+
+- FULL displays tables' type: BASE TABLE for a table, VIEW for a view, or
+  SYSTEM VIEW for an INFORMATION_SCHEMA table. 这样可以区分 table 和 view.
+
+- Only tables you have some privileges are shown.
+
+- table infos are stored in INFORMATION_SCHEMA.TABLES table.
 
 Data Manipulation Language (DML)
 --------------------------------
@@ -1424,6 +1446,9 @@ Information Functions
 ---------------------
 - ``VERSION()``. mysql server version, in utf-8 encoding. see also ``version``
   system variable.
+
+- ``DATABASE()``. name of the default database, in utf-8. If no default,
+  returns NULL.
 
 Stored Programs and Views
 =========================
@@ -2947,6 +2972,12 @@ Client Programs
 
 mysql
 ^^^^^
+::
+
+  mysql [options] [db_name]
+
+- ``db_name`` will be the initial default database for queries. If ``db_name``
+  is not specified, no default db is selected.
 
 options
 """""""
@@ -3003,11 +3034,29 @@ non-interactive mode
 - In non-interactive mode, read input sql from stdin, print results to stdout.
   For processing convenience, such output is tab-delimited for each column.
 
+
+
+mysqladmin
+^^^^^^^^^^
+
 Utility Programs
 ----------------
 
 mysqlshow
 ^^^^^^^^^
+::
+
+  mysqlshow [options] [db_name [tbl_name [col_name]]]
+
+a CLI interface to the following SHOW statements:
+
+* ``SHOW DATABASES``
+
+* ``SHOW TABLES FROM db_name``
+
+options.
+
+- ``--status``, ``-i``. 直接从 INFORMATION_SCHEMA 中获取最全的信息.
 
 mysqlbinlog
 ^^^^^^^^^^^
