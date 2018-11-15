@@ -1474,26 +1474,79 @@ order by
 
 index
 -----
+
+索引类型与数据结构
+^^^^^^^^^^^^^^^^^^
+
+B-tree
+""""""
+used for: PRIMARY KEY, UNIQUE, INDEX
+
+B-tree 适合 lookup for exact matches (equals operator) and ranges.
+
+Inverted index
+""""""""""""""
+used for: FULLTEXT index.
+
+R-tree
+"""""""
+used for: indexes on spatial data types.
+
+Hash index
+""""""""""
+used for: default index type for MEMORY table.
+
+hash index 适合 lookup for exact matches, rather than ranges.
+
+hash index is only available for MEMORY storage engine.
+
+The MEMORY storage engine can also use B-tree indexes, and you should choose
+B-tree indexes for MEMORY tables if some queries use range operators.
+
+How index works
+^^^^^^^^^^^^^^^
+
+When index is used
+^^^^^^^^^^^^^^^^^^
+- Matching a WHERE clause.
+
+- To retrieve rows from other tables when performing joins.
+
+- To find ``MIN()``, ``MAX()`` for a column.
+
+- To sort or group a table if the sorting or grouping is done on a leftmost
+  prefix of a usable index.
+
+- 当查询语句可通过 covering index 优化完成时.
+
+design pattern
+^^^^^^^^^^^^^^
 - Create right index to answer the required question. 不要创建不必要的
   索引, 因为:
-  
+
   * 在空间上索引要占用内存和存储;
-   
+
   * 在时间上创建和更新索引需要时间, 每次 insert, update, delete 的过程中,
     都需要完成相关索引的更新.
 
-- index's data structure.
+- 若无法使用索引, MySQL must begin with the first row and then read through the
+  entire table to find the relevant rows. 这至少是 O(n) 的.
 
-  * B-tree: PRIMARY KEY, UNIQUE, INDEX
+- Covering index. 这是一种查询语句优化技巧, 即, 如果能够满足需求的话, 一个语句
+  可以尽量只取索引覆盖到的列. MySQL 会优化这样的语句, 直接从索引获取结果, 无需
+  访问数据行, 从而提高查询速度.
 
-  * R-tree: indexes on spatial data types.
+- 若数据行数比较小, 则索引并没有那么重要, 因全表扫描也不会慢多少.
 
-  * Inverted index: FULLTEXT.
+- 若查询语句需要返回一个表的绝大部分或全部行, 全表顺序遍历比使用索引更快.
+  Because sequential reads minimize disk seeks, even if not all the rows are
+  needed for the query.
 
-  * Hash index.
+Composite Index
+^^^^^^^^^^^^^^^
+- aka multi-column index, i.e., 复合索引.
 
-
-
+- 
 
 InnoDB storage engine
 =====================
