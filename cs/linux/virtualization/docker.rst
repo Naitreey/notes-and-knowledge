@@ -17,7 +17,9 @@ General & Concepts
     这种能力带来了非常多的可能性和用途. 例如, host 和 guest 以及
     guest 之间具有隔离性, 因此可以同时提供给多个用户使用, 而且不怕相互干扰或干扰
     宿主机; guest 与 host 之间可以是不同的运算环境, 因此可以用于解决单一平台的
-    软件和功能等局限性, 同时应用多个平台带来的能力; 等等.
+    软件和功能等局限性, 同时应用多个平台带来的能力; guest 之间以及 host 和 guest
+    之间是隔离的, 这样具有很好的安全性, 攻破一个服务后也只是 root 了相应的容器,
+    黑客并没有 PWNed 整个集群, 其他服务可能仍是安全的; 等等.
 
     容器提供了类似于虚拟机的能力 (从而暗示着类似的可能性和用途),
     却避免了虚拟机带来的严重的 overhead. 例如, 不同的容器之间是独立的,
@@ -152,9 +154,7 @@ concepts and best practices
     ``RUN`` command 的数量.
 
   * 若多个 app 镜像实际上基于一些共同的基础环境, 则制作一个能够最大程度通用
-    和减少重复的 base image. 然后各个镜像再基于它来制作. 除了显而易见的好处
-    之外, 这样做还可以减少内存用量和提高加载速度. 因相同的 readonly layers
-    docker 只加载一份至内存.
+    和减少重复的 base image. 然后各个镜像再基于它来制作.
 
 - 基镜像的选择.
   
@@ -2729,6 +2729,10 @@ design patterns
 
   * 为方便地 debug entrypoint script, 可通过 bind mount 将脚本 bind mount
     至容器中, 并设置它为 entrypoint, 并配合 custom command.
+
+- 容器中的进程仍然应尽量赋予最小的权限和资源, 尽量避免 run as root. 遵循 least
+  privilege principle. Instead, create a user in your Dockerfile with a known
+  UID and GID, and run your process as this user.
 
 References
 ==========
