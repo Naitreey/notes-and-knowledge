@@ -928,6 +928,102 @@ ALTER DATABASE
 
 - If database name is omitted, use current default database.
 
+CREATE TABLE
+^^^^^^^^^^^^
+- normal "CREATE TABLE"::
+
+    CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
+        (create_definition, ...)
+        [table_options]
+        [partition_options]
+
+- "CREATE TABLE" by queried data::
+
+    CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
+        [(create_definition, ...)]
+        [table_options]
+        [partition_options]
+        [IGNORE | REPLACE]
+        [AS] query_expression
+
+- "CREATE TABLE" like existing table::
+
+    CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
+        LIKE old_tbl_name
+
+- CREATE privilege for the table is required.
+
+table options
+"""""""""""""
+::
+
+  table_options:
+      table_option [[,] table_option] ...
+
+  table_option:
+      AUTO_INCREMENT [=] value
+    | AVG_ROW_LENGTH [=] value
+    | [DEFAULT] CHARACTER SET [=] charset_name
+    | CHECKSUM [=] {0 | 1}
+    | [DEFAULT] COLLATE [=] collation_name
+    | COMMENT [=] 'string'
+    | COMPRESSION [=] {'ZLIB'|'LZ4'|'NONE'}
+    | CONNECTION [=] 'connect_string'
+    | {DATA|INDEX} DIRECTORY [=] 'absolute path to directory'
+    | DELAY_KEY_WRITE [=] {0 | 1}
+    | ENCRYPTION [=] {'Y' | 'N'}
+    | ENGINE [=] engine_name
+    | INSERT_METHOD [=] { NO | FIRST | LAST }
+    | KEY_BLOCK_SIZE [=] value
+    | MAX_ROWS [=] value
+    | MIN_ROWS [=] value
+    | PACK_KEYS [=] {0 | 1 | DEFAULT}
+    | PASSWORD [=] 'string'
+    | ROW_FORMAT [=] {DEFAULT|DYNAMIC|FIXED|COMPRESSED|REDUNDANT|COMPACT}
+    | STATS_AUTO_RECALC [=] {DEFAULT|0|1}
+    | STATS_PERSISTENT [=] {DEFAULT|0|1}
+    | STATS_SAMPLE_PAGES [=] value
+    | TABLESPACE tablespace_name [STORAGE {DISK|MEMORY|DEFAULT}]
+    | UNION [=] (tbl_name[,tbl_name]...)
+
+- ENGINE. Unquoted or string-quoted engine name. Default is InnoDB.  INNODB,
+  MYISAM, MEMORY, CSV, ARCHIVE, EXAMPLE, FEDERATED, MERGE, NDB.
+
+- AUTO_INCREMENT. initial auto increment value for the table. (There can be
+  only one AUTO_INCREMENT column in a table.) default is 1.
+
+- [DEFAULT] CHARACTER SET. the default character set for the table. This is the
+  default charset for textual columns in the table. ``charset_name`` by default
+  is DEFAULT, in which case it falls back to database default charset.
+
+- [DEFAULT] COLLATE. ditto for collation.
+
+- COMMENT. max 2048 字符. default empty.
+
+- COMPRESSION. specify page-level compression for InnoDB tables. Zlib, LZ4, None.
+  default is None.
+
+- {DATA|INDEX} DIRECTORY. For InnoDB, only DATA DIRECTORY can be used (Because
+  InnoDB file-per-table tablespace file contains both data and index). This
+  permits creating a file-per-table tablespace outside of the data directory.
+  The tablespace data file is created in the specified directory, inside a
+  subdirectory with the same name as the schema. Default is specified by
+  ``datadir`` system variable.
+
+- ENCRYPTION. InnoDB page-level data encryption for file-per-table tablespace.
+  default is N.
+
+- KEY_BLOCK_SIZE. the page size in kilobytes to use for compressed InnoDB
+  tables. the default compressed page size, which is half of the
+  ``innodb_page_size`` value.
+
+- MAX_ROWS. The maximum number of rows you plan to store in the table. This is
+  not a hard limit, but rather a hint to the storage engine that the table must
+  be able to store at least this many rows. max value is 2**32-1.
+
+- MIN_ROWS. The minimum number of rows you plan to store in the table. The
+  MEMORY storage engine uses this option as a hint about memory use.
+
 SHOW CREATE DATABASE
 ^^^^^^^^^^^^^^^^^^^^
 ::
@@ -1475,8 +1571,69 @@ order by
 index
 -----
 
-索引类型与数据结构
+See also [SOIndexWorking]_.
+
+terms
+^^^^^
+- cardinality. The number of unique values in a table column.
+
+- selectivity. A data's selectivity by a column is the number of distinct
+  values in a column (i.e., its cardinality) divided by the number of records
+  in the table. High selectivity means that the column values are relatively
+  unique, and can retrieved efficiently through an index.
+
+What is index
+^^^^^^^^^^^^^
+索引是一个数据结构, 它将一个或多个列的数据按照一定顺序 (升序或降序) 排列, 以
+达到快速查询所需数据行的目的. 在索引中的每个项, 保存了指向相应数据行的指针,
+这样可以根据确定的列值直接 seek 到对应的数据行.
+
+索引抽象结构::
+
+  ^
+  |
+  -----------------------------
+  column value | pointer to row
+  -----------------------------
+  |
+  V
+
+Why need index
+^^^^^^^^^^^^^^
+在没有索引的情况下, 基于一个列的值对表数据进行搜索, 必须使用 linear search, 这
+样时间复杂度是 O(n), 其中 n 是表中的数据行数. 当对一个列建立索引后, 由于索引
+中的列值是 sorted, 可以使用数搜索, 搜索的时间复杂度是 O(log n), 对于 B-tree 索
+引. 因此, 使用索引能极大地提高数据查询性能.
+
+Advantages and disadvantages of index
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+advantages:
+
+- 大大提高查询效率.
+
+索引的两方面代价:
+
+- 维护索引的时间成本. 在每次数据修改时 (插入、更新、删除等), 相关的索引都
+  必须更新.
+
+- 索引数据的空间占用. 索引占用的体积相对与原数据表而言是可观的. 当数据量大时,
+  索引占用空间也会非常大.
+
+When index is used
 ^^^^^^^^^^^^^^^^^^
+- Matching a WHERE clause.
+
+- To retrieve rows from other tables when performing joins.
+
+- To find ``MIN()``, ``MAX()`` for a column.
+
+- To sort or group a table if the sorting or grouping is done on a leftmost
+  prefix of a usable index.
+
+- 当查询语句可通过 covering index 优化完成时.
+
+index types and data structure
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 B-tree
 """"""
@@ -1503,21 +1660,28 @@ hash index is only available for MEMORY storage engine.
 The MEMORY storage engine can also use B-tree indexes, and you should choose
 B-tree indexes for MEMORY tables if some queries use range operators.
 
-How index works
+Composite Index
 ^^^^^^^^^^^^^^^
+- Composite index (复合索引) is multi-column index.
 
-When index is used
-^^^^^^^^^^^^^^^^^^
-- Matching a WHERE clause.
+- 一个包含多列的索引自动即成为所谓复合索引. 一个索引最多可以包含 16 个列.
 
-- To retrieve rows from other tables when performing joins.
+- 一个复合索引可以用在对所有 index prefix 部分的列的查询条件上, 只要查询条件
+  对列的顺序要求与 index prefix 部分一致即可.
 
-- To find ``MIN()``, ``MAX()`` for a column.
+- 复合索引中的每个索引值可理解为是各个列的值的 concatenation. 因此索引的构建顺
+  序是按照列的优先级顺序进行排序的. 例如::
 
-- To sort or group a table if the sorting or grouping is done on a leftmost
-  prefix of a usable index.
-
-- 当查询语句可通过 covering index 优化完成时.
+    column 1 | column 2 | column 3
+    ABC
+    ABD
+    ACD
+    ADE
+    BAB
+    BAC
+    BBA
+    BBB
+    ...
 
 design pattern
 ^^^^^^^^^^^^^^
@@ -1529,8 +1693,7 @@ design pattern
   * 在时间上创建和更新索引需要时间, 每次 insert, update, delete 的过程中,
     都需要完成相关索引的更新.
 
-- 若无法使用索引, MySQL must begin with the first row and then read through the
-  entire table to find the relevant rows. 这至少是 O(n) 的.
+- 若索引相关的列并没有查询需要, 而只是输出, 则没有必要创建索引.
 
 - Covering index. 这是一种查询语句优化技巧, 即, 如果能够满足需求的话, 一个语句
   可以尽量只取索引覆盖到的列. MySQL 会优化这样的语句, 直接从索引获取结果, 无需
@@ -1542,11 +1705,22 @@ design pattern
   Because sequential reads minimize disk seeks, even if not all the rows are
   needed for the query.
 
-Composite Index
-^^^^^^^^^^^^^^^
-- aka multi-column index, i.e., 复合索引.
+- An index with low selectivity is useless. MySQL processes the query
+  differently depending on the selectivity of the index. 当 selectivity 比较低
+  时, 不会使用相应的 index, 这个 index 就变成了只会增加负担, 但没有用处的废物.
 
-- 
+- 当列值的分布非常不均匀时, 对于某些列值 (对应的行数比较少时) 的查询可能使用索
+  引比较高效, 而对于另一些列值 (对应的行比较多时) 的查询使用索引比较低效. In
+  such a case, you might need to use index hints to pass along advice about
+  which lookup method is more efficient for a particular query.
+
+- Hashed column as alternative to wide index spanning multiple columns.
+  如果索引涉及的列比较多, 可能查询起来更快的方式是添加一个 indexed hash column,
+  其值是这些需要索引的列的 concatenation 的 hash. 查询方式::
+
+    SELECT * FROM tbl_name
+      WHERE hash_col=MD5(CONCAT(val1,val2))
+      AND col1=val1 AND col2=val2;
 
 InnoDB storage engine
 =====================
@@ -3209,3 +3383,4 @@ References
 .. [SOCharVarchar] `What are the use cases for selecting CHAR over VARCHAR in SQL? <https://stackoverflow.com/questions/59667/what-are-the-use-cases-for-selecting-char-over-varchar-in-sql>`_
 .. [SEMysqlRepl] `How can you stop MySQL slave from replicating changes to the 'mysql' database? <https://dba.stackexchange.com/questions/584/how-can-you-stop-mysql-slave-from-replicating-changes-to-the-mysql-database>`_
 .. [SOUTF8Difference] `What's the difference between utf8_general_ci and utf8_unicode_ci <https://stackoverflow.com/questions/766809/whats-the-difference-between-utf8-general-ci-and-utf8-unicode-ci>`_
+.. [SOIndexWorking] `How does database indexing work? [closed] <https://stackoverflow.com/questions/1108/how-does-database-indexing-work>`_
