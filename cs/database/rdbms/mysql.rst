@@ -1010,6 +1010,12 @@ table options
   subdirectory with the same name as the schema. Default is specified by
   ``datadir`` system variable.
 
+- TABLESPACE. specify a general tablespace, a file-per-table tablespace, or
+  system tablespace. 如果是 general tablespace, 必须预先存在; ``innodb_system``
+  is system tablespace, specify ``innodb_file_per_table`` to create explicitly
+  a file-per-table tablespace, as will do by default ``innodb_file_per_table``
+  system variable.
+
 - ENCRYPTION. InnoDB page-level data encryption for file-per-table tablespace.
   default is N.
 
@@ -1023,6 +1029,19 @@ table options
 
 - MIN_ROWS. The minimum number of rows you plan to store in the table. The
   MEMORY storage engine uses this option as a hint about memory use.
+
+- ROW_FORMAT. default is DEFAULT, which is defined by
+  ``innodb_default_row_format``.
+
+- STATS_PERSISTENT. whether to enable persistent statistics for an InnoDB
+  table. default is DEFAULT, which is defined by ``innodb_stats_persistent``.
+
+- STATS_AUTO_RECALC. whether to automatically recalculate persistent statistics
+  for an InnoDB table. default is DEFAULT, defined by
+  ``innodb_stats_auto_recalc``.
+
+- STATS_SAMPLE_PAGES. The number of index pages to sample when calculating
+  table statistics.
 
 SHOW CREATE DATABASE
 ^^^^^^^^^^^^^^^^^^^^
@@ -3280,6 +3299,8 @@ a CLI interface to the following SHOW statements:
 * ``SHOW DATABASES``
 
 * ``SHOW TABLES FROM db_name``
+
+* ``SHOW TABLE STATUS FROM db_name``
 
 options.
 
