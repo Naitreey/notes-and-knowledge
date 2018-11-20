@@ -493,7 +493,8 @@ text and binary data
 
 - Indexes on BLOB and TEXT columns must specify index prefix length.
 
-- BLOB and TEXT columns can not have non-NULL DEFAULT value.
+- BLOB and TEXT columns can be assigned a default value only if the value is
+  written as an expression, even if the expression value is a literal
 
 - Only the first ``max_sort_length`` bytes of the column are used when sorting.
 
@@ -781,7 +782,8 @@ Geospatial types
 
   * SRID. 指定该列 geometry value 所属的 spatial reference system (SRS).
 
-- GEOMETRY types can not have non-NULL DEFAULT.
+- GEOMETRY types can be assigned a default value only if the value is written
+  as an expression, even if the expression value is a literal.
 
 - storage. 4 bytes for SRID + WKB representation of geometry value.
 
@@ -798,7 +800,8 @@ JSON type
 
   * inplace update of JSON document. 
 
-- JSON column can not have non-NULL DEFAULT value.
+- JSON column can be assigned a default value only if the value is written as
+  an expression, even if the expression value is a literal.
 
 - index. JSON column can not be indexed directly. You can create an index on a
   generated column that extracts a scalar value from the JSON column.
@@ -930,6 +933,10 @@ ALTER DATABASE
 
 CREATE TABLE
 ^^^^^^^^^^^^
+- CREATE privilege for the table is required.
+
+formats
+"""""""
 - normal "CREATE TABLE"::
 
     CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
@@ -937,6 +944,54 @@ CREATE TABLE
         [table_options]
         [partition_options]
 
+    create_definition:
+        col_name column_definition
+      | [CONSTRAINT [symbol]] PRIMARY KEY [index_type] (key_part,...)
+          [index_option] ...
+      | {INDEX|KEY} [index_name] [index_type] (key_part,...)
+          [index_option] ...
+      | [CONSTRAINT [symbol]] UNIQUE [INDEX|KEY]
+          [index_name] [index_type] (key_part,...)
+          [index_option] ...
+      | {FULLTEXT|SPATIAL} [INDEX|KEY] [index_name] (key_part,...)
+          [index_option] ...
+      | [CONSTRAINT [symbol]] FOREIGN KEY
+          [index_name] (col_name,...) reference_definition
+      | CHECK (expr)
+
+    column_definition:
+        data_type [NOT NULL | NULL] [DEFAULT {literal | (expr)} ]
+          [AUTO_INCREMENT] [UNIQUE [KEY]] [[PRIMARY] KEY]
+          [COMMENT 'string']
+          [COLUMN_FORMAT {FIXED|DYNAMIC|DEFAULT}]
+          [STORAGE {DISK|MEMORY|DEFAULT}]
+          [reference_definition]
+      | data_type [GENERATED ALWAYS] AS (expression)
+          [VIRTUAL | STORED] [NOT NULL | NULL]
+          [UNIQUE [KEY]] [[PRIMARY] KEY]
+          [COMMENT 'string']
+
+    key_part: {col_name [(length)] | (expr)} [ASC | DESC]
+
+    index_type:
+        USING {BTREE | HASH}
+    
+    index_option:
+        KEY_BLOCK_SIZE [=] value
+      | index_type
+      | WITH PARSER parser_name
+      | COMMENT 'string'
+      | {VISIBLE | INVISIBLE}
+    
+    reference_definition:
+        REFERENCES tbl_name (key_part,...)
+          [MATCH FULL | MATCH PARTIAL | MATCH SIMPLE]
+          [ON DELETE reference_option]
+          [ON UPDATE reference_option]
+    
+    reference_option:
+        RESTRICT | CASCADE | SET NULL | NO ACTION | SET DEFAULT
+    
 - "CREATE TABLE" by queried data::
 
     CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
@@ -951,7 +1006,80 @@ CREATE TABLE
     CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
         LIKE old_tbl_name
 
-- CREATE privilege for the table is required.
+CREATE TABLE ... query
+"""""""""""""""""""""""
+- 最终创建的表的列是 ``create_definition`` 部分与 query 语句中包含的列的并集.
+
+- In the resulting table, columns named only in the CREATE TABLE part come
+  first. Columns named in both parts or only in the query part come after
+  that. The data type of query columns can be overridden by also specifying
+  the column in the CREATE TABLE part.
+
+- IGNORE and REPLACE 指定如何处理 rows with duplicate PK values. IGNORE
+  discards all rows duplicating an existing row. REPLACE replaces the original
+  row.  If neither is specified, rows with duplicate PKs result in error.
+
+- 注意对于根据 query 列定义创建的列, 原索引并没有复制, 需在 CREATE TABLE 部分
+  单独指定. Retrained attributes are NULL (or NOT NULL) and, for those columns
+  that have them, CHARACTER SET, COLLATION, COMMENT, and the DEFAULT clause.
+  The AUTO_INCREMENT attribute is not preserved.
+
+- 任何 query statement 都可以使用, 不仅仅是 SELECT statement, 例如 UNION.
+
+CREATE TABLE ... LIKE
+"""""""""""""""""""""
+- create an empty table based on definition of another table.
+
+- SELECT privilege on original table is required.
+
+- Only base tables can be used as original table, not views.
+
+- DATA/INDEX DIRECTORY table option is not preserved.
+
+- Foreign key definitions are not preserved.
+
+column definitions
+""""""""""""""""""
+- hard limit for column numbers: 4096 per table.
+
+- each data types accepts additional data type attributes as defined in
+  respective sections of `Data types`_.
+
+index and foreign keys
+""""""""""""""""""""""
+
+table name
+""""""""""
+::
+
+  [db_name.]tbl_name
+
+- Unqualified table name is created in default database.
+
+- If you use quoted identifiers, quote the database and table names separately.
+
+temporary table
+"""""""""""""""
+::
+
+  CREATE TEMPORARY TABLE
+
+- 临时表对一个 session 中需要对同样的查询结果数据进行多次处理时, 可以提高效率.
+  尤其是当这个查询结果的构造成本比较高时.
+
+- require privilege: CREATE TEMPORARY TABLES.
+
+- A temporary table is visible only within the current session, and is dropped
+  automatically when the session is closed.
+
+- two different sessions can use the same temporary table name without
+  conflicting with each other. The existing non-TEMPORARY table of the same
+  name is hidden until the temporary table is dropped.
+
+- CREATE TEMPORARY TABLE does NOT cause an implicit commit.
+
+- Drop a database does not automatically drop any TEMPORARY tables in that
+  database. A TEMPORARY table can be created in a nonexistent database.
 
 table options
 """""""""""""
@@ -1053,6 +1181,15 @@ SHOW CREATE DATABASE
 
 - default charset and collation 也会输出. 如果 collation 部分
   没有显示, 说明使用的是相应 charset 默认的 collation.
+
+SHOW CREATE TABLE
+^^^^^^^^^^^^^^^^^
+::
+
+  SHOW CREATE TABLE tbl_name
+
+- 显示的 CREATE TABLE statement 是与当前 table definition 一致的, 而不一定是最
+  初创建 table 时使用的 statement.
 
 SHOW DATABASES
 ^^^^^^^^^^^^^^
