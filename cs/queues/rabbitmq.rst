@@ -1,8 +1,36 @@
+overview
+========
+- RabbitMQ is a message broker software.
+
+- It has a plug-in architecture, supporting many protocols.
+
+- Written in Erlang.
+
+Components
+==========
+- RabbitMQ server
+
+- Gateways for various messaging protocols.
+
+- Client libraries.
+
+- Plugins.
+
 Concepts
 ========
 
-components
-----------
+terms
+-----
+
+message
+^^^^^^^
+A message is a blob of binary data.
+
+Message is produced by producer, queued in queue, consumed by consumer.
+
+producer
+^^^^^^^^
+Producer produces message, i.e., it sends message.
 
 virtual host
 ^^^^^^^^^^^^
@@ -82,3 +110,15 @@ persistent messaging
 
 - Persistent messages are written to disk during processing by rabbitmq.
   Note that this will take time therefore slow things down.
+
+Server
+======
+- default port: 5672
+
+Protocol Support
+================
+- AMQP
+
+- STOMP
+
+- MQTT

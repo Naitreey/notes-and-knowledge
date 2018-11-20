@@ -2597,14 +2597,15 @@ rabbitmq
   
   - ``rabbitmq:*alpine*``
 
-- 注意需要设置容器 hostname, 因为 rabbitmq stores data based on what it calls the
-  "Node Name", which defaults to the hostname.
+- 注意需要设置容器 hostname, 因为 rabbitmq stores data in
+  ``/var/lib/rabbitmq/mnesia/rabbit@${hostname}``. 而服务实例容器的 hostname 每
+  次启动默认都会变成一个新值. 这样就无法自动继续使用上一个实例的数据.
 
 - ``/var/lib/rabbitmq`` 默认是一个 volume.
 
 - environs:
 
-  * RABBITMQ_VM_MEMORY_HIGH_WATERMARK
+  * RABBITMQ_VM_MEMORY_HIGH_WATERMARK. setting for ``vm_memory_high_watermark``.
 
   * RABBITMQ_ERLANG_COOKIE
 
