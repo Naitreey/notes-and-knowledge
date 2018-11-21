@@ -4,10 +4,13 @@ message queues
 
 task queues
 ===========
-- Asynchronous task queues 经常用在 web 后端架构中, 用于 delegrate
-  long-running tasks to a separate execution unit. 从而作为服务
-  响应主体的 web server 可以迅速返回响应给客户端, 完成 request-response
-  cycle.
+- Asynchronous task queues 经常用在 web 后端架构中, 用于 delegrate long-running
+  tasks to a separate execution unit. 从而作为服务响应主体的 web server 可以迅
+  速返回响应给客户端, 完成 request-response cycle.
+
+- The main idea behind task queues is to avoid doing a resource-intensive task
+  immediately and having to wait for it to complete. Instead we schedule the
+  task to be done later.
 
 - 交给任务队列去执行的任务, 一般具有以下特征:
 
