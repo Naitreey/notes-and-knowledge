@@ -58,35 +58,7 @@ A queue is a large message buffer, 队列的容量受限于内存和硬盘容量
 
 exchange
 ^^^^^^^^
-Exchange 的作用是它决定输入的 messages 该去哪些队列中排队, 并把它们送入这些目的
-队列中. 它通过匹配 message 的 routing key 与自己维持的 binding rule list, 选择
-目标队列.
-
-exchange 具有三种类型: fanout, direct, topic. 对应着不同的匹配灵活度.
-具有不同的 CPU 计算量和效率. 设计多种 exchange, 给用户提供了不同
-的选择, 由用户去在灵活性和效率之间 tradeoff.
-
-三种 exchange 的具体解释:
-
-* fanout. no routing keys involved. 输入信息会发送给所有绑定的队列.
-  相当于 broadcasting.
-
-* direct. message 的 routing key 与 queue binding 使用的值需要
-  exact match.
-
-* topic. message routing key 与 queue binding 值进行 pattern matching.
-  一个 routing key 由一组 dot separated hierarchy of words 组成.
-  匹配时支持以下 metachar:
-
-  - ``*`` matches any single word.
-
-  - ``#`` matches one or more words.
-
-一个 virtual host 中可以创建多个 exchange. 从而满足不同的需求.
-
-可以把 exchange 看成是某种路由器. binding rules 就是它的路由表.
-
-default exchange 由 empty string 表示.
+Exchange routes a message to queues.
 
 binding
 ^^^^^^^
@@ -130,6 +102,17 @@ Queue
 
 - durable queue is stored on disk.
 
+binding
+-------
+- A queue binds to an exchange with an binding key. A binding key 最大长度是
+  255 bytes.
+
+- A queue can bind to an exchange multiple times, each time with a different
+  binding key. 效果是这些 binding keys OR-ed, 满足至少一个 binding key 则会给这
+  个队列发消息. 
+
+- Multiple queue can bind to the same exchange with the same binding keys.
+
 messaging
 =========
 - 当一个队列有多个 consumer 时, rabbitmq 会使用 round-robin 的方式将消息分发给
@@ -161,6 +144,55 @@ messaging
 
 - fair dispatch. basic.qos. 在分发消息时考虑 consumer 当前的 message pressure.
 
+exchange
+========
+- Exchange is like a router. Producer only sends message to an exchange. It's
+  the responsibility of an exchange to route message to the appropriate
+  queue(s).
+
+- 当一个 exchange 收到 message 后, 它根据路由条件将消息发给所有符合条件的队列,
+  若没有任何符合条件的队列, 则相当于消息直接被抛弃掉了.
+
+- 一个 virtual host 中可以创建多个 exchange. 从而满足不同的需求.
+
+- 可以把 exchange 看成是某种路由器. binding rules 就是它的路由表.
+
+- default exchange 由 empty string 表示.
+
+exchange types
+--------------
+exchange 类型: fanout, direct, topic, headers.
+
+不同的 exchange type 有不同的匹配灵活度, 适合不同的应用场景, 具有不同的 CPU 计
+算量和效率.
+
+fanout
+^^^^^^
+no routing keys involved. 输入信息会发送给所有绑定的队列.  相当于 broadcasting.
+
+direct
+^^^^^^
+message 的 routing key 与 queue binding 使用的值需要 exact match.
+
+topic
+^^^^^
+- topic exchange 的 routing key 和 binding key 必须是 a dot separated hierarchy
+  of words.
+
+- 在路由匹配时, message routing key 与 queue binding 值进行 pattern matching.
+  当队列指定 binding key 时, topic exchange 对以下 metachar 进行解析:
+
+  * ``*`` is a pattern that matches any single word, when compared with a
+    routing key. 例如, ``*.a.*``, ``a.b.*.*``
+  
+  * ``#`` is a pattern that matches one or more words, when compared with a
+    routing key. 例如, ``a.#``.
+
+- A binding key of ``#`` behaves like fanout exchange for this queue.
+
+- A binding key without any metachar behaves like direct exchange for this
+  queue.
+
 Protocol Support
 ================
 - AMQP
@@ -177,6 +209,12 @@ rabbitmqctl
 
 list_queues
 ^^^^^^^^^^^
+
+list_exchanges
+^^^^^^^^^^^^^^
+
+list_bindings
+^^^^^^^^^^^^^
 
 Client libraries
 ================
@@ -195,3 +233,13 @@ Client-side programming
 - 根据使用场景决定是否使用 automatic acknowledgement mode. 若使用 manual
   acknowledgement, 设计合理的 ack 位置. 考虑在什么情况下不该 ack, 让消息重新排
   队.
+
+- 一个队列和多个 consumer 的组合构成 task queue 的应用场景. Celery 就是这样.
+
+- 一个 exchange 和多个队列的组合构成 publish/subscribe 的应用场景.
+
+  * Producer declares an exchange of appropriate type, e.g., simple fanout,
+    topic match, exact match etc.
+
+  * Every consumer declares a temporary queue that is exclusive to its
+    connection.
