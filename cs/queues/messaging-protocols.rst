@@ -1,5 +1,8 @@
 AMQP
 ====
+overview
+--------
+
 - Advanced Message Queuing Protocol.
 
 - design principle: interoperability between different vendors.
@@ -18,19 +21,34 @@ AMQP
 
 - AMQP was originally designed by JP Morgan.
 
-- implementations:
+protocol
+--------
 
-  * Apache Qpid
+message properties
+^^^^^^^^^^^^^^^^^^
+- ``delivery_mode``. transitent message (1), persistent message (2).
 
-  * Apache ActiveMQ
+- ``content_type``. message encoding as mime-type.
 
-  * RabbitMQ
+- ``reply_to``. the name of a callback queue.
 
-- major versions:
+- ``correlation_id``. Useful to correlate RPC responses with requests.
 
-  * 1.0
+implementations
+---------------
 
-  * 0-9-1
+* Apache Qpid
+
+* Apache ActiveMQ
+
+* RabbitMQ
+
+major versions
+--------------
+
+* 1.0
+
+* 0-9-1
 
 MQTT
 ====

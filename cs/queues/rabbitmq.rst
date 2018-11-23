@@ -243,3 +243,14 @@ Client-side programming
 
   * Every consumer declares a temporary queue that is exclusive to its
     connection.
+
+- 使用消息队列实现 (同步) RPC model.
+
+  * request side 声明一个 reply queue. 发送消息至 request queue, 消息属性中附上
+    ``reply_to`` and ``correlation_id``.
+
+  * response side 收到消息后, 执行操作, 将结果返回至 ``reply_to`` queue, 附上
+    ``correlation_id``.
+
+  * request side 监听 ``reply_to`` queue, 注意要检查收到的消息的
+    ``correlation_id`` 是否与原消息相符.

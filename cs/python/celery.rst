@@ -635,19 +635,26 @@ content
 
 RPC and AMQP result backends
 ----------------------------
-- When rabbitmq or QPid is used as message broker, RPC and AMQP result
-  backend ``rpc://`` and ``amqp://`` are available automatically.
+- When rabbitmq or QPid is used as message broker, RPC and AMQP result backend
+  ``rpc://`` and ``amqp://`` are available automatically.
 
-- They send task state information back as transient messages, rather than
-  actually storing result somewhere. Therefore result can only be retrieved
-  once, and only by the client that initiated the task.
+- RPC/AMQP 的命名, 就体现了这种 result backend 本质上是 RPC 操作. 因此, they
+  send task state information back as transient messages, rather than actually
+  storing result somewhere. 这些任务状态信息可以理解为 RPC 的返回值. Therefore
+  result can only be retrieved once, and only by the client that initiated the
+  task.
 
 - It's still an excellent choice if you need to receive state changes in
   real-time. Using messaging means the client doesn’t have to poll for new
   states.
 
-- RPC 对于每个 client 开一个队列. AMQP 对于每个任务单独开一个队列. 因此后者
-  非常低效, is deprecated.
+- RPC 与 AMQP result backend 的区别.
+ 
+  * RPC 对于每个 client 开一个队列 (In AMQP jargon, a ``reply_to`` queue that
+    is ``exclusive`` to this client). 不同的任务结果通过 task id 作为 AMQP 中的
+    ``correlation_id`` 来识别.
+    
+  * AMQP 对于每个任务单独开一个队列. 因此非常低效, deprecated.
 
 database result backends
 ------------------------
