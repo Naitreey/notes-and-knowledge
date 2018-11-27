@@ -594,7 +594,11 @@ Internals
     不同的方式仅在 Salt 的使用方式上有区别 (例如 ``salt``, ``salt-call`` 等),
     salt 的所有 modules 可以在任何一种方式中使用.
 
-  * 连接从 minion 发起, minion 上不需要允许 incoming connections.
+  * TCP 连接一定是从 minion 向 master 发起. 因此 minion 上不需要开放端口允许
+    external initiating connections. Master 不会主动向 minion 发起 TCP 连接.
+
+  * 当 minion 和 master 的连接经过 NAT 设备时, 虽然 NAT 对 idle connection 存在
+    超时断开的机制, master 和 minion 之间的连接也会保持, 因为 zeromq 
 
   * publish-subscribe model.
 
@@ -603,6 +607,9 @@ Internals
 
     - request server port 4506, minion 按需连接该端口以获取各种所需文件和数据,
       以及发送执行结果回 master. 这些数据的传输是同步的.
+
+    master 与 minion 之间这两个 TCP 连接都是长连接, 一旦建立只要两端都保持运行
+    一般不会断开.
 
 - authentication & secure communication
 
