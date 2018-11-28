@@ -9,6 +9,13 @@ Questions
 
   * 使用 ``salt-call`` 本地执行 execution modules, 无需 minion.
 
+installation
+============
+
+upgrade
+-------
+- the master(s) should always be upgraded first.
+
 Salt Jinja extension
 ====================
 
@@ -586,39 +593,6 @@ Internals
   相同的 module name 在不同的 OS 等环境下实际上是对不同的 implementation module
   的重命名. 这类似于 ``os.path`` 与 ``posixpath``, ``ntpath`` 的关系.
 
-- architecture model
-
-  * salt 支持多种 management models:
-    agent-server (agent-based), agent-only, agent-less.
-  
-    不同的方式仅在 Salt 的使用方式上有区别 (例如 ``salt``, ``salt-call`` 等),
-    salt 的所有 modules 可以在任何一种方式中使用.
-
-  * TCP 连接一定是从 minion 向 master 发起. 因此 minion 上不需要开放端口允许
-    external initiating connections. Master 不会主动向 minion 发起 TCP 连接.
-
-  * 当 minion 和 master 的连接经过 NAT 设备时, 虽然 NAT 对 idle connection 存在
-    超时断开的机制, master 和 minion 之间的连接也会保持, 因为 zeromq 
-
-  * publish-subscribe model.
-
-    - publisher port 4505, minion 连接 master 上的 4505 端口, 监听任务信息.
-      任务异步地从该端口发送至所有 minions.
-
-    - request server port 4506, minion 按需连接该端口以获取各种所需文件和数据,
-      以及发送执行结果回 master. 这些数据的传输是同步的.
-
-    master 与 minion 之间这两个 TCP 连接都是长连接, 一旦建立只要两端都保持运行
-    一般不会断开.
-
-- authentication & secure communication
-
-  * minion 向 master 连接时, 首先送上自己的公钥. master 接受 minion 后, 返回
-    自己的公钥和 AES key. 后者用 minion 的公钥加密, 从而只有 master 和这个
-    minion 知道 AES key 的内容.
-
-  * master 和 minion 的通信通过 TLS 进行, 使用 AES key 对称加密.
-
 - user access control
 
 - remote execution
@@ -653,33 +627,56 @@ Internals
 Configuration
 =============
 
-- 不同方面的配置项应放在 ``master.d`` 或 ``minion.d`` 中的单独文件中.
-  而不该直接修改 ``master`` ``minion`` 配置文件.
+master
+------
+- 不同方面的配置项应放在 ``master.d`` 的单独文件中. 而不该直接修改 ``master``
+  文件.
+
+Primary configurations
+^^^^^^^^^^^^^^^^^^^^^^
+* ``interface``. default 0.0.0.0. bind ip.
 
 minion
 ------
+- 不同方面的配置项应放在 ``minion.d`` 的单独文件中. 而不该直接修改 ``minion``
+  文件.
 
-- Primary configurations
+Primary configurations
+^^^^^^^^^^^^^^^^^^^^^^
+* ``master``. Default ``salt``. can be
 
-  * ``minion_id_caching``, 将 minion id 缓存在 ``minion_id`` file 中. 这是为了当
-    minion 配置文件中没有定义 ``id`` 时, resolved minion id 值不随 hostname 的
-    改变而改变, 避免 master 不认识这个 minion.
+  - hostname or IP address of master node. 
 
-  * ``id``, 指定 minion id. minion id 的 resolution order:
+  - A list of above for multi-master mode.
 
-    - ``id`` 值 override 所有其他.
+  - A valid value based on ``master_type``.
 
-    - ``socket.getfqdn()``
+* ``master_type``. default ``str``. can be ``str``, ``failover``, ``func``,
+  ``disable``.
 
-    - ``/etc/hostname``
+* ``master_port``. default 4506. master ret server port.
 
-    - ``/etc/hosts`` 中 127.0.0.0/8 子网下的任何域名.
+* ``publish_port``. default 4505. master publish server port.
 
-    - publicly-routable ip address
+* ``minion_id_caching``, 将 minion id 缓存在 ``minion_id`` file 中. 这是为了当
+  minion 配置文件中没有定义 ``id`` 时, resolved minion id 值不随 hostname 的
+  改变而改变, 避免 master 不认识这个 minion.
 
-    - privately-routable ip address
+* ``id``, 指定 minion id. minion id 的 resolution order:
 
-    - localhost
+  - ``id`` 配置值
+
+  - ``socket.getfqdn()``
+
+  - ``/etc/hostname``
+
+  - ``/etc/hosts`` 中 127.0.0.0/8 子网下的任何域名.
+
+  - publicly-routable ip address
+
+  - privately-routable ip address
+
+  - localhost
 
 Output
 ======
@@ -960,3 +957,130 @@ usage
     Once the token is created, it is sent with all subsequent communications.
     User authentication does not need to be entered again until the token
     expires.
+Architecture
+============
+* management modes: agent-server (agent-based), agent-only, agent-less.
+
+  不同的方式仅在 Salt 的使用方式上有区别 (例如 ``salt``, ``salt-call`` 等),
+  salt 的所有 modules 可以在任何一种方式中使用.
+
+agent-server mode
+-----------------
+职责
+^^^^
+The Salt master is responsible for sending commands to Salt minions, and then
+aggregating and displaying the results of those commands.
+
+连接模型
+^^^^^^^^
+- TCP 连接从 minion 向 master 发起. minion 上不需要开放端口允许 external
+  initiating connections. Master 不会主动向 minion 发起 TCP 连接.
+
+- master 与 minion 之间有两种通信:
+
+  * publication communication. 即任务分发. 使用 publisher-subscriber model.
+    minion 连接 master, 监听任务信息. default publisher port 4505.
+   
+    这个 TCP 连接是持续性的, 一旦建立只要两端都保持运行一般不会断开.  当 minion
+    和 master 的连接经过 NAT 设备时, 虽然 NAT 对 idle connection 存在超时断开的
+    机制, master 和 minion 之间的连接也会保持, 因为 zeromq 的 heartbeat 机制.
+
+    publication communication 是异步的. 此时, master 是 producer -- 生产任务,
+    minion 是 consumer -- 获取 (消费) 任务. master 不需要等待所有 minion 获取
+    到了任务再去做别的, 是非阻塞式的.
+
+  * direct communication. minion 按需连接 master 以获取各种所需文件和数据以及发
+    送执行结果回 master. default request server port 4506.
+
+    这个连接是短期的. 只有 minion 需要时才连接到 master 该端口.
+
+    direct communication 是同步的. 此时, minion 连接到 master 后, 无论是 master
+    发送数据还是 minion 返回结果, 都是阻塞式的.
+
+节点认证和数据加密
+^^^^^^^^^^^^^^^^^^
+* publication communication.  minion 向 master 首次连接时, 发送自己的公钥.
+  master 接受 minion 的连接后, 返回自己的公钥和 rotating AES key. 这些信息用
+  minion 的公钥加密, 以保证只有 minion 可以解密.
+
+  认证后, master 和 minion 的通信通过 TLS 进行, 使用 rotating AES key 对称加
+  密.
+
+* direct communication. Encrypted using a unique AES key for each session.
+
+CLI
+===
+
+salt-master
+-----------
+Run master node.
+
+run options
+^^^^^^^^^^^
+- ``-d``. as a daemon. by default run in foreground.
+
+logging options
+^^^^^^^^^^^^^^^
+- ``-l LOGLEVEL``. console log level. all, garbage, trace, debug, info,
+  warning, error, quiet.  default warning.
+
+salt-key
+--------
+manage public keys in salt system.
+
+key's states
+^^^^^^^^^^^^
+- unaccepted. key is waiting to be accepted.
+
+- accepted. accepted.
+
+- rejected. key is rejected by admin.
+
+- denied. something wrong and minion is denied. Occurs
+  
+  * when minion has a duplicate ID
+   
+  * when a minion was rebuilt or had new keys generated and the previous key
+    was not deleted from the Salt master
+
+actions
+^^^^^^^
+
+list
+""""
+- ``-l STATE``. list keys. STATE can be unaccepted, accepted, rejected, all.
+
+accept
+""""""
+- ``-a ID``. accept key. globs are supported.
+
+- ``-A``. accept all pending keys.
+
+reject
+""""""
+- ``-r ID``. reject key. globs are supported.
+
+- ``-R``. reject all.
+
+delete
+""""""
+- ``-d ID``. delete key. globs are supported.
+
+- ``-D``. delete all.
+
+print
+""""""
+- ``-p ID``. print key.
+
+- ``-P``. print all.
+
+- ``-f KEY``. print fingerprint.
+
+- ``-F``. print all fingerprints.
+
+options
+"""""""
+- ``--include-all``. include non-pending keys when accepting/rejecting.
+
+key generation
+^^^^^^^^^^^^^^
