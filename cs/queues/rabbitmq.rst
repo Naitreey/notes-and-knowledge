@@ -223,11 +223,34 @@ pika
 ----
 - python client
 
-Design Patterns
-===============
+Architecture
+============
+- smart broker, dumb consumer model.
+
+- Decoupling producers from queues via exchanges ensures that producers aren't
+  burdened with hardcoded routing decisions. 
+
+Use case
+========
+- Your application needs to work with any combination of existing protocols
+  like AMQP 0-9-1, STOMP, MQTT, AMQP 1.0.
+
+- Needs complex routing scheme, to integrate multiple apps with message queue.
+
+- Your application needs variety in point to point, request / reply, and
+  publish/subscribe messaging
+
+- Traditional message queue application like rabbitmq is often used in web
+  architecture.
+
+- When messaging throughput does not need to be extremely high, like those in
+  kafka.
+
+- RabbitMQ 的设计就让它适合做一般性服务之间的消息传递. 而不适合做大数据类型的消
+  息传递.
 
 Client-side programming
------------------------
+=======================
 - always declaring a queue before using it.
 
 - 根据使用场景决定是否使用 automatic acknowledgement mode. 若使用 manual
@@ -254,3 +277,8 @@ Client-side programming
 
   * request side 监听 ``reply_to`` queue, 注意要检查收到的消息的
     ``correlation_id`` 是否与原消息相符.
+
+References
+==========
+.. [Kafka-vs-RabbitMQ] `Understanding When to use RabbitMQ or Apache Kafka <https://content.pivotal.io/blog/understanding-when-to-use-rabbitmq-or-apache-kafka>`_
+.. [SOKafka-vs-RabbitMQ] `Is there any reason to use RabbitMQ over Kafka? <https://stackoverflow.com/questions/42151544/is-there-any-reason-to-use-rabbitmq-over-kafka>`_
