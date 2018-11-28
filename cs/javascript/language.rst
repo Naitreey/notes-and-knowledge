@@ -2737,10 +2737,14 @@ function declaration statement
   Note that function expression does not hoist of course. The following code
   may trick you::
 
-    func(); // `TypeError`, NOT `ReferenceError`. As `func` is hoisted.
+    func(); // `TypeError`, NOT `ReferenceError`. As `func` variable is hoisted.
     var func = function func() {
         ...
     }
+    
+  Function expression does not hoist because first of all, the expression is a rvalue
+  that is only evaluated when it's reached; second, the function name even if provided
+  is visible only inside function body.
 
 - Special note on block-level function declaration (ES6) [SOBLKFUNC]_ (WTFJS_).
 
