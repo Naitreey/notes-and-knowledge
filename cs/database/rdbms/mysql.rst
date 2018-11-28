@@ -971,18 +971,8 @@ formats
           [UNIQUE [KEY]] [[PRIMARY] KEY]
           [COMMENT 'string']
 
-    key_part: {col_name [(length)] | (expr)} [ASC | DESC]
+    key_part, index_option, index_type: See CREATE INDEX
 
-    index_type:
-        USING {BTREE | HASH}
-    
-    index_option:
-        KEY_BLOCK_SIZE [=] value
-      | index_type
-      | WITH PARSER parser_name
-      | COMMENT 'string'
-      | {VISIBLE | INVISIBLE}
-    
     reference_definition:
         REFERENCES tbl_name (key_part,...)
           [MATCH FULL | MATCH PARTIAL | MATCH SIMPLE]
@@ -1838,6 +1828,77 @@ Composite Index
     BBA
     BBB
     ...
+
+
+SQL statements
+^^^^^^^^^^^^^^
+
+CREATE INDEX
+""""""""""""
+::
+
+  CREATE [UNIQUE | FULLTEXT | SPATIAL] INDEX index_name
+      [index_type]
+      ON tbl_name (key_part, ...)
+      [index_option]
+      [algorithm_option | lock_option]
+
+  key_part: {col_name [(length)] | (expr)} [ASC | DESC]
+
+  index_type:
+      USING {BTREE | HASH}
+
+  index_option:
+      KEY_BLOCK_SIZE [=] value
+    | index_type
+    | WITH PARSER parser_name
+    | COMMENT 'string'
+    | {VISIBLE | INVISIBLE}
+    
+- CREATE INDEX is mapped to ALTER TABLE. It can not create primary key or
+  foreign key, but ALTER TABLE can.
+
+- Index order: ASC or DESC specify index values are stored in ascending or
+  descending order. Default is ASC. Index order is not permitted for HASH
+  indexes.
+
+- Index prefix length:
+
+  * can be specified for CHAR, VARCHAR, BINARY, VARBINARY, TEXT-related,
+    BLOB-related columns.
+ 
+  * required for TEXT and BLOB related columns.
+
+  * prefix length is measured in bytes for binary string types, and in
+    characters for text string types.
+
+  * Permissible prefix length is determined by InnoDB row format.
+
+- Functional key parts: ``(expr)``
+
+  * Functional indexes are implemented as hidden virtual generated columns.
+    可是这样不就没啥用了么???
+
+  * A functional key part indexes expression value rather than column or
+    column prefix value.
+
+  * column values can be referenced in the expression.
+
+  * A functional key part must be enclosed in parentheses, even if it's a
+    single literal.
+
+  * A functional key part cannot consist solely of a column name, even enclosed
+    in parentheses.
+
+  * A composite index can have functional and normal key parts.
+
+  * UNIQUE index can have functional key parts.
+
+  * FULLTEXT, SPATIAL index can not have functional key parts.
+
+  * 若要在查询时能利用 functional index, query condition 中要包含与 CREATE
+    INDEX 时使用的相同的表达式. 也就是说, functional key parts 的形式要与查询需
+    求相符合.
 
 design pattern
 ^^^^^^^^^^^^^^
