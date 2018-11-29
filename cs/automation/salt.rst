@@ -9,7 +9,7 @@ Questions
 
   * 使用 ``salt-call`` 本地执行 execution modules, 无需 minion.
 
-installation
+Installation
 ============
 
 upgrade
@@ -43,24 +43,125 @@ Salt Jinja extension
 
   * git file server, 可以使用这个直接从 git server 中取文件.
 
-target selection
-================
+Target matchers
+===============
 
-- target selection (``man salt(1)``).
+minion id glob matcher
+----------------------
+- minion id can be a shell glob pattern.
 
-  * minion id.
+minion id PCRE matcher
+----------------------
+- minion id can be a PCRE pattern.
+  
+- When using regular expressions in a top file, you must specify the matcher
+  as the first element of the SLS file list::
 
-  * shell globbing.
+    base:
+      'web1-(prod|devel)':
+        - match: pcre
+        - ...
 
-  * PCRE regex.
+minion list matcher
+-------------------
+- minion id can be a list of minion ids.
 
-  * Grain system with glob.
+grains glob matcher
+-------------------
+format::
 
-  * Grain system with PCRE.
+  [key[:key]...]:value
 
-  * target list.
+- Nested key (as above) is supported.
 
-  * all above combined.
+- value can contain glob pattern.
+
+grains PCRE matcher
+-------------------
+ditto
+
+- value can contain PCRE pattern.
+
+pillar glob matcher
+-------------------
+format::
+
+  [key[:key]...]:value
+
+- Nested key (as above) is supported.
+
+- value can contain glob pattern.
+
+pillar PCRE matcher
+-------------------
+ditto
+
+- value can contain PCRE pattern.
+
+ipcidr matcher
+--------------
+format::
+
+  x.x.x.x
+  x.x.x.x/xx
+
+- To use in top file, specify the ``ipcidr`` matcher::
+
+    base:
+      '127.0.0.0/8':
+        - match: ipcidr
+        - ...
+
+nodegroup matcher
+-----------------
+- node groups are defined in master config file, under ``nodegroups`` key::
+
+    nodegroups:
+      group1: <pattern>
+      group2: <pattern>
+
+  The master must be restarted for those changes to be fully recognized.
+
+- A node group pattern can be
+  
+  * a complete string of compound matcher. Then tokenization is performed by
+    splitting on whitespace.
+
+  * a list of strings that makes up a compound matcher. Tokenization is
+    performed by treating each element of the list as a whole.
+
+- A node group can reference another node group in its matcher.
+
+- To use in top file, specify ``nodegroup`` matcher.
+
+compound matcher
+----------------
+- All matchers above is supported.
+
+- By default use minion id glob matcher
+
+- All other matchers must be prefixed with proper letter ``X@``
+
+  * minion id PCRE: ``E@``
+
+  * minion id list: ``L@``
+
+  * grains glob: ``G@``
+
+  * grains PCRE: ``P@``
+
+  * pillar glob: ``I@``
+
+  * pillar PCRE: ``J@``
+
+  * IP, CIDR: ``S@``
+
+  * nodegroup: ``N@`` (only in master's nodegroups definition)
+
+- Boolean operator: and, or, not
+
+- precedence overriding: ``( ... )``. spaces are required between the
+  parentheses and matchers.
 
 Grains
 ======
@@ -112,13 +213,10 @@ Grains
 
 Execution
 =========
+- Remote execution is performed by ``salt`` command. See it for detailed
+  formats.
 
-- 格式 ``salt <target> <module>.<function> [args]...``
-  对于 positional args 一般就做普通的 positional 在命令行上,
-  对于 keyword args 使用 ``key=value`` 形式作为命令行参数.
-  对于 list 和 dict 类型参数, 直接写 json 在命令行上.
-
-- Execution functions vs State functions
+- Execution functions vs State functions.
 
   Salt state functions are designed to make only the changes necessary to apply
   a configuration, and to not make changes otherwise. Salt execution functions
@@ -153,49 +251,67 @@ archive
 
 minion
 ------
-
 - minion.list
 
+test
+----
 
+- ``test.ping``
 
+- ``test.arg``
 
+- ``test.arg_repr``
 
+state
+-----
 
-  * ``state.apply``
+- ``state.apply``
 
-    - parameters
+  * parameters
 
-      * ``test`` 进行 dry-run, 需要进行的状态改变会标黄, 不需要改变的状态
-        维持绿色.
+    * ``test`` 进行 dry-run, 需要进行的状态改变会标黄, 不需要改变的状态
+      维持绿色.
 
-      * ``pillar`` 指定额外的 pillar data, 它覆盖 pillar file 中的同名参数.
+    * ``pillar`` 指定额外的 pillar data, 它覆盖 pillar file 中的同名参数.
 
-  * ``state.show_sls``
+- ``state.show_sls``
 
-  * ``pillar.items``
+pillar
+------
+- ``pillar.items``
 
-  * ``pillar.get``
+- ``pillar.get``
 
-  * ``pillar.raw``
+- ``pillar.raw``
 
-  * ``event.send``
+event
+-----
+- ``event.send``
 
-  * ``sys.doc`` 获取 module/function doc.
+sys
+---
+- ``sys.doc`` 获取 module/function doc.
 
-  * ``grains.ls``
+grains
+------
+- ``grains.ls``
 
-  * ``grains.items``
+- ``grains.items``
 
-  * ``grains.get``
+- ``grains.get``
 
-  * ``saltutil.refresh_modules``
+cp
+--
 
-  * ``saltutil.refresh_pillar``
+saltutil
+--------
+- ``saltutil.refresh_modules``
 
-  * ``saltutil.sync_grains``
+- ``saltutil.refresh_pillar``
 
-  * ``saltutil.sync_all`` 同步各种 custom modules 至 minion.
+- ``saltutil.sync_grains``
 
+- ``saltutil.sync_all`` 同步各种 custom modules 至 minion.
 
 State
 =====
@@ -342,18 +458,19 @@ State
 Pillar
 ======
 
-- Pillar 实际上是一系列分配给各 minion 的数据或参数. 它根据 target selection
-  机制 对数据进行分配. 将 salt state 模板化, 对各个 minion 传入自定义的
-  pillar data, 从而达到 salt state reuse 的目的.
+- Pillar 实际上是一系列分配给各 minion 的数据或参数. 它根据 target selection 机
+  制 对数据进行分配. 将 salt state 模板化, 对各个 minion 传入自定义的 pillar
+  data, 从而达到 salt state reuse 的目的.
 
 - 与 state file 不同, pillar data 不是对所有 minion 共享的, 只有 matched target
   minion 才会收到分配给他的 pillar data. 所以可以用这个来存储 secure data.
 
-- Pillar data is compiled on the master and is never written to disk on the minion.
-  In-memory pillar data 是在 minion 启动时生成的.
+- Pillar data is compiled on the master and is never written to disk on the
+  minion.  In-memory pillar data 是在 minion 启动时生成的.
 
-- Running states 以及 ``pillar.items`` 时, minion 会从 master 获取最新的 pillar data.
-  但不会更新 in-memory pillar data. 若要更新, 需要执行 ``saltutil.refresh_pillar``.
+- Running states 以及 ``pillar.items`` 时, minion 会从 master 获取最新的 pillar
+  data.  但不会更新 in-memory pillar data. 若要更新, 需要执行
+  ``saltutil.refresh_pillar``.
 
 - pillar data 位于 ``pillar_roots``, 其中文件结构与 ``file_roots`` 相同.
   pillar_roots 必须在 file_roots 之外, 不能是后者的子目录, 为了保密.
@@ -362,8 +479,8 @@ Pillar
   
   * Pillar files are applied in the order they are listed in the top file.
 
-  * 对于不同 pillar sls file 中的同名 key, 其值若是 dict, 则 recursively merged;
-    否则后执行的值覆盖先前执行的值.
+  * 对于不同 pillar sls file 中的同名 key, 其值若是 dict, 则 recursively
+    merged; 否则后执行的值覆盖先前执行的值.
 
 - pillar file 可以相互 ``include``.
 
@@ -417,7 +534,7 @@ Event
 
   * 使用 ``event.send`` 直接发送任意 event.
 
-beacon
+Beacon
 ======
 
 - 用于监控 salt 之外的系统状态, 当预设的状态、条件等满足时, 向 bus 发送
@@ -860,7 +977,7 @@ pepper client module
 - use ``pepper`` CLI script to execute salt commands at remote command line
   as if the specified command was run locally.
 
-access control
+Access Control
 ==============
 access control system includes the peer system, the external auth system and
 the publisher acl system.
@@ -1084,3 +1201,104 @@ options
 
 key generation
 ^^^^^^^^^^^^^^
+
+salt
+----
+::
+
+  salt <target> [options]
+    <module>.<function>[,<module>.<function>]...
+    [args]...[ , [args]...]...
+
+- ``args`` 部分的形式:
+  
+  * 函数的 positional args 以空格分隔
+
+  * 函数的 kwargs 使用 ``key=value`` 形式指定, 并以空格分隔.
+  
+  * 对于 list 和 dict 类型参数值, 使用 Python repr 形式即可.
+
+- The following target matchers are recognized. See `Target matchers`_ for
+  explanation.
+
+  * default is minion id glob matcher
+
+  * ``-E ...``.
+
+  * ``-L ...``
+
+  * ``-G ...``
+
+  * ``--grain-pcre ...``
+
+  * ``-N ...``
+
+  * ``-C ...``. compound matcher.
+
+  * ``-I ...``
+
+  * ``-S ...``
+
+- compound command execution.
+
+  * ``module.function`` 和 ``args`` 两个部分都可以是 a comma separated list.
+    The functions are executed on the minion in the order they are defined on
+    the command line, and then the data from all of the commands are returned
+    in a dictionary.
+
+  * ``args`` list 必须与 ``module.function`` 一一对应. 若某些函数不需要参数,
+    也要留出 empty element.
+
+  * ``args`` list 中, separator 最好左右以空格间隔, 作为单独一个参数传入命令,
+    这样在参数内容本身包含 comma 时, 可消除歧义.
+
+execution options
+^^^^^^^^^^^^^^^^^
+- ``--async``. do not block in RPC mode, print the id of started job.
+
+- ``-b BATCH``. simultaneously execute on at most the BATCH number or
+  percentage of minions.
+
+  The batch system maintains a window of running minions, so, if there are a
+  total of 150 minions targeted and the batch size is 10, then the command is
+  sent to 10 minions, when one minion returns then the command is sent to one
+  additional minion, so that the job is constantly running on 10 minions.
+
+- ``--subset=NUM``. Execute the routine on a random subset of the targeted
+  minions.
+
+- ``-d``. return doc for the execution function, rather than execute the
+  function.
+
+- ``--args-separator=SEPARATOR``. Set list separator for the list of args
+  in compound command execution, instead of default comma.
+
+output options
+^^^^^^^^^^^^^^
+- ``--out=OUTPUTTER``. display data in format.
+
+- ``-s``, ``--static``. Without static option, 每个 minion 的返回结果是立即输出
+  的. 若 outputter 是 JSON, 效果是对每个 minion 返回结果输出一个独立的 json
+  object. With static option, 结果整体输出一次, 作为一个 json object. 这便于
+  程序化解析.
+
+- ``--out-file=FILE``. write output to file.
+
+return options
+^^^^^^^^^^^^^^
+- ``--return=RETURNER``. send return data to this return system.
+
+salt-cp
+-------
+::
+
+  salt-cp <target> [options] SOURCE [SOURCE]... DEST
+
+- copy sources to dest of the all matching targets.
+
+- targets see salt command.
+
+options
+^^^^^^^
+- ``-C``. chunked mode. Supports large files, recursive directories copying and
+  compression.
