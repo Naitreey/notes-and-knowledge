@@ -946,12 +946,12 @@ formats
 
     create_definition:
         col_name column_definition
-      | [CONSTRAINT [symbol]] PRIMARY KEY [index_type] (key_part,...)
+      | [CONSTRAINT [symbol]] PRIMARY KEY (key_part,...)
           [index_option] ...
-      | {INDEX|KEY} [index_name] [index_type] (key_part,...)
+      | {INDEX|KEY} [index_name] (key_part,...)
           [index_option] ...
       | [CONSTRAINT [symbol]] UNIQUE [INDEX|KEY]
-          [index_name] [index_type] (key_part,...)
+          [index_name] (key_part,...)
           [index_option] ...
       | {FULLTEXT|SPATIAL} [INDEX|KEY] [index_name] (key_part,...)
           [index_option] ...
@@ -1783,9 +1783,11 @@ index types and data structure
 
 B-tree
 """"""
-used for: PRIMARY KEY, UNIQUE, INDEX
+- used for: PRIMARY KEY, UNIQUE, INDEX
 
-B-tree 适合 lookup for exact matches (equals operator) and ranges.
+- B-tree 适合 lookup for exact matches (equals operator) and ranges.
+
+- B-tree index 是有序的, 升序或降序.
 
 Inverted index
 """"""""""""""
@@ -1797,14 +1799,16 @@ used for: indexes on spatial data types.
 
 Hash index
 """"""""""
-used for: default index type for MEMORY table.
+- used for: default index type for MEMORY table.
 
-hash index 适合 lookup for exact matches, rather than ranges.
+- hash index 适合 lookup for exact matches, rather than ranges.
 
-hash index is only available for MEMORY storage engine.
+- hash index is only available for MEMORY storage engine.
 
-The MEMORY storage engine can also use B-tree indexes, and you should choose
-B-tree indexes for MEMORY tables if some queries use range operators.
+- hash index 是无序的, 不支持排序.
+
+- The MEMORY storage engine can also use B-tree indexes, and you should choose
+  B-tree indexes for MEMORY tables if some queries use range operators.
 
 Composite Index
 ^^^^^^^^^^^^^^^
@@ -1838,7 +1842,6 @@ CREATE INDEX
 ::
 
   CREATE [UNIQUE | FULLTEXT | SPATIAL] INDEX index_name
-      [index_type]
       ON tbl_name (key_part, ...)
       [index_option]
       [algorithm_option | lock_option]
@@ -1854,6 +1857,12 @@ CREATE INDEX
     | WITH PARSER parser_name
     | COMMENT 'string'
     | {VISIBLE | INVISIBLE}
+
+  algorithm_option:
+      ALGORITHM [=] {DEFAULT | INPLACE | COPY}
+
+  lock_option:
+      LOCK [=] {DEFAULT | NONE | SHARED | EXCLUSIVE}
     
 - CREATE INDEX is mapped to ALTER TABLE. It can not create primary key or
   foreign key, but ALTER TABLE can.
@@ -1876,8 +1885,10 @@ CREATE INDEX
 
 - Functional key parts: ``(expr)``
 
-  * Functional indexes are implemented as hidden virtual generated columns.
-    可是这样不就没啥用了么???
+  * Functional key part 相当于单独创建 virtual generated column 并配合创建包含
+    这列的索引. 当创建包含 functional key part 的索引时, 同时会创建一个 hidden
+    virtual generated column, 对应于这个 key part. 这样, 仍然保证了每个 key
+    part 对应一个 column.
 
   * A functional key part indexes expression value rather than column or
     column prefix value.
@@ -1899,6 +1910,34 @@ CREATE INDEX
   * 若要在查询时能利用 functional index, query condition 中要包含与 CREATE
     INDEX 时使用的相同的表达式. 也就是说, functional key parts 的形式要与查询需
     求相符合.
+
+- Unique index. Requires every value in the index to be unique. 也就是说, 对于
+  表中的每行, 所有 key parts 的组合必须是唯一的.
+
+  * 若 column 本身允许 NULL, 则 index 中允许多个 NULL 值, 不算违反 UNIQUE.
+
+- Full-text index.
+
+  * can include only CHAR, VARCHAR, TEXT-related columns.
+
+  * index prefix length unsupported.
+
+  * can include NULL.
+
+- index options.
+
+  * USING type.
+    
+    * 只有 MEMORY table 的普通索引才可能需要指定 index type, 即在 HASH, BTREE
+    中选择, 其他 engine 的普通索引只有 BTREE.
+    
+    * 对于 FULLTEXT, SPATIAL index, 不能选择, 因它们使用的数据结构是确定的.
+
+  * WITH PARSER is used for FULLTEXT index.
+
+  * COMMENT can be up to 1024 chars.
+
+  * VISIBLE, INVISIBLE. Index is visible by default.
 
 design pattern
 ^^^^^^^^^^^^^^
