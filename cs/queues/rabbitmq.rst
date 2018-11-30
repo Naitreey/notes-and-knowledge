@@ -212,6 +212,11 @@ list_queues
 
 list_exchanges
 ^^^^^^^^^^^^^^
+- output formatting:
+ 
+  .. code:: sh
+
+     rabbitmqctl list_exchanges | column -s $'\t' -t
 
 list_bindings
 ^^^^^^^^^^^^^
