@@ -233,61 +233,106 @@ statement syntax
 Data types
 ==========
 
-- general attributes.
+general attributes
+------------------
 
-  * DEFAULT.
+NULL, NOT NULL
+^^^^^^^^^^^^^^
+- If unspecified, default is NULL.
+
+DEFAULT
+^^^^^^^
+
+explicit default value
+""""""""""""""""""""""
+- definition format::
+
+    DEFAULT literal | DEFAULT (expr)
+
+  也就是说, 默认值可以是一个 literal value, or an expression enclosed in
+  parentheses.
+
+- rules for default expression, see [DocDefaultValue]_.
+
+- for TIMESTAMP and DATETIME columns, you can specify the CURRENT_TIMESTAMP
+  function as the default, without enclosing parentheses.
+
+- The BLOB, TEXT, GEOMETRY, and JSON data types can be assigned a default value
+  only if the value is written as an expression, even if the expression value
+  is a literal.
+
+- 若指定的默认值与列数据类型不符, implicit coercion occurs.
+
+implicit default value
+""""""""""""""""""""""
+- 如果一个列在定义时没有指定 DEFAULT attribute,
+  
+  * 若该列接受 NULL 值, 自动设置 DEFAULT NULL.
+
+  * 若该列不接受 NULL 值, 不设置 DEFAULT clause.
     
-    - default should normally be a constant. 但 CURRENT_TIMESTAMP for DATETIME,
-      TIMESTAMP 是个例外.
+specify default in DML
+""""""""""""""""""""""
+* 在 INSERT 时在 VALUES list 中不指定该列. 例如::
 
-    - 如果一个列在定义时没有指定 DEFAULT attribute. mysql 根据该列是否可以接受
-      NULL 来设置 DEFAULT NULL 或者不设置 DEFAULT. 但如果该列是 primary key,
-      会设置 NOT NULL.
+    INSERT INTO tbl (/* omit col1 */ col2, col3) VALUES (val2, val3);
 
-      因此, 一个列的定义中的默认值只会有三种情况: 明确指定的 non-NULL DEFAULT,
-      明确或非明确指定的 NULL DEFAULT, 没有 DEFAULT.
+* 使用 ``DEFAULT`` 明确指定插入当前列的默认值::
 
-    - 插入时对某列使用默认值的方法:
-      
-      * 不指定该列的值.
+    INSERT INTO tbl (col1, col2, col3) VALUES (DEFAULT, val2, val3);
 
-      * 使用 ``DEFAULT[(col)]`` 明确指定插入当前列或指定列的默认值.
+* 使用 ``DEFAULT(col)`` function to get a column's default value, and use it
+  anywhere. 注意这与第二个方式是不同的, 不是同一个用法.
 
-      In strict sql mode, 对于没有 DEFAULT 的列, 会报错.
+storage requirements
+--------------------
 
-- storage requirements.
-
-  * max row size: 64KB. Excluding BLOB, TEXT, JSON columns, 它们单独存储, 只
-    在行内添加必要信息.
+* max row size: 64KB. Excluding BLOB, TEXT, JSON columns, 它们单独存储, 只
+  在行内添加必要信息.
 
 Numeric types
 -------------
+data type attributes
+^^^^^^^^^^^^^^^^^^^^
+* UNSIGNED.
+    
+  - integer types: only nonnegative values are allowed. 所有 bytes 用 unsigned
+    binary arithmetics 存储, 最大值为 signed 情况的两倍.
+
+  - floating-point and fixed-point types: only nonnegative values are allowed.
+    但存储方式不变, 最大值不变.
+
+* AUTO_INCREMENT.
+  
+  * integer types and floating-point types can be auto-incremented.
+
+  * AUTO_INCREMENT field 应该设置 NOT NULL, 因为一般通过插入 NULL 来自动递增序
+    列值.
+  
+  * 列值只能为正值. Sequence begins with 1.
+    
+  * 若插入任何大于当前最大序数的数字,  the column is set to that value and the
+    sequence is reset so that the next automatically generated value follows
+    sequentially from the inserted value.
+
+  * 若插入负值, 相当于插入等价正值.
+
+  * 一个表里只能有一个列是 auto-incremented, 必须有 index, 不能有 DEFAULT.
+    
+  * 当一个表里有 AUTO_INCREMENT field 时, 一般就应该作为主键使用吧. 但也许另有
+    更适合的主键 (例如多列的组合是更自然的主键的情况).
+
+  * You can retrieve the most recent automatically generated ``AUTO_INCREMENT``
+    value with the ``LAST_INSERT_ID()`` SQL function.
+
+  * 在插入时, 递增 AUTO_INCREMENT field 的方法:
+
+    - 插入 NULL.
+
+    - 插入 DEFAULT key 值, 或者使用等价形式, 将该列直接从 VALUES 部分忽略.
+
 - mysql 支持给 integer types 添加 ``(M)`` attribute 以设置 "display width".
   还有 ZEROFILL attribute. THIS IS CRAZY. DON'T DO THIS. SAVE YOUR FUCKING ASS.
-
-- data type attributes.
-
-  * UNSIGNED.
-    
-    - integer types: only nonnegative values are allowed. 所有 bytes 用 unsigned
-      binary arithmetics 存储, 最大值为 signed 情况的两倍.
-
-    - floating-point and fixed-point types: only nonnegative values are allowed.
-      但存储方式不变, 最大值不变.
-
-  * AUTO_INCREMENT. integer types and floating-point types can be
-    auto-incremented. AUTO_INCREMENT field 一般同时要求 NOT NULL.
-
-    插入 NULL, 0, DEFAULT 都会自动递增序列值.
-    
-    Sequence begins with 1. 若插入任何大于当前最大序数的数字,  the column is
-    set to that value and the sequence is reset so that the next automatically
-    generated value follows sequentially from the inserted value.
-
-    一个表里只能有一个列是 auto-incremented, 并且该列必须有 index.
-
-    You can retrieve the most recent automatically generated ``AUTO_INCREMENT``
-    value with the ``LAST_INSERT_ID()`` SQL function.
 
 - In non-strict sql mode, out-of-range values are clipped to the appropriate
   endpoint of the column data type range and the resulting value are stored.
@@ -803,8 +848,10 @@ JSON type
 - JSON column can be assigned a default value only if the value is written as
   an expression, even if the expression value is a literal.
 
-- index. JSON column can not be indexed directly. You can create an index on a
-  generated column that extracts a scalar value from the JSON column.
+- index. JSON column can not be indexed directly.
+  
+  * Workaround: create an index on a virtual generated column that extracts a
+    scalar value from the JSON column.
 
 - 构建 JSON 的方法.
 
@@ -966,10 +1013,7 @@ formats
           [COLUMN_FORMAT {FIXED|DYNAMIC|DEFAULT}]
           [STORAGE {DISK|MEMORY|DEFAULT}]
           [reference_definition]
-      | data_type [GENERATED ALWAYS] AS (expression)
-          [VIRTUAL | STORED] [NOT NULL | NULL]
-          [UNIQUE [KEY]] [[PRIMARY] KEY]
-          [COMMENT 'string']
+      | generated_column
 
     key_part, index_option, index_type: See CREATE INDEX
 
@@ -1016,6 +1060,10 @@ CREATE TABLE ... query
 
 - 任何 query statement 都可以使用, 不仅仅是 SELECT statement, 例如 UNION.
 
+- About generated column: Destination table does not preserve information about
+  whether columns in the selected-from table are generated columns. query part
+  cannot assign values to generated columns in the destination table.
+
 CREATE TABLE ... LIKE
 """""""""""""""""""""
 - create an empty table based on definition of another table.
@@ -1028,6 +1076,9 @@ CREATE TABLE ... LIKE
 
 - Foreign key definitions are not preserved.
 
+- About generated column: Generated column information from the original table
+  is preserved.
+
 column definitions
 """"""""""""""""""
 - hard limit for column numbers: 4096 per table.
@@ -1035,8 +1086,46 @@ column definitions
 - each data types accepts additional data type attributes as defined in
   respective sections of `Data types`_.
 
+- COMMENT. up to 1024 chars.
+
+generated column
+""""""""""""""""
+::
+
+  generated_column:
+      data_type [GENERATED ALWAYS] AS (expression)
+          [VIRTUAL | STORED] [NOT NULL | NULL]
+          [UNIQUE [KEY]] [[PRIMARY] KEY]
+          [COMMENT 'string']
+          [reference_definition]
+
+- Column value is generated by expression.
+
+- Rules for expression, see [DocGenColumn]_.
+
+- GENERATED ALWAYS. an optional keyword to make the generated nature of the
+  column more explicit.
+
+- A generated column can be VIRTUAL or STORED. default is VIRTUAL.
+
+  * VIRTUAL: 列数据不保存, 在读取相关行时才临时计算, 不需要存储空间.
+
+  * STORED: 列数据与普通列相同方式保存, 所以需要存储空间.
+
+- 若表达式值与列类型不一致, implicit coercion occurs.
+
+- if a generated column is inserted into, replaced, or updated explicitly, the
+  only permitted value is DEFAULT.
+
+- generated column and index.
+
+  * All kinds of indexes can be defined on stored generated columns.
+
+  * FK can not reference a virtual generated column (Why not?).
+
 index and foreign keys
 """"""""""""""""""""""
+
 
 table name
 """"""""""
@@ -1691,6 +1780,10 @@ Information Functions
 
 - ``DATABASE()``. name of the default database, in utf-8. If no default,
   returns NULL.
+
+- ``DEFAULT(col)``. default value for a table column. Column name can be
+  qualified. This function is permitted only for columns that have a literal
+  default value, not for columns that have an expression default value.
 
 Stored Programs and Views
 =========================
@@ -3642,3 +3735,5 @@ References
 .. [SEMysqlRepl] `How can you stop MySQL slave from replicating changes to the 'mysql' database? <https://dba.stackexchange.com/questions/584/how-can-you-stop-mysql-slave-from-replicating-changes-to-the-mysql-database>`_
 .. [SOUTF8Difference] `What's the difference between utf8_general_ci and utf8_unicode_ci <https://stackoverflow.com/questions/766809/whats-the-difference-between-utf8-general-ci-and-utf8-unicode-ci>`_
 .. [SOIndexWorking] `How does database indexing work? [closed] <https://stackoverflow.com/questions/1108/how-does-database-indexing-work>`_
+.. [DocDefaultValue] https://dev.mysql.com/doc/refman/8.0/en/data-type-defaults.html
+.. [DocGenColumn] https://dev.mysql.com/doc/refman/8.0/en/create-table-generated-columns.html
