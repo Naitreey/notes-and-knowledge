@@ -222,10 +222,11 @@ Execution
   a configuration, and to not make changes otherwise. Salt execution functions
   run each time they are called, which may or may not result in system changes.
 
-以下是各种 execution module and functions.
+modules
+-------
 
 service
--------
+^^^^^^^
 a virtual module that is fulfilled by a concrete module depending on environment.
 
 - service.available
@@ -233,7 +234,7 @@ a virtual module that is fulfilled by a concrete module depending on environment
 - service.restart
 
 file
-----
+^^^^
 
 - file.write
 
@@ -247,14 +248,14 @@ if path is directory, it will be recursively deleted.
 - file.read
 
 archive
--------
+^^^^^^^
 
 minion
-------
+^^^^^^
 - minion.list
 
 test
-----
+^^^^
 
 - ``test.ping``
 
@@ -263,7 +264,7 @@ test
 - ``test.arg_repr``
 
 state
------
+^^^^^
 
 - ``state.apply``
 
@@ -277,7 +278,7 @@ state
 - ``state.show_sls``
 
 pillar
-------
+^^^^^^
 - ``pillar.items``
 
 - ``pillar.get``
@@ -285,15 +286,15 @@ pillar
 - ``pillar.raw``
 
 event
------
+^^^^^
 - ``event.send``
 
 sys
----
+^^^
 - ``sys.doc`` 获取 module/function doc.
 
 grains
-------
+^^^^^^
 - ``grains.ls``
 
 - ``grains.items``
@@ -301,10 +302,14 @@ grains
 - ``grains.get``
 
 cp
---
+^^
 
 saltutil
---------
+^^^^^^^^
+- used to manage the state of the salt minion.
+
+synchronization
+""""""""""""""""
 - ``saltutil.refresh_modules``
 
 - ``saltutil.refresh_pillar``
@@ -312,6 +317,33 @@ saltutil
 - ``saltutil.sync_grains``
 
 - ``saltutil.sync_all`` 同步各种 custom modules 至 minion.
+
+job state
+""""""""""
+- ``saltutil.running``
+
+- ``saltutil.find_cached_job``
+
+- ``saltutil.find_job``
+
+- ``saltutil.is_running``
+
+- ``saltutil.kill_all_jobs``
+
+- ``saltutil.kill_job``
+
+- ``saltutil.signal_job``
+
+- ``saltutil.term_all_jobs``
+
+- ``saltutil.term_job``
+
+cache
+""""""
+- ``saltutil.clear_cache``
+
+- ``saltutil.clear_job_cache``
+
 
 State
 =====
@@ -584,19 +616,52 @@ Reactor
 Runner
 ======
 
-- Runners are modules that execute on the Salt master to perform supporting tasks.
-  这些操作可能是关于 master 自己的, 或者是整个 master/minion 系统的管理性质的操作,
-  总之不是直接去对 minion 进行操作.
+- Runners are modules that execute on the Salt master to perform supporting
+  tasks. 这些操作可能是关于 master 自己的, 或者是整个 salt 系统的管理性质的操
+  作, 总之不是直接去对 minion 进行操作.
 
-- runner modules
+- Runner modules can be executed by ``salt-run`` command.
 
-  * ``state.event``
+mechanism
+---------
+- Any output from a runner function will be sent as an event to event bus.
 
-  * ``jobs.lookup_jid``
+- Runners can be run synchronously or asynchronously.
 
-  * ``jobs.list_jobs``
+  * Sync mode, i.e., blocking mode, control will not be returned until the
+    runner has finished executing. And output is printed directly to cli.
 
-  * ``jobs.active``
+  * Async mode, control will be returned immediately. If results are desired,
+    they must be gathered either by firing events on the bus from the runner
+    and then watching for them or by some other means.
+
+modules
+-------
+
+state
+^^^^^
+* ``state.event``
+
+jobs
+^^^^
+inspect active jobs and ran jobs.
+
+- ``jobs.active``. runs saltutil.running on all minions and formats the return
+  data about all running jobs in a job-oriented way.
+
+- ``jobs.exit_success``
+
+- ``jobs.last_run``. show last-run job.
+
+- ``jobs.list_job``. show detail of one job.
+
+- ``jobs.print_job``. 似乎基本同上.
+
+- ``jobs.lookup_jid``. show job output.
+
+- ``jobs.list_jobs``.
+
+- ``jobs.list_jobs_filter``
 
 Orchestrate Runner
 ==================
@@ -616,6 +681,41 @@ Orchestrate Runner
 
 Wheel
 =====
+
+Job
+===
+
+job management
+--------------
+- proc system. Under ``$cachedir/proc``, 保存着当前正在执行的任务的信息.  对于
+  每个任务, 有一个文件与之对应, 以 job id 命名.
+
+- Manage running jobs at each minion, via ``saltutil`` execution module.
+
+- Inspect historical or currently active jobs via ``jobs`` runner module.
+
+job cache
+---------
+- Job cache can be queried by ``salt.runners.jobs`` runner module.
+
+default job cache
+^^^^^^^^^^^^^^^^^
+- This cache is maintained by master, it caches results of job execution by
+  minions.
+
+- 路径: local storage on the Salt Master, ``$cachedir/jobs``
+
+- 缓存时间: 既然说是一个缓存, 就不会持久保存. ``keep_jobs`` master config
+  option 控制任务结果的缓存时间. 默认 24h.
+
+- 优化:
+
+  * 提高 cache 读写效率: job cache 路径使用更快 IO 的存储设备, 或 tmpfs.
+
+  * 完全不保存 job result. ``job_cache`` option.
+
+scheduling jobs
+---------------
 
 
 Returner
@@ -753,6 +853,16 @@ Primary configurations
 ^^^^^^^^^^^^^^^^^^^^^^
 * ``interface``. default 0.0.0.0. bind ip.
 
+* ``job_cache``. default True. Set to False to disable job cache. But the
+  ``$jid`` directory for each job is still created. The creation of the JID
+  directories is necessary because Salt uses those directories to check for JID
+  collisions.
+
+* ``keep_jobs``. number of hours to keep old job information. set to 0 to
+  keep forever.
+
+* ``cachedir``, ``/var/cache/salt/master``. master cache data.
+
 minion
 ------
 - 不同方面的配置项应放在 ``minion.d`` 的单独文件中. 而不该直接修改 ``minion``
@@ -794,6 +904,8 @@ Primary configurations
   - privately-routable ip address
 
   - localhost
+
+* ``cachedir``, ``/var/cache/salt/minion``. minion cache data.
 
 Output
 ======
@@ -1287,6 +1399,14 @@ output options
 return options
 ^^^^^^^^^^^^^^
 - ``--return=RETURNER``. send return data to this return system.
+
+salt-run
+--------
+execute Salt Runner modules.
+
+options
+^^^^^^^
+- ``-d``. show doc.
 
 salt-cp
 -------
