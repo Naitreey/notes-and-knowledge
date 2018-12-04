@@ -491,7 +491,7 @@ Pillar
 ======
 
 - Pillar 实际上是一系列分配给各 minion 的数据或参数. 它根据 target selection 机
-  制 对数据进行分配. 将 salt state 模板化, 对各个 minion 传入自定义的 pillar
+  制对数据进行分配. 将 salt state 模板化, 对各个 minion 传入自定义的 pillar
   data, 从而达到 salt state reuse 的目的.
 
 - 与 state file 不同, pillar data 不是对所有 minion 共享的, 只有 matched target
@@ -714,9 +714,77 @@ default job cache
 
   * 完全不保存 job result. ``job_cache`` option.
 
-scheduling jobs
----------------
+scheduled jobs
+--------------
+- 两种任务可以设置 schedule.
 
+  * execution modules on minion
+
+  * runner modules on master
+
+- 设置 scheduled jobs 的 4 种方式:
+
+  * ``schedule`` option in master or minion config. Restart master/minion to
+    have effect.
+
+  * ``schedule`` key in minion pillar data. Run saltutil.refresh_pillar to
+    distribute schedule.
+
+  * ensure scheduling by ``schedule`` state module.
+
+  * apply scheduling by ``schedule`` execution module.
+
+  除了直接修改 master/minion config file 之外, 其他所有方法创建的 scheduling
+  都会转化为 config 项, 持久化在 ``$confg_dir/$include_dir/_schedule.conf``.
+
+specification
+^^^^^^^^^^^^^
+一个 scheduled job 需要以下信息:
+
+- job name: ``name``.
+
+- 要执行的函数: ``function``. 对于 master scheduled job, 识别为 runner module
+  function; 对于 minion scheduled job, 识别为 execution module function.
+
+- 函数 positionals: ``args``
+
+- 函数 kwargs: ``kwargs``
+
+- scheduling parameters:
+
+  * ``days``, ``hours``, ``minutes``, ``seconds``. 可以结合使用. 即以此为周期
+    执行.
+
+  * ``when``. 指定执行时间. 可以是 time string 或 a list of time string. 对于
+    每个时间, 可以是以下内容:
+
+    - dateutil 日期和时间字符串. 无论格式如何, 只要解析出的时间在未来, 就会执行.
+      这样就可以指定每天某时间执行, 周几执行, 每月某天执行, 等. 但格式的最小单
+      位是一个固定时间的字符串.
+
+    - ``whens`` pillar/grains data 定义的日期时间字符串.
+
+  * ``cron``. use crontab format. See croniter module for supported formats.
+
+  * ``once``. 在指定日期时间执行一次.
+
+  * ``once_fmt``. 默认 ISO 8601. 可使用 strftime(3) 格式.
+
+  * ``splay``. 随机漂移范围, 单位是秒: [0, splay].
+
+    - ``start``. 指定随机漂移起始值.
+
+    - ``end``. ditto for 结束值.
+
+  * ``range``. 在此时间范围内执行. dateutil 日期和时间字符串.
+
+    - ``start``
+
+    - ``end``
+
+    - ``invert``. true/false. 指定在或不在此时间范围内执行.
+
+  * ``maxrunning``. 任务的最大同时执行实例数. 默认 1.
 
 Returner
 ========
@@ -863,6 +931,10 @@ Primary configurations
 
 * ``cachedir``, ``/var/cache/salt/master``. master cache data.
 
+Scheduling configurations
+^^^^^^^^^^^^^^^^^^^^^^^^^
+* ``schedule``. scheduling configurations.
+
 minion
 ------
 - 不同方面的配置项应放在 ``minion.d`` 的单独文件中. 而不该直接修改 ``minion``
@@ -906,6 +978,10 @@ Primary configurations
   - localhost
 
 * ``cachedir``, ``/var/cache/salt/minion``. minion cache data.
+
+Scheduling configurations
+^^^^^^^^^^^^^^^^^^^^^^^^^
+* ``schedule``. scheduling configurations.
 
 Output
 ======
