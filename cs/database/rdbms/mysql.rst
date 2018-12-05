@@ -1119,9 +1119,27 @@ generated column
 
 - generated column and index.
 
-  * All kinds of indexes can be defined on stored generated columns.
+  * Primary and secondary indexes can be defined on stored generated columns.
 
-  * FK can not reference a virtual generated column (Why not?).
+  * Only secondary index can be defined on virtual generated columns. primary
+    key index can not reference a virtual generated column.
+
+  * When secondary index is defined on virtual generated columns, column values
+    are materialized in the index. For covering index query, values are
+    retrieved directly from index, as usual, without computation on-the-fly.
+
+- 若 generated column 有索引, 在查询时, 优化器会适时根据 query expression 使用
+  该列的索引, 而并不是说只有直接 query against generated column 时才使用索引.
+
+- Use cases.
+
+  * Virtual generated column 可用于替代可重用的复杂 query expression. 这样降低
+    重复, 并保证了查询表达式的一致性.
+
+  * Stored generated column 可作为复杂计算结果的缓存.
+
+  * Virtual generated column 配合索引使用, 比 functional index 使用起来稍方便一
+    些, 因查询时无需写明复杂的表达式.
 
 index and foreign keys
 """"""""""""""""""""""
@@ -1821,6 +1839,17 @@ terms
   in the table. High selectivity means that the column values are relatively
   unique, and can retrieved efficiently through an index.
 
+- clustered index. the primary key index in innodb. 由于在 innodb 中, 行数据
+  完全是在 primary key index 这个 b-tree 结构中, 所以称为 "cluster".
+
+- secondary index. All indexes except clustered index. A secondary index can be
+  used to satisfy covering index queries.  For more complex queries, it can be
+  used to identify the relevant rows in the table, which are then retrieved
+  through lookups using the clustered index.
+
+- Covering index. 这是一种查询语句优化操作. 当查询语句可通过走索引完全满足时,
+  MySQL 会直接从索引获取结果, 无需访问 clustered index, 从而提高查询速度.
+
 What is index
 ^^^^^^^^^^^^^
 索引是一个数据结构, 它将一个或多个列的数据按照一定顺序 (升序或降序) 排列, 以
@@ -1998,11 +2027,13 @@ CREATE INDEX
 
   * UNIQUE index can have functional key parts.
 
-  * FULLTEXT, SPATIAL index can not have functional key parts.
+  * FULLTEXT, SPATIAL index can not have functional key parts, 因为 doesn't
+    make sense.
 
-  * 若要在查询时能利用 functional index, query condition 中要包含与 CREATE
-    INDEX 时使用的相同的表达式. 也就是说, functional key parts 的形式要与查询需
-    求相符合.
+  * primary key index can not have functional key parts, 因为 primary key 要尽
+    量不变且没有依赖, 而 functional key parts 的意义就是依赖其他列与变化.
+
+  * 在查询时, mysql 会根据 query condition 适时使用 functional index.
 
 - Unique index. Requires every value in the index to be unique. 也就是说, 对于
   表中的每行, 所有 key parts 的组合必须是唯一的.
@@ -2034,6 +2065,18 @@ CREATE INDEX
 
 design pattern
 ^^^^^^^^^^^^^^
+- primary key index 的设计.
+
+  * 一个表应该有明确定义的 primary key. 这有助于依据关键信息进行高效检索.  (即
+    使建表人不创建 primary key, innodb 也会自动创建一个隐藏的 cluster index 来
+    组织表结构).
+
+  * 选择几乎或完全不需要修改的列 (组合) 作为 primary key index. 因修改
+    clustered index is expensive.
+
+  * primary key index 应该尽量短. 因为所有 secondary index 中都要存一份 primary
+    index value.
+
 - Create right index to answer the required question. 不要创建不必要的
   索引, 因为:
 
@@ -2044,9 +2087,8 @@ design pattern
 
 - 若索引相关的列并没有查询需要, 而只是输出, 则没有必要创建索引.
 
-- Covering index. 这是一种查询语句优化技巧, 即, 如果能够满足需求的话, 一个语句
-  可以尽量只取索引覆盖到的列. MySQL 会优化这样的语句, 直接从索引获取结果, 无需
-  访问数据行, 从而提高查询速度.
+- 如果能够满足需求的话, 查询语句应利用 mysql 的 covering index 操作, 来优化
+  查询速度.
 
 - 若数据行数比较小, 则索引并没有那么重要, 因全表扫描也不会慢多少.
 
