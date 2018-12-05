@@ -345,6 +345,47 @@ cache
 - ``saltutil.clear_job_cache``
 
 
+schedule
+^^^^^^^^
+- ``schedule.add``
+
+- ``schedule.modify``.
+
+- ``schedule.delete``
+
+- ``schedule.copy``
+
+- ``schedule.move``
+
+- ``schedule.disable``, disable all jobs.
+
+- ``schedule.disable_job``. disable one job.
+
+- ``schedule.enable``.
+
+- ``schedule.enable_job``
+
+- ``schedule.reload``
+
+- ``schedule.save``
+
+- ``schedule.purge``
+
+- ``schedule.is_enabled``. show a scheduled job if enabled.
+
+- ``schedule.list``. show scheduled jobs.
+
+- ``schedule.show_next_fire_time``
+
+- ``schedule.run_job``
+
+- ``schedule.postpone_job``
+
+- ``schedule.skip_job``
+
+- ``schedule.build_schedule_item`` mainly used internally, to build schedule
+  config.
+
 State
 =====
 
@@ -746,29 +787,34 @@ specification
 - 要执行的函数: ``function``. 对于 master scheduled job, 识别为 runner module
   function; 对于 minion scheduled job, 识别为 execution module function.
 
-- 函数 positionals: ``args``
+- 函数 positionals: ``args``. 为消歧义, 在命令行上名为 ``job_args``.
 
-- 函数 kwargs: ``kwargs``
+- 函数 kwargs: ``kwargs``. 为消歧义, 在命令行上名为 ``job_kwargs``.
 
 - scheduling parameters:
 
-  * ``days``, ``hours``, ``minutes``, ``seconds``. 可以结合使用. 即以此为周期
-    执行.
+  * ``days``, ``hours``, ``minutes``, ``seconds``. 可以结合使用. 即以此为周期执
+    行.
 
   * ``when``. 指定执行时间. 可以是 time string 或 a list of time string. 对于
     每个时间, 可以是以下内容:
 
     - dateutil 日期和时间字符串. 无论格式如何, 只要解析出的时间在未来, 就会执行.
       这样就可以指定每天某时间执行, 周几执行, 每月某天执行, 等. 但格式的最小单
-      位是一个固定时间的字符串.
+      位是一个固定时间的字符串. 要求安装 python-dateutil.
 
     - ``whens`` pillar/grains data 定义的日期时间字符串.
 
   * ``cron``. use crontab format. See croniter module for supported formats.
+    尤其是这里支持秒级的 crontab. 要求安装 croniter.
 
-  * ``once``. 在指定日期时间执行一次.
+  * ``once``. 在指定日期时间执行一次. 执行完却仍然是 enable 状态. 需手动删除.
 
   * ``once_fmt``. 默认 ISO 8601. 可使用 strftime(3) 格式.
+
+  * ``run_on_start``. true/false. default false. 对于纯周期性任务, 在起点时是否
+    执行一次任务. 这里起点是指任务新增、修改等操作的时候. 该参数不适合与 cron
+    类型任务一起使用.
 
   * ``splay``. 随机漂移范围, 单位是秒: [0, splay].
 
@@ -785,6 +831,24 @@ specification
     - ``invert``. true/false. 指定在或不在此时间范围内执行.
 
   * ``maxrunning``. 任务的最大同时执行实例数. 默认 1.
+
+  * ``return_job``. true/false. 是否返回任务结果至 master.
+
+  * ``metadata``. a dict. 设置 metadata 用于任务的识别和筛选.
+
+  * ``until``. run until the time, specified as dateutil date/time string.
+    当任务执行完后, 并不会自动 disable, 仍然是 enable 状态. 目前没发现任何标识
+    能说明任务已经不再执行. 可以与所有计划任务格式配合使用.
+
+  * ``after``. run only after the time. 其他同上.
+
+    - 对于纯周期性任务, after 时间点之后一个 delta 时间范围内会执行一次.
+
+    - 对于 cron 类型任务, 若 after 时间点与 cron 触发时间匹配, 也不会执行. 这是
+      因为存在一个 delta 滞后.
+
+  * ``returner``. 指定该任务使用的 returner. 全局的 scheduled job's returner 由
+    ``schedule_returner`` 配置项指定.
 
 Returner
 ========
@@ -982,6 +1046,9 @@ Primary configurations
 Scheduling configurations
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 * ``schedule``. scheduling configurations.
+
+* ``schedule_returner``. scheduled job's default returner. One or a list of
+  returners.
 
 Output
 ======

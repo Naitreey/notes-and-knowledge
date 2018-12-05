@@ -144,6 +144,20 @@ command format
 
   * Multiline command is not allowed.
 
+language implementations
+========================
+croniter
+--------
+- a python module to provide iteration for datetime object.
+
+- 它支持秒级的 crontab.
+
+- supported format::
+
+    m h dom m dow [s]
+
+  注意到 optional seconds 作为第 6 列.
+
 references
 ==========
 - crontab(5)
