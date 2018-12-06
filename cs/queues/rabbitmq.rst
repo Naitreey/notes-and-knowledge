@@ -6,6 +6,22 @@ overview
 
 - Written in Erlang.
 
+Installation
+============
+Ubuntu
+------
+- setup erlang repo and rabbitmq repo.
+
+- pin erlang packages version by apt/preferences.d
+
+- install:
+
+  * erlang-nox
+
+  * init-system-helpers
+
+  * rabbitmq-server
+
 Components
 ==========
 - RabbitMQ server
@@ -21,7 +37,6 @@ Concepts
 
 terms
 -----
-
 message
 ^^^^^^^
 A message is a blob of binary data.
@@ -91,9 +106,31 @@ persistent messaging
 - Persistent messages are written to disk during processing by rabbitmq.
   Note that this will take time therefore slow things down.
 
-Server
-======
-- default port: 5672
+Networking
+==========
+
+default ports
+-------------
+- 4369: epmd. peer discovery service
+
+- 5672, 5671: for AMQP client connections
+
+- 25672: erlang distribution server port, inter-node and CLI tools
+  communication (dynamic: AMQP port + 20000)
+
+- 35672-35682: Erlang distribution client ports for communication with nodes
+  (dynamic: server distribution port + 10000 through server distribution port +
+  10010)
+
+- 15672: HTTP API clients (management plugin)
+
+- 61613, 61614: STOMP clients
+
+- 1883, 8883: MQTT clients
+
+- 15674: STOMP over websocket
+
+- 15675: MQTT over websocket
 
 Queue
 =====
@@ -193,6 +230,148 @@ topic
 - A binding key without any metachar behaves like direct exchange for this
   queue.
 
+
+
+Cluster
+=======
+
+Clustering
+----------
+
+overview
+^^^^^^^^
+- Clustering connects multiple machines together to form a single logical
+  broker.
+
+- A broker is a logical grouping of one or several Erlang nodes, each running
+  the RabbitMQ application and sharing users, virtual hosts, queues, exchanges,
+  bindings, and runtime parameters.
+
+- When network partitioning is occurred, choose C and P from CAP theorem.
+
+requirements
+^^^^^^^^^^^^
+- all nodes in the cluster must have the same Erlang cookie.
+
+- 网络必须可靠, 所有节点的 rabbitmq + erlang 版本必须相同.
+
+- Hostnames or FQDNs of all cluster members must be resolvable from all cluster
+  nodes, as well as on hosts where rabbitmq CLIs are invoked.
+
+  * 节点之间默认使用 hostname, 可配置使用 FQDN.
+
+Forming a cluster
+^^^^^^^^^^^^^^^^^
+- blank node: A reset erlang node, without rabbitmq app running.
+
+- 构建集群可通过 CLI 手动的方式, 或多种 peer discovery 的方式. 每种 peer
+  discovery 是由一种 backend 来实现的.
+
+- Config file and DNS 是两种 builtin 的 peer discovery backend. 其他后端可由
+  plugin 实现.
+
+- Config key for peer discovery backend:
+  ``cluster_formation.peer_discovery_backend``.
+
+peer discovery mechanism
+""""""""""""""""""""""""
+一个节点启动时, 若存在状态数据, 会按保存的状态运行. 若没有状态数据, 它会按照配
+置的 peer discovery mechanism 来 discovery and contact peers. 若找到了 peers,
+它会尝试加入第一个 reachable peer 所属的集群.
+
+If peer discovery isn't configured, or it fails, or no peers are reachable, a
+node that wasn't a cluster member in the past will initialise from scratch and
+proceed as a standalone node.
+
+If a node previously was a cluster member, it will try to contact its "last
+seen" peer for a period of time. It will not perform peer discovery.
+
+If a node is reset since losing contact with the cluster, it will behave like a
+blank node. Note that other cluster members might still consider it to be a
+cluster member, in which case there two sides will disagree and the node will
+fail to join. Such reset nodes must also be removed from the cluster using
+``rabbitmqctl forget_cluster_node`` executed against an existing cluster
+member.
+
+A node rejoining after a node name or host name change can start as a blank
+node if its data directory path changes as a result. Such nodes will fail to
+rejoin the cluster.
+
+via rabbitmqctl
+"""""""""""""""
+
+via config file
+"""""""""""""""
+::
+
+  cluster_formation.peer_discovery_backend = rabbit_peer_discovery_classic_config
+  cluster_formation.classic_config.nodes.<N> = rabbit@<hostname>
+
+- 注意 ``rabbit@`` 部分.
+
+- 配置完成后, 要重置 reset 每个节点, 并停止进程::
+
+    sudo rabbitmqctl stop_app && \
+    sudo rabbitmqctl reset && \
+    sudo systemctl stop rabbitmq-server.service
+
+- 注意启动服务时, 必须一个一个启动.
+
+via DNS
+"""""""
+
+Mechanisms
+^^^^^^^^^^
+- Virtual hosts, exchanges, users, and permissions are automatically mirrored
+  across all nodes in a cluster.
+
+- 不同的节点上可以有不同的队列, 也可以进行 mirroring.
+
+- Consumer 连接任意节点时可见整个集群中的所有队列.
+
+use case
+^^^^^^^^
+* HA
+
+* increase throughput
+
+* 机器在同一机房.
+
+Federation
+----------
+- Federation allows an exchange or queue on one broker to receive messages
+  published to an exchange or queue on another. 注意这里 broker 指的是 logical
+  broker.
+
+- When network partitioning is occurred, choose A and P from CAP theorem.
+
+- 网络可以不可靠, Exchanges and queues are connected via AMQP. 各 broker 可以
+  运行不同版本的 rabbitmq and erlang.
+
+- Consumer 连接任何 broker 只能看见该 broker 中的队列.
+
+- use case:
+
+  * link brokers across the internet.
+
+Shovel
+------
+- Similar to federation, but at a lower level.
+
+- Whereas federation aims to provide opinionated distribution of exchanges and
+  queues, the shovel simply consumes messages from a queue on one broker, and
+  forwards them to an exchange on another.
+
+- use case:
+
+  * link brokers across the internet, with more control than federation.
+
+Dynamic Shovel
+--------------
+- use case:
+
+  * moving messages around in an ad-hoc manner on a single broker
+
 Protocol Support
 ================
 - AMQP
@@ -200,6 +379,72 @@ Protocol Support
 - STOMP
 
 - MQTT
+
+Server
+======
+
+process properties
+------------------
+- run as rabbitmq user.
+
+logging
+-------
+- systemd journal.
+
+System Configuration
+====================
+- file descriptor limit: 65536 (recommended). via:
+
+  * kernel parameter: ``fs.file-max`` (global max)
+
+  * systemd service limit::
+
+      [Service]
+      LimitNOFILE=65536
+
+Configuration
+=============
+
+means of configuration
+----------------------
+- configuration files
+
+- environment variables
+
+- runtime parameters and policies
+
+configuration file
+------------------
+
+main config
+^^^^^^^^^^^
+- format: sysctl::
+
+    key = value
+
+  Line starting with # is comment.
+
+- location: /etc/rabbitmq/rabbitmq.conf
+
+advanced config
+^^^^^^^^^^^^^^^
+- format: erlang term.
+
+- location: /etc/rabbitmq/advanced.config.
+
+check config
+^^^^^^^^^^^^
+- check configuration: rabbitmqctl environment
+
+config items
+^^^^^^^^^^^^
+
+environment variables
+---------------------
+
+env file
+^^^^^^^^
+- location: /etc/rabbitmq/rabbitmq-env.conf
 
 CLI
 ===
@@ -221,12 +466,21 @@ list_exchanges
 list_bindings
 ^^^^^^^^^^^^^
 
+environment
+^^^^^^^^^^^
+- check application environment, i.e., its configuration.
+
+forget_cluster_node
+^^^^^^^^^^^^^^^^^^^
+
 Client libraries
 ================
 
 pika
 ----
 - python client
+
+
 
 Architecture
 ============
