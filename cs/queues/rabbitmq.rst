@@ -260,6 +260,8 @@ requirements
 
   * 节点之间默认使用 hostname, 可配置使用 FQDN.
 
+- 一个节点必须在 reset 之后才能加入 new cluster.
+
 Forming a cluster
 ^^^^^^^^^^^^^^^^^
 - blank node: A reset erlang node, without rabbitmq app running.
@@ -299,10 +301,16 @@ rejoin the cluster.
 
 via rabbitmqctl
 """""""""""""""
+::
+
+  sudo rabbitmqctl stop_app && \
+  sudo rabbitmqctl reset && \
+  sudo rabbitmqctl join_cluster ... && \
+  sudo rabbitmqctl start_app
 
 via config file
 """""""""""""""
-::
+- 配置文件::
 
   cluster_formation.peer_discovery_backend = rabbit_peer_discovery_classic_config
   cluster_formation.classic_config.nodes.<N> = rabbit@<hostname>
@@ -317,17 +325,142 @@ via config file
 
 - 注意启动服务时, 必须一个一个启动.
 
+- 每个节点必须有相同的 erlang cookie.
+
+- location:
+
+  * server: /var/lib/rabbitmq/.erlang.cookie
+
+  * CLI tools: $HOME/.erlang.cookie
+
 via DNS
 """""""
 
 Mechanisms
 ^^^^^^^^^^
-- Virtual hosts, exchanges, users, and permissions are automatically mirrored
-  across all nodes in a cluster.
+
+entities
+""""""""
+- 以下实体和数据自动复制到各个节点:
+
+  * virtual hosts
+
+  * exchanges
+
+  * users
+
+  * permissions
+
+  queues 默认不复制, 只在一个节点上.
 
 - 不同的节点上可以有不同的队列, 也可以进行 mirroring.
 
-- Consumer 连接任意节点时可见整个集群中的所有队列.
+node relation
+"""""""""""""
+- A standalone node is equivalent to a cluster with one node. Any other node
+  can join it to form a larger cluster.
+
+- All nodes in a cluster are equal peers. queue mirroring will complicate this
+  a little bit.
+
+- CLI tools can be executed against any node.
+
+node authentication
+"""""""""""""""""""
+- For two nodes to be able to communicate they must have the same shared Erlang
+  cookie. 
+
+- Erlang cookie is a string of alphanumeric characters up to 255 characters.
+
+- Erlang cookie must be only readable to the rabbitmq user (0600).
+
+- If the file does not exist, Erlang VM will try to create one with a randomly
+  generated value when the RabbitMQ server starts up.
+
+node failure handling
+"""""""""""""""""""""
+- Nodes can be started and stopped at will, as long as they can contact a
+  cluster member node known at the time of shutdown.
+
+node stop and start
+"""""""""""""""""""
+- When new node joined a cluster, it automatically sync from other nodes.
+
+- A stopping node picks an online cluster member (only disc nodes will be
+  considered) to sync with after restart. Upon restart the node will try to
+  contact that peer 10 times by default, with 30 second response timeouts. In
+  case the peer becomes available in that time interval, the node successfully
+  starts, syncs what it needs from the peer and keeps going. If the peer does
+  not become available, the restarted node will give up and voluntarily stop.
+
+- When a node has no online peers during shutdown, it will start without
+  attempts to sync with any known peers. It does not start as a standalone
+  node, however, and peers will be able to rejoin it.
+
+- When the entire cluster is brought down therefore, the last node to go down
+  is the only one that didn't have any running peers at the time of shutdown.
+  That node can start without contacting any peers first. Since nodes will try
+  to contact a known peer for up to 5 minutes (by default), nodes can be
+  restarted in any order in that period of time.
+
+- In some cases the last node to go offline cannot be brought back up. It can
+  be removed from the cluster using the ``rabbitmqctl forget_cluster_node`` 
+  command.
+
+- ``rabbitmqctl force_boot`` command can be used on a node to make it boot
+  without trying to sync with any peers (as if they were last to shut down).
+  This is usually only necessary if the last node to shut down or a set of
+  nodes will never be brought back online.
+
+node leaving cluster
+""""""""""""""""""""
+- reset a node for it to leave voluntarily from a cluster.
+
+- ``rabbitmqctl forget_cluster_node`` to tell cluster to remove a node. But
+  the node itself does not know it. For itself to forget the membership, it
+  must be reset as well.
+
+- The last node in a cluster need not be reset.
+
+node storage
+""""""""""""
+- A node can be a disk node or a RAM node.
+
+- 集群必须有至少一个 disk node. It's not possible to manually remove the last
+  remaining disk node in a cluster.
+
+  A cluster containing only RAM nodes is fragile; if the cluster stops you will
+  not be able to start it again and will lose all data. RabbitMQ will prevent
+  the creation of a RAM-node-only cluster in many situations, but it can't
+  absolutely prevent it.
+
+- disk nodes store internal database tables on disk and RAM. RAM node 只保存这
+  些信息在内存中. 这不包含 messages, message store indices, queue indices and
+  other node state. Therefore, the performance improvements will affect only
+  resource management (e.g. adding/removing queues, exchanges, or vhosts), but
+  not publishing or consuming speed.
+
+- RAM nodes are a special case that can be used to improve the performance
+  clusters with high queue, exchange, or binding churn.
+
+  注意 RAM node do not provide higher message rates.
+
+- For RAM node, on startup they must sync database from a peer node on startup.
+
+client connection
+^^^^^^^^^^^^^^^^^
+- 在客户端连接至任意节点时, 可访问整个集群中的所有实体.
+
+  * 对于 queue 相关操作, nodes will route operations to the queue master node
+    transparently.
+
+- In case of a node failure, clients should be able to reconnect to a different
+  node, recover their topology and continue operation. 这可由以下方式实现:
+
+  * 客户端配置 a list of node's hostname/ip 等以供选择连接.
+
+  * 客户端只配置一个 hostname, 由其他机制保证多态切换和负载均衡. 例如 DNS 或
+    TCP load balancer.
 
 use case
 ^^^^^^^^
@@ -382,6 +515,14 @@ Protocol Support
 
 Server
 ======
+
+hostname consideration
+----------------------
+- by default RabbitMQ names the database directory using the current hostname
+  of the system. If the hostname changes, a new empty database is created. To
+  avoid data loss it's crucial to set up a fixed and resolvable hostname.
+
+- Whenever the hostname changes RabbitMQ node must be restarted.
 
 process properties
 ------------------
@@ -451,6 +592,13 @@ CLI
 
 rabbitmqctl
 -----------
+- cluster mode.
+ 
+  * 在 cluster 中, 一部分子命令是 "cluster-wide" 的, 另一些是 "node-local" 的.
+
+  * "cluster-wide" commands will often contact one node first, discover cluster
+    members and contact them all to retrieve and combine their respective
+    state.
 
 list_queues
 ^^^^^^^^^^^
@@ -472,6 +620,21 @@ environment
 
 forget_cluster_node
 ^^^^^^^^^^^^^^^^^^^
+
+set_cluster_name
+^^^^^^^^^^^^^^^^
+
+cluster_status
+^^^^^^^^^^^^^^
+
+start_app
+^^^^^^^^^
+
+stop_app
+^^^^^^^^
+
+reset
+^^^^^
 
 Client libraries
 ================
