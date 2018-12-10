@@ -238,7 +238,7 @@ Cluster
 Clustering
 ----------
 
-overview
+Overview
 ^^^^^^^^
 - Clustering connects multiple machines together to form a single logical
   broker.
@@ -249,7 +249,7 @@ overview
 
 - When network partitioning is occurred, choose C and P from CAP theorem.
 
-requirements
+Requirements
 ^^^^^^^^^^^^
 - all nodes in the cluster must have the same Erlang cookie.
 
@@ -355,6 +355,25 @@ entities
 
 - 不同的节点上可以有不同的队列, 也可以进行 mirroring.
 
+- 当队列所在节点挂掉时,
+
+  * durable queue become unavailable until the node comes back. All operations
+    on a durable queue with unavailable master node will fail. (Consistency 要
+    求. 若继续允许操作, 则该队列必须在别的节点上重新声明, 等原节点恢复上线后会
+    造成冲突.)
+
+  * non-durable queue is deleted. 因为所有可能具有的数据已经丢了. 此时, 访问
+    该队列会报错, 需重新声明.
+
+performance
+"""""""""""
+- 集群这种水平扩展的方式可以提高一个 broker 整体的 throughput, 例如每秒的消息处
+  理数目. 这是因为机器曾多后可以容纳更多的队列.
+
+- 但具体到某个队列, 集群并不能提高单个队列的 throughput. 这是因为, 一个队列默认
+  只位于一个节点; 而在 mirrored queue 的情况下, 所有相关节点要做同等的工作, 也
+  没有效率提升.
+
 node relation
 """""""""""""
 - A standalone node is equivalent to a cluster with one node. Any other node
@@ -447,7 +466,95 @@ node storage
 
 - For RAM node, on startup they must sync database from a peer node on startup.
 
-client connection
+Queue mirroring
+^^^^^^^^^^^^^^^
+
+mechanism
+"""""""""
+- 默认情况下, 每个队列只位于一个节点上. 通过一些设置可以得到高可用的队列
+  (mirrored queues).
+
+- Queue mirroring 提高单个队列的可用性. 但不能提高单个队列的 throughput, 因为所
+  有队列节点都干相同的活.
+
+- Mirrored queues 有一个 master 和多个 mirror. Master queue 所在的节点被称为这
+  个队列的 queue master.
+
+- All operations for a given queue are first applied on the queue's master node
+  and then propagated to mirrors. This is necessary to guarantee FIFO ordering
+  of messages.
+
+- Consumers are connected to the master regardless of which node they connect
+  to.
+
+- Mirrors drops messages that have been acknowledged at the master.
+
+- If the node that hosts queue master fails, the oldest mirror will be promoted
+  to the new master as long as it synchronised. Unsynchronised mirrors can be
+  promoted, too, depending on queue mirroring parameters.
+
+configuration
+"""""""""""""
+- 通过一系列 policy 参数, 对匹配的队列设置 mirroring:
+  ``ha-mode``, ``ha-params``.
+
+- 由于是通过 policy 进行设置, mirroring can be applied and unapplied at any
+  time.
+
+- policies:
+
+  * exactly. 指定 repilca 的数目 (master + mirror). ha-params 值为所需数目. If
+    a node containing a mirror goes down, then a new mirror will be created on
+    another node. If there are fewer than count nodes in the cluster, the
+    queue is mirrored to all nodes.
+    
+    使用这种 policy 时, 建议的 replica 数目为 ``N/2+1``. 当然, 若节点比较多, 并
+    且对实时性要求比较高时, 可以在保证可用性的基础上降低 replica 数目.
+
+  * all. Mirrored on all nodes. ha-params 不需要.
+
+  * nodes. ha-params is a list of node names. node name 是 ``cluster_status``
+    输出的 node name. If any of those node names are not a part of the cluster,
+    this does not constitute an error. If none of the nodes in the list are
+    online at the time when the queue is declared then the queue will be
+    created on the node that the declaring client is connected to.
+
+performance
+"""""""""""
+- Queue mirroring 会降低队列的 throughput. 因为与单节点的队列相比, 有更复杂的
+  状态机制, 例如跨节点的状态需要同步和保持.
+
+queue master
+""""""""""""
+- Queue master 的决定方式由 queue-master-locator 配置项决定. 该配置可以在三层
+  进行配置:
+
+  * ``x-queue-master-locator`` argument during queue declaration.
+
+  * ``queue-master-locator`` policy key.
+
+  * ``queue_master_locator`` config key.
+
+  配置值:
+
+  * min-masters. node with minimum number of bound masters.
+
+  * client-local. node where client declared the queue.
+
+  * random.
+
+- master migration. 若在应用新的配置后, 导致新的 queue master 与现有 master 不
+  同, order to prevent message loss, RabbitMQ will keep the existing master
+  around until at least one other mirror has synchronised (even if this is a
+  long time). However, once synchronisation has occurred things will proceed
+  just as if the node had failed: consumers will be disconnected from the
+  master and will need to reconnect.
+
+exclusive queue
+"""""""""""""""
+- exclusive queue is never mirrored and never durable.
+
+Client connection
 ^^^^^^^^^^^^^^^^^
 - 在客户端连接至任意节点时, 可访问整个集群中的所有实体.
 
@@ -462,7 +569,7 @@ client connection
   * 客户端只配置一个 hostname, 由其他机制保证多态切换和负载均衡. 例如 DNS 或
     TCP load balancer.
 
-use case
+Use case
 ^^^^^^^^
 * HA
 
