@@ -23,7 +23,7 @@ anchors
 
 - ``&`` marks a node for furture reference.
 
-- ``*`` marks a an alias node, which refers to the most recent preceding
+- ``*`` marks an alias node, which refers to the most recent preceding
   node having the same anchor.
 
 - ``<<`` extends a node with alias node.

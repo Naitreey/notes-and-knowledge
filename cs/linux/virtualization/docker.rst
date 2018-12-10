@@ -2008,7 +2008,8 @@ shm_size
 
 stdin_open
 ^^^^^^^^^^
-keep stdin open. like ``docker run --interactive``
+stdin_open, tty 两个选项保证了容器在需要时仍然可以 attach.
+它们的作用即 ``docker run -it``.
 
 tty
 ^^^
@@ -2020,14 +2021,6 @@ like ``docker run --user``
 
 working_dir
 ^^^^^^^^^^^
-
-stdin_open
-^^^^^^^^^^
-stdin_open, tty 两个选项保证了容器在需要时仍然可以 attach.
-它们的作用即 ``docker run -it``.
-
-tty
-^^^
 
 docker config configs
 ---------------------
@@ -2591,11 +2584,13 @@ rabbitmq
   
     based on debian slim images. defacto images.
   
-  - ``rabbitmq:*management*``
+  - ``rabbitmq:*management``
   
     ditto, with management plugin.
   
-  - ``rabbitmq:*alpine*``
+  - ``rabbitmq:*alpine``
+
+  - ``rabbitmq:*management-alpine``
 
 - 注意需要设置容器 hostname, 因为 rabbitmq stores data in
   ``/var/lib/rabbitmq/mnesia/rabbit@${hostname}``. 而服务实例容器的 hostname 每
@@ -2603,23 +2598,67 @@ rabbitmq
 
 - ``/var/lib/rabbitmq`` 默认是一个 volume.
 
+- management plugin.
+
+  * for ``*management`` tagged image, management plugin is installed and
+    enabled by default.
+
+  * using default user can login to frontend as administrator.
+
+- default user: default user can authenticate remotely. ``loopback_users.guest = false``
+
+- enable plugins:
+
+  * in dockerfile: ``RUN rabbitmq-plugins enable --offline ...``
+
+  * as configuration: ``/etc/rabbitmq/enabled_plugins``::
+
+      [rabbitmq_federation_management,rabbitmq_management,rabbitmq_mqtt,rabbitmq_stomp].
+
 - environs:
 
+  * Any rabbitmq recognized environs.
+
   * RABBITMQ_VM_MEMORY_HIGH_WATERMARK. setting for ``vm_memory_high_watermark``.
+    与直接设置后者配置相比, 这里的一个好处是, 对于比例类型的值, a percentage
+    value will be calculated to an absolute byte value based on the memory
+    limit, rather than being passed to RabbitMQ as-is.
 
-  * RABBITMQ_ERLANG_COOKIE
+  * RABBITMQ_ERLANG_COOKIE. erlang cookie for clustering.
 
-  * RABBITMQ_NODENAME
+  * RABBITMQ_DEFAULT_VHOST. 设置 default vhost.
 
-  * RABBITMQ_DEFAULT_VHOST
-
-  * RABBITMQ_DEFAULT_USER 
+  * RABBITMQ_DEFAULT_USER. default user's name. default is guest.
     
-  * RABBITMQ_DEFAULT_PASS
+  * RABBITMQ_DEFAULT_PASS. default user's password. default is guest.
 
-  * RABBITMQ_HIPE_COMPILE
+  * RABBITMQ_HIPE_COMPILE. set to 1 to compile on startup.
 
-  * RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS
+  * RABBITMQ_SSL_CACERTFILE
+
+  * RABBITMQ_SSL_CERTFILE
+
+  * RABBITMQ_SSL_DEPTH
+
+  * RABBITMQ_SSL_FAIL_IF_NO_PEER_CERT
+
+  * RABBITMQ_SSL_KEYFILE
+
+  * RABBITMQ_SSL_VERIFY
+
+  * RABBITMQ_MANAGEMENT_SSL_CACERTFILE
+
+  * RABBITMQ_MANAGEMENT_SSL_CERTFILE
+
+  * RABBITMQ_MANAGEMENT_SSL_DEPTH
+
+  * RABBITMQ_MANAGEMENT_SSL_FAIL_IF_NO_PEER_CERT
+
+  * RABBITMQ_MANAGEMENT_SSL_KEYFILE
+
+  * RABBITMQ_MANAGEMENT_SSL_VERIFY
+
+  * ``*_FILE``. 以上环境变量的文件路径.
 
 mysql
 -----
