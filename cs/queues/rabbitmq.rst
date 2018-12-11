@@ -767,17 +767,6 @@ logging
 -------
 - systemd journal.
 
-System Configuration
-====================
-- file descriptor limit: 65536 (recommended). via:
-
-  * kernel parameter: ``fs.file-max`` (global max)
-
-  * systemd service limit::
-
-      [Service]
-      LimitNOFILE=65536
-
 Configuration
 =============
 
@@ -1006,6 +995,67 @@ Architecture
 - Decoupling producers from queues via exchanges ensures that producers aren't
   burdened with hardcoded routing decisions. 
 
+Production Checklist
+====================
+vhost
+-----
+- single-tenant: use default / vhost is fine.
+
+- multi-tenant: use a separate vhost for each tenant.
+
+users
+-----
+- delete default guest user.
+
+- Use a separate user per application.
+
+- generate strong password.
+
+- Credentials roll-over (e.g. periodically or in case of a breach).
+
+- If needed, set up fine-grained permissions.
+
+memory
+------
+- ``vm_memory_high_watermark``. RabbitMQ will not accept any new messages when
+  it detects that it's using more than this amount of the available memory.
+
+  Leave enough memory for kernel, processes and caching. Otherwise swapping and
+  OOM might happen.  recommended 0.40 to 0.66. The OS and file system must be
+  left with at least 30% of the memory, otherwise performance may degrade
+  severely due to paging.
+
+- node's available memory (``free`` output) should always be at least 128MB.
+
+storage
+-------
+- Insufficient disk space will lead to node failures and may result in data
+  loss as all disk writes will fail.
+
+- ``disk_free_limit.relative``.
+
+  * 1.0. minimum recommended.
+
+  * 1.5. safer. If RabbitMQ needs to flush to disk memory worth of data, there
+    will be sufficient disk space available for RabbitMQ to start again. 
+
+  * 2.0. most conservative. full confidence in RabbitMQ having all the disk
+    space that it needs, at all times.
+
+file descriptor
+---------------
+- Make sure your environment allows for at least 50K open file descriptors for
+  effective RabbitMQ user
+
+  65536 (recommended). via:
+
+  * kernel parameter: ``fs.file-max`` (global max)
+
+  * systemd service limit::
+
+      [Service]
+      LimitNOFILE=65536
+
 Use case
 ========
 - Your application needs to work with any combination of existing protocols
@@ -1027,6 +1077,15 @@ Use case
 
 Client-side programming
 =======================
+- prefer long-lived TCP connection to rabbitmq server.
+
+  * open connection is expensive.
+
+  * Under continuous short-lived connection, server might experience connection
+    churn. Then node must be tuned to release TCP connections much quicker than
+    kernel defaults, otherwise they will eventually run out of file handles or
+    memory and will stop accepting new connections.
+
 - always declaring a queue before using it.
 
 - 根据使用场景决定是否使用 automatic acknowledgement mode. 若使用 manual
@@ -1054,6 +1113,13 @@ Client-side programming
   * request side 监听 ``reply_to`` queue, 注意要检查收到的消息的
     ``correlation_id`` 是否与原消息相符.
 
+- 客户端程序必须实现可靠的 connection recovery 机制 (或者由客户端库来实现).  这
+  是用于解决以下几种情况:
+
+  * 网络问题, 导致连接断开.
+
+  * 集群中节点挂掉, 导致连接断开.
+
 - clients that consume from the queue must be aware that they are likely to
   subsequently receive messages that they have already received. 这种消息重复可
   能源于多种情况:
@@ -1062,6 +1128,10 @@ Client-side programming
 
   * 在 rabbitmq 集群中, 客户端发送 ack 表示自己处理完成后, queue master 节点可
     能挂掉而没收到 ack. 这样在有 mirrored queue 时, 集群会再次发送该信息.
+
+- Channels are meant to be long-lived. Applications should minimize the number
+  of channels they use when possible and close channels that are no longer
+  necessary.
 
 References
 ==========
