@@ -1,4 +1,4 @@
-overview
+Overview
 ========
 - RabbitMQ is a message broker software.
 
@@ -132,6 +132,43 @@ default ports
 
 - 15675: MQTT over websocket
 
+
+Virtual hosts
+=============
+overview
+--------
+- Virtual hosts make rabbitmq a multi-tenant system.
+
+- A virtual host is a logical grouping and separation of resources:
+  connections, exchanges, queues, bindings, user permissions, policies and some
+  other things.
+
+- A client connection is bound to a specific vhost. Connections to a vhost can
+  only operate in that vhost. "Interconnection" of e.g. a queue and an exchange
+  in different vhosts is only possible when an application connects to two
+  vhosts at the same time.
+
+vhost creation
+--------------
+- Creating vhost is an expensive operation. So when multiple vhosts are created
+  in a loop by HTTP or CLI tools, they may experience timeout.
+
+- A newly created vhost will have a default set of exchanges but no other
+  entities and no user permissions.
+
+vhost deletion
+--------------
+- Deleting a virtual host will permanently delete all entities in it.
+
+
+default vhost
+-------------
+- name ``/``
+
+vhost limits
+------------
+Use ``rabbitmqctl set_vhost_limits``.
+
 Queue
 =====
 - declaring queue is idempotent operation. 但已声明的队列不能以不同的参数重新声
@@ -150,7 +187,7 @@ binding
 
 - Multiple queue can bind to the same exchange with the same binding keys.
 
-messaging
+Messaging
 =========
 - 当一个队列有多个 consumer 时, rabbitmq 会使用 round-robin 的方式将消息分发给
   这些 consumer, 这样在统计上每个 consumer 得到的消息数量是相同的.
@@ -181,7 +218,7 @@ messaging
 
 - fair dispatch. basic.qos. 在分发消息时考虑 consumer 当前的 message pressure.
 
-exchange
+Exchange
 ========
 - Exchange is like a router. Producer only sends message to an exchange. It's
   the responsibility of an exchange to route message to the appropriate
@@ -489,9 +526,38 @@ mechanism
 
 - Mirrors drops messages that have been acknowledged at the master.
 
-- If the node that hosts queue master fails, the oldest mirror will be promoted
-  to the new master as long as it synchronised. Unsynchronised mirrors can be
-  promoted, too, depending on queue mirroring parameters.
+Failure handling
+""""""""""""""""
+
+* If the node that hosts queue master fails, the oldest mirror will be
+  promoted to the new master as long as it synchronised. Unsynchronised
+  mirrors can be promoted, too, depending on queue mirroring parameters. If
+  there is no mirror that is synchronised with the master, messages that only
+  existed on master will be lost.
+
+* The mirror considers all previous consumers to have been abruptly
+  disconnected. It requeues all messages that have been delivered to clients
+  but are pending acknowledgement.
+
+  This can include messages for which a client has issued acknowledgements,
+  say, if an acknowledgement was either lost on the wire before reaching the
+  node hosting queue master, or it was lost when broadcast from the master to
+  the mirrors. (这是 queue cancellation notification 机制的原因之一. 即客户端
+  可能需要处理这种情况: 客户端以为自己已经处理完了消息, 但却由收到了同一个消息.
+  但也许更好的方式, 是尽量保证任务的等幂性.)
+
+* Should a mirror fail, there is little to be done other than some
+  bookkeeping: the master remains the master and no client need take any
+  action or be informed of the failure.
+
+* Messages published to a node that hosts queue mirror are routed to the queue
+  master and then replicated to all mirrors. Should the master fail, the
+  messages continue to be sent to the mirrors and will be added to the queue
+  once the promotion of a mirror to the master completes.
+
+* 当一个原来有 queue mirror 的节点重启后, 若仍成为同一个 queue 的 mirror, 则 it
+  throws away any durable local contents it already has and starts empty. 这是
+  因为重启后, mirror 无法判断自己是否跟 master 的内容仍然是一致的.
 
 configuration
 """""""""""""
@@ -501,7 +567,7 @@ configuration
 - 由于是通过 policy 进行设置, mirroring can be applied and unapplied at any
   time.
 
-- policies:
+- policy:
 
   * exactly. 指定 repilca 的数目 (master + mirror). ha-params 值为所需数目. If
     a node containing a mirror goes down, then a new mirror will be created on
@@ -553,6 +619,68 @@ queue master
 exclusive queue
 """""""""""""""
 - exclusive queue is never mirrored and never durable.
+
+failover and client
+"""""""""""""""""""
+- For clients wanting to know about failover, they can consume with
+  ``x-cancel-on-ha-failover: true`` as argument.
+
+mirror synchronization
+""""""""""""""""""""""
+- synchronization mode policy, ``ha-sync-mode``:
+ 
+  * manual. When a queue is mirrored on a new node, mirror will receive new
+    messages published to the queue, and thus over time will accurately
+    represent the tail of the mirrored queue.
+
+    As messages are drained from the mirrored queue, the size of the head of
+    the queue for which the new mirror is missing messages, will shrink until
+    eventually the mirror's contents precisely match the master's contents.
+    Then a queue considered fully synchronized.
+
+  * automatic. synchronize messages enqueued before the queue mirror is
+    created, from master to the mirror.
+
+    When automatic synchronization is happening, the queue is blocked.
+
+- Automatic synchronization can be triggered explicitly via
+  ``rabbitmqctl sync_queue``.
+
+- Batch synchronization. ``ha-sync-batch-size`` queue argument. If the network
+  takes longer than net_ticktime to send one batch of messages, then nodes in
+  the cluster could think they are in the presence of a network partition.
+
+  So to tune this value, you need to consider:
+
+  * average message size
+
+  * net_ticktime value
+
+  * network throughput
+
+mirror promotion policies
+"""""""""""""""""""""""""
+- ``ha-promote-on-failure``, policy during an uncontrolled master shutdown
+  (i.e. server or node crash, or network outage):
+
+  * when-synced. unsynchronised mirrors are not promoted. This avoids data loss
+    due to promotion of an unsynchronised mirror but makes queue availability
+    依赖于同步性和 master 的状态.  In the event of queue master node failure,
+    若 master/slave 仍是同步的 (例如没有新消息), 只要 master/mirror 有一点点不
+    同步 (例如因为刚来的尚未同步的新消息), the queue will become unavailable
+    until queue master recovers. In case of a permanent loss of queue master
+    the queue won't be available unless it is deleted and redeclared.
+
+  * always (default). unsync queue can be promoted. This ensures max
+    availability.
+
+- ``ha-promote-on-shutdown``, policy during a controlled master shutdown (i.e.
+  explicit stop of the RabbitMQ service or shutdown of the OS):
+
+  * when-synced (default). Refuse to promote an unsynchronised mirror on in
+    order to avoid message loss.
+
+  * always.
 
 Client connection
 ^^^^^^^^^^^^^^^^^
@@ -694,6 +822,125 @@ env file
 ^^^^^^^^
 - location: /etc/rabbitmq/rabbitmq-env.conf
 
+Parameters and Policies
+=======================
+
+overview
+--------
+- Parameters and policies are used for configs that have the following
+  properties:
+
+  * needs to be applied at cluster-level, rather than node specific.
+
+  * likely to change at run time.
+ 
+  Therefore they are not suitable in static node configuration file.
+
+- 2 kinds of parameters: vhost-scoped parameters and global parameters.
+
+- Policies are a special case of parameters. Policies are vhost-scoped.
+
+parameters
+----------
+- Set vhost-specific parameters via ``rabbitmqctl set_parameter``
+
+- Set global parameters via ``rabbitmqctl set_global_parameter``
+
+policies
+--------
+- Policies is used to solve the following problems:
+
+  * Setting exchanges/queues' x-arguments in client applications are
+    inflexible, which requires modifying client applications. We want flexible
+    settings from server-side.
+
+  * to control the extra arguments for groups of queues and exchanges.
+
+- How policy works:
+  
+  * A policy matches one or more entities by name and appends its definition to
+    the x-arguments of the matching entities.
+
+  * Each exchange/queue has at most one (combined) policy in effect.
+
+  * A policy can match exchanges, queues, or both. This is defined by
+    ``apply-to`` option.
+
+  * When policy is changed, its effect on matching exchanges and queues will be
+    reapplied.
+
+  * When new entities are created, matching policy is applied.
+
+- Policy definition:
+
+  * name: any unicode
+
+  * pattern: an regex matching any entity names.
+
+  * definition: JSON object.
+
+  * priority. The policy with highest priority is applied.
+
+operator policies
+-----------------
+- Operator policies, don't just overwrite regular policy values. They enforce
+  limits but try to not override user-provided policies where possible.
+
+
+Authentication and Authorization
+================================
+
+default user
+------------
+- name: guest, pass: guest. full access to default ``/`` vhost.
+
+- default vhost, user/pass are created when the database is uninitialized.
+
+- By default, guest user is prohibited from connecting to the broker remotely.
+
+ACL mechanism
+-------------
+
+vhost level
+^^^^^^^^^^^
+该层 ACL 在客户端连接时校验. 当一个用户向 vhost 连接时, 只有当该用户在这个
+vhost 中具有权限条目时才允许连接. 然而注意只要有权限即可, 即使全部都是 ``^$``
+也可以.
+
+entity level
+^^^^^^^^^^^^
+该层 ACL 在客户端对相应实体进行操作时校验. 对一个资源实体, 存在 configure,
+write and read 三类权限.
+
+- configure. create or destroy resources, or alter their behavior.
+
+- write. inject messages into a resource.
+
+- read. retrieve messages from a resource.
+
+一个 AMQP 操作可能涉及多个实体的权限. See [ACLDoc]_ for details.
+
+Permission definition
+---------------------
+- format::
+
+    <configure> <write> <read>
+
+  每项为一个正则, 匹配该 vhost 中的一系列实体. 对用户授予所有匹配到的实体的相应
+  权限.
+
+  * For convenience, default blank exchange is aliased to amq.default for
+    matching.
+
+  * ``^$`` and ``''`` means to grant no permissions.
+
+Permission caching
+------------------
+- RabbitMQ may cache the results of access control checks on a per-connection
+  or per-channel basis. Hence changes to user permissions may only take effect
+  when the user reconnects.
+
+
 CLI
 ===
 
@@ -807,7 +1054,17 @@ Client-side programming
   * request side 监听 ``reply_to`` queue, 注意要检查收到的消息的
     ``correlation_id`` 是否与原消息相符.
 
+- clients that consume from the queue must be aware that they are likely to
+  subsequently receive messages that they have already received. 这种消息重复可
+  能源于多种情况:
+
+  * 客户端本身的问题, 例如处理中断等.
+
+  * 在 rabbitmq 集群中, 客户端发送 ack 表示自己处理完成后, queue master 节点可
+    能挂掉而没收到 ack. 这样在有 mirrored queue 时, 集群会再次发送该信息.
+
 References
 ==========
 .. [Kafka-vs-RabbitMQ] `Understanding When to use RabbitMQ or Apache Kafka <https://content.pivotal.io/blog/understanding-when-to-use-rabbitmq-or-apache-kafka>`_
 .. [SOKafka-vs-RabbitMQ] `Is there any reason to use RabbitMQ over Kafka? <https://stackoverflow.com/questions/42151544/is-there-any-reason-to-use-rabbitmq-over-kafka>`_
+.. [ACLDoc] `Access Control (Authentication, Authorisation) in RabbitMQ <https://www.rabbitmq.com/access-control.html>`_
