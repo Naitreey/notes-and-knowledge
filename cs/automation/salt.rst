@@ -737,10 +737,18 @@ job management
 
 job cache
 ---------
+
+querying job cache
+^^^^^^^^^^^^^^^^^^
 - Job cache can be queried by ``salt.runners.jobs`` runner module.
+
+- 这个模块会按顺序选择 ``ext_job_cache``, ``master_job_cache`` 中的一个
+  returner 来查询 job cache.
 
 default job cache
 ^^^^^^^^^^^^^^^^^
+- Default job cache 等价于 ``master_job_cache: local_cache``.
+
 - This cache is maintained by master, it caches results of job execution by
   minions.
 
@@ -754,6 +762,67 @@ default job cache
   * 提高 cache 读写效率: job cache 路径使用更快 IO 的存储设备, 或 tmpfs.
 
   * 完全不保存 job result. ``job_cache`` option.
+
+external job cache
+^^^^^^^^^^^^^^^^^^
+- Mechanism:
+  
+  * Job execution result is returned to external job cache, in addition to
+    return to ``master_job_cache``.
+
+  * 这个额外的操作, 是由 minion 执行 minion-side returner module 来实现的.
+
+- 注意设置 external job cache 后, 任务结果会在 ``master_job_cache`` 和
+  ``ext_job_cache`` 中都写入.
+
+- 优点:
+
+  * Data is stored without placing additional load on the Salt Master.
+
+- 缺点:
+
+  * A large number of concurrent connections to external cache system.
+
+- configuration.
+
+  * Configure the relevant returner. The precedence of reading config:
+
+    - minion config file
+
+    - minion grains
+
+    - minion pillar data
+
+  * enable the returner as external job cache, by configuring ``ext_job_cache``
+    at *master* configuration. (在 master 是因为 runner modules 也要知道到哪里
+    去找 job cache.)
+
+master job cache
+^^^^^^^^^^^^^^^^
+- Mechanism:
+  
+  * Salt Minions send data to the Default Job Cache as usual, and then the Salt
+    Master sends the data to the external system.
+   
+  * 这个额外的操作, 是由 master 执行 master-side returner module 来实现的.
+
+- 注意设置 master job cache 后, 任务结果会在 ``master_job_cache`` 中写入, 不再
+  写入 default job cache (因由同一个配置负责).
+
+- 优点:
+
+  * A single connection is required to the external system.
+
+- 缺点:
+
+  * Places additional load on your Salt Master.
+
+- configuration.
+
+  * Configure the relevant returner in master configuration file.
+
+  * enable the returner as master job cache, by configuring
+    ``master_job_cache`` at master configuration.
 
 scheduled jobs
 --------------
@@ -853,8 +922,16 @@ specification
 Returner
 ========
 
-- 将执行结果 return 至某个数据库, 而不是返回至 master 端.
+- 指定 returner 后, minion 的操作结果在返回给 master 上的 ``master_job_cache``
+  的同时, 还会返回给所指定的各个 returner.
 
+redis_return
+------------
+- ``salt.returners.redis_return``
+
+- virtual module name: ``redis``
+
+- 在作为 master job cache 使用时, 需指定 virtual module name.
 
 Salt Cloud
 ==========
@@ -985,6 +1062,10 @@ Primary configurations
 ^^^^^^^^^^^^^^^^^^^^^^
 * ``interface``. default 0.0.0.0. bind ip.
 
+* ``cachedir``, ``/var/cache/salt/master``. master cache data.
+
+job management configurations
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 * ``job_cache``. default True. Set to False to disable job cache. But the
   ``$jid`` directory for each job is still created. The creation of the JID
   directories is necessary because Salt uses those directories to check for JID
@@ -993,7 +1074,9 @@ Primary configurations
 * ``keep_jobs``. number of hours to keep old job information. set to 0 to
   keep forever.
 
-* ``cachedir``, ``/var/cache/salt/master``. master cache data.
+* ``ext_job_cache``. default "". This is the default returner for all minions.
+
+* ``master_job_cache``. default: ``local_cache``. for master job cache.
 
 Scheduling configurations
 ^^^^^^^^^^^^^^^^^^^^^^^^^
