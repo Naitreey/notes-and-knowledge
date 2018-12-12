@@ -1056,6 +1056,23 @@ file descriptor
       [Service]
       LimitNOFILE=65536
 
+Erlang cookie
+-------------
+- should be cryptographically generated.
+
+cluster
+-------
+- Try making consumers and producers connect to the same node, if possible:
+  this will reduce inter-node traffic.
+
+- Equally helpful would be making consumers connect to the node that currently
+  hosts queue master.
+
+Time synchronization
+--------------------
+- Node time should be synced. It does not affect cluster operation, but it does
+  affect plugins such as management statistics.
+
 Use case
 ========
 - Your application needs to work with any combination of existing protocols
