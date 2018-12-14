@@ -1141,9 +1141,85 @@ generated column
   * Virtual generated column 配合索引使用, 比 functional index 使用起来稍方便一
     些, 因查询时无需写明复杂的表达式.
 
-index and foreign keys
-""""""""""""""""""""""
+index
+"""""
+- CONSTRAINT clause is used for naming a constraint explicitly. 这里,
+  constraint 指的是 PRIMARY KEY, UNIQUE INDEX, FOREIGN KEY 三种具有限制性的
+  索引. 这个 clause 基本上是多余的, 一般情况下没必要使用. 只是一个类型的表示.
 
+  所有 constraint 都具有以下特点: They prevent data from being inserted or
+  updated if data would become inconsistent.
+
+foreign key
+"""""""""""
+- FOREIGN KEY constraint 主要有两个作用:
+  
+  * Referential integrity (表之间的数据交叉引用时).  Specifically, MySQL
+    rejects any INSERT or UPDATE operation that attempts to create a foreign
+    key value in a child table if there is no a matching candidate key value in
+    the parent table.
+
+  * Referential action. When an UPDATE or DELETE operation affects a key value
+    in the parent table that has matching rows in the child table, the action
+    depends on ON UPDATE and ON DELETE clauses.
+
+    - ON DELETE CASCADE, ON UPDATE CASCADE.
+
+    - ON DELETE SET NULL, ON UPDATE SET NULL.
+
+    - RESTRICT (default), NO ACTION. Rejects the delete or update operation for
+      the parent table.
+
+    - SET DEFAULT. (并不可用.)
+
+- implementation:
+
+  - FK constraint 依赖于相关列之上的一个 index 来实现.
+  
+    * 若表中已经存在以 FK 列起始的 index, 则创建 FK constraint 时不会再重复创建
+      索引, 而是重用这个索引. 此时, ``index_name`` 若指定则忽略.
+  
+    * 若表中没有这样可重用的索引, 则会新建一个 index 以实现 FK constraint.
+
+    * 若后续明确创建了可重用于 FK constraint 的索引, 且初始创建 FK index 时
+      没有指定 index name, 则原来的 FK index 会被 drop 掉.
+
+  - Referenced columns 上面也必须有与 REFERENCES clause 中顺序相符的索引.
+
+  - FK columns 以及 referenced columns 上的两个索引, 是为了提高正向和反向的
+    FK check 速度, 避免 full table scan.
+
+- parent table and child table 的关联限制.
+  
+  * Child FK columns 中填入所引用的 parent table 中相关列的完全相同的列值.
+
+  * Parent and child tables must use the same storage engine.
+
+  * Parent and child tables 中的相关列的数据类型限制:
+
+    - 对于 integer types: The size and sign must be the same
+
+    - 对于 string/binary types: length need not be the same. For nonbinary
+      string columns, the character set and collation must be the same.
+
+    - TEXT/BLOB 等类型列不能用于 FK constraints, 因 FK 的索引不能包含 prefix.
+
+- 设置了 partitioning 的表, 不能用于 FK 关系中.
+
+- generated column.
+
+  * stored generated column 上设置 FK 时, referential action 只能使用 ON DELETE
+    CASCADE.
+
+  * virtual generated column can not be referenced by a FK.
+
+- constraints on altering schema.
+
+  * the server prohibits changes to foreign key columns with the potential to
+    cause loss of referential integrity.
+
+  * DROP TABLE for a table that is referenced by a FOREIGN KEY constraint is
+    disallowed.
 
 table name
 """"""""""
