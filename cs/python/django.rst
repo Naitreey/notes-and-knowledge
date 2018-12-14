@@ -306,6 +306,14 @@ startproject
 - 在 ``directory`` 中创建 django project directory structure. 若未指定, 创建
   ``$PWD/<name>`` 然后在里面初始化. 若指定, directory 必须事先存在.
 
+startapp
+^^^^^^^^
+::
+
+  ./manage.py startapp name [directory]
+
+- create a django app ``name`` in ``directory``, default to current directory.
+
 URLconf
 =======
 
@@ -1029,8 +1037,7 @@ ModelFormMixin
 File handling
 =============
 
-- 文件不一定是用户上传的, 只要是存储在数据库之外的文件体都可以用这个
-  模块处理.
+- 文件不一定是用户上传的, 只要是存储在数据库之外的文件体都可以用这个模块处理.
 
 - 用户文件的下载在生产时应通过前端服务器来处理, 在研发时通过 django 来处理. 用
   户文件的上传则始终通过 django 来处理.
@@ -9582,8 +9589,7 @@ methods
 - ``get_version()``. default return django version. can be overrided to provide
   command version.
 
-- ``execute(*args, **options)``. execute command with parsed arguments. Raised
-  ``CommandError`` will be printed to stderr then exiting with status code 1.
+- ``execute(*args, **options)``. execute command with parsed arguments. 
   ``args`` is mostly useless.
 
   * ``stdout``, ``stderr`` options 可进行 redirection.
@@ -9597,7 +9603,8 @@ methods
 - ``check_migrations()``. migration check.
 
 - ``run_from_argv()``. cmdline execution entrypoint. create parser, parse args
-  and call ``execute()``.
+  and call ``execute()``. Raised ``CommandError`` will be printed to stderr
+  then exiting with status code 1.
 
 - ``create_parser()``.
 

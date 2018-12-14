@@ -347,7 +347,8 @@ naming conventions
 - 不要自创 ``__name__``, 这些是 python 定义的 magic objects/methods, 每一项都有特殊
   用途, 不要混淆这个命名空间.
 
-- modules 命名使用全小写, 并允许使用 ``_`` 进行分隔.
+- modules 命名使用全小写, 并允许使用 ``_`` 进行分隔. 当我们命名一个 top-level
+  module 时, 要首先检查 pypi 上是否有重名的 module, 避免冲突.
 
 - 私有模块命名以 ``_`` 起始.
 
