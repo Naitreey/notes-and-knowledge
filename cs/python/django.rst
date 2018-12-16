@@ -312,7 +312,38 @@ startapp
 
   ./manage.py startapp name [directory]
 
-- create a django app ``name`` in ``directory``, default to current directory.
+- create a django app directory structure in ``directory``, default to
+  ``$PWD/<name>``. 若指定了 directory, 必须必须事先存在.
+
+- 特定的 template files 可以通过 django template system 渲染后再输出. 它们
+  支持以下 template variables:
+
+  * startapp command cli options.
+
+  * ``app_name``
+
+  * ``app_directory``
+
+  * ``camel_case_app_name``
+
+  * ``docs_version`` django docs version
+
+  * ``django_version``
+
+- ``--template TEMPLATE``. 支持指定 alternative template directory structure
+  path. default is ``django/conf/app_template``. could be:
+  
+  * a dir path,
+    
+  * a file path to compressed file containing dir directory
+   
+  * a url to the compressed file
+
+- ``--extension EXTENSIONS``. a list of extensions of files to render with
+  django template system.
+
+- ``--name FILES``. a list of additional files to be rendered by template
+  engine.
 
 URLconf
 =======
@@ -1576,7 +1607,7 @@ settings
 --------
 
 - ``MEDIA_ROOT``. 保存用户文件的目录, absolute path. Default ``""``
-  (current workding directory). Must differ from ``STATIC_ROOT``.
+  (current working directory). Must differ from ``STATIC_ROOT``.
 
 - ``MEDIA_URL``. serve user files. must end in a slash if set to a non-empty
   value. default ``""``.

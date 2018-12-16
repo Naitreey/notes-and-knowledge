@@ -879,7 +879,7 @@ Statements
 
 assignment statements
 ---------------------
-以下 DNF 有所简化.
+以下 BNF 有所简化.
 
 ::
 
@@ -904,7 +904,7 @@ about target list
 
   * 当 LHS 是一个 single target, 则 RHS 是整体赋值给 LHS.
 
-- 注意到 DNF 中, target list 是递归定义的. 以下详述 target list 的可能形式.
+- 注意到 BNF 中, target list 是递归定义的. 以下详述 target list 的可能形式.
 
   * target list 可以是 surrounded by ``()``, ``[]`` 或者裸的.  但是注意, ``()``
     中包含单个 target 时, 服从 tuple 的书写规则.  即 ``(x) = [1]`` 不会认为是
@@ -1472,7 +1472,7 @@ methods
 
 - ``format()``.
 
-  * DNF notation. see
+  * BNF notation. see
     `docs <https://docs.python.org/3/library/string.html#format-string-syntax>`_.
 
   * literal ``{}`` ``{{}}``
@@ -1496,7 +1496,7 @@ methods
       的 ``__format__`` method will be called with ``format_spec``, 而不是原
       object 的方法.
 
-    - DNF::
+    - BNF::
 
         [[fill]align][sign][#][0][width][grouping_option][.precision][type]
 
@@ -1515,6 +1515,8 @@ methods
 
     - type: ``sbcdoxXneEfFgGn%gg``.
 
+- ``title()``. In string, first char of each word is uppercased, and remaining
+  chars are lowercased. A word is defined as groups of consecutive letters.
 
 string formattings
 ^^^^^^^^^^^^^^^^^^
