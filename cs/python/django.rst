@@ -189,11 +189,11 @@ class attributes
 ^^^^^^^^^^^^^^^^
 - ``name``. python import path to the app this AppConfig is configuring. 需要这
   个 name 是因为 AppConfig 理论上可以放在任何地方, 所以需要指定它所配置的 app
-  的所在位置. Required, must be unique across django project.
+  的所在位置. Required, must be unique across a django project.
 
 - ``label``. 这是各处使用的 ``app_label`` 的来源. 默认为 ``name``'s last part.
   This attribute allows relabeling an application when two applications have
-  conflicting labels.
+  conflicting labels. Must be unique across a django project.
 
 - ``verbose_name``. app's human-readable name. 例如 admin site 会使用. default
   ``label.title()``
@@ -281,6 +281,39 @@ methods
   ``AppConfig.name``.
 
 - ``get_model(app_label, model_name, require_ready=True)``. Return model class.
+
+settings
+--------
+- ``INSTALLED_APPS``. a list of import strings to activated django apps in this
+  project.
+
+  * 该配置的意义是告诉 django 哪些 module 是属于该项目的, 即是需要加载的, 在各
+    个组件的机制中需要考虑的 (例如 templates, static files, management
+    commands, etc.). 这样, 允许我们在项目源代码中包含一些 "ignored" modules. 可
+    能用于一些 django 之外的其他目的, 或暂时不想让 django 加载. 从而避免了
+    django 去误加载.
+  
+  * 一定要写 path to AppConfig class, 即 ``<app>.apps.<app>Config``. 这是应用自
+    定义 app config 的最佳方式.
+
+    若 INSTALLED_APPS 中只有 app module path, 则 django checks for
+    ``<module>.default_app_config`` for app config class. 这仅用作向后兼容.
+    
+    若没找到自定义的 app config, fallback 至 ``django.apps.AppConfig``.  但这样
+    就无法使用 custom app config.
+
+  * 列表中每个值成为创建的 ``AppConfig.name`` attribute, 因此必须保证唯一.  每
+    个值的最后一部分成为 ``AppConfig.label`` attribute, 除非 class 中另有定义.
+    因此也应要保证唯一性.
+
+  * 要注意考虑 apps 在列表中放置的顺序. 这会影响:
+
+    - Apps registry 的 population order. 从而影响 ``AppConfig.ready()`` 的执行
+      顺序.  这会影响: signal handlers 的注册以及执行顺序.
+
+    - When several applications provide different versions of the same resource
+      (template, static file, management command, translation), the application
+      listed first in INSTALLED_APPS has precedence.
 
 design patterns
 ---------------
@@ -7931,27 +7964,6 @@ use middleware
       再传递回上层 middleware.
       在 process_exception 处理时, 若任一返回 HttpResponse 则继续下面的步骤;
       若全部都返回 None, 则 re-raise exception.
-
-applications
-============
-
-配置 app
---------
-- ``settings.INSTALLED_APPS``.
-  
-  * 一定要写 path to AppConfig class, 即 ``<app>.apps.<app>Config``. 这是应用自
-    定义 app config 的最佳方式.
-
-    若 INSTALLED_APPS 中只有 app module path, 则 django checks for
-    ``<module>.default_app_config`` for app config class. 这仅用作向后兼容.
-    
-    若没找到自定义的 app config, fallback 至 ``django.apps.AppConfig``.  但这样
-    就无法使用 custom app config.
-
-  * 要注意考虑 apps 在列表中放置的顺序. 这会影响:
-
-    - Apps registry 的 population order. 从而影响 ``AppConfig.ready()`` 的执行
-      顺序.  这会影响: signal handlers 的注册以及执行顺序.
 
 messages framework
 ==================
