@@ -1538,7 +1538,7 @@ FileField
   ``upload_to`` callable 生成. 这是 FieldFile.name
 
 - 在 model instance 上, 通过一个特殊的 FileDescriptor 实现了:
-  
+
   * set ``File.name`` string 或者 None 或者 File/FieldFile instance 都可以.
 
   * get 该列属性得到 FieldFile instance. 由于 getter 的逻辑, 即使文件列属性
@@ -4720,8 +4720,8 @@ model meta options
 * ``default_related_name``, 对于 relation field, ``related_name`` 的默认值.
   默认是 ``<model>_set``.
 
-* ``get_latest_by``, ``QuerySet.latest()`` ``QuerySet.earliest()`` 默认
-  使用的 field name.
+* ``get_latest_by``. ``QuerySet.latest()`` ``QuerySet.earliest()`` 默认
+  使用的 fields: The name of a field or a list of field names.
 
 * ``managed``, This is useful if the model represents an existing table or a
   database view that has been created by some other means.
@@ -4829,9 +4829,8 @@ constructor
   对于 relational fields, default 设置为 remote_field 值, 而不是 model instance.
 
   仅在 SQL 中创建 entry 时该列的值未指定时生效, 而不是
-  ``field=None`` 时. 后者情况是指定了该列, 但值是 null. 默认情况下
-  ``default=None``, 但是否能顺利使用该 default value, 还要看该列是否允许
-  null, 即 ``null=`` 的配置.
+  ``field=None`` 时. 后者情况是指定了该列, 但值是 null. 在未指定时, default value
+  根据 ``Field.get_default`` 逻辑给出: 若 nullable, 给出 None, 否则给出 "".
 
   对于 model field 设置的默认值, django 并不应用到数据库表定义中. 而是维持在
   django 层. 这是为了保证 default value 的灵活性 (e.g., callable 而不是固定值).
@@ -4897,9 +4896,15 @@ constructor
 
 - ``db_tablespace``, 若建立索引, 索引所在的 tablespace. 默认为
   ``settings.DEFAULT_INDEX_TABLESPACE`` 或 ``Meta.db_tablespace``.
+  这个有效性取决于 db backend.
+
+  * 对于 mysql, innodb 默认使用 file-per-table tablespace. 这参数就没啥意义.
 
 - ``validators``. 指定 validators. 这些 validators 会在 form validation 或
   model instance validation 的时候生效.
+
+- ``max_length``. 对于一些 field types, 可以设置最大长度. 这包含: CharField,
+  TextField, SlugField, BinaryField,
 
 attributes
 ^^^^^^^^^^
@@ -9724,22 +9729,68 @@ more model fields
 ^^^^^^^^^^^^^^^^^
 
 JSONField
-""""""""""
+"""""""""
 - 使用 mysql JSON data type.
 
 - MySQL 5.7+ 可用.
 
 - 其值可以是任何 valid json value 的 python equivalent. 只要能够 ``json.dumps()``.
 
-- constructor options.
+- additional constructor options.
 
-  * default. 注意默认的 default 值是 ``dict``. 如需要其他值比如 NULL 需明确设置.
+  * default. 注意默认的 default 值是 ``dict`` function. 如需要其他值比如 NULL
+    需明确设置.
+    
+    Incorrectly using a mutable object, creates a single object that is shared
+    between all instances of the field. 此时应该使用 callable that returns the
+    mutable objects.
 
-- checkings.
+- additional checkings.
 
   * check ``default`` is not mutable container object. 因为会共享.
 
   * check mysql version.
+
+- field lookups.
+
+  * Most of the standard lookups don’t make sense for JSONField and so have
+    been made to fail with NotImplementedError.
+
+  * In cases where names collide with existing lookups, or not achievable
+    via field lookup syntax, use the ``JSONExtract`` database function.
+
+  * exact match, in standard form (``field=b``, ``field__exact=b``)
+
+  * ordering, in standard form (gt, gte, lt, lte lookups), conforming to
+    mysql's JSON ordering definition.
+
+  * path lookup:
+    
+    - key: ``field__key__subkey``
+
+    - array index: ``field__<N>``
+
+    可以多层叠加.
+
+  * key presence lookups:
+
+    - has key: ``field__has_key``
+
+    - has all keys: ``field__has_keys=[...]``
+
+    - has any keys (has at least one of key list): ``field_has_any_keys=[...]``
+
+  * length lookups (``JSON_LENGTH`` function):
+    
+    - ``field__length``
+
+    - ``field__length__<ordering>``
+
+  * containment lookups (``JSON_CONTAINS`` function):
+
+    - ``field__contains``
+
+    - ``field__contained_by``
 
 EnumField
 """"""""""
@@ -9755,6 +9806,9 @@ EnumField
   * 虽是 CharField 子类, 但不允许 ``max_length``. 将 max length 的检查
     交给 mysql. mysql 会检查 enum 的元素个数以及每个元素的长度是否超过
     上限.
+
+- 允许 append new choices. 允许 modify human readable form of existing
+  choices. 但 MySQL 不允许 modifying value of existing choices.
 
 Bit1BooleanField
 """"""""""""""""

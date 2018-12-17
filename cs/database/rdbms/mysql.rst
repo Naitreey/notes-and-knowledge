@@ -645,7 +645,21 @@ ENUM
   在定义时保证 ENUM list in alphabetic order, 或者在排序时按照 enum value 来排序
   ORDER BY CAST(col AS CHAR).
 
+- Changing ENUM definition:
+
+  * ALTER TABLE 修改列数据类型定义.
+
+  * It is possible to append new members to a ENUM column.
+
+  * Editing or removing existing members will error if MySQL Strict Mode is on.
+
 - storage. 1-2 bytes.
+
+- ENUM field type 的意义: 提高 enumeration 性质的数据的存储效率.
+
+  这是因为: 与 enum integer 对应的 enum literal string 只存储一次. 在各个行中只
+  保存一个至多 2 bytes 的整数. 整体的存储是: 一系列的 1-2 bytes 的数字加上一个
+  integer-to-string 的映射. 相比之下, 纯粹保存字符串显然需要多很多的存储空间.
 
 SET
 ^^^
