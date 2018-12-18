@@ -919,6 +919,16 @@ specification
   * ``returner``. 指定该任务使用的 returner. 全局的 scheduled job's returner 由
     ``schedule_returner`` 配置项指定.
 
+result data
+^^^^^^^^^^^
+- ``_stamp``: event timestamp.
+
+- ``metadata``:
+
+  * ``_TS``. time start.
+  
+  * ``_TOS``. OS timezone.
+  
 Returner
 ========
 
