@@ -3431,6 +3431,9 @@ deconstruction and serialization
   * arbitrary class instance. (无法保证序列化后信息无损, 除非作者通过
     ``deconstruct()`` 来告诉 django 怎样的信息是足够重建原实例.)
 
+  * bound method, including classmethod, instance method.
+    .. XXX why not even classmethod?
+
   * lambda. (找不到定义)
 
 deconstructible protocol
@@ -5223,7 +5226,7 @@ field types
 
   * ``auto_now_add`` 适合做 create time; ``auto_now`` 适合做 modified time.
     这些参数在调用 ``Model.save()`` 来保存时才有效, 通过其他途径修改数据
-    时不会生效.
+    时不会生效. (**不要使用这两个参数**)
 
     若只是想设置默认值, 那就用 ``default=``, 别用这两个选项.
 
@@ -5233,13 +5236,11 @@ field types
     ``Model.save()`` 时也会修改为当前时间. 并会自动设置 ``editable=False`` 和
     ``blank=True``.
 
-    在单元测试时, ``auto_now`` 和 ``auto_now_add`` 会阻碍手动构建任意时间. 此时,
-    一个解决方案是在创建 model instance 之后再单独更新一次时间. 使用 UPDATE 类的
-    语句, 避开 ``Model.save``. 对于 factory boy, 完全他妈没有解决办法, 因为
-    ``_after_postgeneration`` 会再保存一次我日. 我以后再也不他妈用这两个傻逼参
-    数了. 我操你妈 django.
-
-    另一个方案是写一个自定义的 datetime field. See `snippets/datetimefield.py`
+    **在单元测试时, ``auto_now`` 和 ``auto_now_add`` 会阻碍手动构建任意时间. 此
+    时, 一个解决方案是在创建 model instance 之后再单独更新一次时间. 使用 UPDATE
+    类的语句, 避开 ``Model.save``. 而对于 factory boy, 完全他妈没有解决办法, 因
+    为 ``_after_postgeneration`` 会再保存一次我日. 我以后再也不他妈用这两个傻逼
+    参数了. 我操你妈 django.**
 
   * 所在的 model class 会添加 ``get_previous_by_<name>`` 和 ``get_next_by_<name>``
     两个 method.

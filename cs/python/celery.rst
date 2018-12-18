@@ -92,11 +92,8 @@ Celery app
 - A ``Celery`` app instance is the entrypoint for everything. It must be
   possible for other modules to import it.
 
-APIs
-----
-
 constructor options
-^^^^^^^^^^^^^^^^^^^
+-------------------
 
 - broker
 
@@ -105,20 +102,47 @@ constructor options
 - include.
 
 app config
-^^^^^^^^^^
+----------
 - ``conf``
 
 - ``config_from_object(<module>)``. 
 
-tasks
-^^^^^
+task registry
+-------------
 - tasks. The Celery app's task registry.
 
-send task
-^^^^^^^^^
-- argsrepr
+task creation
+-------------
+- ``task(*args, **opts)``. This method returns a decorator or a task instance.
+  
+  当 decorator 应用到 task callable 之后, 创建一个 ``task_cls`` 的子类. 原
+  callable object 成为 ``Task.run()`` method or staticmethod (根据 ``bind``
+  option 的值). 创建并注册该子类的一个实例, 然后返回, 替换原来的 task callable.
 
-- kwargsrepr
+  A task is not instantiated for every message, but is registered in the task
+  registry as a global instance.
+
+  ``args`` 一般不存在, 即一般情况下该方法只需指定一系列 task creation options
+  即可. 若指定 positionals, 可以将 task callable 作为第一 positional 参数. 此时
+  该方法直接返回 task instance. 即::
+
+    @app.task(**opts)
+    def func():
+      pass
+    # equals to
+    app.task(**opts)(func)
+
+  options can be:
+
+  * Any Task class attribute.
+
+  * task retry options.
+
+  * base.
+
+  * bind.
+
+  * ...
 
 Tasks
 =====
@@ -202,14 +226,21 @@ bound task
 
 task inheritance
 ^^^^^^^^^^^^^^^^
-- Create subclass of ``celery.app.task.Task`` to do customizations.
+- Create subclass of ``celery.app.task.Task`` (or other appropriate subclasses)
+  to do customizations. 在创建 task 时, 使用 ``base`` option to designate base
+  Task class to use.  It's not an option on ``Task`` class, but defined on
+  ``Celery._task_from_fun``.
 
-- task decorators accepts ``base`` option to designate base Task class to use.
-  It's not a option on ``Task`` class, but defined on ``Celery._task_from_fun``.
+- Task inheritance 可用于抽象多个 task 中需要使用的相似的逻辑. 从而达到避免重复
+  的意义.
 
 retry task
 ^^^^^^^^^^
 - 应用 ``Task.retry()`` 处理 recoverable, expected errors.
+
+- When you call retry it’ll send a new message, using the same task-id, and it’
+  ll take care to make sure the message is delivered to the same queue as the
+  originating task.
 
 - retry 后, 任务进入 RETRY state.
 
@@ -222,10 +253,11 @@ retry task
 
     raise self.retry(exc=exc)
 
-  The original exception 会记录在日志和任务结果中.
+  ``exc`` 的信息和 traceback 会记录在日志和任务状态中.
 
-- 若 max_retries is configured, task will fail after retries, and current
-  exception or original exception will be raised (if there is one).
+- 若 ``max_retries`` is configured, task will fail after retries, and current
+  exception or original exception will be raised (if there is one and it's
+  passed in ``self.retry()``).
 
 - task decorators options for convenient retry configuration. 这种 retry
   配置是认为整个 task body 任意位置出现指定错误都可以 retry. 所以精细程度
@@ -246,22 +278,18 @@ retry task
 
 - Task.retry vs acks_late.[DocFAQRetry]_
 
-  * Task.retry 和 acks_late 解决的实际上是不同的问题.
-    Task.retry 解决的是当任务遇到可控的问题时, 可以 gracefully finish 当前
-    执行进度并进行重试; acks_late 解决是当任务遇到不可控的问题、并导致突然
-    中断时, 可以重新调度.
-
-    两种机制并不矛盾, 完全可以在需要的时候配合使用. 即一个任务, 即在任务体中
-    考虑了可能的 retry point, 又设置了 acks_late 保证中断时重新调度.
+  Task.retry 和 acks_late 解决的实际上是不同的问题.
+ 
+  * Task.retry 解决的是当任务遇到可控的问题时, 可以 gracefully finish 当前执行
+    进度并再次排队该任务进行重试.
   
-  * 在一般的情况下, Task.retry 相对于 acks_late 是合适的设计. 因为, 只有
-    遇到了 uncatchable errors 才需要 acks_late 提供的可靠性 (即在这种情况下还
-    可以重新执行任务). 然而, 如果 error 都是 uncatchable 了, 更有可能的原因是
-    代码 bug, 而不是重新执行可以解决的.
+  * acks_late 解决当 worker 遇到不可控的问题, 导致突然中断时, 可以重新调度. 例
+    如, worker (而不是 child) process is terminated, 所在机器断电、重启等.
 
-    因此, 在一般的情况下, 没必要收到任务不 ack. 而是立即 ack, 如果在任务执行中
-    出错, 重新排队该任务进行重试.
 
+  两种机制并不矛盾, 完全可以在需要的时候配合使用. 即一个任务, 即在任务体中
+  考虑了可能的 retry point, 又设置了 acks_late 保证中断时重新调度.
+  
 revoke task
 ^^^^^^^^^^^
 revoke task 是不需要 task body 实现进行配合的 task abortion. 它的原理是
@@ -318,7 +346,7 @@ abort task
 
 reject task
 ^^^^^^^^^^^
-reject task 是需要配合 AMQP 的 basic_reject method 来使用的, 即是对这个方法
+reject task 是需要配合 AMQP 的 basic.reject method 来使用的, 即是对这个方法
 的封装. 相应地, reject task 有两种用途:
 
 - reject task message and requeue. worker reserved task message, 但随后
@@ -464,12 +492,6 @@ custom state
 
 task class
 ----------
-- celery 读取应用中定义的 task callable, 对于每个 task callable, 定义一个
-  ``celery.app.task.Task`` subclass, 包裹 task callable, 并实例化后返回, 替换
-  原来的 task callable.
-
-- A task is not instantiated for every message, but is registered in the task
-  registry as a global instance.
 
 class attributes
 ^^^^^^^^^^^^^^^^
@@ -866,8 +888,7 @@ Routing and Messaging
 
 - 一些 routing 设计考虑的方面:
 
-  * 考虑 worker 的类型: prefork, eventlet, gevent. 接受不同类型
-    的任务.
+  * 考虑 worker 的类型: prefork, eventlet, gevent. 接受不同类型的任务.
 
   * 任务的优先级.
 
@@ -1186,7 +1207,7 @@ setup
   
   * 设置独立加载 django project 所需配置
     
-  * 初始化 celery app
+  * 实例化 celery app
 
   * 从 django settings 中加载 celery 配置.
 
@@ -1337,8 +1358,8 @@ subcommands
 
 - amqp
 
-recipes
-=======
+design patterns
+===============
 
 - 可靠的 long-running task 的中断.
 
