@@ -266,15 +266,20 @@ retry task
   * ``autoretry_for``. a list of exception classes, if any of those is raised
     then task is automatically retried.
 
-  * ``retry_kwargs``. a dict of ``Task.retry()`` arguments.
+  * ``retry_kwargs``. a dict of ``Task.retry()`` arguments provided for
+    autoretry.
 
-  * ``retry_backoff``. boolean or int. use exponential backoff as countdown.
+  * ``retry_backoff``. boolean or int. If False, use fixed delay when retrying
+    (``default_retry_delay``). If True, use exponential backoff as countdown.
+    开启时, 默认的 retry backoff factor 是 1 (retry wait: 1*2**N).  若设置 int
+    值, 则成为 factor, 即 (try wait: f*2**N).
 
-  * ``retry_backoff_max``. default 600. max backoff interval between retries.
+  * ``retry_backoff_max``. default 600. max exponential backoff interval
+    between retries, a cap value of exponential backoff wait interval.
 
-  * ``retry_jitter``. default True. introduce randomness into backoff. The
-    actual delay value will be a random number between zero and the expected
-    backoff.
+  * ``retry_jitter``. default True. introduce randomness into exponential
+    backoff. The actual delay value will be a random number between zero and
+    the expected backoff.
 
 - Task.retry vs acks_late.[DocFAQRetry]_
 
@@ -285,7 +290,6 @@ retry task
   
   * acks_late 解决当 worker 遇到不可控的问题, 导致突然中断时, 可以重新调度. 例
     如, worker (而不是 child) process is terminated, 所在机器断电、重启等.
-
 
   两种机制并不矛盾, 完全可以在需要的时候配合使用. 即一个任务, 即在任务体中
   考虑了可能的 retry point, 又设置了 acks_late 保证中断时重新调度.
@@ -375,10 +379,6 @@ recorded). 注意到任务消息在 raise Ignore 之前就 ack 了.::
     raise Ignore()
 
 这可用于手动状态记录, 或就是 ignore.
-
-task options
-^^^^^^^^^^^^
-所有的 Task class attributes 都可以在 task decorator 中设置.
 
 task message
 ------------
