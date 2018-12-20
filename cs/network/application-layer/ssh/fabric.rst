@@ -122,7 +122,7 @@ methods
   * local: A path to local file (not directory), or a file-like object.
 
   * remote: remote path to save file. Default None, meaning uploading to home
-    dir.
+    dir. Intermediate directories must exist beforehand.
 
     - When local is file path, remote can be None, a file path or directory path.
 

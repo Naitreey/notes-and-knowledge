@@ -303,6 +303,26 @@ grains
 
 cp
 ^^
+The cp module is the home of minion side file server operations. The cp
+module is used by the Salt state system, salt-cp, and can be used to
+distribute files presented by the Salt file server.
+
+cp module is based on ``salt.fileclient`` module.
+
+- ``cp.get_file``. kwargs:
+
+  * ``template``. render source and destination string.
+
+  * ``gzip=N``. enable gzip compression on file transfer.
+
+  * ``makedirs=True|False``. make intermediate directories leading to
+    destination file.
+
+- ``cp.get_dir``. kwargs:
+
+  * ``template``. ditto
+
+  * ``gzip`` ditto.
 
 saltutil
 ^^^^^^^^
@@ -316,7 +336,19 @@ synchronization
 
 - ``saltutil.sync_grains``
 
-- ``saltutil.sync_all`` 同步各种 custom modules 至 minion.
+- ``saltutil.sync_all`` 同步各种 custom modules 至 minion. Sync down all of the
+  dynamic modules from the file server for a specific environment ``saltenv``.
+
+  kwargs:
+
+  * ``saltenv``. 要同步的环境. default base.
+
+  * ``refresh``. refresh the execution modules and recompile pillar data
+    available to the minion. default True.
+
+  * ``extmod_whitelist``.
+
+  * ``extmod_blacklist``.
 
 job state
 """"""""""
@@ -527,6 +559,106 @@ State
   * ``onchanges``, makes a state only apply if the required states generate
     changes, and if the watched state's "result" is True. ``onchanges`` 用于
     在某个其他系统产生修改时执行 posthook.
+
+File server
+===========
+
+overview
+--------
+- File server is used for distributing files to the Salt minions. The file
+  server is a stateless ZeroMQ server that is built into the Salt master.
+
+- the Salt file server can be used for any general file transfer from the
+  master to the minions.
+
+- The Salt file server is environment-aware. This means that files can be
+  allocated within many root directories and accessed by specifying both the
+  file path and the environment to search. 
+
+- Files are manipulated via salt.modules.cp.
+
+backends
+--------
+- specify file server backend via ``fileserver_backend`` master option.
+
+- available backends: azure, git, hg, minion, roots, s3, svn.
+
+environments
+------------
+- 每个 backend 都定义了 environment 至 file namespace 的映射关系.
+
+- ``base`` environment is mandatory. This environment MUST be defined and is
+  used to download files when no environment is specified.
+
+- querying files.
+  
+  * ``salt://path/to/file?saltenv=<env>`` refers to files in salt file server.
+
+  * escaping ``?``: ``salt://|dir/file?name``
+
+- specifying environment
+
+  * globally: A minion can be pinned to an environment using the
+    ``environment`` option in the minion config file.
+
+  * set for a single state operation: ``saltenv`` parameter.
+
+  * per-state SLS definition: ``saltenv`` key. (If the SLS file containing a
+    state was in the environment, then it would look in that environment by
+    default.)
+
+minion-side file server
+-----------------------
+This is primarily to enable running Salt states without a Salt master. To use
+the local file server interface, copy the file server data to the minion and
+set the file_roots option on the minion to point to the directories copied from
+the master. Once the minion file_roots option has been set, change the
+file_client option to local to make sure that the local file server interface
+is used.
+
+Custom module distribution
+--------------------------
+Under any environment, the following directories can exist inside file root,
+which saves custom modules of various kinds:
+
+* _beacons
+
+* _clouds
+
+* _engines
+
+* _grains
+
+* _modules
+
+* _output
+
+* _proxy
+
+* _renderers
+
+* _returners
+
+* _states
+
+* _tops
+
+* _utils
+
+Custom modules can be synced via:
+
+- implicitly: When states are run, they are automatically synced.
+
+- explicitly: use saltutil execution module to sync explicitly.
+
+roots
+^^^^^
+- environment 定义.
+
+  * 每个 environment 下定义 a list of file directory roots.
+
+  * 当在某个环境中定位文件时, 是根据 directory roots 的定义顺序遍历查找. 取第一
+    个找到的文件.
 
 Pillar
 ======
@@ -1091,6 +1223,18 @@ job management configurations
 Scheduling configurations
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 * ``schedule``. scheduling configurations.
+
+Master file server settings
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- ``fileserver_backend``. default ``["roots"]``. Multiple backends can be
+  configured and will be searched for the requested file in the order in which
+  they are defined here.
+
+roots
+"""""
+- ``file_roots``. define the root directories of various environment.  Its
+  value is a dict, where the key is environment key, and the value is a list of
+  file root directories (Each environment can have multiple root directories.).
 
 minion
 ------
