@@ -381,7 +381,7 @@ schedule
 ^^^^^^^^
 - ``schedule.add``
 
-- ``schedule.modify``.
+- ``schedule.modify``. 对于一个 host, 只有现有 schedule 的时候才能 modify 成功.
 
 - ``schedule.delete``
 
@@ -1050,6 +1050,8 @@ specification
 
   * ``returner``. 指定该任务使用的 returner. 全局的 scheduled job's returner 由
     ``schedule_returner`` 配置项指定.
+
+  * ``enabled``. 是否启用.
 
 result data
 ^^^^^^^^^^^

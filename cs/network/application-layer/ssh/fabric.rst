@@ -76,6 +76,11 @@ constructor options
 
 - ``inline_ssh_env``.
 
+attributes
+^^^^^^^^^^
+- ``is_connected``. 能确实保证当前是否已连接. 因为它是一个 property, 会自动检测
+  ssh transport layer 状态.
+
 methods
 ^^^^^^^
 - ``run(command, **kwargs)``. Every run execution is invoked in its own
