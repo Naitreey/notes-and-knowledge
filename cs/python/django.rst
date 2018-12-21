@@ -6025,6 +6025,12 @@ CRUD
   result from joining across a ‘many’ relationship, ``select_related`` is limited
   to single-valued relationships - foreign key and one-to-one.
 
+  支持 field lookup syntax, 从而可以 select 多层 FK 关系::
+
+    .select_related("a__b__c")
+
+  同时 select 关联的 a 条目, 与 a 关联的 b 条目, 与 b 关联的 c 条目.
+
 - 对于十分复杂的一长串的 ORM 操作 QuerySet (涉及可能多个过滤、聚合等), 如果对它
   到底会怎么执行不确定, 需要检查 raw SQL 长什么样子, 通过 ``QuerySet.query``.
   对于直接执行不返回 queryset 的情况, 直接看 ``django.db.connection.queries``.
