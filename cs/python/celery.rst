@@ -588,7 +588,12 @@ methods
 
 - ``delay()``. Returns a ``AsyncResult``.
 
-- ``apply_async()``
+- ``apply_async(args=None, kwargs=None, task_id=None, producer=None, link=None,
+  link_error=None, shadow=None, **options)``.
+
+  * link. A signature or A list of signatures to apply as a callback after
+    success execution. The return value of this task execution is applied
+    to the signature as additional args.
 
   * argsrepr. Hide sensitive information in arguments.
 
@@ -604,6 +609,29 @@ methods
 - ``on_retry()``. handler to run when task is to be retried.
 
 - ``on_success()``. handler to run when task succeeded.
+
+- ``signature(args=None, *starargs, **starkwargs)``. 参数顺序要符合 Signature
+  constructor 顺序. kwargs 可用于指定 options.
+
+- ``s(*args, **kwargs)``.::
+
+    .s(*a, **k) -> .signature(a, k)
+
+  所以只能指定 task args and kwargs that need to be partially applied.
+
+  看上去与普通的 partially applied function 不同, 即相当于 partially apply 时,
+  传入的参数是靠右侧填充的. 例如::
+
+    @app.task
+    def f(a,b,c):
+        pass
+
+    f.s(1,2) # b == 1, c == 2
+    f.s(1,2).delay(3) # a == 3
+
+- ``si(*args, **kwargs)``. shortcut::
+
+    .si(*a, **k) -> .signature(a, k, immutable=True)
 
 Results
 =======
@@ -712,26 +740,132 @@ Signature
 - A Signature wraps the arguments and execution options of a single task
   invocation. A signature 类似于 partially applied function.
 
-- 与普通的 partially applied function 不同, 初始化 Signature 时, 传入的参数是靠
-  右侧填充的. 例如::
-
-    @app.task
-    def f(a,b,c):
-        pass
-
-    f.s(1,2) # b == 1, c == 2
-    f.s(1,2).delay(3) # a == 3
+- A Signature 本质上只是一个 prettified dict storage (Signature is a dict
+  subclass). 它的核心是一系列 key-value pairs, 记录着 signature 的相关信息.
+  外加一系列用于执行任务的 methods.
 
 - A Signature supports the Task APIs, such as being asynchronously dispatched,
-  invoked directly, etc. 在 call Signature 时, 提供的 kwargs overrides those passed
-  in Signature initialization.
+  invoked directly, etc.
+
+- Signature instantiation & signature call 时, 参数的应用规则见
+  ``Signature.apply_async()``.
+
+- Data preserved in a signature.
+
+  * task: task name.
+
+  * args: partially applied positionals.
+
+  * kwargs: partially applied kwargs.
+
+  * options: partially applied task calling options.
+
+  * subtask_type: primitive type (which is a subtask type).
+
+  * immutable: whether the signature is immutable.
+
+  * chord_size: ...
+
+- Creating a signature:
+
+  * celery.canvas.signature function.
+
+  * celery.canvas.Signature class.
+
+  * celery.app.task.Task.signature method.
+
+  * celery.app.task.Task.s method.
+
+- immutable signature.
+
+  * An immutable signature doesn't take additional args, kwargs, when
+    being applied, called, cloned, etc.
+
+  * When an immutable signature doesn't have sufficient args, kwargs,
+    it's not callable.
+
+  * Only execution options can be set on immutable signature.
+
+utility functions
+^^^^^^^^^^^^^^^^^
+- ``signature(varies, *args, **kwargs)``. create a signature.
+  varies can be:
+
+  * A task name string, task instance. passed to Signature constructor.
+
+  * A Signature, then it's cloned. args, and kwargs if provided is ignored.
+
+  * A general dict instance. Then it's passed to ``Signature.from_dict`` to
+    create a Signature instance. dict should contain the necessary keys to
+    form a valid signature.
+
+constructor
+^^^^^^^^^^^
+- task. Can be:
+
+  * a dict instance. Then signature is simply initialized with this dict's
+    content as its data.
+ 
+  * task instance, task name. A signature is initialized with this task and
+    all other arguments as its data.
+
+- args. see above.
+
+- kwargs. see above.
+
+- options. see above.
+
+- subtask_type. see above.
+
+- immutable. see above.
+
+- app. the app to which the signature's attached. None for global app.
+
+- ``**ex``. other options as kwargs to be merged into options.
+
+attributes
+^^^^^^^^^^
+- app. signature attaching to the app.
+
+- ``_app``. explicitly set app.
+
+- type. signature attaching to the task.
+
+- ``_type``. explicitly set task instance.
+
+- name. task name.
+
+- id. task id.
+
+- parent_id. parent task id.
+
+- root_id. root task id.
+
+- all standard keys stored in Signature dict.
 
 methods
 ^^^^^^^
+- ``apply(args=None, kwargs=None, **options)``. sync version of
+  ``.apply_async()``
 
-- ``apply_async()``
+- ``__call__(*args, **kwargs)``. sync version of ``.delay()``
 
-- ``delay()``
+- ``apply_async(args=None, kwargs=None, route_name=None, **options)``
+
+  * args: args are prepended to signature instantiation 时传入的 positionals.
+
+  * kwargs: kwargs overrides those passed in Signature instantiation.
+
+  * options: options overrides those passed in Signature instantiation.
+
+- ``delay(*args, **kwargs)``. a shortcut for ``apply_async(args, kwargs)``, 不
+  能传 options.
+
+- ``set(immutable=None, **options)``. Set task execution options. returns
+  self, so can be chained.
+
+- ``clone(args=None, kwargs=None, **opts)``. Clone a signature, adding
+  additional args, kwargs and options. 这可用于创建衍生的 signature.
 
 primitives
 ----------
@@ -754,21 +888,24 @@ chain
 - A bitwise OR-ed sequence of Signatures is chained automatically.
 
 constructor
-""""""""""""
+"""""""""""
 - A bitwise OR-ed sequence of Task Signatures.
 
 chord
 ^^^^^
 - A chord is a group with callback task. In other words, the iterable of tasks
-  are executed in parallel, of which the results are feed into the callback task.
+  are executed in parallel, of which the results are feed into the callback
+  task.
 
 - A group chained to another task will be automatically converted to a chord.
 
-map
-^^^
+- chord 是 "弦". (大致可以理解为弦是多个半径的终结?)
 
-starmap
-^^^^^^^
+xmap
+^^^^
+
+xstarmap
+^^^^^^^^
 
 chunks
 ^^^^^^
