@@ -450,6 +450,22 @@ stringify and formating
   object 的默认 ``__format__`` 实现只接受 ``""``, 并输出 ``__str__`` 形式.
   对任何 non-empty string, raise TypeError.
 
+numerical operations
+^^^^^^^^^^^^^^^^^^^^
+注意 operator overloading 仅限于 numerical operators. 不能对 logical operators
+进行重载. 在 logical context 下, 每个对象的 ``__bool__`` is called to get a
+boolean value for logical evaluation.
+
+bitwise operators
+"""""""""""""""""
+- ``__invert__``. bitwise not (``~``)
+
+- ``__and__``. bitwise and ``&``
+
+- ``__or__``. bitwise or ``|``
+
+- ``__xor__``. exclusive or ``^``
+
 context manager protocol
 ------------------------
 A context manager manages some "context". They usually do some setup work
