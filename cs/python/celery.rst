@@ -591,9 +591,20 @@ methods
 - ``apply_async(args=None, kwargs=None, task_id=None, producer=None, link=None,
   link_error=None, shadow=None, **options)``.
 
-  * link. A signature or A list of signatures to apply as a callback after
+  * link. A single or a list of signatures to apply as a callback after
     success execution. The return value of this task execution is applied
     to the signature as additional args.
+
+    The task result keeps track of all subtasks called by the original task.
+
+    The callbacks are run in parallel tasks, all of which are passed task
+    return value.
+
+  * link_error. A single or a list of signatures to apply as callback after
+    execution failure. The callbacks are passed 3 positionals: raw request,
+    exception raised, related traceback. The callbacks are called synchronously
+    and sequentially, rather than asynchronously, so that the raw request,
+    exception and traceback objects can be passed to it.
 
   * argsrepr. Hide sensitive information in arguments.
 
@@ -636,8 +647,10 @@ methods
 Results
 =======
 
+AsyncResult
+-----------
 attributes
-----------
+^^^^^^^^^^
 
 - traceback.
 
@@ -645,8 +658,12 @@ attributes
 
 - state.
 
+- parent. the parent result (the result of parent task).
+
+- graph. dependency graph.
+
 methods
--------
+^^^^^^^
 
 - ``ready()``
 
@@ -786,6 +803,10 @@ Signature
 
   * Only execution options can be set on immutable signature.
 
+  * This is useful when there's need to prevent modification of calling
+    signature. For example, in complex canvas workflow, to prevent a task in
+    next stage from taking the result from previous stage.
+
 utility functions
 ^^^^^^^^^^^^^^^^^
 - ``signature(varies, *args, **kwargs)``. create a signature.
@@ -867,7 +888,15 @@ methods
 - ``clone(args=None, kwargs=None, **opts)``. Clone a signature, adding
   additional args, kwargs and options. 这可用于创建衍生的 signature.
 
-primitives
+- ``link(callback)``. link a callback task's signature. Returns the callback.
+  Call this method multiple times to link a list of callbacks. Works like
+  ``Task.apply_async(link=)``.
+
+- ``link_error(callback)``. ditto for error.
+
+- ``on_error(callback)``. ditto that returns self, for chaining methods.
+
+Primitives
 ----------
 - Primitives are special Signature subclasses that serves as job workflow
   orchestration toolset.
@@ -880,35 +909,108 @@ group
 ^^^^^
 - A group calls an iterable of tasks in parallel.
 
+constructor
+"""""""""""
+- ``*tasks``. can be:
+ 
+  * positional task signatures to be grouped.
+
+  * 只有一个元素, 此时 positional 还可以是一个 an iterable of task signatures to
+    be grouped, or another group.
+
+- ``**options``. kwargs execution options.
+
+methods
+""""""""
+- ``apply_async(args=None, kwargs=None, add_to_parent=True, producer=None, **options)``.
+  args, kwargs, options 允许同时给 group 中的所有任务 signature 应用相同的参数. Returns
+  a GroupResult.
+
 chain
 ^^^^^
 - A chain links tasks together to be executed sequentially, where the output of
   the previous task's signature is feed as input of the next task's signature.
 
-- A bitwise OR-ed sequence of Signatures is chained automatically.
+- A bitwise OR-ed sequence of Signatures is chained automatically.::
+
+    task.s() | task.s() | task.s()
 
 constructor
 """""""""""
-- A bitwise OR-ed sequence of Task Signatures.
+- ``*tasks``. positional task signatures to be chained.
+
+- ``**options``. kwargs execution options.
+
+methods
+"""""""
+- ``__call__(*args, **kwargs)``. equivalent to ``apply_async(args, kwargs)``.
+  注意 chain 没有 explicit sync execution 的方法.
+
+- ``apply_async(args=None, kwargs=None, **options)``. args and kwargs are
+  applied to the first task signature in the chain. Returns the AsyncResult
+  of the last task in chain.
 
 chord
 ^^^^^
-- A chord is a group with callback task. In other words, the iterable of tasks
-  are executed in parallel, of which the results are feed into the callback
-  task.
-
-- A group chained to another task will be automatically converted to a chord.
+- A chord is a group (called header) with callback task (called body). In other
+  words, the iterable of tasks are executed in parallel, of which the results
+  are feed into the callback task.
 
 - chord 是 "弦". (大致可以理解为弦是多个半径的终结?)
 
+- A group chained to another task will be automatically converted to a chord.::
+
+    group | task -> chord
+
+constructor
+"""""""""""
+- header. an iterable of tasks that forms a group.
+
+- body. a signature as callback.
+
+- args. partial args as in signature.
+
+- kwargs. ditto for kwargs.
+
+- options. as in signature.
+
+methods
+"""""""
+- ``apply_async(args=None, kwargs=None, task_id=None, producer=None,
+  publisher=None, connection=None, router=None, result_cls=None, **options)``
+  args, kwargs, options are merged with those during initialization, and
+  they are applied to the header group.
+
 xmap
 ^^^^
+- Works like python built-in map function. Apply the task to an iterable of
+  arguments, sequentially.
+
+- 本质上是异步调用 ``celery.map`` task, 传入要指定的 task 和 iterable 参数.
 
 xstarmap
 ^^^^^^^^
+- works like itertools.starmap function. Apply the task to an iterable of
+  argument iterables. Each application is executed sequentially.
+
+- 本质上是异步调用 ``celery.starmap`` task.
 
 chunks
 ^^^^^^
+- When applying the task to an iterable of argument iterables (which are an
+  iterable of works), split the work into chunks. Works in each chunk are
+  executed sequentially; while chunks are executed in parallel.
+
+
+Graphs
+======
+
+DependencyGraph
+---------------
+
+methods
+^^^^^^^
+- ``to_dot()``
 
 worker
 ======

@@ -201,7 +201,7 @@ Grains
 
 - Since grains are simpler than remote execution modules, each grain module
   contains the logic to gather grain data across OSs (instead of using multiple
-  modules and __virtualname__).
+  modules and ``__virtualname__``).
 
 - ``grains.ls``, ``grains.items`` execution module 获取 grains 列表和 grains 数据.
 
@@ -221,6 +221,201 @@ Execution
   Salt state functions are designed to make only the changes necessary to apply
   a configuration, and to not make changes otherwise. Salt execution functions
   run each time they are called, which may or may not result in system changes.
+
+module structure
+----------------
+- A salt module is a python/cython module that contains functions called by
+  salt command.
+
+module name
+^^^^^^^^^^^
+- Module name is defined by one of the following:
+ 
+  * defined by ``__virtual__`` function and ``__virtualname__``.
+
+  * Otherwise, its filename
+   
+module loading
+^^^^^^^^^^^^^^
+* cython module. must be named ``<modulename>.pyx``. The compilation of the
+  Cython module is automatic and happens when the minion starts.
+
+* zip module can be imported, as usual.
+
+* If a Salt module has errors and cannot be imported, the Salt minion will
+  continue to load without issue and the module with errors will simply be
+  omitted.
+
+function
+^^^^^^^^
+- Rules for objects loading as execution functions:
+ 
+  * "public" python callables are loaded.
+
+  * Private functions (whose name starts with ``_``) are  not exposed as
+    execution functions.
+
+- Function cross calling. via ``__salt__`` global variable::
+
+    __salt__['mod.func']
+
+- Function aliases.
+
+  * Use ``__func_alias__`` to define function aliases.
+  
+  * This is to prevent defining a function that will directly shadow a python
+    built-in. Instead, we define the function using an alternative name, but
+    make an alias to the desired name.
+
+special module attributes
+^^^^^^^^^^^^^^^^^^^^^^^^^
+- ``__salt__``.
+
+  * a dict, where keys are all of the Salt execution functions in the form:
+    ``mod.func``, and the values are the function object.
+
+  * available in the modules after they are loaded into the Salt minion.
+
+- ``__grains__``.
+
+  * A dict containing all grains data of a minion.
+
+- ``__opts__``.
+
+  * A dict containing complete minion configuration.
+
+- ``__salt_system_encoding__``.
+
+  * A string representing the character encoding used by a salt system.
+
+- ``__outputter__``
+
+  * A dict mapping the functions defined in a module to their default outputter
+    names.
+
+  * This allows for a specific outputter to be set on a function-by-function
+    basis.
+
+- ``__virtualname__``.
+
+  * A string used by the documentation build system to know the virtual name of
+    a module without calling the ``__virtual__`` function.
+
+- ``__func_alias__``.
+
+  * a dictionary where each key is the name of a function in the module, and
+    each value is a string representing the alias for that function.
+
+  * When calling an aliased function from a different execution module, state
+    module, or from the cli, the alias name should be used.
+
+special module functions
+^^^^^^^^^^^^^^^^^^^^^^^^
+- ``__virtual__``.
+
+  * called before execution modules is loaded. So ``__salt__`` is unreliable
+    (but other special names should be fine).
+
+  * Returns:
+    
+    - string. the module is loaded using the name of the string as the virtual
+      name. Modules which return a string that is already used by a module that
+      ships with Salt will *override* the stock module.
+
+    - True. the module is loaded using the current module name, as defined by
+      ``__virtualname__`` or default file name.
+     
+    - False. the module is not loaded, probably because deps are not met.
+
+    - A tuple of ``(False, error string)`` . The string contains the reason
+      why a module could not be loaded.
+
+- ``__init__(opts)``. Perform module initialization.
+
+  * minion configuration is passed as ``opts``.
+
+  * This is useful when a module needs to act differently based on minion
+    configs.
+
+virtual module
+^^^^^^^^^^^^^^
+- A virtual module is an abstract module that corresponds to different concrete
+  modules based on specific environment or platform.
+
+- 在不同的环境下, 加载了不同的 module, 但 expose 为相同的 virtual module name.
+  从而在用户角度, 体验是统一的.
+
+- A vritual module is defined by a ``__virtual__`` function and a
+  ``__virtualname__`` global name. To avoid setting the virtual name string
+  twice, you can implement ``__virtual__`` to return the value set for
+  ``__virtualname__``.
+
+- A virtual module's concrete module (provider) can be overridden
+  unconditionally via ``providers`` config key in minion config file or SLS
+  state file.
+
+configuration
+^^^^^^^^^^^^^
+- module can access minion configs directly. So their configs are written in
+  minion yaml configs.
+
+- config key naming convention::
+
+    <module>.<key>
+
+- Any valid YAML is allowed as config value.
+
+- testing configuration. Configuration can be tested using modules.test module.
+
+string handling
+^^^^^^^^^^^^^^^
+- strings fed to the module have already decoded from bytes into Unicode.
+
+- Cross calling should use Unicode for text strings, and bytes for binary data.
+
+logging
+^^^^^^^
+- Use standard python logging procedure.
+
+- logging should not be done anywhere in a Salt module before it is loaded.
+  This includes all code that would run before the ``__virtual__()`` function,
+  as well as the code within the ``__virtual__()`` function itself.
+
+documentation
+^^^^^^^^^^^^^
+- A function's docstring is printed as its documentation by sys.doc.
+
+- The module itself should also contain a docstring.
+
+metadata
+^^^^^^^^
+- Added to the module-level docstring.
+
+- format::
+
+    :maintainer:    Author <email@em.cm>
+    :maturity:      new
+    :depends:       package,package
+    :platform:      all
+
+  The maintainer field is a comma-delimited list of developers who help
+  maintain this module.
+  
+  The maturity field indicates the level of quality and testing for this
+  module. Standard labels will be determined.
+  
+  The depends field is a comma-delimited list of modules that this module
+  depends on.
+  
+  The platform field is a comma-delimited list of platforms that this module is
+  known to run on.
+
+utilities
+^^^^^^^^^
+- salt.utils.decorators.depends. A decorator will check the module when it is
+  loaded and check that the dependencies passed in are in the globals of the
+  module or the check command run successfully. If not, it will cause the
+  function to be unloaded (or replaced).
 
 modules
 -------
@@ -379,23 +574,26 @@ cache
 
 schedule
 ^^^^^^^^
-- ``schedule.add``
+- ``schedule.add(name, **kwargs)`` 支持 `scheduled jobs` 部分的全部
+  specification 参数.
 
-- ``schedule.modify``. 对于一个 host, 只有现有 schedule 的时候才能 modify 成功.
+- ``schedule.modify(name, **kwargs)``. 修改时要指定全部所需参数, salt 会 diff
+  前后差别, 进行所需修改. 对于一个 host, 只有现有 schedule 的时候才能 modify 成
+  功.
 
-- ``schedule.delete``
+- ``schedule.delete(name)``.
 
 - ``schedule.copy``
 
 - ``schedule.move``
 
-- ``schedule.disable``, disable all jobs.
+- ``schedule.disable``, disable all jobs on target hosts.
 
-- ``schedule.disable_job``. disable one job.
+- ``schedule.disable_job(name)``. disable one job.
 
-- ``schedule.enable``.
+- ``schedule.enable``. enable all jobs on target hosts.
 
-- ``schedule.enable_job``
+- ``schedule.enable_job(name)``. enable one job.
 
 - ``schedule.reload``
 
