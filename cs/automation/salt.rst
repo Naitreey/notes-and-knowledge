@@ -230,11 +230,11 @@ module structure
 module name
 ^^^^^^^^^^^
 - Module name is defined by one of the following:
- 
+
   * defined by ``__virtual__`` function and ``__virtualname__``.
 
-  * Otherwise, its filename
-   
+  * Otherwise, its filename.
+
 module loading
 ^^^^^^^^^^^^^^
 * cython module. must be named ``<modulename>.pyx``. The compilation of the
@@ -442,6 +442,82 @@ if path is directory, it will be recursively deleted.
 
 - file.read
 
+- ``file.set_mode``. set file mode. returns new mode as text string.
+  args.
+
+  * path. local file path.
+
+  * mode. in octal format.
+
+- ``file.get_mode``. get file mode. returns mode as text string.
+  args.
+
+  * path. local file path.
+
+  kwargs.
+
+  * ``follow_symlinks=True``
+
+cmd
+^^^
+- ``cmd.run_all``. execute the passed command.
+
+  Returns: a dict containing pid, retcode, stdout, stderr.
+
+  args:
+
+  * cmd. the command to run.
+
+  kwargs:
+
+  * cwd. command's cwd. Defaults to the home directory of the user specified by
+    ``runas``.
+
+  * stdin. string passed as stdin.
+
+  * runas. effective user running the command. default is salt's effective
+    user.
+
+  * password.
+
+  * shell. shell path. default to default shell.
+
+  * ``python_shell``. when False, cmd is splitted by shlex, otherwise cmd is
+    passed directly to shell. Default to python_shell=True when run directly
+    from remote execution system.
+
+  * env. a dict to merge into salt process's env.
+
+  * ``clean_env``. whether to remove any existing env.
+
+  * ``prepend_path``. prepend multiple path segments.
+
+  * template. render cmd and cwd strings through template engine.
+
+  * rstrip. strip all whitespace off the end of output before it is returned.
+
+  * umask. set this umask before running cmd.
+
+  * ``output_encoding``. which encoding should be used to decode output.
+
+  * ``output_loglevel``. when output is logged to minion log. default is debug.
+
+  * ``ignore_retcode``. Pass this argument as True to skip logging the output
+    if the command has a nonzero exit code.
+
+  * ``hide_output``. If True, suppress stdout and stderr in the return data.
+
+  * timeout. A timeout in seconds for the executed process to return.
+
+  * use_vt.
+
+  * encoded_cmd.
+
+  * redirect_stderr. If set to True, then stderr will be redirected to stdout.
+
+  * bg. If True, run command in background and do not await or deliver its
+    results.
+
 archive
 ^^^^^^^
 
@@ -504,6 +580,32 @@ distribute files presented by the Salt file server.
 
 cp module is based on ``salt.fileclient`` module.
 
+caching
+""""""""
+- ``cp.cache_dir``
+
+- ``cp.cache_file``. cache a single file to the minion. 如果源文件没有修改, 就
+  不会再次传输 (这是通过检查 salt-master 上源文件 hash 保证的). 对于 http,
+  https, ftp 等 remote url, 由于无法直接验证 hash, 可提供 ``source_hash`` 来进
+  行验证.
+  
+  Returns location of the cached file on minion. If salt url path does not
+  exist, returns False.
+
+  args:
+
+  * path. the file is saved as ``$cachedir/files/$saltenv/$path``. 注意最后一部
+    分 ``$path`` 包含源文件路径的各个中间目录. 即会创建不存在的中间目录.  支持
+    salt url, http, https, ftp, etc. 等协议类型.
+
+  kwargs:
+
+  * saltenv. 指定 saltenv, 可通过 salt url 指定. default ``base``.
+
+  * ``source_hash``. 指定 remote url's hash, 避免重新下载.
+
+download
+""""""""
 - ``cp.get_file``. kwargs:
 
   * ``template``. render source and destination string.
@@ -848,6 +950,8 @@ Custom modules can be synced via:
 - implicitly: When states are run, they are automatically synced.
 
 - explicitly: use saltutil execution module to sync explicitly.
+
+synced custom modules are available globally, without environment restrictions.
 
 roots
 ^^^^^
