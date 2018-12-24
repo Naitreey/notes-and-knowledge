@@ -719,17 +719,16 @@ overview
 
 - factory boy, faker 等假数据工具不该用于一般的单元测试, 也不该用于 model-level
   单元测试. 在 model-level 单元测试中, 应手动构建 model instance, 使用 factory
-  boy 会太耗时.
+  boy 会太耗时. 并且, 在 model-level 单元测试中, 无需大量构造实例, 一般只需构造
+  一个实例, 对逻辑进行检查.
 
 Factory
 -------
-
 - A factory is associated with a model, and it declares a set of fields and
   their values.
 
 Create a model factory
 ^^^^^^^^^^^^^^^^^^^^^^
-
 Basic procedure:
 
 1. subclass ``Factory`` class or one of its ORM subclasses.
@@ -741,30 +740,28 @@ Basic procedure:
 
 factory inheritance
 ^^^^^^^^^^^^^^^^^^^
-
 - A model factory can be subclassed to a more specific version or modified
   version.
 
 methods
 ^^^^^^^
 - A Factory class's constructor call is the same as calling the factory's
-  default strategy.
+  default strategy (defined by ``Meta.strategy``).
 
 - ``build(**kwargs)``. a build strategy where the instance is not saved. fields
-  can be customized by ``kwargs``.
+  can be customized by passing kwargs.
 
 - ``create(**kwargs)``. a build strategy where the instance is saved.
 
-- ``stub(**kwargs)``. a build strategy where a stub object is created, which is simply
-  a namespace object with declared attributes.
+- ``stub(**kwargs)``. a build strategy where a stub object is created, which is
+  simply a namespace object with declared attributes.
 
 - ``build_batch(n, **kwargs)``. build a batch of objects.
 
-- ``create_batch(n, **kwargs)``.
+- ``create_batch(n, **kwargs)``. ditto for create.
 
 Meta options
 ^^^^^^^^^^^^
-
 - ``model``. factory's model class.
 
 - ``inline_args``. specify which of the attributes should be passed as
@@ -783,7 +780,8 @@ Parameters
 - Parameters can be accessed during attribute resolution.
 
 - 例如, 当多个 model field value 的生成具有一定的相关性, 依赖于几个共同的参数,
-  则可以通过 Params class 来指定. 然后设置 field 使用 ``LazyAttribute`` 来生成.
+  则可以通过 Params class 来指定. 各个 dependent field 使用 ``LazyAttribute``
+  来生成.
 
 Traits
 ^^^^^^
@@ -927,13 +925,13 @@ DjangoModelFactory automatically use DjangoOptions as its Meta inner class.
 
 该 Meta class 支持以下特性
 
-- ``Meta.model`` 支持指定字符串形式的 ``app_label.Model``
+- ``Meta.model`` 支持指定字符串形式的 ``<app_label>.<Model>``
 
 - ``Meta.database`` specify the database to use.
 
-- ``Meta.django_get_or_create``. Specify the fields to be used for
-  filtering in ``Model.objects.get_or_create()``. 指定这个属性后, 创建 instance
-  会使用 ``get_or_create()``, 而不使用 ``create()``.
+- ``Meta.django_get_or_create``. Specify the fields to be used for filtering in
+  ``Model.objects.get_or_create()``. 指定这个属性后, 创建 instance 会使用
+  ``get_or_create()``, 而不使用 ``create()``.
 
 extra attribute classes
 """"""""""""""""""""""""
@@ -958,7 +956,6 @@ Faker
 
 constructor
 ^^^^^^^^^^^
-
 - ``provider``
 
 - ``locale``
@@ -967,7 +964,6 @@ constructor
 
 Debugging
 ---------
-
 - Detailed logging is available through the ``factory`` logger.
 
 - ``factory.debug()`` context manager.
@@ -975,12 +971,7 @@ Debugging
 .. code:: python
 
   with factory.debug():
-      obj = TestModel2Factory()
-  
-  import logging
-  logger = logging.getLogger('factory')
-  logger.addHandler(logging.StreamHandler())
-  logger.setLevel(logging.DEBUG)
+      obj = ModelFactory()
 
 faker
 =====

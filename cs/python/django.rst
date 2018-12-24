@@ -5684,9 +5684,12 @@ model instance
 
 - ``INSERT`` 和 ``UPDATE`` 都是用 ``.save()`` 实现.
 
-- 对实例中 ``ForeignKey`` ``OneToOneField`` 等指向单一 model 实例的 field 赋值时
-  使用相应 model 的 instance 即可.
-  实例中的 ``ManyToManyField`` 实际上是一个 Manager object, 需要用 ``.add()`` 给
+- 对实例中 ``ForeignKey`` ``OneToOneField`` 等指向单一 model 实例的 field 赋值
+  时使用相应 model 的 instance 即可. 给 FK field 赋的 model instance 可以是尚未
+  保存的 (即还没有 pk 值). 在 ``Model.save()`` 时, 会检查 FK 指向的 instance 
+  是否有 pk, 若否会报错. 因此必须首先保存.
+
+- 实例中的 ``ManyToManyField`` 实际上是一个 Manager object, 需要用 ``.add()`` 给
   这个集合中增加关联关系. ``.add()`` 接受一次传入多个对象, 建立多个映射.
 
 QuerySet
