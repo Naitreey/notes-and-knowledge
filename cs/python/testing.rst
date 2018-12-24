@@ -743,6 +743,9 @@ factory inheritance
 - A model factory can be subclassed to a more specific version or modified
   version.
 
+- The subclassed Factory will inherit all declarations from its parent, and
+  update them with its own declarations.
+
 methods
 ^^^^^^^
 - A Factory class's constructor call is the same as calling the factory's
@@ -760,11 +763,25 @@ methods
 
 - ``create_batch(n, **kwargs)``. ditto for create.
 
-Meta options
-^^^^^^^^^^^^
-- ``model``. factory's model class.
+Meta options (FactoryOptions)
+-----------------------------
+- factory options are declared as ``Meta`` inner class inside a Factory class
+  body.
 
-- ``inline_args``. specify which of the attributes should be passed as
+options
+^^^^^^^
+- ``abstract``. 
+  This indicates that the Factory subclass should not be used to generate
+  objects, but instead provides some defaults.
+
+  When unspecified, if ``model`` is not defined, it's set to True, otherwise
+  False. A Factory's subclass will not inherit this attribute from parent
+  Factory's Meta option.
+
+- ``model``. factory's model class. default is None. If unset, inherit from
+  parent factory's Meta option.
+
+- ``inline_args``. a list of attribute names which should be passed as
   positional arguments (rather than kwargs) into model constructor.
 
 - ``strategy``. factory's default strategy.
@@ -773,11 +790,52 @@ Meta options
   例如当 factory class 中定义的一些列属性只是作为 helper attributes. 这与
   `Parameters`_ 有类似之处.
 
-Parameters
+- ``rename``.
+
+option inheritance
+""""""""""""""""""
+Unlike django model's Meta option, there's no way to inherit a parent Factory's
+Meta option class *explicitly*. (During class creation, Meta class itself is
+popped out of class namespace.)
+
+.. code:: python
+
+  class Parent(factory.Factory):
+
+    class Meta:
+      abstract = True
+
+  class Child(Parent):
+
+    class Meta(Parent.Meta): # not possible!
+      # ...
+
+A Factory Meta option is inherited if it can be inherited as defined by
+``_build_default_options()``.
+
+attributes
 ^^^^^^^^^^
+- all Meta options are defined as instance attributes.
+
+methods
+^^^^^^^
+- ``contribute_to_class(factory, meta=None, base_meta=None, base_factory=None, params=None)``.
+
+  * All options' values are resolved, and set on Factory class as normal
+    attributes.
+
+- ``get_model_class()``. Returns the resolved model class, because the
+  ``model`` option might be a ORM-specific stuff, rather than an actual
+  model class.
+  
+  This should be overridden by ORM-specific FactoryOptions subclass.
+
+Parameters
+----------
 - Factory's ``Params`` inner-class 用于设置生成 model field 所依赖的参数.
 
-- Parameters can be accessed during attribute resolution.
+- Parameters can be accessed during attribute resolution. But they are not
+  accessible on resulting model instance.
 
 - 例如, 当多个 model field value 的生成具有一定的相关性, 依赖于几个共同的参数,
   则可以通过 Params class 来指定. 各个 dependent field 使用 ``LazyAttribute``
@@ -785,7 +843,9 @@ Parameters
 
 Traits
 ^^^^^^
-
+- A trait is a special kind of parameter. It's a flag that when toggled, a
+  number of fields are set accordingly. In other words, traits are useful when
+  a number of fields' values needs to be set based on a boolean flag.
 
 declarations
 ------------
@@ -824,7 +884,9 @@ Sequence
 - Useful when a field has unique constraint, so a sequential value ensures
   that there is no collision.
 
-- ``sequence()`` decorator
+decorator
+"""""""""
+- ``sequence()``
 
 Relational attributes
 ^^^^^^^^^^^^^^^^^^^^^
@@ -880,14 +942,13 @@ post-generation hooks
 
 Strategies
 ----------
-
 - built-in strategies
 
   * build. instantiate a model instance.
   
   * create. build and save it to database.
 
-- During factory call, the strategy of the related factories will use the
+- During factory call, the strategy of the sub/related factories will use the
   strategy of the parent factory.
 
 - A factory's default strategy can be set by ``Meta.strategy`` attribute.
