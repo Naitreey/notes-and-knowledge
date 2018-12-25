@@ -746,10 +746,20 @@ factory inheritance
 - The subclassed Factory will inherit all declarations from its parent, and
   update them with its own declarations.
 
-methods
-^^^^^^^
+attributes
+^^^^^^^^^^
+- ``_options_class``. The FactoryOptions subclass associated with a Factory
+  subclass.
+
+- ``_meta``. A Factory's FactoryOptions instance.
+
+class methods
+^^^^^^^^^^^^^
+instance generation
+"""""""""""""""""""
 - A Factory class's constructor call is the same as calling the factory's
-  default strategy (defined by ``Meta.strategy``).
+  default strategy (defined by ``Meta.strategy``). This is defined in
+  ``FactoryMetaClass.__call__``.
 
 - ``build(**kwargs)``. a build strategy where the instance is not saved. fields
   can be customized by passing kwargs.
@@ -757,11 +767,46 @@ methods
 - ``create(**kwargs)``. a build strategy where the instance is saved.
 
 - ``stub(**kwargs)``. a build strategy where a stub object is created, which is
-  simply a namespace object with declared attributes.
+  simply a namespace object (factory.base.StubObject) with declared attributes
+  resolved.
+
+- ``generate(strategy, **kwargs)``. generic generate by strategy.
+
+- ``simple_generate(create, **kwargs)``. create or build.
 
 - ``build_batch(n, **kwargs)``. build a batch of objects.
 
 - ``create_batch(n, **kwargs)``. ditto for create.
+
+- ``stub_batch(n, **kwargs)``. ditto for stub.
+
+- ``generate_batch(strategy, n, **kwargs)``. ditto for generic generate.
+
+- ``simple_generate_batch(create, n, **kwargs)``. ditto for simple generate.
+
+utilities
+"""""""""
+- ``reset_sequence(value=None, force=False)``. Reset the sequence counter
+  to the specified value or to the first value.
+
+extension points
+""""""""""""""""
+- ``_adjust_kwargs(**kwargs)``. adjusting resolved kwargs. It's called after
+  a Factory's kwargs are resolved, in ``FactoryOptions.prepare_arguments()``.
+
+- ``_setup_next_sequence()``. Returns the first value to use for the sequence
+  counter of this factory. called when the first instance of the factory (or
+  one of its subclasses) is created.
+
+- ``_build(model_class, *args, **kwargs)``. called to actually build the model
+  instance. will be called once the full set of args and kwargs has been
+  computed. It's called by ``FactoryOptions.instantiate()``.
+
+- ``_create(model_class, *args, **kwargs)``. called to actually create the
+  model instance. otherwise ditto.
+
+- ``_after_postgeneration(instance, create, results=None)``. Called after
+  post generation hooks are called.
 
 Meta options (FactoryOptions)
 -----------------------------
@@ -770,9 +815,9 @@ Meta options (FactoryOptions)
 
 options
 ^^^^^^^
-- ``abstract``. 
-  This indicates that the Factory subclass should not be used to generate
-  objects, but instead provides some defaults.
+- ``abstract``.  This indicates that the Factory subclass should not be used to
+  generate objects, but instead provides some defaults. An abstract Factory
+  can not be used to generate model instance.
 
   When unspecified, if ``model`` is not defined, it's set to True, otherwise
   False. A Factory's subclass will not inherit this attribute from parent
@@ -782,15 +827,23 @@ options
   parent factory's Meta option.
 
 - ``inline_args``. a list of attribute names which should be passed as
-  positional arguments (rather than kwargs) into model constructor.
+  positional arguments (rather than kwargs) into model constructor. They
+  must be listed in passing order. If unset, inherit from parent.
 
-- ``strategy``. factory's default strategy.
+- ``strategy``. factory's default strategy. default is ``CREATE_STRATEGY``.
+  If unset, inherit from parent.
 
 - ``exclude``. a list of attributes to exclude when creating model instances.
-  例如当 factory class 中定义的一些列属性只是作为 helper attributes. 这与
-  `Parameters`_ 有类似之处.
+  例如当 factory class 中定义的一些列属性只是作为 helper attributes.  If unset,
+  inherit from parent.
+  
+  这与 `Parameters`_ 的作用有类似之处, 但 Params 在很多情况下更方便使用. 目前
+  没发现必须使用 exclude 而不使用 Params 的地方.
 
-- ``rename``.
+- ``rename``. A dict whose keys are class attribute names of a Factory, and
+  values are actual field names of the model class. 这用于, 当需要定义的 field
+  与 Factory class 本身的一些属性和方法命名冲突时, 可以先换一个名字, 然后设置
+  rename option, 在生成实例时转换一下.  If unset, inherit from parent.
 
 option inheritance
 """"""""""""""""""
@@ -811,7 +864,7 @@ popped out of class namespace.)
       # ...
 
 A Factory Meta option is inherited if it can be inherited as defined by
-``_build_default_options()``.
+``_build_default_options()``, and detailed above.
 
 attributes
 ^^^^^^^^^^
@@ -832,70 +885,269 @@ methods
 
 Parameters
 ----------
-- Factory's ``Params`` inner-class 用于设置生成 model field 所依赖的参数.
+- Factory's ``Params`` inner-class 用于设置生成 model field 所依赖的参数.  当多
+  个 model field value 的生成具有一定的相关性, 依赖于几个共同的参数, 则可以通过
+  Params class 来指定. 各个 dependent field 使用 LazyAttribute 等 declaration
+  引用这些 parameters.
 
-- Parameters can be accessed during attribute resolution. But they are not
-  accessible on resulting model instance.
+- Parameters can be accessed during attribute resolution (on Resolver
+  instance). But they are not accessible on resulting model instance.
 
-- 例如, 当多个 model field value 的生成具有一定的相关性, 依赖于几个共同的参数,
-  则可以通过 Params class 来指定. 各个 dependent field 使用 ``LazyAttribute``
-  来生成.
+Parameter inheritance
+^^^^^^^^^^^^^^^^^^^^^
+- Params defined in parent Factory classes are automatically inherited
+  by child Factory class.
 
-Traits
-^^^^^^
+- Child Factory may override any inherited parameters.
+
+SimpleParameter
+^^^^^^^^^^^^^^^
+- A simple parameter can be any declarations like in Factory class body.
+
+- Any attribute value in Params class body is wrapped in SimpleParameter
+  instance.
+
+Trait
+^^^^^
 - A trait is a special kind of parameter. It's a flag that when toggled, a
   number of fields are set accordingly. In other words, traits are useful when
   a number of fields' values needs to be set based on a boolean flag.
 
-declarations
+- A Trait can be enabled/disabled inside a Factory subclass (as normal
+  declaration).
+
+- Values set in a Trait definition can be overridden by call-time values.
+
+- Trait can be chained. 意思是, 在一个 Trait 的定义中, set 另一个 Trait flag.
+
+constructor
+"""""""""""
+- ``**overrides``. For each kwarg, key is the field name to be set, and the
+  value is the value to be set. This can be like any Factory attribute
+  declaration.
+
+Declarations
 ------------
 - These are special class-level declarations.
 
-lazy attributes
-^^^^^^^^^^^^^^^
-- Some attributes (such as fields whose value is computed from other elements)
-  will need values assigned each time an instance is generated.
+- All these declarations can also be used as kwargs during a Factory call.  In
+  other words, 它们不仅可以在 class body 中声明, 还可以直接作为 Factory 参数值
+  传递. 这是因为, 无论是哪种方式, 都是在 generation 阶段才 resolve 至最终使用值
+  , 所以都是可行的.
+
+Faker
+^^^^^
+- ``factory.Faker`` is a factory declaration subclass, utilizing ``faker``
+  module to provide more real fake data.
+
+constructor
+""""""""""""
+- provider. A faker provider method's name.
+
+- locale. locale passed to faker.Faker.
+
+- ``**kwargs``. additional kwargs passed to the provider method.
+
+class methods
+"""""""""""""
+- ``override_default_locale(locale)``. A context manager, used to temporarily
+  override the default locale of all Faker instances.
+
+  .. code:: python
+
+    with factory.Faker.override_default_locale("zh_CN"):
+      SomeFactory()
+
+- ``add_provider(provider, locale=None)``. Add a provider to the faker.Faker
+  instance of the specified locale.
 
 LazyFunction
-""""""""""""
+^^^^^^^^^^^^
 - Useful when the value of a field is determined dynamically. So it can be 
   simulated by a function.
 
-- Use this if the value logic is not related to the model instance.  Otherwise
+- Use this if the value logic is not related to the model instance. Otherwise
   use LazyAttribute.
 
+constructor
+"""""""""""
+- function. the function to generate field's value.
+
 LazyAttribute
-"""""""""""""
-- When the value of a field is determined dynamically and related to the
-  specific instance.
+^^^^^^^^^^^^^
+- Useful When the value of a field is dynamically determined and related to
+  other fields/parameters of the instance being generated.
 
-- It takes as argument a function to call; that function should accept the
-  object being built as sole argument, and return a value suitable for the
-  field.
+constructor
+"""""""""""
+- function. A function that accept the object being built as sole argument, and
+  return a value suitable for the field.
 
-- 注意 the passed-in object is not an instance of model class, but a
-  ``Resolver`` instance.
+  * 注意 the passed-in object is not an instance of model class, but a
+    ``Resolver`` instance.
 
+decorator
+"""""""""
 - The ``lazy_attribute()`` decorator is similar. The decorated function is
-  the function to be called.
+  the function to be called. It's appropriate when a passed-in function
+  can not be a simple lambda, but a more complex function.
+
+- 由于 decorator 的机制, 这与 ``name = LazyAttribute(func)`` 完全是等价的.
 
 Sequence
 ^^^^^^^^
 - Useful when a field has unique constraint, so a sequential value ensures
   that there is no collision.
 
+- The sequence counter is shared across all Factory classes.
+
+- Forcing a sequence number for a factory call: pass ``__sequence`` keyword
+  argument to the generation methods. This will not alter the shared value.
+
+constructor
+"""""""""""
+- function. The function accepts the current sequence counter, and returning
+  the field value.
+
 decorator
 """""""""
-- ``sequence()``
+- ``sequence()``. similar above.
 
-Relational attributes
+LazyAttributeSequence
 ^^^^^^^^^^^^^^^^^^^^^
+- merge functionality of LazyAttribute and Sequence.
+
+constructor
+"""""""""""
+- function. A function that takes:
+ 
+  * the object being generated (Resolver)
+
+  * the sequence number
+
+decorator
+"""""""""
+- ``lazy_attribute_sequence(func)``. similar above.
 
 SubFactory
-""""""""""
+^^^^^^^^^^
+- useful when a model instance depends on another model instance, via FK etc.
+  relations. To generate a factory instance, the depending factory must be
+  generated in advance.
+
+- The Factory in a SubFactory declaration is generated before the main factory
+  (``BuildStep.recurse()`` 创建 StepBuilder 进行 recursive build).
+
+- The same build strategy is used for the SubFactory.
+
+- To override kwargs passed to the SubFactory on a per-call basis, use::
+
+    name__field=value
+
+  in the main factory call.
+
+constructor
+"""""""""""
+- factory. A Factory class or the import path to it (to avoid circular import).
+
+- ``**kwargs``, additional kwargs to pass to the factory.
 
 RelatedFactory
-""""""""""""""
+^^^^^^^^^^^^^^
+
+SelfAttribute
+^^^^^^^^^^^^^
+- When a field value equals to the value of the self attribute, or parent
+  attribute, etc.
+
+- Can reference
+ 
+  * any (deep) attribute of the Resolver object, need not be a field.
+
+  * any (deep) attribute of the parent Resolver object.
+
+constructor
+"""""""""""
+- ``attribute_name``. path to the attribute.::
+
+    attr           # current resolver
+    attr.subattr   # current resolver
+    .attr.subattr  # current resolver
+    ..attr.subattr # parent resolver
+
+Iterator
+^^^^^^^^
+- Produces successive values from the given iterable.
+
+- By default, the iterable can be cycled, which means the produced values must
+  be stored in memory.
+
+- 注意不要使用过大的数据集, 因为都会保存在内存中.
+
+constructor
+"""""""""""
+- iterable. the iterable to produce value from.
+
+- cycle. default True. Whether to cycle the iterable. 注意即使 iterable can
+  not be cycled, 生成过的值也会保存在内存中. 这是很恶心的.
+
+- getter. a custom getter applied to the iterable generated value.
+
+methods
+"""""""
+- ``reset()``. Reset the iterator, produce from the beginning.
+
+decorator
+"""""""""
+- ``iterator(func)``. the func is called to generate an iterator. so it
+  can be a generator function, etc.
+
+Dict
+^^^^
+- Produce a dict with the fixed keys, and values can be any declaration.
+
+- 实现原理:
+
+  * 这是一个 SubFactory, wraps a factory.DictFactory.
+  
+  * dict 实际由 DictFactory 生成. 本质上, 生成一个 dict 与生成任何 model
+    instance 的逻辑是一致的. 这是利用了 dict 可以解释成 class namespace
+    definition.
+
+- 若在 dict 定义中需要 reference main factory 的 attributes, 需要使用
+  ``..attr``, 这是因为本质上是一个 SubFactory.
+
+- Since it's a SubFactory, to override definition on a per-call basis,
+  use ``name__field=value`` pattern.
+
+constructor
+"""""""""""
+- params. a dict defining the scheme of the resulting dict instances.
+  这可以使用与定义 Factory class 相同的任何内容.
+
+- ``dict_factory``. default factory.DictFactory. specify alternative
+  dict Factory.
+
+List
+^^^^
+- Produce a list.
+
+- 实现原理.
+  
+  * Internally, the fields are converted into a ``index=value`` dict.
+
+  * 这是一个 SubFactory, wraps factory.ListFactory.
+
+  * list 有 ListFactory 生成. 将 list 转换成 ``{index: value}`` 形式,
+    从而可以套用标准 build 流程进行操作. 在输出时再转换回 list.
+
+constructor
+"""""""""""
+- params. a list defining the scheme of the resulting list instances.
+  每一项可以使用与定义 Factory class 相同的任何内容.
+
+- ``list_factory``. default factory.ListFactory. specify alternative list
+  Factory.
 
 post-generation hooks
 ^^^^^^^^^^^^^^^^^^^^^
@@ -944,14 +1196,21 @@ Strategies
 ----------
 - built-in strategies
 
-  * build. instantiate a model instance.
+  * build (``BUILD_STRATEGY``). Simply instantiate a model instance.
   
-  * create. build and save it to database.
+  * create (``CREATE_STRATEGY``). build and save it to database.
+
+  * stub (``STUB_STRATEGY``). returns an instance of StubObject whose
+    attributes have been set according to the resolved declarations.
 
 - During factory call, the strategy of the sub/related factories will use the
   strategy of the parent factory.
 
-- A factory's default strategy can be set by ``Meta.strategy`` attribute.
+- Setting a factory's default strategy.
+ 
+  * ``Meta.strategy`` attribute.
+
+  * ``factory.use_strategy(strategy)`` class decorator.
 
 ORMs
 ----
@@ -1010,11 +1269,6 @@ disabling signals
 
 - ``mute_signals(signal1, ...)``. a decorator and context manager.
 
-Faker
------
-- ``factory.Faker`` is a factory declaration subclass, utilizing ``faker``
-  module to provide more real fake data.
-
 constructor
 ^^^^^^^^^^^
 - ``provider``
@@ -1022,6 +1276,15 @@ constructor
 - ``locale``
 
 - ``**kwargs``. provider's optional arguments.
+
+Utility factories
+-----------------
+- StubFactory. A Factory whose default strategy is ``STUB_STRATEGY``.
+
+- DictFactory. A Factory that produces dict instances.
+
+  * pass definitions as kwargs on a per-call basis, or subclass it to
+    define your scheme.
 
 Debugging
 ---------
@@ -1033,6 +1296,16 @@ Debugging
 
   with factory.debug():
       obj = ModelFactory()
+
+Building
+--------
+
+Resovler
+^^^^^^^^
+
+attributes
+""""""""""
+- ``factory_parent``. parent resolver.
 
 faker
 =====
