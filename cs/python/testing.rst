@@ -789,6 +789,9 @@ utilities
 - ``reset_sequence(value=None, force=False)``. Reset the sequence counter
   to the specified value or to the first value.
 
+  例如对每个 TestCase 都保证 sequence 是重新计算的, 从而独立. 可以在
+  ``TestCase.setUp()`` method 中重置 sequence.
+
 extension points
 """"""""""""""""
 - ``_adjust_kwargs(**kwargs)``. adjusting resolved kwargs. It's called after
@@ -902,7 +905,7 @@ Parameter inheritance
 
 SimpleParameter
 ^^^^^^^^^^^^^^^
-- A simple parameter can be any declarations like in Factory class body.
+- A simple parameter can be *any declarations* like in Factory class body.
 
 - Any attribute value in Params class body is wrapped in SimpleParameter
   instance.
@@ -1046,14 +1049,14 @@ SubFactory
 
   in the main factory call.
 
+- If a SubFactory generated instance is passed for the SubFactory's attribute,
+  generation is disabled, and the passed-in instance is assigned directly.
+
 constructor
 """""""""""
 - factory. A Factory class or the import path to it (to avoid circular import).
 
 - ``**kwargs``, additional kwargs to pass to the factory.
-
-RelatedFactory
-^^^^^^^^^^^^^^
 
 SelfAttribute
 ^^^^^^^^^^^^^
@@ -1074,6 +1077,8 @@ constructor
     attr.subattr   # current resolver
     .attr.subattr  # current resolver
     ..attr.subattr # parent resolver
+
+- default. default value if attribute is not found.
 
 Iterator
 ^^^^^^^^
@@ -1141,6 +1146,9 @@ List
   * list 有 ListFactory 生成. 将 list 转换成 ``{index: value}`` 形式,
     从而可以套用标准 build 流程进行操作. 在输出时再转换回 list.
 
+- Since it's a SubFactory, to override definition on a per-call basis,
+  use ``name__<N>=value`` pattern.
+
 constructor
 """""""""""
 - params. a list defining the scheme of the resulting list instances.
@@ -1149,48 +1157,120 @@ constructor
 - ``list_factory``. default factory.ListFactory. specify alternative list
   Factory.
 
+Maybe
+^^^^^
+- Useful when the value of a field depends on another attribute, and forms an
+  if-else relation.
+
+- When the ``decider`` is truthy, select ``yes_declaration``, otherwise select
+  ``false_declaration``.
+
+constructor
+"""""""""""
+- decider. A decider can be:
+
+  * Any declaration.
+
+  * For a plain value, it's wrapped inside a SelfAttribute.
+
+  最常见的是使用一个 attribute reference string 作为 decider, 类似
+  SelfAttribute 那种.
+
+- ``yes_declaration``. The declaration to use for the field when decider is
+  truthy.
+
+- ``no_declaration``. The declaration to use for the field when decider is
+  falsy.
+
 post-generation hooks
 ^^^^^^^^^^^^^^^^^^^^^
-- 在生成实例之后执行的进一步自定义处理和定义.
+- All Post-generation hooks (RelatedFactory, PostGeneration,
+  PostGenerationMethodCall) are called in the same order they are declared in
+  the factory class, so that functions can rely on the side effects applied by
+  the previous post-generation hook.
+
+- All post-generation hooks are called *after* model instance's generation,
+  therefore their declarations are not passed during instantiation.
 
 - usage examples.
 
   * 在生成实例后, 设置 ManyToMany relationship.
 
-- Post-generation hooks are called in the same order they are declared in the
-  factory class, so that functions can rely on the side effects applied by the
-  previous post-generation hook.
+RelatedFactory
+""""""""""""""
+- Generate a Factory *after* the generation of the main factory. This is the
+  opposite of SubFactory. Useful for reverse related fields, etc.
 
-- utils.
-  
-  * ``PostGeneration``. a BaseDeclaration subclass.
+- Like a SubFactory, to override definition on a per-call basis, use
+  ``name__field=value`` pattern.
 
-  * ``post_generation``. a decorator that functions exactly like PostGeneration
-    class.
+- If a related factory generated instance is passed for the RelatedFactory's
+  attribute, RelatedFactory generation is disabled, and the passed-in instance
+  is assigned directly.
 
-- define post-generation hook.
+- RelatedFactory is evaluated after the initial factory has been instantiated.
+  However, the build context is passed down to that factory; this means that
+  attribute reference can go back to the calling factorry’s context.
 
-  * define a callback function in Factory class, of the form:
+constructor
+~~~~~~~~~~~
+- factory. same as in SubFactory.
+
+- ``factory_related_name``. The name under which the model instance generated
+  by main factory will be passed to the related factory. In other words, the
+  main instance will be passed to the ``factory`` call, with
+  ``<factory_related_name>=instance`` as a kwarg. if not set, the main instance
+  will not be passed at all.
+
+- ``**kwargs``. Additional default kwargs to be passed to ``factory``.
+
+PostGeneration
+""""""""""""""
+- Useful for 生成实例之后执行的进一步自定义处理和定义.
+
+constructor
+~~~~~~~~~~~
+- function. The function to be called after main instance is generated.
+  The function has the following signature:
 
     .. code:: python
 
-      @post_generation
       def callback(obj, create, extracted, **kwargs):
           pass
 
   * the name of callback function becomes a valid kwarg of Factory constructor.
 
+  * When post-generation hook is called, ``obj`` is the instance created by
+    base factory; ``create`` is True if the strategy is "create", otherwise
+    False.
+
   * During factory call, if the kwarg is passed value, it will become the
     value of ``extracted`` arg of the callback. Otherwise ``extracted`` is
     None.
 
-  * Any argument starting with ``<callback>__<field>`` will be extracted, its
+  * Any argument in the form ``<callback>__<field>`` will be extracted, its
     ``<callback>__`` prefix removed, and added to the ``kwargs`` passed to the
-    callback.
+    callback. Extracted arguments won’t be passed to the Meta.model class.
 
-  * When post-generation hook is called, ``obj`` is the instance created by
-    base factory; ``create`` is True if the strategy is "create", otherwise
-    False.
+decorator
+~~~~~~~~~
+- ``post_generation(func)``. the decorator form.
+
+PostGenerationMethodCall
+""""""""""""""""""""""""
+- Useful when there's need to call a method of instance after its generation.
+
+- an overriding value can be passed directly to the method through a keyword
+  argument of main Factory call matching the attribute name.
+
+- Keywords extracted from the factory arguments are merged into the defaults
+  defined in PostGenerationMethodCall declaration.
+
+constructor
+~~~~~~~~~~~
+- ``method_name``. the name of the method to call.
+
+- ``**kwargs``. The default kwargs to be passed to method.
 
 Strategies
 ----------
@@ -1224,58 +1304,93 @@ django ORM
 
 DjangoModelFactory
 """"""""""""""""""
-- factory.django.DjangoModelFactory.
+- A subclass of base.Factory.
 
-- ``create`` strategy uses ``Model.objects.create()`` or
-  ``Model._default_manager.create()``.
+class methods
+~~~~~~~~~~~~~
+- ``_create(model_class, *args, **kwargs)``. overrides base definition,
+   uses ``Model.objects.create()``, if not defined, use
+   ``Model._default_manager.create()``. 这影响 create strategy 的处理.
 
-- If the factory contains at least one ``RelatedFactory`` or ``PostGeneration``
-  attributes, the base object will be ``.save()``-ed again to update fields
-  possibly modified by post-generation hooks.
+- ``_after_postgeneration(instance, create, results=None)``. 这里, 如果使用的是
+  create strategy, 并且至少一个 post generation hooks is run, object is saved
+  again to update fields possibly modified by those hooks.
 
-  * 这发生在 ``_after_postgeneration()``.
-
-  * 有时候这会导致一些问题. 例如在 post generation hook 中调用
-    ``QuerySet.update()`` 来更新列值的话, 必须记得刷新 model instance
-    ``.refresh_from_db()``. 否则在 post generation hook 中的修改就会被覆盖.
+  * 若在 post generation hook 中进行的操作更新了数据库值, 却没有更新 instance
+    的 in-memory field value, 则会导致覆盖.  此时记得刷新 model instance
+    ``.refresh_from_db()``.
 
 DjangoOptions
 """""""""""""
 DjangoModelFactory automatically use DjangoOptions as its Meta inner class.
 
-该 Meta class 支持以下特性
+new options and modifications
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- ``Meta.model`` 支持指定字符串形式的 ``<app_label>.<Model>``
+- model. 支持指定字符串形式的 ``<app_label>.<Model>``.
 
-- ``Meta.database`` specify the database to use.
+- database. specify the database to use.
 
-- ``Meta.django_get_or_create``. Specify the fields to be used for filtering in
-  ``Model.objects.get_or_create()``. 指定这个属性后, 创建 instance 会使用
-  ``get_or_create()``, 而不使用 ``create()``.
+- ``django_get_or_create``. Specify the fields to be used for filtering in
+  ``QuerySet.get_or_create()``. 指定这个属性后, 创建 instance 会使用
+  ``get_or_create()``, 而不使用 ``create()``. 这样, 可通过过滤来避免重复
+  创建或由于重复导致的 IntegrityError.
 
-extra attribute classes
-""""""""""""""""""""""""
+additional declarations
+"""""""""""""""""""""""
+FileField
+~~~~~~~~~
+- for django FileField.
 
-- FileField.
+- Subclass of ParameteredAttribute, therefore like SubFactory they support
+  passing kwargs from Factory call.
 
-- ImageField.
+constructor
+```````````
+- ``from_path``. use file at this path-like object as file content, and use
+  the basename of this path as filename, if ``filename`` is not provided.
+
+- ``from_file``. use this file-like object as file content, and use basename of
+  its ``name`` attribute as filename, if ``filename`` is not provided.
+
+- ``from_func``. call this func that returns a file-like object as content, and
+  its ``name`` attribute as filename, if ``filename`` is not provided.
+
+- ``data``. use this data as file content. should be bytes. default to b"".
+
+- ``filename``. specify the overriding filename. default filename is example.dat
+
+Only one of ``from_*`` can be defined.
+
+ImageField
+~~~~~~~~~~
+- for django ImageField.
+
+- Subclass of ParameteredAttribute, therefore like SubFactory they support
+  passing kwargs from Factory call.
+
+constructor
+```````````
+- all kwargs from FileField, except ``data``. ``data`` is useless here.
+
+- width. specify the dummy image's width. default 100.
+
+- height. ditto for height.
+
+- color. ditto for color, default blue.
+
+- format. ditto for format, default JPEG.
 
 disabling signals
 """"""""""""""""""
 - If signals are used to create related objects, they may interfere with
-  RelatedFactory. 如果一个 factory 中指定了 RelatedFactory, (反向) 相关联
-  的实例也会自动创建, 这是由 factory boy 实现的. 所以在 django 系统中设置
-  的 signal 就需要 disable 掉.
+  RelatedFactory (例如因为要创建一些更具体的 related model instance, 而不是默认
+  的). 在 django 系统中设置的 signal 就需要 disable 掉.
 
 - ``mute_signals(signal1, ...)``. a decorator and context manager.
 
-constructor
-^^^^^^^^^^^
-- ``provider``
-
-- ``locale``
-
-- ``**kwargs``. provider's optional arguments.
+- 如果要 mute ``pre_save``, ``post_save`` 等 signal, 所有使用了 post generation
+  hook 的相关 factory 都要使用这个 decorator, 因为会再保存一遍.
 
 Utility factories
 -----------------
@@ -1285,6 +1400,35 @@ Utility factories
 
   * pass definitions as kwargs on a per-call basis, or subclass it to
     define your scheme.
+
+- ListFactory. A Factory that produces list instances.
+
+  * pass definitions as kwargs on a per-call basis, or subclass it to
+    define your scheme.
+
+Utility functions
+-----------------
+- ``make_factory(klass, **kwargs)``.
+
+- ``create(klass, **kwargs)``
+
+- ``create_batch(klass, n, **kwargs)``
+
+- ``build(klass, **kwargs)``
+
+- ``build_batch(klass, **kwargs)``
+
+- ``stub(klass, **kwargs)``
+
+- ``stub_batch(klass, **kwargs)``
+
+- ``generate(klass, strategy, **kwargs)``
+
+- ``generate_batch(klass, strategy, **kwargs)``
+
+- ``simple_generate(klass, create, **kwargs)``
+
+- ``simple_generate_batch(klass, create, n, **kwargs)``
 
 Debugging
 ---------
@@ -1297,8 +1441,8 @@ Debugging
   with factory.debug():
       obj = ModelFactory()
 
-Building
---------
+Internals
+---------
 
 Resovler
 ^^^^^^^^
