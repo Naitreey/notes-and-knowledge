@@ -1252,6 +1252,8 @@ constructor
     ``<callback>__`` prefix removed, and added to the ``kwargs`` passed to the
     callback. Extracted arguments won’t be passed to the Meta.model class.
 
+  * post generation hook does not need to return anything.
+
 decorator
 ~~~~~~~~~
 - ``post_generation(func)``. the decorator form.
@@ -1498,6 +1500,109 @@ providers
 
 - builtin providers are in ``faker.providers`` subpackage.
 
+base
+^^^^
+- ``random_int(min=0, max=9999)``. rand int between min and max.
+
+- ``random_digit()``. a single digit, i.e. between 0-9.
+
+- ``random_digit_not_null()``. non-zero digit.
+
+- ``random_digit_or_empty()``. a random digit or empty string. note that due
+  to implementation, the empty string's probability is 50%.
+
+- ``random_digit_not_null_or_empty()``. a non-zero digit or empty string. 有同
+  上的概率分布问题.
+
+- ``random_number(digits=None, fix_len=False)``. A random number with given
+  number of digits at maximum. If ``fix_len=True``, the number of digits is 
+  fixed at ``digits``. If ``digits=None``, return single digit number.
+
+- ``random_letter()``. a random ascii letter.
+
+- ``random_letters(length=16)``. a list of random letters.
+
+- ``random_lowercase_letter()``. a random lowercase letter.
+
+- ``random_uppercase_letter()``. a random uppercase letter.
+
+- ``random_elements(elements=('a', 'b', 'c'), length=None, unique=False)``.  A
+  list of random elements. If ``length=None``, length is between 1 and number
+  of elements.
+  If `elements` is a dictionary, the value will be used as
+  a weighting element.
+
+- ``random_choices(elements=('a', 'b', 'c'), length=None)``.  ditto for
+  non-unique results.
+
+- ``random_element(elements=('a', 'b', 'c'))``. ditto for one element.
+
+- ``random_sample(elements=('a', 'b', 'c'), length=None)``. like
+  ``random_choices()``, for unique elements. Multiple occurrences of the same
+  value increase its probability to be in the output.
+
+- ``randomize_nb_elements(number=10, le=False, ge=False, min=None, max=None)``.
+  A randomized number near by ``number``. When ``le=True``, result must be
+  lower or equal to number; when ``ge=True``, result must be greater or equal
+  to number; when both is True, result has to equal to number. min and max
+  set lower and higher bounds of the allowed value.
+
+- ``numerify(text='###')``. Replaces all placeholders in given text with
+  randomized values, replacing: all hash sign ('#') occurrences with a random
+  digit (from 0 to 9); all percentage sign ('%') occurrences with a random
+  non-zero digit (from 1 to 9); all exclamation mark ('!') occurrences with a
+  random digit (from 0 to 9) or an empty string; and all at symbol ('@')
+  occurrences with a random non-zero digit (from 1 to 9) or an empty string.
+
+- ``lexify(text="????", letters=string.ascii_letters)``. Replaces all question
+  mark ('?') occurrences with a random letter.
+
+- ``bothify(text='## ??', letters=string.ascii_letters)``. First numerify then
+  lexify.
+
+- ``hexify(text='^^^^', upper=False)``. Replaces all circumflex ('^')
+  occurrences with a random hexadecimal character.
+
+python
+^^^^^^
+- ``pybool()``.
+
+- ``pystr(min_chars=None, max_chars=20)``.
+  Generates a random string of upper and lowercase letters, with length within
+  ``min_chars`` and ``max_chars``. if ``min_chars=None``, length is fixed to
+  ``max_chars``.
+
+- ``pyfloat(left_digits=None, right_digits=None, positive=False)``
+  a random float number, left and right digits specify the number of digits
+  at each side of decimal point. positive specify whether it's positive.
+
+- ``pydecimal(left_digits=None, right_digits=None, positive=False)``. ditto
+  for Decimal.
+
+- ``pyint()``. random int.
+
+- ``pytuple(nb_elements=10, variable_nb_elements=True, *value_types)``.
+  return a tuple. size of ``nb_elements``, allowing a variance of size if
+  ``variable_nb_elements`` is True. ``value_types`` if not specified, default
+  to::
+ 
+    ['str', 'str', 'str', 'str', 'float', 'int', 'int', 'decimal',
+     'date_time', 'uri', 'email']
+
+- ``pyset(nb_elements=10, variable_nb_elements=True, *value_types)``.
+  ditto for set.
+
+- ``pylist(nb_elements=10, variable_nb_elements=True, *value_types)``.
+  ditto for list.
+
+- ``pyiterable(nb_elements=10, variable_nb_elements=True, *value_types)``.
+  ditto for a random type of iterable, (tuple, list, set).
+
+- ``pydict(nb_elements=10, variable_nb_elements=True, *value_types)``.
+  keys are random words, values are like above.
+
+- ``pystruct(count=10, *value_types)``.
+
 internet
 ^^^^^^^^
 - ``user_name()``
@@ -1540,7 +1645,6 @@ file
 
 date_time
 ^^^^^^^^^
-
 - ``date_time_this_century(before_now=True, after_now=False, tzinfo=None)``.
   A datetime instance within current century. ``tzinfo`` if provided must be a
   ``datetime.tzinfo`` instance. That'll make an aware datetime.
@@ -1622,8 +1726,28 @@ lorem
 
 misc
 ^^^^
+- ``boolean(chance_of_getting_true=50)``.
 
-- ``password(length=10, special_chars=True, digits=True, upper_case=True, lower_case=True)``.
+- ``null_boolean()``. a random True, False, None.
+
+- ``binary(length=(1 * 1024 * 1024))``. a random bytes of length.
+
+- ``md5(raw_output=False)``. give a random md5 hash in hex digest format.
+  if ``raw_output=True``, return raw bytes.
+
+- ``sha1(raw_output=False)``. ditto for sha1.
+
+- ``sha256(raw_output=False)``. ditto for sha256.
+
+- ``locale()``. a random language locale string: ``<lang>_<region>``
+
+- ``language_code()``. random language code.
+
+- ``uuid4(cast_to=str)``. random uuid4.
+
+- ``password(length=10, special_chars=True, digits=True, upper_case=True,
+  lower_case=True)``.
+  random password of length.
 
 
 custom provider
