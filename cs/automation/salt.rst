@@ -647,6 +647,9 @@ synchronization
 
   * ``extmod_blacklist``.
 
+  Returns the modules that are actually synced. 没有修改的 modules 不会显示在
+  输出中.
+
 job state
 """"""""""
 - ``saltutil.running``
@@ -895,6 +898,9 @@ environments
   * ``salt://path/to/file?saltenv=<env>`` refers to files in salt file server.
 
   * escaping ``?``: ``salt://|dir/file?name``
+
+  * Non-ascii 字符及空格等非 url metachar 的特殊字符可以直接写入 salt url,
+    使用与 filepath 相同的形式, 无需 escape.
 
 - specifying environment
 

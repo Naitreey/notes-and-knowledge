@@ -1186,6 +1186,17 @@ foreign key
 
     - SET DEFAULT. (并不可用.)
 
+- shema design considerations:
+
+  * For self-referencing FK, ON DELETE RESTRICT will cause only the most leaf
+    row (lowest child) can be deleted. Any bulk delete (more than one row) is
+    forbidden. If bulk delete is desired, referential integrity must be
+    relaxed, and use SET NULL or CASCADE as appropriate.
+
+  * When two tables must be cross-referenced with 2 FKs, any one of them using
+    RESTRICT may cause dead lock. In that case, at least one of the FKs can use
+    SET NULL or CASCADE as appropriate.
+
 - implementation:
 
   - FK constraint 依赖于相关列之上的一个 index 来实现.
