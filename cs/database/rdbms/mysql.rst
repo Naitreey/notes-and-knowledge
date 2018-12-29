@@ -1186,7 +1186,7 @@ foreign key
 
     - SET DEFAULT. (并不可用.)
 
-- shema design considerations:
+- schema design considerations:
 
   * For self-referencing FK, ON DELETE RESTRICT will cause only the most leaf
     row (lowest child) can be deleted. Any bulk delete (more than one row) is
