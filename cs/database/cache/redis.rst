@@ -239,6 +239,10 @@ redis expires
 - If a negative timeout or an expiry time in the past is specified to a key,
   the key is deleted.
 
+messaging
+=========
+
+
 commands
 ========
 - All redis's commands are atomic. This is simply a consequence of Redis
@@ -277,6 +281,9 @@ TTL
 ^^^
 
 - returns: -1 (never expire), -2 (not exist).
+
+SCAN
+^^^^
 
 string
 ------
@@ -544,14 +551,43 @@ HGETALL
 HINCRBY
 ^^^^^^^
 
-HyperLogLog
+hyperloglog
 ------------
-
 PFADD
 ^^^^^
 
 PFCOUNT
 ^^^^^^^
+
+
+connection
+----------
+CONNECT
+^^^^^^^
+
+AUTH
+^^^^
+
+scripting
+---------
+EVAL
+^^^^
+
+misc
+----
+HELP
+^^^^
+::
+
+  help @<category>
+  help <command>
+
+- categories: generic, list, set, sorted_set, hash, pubsub, transactions,
+  connection, server, scripting.
+
+CLEAR
+^^^^^
+- clear screen.
 
 persistence
 ===========
@@ -564,6 +600,230 @@ replication
 
 clustering
 ==========
+
+CLI
+===
+redis-cli
+---------
+::
+
+  redis-cli [options] [cmd [arg]...]
+
+- A CLI client of redis.
+
+interactive mode
+^^^^^^^^^^^^^^^^
+- redis-cli without any positional args enters REPL
+
+- prompt format::
+
+    host:port[n]>
+
+- When redis-cli failed to connect to server, it enters REPL with
+  prompt::
+
+    not connected>
+
+  Typing any command makes it try to reconnect.
+  
+  Generally after a disconnection is detected, the CLI always attempts to
+  reconnect transparently: if the attempt fails, it shows the error and enters
+  the disconnected state. When a reconnection is performed, redis-cli
+  automatically re-select the last database number selected. 
+
+- commandline editting is enabled by linenoise library.
+
+  * history is preserved in ``$REDISCLI_HISTFILE``, which defaults to
+    ``$HOME/.rediscli_history``.
+
+  * command completion: Tab key.
+
+- Repeat command by N times::
+
+    N cmd [arg...]
+
+non-interactive mode
+^^^^^^^^^^^^^^^^^^^^
+several ways of passing commands:
+
+- a command and args are passed as arguments of redis-cli command.
+
+- read commands from stdin.
+  
+  * one command per line.
+
+  * arg with spaces/newlines can be quoted.
+
+- ``-x``. read stdin as value of the last argument.
+
+- ``-r <count>``. repeat command. To run forever, use -1 as count.
+
+- ``-i <delay>``. delay between repeat, use decimal for fractional seconds.
+
+stats mode
+^^^^^^^^^^
+- ``--stat`` option.
+
+- ``-i <delay>`` specify delay between stats output.
+
+- monitor stats of Redis instances in real time.
+
+- a new line is printed every delayed seconds with useful information and the
+  difference between the old data point.
+
+key space analyzer mode
+^^^^^^^^^^^^^^^^^^^^^^^
+- ``--bigkeys`` option.
+
+- ``-i <delay>`` throttles the scanning process by the specified fraction of
+  second for each 100 keys requested.
+
+- The outpout is separated in two parts:
+
+  * In the first part of the output, each new key larger than the previous
+    larger key (of the same type) encountered is reported.
+
+  * The summary section provides general stats about the data inside the Redis
+    instance.
+
+key scanning mode
+^^^^^^^^^^^^^^^^^
+- ``--scan`` option.
+
+- ``--pattern <pattern>``. filter by pattern.
+
+- This scans key space with SCAN.
+
+pub/sub mode
+^^^^^^^^^^^^
+- The subscriber mode is entered automatically when SUBSCRIBE or PSUBSCRIBE
+  command is issued.
+
+- The "reading messages message" shows that we entered Pub/Sub mode.
+
+command monitoring mode
+^^^^^^^^^^^^^^^^^^^^^^^
+- Use MONITOR command.
+
+latency monitoring mode
+^^^^^^^^^^^^^^^^^^^^^^^
+
+simple latency
+""""""""""""""
+- ``--latency`` option.
+
+- Using this option the CLI runs a loop where the PING command is sent to the
+  Redis instance, and the time to get a reply is measured. The min, max and
+  avg of latency is printed.
+
+- This happens 100 times per second, and stats are updated in a real time in
+  the console.
+
+- Latency are provided in milliseconds.
+
+- The average latency of a very fast instance tends to be overestimated a bit
+  because of the latency due to the kernel scheduler of the system
+
+latency history
+"""""""""""""""
+- ``--latency-history`` option.
+  
+- shows the stats evolution through time. It works like ``--latency``, but
+  every delay seconds a new sampling session is started from scratch.
+
+- ``-i <delay>`` specify the length of sampling session, by default it's 15
+  seconds.
+
+latency distribution
+""""""""""""""""""""
+- ``--latency-dist``.
+
+- use color terminals to show a spectrum of latencies.
+
+- You'll see a colored output that indicate the different percentages of
+  samples, and different ASCII characters that indicate different latency
+  figures.
+
+intrinsic latency
+"""""""""""""""""
+- ``--intrinsic-latency <test-time>`` option.
+  
+- The test's time is in seconds, and specifies how many seconds redis-cli
+  should check the latency of the system it's currently running on.
+
+- The latency that's intrinsic to the kernel scheduler
+
+- this command must be executed on the computer you want to run Redis server
+  on, not on a different host. It does not even connect to a Redis instance and
+  performs the test only locally.
+
+lua scripting mode
+^^^^^^^^^^^^^^^^^^
+- ``--eval <file>``. evaluate lua script file. 此时, args 格式为::
+
+    key1 key2 ... , val1 val2 ...
+
+  number of keys and values should match.
+
+RDB dump mode
+^^^^^^^^^^^^^
+- ``--rdb <file>``.
+
+- a remote backup facility, that allows to transfer an RDB file from any Redis
+  instance to the local computer, by pretending to be slave connecting to a
+  master.
+
+slave mode
+^^^^^^^^^^
+- ``--slave``.
+
+- useful for Redis developers and for debugging operations. It allows to
+  inspect what a master sends to its slaves in the replication stream.
+
+- The command begins by discarding the RDB file of the first synchronization
+  (because we are not actually slave, we only need what is to send) and then
+  logs each command received as in CSV format.
+
+LRU simulation mode
+^^^^^^^^^^^^^^^^^^^
+- ``--lru-test <num-keys>``.
+
+- performs a simulation of GET and SET operations, using an 80-20% power law
+  distribution in the requests pattern. This means that 20% of keys will be
+  requested 80% of times, which is a common distribution in caching scenarios.
+
+- its main motivation was for testing the quality of Redis' LRU implementation,
+  but now is also useful in for testing how a given version behaves with the
+  settings you had in mind for your deployment.
+
+- 测试 maxmemory setting and maxmemory policy 与应用场景中需要使用的 keys 的数
+  目两者的结合, key hits/misses 的比例.
+
+output formatting
+^^^^^^^^^^^^^^^^^
+* human-readable format: When redis-cli detects the stdout is a tty, or when
+  ``--no-raw`` is enforced, it uses pretty human-readable format.
+
+* raw format: When stdout is not a tty, or when ``--raw`` is enforced, use raw
+  output format.
+
+- csv format: Use ``--csv``.
+
+connection options
+^^^^^^^^^^^^^^^^^^
+- ``-h <host>``. host. default 127.0.0.1
+
+- ``-p <port>``. port. default 6379
+
+- ``-a <password>``. password.
+
+- ``-n <dbnum>``. database number.
+
+- ``-s <socket>``. server socket.
+
+- ``-u <uri>``. a uri specifying connection parameters.::
+
+    redis://[password@]host[:port][/db]
 
 references
 ==========
