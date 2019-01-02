@@ -644,6 +644,18 @@ methods
 
     .si(*a, **k) -> .signature(a, k, immutable=True)
 
+- ``map(it)``. create a xmap signature, equivalent to::
+
+    xmap(self.s(), it, app=self.app)
+
+- ``starmap(it)``. create a xstarmap signature, equivalent to::
+  
+    xstarmap(self.s(), it, app=self.app)
+
+- ``chunks(it, n)``. create a chunks signature, equivalent to::
+
+    chunks(self.s(), it, n, app=self.app)
+
 Results
 =======
 
@@ -676,7 +688,9 @@ methods
     the get call.
 
   * ``interval``. polling interval. useful only when result backend polls the
-    result. RPC/Redis does not poll.
+    result. RPC/Redis does not poll: they increment a counter after each task
+    in the header, then applies the callback when the counter exceeds the
+    number of tasks in the set.
 
   * ``no_ack``. amqp no ack mode, i.e., result message is automatically acked.
     useful only for message-based backends.
@@ -947,6 +961,10 @@ methods
 
 - ``on_error(callback)``. ditto that returns self, for chaining methods.
 
+- ``__invert__()``. a shortcut for::
+
+    .apply_async().get()
+
 Primitives
 ----------
 - Primitives are special Signature subclasses that serves as job workflow
@@ -976,6 +994,9 @@ methods
 - ``apply_async(args=None, kwargs=None, add_to_parent=True, producer=None, **options)``.
   args, kwargs, options 允许同时给 group 中的所有任务 signature 应用相同的参数. Returns
   a GroupResult.
+
+- ``skew(start=1.0, stop=None, step=1.0)``. skew the countdown of tasks within
+  the group. 这样让并行的任务稍微错开执行, 避免 flooding effect.
 
 chain
 ^^^^^
@@ -1013,11 +1034,15 @@ chord
 
     group | task -> chord
 
+- Chords are not currently supported with the RPC result backend.
+
 constructor
 """""""""""
-- header. an iterable of tasks that forms a group.
+- header. an iterable of tasks that forms a group. The tasks must not ignore
+  their results.
 
-- body. a signature as callback.
+- body. a signature as callback. It executes only after all tasks in header
+  have been successful. A list of task result values is passed to body task.
 
 - args. partial args as in signature.
 
@@ -1027,10 +1052,31 @@ constructor
 
 methods
 """""""
+- ``__call__(body=None, **options)``. execute the chord by calling
+  ``apply_async()``, optionally providing another body, and options.
+
 - ``apply_async(args=None, kwargs=None, task_id=None, producer=None,
   publisher=None, connection=None, router=None, result_cls=None, **options)``
   args, kwargs, options are merged with those during initialization, and
   they are applied to the header group.
+  
+  Returns the body's AsyncResult instance, whose parent is header's GroupResult
+  instance. you can wait for it to complete and get the final return value.
+
+error handling
+""""""""""""""
+If one of the tasks raises an exception, The chord callback result will
+transition to the failure state, and the error is set to the ChordError
+exception.
+
+The ChordError's args includes the failed task's id and original exception's
+representation. The original traceback is available as
+``AsyncResult.traceback``.
+
+The ChordError only shows the task that failed first (in time).
+
+To perform an action when a chord fails you can therefore attach an errback to
+the chord's body signature via ``Signature.on_error|link_error``.
 
 xmap
 ^^^^
@@ -1039,6 +1085,20 @@ xmap
 
 - 本质上是异步调用 ``celery.map`` task, 传入要指定的 task 和 iterable 参数.
 
+- two ways using xmap.
+
+  * ``Task.map()`` method
+
+  * canvas.xmap Signature class.
+
+constructor
+"""""""""""
+- task. task signature, to be mapped.
+
+- it. the iterable on which to map.
+
+- ``**options``
+
 xstarmap
 ^^^^^^^^
 - works like itertools.starmap function. Apply the task to an iterable of
@@ -1046,12 +1106,47 @@ xstarmap
 
 - 本质上是异步调用 ``celery.starmap`` task.
 
+- two ways using xstarmap.
+
+  * ``Task.starmap()`` method
+
+  * canvas.xstarmap Signature class.
+
+constructor
+"""""""""""
+- task. task signature, to be mapped.
+
+- it. the iterable on which to map.
+
+- ``**options``
+
 chunks
 ^^^^^^
 - When applying the task to an iterable of argument iterables (which are an
   iterable of works), split the work into chunks. Works in each chunk are
   executed sequentially; while chunks are executed in parallel.
 
+- Internally, a chunk is converted to a group, in which the tasks are chunks
+  of iterable, applied by sequential xstarmap of task::
+
+    group(xstarmap(task, part, app) for part in _chunks(iter(it), n))
+
+- two ways using chunks.
+
+  * ``Task.chunks()`` method.
+
+  * canvas.chunks Signature class.
+
+constructor
+"""""""""""
+- task. ditto
+
+- it. ditto. For every element yielding from the iterable, the task is starmap-ed
+  on to the element.
+
+- n. number of chunks.
+
+- ``**options``
 
 Graphs
 ======
