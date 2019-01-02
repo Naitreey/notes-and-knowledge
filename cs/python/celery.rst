@@ -461,9 +461,9 @@ States transition
 
 classification
 ^^^^^^^^^^^^^^
-- ready states, meaning the task is finished, its result is ready.
-  无论成败. 当任务进入 ready states, AsyncResult 会 cache task data
-  on the instance.
+- ready states (READY_STATES), meaning the task is finished, its result is
+  ready.  无论成败. 当任务进入 ready states, AsyncResult 会 cache task data on
+  the instance.
 
   * SUCCESS
 
@@ -665,17 +665,68 @@ attributes
 methods
 ^^^^^^^
 
-- ``ready()``
+- ``get(timeout=None, propagate=True, interval=0.5, no_ack=True,
+  follow_parents=True, callback=None, on_message=None, on_interval=None,
+  disable_sync_subtasks=True)``. Block until task is in READY_STATES,
+  return task result.
 
-- ``get()``.
+  * ``timeout``. wait this many seconds before timeout.
 
-  * If the task raised an exception, it is re-raised inside of the get call.
+  * ``propagate``. If the task raised an exception, it is re-raised inside of
+    the get call.
 
-  * ``wait()`` is a deprecated alias of ``get()``.
+  * ``interval``. polling interval. useful only when result backend polls the
+    result. RPC/Redis does not poll.
 
-- ``failed()``
+  * ``no_ack``. amqp no ack mode, i.e., result message is automatically acked.
+    useful only for message-based backends.
 
-- ``successful()``
+  * ``follow_parents``. re-raise exceptions raised by parent tasks.
+
+  * ``disable_sync_subtasks``.
+
+  * ``callback``. Optional callback to be called for every result received.
+    Must have signature ``(task_id, value)``.
+
+  * ``on_message``
+
+  * ``on_interval``.
+
+- ``successful()``. Task execution was successful (its state is SUCCESS)
+
+- ``failed()``. Task state is FAILURE.
+
+- ``ready()``. Task in READY_STATES.
+
+GroupResult
+-----------
+- The result class returned by ``group`` primitive.
+
+- GroupResult works on the group of AsyncResults as a whole, treating the
+  results like a single task result.
+
+methods
+^^^^^^^
+- ``successful()``. When all tasks are successful.
+
+- ``failed()``. When any task has failed.
+
+- ``waiting()``. When any task is not ready.
+
+- ``ready()``. When all tasks are ready.
+
+- ``completed_count()``. the number of completed tasks.
+
+- ``revoke(connection=None, terminate=False, signal=None, wait=False,
+  timeout=None)``. parameters like AsyncResult.revoke. revoke all tasks.
+
+- ``join(timeout=None, propagate=True, interval=0.5, callback=None,
+  no_ack=True, on_message=None, disable_sync_subtasks=True, on_interval=None)``
+  parameters similar to AsyncResult.get. Gather all tasks results. Return a
+  list of result values, in GroupResult.results order.
+
+  * ``callback``. result is empty list when callback is specified.
+
 
 Result backend
 ==============

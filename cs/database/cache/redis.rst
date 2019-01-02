@@ -1,6 +1,5 @@
 overview
 ========
-
 - redis: REmote DIctionary Server
 
 - in-memory key-value store.
@@ -98,7 +97,6 @@ redis keys
 
 data types
 ==========
-
 string
 ------
 
@@ -221,7 +219,6 @@ HyperLogLog (HLL)
 
 redis expires
 =============
-
 - expired key is automatically deleted.
 
 - resolution of key expire time is 1 millisecond.
@@ -558,12 +555,10 @@ PFCOUNT
 
 persistence
 ===========
-
 - AOF: append-only file.
 
 replication
 ===========
-
 - Replication is useful for read (but not write) scalability or data
   redundancy.
 
