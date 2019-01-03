@@ -1046,6 +1046,38 @@ overview
   * SCAN, etc. Besides the samely named methods, there're are also iterator
     equivalent method.
 
+Redis
+^^^^^
+
+response callbacks
+""""""""""""""""""
+- The client class uses a set of callbacks to cast Redis responses to the
+  appropriate Python type. These are defined in ``response_callbacks``.
+
+- Custom callbacks can be added on a per-instance basis using the
+  ``set_response_callback`` method. Callbacks added in this manner are only
+  valid on the instance the callback is added to.
+  
+- To define callbacks globally, make a subclass of the Redis client and modify
+  RESPONSE_CALLBACKS class dictionary.
+
+- callback signature::
+
+    callback(response[, opt1, ...])
+
+  * resopnse is server response for this command.
+
+  * optional parameters can be defined, they are passed as kwargs during call,
+    from ``execute_command()`` method.
+
+thread safety
+"""""""""""""
+- Redis client instances can safely be shared between threads. Internally,
+  connection instances are only retrieved from the connection pool during
+  command execution, and returned to the pool directly after.
+
+- Command execution never modifies state on the client instance.
+
 ConnectionPool
 ^^^^^^^^^^^^^^
 - Connections to redis server is actually managed by a connection pool. A Redis
@@ -1057,6 +1089,26 @@ ConnectionPool
 
   这样, Redis client 等上层封装通过 connection pool 使用连接时, 本身具有了
   thread safety.
+
+Connection
+^^^^^^^^^^
+- A connection to redis server, by TCP.
+
+UnixDomainSocketConnection
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+- A connection to redis server, by unix domain socket.
+
+PythonParser
+^^^^^^^^^^^^
+- parse response from redis server using pure python implementation.
+
+- This is a fallback parser when HiredisParser is not usable.
+
+HiredisParser
+^^^^^^^^^^^^^
+- High performance response parser using C client library hiredis.
+
+- depends on hiredis module.
 
 references
 ==========
