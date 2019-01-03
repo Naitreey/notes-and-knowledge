@@ -99,7 +99,6 @@ data types
 ==========
 string
 ------
-
 - strings can be any binary sequence.
 
 - A string's max size is 512MB.
@@ -112,7 +111,6 @@ string
 
 bitmap/bit array
 ----------------
-
 - Bitmaps are not an actual data type, but a set of bit-oriented operations
   defined on the String type. 因此可以分别使用 GET/SET 去 serialize/deserialize
   bitmap.
@@ -241,7 +239,107 @@ redis expires
 
 messaging
 =========
+architecture
+------------
+redis 的 messaging model 是 publish/subscribe messaging model.
 
+从 AMQP 的角度来看, redis 的 messaging model 可以描述为:
+
+* A topic exchange.
+
+* A subscriber (consumer) always declares a exclusive queue.
+
+  Use SUBSCRIBE/PSUBSCRIBE to bind it to the topic exchange, the binding key is
+  the channel name or pattern. SUBSCRIBE/PSUBSCRIBE to multiple
+  channels/patterns equals to binding to the exchange multiple times, with a
+  different binding key each time.
+
+  This is equivalent to saying that a subscriber always receives messages
+  published to the matching channel.
+
+* Channel 不留存信息. A subscriber receives a message from a channel, only if
+  it SUBSCRIBEd to the channel at the time the publisher PUBLISHed the message.
+  也就是说, 如果 PUBLISH 时没有可接受的 subscriber, 则该条消息直接消失.
+
+  这与 AMQP exchange 的机制是相同的.
+
+* A client may receive a single message multiple times if it's subscribed to
+  multiple channels/patterns matching a published message.
+
+  这与 AMQP exchange 的机制是相同的.
+
+* Once the client enters the subscribed state it is not supposed to issue any
+  other commands, although it can subscribe and unsubscribe to and from other
+  channels.
+
+* The commands that are allowed in the context of a subscribed client are
+  SUBSCRIBE, PSUBSCRIBE, UNSUBSCRIBE, PUNSUBSCRIBE, PING and QUIT.
+
+Pub/Sub has no relation to the key space. It was made to not interfere with it
+on any level, including database numbers. In other words, channels are global
+objects.
+
+message format
+--------------
+The message format is used for
+
+- SUBSCRIBE/UNSUBSCRIBE response message.
+
+- PSUBSCRIBE/PUNSUBSCRIBE response message.
+
+- messages received by client SUBSCRIBEing to channels (direct exchange).
+
+A message is a RESP Array with three elements.
+
+1. the type of message.
+
+   - subscribe/psubscribe. means that we successfully subscribed to a
+     channel/pattern.
+
+   - unsubscribe/punsubscribe. means that we successfully unsubscribed from a
+     channel/pattern.
+
+   - message. a message received as result of a PUBLISH command issued by
+     another client.
+
+2. channel name/pattern.
+
+   - For subscribe/psubscribe, this is the channel/pattern that is subscribed.
+
+   - For unsubscribe/punsubscribe, this is the channel/pattern that is
+     unsubscribed.
+
+   - For message, this is the channel where the message is originated.
+
+3. data.
+
+   - For subscribe/psubscribe, this is the number of channel/pattern the
+     subscriber is currently subscribed to, after the SUBSCRIBE/PSUBSCRIBE
+     operation.
+
+   - For unsubscribe/punsubscribe, this is the number of channel/pattern the
+     subscriber is currently subscribed to, after the UNSUBSCRIBE/PUNSUBSCRIBE
+     operation. When it's 0, the client is out of the pub/sub state.
+
+   - For message, this is the message payload.
+
+pmessage format
+---------------
+The pmessage format is used for messages received by client PSUBSCRIBEing to
+patterns (topic exchange), A pmessage is a RESP Array with four elements.
+
+1. the type of message: pmessage. means a message received, as a result of
+   matching a pattern-matching subscription.
+
+2. pattern. the matched pattern.
+
+3. channel name. the channel where the message is originated.
+
+4. data. the message payload.
+
+Related commands
+----------------
+SUBSCRIBE, UNSUBSCRIBE, PSUBSCRIBE, PUNSUBSCRIBE, PUBLISH, PUBSUB.
 
 commands
 ========
@@ -568,6 +666,95 @@ CONNECT
 AUTH
 ^^^^
 
+QUIT
+^^^^
+pubsub
+------
+SUBSCRIBE
+^^^^^^^^^
+::
+
+  SUBSCRIBE channel [channel ...]
+
+- Returns the subscription information, in the form of a message of
+  ``subscribe`` type.
+
+UNSUBSCRIBE
+^^^^^^^^^^^
+::
+
+  UNSUBSCRIBE [channel ...]
+
+- unsubscribe from given channels, or all channels.
+
+- Returns the ``unsubscribe`` type information for each unsubscribed channel.
+
+PSUBSCRIBE
+^^^^^^^^^^
+::
+
+  PSUBSCRIBE pattern [pattern ...]
+
+- patterns are file globs. supporting:
+
+  * ``?`` one char
+
+  * ``*`` 0 or more char
+
+  * ``[]`` char class
+   
+  use \ to escape metachars.
+
+PUNSUBSCRIBE
+^^^^^^^^^^^^
+::
+
+  PUNSUBSCRIBE [pattern ...]
+
+- similar to UNSUBSCRIBE
+
+PUBLISH
+^^^^^^^
+::
+
+  PUBLISH channel message
+
+- publish a message.
+
+- returns an integer, the number of clients that received the message.
+
+PUBSUB
+^^^^^^
+introspect pub/sub system state.
+
+::
+
+  PUBSUB CHANNELS [pattern]
+
+- list active channels. An active channel is a Pub/Sub channel with one or more
+  subscribers, *not including clients subscribed to patterns*.
+
+- if pattern is specified only channels matching the specified glob-style
+  pattern are listed.
+
+- Returns an Array of channel names.
+
+::
+
+  PUBSUB NUMSUB [channel ...]
+
+- Returns the number of subscribers (not counting clients subscribed to
+  patterns) for the specified channels.
+
+- Returns an Array. The format is channel, count, channel, count, ..., so the
+  list is flat, according to the order specified in command.
+
+::
+
+  PUBSUB NUMPAT
+
+- returns the number of subscriptions to patterns.
+
 scripting
 ---------
 EVAL
@@ -701,6 +888,9 @@ pub/sub mode
 
 - The "reading messages message" shows that we entered Pub/Sub mode.
 
+- Unlike other client, redis-cli will not accept any commands once in
+  subscribed mode and can only quit the mode with Ctrl-C.
+
 command monitoring mode
 ^^^^^^^^^^^^^^^^^^^^^^^
 - Use MONITOR command.
@@ -824,6 +1014,49 @@ connection options
 - ``-u <uri>``. a uri specifying connection parameters.::
 
     redis://[password@]host[:port][/db]
+
+Client libraries
+================
+redis-py
+--------
+installation
+^^^^^^^^^^^^
+- redis package
+
+- deps:
+
+  * hiredis, C client library, a prefered high performance parser library.
+
+overview
+^^^^^^^^
+- By default, all responses are returned as bytes in Python 3 and str in Python 2.
+
+- redis-py attempts to adhere to the official command syntax. with following
+  exceptions:
+
+  * SELECT, not implemented.
+
+  * DEL. del is a python keyword, rename to delete.
+
+  * MULTI/EXEC. part of Pipeline class.
+
+  * SUBSCRIBE, etc. part of PubSub class, as it places the underlying
+    connection in a state where it can't execute non-pubsub commands.
+
+  * SCAN, etc. Besides the samely named methods, there're are also iterator
+    equivalent method.
+
+ConnectionPool
+^^^^^^^^^^^^^^
+- Connections to redis server is actually managed by a connection pool. A Redis
+  client does not make connections directly.
+
+- 由于一个 redis connection instance 本身不具有 thread safety, Connection pool
+  维持一组连接, 记录空闲的连接与正在使用的连接, 每次只提供空闲的连接, 从而避免
+  了 thread safety 的问题.
+
+  这样, Redis client 等上层封装通过 connection pool 使用连接时, 本身具有了
+  thread safety.
 
 references
 ==========
