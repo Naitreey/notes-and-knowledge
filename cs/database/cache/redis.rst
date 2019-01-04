@@ -341,6 +341,123 @@ Related commands
 ----------------
 SUBSCRIBE, UNSUBSCRIBE, PSUBSCRIBE, PUNSUBSCRIBE, PUBLISH, PUBSUB.
 
+pipelining
+==========
+- Pipeline 是用于在一次网络请求中发送多条 commands 至 redis server, 并在一次
+  响应中包含多条相应的 command responses.
+
+- pipeline 不是通过一个专门的命令来实现的, 而仅仅是通过一次性地向 socket 中写入
+  多条 commands 来实现的. 所以, 一般情况下, pipeline 功能由 client library 提供
+  更便于使用的封装层.
+
+- Pipeline 的目的和价值:
+  
+  * 避免在 request-response cycle 中, 网络 RTT 成为命令执行效率的瓶颈. Pipeline
+    将多条命令一次发出, 从而将多次 RTT 带来的延迟减少为一次. 这是 pipeline 的
+    主要目的.
+
+  * 由于一次 pipeline 只需进行一组 socket IO, 即调用 ``read()``, ``write()``
+    syscalls 各一次, 这样很大程度上减少 context switch 带来的 penalty.
+
+- Redis 需要 pipeline 这种设计, 而 sql 不需要. 这是因为 SQL 是一个比较完备的
+  语言 (actually Turing-complete), 可以用 SQL 写一系列处理逻辑, 发给 server
+  计算后一次性给出结果. 而 redis commands 只是一系列相对孤立的操作, 没有必要的
+  flow control, 变量赋值等 language construct, 所有逻辑需要由 client
+  application 来完成. 这样就需要更多的交互. 而 pipeline 可以在一定程度上将
+  部分客户端逻辑打包, 一次性执行给出结果.
+
+- Pipelining is a technique widely in use since many decades.
+
+- While the client sends commands using pipelining, the server will be forced
+  to queue the replies, using memory. So if you need to send a lot of commands
+  with pipelining, it is better to send them as batches having a reasonable
+  number, for instance 10k commands, read the replies, and then send another
+  10k commands again, and so forth.
+
+transactions
+============
+- A transaction allow the execution of a group of commands in a single step.
+
+transaction properties
+----------------------
+* All the commands in a transaction are serialized and executed sequentially.
+  It can never happen that a request issued by another client is served in
+  the middle of the execution of a Redis transaction.
+
+* All the commands in a transaction are executed atomically. Either all or
+  none of the commands are executed. When using the append-only file Redis
+  makes sure to use a single write(2) syscall to write the transaction on
+  disk.
+
+usage
+-----
+- A transaction is entered by MULTI.
+  
+- Then commands can be issued. All commands will reply with the string QUEUED.
+
+- Before EXEC, instead of executing these commands, Redis will queue them.
+
+- To execute the transaction, issue EXEC. Then the transaction is scheduled for
+  execution.
+  
+- To discard the transaction, issue DISCARD, this will flush the command queue.
+
+注意到在 transaction 内部, 并不能进行任何有效的读操作, 也就是说不能根据读取的数
+据调整执行逻辑和写操作. 因此看上去 transaction 只有与 pipeline 一起使用才有价值.
+
+optimistic locking with check-and-set (CAS)
+-------------------------------------------
+- Use WATCH with transaction for optimistic locking.
+
+- WATCHed keys are monitored in order to detect changes against them. If at
+  least one watched key is modified before the EXEC command, the whole
+  transaction aborts, and EXEC returns a Null reply to notify that the
+  transaction failed. Then we can retry the operation.
+
+- When EXEC is called, all keys are UNWATCHed, regardless of whether the
+  transaction was aborted or not. When DISCARD is called, all keys are also
+  UNWATCHed. Also when a client connection is closed, everything gets
+  UNWATCHed.
+
+- It is also possible to use the UNWATCH command (without arguments) in order
+  to flush all the watched keys explicitly before EXEC.
+
+error handling
+--------------
+- If a command fails to be queued, e.g., the command is syntactically wrong,
+  there's some critical condition, the server returns an error rather than
+  QUEUED. In this case, client should abort the transaction by DISCARDing it.
+
+  The server will remember that there was an error during the accumulation of
+  commands. If client enforced a EXEC, the server will refuse to execute the
+  transaction, returning another error and discarding the transaction
+  automatically.
+
+- If a command fails after EXEC is called, e.g., we performed an operation
+  against a key with the wrong value, all the other commands will be executed
+  even if some command fails during the transaction.
+
+- Redis does *not* support transaction rollback.
+
+  * Redis commands can fail only if called with a wrong syntax that is not
+    detectable during the command queueing, or against keys holding the wrong
+    data type. This means a failing command is the result of a programming
+    errors and never a data integrity error. Thus it's the kind of fault that
+    can be avoided entirely at author time.
+
+  * Redis is internally simplified and faster because it does not need the
+    ability to roll back.
+
+lua scripting
+=============
+- 在 Redis 中, 与 SQL 的编程性相对应的是, lua scripting. 使用 lua script, 可以
+  完成单个 pipeline 无法实现的逻辑, 同时具有 pipeline 类似的单次
+  request-response 带来的低延迟优势.
+
+- A Redis script is transactional by definition, so everything you can do with
+  a Redis transaction, you can also do with a script, and usually the script
+  will be both simpler and faster.
+
 commands
 ========
 - All redis's commands are atomic. This is simply a consequence of Redis
@@ -658,10 +775,91 @@ PFCOUNT
 ^^^^^^^
 
 
+transactions
+------------
+WATCH
+^^^^^
+::
+
+  WATCH key [key ...]
+
+- Mark one or more keys to be watched prior to starting a transaction.  If any
+  of those keys change prior EXEC of that transaction, the entire transaction
+  will be canceled.
+
+- WATCH makes EXEC conditional: perform the transaction only if none of the
+  WATCHed keys were modified.
+
+- If you WATCH a volatile key and Redis expires the key after you WATCHed it,
+  EXEC will still work.
+
+- WATCH can be called multiple times before the EXEC. The keys are watched
+  starting from their respective calls, up to the moment EXEC is called.
+
+- Returns OK.
+
+UNWATCH
+^^^^^^^
+::
+
+  UNWATCH
+
+- unwatch all keys explicitly.
+
+- returns OK.
+
+MULTI
+^^^^^
+::
+
+  MULTI
+
+- mark start of transaction block.
+
+- returns OK.
+
+EXEC
+^^^^
+::
+
+  EXEC
+
+- execute transaction, and restore connection state to normal.
+
+- Returns Array of each command's response, or NULL reply if execution is
+  aborted because of WATCH lock.
+
+DISCARD
+^^^^^^^
+::
+
+  DISCARD
+
+- discard transaction, all queued commands and restore connection state to
+  normal.
+
+- also unwatch all keys.
+
+- returns OK.
+
 connection
 ----------
 CONNECT
 ^^^^^^^
+
+SELECT
+^^^^^^
+::
+
+  SELECT index
+
+- select redis logical database by its 0-based index number.
+
+- new connection use 0 db by default.
+
+- SELECT can not be used in Redis Cluster.
+
+- Returns Simple string "OK".
 
 AUTH
 ^^^^
@@ -760,6 +958,12 @@ scripting
 EVAL
 ^^^^
 
+
+server
+------
+CLIENT LIST
+^^^^^^^^^^^
+
 misc
 ----
 HELP
@@ -776,6 +980,23 @@ CLEAR
 ^^^^^
 - clear screen.
 
+server
+======
+database
+--------
+- databases are a form of namespacing: all the databases are anyway persisted
+  together in the same RDB / AOF file.
+  
+- Different databases can have keys having the same name, and there are
+  commands available like FLUSHDB, SWAPDB or RANDOMKEY that work on specific
+  databases.
+
+- Redis databases should mainly used in order to, if needed, separate different
+  keys *belonging to the same application*, and *not* in order to use a single
+  Redis instance for multiple unrelated applications.
+
+- Redis Cluster supports only database 0.
+
 persistence
 ===========
 - AOF: append-only file.
@@ -787,6 +1008,7 @@ replication
 
 clustering
 ==========
+- Redis Cluster supports only database 0.
 
 CLI
 ===
@@ -897,7 +1119,6 @@ command monitoring mode
 
 latency monitoring mode
 ^^^^^^^^^^^^^^^^^^^^^^^
-
 simple latency
 """"""""""""""
 - ``--latency`` option.
@@ -1007,7 +1228,7 @@ connection options
 
 - ``-a <password>``. password.
 
-- ``-n <dbnum>``. database number.
+- ``-n <dbnum>``. database number. default 0.
 
 - ``-s <socket>``. server socket.
 
@@ -1015,8 +1236,8 @@ connection options
 
     redis://[password@]host[:port][/db]
 
-Client libraries
-================
+Client programming
+==================
 redis-py
 --------
 installation
@@ -1034,7 +1255,10 @@ overview
 - redis-py attempts to adhere to the official command syntax. with following
   exceptions:
 
-  * SELECT, not implemented.
+  * SELECT, not implemented. Because SELECT command allows you to switch the
+    database currently in use by the connection. This makes connections in
+    connection pool stateful. Thus it breaks thread safety guarantee of Redis
+    client.
 
   * DEL. del is a python keyword, rename to delete.
 
@@ -1078,6 +1302,22 @@ thread safety
 
 - Command execution never modifies state on the client instance.
 
+- To prevent breaking thread safety, SELECT command is not implemented on
+  client instances. To use multiple Redis databases within the same
+  application, create a separate client instance (and possibly a separate
+  connection pool) for each database.
+
+class attributes
+""""""""""""""""
+- ``RESPONSE_CALLBACKS``. A dict, mapping command names to its response parsing
+  callbacks.
+
+methods
+"""""""
+- ``pipeline(transaction=True, shard_hint=None)``. Create a Pipeline.
+  ``transaction`` controls whether to wrap the pipeline with a transaction, so
+  that the commands in pipeline are executed atomically.
+
 ConnectionPool
 ^^^^^^^^^^^^^^
 - Connections to redis server is actually managed by a connection pool. A Redis
@@ -1109,6 +1349,102 @@ HiredisParser
 - High performance response parser using C client library hiredis.
 
 - depends on hiredis module.
+
+Pipeline
+^^^^^^^^
+- a subclass of Redis class, thus inheriting all its methods (e.g., all command
+  methods).
+
+thread safety
+"""""""""""""
+- No thread safety guarantee, each thread should use a separate Pipeline.
+
+method chaining
+"""""""""""""""
+- For ease of use, all commands methods return the pipeline object itself,
+  so that it's possible::
+
+    pipe.set(...).get(...).execute()
+
+reusing a pipeline
+""""""""""""""""""
+- A pipeline can be reused by:
+
+  * calling ``reset()`` explicitly.
+
+  * after calling ``execute()``, which calls ``reset()``.
+
+  * after exiting from the context manager, which calls ``reset()``.
+
+constructor
+"""""""""""
+- ``connection_pool``. where to get connection. A connection is retrieved
+  from pool when executing pipeline, and released back to the pool after
+  execution.
+
+- ``response_callbacks``. how to parse response.
+
+- ``transaction``. Whether to use transaction. If True, all commands executed
+  within a pipeline are wrapped with MULTI and EXEC calls. This guarantees all
+  commands executed in the pipeline will be executed atomically.
+
+- ``shard_hint``.
+
+methods
+"""""""
+- ``execute(raise_on_error=True)``. execute all the commands queued in current
+  pipeline. Returns a list of responses, one for each command, in order.
+
+- ``execute_command(*args, **kwargs)``. overriding parent class's method,
+  queues commands to be executed in the ``self.command_stack``. 这样调用任何
+  command methods 都不会立即执行, 而是缓存起来. Returns self, to support method
+  chaining.
+
+- ``__enter__()``. as a context manager. return self.
+
+- ``__exit__(exc_type, exc_value, traceback)``. reset pipeline.
+
+- ``multi()``. Mark all following commands in pipeline to be wrapped in a
+  transaction explicitly.
+
+- ``watch(*names)``. WATCH names. mark pipeline in ``watching`` state.  after
+  WATCHing, the pipeline is put into immediate execution mode until we tell it
+  to start buffering commands again by ``multi()``.
+
+PubSub
+^^^^^^
+thread safety
+"""""""""""""
+- No thread safety guarantee, each thread should use a separate PubSub.
+
+design patterns
+---------------
+client-side atomicity enforcement
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Optimistic locking: Use pipeline with WATCH.
+
+- watch the key you wanna modify before making changes.
+
+- start a transactional pipeline to make changes.
+  
+  * If WatchError is raised, the key's value is changed between setting watch
+    and making changes, therefore we has to retry.
+
+  * Otherwise the change must have been successfully made.
+
+.. code:: python
+
+    with r.pipeline() as p:
+      while True:
+        try:
+          p.watch("key")
+          p.multi()
+          # ... make changes
+          p.execute()
+        except WatchError:
+          continue
+        else:
+          break
 
 references
 ==========
