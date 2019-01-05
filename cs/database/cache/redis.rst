@@ -241,7 +241,9 @@ messaging
 =========
 architecture
 ------------
-redis 的 messaging model 是 publish/subscribe messaging model.
+redis 的 messaging model 是 publish/subscribe messaging model. 因此它只适合
+pub/sub 模式适合的应用场景, 而这只是 general messaging 概念的一个子集而已. 除此
+之外的使用场景应该用更一般化的 messaging model, 例如 AMQP.
 
 从 AMQP 的角度来看, redis 的 messaging model 可以描述为:
 
@@ -282,9 +284,11 @@ objects.
 注意到, 由于 redis 中相当于 subscriber 总是 declare exclusive queue, 因此在
 redis 中一个 subscriber 永远只能收到它 subscribe 一个 channel 之后发到这个
 channel 的消息. 而 rabbitmq 等 AMQP 实现, 由于具有独立于 consumer 的队列实体,
-只要队列预先存在, consumer 可以收到之前加入队列中 (尚未被消费) 的消息. 因此,
-若需要 message broker 具有相对于 consumer 而言是持久化的队列, 则 redis pub/sub
-不是一个合适的选择.
+只要队列预先存在, consumer 可以收到之前加入队列中 (尚未被消费) 的消息. 因此, 若
+需要 message broker 具有相对于 consumer 而言是持久化的队列, 则 redis pub/sub 不
+是一个合适的选择. 此时, 可以选择 list or stream (但相当于直接 produce 至队列,
+失去了 exchange 的灵活性), 或者直接使用专业的 message broker middleware, 例如
+rabbitmq.
 
 message format
 --------------

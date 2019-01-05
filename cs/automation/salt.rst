@@ -1190,6 +1190,14 @@ Wheel
 Job
 ===
 
+job id
+------
+- just fucking current time, 精确到 microsecond.
+
+- 若设置了 ``unique_jid``, append current pid.
+
+- 其实无法保证唯一性.
+
 job management
 --------------
 - proc system. Under ``$cachedir/proc``, 保存着当前正在执行的任务的信息.  对于
