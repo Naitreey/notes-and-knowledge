@@ -389,8 +389,8 @@ transaction properties
   makes sure to use a single write(2) syscall to write the transaction on
   disk.
 
-usage
------
+workflow
+--------
 - A transaction is entered by MULTI.
   
 - Then commands can be issued. All commands will reply with the string QUEUED.
@@ -447,6 +447,14 @@ error handling
 
   * Redis is internally simplified and faster because it does not need the
     ability to roll back.
+
+usage
+-----
+- 用于进行具有原子性的多个操作.
+
+- 与 optimistic locking 结合, 实现具有原子性的更复杂操作.
+
+- 与 pipeline 结合, 优化 transaction 的执行效率, 降低延迟.
 
 lua scripting
 =============
@@ -919,7 +927,9 @@ PUBLISH
 
 - publish a message.
 
-- returns an integer, the number of clients that received the message.
+- returns an integer, the number of bindings that received the message.  注意不
+  是 number of clients, 因为若一个 client 有多个 bindings matching the
+  published channel, 则为多个 bindings, 消息会接收多次.
 
 PUBSUB
 ^^^^^^
@@ -1318,6 +1328,29 @@ methods
   ``transaction`` controls whether to wrap the pipeline with a transaction, so
   that the commands in pipeline are executed atomically.
 
+- ``transaction(func, *watches, shard_hint=None, value_from_callable=False,
+  watch_delay=None, **kwargs)``. a convenience method that running a pipeline
+  inside a transaction, with optional watches. This handles retry on
+  WatchError, using optimistic locking with CAS pattern. See also `client-side
+  atomicity enforcement`_.
+
+  * ``func`` 的唯一参数为一个 Pipeline instance. 在 func 中不执行
+    ``Pipeline.execute()``. 若指定 ``*watches``, 在 func 中必须适时执行
+    ``Pipeline.multi()`` 进入 pipeline execution mode. 否则, 不能使用
+    ``Pipeilne.multi()``.
+
+  * 若指定 ``*watches``, 这些 keys 会在执行 func 之前 WATCHed.
+
+  * ``shard_hint`` same as Pipeline constructor.
+
+  * ``value_from_callable`` 是否使用 func 的返回值作为返回值, 默认使用
+    ``Pipeline.execute()`` 的返回值.
+
+  * ``watch_delay`` 重试时的等待时间, 默认不等待.
+
+- ``pubsub(**kwargs)``. Create a PubSub. passing client's connection pool.
+  ``**kwargs`` are those accepted by PubSub constructor.
+
 ConnectionPool
 ^^^^^^^^^^^^^^
 - Connections to redis server is actually managed by a connection pool. A Redis
@@ -1405,7 +1438,8 @@ methods
 - ``__exit__(exc_type, exc_value, traceback)``. reset pipeline.
 
 - ``multi()``. Mark all following commands in pipeline to be wrapped in a
-  transaction explicitly.
+  transaction explicitly. 注意这并不会立即发送 MULTI 至 server. 而是进入
+  pipeline execution mode. 先 cache commands at client-side.
 
 - ``watch(*names)``. WATCH names. mark pipeline in ``watching`` state.  after
   WATCHing, the pipeline is put into immediate execution mode until we tell it
@@ -1413,9 +1447,101 @@ methods
 
 PubSub
 ^^^^^^
+
 thread safety
 """""""""""""
 - No thread safety guarantee, each thread should use a separate PubSub.
+
+message format
+""""""""""""""
+a dict with following keys:
+
+- type. 'subscribe', 'unsubscribe', 'psubscribe', 'punsubscribe', 'message',
+  'pmessage'
+
+- channel. same as `message format`_ and `pmessage format` in `messaging`_.
+
+- pattern. for pmessage, the pattern matched; otherwise None.
+
+- data. same as `message format`_ and `pmessage format` in `messaging`_.
+
+message handler
+"""""""""""""""
+If for a channel/pattern a callback is specified, the callback is called 
+on receiving related messages, and the message itself is not returned.
+
+strategies for reading messages
+"""""""""""""""""""""""""""""""
+- ``get_message()``. suitable for integrate into an existing event loop inside
+  your application
+
+- ``listen()``. If your application doesn't need to do anything else but
+  receive and act on messages received from redis.
+
+- ``run_in_thread()``. handle consuming message in a separate thread, and do
+  other jobs in main thread.
+
+operations
+""""""""""
+- PubSub can only receive messages, to publish message use Redis client.
+
+- message consumption occupies a connection, but since Redis client uses
+  connection pool internally, while the ``PubSub.connection`` is in pub/sub
+  mode, the Redis client can still be used to issue other commands.
+
+connection recovery
+"""""""""""""""""""
+PubSub objects remember what channels and patterns they are subscribed to. In
+the event of a disconnection such as a network error or timeout, the PubSub
+object will re-subscribe to all prior channels and patterns when reconnecting.
+
+constructor
+""""""""""""
+- ``connection_pool``.
+
+- ``shard_hint=None``
+
+- ``ignore_subscribe_messages=False``. ignore subscribe/psubscribe,
+  unsubscribe/punsubscribe messages.
+
+methods
+"""""""
+- ``subscribe(*args, **kwargs)``. subscribe to channels, with optional
+  callbacks. channels can be specified as a list, or positionals, or kwargs
+  with callback function, for channel name that is invalid identifier, use
+  ``**{"channel": callback}``.
+
+  callback is passed with the received message as the only argument.
+
+- ``psubscribe(*args, **kwargs)``. subscribe to patterns, with optional
+  callbacks. others similar to ``subscribe()``.
+
+- ``unsubscribe(*args)``. UNSUBSCRIBE from the specified channels or all
+  channels.
+
+- ``punsubscribe(*args)``. PUNSUBSCRIBE similar to ``unsubscribe()``.
+
+- ``get_message(ignore_subscribe_messages=False, timeout=0)``. get message, if
+  no message after optional timeout seconds, return None. 注意如果采用了
+  callback, 即使有 message, 相应的 message 不会输出, 而是 None. 因此, None 不代
+  表没有收到消息.
+  
+- ``listen()``. block and listen for messages forever. Returns a generator that
+  yields the received and *unhandled* messages. If a message has already been
+  handled by a callback, it's not returned.
+
+- ``run_in_thread(sleep_time=0, daemon=False)``. run the message consuming loop
+  in a thread. All channels/patterns must have a callback. Messages are just
+  received and handled, but not returned in any way.
+  ``sleep_time`` specify how long to wait for the message in the loop.
+  ``daemon`` specify whether it's a daemon thread.
+
+  Returns the thread and starts it automatically.
+
+  Call ``Thread.stop()`` to stop the thread.
+
+- ``close()``. When you're finished with a PubSub object, call this method to
+  shutdown the connection and resetting all states.
 
 design patterns
 ---------------
@@ -1445,6 +1571,10 @@ Optimistic locking: Use pipeline with WATCH.
           continue
         else:
           break
+
+    # or
+
+    r.transaction(func)
 
 references
 ==========
