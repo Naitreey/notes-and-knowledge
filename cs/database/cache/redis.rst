@@ -279,6 +279,13 @@ Pub/Sub has no relation to the key space. It was made to not interfere with it
 on any level, including database numbers. In other words, channels are global
 objects.
 
+注意到, 由于 redis 中相当于 subscriber 总是 declare exclusive queue, 因此在
+redis 中一个 subscriber 永远只能收到它 subscribe 一个 channel 之后发到这个
+channel 的消息. 而 rabbitmq 等 AMQP 实现, 由于具有独立于 consumer 的队列实体,
+只要队列预先存在, consumer 可以收到之前加入队列中 (尚未被消费) 的消息. 因此,
+若需要 message broker 具有相对于 consumer 而言是持久化的队列, 则 redis pub/sub
+不是一个合适的选择.
+
 message format
 --------------
 The message format is used for
