@@ -3473,12 +3473,38 @@ migration checkings
 
 migration signals
 -----------------
-
 post_migrate
 ^^^^^^^^^^^^
-- sent at the end of ``migrate`` and ``flush`` management commands.
+- At the end of ``migrate`` and ``flush`` management commands, 对于每个
+  registered 并且有 models.py 模块的 app, 发送一次 ``post_migrate`` signal.
 
-- 对于每个 registered app, 发送一次这个 signal.
+- 该 signal 表示参数对应的 app 已经 migrate 完成, 可以进行 post migration 处理
+  了.
+
+- 在发送 ``post_migrate`` signal 时, 所有 apps 早已初始化完成, app registry
+  (Apps) 早已初始化完成, 且已经完成 database migrations. 
+
+- 发送 ``post_migrate`` signal 是在 ``emit_post_migrate_signal()`` 中进行的.
+
+- Handlers of this signal must not perform database schema alterations. 若需
+  数据库操作, 只该是 data manipulation.
+
+- arguments:
+
+  * sender. 完成 migration 的 app's AppConfig.
+
+  * app_config. ditto.
+
+  * verbosity. same as ``manage.py migrate``'s the very same flag.
+
+  * interactive. same as ``manage.py migrate --noinput`` flag.
+
+  * using. db alias used.
+
+  * plan. migration plan used by ``migrate`` command.
+
+  * apps. An app registry containing the state of the project after the
+    migration run. Use this instead of global app registry.
 
 settings
 --------
@@ -7139,10 +7165,10 @@ AnonymousUser implements basic interface of AbstractUser.
 Permission and Authorization
 ----------------------------
 
-- 每个 app 的每个 model 都默认存在 add, change, delete 三个权限. 这些权限
+- 每个 app 的每个 model 都默认存在 view, add, change, delete 四个权限. 这些权限
   是在 Model.Meta.default_permissions 定义的.
 
-- 权限检查 ``User.has_perm(<app_label>."add|change|delete"_<model>)``
+- 权限检查 ``User.has_perm(<app_label>."view|add|change|delete"_<model>)``
 
 - 一个用户或一个组可以有任意个权限 (many-to-many). 组具有的权限用户自动具有.
 
