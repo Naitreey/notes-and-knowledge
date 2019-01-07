@@ -9482,9 +9482,79 @@ design patterns
   细节. 这样不但是更好的设计, 更可读的代码, 也更容易进行单元测试. 只需在 UT 中
   mock 这些封装的集成点即可.
 
+System check
+============
+overview
+--------
+- A set of static checks for validating Django projects.
+
+- It detects problems and provides hints for how to fix them.
+
+- When the system checks are run:
+
+  * explicitly by checking command ``./manage.py check``.
+
+  * implicitly when the management command's ``require_system_checks=True``,
+    which is the default.
+
+  这些是在 ``BaseCommand.check()`` 中实现的.
+
+writing system checks
+---------------------
+- A check is a callable with the following formal parameters:
+
+  * ``app_configs``. A list of applications that should be inspected. If None,
+    the check must be run on all installed apps in the project.
+
+  * ``**kwargs``. not used.
+
+  It returns a list of CheckMessage instances, each representing an found
+  issue, if no issue is found, returns [].
+
+- Register the callable to the global CheckRegistry.::
+
+    @register(label1, ...)
+    def check(app_configs, **kwargs):
+        return issues
+
+  ``register`` decorator is ``CheckRegistry.register()`` method.
+
+- Put system checking codes in ``<app_label>/checks.py``, running system check
+  registration in ``AppConfig.ready()`` method (when app is loaded).
+
+check messages
+--------------
+- all check messages are instances of CheckMessage class.
+
+- Messages are tagged with a level indicating the severity of the message.
+
+- builtin message levels: DEBUG, INFO, WARNING, ERROR, CRITICAL. Defined in
+  django.core.checks.messages.
+
+- builtin CheckMessage subclasses: Debug, Info, Warning, Error, Critical.
+
+CheckMessage
+^^^^^^^^^^^^
+constructor
+"""""""""""
+- level. message level. a int level number.
+
+- msg.
+
+- ``hint=None``.
+
+- ``obj=None``.
+
+- ``id=None``.
+
+check labels
+------------
+
+management commands
+-------------------
+
 django-admin
 ============
-
 CLI usage
 ---------
 ::
@@ -9626,13 +9696,12 @@ module-level functions
 
 command class
 ^^^^^^^^^^^^^
-
 BaseCommand
 """"""""""""
 ``django.core.management.BaseCommand``: base class of all management commands.
 
 options
-
+~~~~~~~
 - ``help``. command description. default empty string.
 
 - ``missing_args_message``. 对于 subcommand 定义了 required positionals 时,
@@ -9655,7 +9724,7 @@ options
   于在 ``call_command()`` 时传递一些额外的参数. 例如 stdout/stderr redirection.
 
 attributes
-
+~~~~~~~~~~
 - ``style``. output colorscheme ``Style`` definitions instance. attribute
   names are uppercased palette role name. attribute values are corresponding
   ``colorize()`` function.
@@ -9667,7 +9736,7 @@ attributes
   添加 line ending, 如果输入没有提供的话.
 
 methods
-
+~~~~~~~
 - ``add_arguments(parser)``. 添加自定义的命令行参数. parse 是 ArgumentParser.
 
 - ``get_version()``. default return django version. can be overrided to provide
@@ -9682,7 +9751,11 @@ methods
   to stdout. returned output 应该用于输出某种执行结果数据. 对于过程中的 generic
   output 直接写入 ``self.stdout``, ``self.stderr`` streams 即可.
 
-- ``check()``. system check.
+- ``check(app_configs=None, tags=None, display_num_errors=False,
+  include_deployment_checks=False, fail_level=checks.ERROR)``.
+  Run system checks. If any CheckMessage has a level equal or higher than
+  ``fail_level`` and not silenced, the SystemCheckError is raised, therefore
+  the command exits with a non-zero status.
 
 - ``check_migrations()``. migration check.
 
@@ -9694,7 +9767,6 @@ methods
 
 exceptions
 ^^^^^^^^^^
-
 CommandError
 """"""""""""
 If this exception is raised during the execution of a management command from a
@@ -9722,7 +9794,6 @@ django-mysql
 
 system checks
 ^^^^^^^^^^^^^
-
 Strict Mode
 """""""""""
 
