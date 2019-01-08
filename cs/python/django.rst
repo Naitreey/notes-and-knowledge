@@ -4619,6 +4619,25 @@ model
 * ``django.core.exceptions.ObjectDoesNotExist`` 是所有 ``Model.DoesNotExist``
   exception 的父类.
 
+model class
+-----------
+class methods
+^^^^^^^^^^^^^
+- ``check(**kwargs)``. Entry point for all model related system checks. This
+  method is called by ``django.core.checks.model_checks.check_all_models``
+  which is a registered system check.
+
+  The checks performed here:
+
+  * Every field instance's ``check()`` method.
+
+  * Every model manager's ``check()`` method.
+
+  * ...
+
+  If model subclas wanna extend checks, it's recommended that you delegate each
+  check to separate non-public methods.
+
 inheritance
 -----------
 
@@ -5139,6 +5158,8 @@ field checkings
   * 检查 field class 是否 pending deprecation 或者已经 removed. 若此, 输出相应
     的警告或错误信息.
 
+  子类若需扩展 system checks, 应将每个测试点放在一个单独的 non-public method 中.
+
 model clean & validation
 """"""""""""""""""""""""
 
@@ -5546,14 +5567,14 @@ concrete forward relations.
 
     * related_name, related_query_name, limit_choices_to.
 
-    * ``symmetrical``, 与 recursive M2M relationship 相关.
+    * ``symmetrical``, M2M relationship pointing to self 时, 可能希望
+      ``related_name`` 与 field name 相同, 此时, 希望 ``a.relations.add(b)`` 之
+      后, ``b.relations`` 自动也包含 ``a``. 
 
-    * ``through``
-
-      through model. 多对多关系实际上是通过一个关系表来实现的. 这个关系表的 model
-      可通过 ``ManyToManyField.through`` attribute 获得. 并可以通过 ``through``
-      option 来指定单独创建的 through model, 这可用于在 through model 中加入额外的
-      状态信息等列.
+    * ``through``. through model. 多对多关系实际上是通过一个关系表来实现的. 这
+      个关系表的 model 可通过 ``ManyToManyField.through`` attribute 获得. 并可
+      以通过 ``through`` option 来指定单独创建的 through model, 这可用于在
+      through model 中加入额外的状态信息等列.
 
       ``.through`` 属性在 field instance 是 through model class.
 
@@ -6250,8 +6271,12 @@ attributes
 methods
 """""""
 
-* ``db_manager()``. 生成一个使用指定数据库的 manager instance.
+* ``db_manager(using=None, hints=None)``. 生成一个使用指定数据库的 manager
+  instance.
 
+* ``check(**kwargs)``. perform checks regarding this model manager. 这里什么也
+  没检查. 子类扩展 system checks 时, 应将每个测试点放在一个单独的 non-public
+  method 中.
 
 Manager
 ^^^^^^^
@@ -9522,6 +9547,16 @@ writing system checks
 - Put system checking codes in ``<app_label>/checks.py``, running system check
   registration in ``AppConfig.ready()`` method (when app is loaded).
 
+check registry
+--------------
+- ``django.core.checks.registry.CheckRegistry``
+
+methods
+"""""""
+- ``register(check=None, *tags, deploy=False)``. register a check.  ``check``
+  can be the check callable, or just another tag in which case the method is
+  used as a decorator. ``deploy`` define whether this is a deployment check.
+
 check messages
 --------------
 - all check messages are instances of CheckMessage class.
@@ -9537,21 +9572,83 @@ CheckMessage
 ^^^^^^^^^^^^
 constructor
 """""""""""
-- level. message level. a int level number.
+- level. message level. a int level number, probably one of the predefined
+  values.
 
-- msg.
+- msg. describing the problem, in less than 80 chars. Should not contain
+  newlines.
 
-- ``hint=None``.
+- ``hint=None``. a hint for fixing the problem. no newline. If no hint can be
+  provided, or the hint is self-evident from the error message, the hint can be
+  omitted.
 
-- ``obj=None``.
+- ``obj=None``. An object providing context for the message (for example, the
+  model where the problem was discovered). Anything that defines a string
+  representation.
 
-- ``id=None``.
+- ``id=None``. A unique identifier for the issue. Identifiers should follow the
+  pattern ``<app_label>.XNNN``, where X is one of the letters CEWID, indicating
+  the message severity. The number should be unique within the application.
 
-check labels
-------------
+methods
+"""""""
+- ``__eq__(other)``. Message instances are comparable. They are equal when
+  their level, msg, hint, obj, id are all equal. This makes testing easier.
+
+check tags
+----------
+- tags allow only a category of checks to be run.
+
+- The bulitin tags are defined as enum: ``django.core.checks.registry.Tags``.
+  See https://docs.djangoproject.com/en/stable/ref/checks/#builtin-tags for
+  explanations.
+
+  * database. Database checks are not run by default because they do more than
+    static code analysis as regular checks do. They are only run by the
+    ``migrate`` command or if you specify the ``database`` tag when calling the
+    check command.
+
+deployment checks
+-----------------
+- deployment checks are only run when ``check --deploy`` is used.
+
+- deployment checks is meant to check only issues regarding deployment
+  environment/settings, etc, which is not universally applicable to any stage
+  of development, just specific to production.
+
+- 它们与普通的 checks 是分开成两组的.
+
+builtin checks
+--------------
+- See https://docs.djangoproject.com/en/2.1/ref/checks/ for a list of builtin
+  checks.
+
+model checks
+^^^^^^^^^^^^
+- Call ``Model.check()`` classmethod, performing all range of checks regarding
+  models/fields/managers, etc.
 
 management commands
 -------------------
+check
+^^^^^
+::
+
+  ./manage.py check [app_label]...
+
+- If app labels are specified, only those apps are checked. By default all apps
+  are checked.
+
+- ``--tag TAG``. only checks belonging to TAG are checked. can specify multiple
+  times.
+
+- ``--list-tags``. list all tags.
+
+- ``--deploy``. activate additional deployment-only checks.
+
+- ``--fail-level {CRITICAL,ERROR,WARNING,INFO,DEBUG}``. consider issues of the
+  specified level or higher to be serious, and causing check to fail. default
+  is ERROR.
 
 django-admin
 ============
