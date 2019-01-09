@@ -1726,6 +1726,8 @@ Primary configurations
 
 * ``cachedir``, ``/var/cache/salt/master``. master cache data.
 
+* ``publish_port``. default 4505. master publish server port.
+
 job management configurations
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 * ``job_cache``. default True. Set to False to disable job cache. But the
@@ -1774,9 +1776,9 @@ Primary configurations
 * ``master_type``. default ``str``. can be ``str``, ``failover``, ``func``,
   ``disable``.
 
-* ``master_port``. default 4506. master ret server port.
-
 * ``publish_port``. default 4505. master publish server port.
+
+* ``master_port``. default 4506. master ret server port.
 
 * ``minion_id_caching``, 将 minion id 缓存在 ``minion_id`` file 中. 这是为了当
   minion 配置文件中没有定义 ``id`` 时, resolved minion id 值不随 hostname 的

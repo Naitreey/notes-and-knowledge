@@ -2,9 +2,11 @@ overview
 ========
 - redis: REmote DIctionary Server
 
-- in-memory key-value store.
+- in-memory key-value store, a data structures server.
 
   * A key-value store maps keys to values.
+
+  * Values can be many kinds of data types.
 
 - usage: cache, in-memory database, message broker (message queue).
 
@@ -70,17 +72,9 @@ comparison: redis vs memcached
 
 redis keys
 ==========
-* A redis key is a redis string type value.
+* A redis key is a redis string type value. So it can be any binary sequence.
 
 * A key can be empty string.
-
-* Caution: very long keys is bad, because 1) use more memory 2) key
-  comparison during lookups becomes expensive.
-
-* 由于 key 没必要是 identifier, 而是任意字符, 对于复杂的应用场景, 需要规范一个
-  key schema, 即划分 key 的结构. 例如 ``ns1:ns2:keyname``
-
-  常见分隔符: ``:`` 用于分隔层级, ``.`` or ``-`` 用于层级内 word separation.
 
 * creation and removal of keys.
 
@@ -95,11 +89,28 @@ redis keys
     nonexistent key, 相当于应用该命令在一个类型相符的 empty aggregate value
     上面.
 
+design patterns
+---------------
+* very long keys is bad, because
+  
+  1) use more memory.
+  
+  2) key comparison during lookups becomes expensive.
+
+  When there's need to use a very long key, using its hash as actual key value
+  is a better idea.
+
+* 由于 key 没必要是 identifier, 而是任意字符, 对于复杂的应用场景, 需要规范一个
+  key schema, 即划分 key 的结构. 例如 ``ns1:ns2:keyname``
+
+  常见分隔符: ``:`` 用于分隔层级, ``.`` or ``-`` 用于层级内 word separation.
+
 data types
 ==========
 string
 ------
-- strings can be any binary sequence.
+- strings can be any binary sequence. It's not unicode string, but binary
+  string.
 
 - A string's max size is 512MB.
 
@@ -110,9 +121,9 @@ string
   * cache html pages.
 
 bitmap/bit array
-----------------
+^^^^^^^^^^^^^^^^
 - Bitmaps are not an actual data type, but a set of bit-oriented operations
-  defined on the String type. 因此可以分别使用 GET/SET 去 serialize/deserialize
+  defined on the string type. 因此可以分别使用 GET/SET 去 serialize/deserialize
   bitmap.
 
 - For max size 512MB string, corresponds to 2**32 bit array.
@@ -134,20 +145,14 @@ bitmap/bit array
 
   * Real time analytics of all kinds.
 
-  * space efficient but high performance boolean information associated with
-    object IDs. 前提要求是 object id 是依次递增的. 否则在小数据量时会造成
-    不必要的内存浪费.
-
+  * Space efficient but high performance boolean information associated with
+    object IDs. 前提要求是 object id 是依次递增的. 否则在小数据量时会造成不必要
+    的内存浪费.
 
 list
 ----
-
-- linked list.
+- A redis list is a linked list, where elements are strings.
   
-- string elements.
-
-- sorted according to the order of insertion.
-
 - 由于是 linked list,
   
   * LPUSH & RPUSH 操作都是 constant time.
@@ -169,17 +174,16 @@ list
 
 set
 ---
-
 - collection of unique, unsorted strings.
 
 sorted set
 ----------
-
-- Every element is associated with a score.
+- A set where every element (a string) is associated with a score, and
+  sorted by their scores.
 
 - A score is a floating number.
 
-- sorted by score. So it has order, and can talk about ranges.
+- Because a sorted set has ordering, there are commands acting on ranges.
 
 - It's useful:
  
@@ -188,18 +192,16 @@ sorted set
 
 hash
 ----
-
 - a map of strings to strings.
 
 HyperLogLog (HLL)
 -----------------
-
 - a probabilistic data structure which is used in order to estimate the
-  cardinality of a set (like counting unique things).
+  cardinality of a set.
 
-- 使用统计学的方法, 可以避免存储已经见过的每个 unique element,
-  从而大大降低内存使用. 然而 tradeoff 是结果的精度. 对于 Redis 的 HLL
-  implementation, 估计结果的标准差小于 1%.
+- 使用统计学的方法, 可以避免存储已经见过的每个 unique element, 从而大大降低内存
+  使用. 然而 tradeoff 是结果的精度. 对于 Redis 的 HLL implementation, 估计结果
+  的标准差小于 1%.
 
 - HLLs in Redis, while technically a different data structure, are encoded as a
   Redis string, so you can call GET to serialize a HLL, and SET to deserialize
@@ -487,6 +489,12 @@ generic
 
 EXISTS
 ^^^^^^
+::
+
+  EXISTS key [key]...
+
+- returns the total number of keys existing. if the same existing key is
+  mentioned in the arguments multiple times, it will be counted multiple times.
 
 DEL
 ^^^
@@ -521,17 +529,32 @@ SCAN
 
 string
 ------
-
 GET
 ^^^
+::
+
+  GET key
+
+- If the key does not exist the special value nil is returned.
+
+- Because GET only handles string values, An error is returned if the value
+  stored at key is not a string.
 
 SET
 ^^^
 ::
 
-  SET key value [EX seconds] [PX milliseconds] [NX|XX]
+  SET key value [EX seconds | PX milliseconds] [NX|XX]
 
-- set value to key. By default any existing value is overriden.
+- set value to string value. By default any existing value is overriden.
+
+- Returns OK, or nil if condition not met.
+
+- Any previous TTL associated with the key is discarded on successful SET.
+
+- ``EX``. expire time in seconds.
+
+- ``PX``. expire time in milliseconds.
 
 - ``NX``. set only if not exist.
 
@@ -539,38 +562,69 @@ SET
 
 INCR
 ^^^^
+::
 
-- Parse the value of key is number, increment by 1. If key does not exist, set
-  it to 0 before incrementing. If the value can not be interpreted as integer,
-  abort with error.
+  INCR key
+
+- Parse the value of key as base-10 64 bit signed integer, increment by 1. If
+  key does not exist, set it to 0 before incrementing.
+
+- Return the resulted number. Or abort with error, if value can not be
+  interpreted as integer or out of range.
 
 - limited by 64bit signed integer.
 
-- 解决 race condition. INCR 解决的问题是多个客户端需要递增一个量时, 各自 GET
-  then SET 存在信息不同步的问题, 从而导致 race condition. INCR 由 server 控制,
-  这样就把控制权集中了, 在多线程 (多客户端的一般化) 情况下避免了 race
-  condition. 这是 atomic operation 的意义.
+- Redis stores integers in their integer representation, so for string values
+  that actually hold an integer, there is no overhead for storing the string
+  representation of the integer.
+
+  但在 GET 这样的整数时, 仍然输出的是正确的 number value, in string form.
+
+- Usage. 当一个 key 作为 counter 使用时, 解决 race condition. INCR 解决的问题是
+  多个客户端需要递增一个量时, 各自 GET then SET 存在信息不同步的问题, 从而导致
+  race condition. INCR 由 server 控制, 这样就把控制权集中了, 在多线程 (多客户端
+  的一般化) 情况下避免了 race condition. 这是 atomic operation 的意义.
 
   类似于 database 中的 auto increment field.
 
 INCRBY
 ^^^^^^
+::
+
+  INCRBY key increment
+
+- similar to INCR, by an amount.
 
 DECR
 ^^^^
+::
+
+  DECR key
+
+- similar to INCR, negative number is possible.
 
 DECRBY
 ^^^^^^
+::
+
+  DECRBY key decrement
+
+- similar to DECR, by an amount.
 
 GETSET
 ^^^^^^
+::
 
-- GETSET is atomic.
+  GETSET key value
 
-- 解决 race condition. GETSET 解决的问题是一个客户端现在即要 GET 又要 SET, 如果
-  GET then SET, 则两个操作之间的时间差允许其他客户端对该 key 值进行修改. 之后的
-  SET 就错误 override 了别的客户端的修改. 所以实现一个 atomic 的 GET & SET 操作,
-  消除了这个时间差, 也就消除了引发的 race condition.
+- Atomically sets key to value and returns the old value.
+
+- Returns nil if key is not string.
+
+- Usage. 解决 race condition. GETSET 解决的问题是一个客户端现在即要 GET 又要
+  SET, 如果 GET then SET, 则两个操作之间的时间差允许其他客户端对该 key 值进行修
+  改. 之后的 SET 就错误 override 了别的客户端的修改. 所以实现一个 atomic 的 GET
+  & SET 操作, 消除了这个时间差, 也就消除了引发的 race condition.
 
 - usage examples.
 
@@ -579,16 +633,27 @@ GETSET
 
 MGET
 ^^^^
+::
+
+  MGET key [key]...
+
+- Returns an Array of values, for every key that does not hold a string value
+  or does not exist, the special value nil is returned.
 
 - useful to reduce latency and atomically get multiple values.
 
 MSET
 ^^^^
+::
+
+  MSET key value [key value]...
+
+- Returns OK.
 
 - useful to reduce latency and atomically set multiple values.
 
-SETNX
-^^^^^
+MSETNX
+^^^^^^
 
 bitmap
 ------
@@ -1586,6 +1651,53 @@ Optimistic locking: Use pipeline with WATCH.
     # or
 
     r.transaction(func)
+
+atomic counter
+^^^^^^^^^^^^^^
+- use INCR related commands
+
+counter with atomic reset
+^^^^^^^^^^^^^^^^^^^^^^^^^
+- use GETSET to make atomic reset and get the old value at the same time,
+  for statistics possibly.
+
+rate limiter
+^^^^^^^^^^^^
+limit rate for every second, every IP
+
+1. ::
+
+    FUNCTION LIMIT_API_CALL(ip)
+    ts = CURRENT_UNIX_TIME()
+    keyname = ip+":"+ts
+    current = GET(keyname)
+    IF current != NULL AND current > 10 THEN
+        ERROR "too many requests per second"
+    ELSE
+        MULTI
+            INCR(keyname,1)
+            EXPIRE(keyname,10)
+        EXEC
+        PERFORM_API_CALL()
+    END
+
+2. ::
+
+    FUNCTION LIMIT_API_CALL(ip)
+    current = LLEN(ip)
+    IF current > 10 THEN
+        ERROR "too many requests per second"
+    ELSE
+        IF EXISTS(ip) == FALSE
+            MULTI
+                RPUSH(ip,ip)
+                EXPIRE(ip,1)
+            EXEC
+        ELSE
+            RPUSHX(ip,ip)
+        END
+        PERFORM_API_CALL()
+    END
 
 references
 ==========

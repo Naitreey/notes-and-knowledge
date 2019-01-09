@@ -9777,19 +9777,17 @@ Core functionality resides in ``django.core.management``.
 
 module-level functions
 ^^^^^^^^^^^^^^^^^^^^^^
-
 - ``call_command(name, *args, **options)``. call management command
   programmatically.
   
-  * ``name`` of command.
+  * ``name``. a command name string or a command object.
     
-  * arg is commadline argument list. 
+  * ``*args``. commadline argument list. 
 
-  * options is command line option and stealth_options in kwarg form.
-    这部分不通过 parser 解析, 应该符合 ``parse_args()`` 输出.
-    Send directly to ``BaseCommand.execute()``.
-
-    stdout/stderr options can be used for redirection.
+  * ``**options``. Command line option and ``stealth_options`` in kwarg form.
+    这部分相当于不通过 parser 解析, 直接传入 ``BaseCommand.execute()``, 应该符
+    合 ``parse_args()`` 输出格式. 这里可以传入任何 ``execute()`` method 支持的
+    额外参数, 例如 stdout, stderr 等.
 
 command class
 ^^^^^^^^^^^^^
