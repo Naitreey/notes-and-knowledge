@@ -153,16 +153,11 @@ list
 ----
 - A redis list is a linked list, where elements are strings.
   
-- 由于是 linked list,
+- 由于是 linked list, 好处是 push/pop at both sides 操作都是 constant time.
+  这对于一个数据库系统来说是很重要的.
   
-  * LPUSH & RPUSH 操作都是 constant time.
-
-  * 但对于 access element by index requires an amount of work proportional to
-    the index of the accessed element.
-
-- Redis Lists are implemented with linked lists because for a database system
-  it is crucial to be able to add elements to a very long list in a very fast
-  way.
+  但缺点是, access by index is O(N). 若需要对首尾之外的中间部分的快速访问,
+  可考虑 sorted set.
 
 - example usages:
 
@@ -517,16 +512,84 @@ TYPE
 
 EXPIRE
 ^^^^^^
+::
 
-- 
+  EXPIRE key seconds
+
+- Set or reset a key's EXPIRE time countdown. Return 1 if timeout is set, 0 if
+  key does not exist.
+
+- A key with an associated timeout is called a volatile key.
+
+- The timeout will only be cleared by commands that delete or overwrite the
+  contents of the key, including DEL, SET, GETSET and all the ``*STORE``
+  commands. All the operations that conceptually *alter* the value stored at
+  the key without replacing it with a new one will leave the timeout untouched.
+
+- Use PERSIST to clear timeout.
+
+- When a key is RENAMEd, timeout is transfered to new key.
+
+- When ``seconds`` is negative, or EXPIREAT specified a time in the past, the
+  key is deleted immediately, rather than expired.
+
+- Expire accuracy: the expire error is from 0 to 1 milliseconds.
+
+- Keys expiring information is stored as absolute Unix timestamps in
+  milliseconds. This means that the time is flowing even when the Redis
+  instance is not active. This also means all nodes in a clustered redis setup
+  must have stable, synced time.
+
+- Expire strategies: passive and active expiry.
+
+  * passive expiry. A key is passively expired simply when some client tries to
+    access it, and the key is found to be timed out. 然而一些 key 可能不会再被
+    访问, 造成内存浪费. 因此 passive expiry 是不够的, 还需要 active expiry.
+
+  * active expiry. Periodically Redis tests a few keys at random among keys
+    with an expire set. All the keys that are seen expired are deleted from the
+    keyspace.
+
+    Redis does the following expiry checking for 10 times per second:
+
+    - Test 20 random keys from the set of keys with an associated expire.
+
+    - Delete all the keys found expired.
+
+    - If more than 25% of keys were expired, start again from step 1.
+
+    This means that at any given moment the maximum amount of keys already
+    expired that are using memory is at max equal to max amount of write
+    operations per second divided by 4.
+
+- During replication, the replicas connected to a master will not expire keys
+  independently but will wait for the DEL coming from the master.
 
 PERSIST
 ^^^^^^^
+::
+
+  PERSIST key
+
+- remove expiry on key.
+
+- returns 1 if succuess, 0 if key not exist or no expiry attached.
 
 TTL
 ^^^
+::
 
-- returns: -1 (never expire), -2 (not exist).
+  TTL key
+
+- returns: TTL in seconds, or -1 (never expire), -2 (not exist).
+
+PTTL
+^^^^
+::
+
+  PTTL key
+
+- returns: TTL in milliseconds, or -1 (never expire), -2 (not exist).
 
 SCAN
 ^^^^
@@ -686,26 +749,79 @@ BITPOS
 list
 ----
 
-RPUSH
-^^^^^
-
-LPUSH
-^^^^^
-
 LLEN
 ^^^^
 
 LRANGE
 ^^^^^^
+::
 
-- time complexity: O(N). accessing small ranges towards the head or the tail of
-  the list is a constant time operation.
+  LRANGE key start stop
+
+- Returns an Array of elements from start to stop, inclusive.
+
+- indexes are 0-based. negative counts from the end of the list, -1 is the
+  last.
+
+- Out of range indexes will not produce an error but an empty Array, like
+  python slicing. start bigger than stop also produces empty Array.
+
+- accessing small ranges towards the head or the tail of the list is a constant
+  time operation.
+
+LTRIM
+^^^^^
+::
+
+  LTRIM key start stop
+
+- trim a list, leaving the specified range.
+
+- start/stop is the same as LRANGE.
+
+LPUSH
+^^^^^
+::
+
+  LPUSH key value [value]...
+
+- push values at head of list. 对于一次 push 多个元素的情况, elements are
+  inserted one after the other to the head of the list, from the leftmost
+  element to the rightmost element. 这导致, list 中元素的顺序是 LPUSH 参数
+  列表的逆序.
+
+- Returns the length of list after push. an error is returned when key is not
+  list.
+
+RPUSH
+^^^^^
+::
+
+  RPUSH key value [value]...
+
+- push values at tail of list. 对于多个元素的情况, 结果顺序与参数顺序一致, 这与
+  LPUSH 正好相反.
+
+- Returns the length of list after push. an error is returned when key is not
+  list.
 
 LPOP
 ^^^^
+::
+
+  LPOP key
+
+- pop first element off key.
+
+- returns the value, or nil if key not exist.
 
 RPOP
 ^^^^
+::
+
+  RPOP key
+
+- pop last element off key. otherwise like LPOP.
 
 BLPOP
 ^^^^^
@@ -723,9 +839,6 @@ RPOPLPUSH
 
 BRPOPLPUSH
 ^^^^^^^^^^
-
-LTRIM
-^^^^^
 
 set
 ---
@@ -1702,6 +1815,14 @@ limit rate for every second, every IP
         END
         PERFORM_API_CALL()
     END
+
+messaging queue
+^^^^^^^^^^^^^^^
+Use list, with BRPOPLPUSH.
+
+capped list
+^^^^^^^^^^^
+- LPUSH/RPUSH + LTRIM.
 
 references
 ==========
