@@ -508,8 +508,12 @@ DEL
 
 TYPE
 ^^^^
+::
 
-- returns the type of value or none.
+  TYPE key
+
+- returns the type of value or none, in string form. (string, list, set, zset,
+  hash and stream, none).
 
 EXPIRE
 ^^^^^^
