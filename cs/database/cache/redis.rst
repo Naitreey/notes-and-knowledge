@@ -176,13 +176,17 @@ sorted set
 - A set where every element (a string) is associated with a score, and
   sorted by their scores.
 
-- A score is a floating number. The elements are sorted by score on storage.
+- A score is a floating number.
 
-- The ordering rule:
+- elemented are sorted by:
 
-  * Elements are sorted by 
+  1) score ascendingly
+
+  2) lexicographically if score equals (by memcmp(3), 因此是纯二进制比较.)
 
 - Because a sorted set has ordering, there are commands acting on ranges.
+
+- a sorted set is implemented by a skip list and a hash table.
 
 - It's useful:
  
@@ -1079,26 +1083,41 @@ SISMEMBER
 
 sorted set
 ----------
-
-- elements are unique, non-repeating string elements.
-
-- every element in a sorted set is associated with a floating point value,
-  called the score. This is like mapping elements to scores.
-
-- Elements in a sorted sets are sorted in internal data structure. In other
-  words, order is stored with data.
-
-- elemented are sorted by:
-
-  1) score
-
-  2) lexicographically if score equals (by memcmp(3), 因此是纯二进制比较.)
-
 ZADD
 ^^^^
+::
 
-- calling ZADD against an element already included in the sorted set will
-  update its score (and position) with O(log(N)) time complexity.
+  ZADD key [NX|XX] [CH] [INCR] score member [score member]...
+
+- adds members with scores to the sorted set.
+
+- If a specified member is already a member of the sorted set, the score is
+  updated and the element reinserted at the correct position to ensure correct
+  ordering.
+
+- score value: the string representation of a double precision floating point
+  number (IEEE 754). +inf and -inf are valid.
+
+- NX. only add nonexisting (new) elements, don't update existing elements.
+
+- XX. only update existing elements, don't add new elements.
+
+- CH. return value represents the number of elements changed. Changed elements
+  include new elements and existing elements for which score was changed.
+
+- INCR. make ZADD act like ZINCRBY. only one score-member pair is allowed.
+  This mode can be affected by NX/XX, in which case only non-existing or
+  existing element's score can be INCR-ed.
+
+- Returns
+  
+  * normally: number of elements added, not including existing updated
+    elements.
+
+  * with CH: number of elements changed.
+
+  * with INCR. the new score, like ZINCRBY. If NX/XX condition is invalidated,
+    return nil.
 
 ZREM
 ^^^^
