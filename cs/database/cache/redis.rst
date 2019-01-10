@@ -176,7 +176,11 @@ sorted set
 - A set where every element (a string) is associated with a score, and
   sorted by their scores.
 
-- A score is a floating number.
+- A score is a floating number. The elements are sorted by score on storage.
+
+- The ordering rule:
+
+  * Elements are sorted by 
 
 - Because a sorted set has ordering, there are commands acting on ranges.
 
