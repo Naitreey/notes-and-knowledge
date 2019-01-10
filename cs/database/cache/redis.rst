@@ -189,6 +189,11 @@ hash
 ----
 - a map of strings to strings.
 
+- there's no limit on the number of fields a hash can hold.
+
+- small hashes (i.e., a few elements with small values) are encoded in special
+  way in memory that make them very memory efficient.
+
 HyperLogLog (HLL)
 -----------------
 - a probabilistic data structure which is used in order to estimate the
@@ -660,7 +665,30 @@ INCRBY
 
   INCRBY key increment
 
-- similar to INCR, by an amount.
+- similar to INCR, by an amount. The amount can be negative to actually
+  decrement.
+
+INCRBYFLOAT
+^^^^^^^^^^^
+::
+
+  INCRBYFLOAT key increment
+
+- like INCRYBY, for float.
+
+- Both the value already contained in the string key and the increment argument
+  can be optionally provided in exponential notation, however the value
+  computed after the increment is stored consistently in the same format, that
+  is, an integer number followed (if needed) by a dot, and a variable number of
+  digits representing the decimal part of the number. Trailing zeroes are
+  always removed.
+
+- The precision of the output is fixed at 17 digits after the decimal point
+  regardless of the actual internal precision of the computation.
+
+- The command is always propagated in the replication link and the Append Only
+  File as a SET operation, so that differences in the underlying floating point
+  math implementation will not be sources of inconsistency.
 
 DECR
 ^^^^
@@ -676,7 +704,7 @@ DECRBY
 
   DECRBY key decrement
 
-- similar to DECR, by an amount.
+- similar to DECR, by an amount. amount can be negative.
 
 GETSET
 ^^^^^^
@@ -779,6 +807,24 @@ LTRIM
 
 - start/stop is the same as LRANGE.
 
+LREM
+^^^^
+::
+
+  LREM key count value
+
+- remove the first count occurrences of value from key.
+
+- count:
+
+  * positive, remove first count.
+
+  * negative, remove last ``|count|``.
+
+  * 0, remove all elements.
+
+- Returns the number of removed elements.
+
 LPUSH
 ^^^^^
 ::
@@ -827,57 +873,205 @@ BLPOP
 ^^^^^
 ::
 
-  BLPOP key [key ...] timeout
+  BLPOP key [key]... timeout
 
-- timeout can be 0 to wait forever.
+- An element is popped from the head of the first list that is non-empty, with
+  the given keys being checked in the order that they are given. Block the
+  connection when there are no elements to pop from any of the given lists
+  (i.e., none of the keys exists).
+
+- timeout is the max seconds to wait, can be 0 to wait forever.
+
+- Returns an Array, the first is the name of the key where element is popped,
+  the second is the value of the popped element. Or nil if no element is
+  available and timeout is expired.
+
+- serving order.
+  
+  * If multiple clients are blocked for the same key, the first client to be
+    served is the one that was waiting for more time (the first that blocked
+    for the key). Once a client is unblocked it does not retain any priority.
+
+  * When a client is blocking for *multiple keys* at the same time, and
+    elements are available at *the same time* in multiple keys (because of a
+    transaction or lua script), the client will be unblocked using the first
+    key that received an element.
+
+  * After the execution of every command/transaction/script, Redis will run a
+    list of all the keys that received data AND that have at least a client
+    blocked. The list is ordered by new element arrival time, from the first
+    key that received data to the last. For every key processed, Redis will
+    serve all the clients waiting for that key in a FIFO fashion, as long as
+    there are elements in this key. When the key is empty or there are no
+    longer clients waiting for this key, the next key that received new data in
+    the previous command / transaction / script is processed, and so forth.
+
+- BLPOP inside a transaction never blocks, it either pops an element immediately
+  or returns nil. Otherwise the operation will block the server.
 
 BRPOP
 ^^^^^
+::
+
+  BRPOP key [key]... timeout
+
+- similar to BLPOP, but for tail.
 
 RPOPLPUSH
 ^^^^^^^^^
+::
+
+  RPOPLPUSH source destination
+
+- atomically RPOP from source and LPUSH to destination.
+
+- returns the popped element, or nil if source does not exist.
+
+- If source and destination is the same list, equivalent to list rotation.
 
 BRPOPLPUSH
 ^^^^^^^^^^
+::
+
+  BRPOPLPUSH source destination timeout
+
+- block variant of RPOPLPUSH.
 
 set
 ---
-
-- unordered collection of strings.
-
 SADD
 ^^^^
+::
+
+  SADD key member [member]...
+
+- add members to key.
+
+- returns the number of elements actually added.
 
 SREM
 ^^^^
+::
 
-SISMEMBER
-^^^^^^^^^
+  SREM key member [member]...
 
-SMEMBERS
-^^^^^^^^
+- remove members from key.
 
-SUNION
-^^^^^^
-
-- combine multiple sets into one and returns it
-
-SUNIONSTORE
-^^^^^^^^^^^
-
-SINTER
-^^^^^^
+- returns the number of elements actually removed.
 
 SPOP
 ^^^^
+::
 
-SCARD
-^^^^^
+  SPOP key [count]
 
-- get a set's cardinality, the same thing as LLEN.
+- pop random count (default 1) number of elements from set.
+
+- return the popped element, or an Array of popped elements or nil if set not
+  exist.
+
+- If count is bigger than the number of elements inside the Set, the command
+  will only return the whole set without additional elements.
 
 SRANDMEMBER
 ^^^^^^^^^^^
+::
+
+  SRANDMEMBER key [count]
+
+- returns a random element from set, or an Array of count random elements,
+  or nil if set does not exist.
+
+- For positive count, returned elements must be unique. If count is bigger than
+  the number of elements inside the Set, the command will only return the whole
+  set without additional elements.
+
+- For negative count, returned elements can be duplicates.
+
+SMEMBERS
+^^^^^^^^
+::
+
+  SMEMBERS key
+
+- returns an Array of members.
+
+SINTER
+^^^^^^
+::
+
+  SINTER key [key]...
+
+- returns the intersection of given sets, as an Array.
+
+- Keys that do not exist are considered to be empty sets. With one of the keys
+  being an empty set, the resulting set is also empty.
+
+SINTERSTORE
+^^^^^^^^^^^
+::
+
+  SINTERSTORE destination key [key]...
+
+- SINTER keys then store result at destination (overriden if exists).
+
+- returns the number of elements in the resulting set.
+
+- ``SINTERSTORE`` with one source key can be used to duplicate the set.
+
+SUNION
+^^^^^^
+::
+
+  SUNION key [key]...
+
+- returns the union of given sets, as an Array.
+
+SUNIONSTORE
+^^^^^^^^^^^
+::
+
+  SUNIONSTORE destination key [key]...
+
+- SUNION then store result at destination.
+
+- returns the number of elements in resulting set.
+
+- ``SUNIONSTORE`` with one source key can be used to duplicate the set.
+
+SDIFF
+^^^^^
+::
+
+  SDIFF key [key]...
+
+- returns the members by computing ``key1 - key2 - key3 ...``.
+
+SDIFFSTORE
+^^^^^^^^^^
+::
+
+  SDIFFSTORE destination key [key ...]
+
+- SDIFF then store at destination.
+
+- Returns the number of elements in the resulting set.
+
+SCARD
+^^^^^
+::
+
+  SCARD key
+
+- Returns a set's cardinality, i.e., its length. 0 if key not exist.
+
+SISMEMBER
+^^^^^^^^^
+::
+
+  SISMEMBER key member
+
+- returns 1 if key has member, 0 otherwise.
 
 sorted set
 ----------
@@ -946,26 +1140,116 @@ ZREVRANK
 
 hash
 ----
-- there's no limit on the number of fields a hash can hold.
-
-- small hashes (i.e., a few elements with small values) are encoded in special
-  way in memory that make them very memory efficient.
-
-
 HSET
 ^^^^
+::
 
-HMSET
-^^^^^
+  HSET key field value
+
+- set field of key to value.
+
+- returns 1 if field is created and set; 0 if field is updated.
 
 HGET
 ^^^^
+::
+
+  HGET key field
+
+- get field of key.
+
+- returns the string or nill if field or key not exist.
+
+HMSET
+^^^^^
+::
+
+  HMSET key field value [field value]...
+
+- set multiple fields.
+
+HMGET
+^^^^^
+::
+
+  HMGET key field [field]...
+
+- Returns an Array with values of all matching fields.
+
+- A nil is returned for every non-existent field.
 
 HGETALL
 ^^^^^^^
+::
+
+  HGETALL key
+
+- Returns an Array containing all fields and values of a hash. In the array,
+  every field name is followed by its value. Or an empty list if key not exist.
+
+HDEL
+^^^^
+::
+
+  HDEL key field [field]...
+
+- Remove specified fields from key.
+
+- Returns the number of fields actually removed.
+
+HKEYS
+^^^^^
+::
+
+  HKEYS key
+
+- returns all field names in an Array, or empty Array.
+
+HVALS
+^^^^^
+::
+
+  HVALS key
+
+- similar to HKEYS for values.
+
+HEXISTS
+^^^^^^^
+::
+
+  HEXISTS key field
+
+- returns 1 if field exists in key, 0 otherwise.
+
+HLEN
+^^^^
+::
+
+  HLEN key
+
+- returns the number of fields at key. 0 if not exist.
 
 HINCRBY
 ^^^^^^^
+::
+
+  HINCRBY key field increment
+
+- similar to INCRBY, act on a field of hash.
+
+- returns the value after increment.
+
+HINCRBYFLOAT
+^^^^^^^^^^^^
+::
+
+  HINCRBYFLOAT key field increment
+
+- like INCRBYFLOAT, for hash field.
+
+- The command is always propagated in the replication link and the Append Only
+  File as a HSET operation, so that differences in the underlying floating
+  point math implementation will not be sources of inconsistency.
 
 hyperloglog
 ------------
@@ -1816,13 +2100,70 @@ limit rate for every second, every IP
         PERFORM_API_CALL()
     END
 
-messaging queue
-^^^^^^^^^^^^^^^
-Use list, with BRPOPLPUSH.
+listening to multiple queues
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+blocking pop from multiple lists.
+
+reliable message queues
+^^^^^^^^^^^^^^^^^^^^^^^
+Use list, with RPOPLPUSH/BRPOPLPUSH.
+
+简单的 RPOP/BRPOP 等操作, 虽然能实现基本的 consume message 的操作, 但 not
+reliable as messages can be lost, for example in the case there is a network
+problem or if the consumer crashes just after the message is received but it is
+still to process.
+
+RPOPLPUSH (or BRPOPLPUSH for the blocking variant) offers a way to avoid this
+problem: the consumer fetches the message and at the same time pushes it into a
+processing list. It will use the LREM command in order to remove the message
+from the processing list once the message has been processed.
+
+对于 processing list 的处理, 可以有多种方式.
+
+1. An additional client may monitor the processing list for items that remain
+   there for too much time, and will push those timed out items into the queue
+   again if needed.
+
+2. On start, client RPOPLPUSH the elements off processing list to the original
+   queue.
+
+对于 blocking/non-blocking 操作的选择:
+
+- 对于 dedicated message consumer/worker application, 应使用 blocking operation
+  去接收 messages. 而不要使用 polling, 即不要使用以下方式: 使用 nonblocking
+  operation 尝试获取消息, 若没有则等待一段时间再重试.
+  
+  polling 的缺点:
+  
+  * Redis and client application 需要做更多没有价值的操作.
+  
+  * Adds a unnecessary delay to the processing of items, when the message arrives
+    after the application has just tried to consume any message. To make the
+    delay smaller, we could wait less between calls, which amplifies the first
+    problem.
+
+- 对于 non-dedicated message consumer, 可以使用 non-blocking operation 与现有操作
+  逻辑集成.
+
+event notification
+^^^^^^^^^^^^^^^^^^
+Use list, with blocking pop for receiving event, and act accordingly.
 
 capped list
 ^^^^^^^^^^^
 - LPUSH/RPUSH + LTRIM.
+
+circular list
+^^^^^^^^^^^^^
+Use RPOPLPUSH/BRPOPLPUSH with source and destination are the same list, a
+client can visit all the elements of an N-elements list, one after the other,
+in O(N) without transferring the full list from the server to the client using
+a single LRANGE operation.
+
+The above makes it very simple to implement a system where a set of items must
+be processed by N workers continuously as fast as possible. An example is a
+monitoring system that must check that a set of web sites are reachable, with
+the smallest delay possible, using a number of parallel workers.
 
 references
 ==========
