@@ -9688,7 +9688,6 @@ writing management commands
 
 execution logic
 ----------------
-
 执行 management 命令时的基本步骤:
 
 - ``django-admin`` 和 ``manage.py`` 执行 ``execute_from_command_line()``,

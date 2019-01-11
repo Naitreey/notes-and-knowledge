@@ -1314,6 +1314,9 @@ WATCH
   of those keys change prior EXEC of that transaction, the entire transaction
   will be canceled.
 
+- Non-existent key can be watched. If it's added after WATCH before EXEC, the
+  transaction will be canneled.
+
 - WATCH makes EXEC conditional: perform the transaction only if none of the
   WATCHed keys were modified.
 
@@ -1780,6 +1783,8 @@ installation
 overview
 ^^^^^^^^
 - By default, all responses are returned as bytes in Python 3 and str in Python 2.
+  During request, all non-bytes values are encoded into bytes before sending
+  to server, using utf-8 by default.
 
 - redis-py attempts to adhere to the official command syntax. with following
   exceptions:
@@ -1801,7 +1806,6 @@ overview
 
 Redis
 ^^^^^
-
 response callbacks
 """"""""""""""""""
 - The client class uses a set of callbacks to cast Redis responses to the
@@ -1840,6 +1844,14 @@ class attributes
 """"""""""""""""
 - ``RESPONSE_CALLBACKS``. A dict, mapping command names to its response parsing
   callbacks.
+
+class methods
+"""""""""""""
+- ``from_url(url, db=None, **kwargs)``. Create a Redis client from url schemes.
+  This method calls directly ``ConnectionPool.from_url()`` class method to
+  create a connection pool, and create a Redis client using the pool.
+  The interpretation of ``url``, ``db``, available ``kwargs`` are all defered
+  to ConnectionPool.
 
 methods
 """""""
@@ -1881,6 +1893,32 @@ ConnectionPool
 
   这样, Redis client 等上层封装通过 connection pool 使用连接时, 本身具有了
   thread safety.
+
+class methods
+"""""""""""""
+- ``from_url(url, db=None, decode_components=False, **kwargs)``. create a
+  ConnectionPool from url.
+
+  url schemes:
+
+  * ``redis://[:password][@host][:6379][/db | ?db=N]``, TCP
+
+  * ``rediss://[:password][@host][:6379][/db | ?db=N]``, SSL over TCP.
+
+  * ``unix://[:password]@/path/to/socket.sock?db=N``, unix domain socket.
+
+  db specified in url take precedence over separate parameter. default to 0.
+
+  ``decode_components`` whether to decode url-encoded urls. This only applies
+  to the ``hostname``, ``path``, and ``password`` components.
+
+  urls also accepts any querystring parameters that are valid kwargs for the
+  class constructor. They are merged with ``kwargs``, and passed to the class
+  constructor. Special handling for the following kwargs when passed as query
+  string parameters: ``socket_connect_timeout`` and ``socket_timeout`` are
+  parsed as float; ``socket_keepalive`` and ``retry_on_timeout`` are parsed to
+  boolean values that accept True/False, Yes/No values to indicate state;
+  ``max_connections`` is parsed as int.
 
 Connection
 ^^^^^^^^^^
