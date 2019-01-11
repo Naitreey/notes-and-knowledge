@@ -1122,14 +1122,20 @@ ZADD
 ZREM
 ^^^^
 
-ZREMRANGEBYSCORE
-^^^^^^^^^^^^^^^^
-
 ZRANGE
 ^^^^^^
+::
 
-ZREVRANGE
-^^^^^^^^^
+  ZRANGE key start stop [WITHSCORES]
+
+- Returns the range of elements of sorted set, from start to stop.
+
+- Ranges are computed by elements' ordering.
+
+- start/stop is the same as LRANGE.
+
+- WITHSCORES, return the scores of the elements together with the elements.
+  The returned list is of form: value1,score1,...
 
 ZRANGEBYSCORE
 ^^^^^^^^^^^^^
@@ -1137,16 +1143,29 @@ ZRANGEBYSCORE
 
   ZRANGEBYSCORE key min max [WITHSCORES] [LIMIT offset count]
 
-- min, max can be -inf, +inf. 默认是闭区间, prefixing the score with ``(``
-  to specify an open interval.
+- Returns the range of elements with scores between min and max. The elements
+  having the same score are returned in lexicographical order.
+
+- min/max can be any score, -inf, +inf. 默认是闭区间, prefixing the score with
+  ``(`` to specify an open interval.
+
+- LIMIT. select by offset and count in the filtered range of elements.
 
 ZRANGEBYLEX
 ^^^^^^^^^^^
 
-ZREVRANGEBYLEX
-^^^^^^^^^^^^^^
+ZREVRANGE
+^^^^^^^^^
+::
 
-ZREMRANGEBYLEX
+  ZREVRANGE key start stop [WITHSCORES]
+
+- similar to ZRANGE, in descending order.
+
+ZREMRANGEBYSCORE
+^^^^^^^^^^^^^^^^
+
+ZREVRANGEBYLEX
 ^^^^^^^^^^^^^^
 
 ZLEXCOUNT
@@ -2188,6 +2207,27 @@ be processed by N workers continuously as fast as possible. An example is a
 monitoring system that must check that a set of web sites are reachable, with
 the smallest delay possible, using a number of parallel workers.
 
+weighed random choice
+^^^^^^^^^^^^^^^^^^^^^
+Use sorted set and ZRANGEBYSCORE.
+
+suppose a set of choices with weights::
+
+  {a:1, b:2, c:3}
+
+compute accumulative normalized score and add to a sorted set::
+
+  SUM = ELEMENTS.TOTAL_WEIGHT
+  SCORE = 0
+  FOREACH ELE in ELEMENTS
+      SCORE += ELE.weight / SUM
+      ZADD KEY SCORE ELE
+  END
+
+select random element by::
+
+  ZRANGEBYSCORE key rand() +inf LIMIT 0 1
+  
 references
 ==========
 .. [SOMemcachedRedis] https://stackoverflow.com/questions/10558465/memcached-vs-redis
