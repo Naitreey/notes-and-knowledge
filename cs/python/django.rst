@@ -7008,7 +7008,7 @@ auth backend 应当检查用户是否被禁用. 对于 ModelBackend & RemoteUser
 
 - methods.
 
-  * ``email_user()``. 为啥有这么个奇葩的方法放在这里?
+  * ``email_user()``. A convenient method to send an email to this user.
 
 User
 ^^^^

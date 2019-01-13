@@ -676,10 +676,6 @@
 
     在没有 ``zipapp`` 的 py2 中, 可以用这个技巧生成 pyz executable.
 
-- 何时在 with 后面跟多个 context manager? 只有当 with 下面的 block 需要同时
-  访问这些 manager 提供的资源时, 才应该这样使用. 凡是资源的获取和释放有先后
-  顺序, 不是必须同时进行的, 都不应这样使用. 而是多个 with 嵌套.
-
 - DB-API
 
   如果 ``cursor.execute()`` 中的 sql 语句需要填入 SQL 语句里的 identifier
