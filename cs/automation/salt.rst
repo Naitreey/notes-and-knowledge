@@ -419,7 +419,6 @@ utilities
 
 modules
 -------
-
 service
 ^^^^^^^
 a virtual module that is fulfilled by a concrete module depending on environment.
@@ -732,6 +731,15 @@ useful to use or test returner directly.
 - ``get_jids(returner)``
 
 - ``get_minions(returner)``
+
+timezone
+^^^^^^^^
+- ``timezone.get_zone()``. get timezone. format: ``region/city``, by inspecting
+  system timezone configuration files.
+
+- ``timezone.get_zonecode()``. get timezone as code. e.g., CST, PMT, etc.
+
+- ``timezone.get_offset()``. get offset. format: ``{+|-}HHMM``
 
 State
 =====
