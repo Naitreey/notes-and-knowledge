@@ -815,6 +815,8 @@ LTRIM
 
 - start/stop is the same as LRANGE.
 
+- returns OK.
+
 LREM
 ^^^^
 ::
