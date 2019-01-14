@@ -1123,6 +1123,33 @@ ZADD
 
 ZREM
 ^^^^
+::
+
+  ZREM key member [member]...
+
+- Remove members. returns the number of elements actually removed from sorted
+  set.
+
+ZINCRBY
+^^^^^^^
+::
+
+  ZINCRBY key increment member
+
+- increment member of key, by increment.
+
+- The increment should be the string representation of a numeric value, and can
+  be double precision floating point numbers. Can be negative to decrement.
+
+- Returns the new score of member.
+
+ZSCORE
+^^^^^^
+::
+
+  ZSCORE key member
+
+- return the score of member at key.
 
 ZRANGE
 ^^^^^^
@@ -1148,13 +1175,26 @@ ZRANGEBYSCORE
 - Returns the range of elements with scores between min and max. The elements
   having the same score are returned in lexicographical order.
 
-- min/max can be any score, -inf, +inf. 默认是闭区间, prefixing the score with
+- min, max can be any score, -inf, +inf. 默认是闭区间, prefixing the score with
   ``(`` to specify an open interval.
 
 - LIMIT. select by offset and count in the filtered range of elements.
 
 ZRANGEBYLEX
 ^^^^^^^^^^^
+::
+
+  ZRANGEBYLEX key min max [LIMIT offset count]
+
+- Returns an Array of elements in range.
+
+- Can be used only when all scores in a sorted set are equal. When there're
+  different scores, return value is unspecified.
+
+- min, max must start with ``(``, ``[``, for exclusive or inclusive. ``+`` and
+  ``-`` denotes positively infinite and negatively infinite strings. min, max
+  are strings compared with elements by ``memcmp()`` function, to determine
+  ranges.
 
 ZREVRANGE
 ^^^^^^^^^
@@ -1164,11 +1204,22 @@ ZREVRANGE
 
 - similar to ZRANGE, in descending order.
 
-ZREMRANGEBYSCORE
+ZREVRANGEBYSCORE
 ^^^^^^^^^^^^^^^^
+::
+
+  ZREVRANGEBYSCORE key max min [WITHSCORES] [LIMIT offset count]
+
+- Note: max first, min second. Return in descending order. Otherwise similar to
+  ZRANGEBYSCORE.
 
 ZREVRANGEBYLEX
 ^^^^^^^^^^^^^^
+::
+
+  ZREVRANGEBYLEX key max min [WITHSCORES] [LIMIT offset count]
+
+- similar to ZRANGEBYLEX, in descending order.
 
 ZLEXCOUNT
 ^^^^^^^^^
