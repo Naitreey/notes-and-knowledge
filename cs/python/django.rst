@@ -9841,6 +9841,9 @@ methods
 
   * ``stdout``, ``stderr`` options 可进行 redirection.
 
+  * ``skip_checks`` 便于在 programmatically 执行 management command 使用, 此时
+    无需再进行执行 system checks.
+
 - ``handle(*args, **options)``. main execution logic. return value is printed
   to stdout. returned output 应该用于输出某种执行结果数据. 对于过程中的 generic
   output 直接写入 ``self.stdout``, ``self.stderr`` streams 即可.

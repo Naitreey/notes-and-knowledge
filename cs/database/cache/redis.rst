@@ -606,6 +606,34 @@ PTTL
 
 SCAN
 ^^^^
+::
+
+  SCAN cursor [MATCH pattern] [COUNT count]
+
+- Incrementally iterate over the set of keys in the currently selected Redis
+  database.
+
+- It allow for incremental iteration, returning only a small number of elements
+  per call, therefore they can be used in production without risking blocking
+  the server when called against big collections of keys.
+
+- The SCAN family of commands only offer limited guarantees about the returned
+  elements since the collection that we incrementally iterate can change during
+  the iteration process.
+
+- SCAN is a cursor based iterator. This means that at every call of the
+  command, the server returns an updated cursor that the user needs to use as
+  the cursor argument in the next call.  An iteration starts when the cursor is
+  set to 0, and terminates when the cursor returned by the server is 0 (a full
+  iteration).
+
+- Guarantees:
+
+  * A full iteration always retrieves all the elements that were present in the collection from the start to the end of a full iteration. This means that if a given element is inside the collection when an iteration is started, and is still there when an iteration terminates, then at some point SCAN returned it to the user.
+
+
+- Returns an array of two values: the first value is the new cursor to use in
+  the next call, the second value is an array of elements.
 
 string
 ------
@@ -1083,6 +1111,8 @@ SISMEMBER
 
 - returns 1 if key has member, 0 otherwise.
 
+SSCAN
+^^^^^
 sorted set
 ----------
 ZADD
@@ -1129,6 +1159,31 @@ ZREM
 
 - Remove members. returns the number of elements actually removed from sorted
   set.
+
+ZREMRANGEBYSCORE
+^^^^^^^^^^^^^^^^
+::
+
+  ZREMRANGEBYSCORE key min max
+
+- Removes all elements in the sorted set stored at key with a score between min
+  and max.
+
+- min, max syntax is the same as ZRANGEBYSCORE.
+
+- returns the number of elements actually removed.
+
+ZREMRANGEBYLEX
+^^^^^^^^^^^^^^
+::
+
+  ZREMRANGEBYLEX key min max
+
+- having the same requirements as ZRANGEBYLEX.
+
+- min, max syntax is the same as ZRANGEBYLEX.
+
+- returns the number of elements actually removed.
 
 ZINCRBY
 ^^^^^^^
@@ -1221,6 +1276,53 @@ ZREVRANGEBYLEX
 
 - similar to ZRANGEBYLEX, in descending order.
 
+ZPOPMIN
+^^^^^^^
+::
+
+  ZPOPMIN key [count]
+
+- pop count (default 1) lowest members from key, as ordered by score and lex.
+
+- Returns an Array of popped elements and scores, in order. Or an empty Array.
+
+ZPOPMAX
+^^^^^^^
+::
+
+  ZPOPMAX key [count]
+
+- Like ZPOPMIN, for highest members.
+
+- In return, the one with the highest score will be the first, followed by the
+  elements with lower scores.
+
+BZPOPMIN
+^^^^^^^^
+::
+
+  BZPOPMIN key [key]... timeout
+
+- a blocking variant of ZPOPMIN.
+
+- The blocking and popping behavior is like BLPOP.
+
+- Returns nil if timeout expired, or an Array with three elements: key, score,
+  member.
+
+BZPOPMAX
+^^^^^^^^
+::
+
+  BZPOPMAX key [key]... timeout
+
+- a blocking variant of ZPOPMAX.
+
+- The blocking and popping behavior is like BRPOP.
+
+- Returns nil if timeout expired, or an Array with three elements: key, score,
+  member.
+
 ZLEXCOUNT
 ^^^^^^^^^
 
@@ -1229,9 +1331,43 @@ ZLEXCOUNT
 
 ZRANK
 ^^^^^
+::
+
+  ZRANK key member
+
+- the rank (i.e., index) of member in key, in ascending order.
+
+- rank is 0-based.
+
+- Returns the rank integer, or nil if member or key does not exist.
 
 ZREVRANK
 ^^^^^^^^
+::
+
+  ZREVRANK key member
+
+- rank in ascending order. otherwise like ZRANK.
+
+ZCOUNT
+^^^^^^
+::
+
+  ZCOUNT key min max
+
+- the number of elements in key, between min and max scores.
+
+- min, max has the same syntax as ZRANGEBYSCORE.
+
+- returns the number of elements in range.
+
+ZSCAN
+^^^^^
+::
+
+  ZSCAN key cursor [MATCH pattern] [COUNT count]
+
+- Work like SCAN. Iterates elements of a sorted set.
 
 hash
 ----
