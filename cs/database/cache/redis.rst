@@ -133,17 +133,10 @@ bitmap/bit array
 
 - During a read operation, out of range bits are considered zero.
 
-- usage:
-
-  * One of the biggest advantages of bitmaps is that they often provide extreme
-    space savings when storing information. 
-
 - 注意到, bitmap 的 offset, 从二进制位的角度看, 是从一个 byte 的高位侧开始数的.
   因此, 作为 string 输出时 (GET), 需要理解它的转换方式.
 
 - example usage:
-
-  * Real time analytics of all kinds.
 
   * Space efficient but high performance boolean information associated with
     object IDs. 前提要求是 object id 是依次递增的. 否则在小数据量时会造成不必要
@@ -208,8 +201,8 @@ HyperLogLog (HLL)
   cardinality of a set.
 
 - 使用统计学的方法, 可以避免存储已经见过的每个 unique element, 从而大大降低内存
-  使用. 然而 tradeoff 是结果的精度. 对于 Redis 的 HLL implementation, 估计结果
-  的标准差小于 1%.
+  使用 (constant amount of memory, 12KB in worst case). 然而 tradeoff 是结果的
+  精度. 对于 Redis 的 HLL implementation, 估计结果的标准差小于 1%.
 
 - HLLs in Redis, while technically a different data structure, are encoded as a
   Redis string, so you can call GET to serialize a HLL, and SET to deserialize
@@ -223,7 +216,7 @@ HyperLogLog (HLL)
   * 估计一组非常大量的数据中 unique elements 的数量. 并且这个 unique element
     的数量可能非常大.  
 
-  * 例如, number of unique queries performed by users.
+  * 例如, number of unique search queries performed by users on a site.
 
 redis expires
 =============
@@ -604,6 +597,20 @@ PTTL
 
 - returns: TTL in milliseconds, or -1 (never expire), -2 (not exist).
 
+KEYS
+^^^^
+::
+
+  KEYS pattern
+
+- Returns all keys matching pattern.
+
+- For very large key space, KEYS may block the server. Therefore, this command
+  is intended for debugging and special operations, such as changing your
+  keyspace layout. Don't use KEYS in your regular application code.
+
+- pattern is file glob. See also PSUBSCRIBE.
+
 SCAN
 ^^^^
 ::
@@ -627,10 +634,81 @@ SCAN
   set to 0, and terminates when the cursor returned by the server is 0 (a full
   iteration).
 
-- Guarantees:
+- iteration behaviors.
 
-  * A full iteration always retrieves all the elements that were present in the collection from the start to the end of a full iteration. This means that if a given element is inside the collection when an iteration is started, and is still there when an iteration terminates, then at some point SCAN returned it to the user.
+  * A full iteration always retrieves all the elements that were present in the
+    collection from the start to the end of a full iteration. This means that
+    if a given element is inside the collection when an iteration is started,
+    and is still there when an iteration terminates, then at some point SCAN
+    returned it to the user.
 
+  * A full iteration never returns any element that was NOT present in the
+    collection from the start to the end of a full iteration. 
+
+  * A given element may be returned multiple times.
+
+  * Elements that were not constantly present in the collection during a full
+    iteration, may be returned or not: it is undefined.
+
+- number of returned elements.
+
+  * SCAN do not guarantee that the number of elements returned per call are in
+    a given range.
+
+  * 只有 cursor 回归至 0 才是 full iteration complete 的标识, 中间某次返回的
+    items 为空并不能说明问题.
+
+  * COUNT adjusts the behavior of SCAN. With COUNT the user specified the
+    amount of work that should be done at every call in order to retrieve
+    elements from the collection. This is just a hint for the implementation.
+
+  * default COUNT is 10. there is no need to use the same COUNT value for every
+    iteration. The caller is free to change the count from one iteration to the
+    other as required.
+    
+  * The cursor-based iterator can be implemented, and is useful, only when the
+    aggregate data type that we are scanning is represented as an hash table.
+    When iterating the key space, or a Set, Hash or Sorted Set that is big
+    enough to be represented by a hash table, assuming no MATCH option is used,
+    the server will usually return count or a bit more than count elements per
+    call.
+
+  * Redis uses a memory optimization where small aggregate data types, until
+    they reach a given amount of items or a given max size of single elements,
+    are represented using a compact single-allocation packed encoding. When
+    this is the case, Sets encoded as intsets, or Hashes and Sorted Sets
+    encoded as ziplists, SCAN has no meaningful cursor to return, and must
+    iterate the whole data structure at once, so the only sane behavior it has
+    is to return everything in a call.
+
+    This behavior is specific of SSCAN, HSCAN and ZSCAN. SCAN itself never
+    shows this behavior because the key space is always represented by hash
+    tables.
+
+- MATCH patterns is like KEYS patterns.
+
+  * the MATCH filter is applied after elements are retrieved from the
+    collection, just before returning data to the client. 这可能导致很多次 SCAN
+    的输出都是 empty array, 但是 iteration is not completed.
+
+- State. During a SCAN, the full state is captured by cursor, and it's
+  maintained by client. Server does not preserve any iteration state.
+
+  * Therefore it is possible for an infinite number of clients to iterate the
+    same collection at the same time.
+
+  * The caller is free to terminate an iteration half-way without signaling
+    this to the server in any way.
+
+- Calling SCAN with a broken, negative, out of range, or otherwise invalid
+  cursor, will result into undefined behavior but never into a crash. What will
+  be undefined is that the guarantees about the returned elements can no longer
+  be ensured by the SCAN implementation.
+
+- Termination. The SCAN algorithm is guaranteed to terminate only if the size
+  of the iterated collection remains bounded to a given maximum size, otherwise
+  iterating a collection that always grows may result into SCAN to never
+  terminate a full iteration.
 
 - Returns an array of two values: the first value is the new cursor to use in
   the next call, the second value is an array of elements.
@@ -788,28 +866,82 @@ MSETNX
 
 bitmap
 ------
-
 GETBIT
 ^^^^^^
+::
+
+  GETBIT key offset
+
+- get bit value at offset from key.
+
+- If offset is beyond the bitmap's length, assume 0.
 
 SETBIT
 ^^^^^^
+::
+
+  SETBIT key offset value
+
+- set bit at offset of key to value.
+
+- The string is grown to make sure it can hold a bit at offset, the grown bits
+  are set to 0. 如果需要 allocate 的长度很大, 则在分配过程中 server blocks.
+
+- offset must be smaller than 2**32, for max string 512MB.
+
+- Returns the original bit at this position.
 
 BITOP
 ^^^^^
+::
+
+  BITOP operation destkey key [key]...
+
+- perform bitwise operations between keys, and store the result in destkey.
 
 - bitwise operation between keys.
 
+- operation can be AND, OR, XOR, NOT.
+
+- 若 keys 长度不同, 按照 bitmap 的正常扩展方向, 填充 0.
+
+- Returns the size of the string stored in the destination key, that is equal
+  to the size of the longest input string.
+
 BITCOUNT
 ^^^^^^^^
+::
 
-- Count the number of set bits (population counting) in a string.
+  BITCOUNT key [start end]
+
+- Count the number of set bit in a key, optionally only from start to end.
+
+- start, end are inclusive, can be negative.
+
+- returns the count.
 
 BITPOS
 ^^^^^^
+::
 
-- Find first position of first bit having the specified value.
+  BITPOS key bit [start] [end]
 
+- Return the position of the first bit set to 1 or 0 in a bitmap.
+
+- start, end are the optional *byte* indices about where to start and end
+  finding for the bit. Inclusive. start, end can be negative.
+
+- 当未指定 end 时, key is assumed to be a bitmap with 0 padded to the right
+  infinity. 注意这可能会影响寻找 0 bit 的效果.
+
+- The position is defined as from left to right, the first byte's most
+  significant bit is at position 0, the second byte's most significant bit is
+  at position 8, and so forth. Same as SETBIT/GETBIT.
+
+- Return value: non-negative position for the found bit, or -1 if not found.
+
+BITFIELD
+^^^^^^^^
 list
 ----
 
@@ -1151,6 +1283,38 @@ ZADD
   * with INCR. the new score, like ZINCRBY. If NX/XX condition is invalidated,
     return nil.
 
+
+ZUNIONSTORE
+^^^^^^^^^^^
+::
+
+  ZUNIONSTORE destination numkeys key [key ...] [WEIGHTS weight [weight ...]]
+  [AGGREGATE SUM|MIN|MAX]
+
+- Computes the union of numkeys sorted sets given by the specified keys, and
+  stores the result in destination.
+
+- numkeys is mandatory.
+
+- WEIGHTS. a multiplication factor for each input sorted set. This means that
+  the score of every element in every input sorted set is multiplied by this
+  factor before being passed to the aggregation function. default WEIGHTS is
+  1.
+
+- AGGREGATE specify how scores of common members in those keys are aggregated.
+  Default AGGREGATE is SUM.
+
+- returns the number of elements in destination.
+
+ZINTERSTORE
+^^^^^^^^^^^
+::
+
+  ZINTERSTORE destination numkeys key [key ...] [WEIGHTS weight [weight ...]]
+  [AGGREGATE SUM|MIN|MAX]
+
+- similar to ZUNIONSTORE, but for interaction.
+
 ZREM
 ^^^^
 ::
@@ -1184,6 +1348,19 @@ ZREMRANGEBYLEX
 - min, max syntax is the same as ZRANGEBYLEX.
 
 - returns the number of elements actually removed.
+
+ZREMRANGEBYRANK
+^^^^^^^^^^^^^^^
+::
+
+  ZREMRANGEBYRANK key start stop
+
+- remove elements with rank from start to stop from key.
+
+- start, stop can be negative numbers, representing offsets starting at the
+  element with the highest rank.
+
+- Returns the nunmber of elements actually removed.
 
 ZINCRBY
 ^^^^^^^
@@ -1361,6 +1538,18 @@ ZCOUNT
 
 - returns the number of elements in range.
 
+ZLEXCOUNT
+^^^^^^^^^
+::
+
+  ZLEXCOUNT key min max
+
+- the number of elements in key, between min and max strings.
+
+- min, max has the same syntax as ZRANGEBYLEX.
+
+- returns the number of elements in range.
+
 ZSCAN
 ^^^^^
 ::
@@ -1368,6 +1557,9 @@ ZSCAN
   ZSCAN key cursor [MATCH pattern] [COUNT count]
 
 - Work like SCAN. Iterates elements of a sorted set.
+
+- returns an array, cursor and elements, where elements is an array of elements
+  containing two elements, a member and its associated score.
 
 hash
 ----
@@ -1486,10 +1678,32 @@ hyperloglog
 ------------
 PFADD
 ^^^^^
+::
+
+  PFADD key element [element]...
+
+- add elements to HLL at key.
+
+- Returns 1 if the approximated cardinality was changed after this operation,
+  0 otherwise.
 
 PFCOUNT
 ^^^^^^^
+::
 
+  PFCOUNT key [key]...
+
+- With a single key, returns approximated cardinality of the HLL.
+
+- With multiple keys, returns approximated cardinality of the union of the
+  HLLs, by internally merging the HyperLogLogs stored at the provided keys into
+  a temporary HyperLogLog.
+
+- Note: as a side effect of calling this function, it is possible that the
+  HyperLogLog is modified, since the last 8 bytes encode the latest computed
+  cardinality for caching purposes. So PFCOUNT is technically a write command.
+
+- Returns count.
 
 transactions
 ------------
@@ -1612,7 +1826,7 @@ PSUBSCRIBE
 
   PSUBSCRIBE pattern [pattern ...]
 
-- patterns are file globs. supporting:
+- patterns are file glob. supporting:
 
   * ``?`` one char
 
@@ -2414,6 +2628,28 @@ from the processing list once the message has been processed.
 - 对于 non-dedicated message consumer, 可以使用 non-blocking operation 与现有操作
   逻辑集成.
 
+priority queues
+^^^^^^^^^^^^^^^
+Use sorted set's score as priority.
+
+For multiple items with the same priority, FIFO order needs to be preserved.
+This can be achieved by prefixing message with a INCR-ed value (like a primary
+key).
+
+Each client needs to INCR the primary key and concatenate it with the actual
+message then put the result into the sorted set.
+
+generic index
+^^^^^^^^^^^^^
+A sorted set's score can be seen as an index.
+
+A sorted set where all member's scores are equal, can also be seen as a more
+general index.
+
+leader boards
+^^^^^^^^^^^^^
+With ZADD it's easy to update member's score, thus useful as leader board.
+
 event notification
 ^^^^^^^^^^^^^^^^^^
 Use list, with blocking pop for receiving event, and act accordingly.
@@ -2455,6 +2691,13 @@ select random element by::
 
   ZRANGEBYSCORE key rand() +inf LIMIT 0 1
   
+
+site visits for each user
+^^^^^^^^^^^^^^^^^^^^^^^^^
+每个用户一个 bitmap, 对用户访问的日期 (as unix timestamp) BITSET 1.
+
+BITCOUNT 可用于统计访问次数.
+
 references
 ==========
 .. [SOMemcachedRedis] https://stackoverflow.com/questions/10558465/memcached-vs-redis
