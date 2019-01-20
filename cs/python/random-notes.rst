@@ -912,3 +912,16 @@
 
 - 在 function argument list 中, bare start ``*`` 若要用于分隔 positional &
   keyword-only argument, 后面必须确实有至少一个 argument.
+
+- Sort Stability and Complex Sorts. ``list.sort()`` and ``sorted()`` is
+  guaranteed to be stable. That means that when multiple records have the same
+  key values, their original order is preserved (or reversed if
+  ``reverse=True``). This wonderful property lets you build complex sorts in a
+  series of sorting steps. For example, to sort the student data by descending
+  grade and then ascending age, do the age sort first and then sort again using
+  grade.::
+
+    # sort on secondary key
+    s = sorted(student_objects, key=attrgetter('age'))
+    # now sort on primary key, descending
+    sorted(s, key=attrgetter('grade'), reverse=True)
