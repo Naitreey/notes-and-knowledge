@@ -259,7 +259,8 @@ rows
   个操作的意义是, 避免 container, row, column 三层嵌套导致 column content
   indented too much.
 
-- never use a row outside of container, it doesn't work.
+- Only use row inside of a bootstrap container or something with that similar
+  configuration.
 
 - The direct children of a row must be a set of columns.
 

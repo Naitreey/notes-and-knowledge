@@ -1824,11 +1824,11 @@ convert utf8mb3 to utf8mb4
     上限. 若超过, 需要减小列长度定义或 index prefix.
 
 - 配置文件中:
-  
+
   * 保证 client/server 之间发送数据通过 utf8mb4 编码.
-    
+
   * 服务端的 charset 为 utf8mb4, 即新数据库的默认编码.
-    
+
   ::
 
     [client]

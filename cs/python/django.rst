@@ -4619,6 +4619,25 @@ model
 * ``django.core.exceptions.ObjectDoesNotExist`` 是所有 ``Model.DoesNotExist``
   exception 的父类.
 
+model class
+-----------
+class methods
+^^^^^^^^^^^^^
+- ``check(**kwargs)``. Entry point for all model related system checks. This
+  method is called by ``django.core.checks.model_checks.check_all_models``
+  which is a registered system check.
+
+  The checks performed here:
+
+  * Every field instance's ``check()`` method.
+
+  * Every model manager's ``check()`` method.
+
+  * ...
+
+  If model subclas wanna extend checks, it's recommended that you delegate each
+  check to separate non-public methods.
+
 inheritance
 -----------
 
@@ -5139,6 +5158,8 @@ field checkings
   * 检查 field class 是否 pending deprecation 或者已经 removed. 若此, 输出相应
     的警告或错误信息.
 
+  子类若需扩展 system checks, 应将每个测试点放在一个单独的 non-public method 中.
+
 model clean & validation
 """"""""""""""""""""""""
 
@@ -5546,14 +5567,14 @@ concrete forward relations.
 
     * related_name, related_query_name, limit_choices_to.
 
-    * ``symmetrical``, 与 recursive M2M relationship 相关.
+    * ``symmetrical``, M2M relationship pointing to self 时, 可能希望
+      ``related_name`` 与 field name 相同, 此时, 希望 ``a.relations.add(b)`` 之
+      后, ``b.relations`` 自动也包含 ``a``. 
 
-    * ``through``
-
-      through model. 多对多关系实际上是通过一个关系表来实现的. 这个关系表的 model
-      可通过 ``ManyToManyField.through`` attribute 获得. 并可以通过 ``through``
-      option 来指定单独创建的 through model, 这可用于在 through model 中加入额外的
-      状态信息等列.
+    * ``through``. through model. 多对多关系实际上是通过一个关系表来实现的. 这
+      个关系表的 model 可通过 ``ManyToManyField.through`` attribute 获得. 并可
+      以通过 ``through`` option 来指定单独创建的 through model, 这可用于在
+      through model 中加入额外的状态信息等列.
 
       ``.through`` 属性在 field instance 是 through model class.
 
@@ -6250,8 +6271,12 @@ attributes
 methods
 """""""
 
-* ``db_manager()``. 生成一个使用指定数据库的 manager instance.
+* ``db_manager(using=None, hints=None)``. 生成一个使用指定数据库的 manager
+  instance.
 
+* ``check(**kwargs)``. perform checks regarding this model manager. 这里什么也
+  没检查. 子类扩展 system checks 时, 应将每个测试点放在一个单独的 non-public
+  method 中.
 
 Manager
 ^^^^^^^
@@ -6983,7 +7008,7 @@ auth backend 应当检查用户是否被禁用. 对于 ModelBackend & RemoteUser
 
 - methods.
 
-  * ``email_user()``. 为啥有这么个奇葩的方法放在这里?
+  * ``email_user()``. A convenient method to send an email to this user.
 
 User
 ^^^^
@@ -7785,6 +7810,11 @@ method 是什么都会生效. 不如相应的 decorator 灵活.
   methods.
 
   * ``test_func()``. 要进行的检查.
+
+若要求对未登录用户和已登录却权限不足的用户分别做不同的处理, 则不能同时使用
+LoginRequiredMixin 和 PermissionRequiredMixin, 因为它们使用同一个
+``AccessMixin.handle_no_permission()``. 此时, 需要使用一个 decorator 形式配合一
+个 Mixin 形式, 或者两个 decorator 形式, 才能设置不同的处理方式.
 
 context processors
 ------------------
@@ -9482,9 +9512,151 @@ design patterns
   细节. 这样不但是更好的设计, 更可读的代码, 也更容易进行单元测试. 只需在 UT 中
   mock 这些封装的集成点即可.
 
+System check
+============
+overview
+--------
+- A set of static checks for validating Django projects.
+
+- It detects problems and provides hints for how to fix them.
+
+- When the system checks are run:
+
+  * explicitly by checking command ``./manage.py check``.
+
+  * implicitly when the management command's ``require_system_checks=True``,
+    which is the default.
+
+  这些是在 ``BaseCommand.check()`` 中实现的.
+
+writing system checks
+---------------------
+- A check is a callable with the following formal parameters:
+
+  * ``app_configs``. A list of applications that should be inspected. If None,
+    the check must be run on all installed apps in the project.
+
+  * ``**kwargs``. not used.
+
+  It returns a list of CheckMessage instances, each representing an found
+  issue, if no issue is found, returns [].
+
+- Register the callable to the global CheckRegistry.::
+
+    @register(label1, ...)
+    def check(app_configs, **kwargs):
+        return issues
+
+  ``register`` decorator is ``CheckRegistry.register()`` method.
+
+- Put system checking codes in ``<app_label>/checks.py``, running system check
+  registration in ``AppConfig.ready()`` method (when app is loaded).
+
+check registry
+--------------
+- ``django.core.checks.registry.CheckRegistry``
+
+methods
+"""""""
+- ``register(check=None, *tags, deploy=False)``. register a check.  ``check``
+  can be the check callable, or just another tag in which case the method is
+  used as a decorator. ``deploy`` define whether this is a deployment check.
+
+check messages
+--------------
+- all check messages are instances of CheckMessage class.
+
+- Messages are tagged with a level indicating the severity of the message.
+
+- builtin message levels: DEBUG, INFO, WARNING, ERROR, CRITICAL. Defined in
+  django.core.checks.messages.
+
+- builtin CheckMessage subclasses: Debug, Info, Warning, Error, Critical.
+
+CheckMessage
+^^^^^^^^^^^^
+constructor
+"""""""""""
+- level. message level. a int level number, probably one of the predefined
+  values.
+
+- msg. describing the problem, in less than 80 chars. Should not contain
+  newlines.
+
+- ``hint=None``. a hint for fixing the problem. no newline. If no hint can be
+  provided, or the hint is self-evident from the error message, the hint can be
+  omitted.
+
+- ``obj=None``. An object providing context for the message (for example, the
+  model where the problem was discovered). Anything that defines a string
+  representation.
+
+- ``id=None``. A unique identifier for the issue. Identifiers should follow the
+  pattern ``<app_label>.XNNN``, where X is one of the letters CEWID, indicating
+  the message severity. The number should be unique within the application.
+
+methods
+"""""""
+- ``__eq__(other)``. Message instances are comparable. They are equal when
+  their level, msg, hint, obj, id are all equal. This makes testing easier.
+
+check tags
+----------
+- tags allow only a category of checks to be run.
+
+- The bulitin tags are defined as enum: ``django.core.checks.registry.Tags``.
+  See https://docs.djangoproject.com/en/stable/ref/checks/#builtin-tags for
+  explanations.
+
+  * database. Database checks are not run by default because they do more than
+    static code analysis as regular checks do. They are only run by the
+    ``migrate`` command or if you specify the ``database`` tag when calling the
+    check command.
+
+deployment checks
+-----------------
+- deployment checks are only run when ``check --deploy`` is used.
+
+- deployment checks is meant to check only issues regarding deployment
+  environment/settings, etc, which is not universally applicable to any stage
+  of development, just specific to production.
+
+- 它们与普通的 checks 是分开成两组的.
+
+builtin checks
+--------------
+- See https://docs.djangoproject.com/en/2.1/ref/checks/ for a list of builtin
+  checks.
+
+model checks
+^^^^^^^^^^^^
+- Call ``Model.check()`` classmethod, performing all range of checks regarding
+  models/fields/managers, etc.
+
+management commands
+-------------------
+check
+^^^^^
+::
+
+  ./manage.py check [app_label]...
+
+- If app labels are specified, only those apps are checked. By default all apps
+  are checked.
+
+- ``--tag TAG``. only checks belonging to TAG are checked. can specify multiple
+  times.
+
+- ``--list-tags``. list all tags.
+
+- ``--deploy``. activate additional deployment-only checks.
+
+- ``--fail-level {CRITICAL,ERROR,WARNING,INFO,DEBUG}``. consider issues of the
+  specified level or higher to be serious, and causing check to fail. default
+  is ERROR.
+
 django-admin
 ============
-
 CLI usage
 ---------
 ::
@@ -9521,7 +9693,6 @@ writing management commands
 
 execution logic
 ----------------
-
 执行 management 命令时的基本步骤:
 
 - ``django-admin`` 和 ``manage.py`` 执行 ``execute_from_command_line()``,
@@ -9610,29 +9781,26 @@ Core functionality resides in ``django.core.management``.
 
 module-level functions
 ^^^^^^^^^^^^^^^^^^^^^^
-
 - ``call_command(name, *args, **options)``. call management command
   programmatically.
   
-  * ``name`` of command.
+  * ``name``. a command name string or a command object.
     
-  * arg is commadline argument list. 
+  * ``*args``. commadline argument list. 
 
-  * options is command line option and stealth_options in kwarg form.
-    这部分不通过 parser 解析, 应该符合 ``parse_args()`` 输出.
-    Send directly to ``BaseCommand.execute()``.
-
-    stdout/stderr options can be used for redirection.
+  * ``**options``. Command line option and ``stealth_options`` in kwarg form.
+    这部分相当于不通过 parser 解析, 直接传入 ``BaseCommand.execute()``, 应该符
+    合 ``parse_args()`` 输出格式. 这里可以传入任何 ``execute()`` method 支持的
+    额外参数, 例如 stdout, stderr 等.
 
 command class
 ^^^^^^^^^^^^^
-
 BaseCommand
 """"""""""""
 ``django.core.management.BaseCommand``: base class of all management commands.
 
 options
-
+~~~~~~~
 - ``help``. command description. default empty string.
 
 - ``missing_args_message``. 对于 subcommand 定义了 required positionals 时,
@@ -9655,7 +9823,7 @@ options
   于在 ``call_command()`` 时传递一些额外的参数. 例如 stdout/stderr redirection.
 
 attributes
-
+~~~~~~~~~~
 - ``style``. output colorscheme ``Style`` definitions instance. attribute
   names are uppercased palette role name. attribute values are corresponding
   ``colorize()`` function.
@@ -9667,7 +9835,7 @@ attributes
   添加 line ending, 如果输入没有提供的话.
 
 methods
-
+~~~~~~~
 - ``add_arguments(parser)``. 添加自定义的命令行参数. parse 是 ArgumentParser.
 
 - ``get_version()``. default return django version. can be overrided to provide
@@ -9678,11 +9846,18 @@ methods
 
   * ``stdout``, ``stderr`` options 可进行 redirection.
 
+  * ``skip_checks`` 便于在 programmatically 执行 management command 使用, 此时
+    无需再进行执行 system checks.
+
 - ``handle(*args, **options)``. main execution logic. return value is printed
   to stdout. returned output 应该用于输出某种执行结果数据. 对于过程中的 generic
   output 直接写入 ``self.stdout``, ``self.stderr`` streams 即可.
 
-- ``check()``. system check.
+- ``check(app_configs=None, tags=None, display_num_errors=False,
+  include_deployment_checks=False, fail_level=checks.ERROR)``.
+  Run system checks. If any CheckMessage has a level equal or higher than
+  ``fail_level`` and not silenced, the SystemCheckError is raised, therefore
+  the command exits with a non-zero status.
 
 - ``check_migrations()``. migration check.
 
@@ -9694,7 +9869,6 @@ methods
 
 exceptions
 ^^^^^^^^^^
-
 CommandError
 """"""""""""
 If this exception is raised during the execution of a management command from a
@@ -9722,7 +9896,6 @@ django-mysql
 
 system checks
 ^^^^^^^^^^^^^
-
 Strict Mode
 """""""""""
 

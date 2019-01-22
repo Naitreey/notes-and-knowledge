@@ -637,11 +637,11 @@ class creation procedure
   * if an instance of type() is given as the explicit metaclass, or bases
     are defined, then the most derived metaclass is used
 
-  The most derived metaclass is selected from the explicitly specified metaclass
-  (if any) and the metaclasses (i.e. type(cls)) of all specified base classes.
-  **The most derived metaclass is one which is a subtype of all of these candidate
-  metaclasses. If none of the candidate metaclasses meets that criterion, then
-  the class definition will fail with TypeError.**
+  The most derived metaclass is selected from the explicitly specified
+  metaclass (if any) and the metaclasses (i.e. type(cls)) of all specified base
+  classes.  **The most derived metaclass is one which is a subtype of all of
+  these candidate metaclasses. If none of the candidate metaclasses meets that
+  criterion, then the class definition will fail with TypeError.**
 
   例如, 以下代码会失败:
 
@@ -1002,10 +1002,14 @@ with statement
 
   with expression [as target] [, expression [as target]]+ : suite
 
-注意若 expression 生成的 context manager 仅仅是为了 setup/cleanup context,
-并无 binding 需要, 没必要使用 binding to ``as`` target. 这也为一些情况下,
-context manager 的重用提供支持. 例如 RDBMS connection object 可以多次
+注意若 expression 生成的 context manager 仅仅是为了 setup/cleanup context, 并无
+binding 需要, 没必要使用 binding to ``as`` target. 这也为一些情况下, context
+manager 的重用提供支持. 例如 RDBMS connection object 可以多次
 BEGIN/COMMIT/ROLLBACK.
+
+何时在 with 后面跟多个 context manager? 只有当 with 下面的 block 需要同时访问这
+些 manager 提供的资源时, 才应该这样使用. 凡是资源的获取和释放有先后顺序, 不是必
+须同时进行的, 都不应这样使用. 而是多个 with 嵌套.
 
 exception handling
 ------------------

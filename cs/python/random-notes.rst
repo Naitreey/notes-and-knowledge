@@ -676,10 +676,6 @@
 
     在没有 ``zipapp`` 的 py2 中, 可以用这个技巧生成 pyz executable.
 
-- 何时在 with 后面跟多个 context manager? 只有当 with 下面的 block 需要同时
-  访问这些 manager 提供的资源时, 才应该这样使用. 凡是资源的获取和释放有先后
-  顺序, 不是必须同时进行的, 都不应这样使用. 而是多个 with 嵌套.
-
 - DB-API
 
   如果 ``cursor.execute()`` 中的 sql 语句需要填入 SQL 语句里的 identifier
@@ -916,3 +912,16 @@
 
 - 在 function argument list 中, bare start ``*`` 若要用于分隔 positional &
   keyword-only argument, 后面必须确实有至少一个 argument.
+
+- Sort Stability and Complex Sorts. ``list.sort()`` and ``sorted()`` is
+  guaranteed to be stable. That means that when multiple records have the same
+  key values, their original order is preserved (or reversed if
+  ``reverse=True``). This wonderful property lets you build complex sorts in a
+  series of sorting steps. For example, to sort the student data by descending
+  grade and then ascending age, do the age sort first and then sort again using
+  grade.::
+
+    # sort on secondary key
+    s = sorted(student_objects, key=attrgetter('age'))
+    # now sort on primary key, descending
+    sorted(s, key=attrgetter('grade'), reverse=True)

@@ -365,8 +365,11 @@ naming conventions
 - instance method 的第一个变量用 ``self`` 命名, class method 的第一个变量用
   ``cls`` 命名.
 
-- 对于 public attribute, 若有复杂的 set/get 操作需求, 最好使用 property.
-  这保证了 API 简洁.
+- 属于 public API 的 data members 部分, 尽量设置为 property 或 general
+  descriptor (类属性的话确实不太容易做到, python 的 literal 设计原则导致就没法
+  限制得太死). 这样的好处是: 1) get/set data member 更灵活, 可在保证 client
+  side API 不变的同时, 方便地调整实现细节与读写过滤; 可对 data member 的
+  read/write/delete 进行限制. 
 
   property 之类的特殊方法, 是作为 attributes 来使用, 因此应该放在 class 最
   前面, ``__init__`` 后面. 与普通 instance attributes 靠得比较近, 这样意义

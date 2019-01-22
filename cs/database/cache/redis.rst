@@ -2,9 +2,11 @@ overview
 ========
 - redis: REmote DIctionary Server
 
-- in-memory key-value store.
+- in-memory key-value store, a data structures server.
 
   * A key-value store maps keys to values.
+
+  * Values can be many kinds of data types.
 
 - usage: cache, in-memory database, message broker (message queue).
 
@@ -70,17 +72,9 @@ comparison: redis vs memcached
 
 redis keys
 ==========
-* A redis key is a redis string type value.
+* A redis key is a redis string type value. So it can be any binary sequence.
 
 * A key can be empty string.
-
-* Caution: very long keys is bad, because 1) use more memory 2) key
-  comparison during lookups becomes expensive.
-
-* 由于 key 没必要是 identifier, 而是任意字符, 对于复杂的应用场景, 需要规范一个
-  key schema, 即划分 key 的结构. 例如 ``ns1:ns2:keyname``
-
-  常见分隔符: ``:`` 用于分隔层级, ``.`` or ``-`` 用于层级内 word separation.
 
 * creation and removal of keys.
 
@@ -95,11 +89,28 @@ redis keys
     nonexistent key, 相当于应用该命令在一个类型相符的 empty aggregate value
     上面.
 
+design patterns
+---------------
+* very long keys is bad, because
+  
+  1) use more memory.
+  
+  2) key comparison during lookups becomes expensive.
+
+  When there's need to use a very long key, using its hash as actual key value
+  is a better idea.
+
+* 由于 key 没必要是 identifier, 而是任意字符, 对于复杂的应用场景, 需要规范一个
+  key schema, 即划分 key 的结构. 例如 ``ns1:ns2:keyname``
+
+  常见分隔符: ``:`` 用于分隔层级, ``.`` or ``-`` 用于层级内 word separation.
+
 data types
 ==========
 string
 ------
-- strings can be any binary sequence.
+- strings can be any binary sequence. It's not unicode string, but binary
+  string.
 
 - A string's max size is 512MB.
 
@@ -110,9 +121,9 @@ string
   * cache html pages.
 
 bitmap/bit array
-----------------
+^^^^^^^^^^^^^^^^
 - Bitmaps are not an actual data type, but a set of bit-oriented operations
-  defined on the String type. 因此可以分别使用 GET/SET 去 serialize/deserialize
+  defined on the string type. 因此可以分别使用 GET/SET 去 serialize/deserialize
   bitmap.
 
 - For max size 512MB string, corresponds to 2**32 bit array.
@@ -122,42 +133,24 @@ bitmap/bit array
 
 - During a read operation, out of range bits are considered zero.
 
-- usage:
-
-  * One of the biggest advantages of bitmaps is that they often provide extreme
-    space savings when storing information. 
-
 - 注意到, bitmap 的 offset, 从二进制位的角度看, 是从一个 byte 的高位侧开始数的.
   因此, 作为 string 输出时 (GET), 需要理解它的转换方式.
 
 - example usage:
 
-  * Real time analytics of all kinds.
-
-  * space efficient but high performance boolean information associated with
-    object IDs. 前提要求是 object id 是依次递增的. 否则在小数据量时会造成
-    不必要的内存浪费.
-
+  * Space efficient but high performance boolean information associated with
+    object IDs. 前提要求是 object id 是依次递增的. 否则在小数据量时会造成不必要
+    的内存浪费.
 
 list
 ----
-
-- linked list.
+- A redis list is a linked list, where elements are strings.
   
-- string elements.
-
-- sorted according to the order of insertion.
-
-- 由于是 linked list,
+- 由于是 linked list, 好处是 push/pop at both sides 操作都是 constant time.
+  这对于一个数据库系统来说是很重要的.
   
-  * LPUSH & RPUSH 操作都是 constant time.
-
-  * 但对于 access element by index requires an amount of work proportional to
-    the index of the accessed element.
-
-- Redis Lists are implemented with linked lists because for a database system
-  it is crucial to be able to add elements to a very long list in a very fast
-  way.
+  但缺点是, access by index is O(N). 若需要对首尾之外的中间部分的快速访问,
+  可考虑 sorted set.
 
 - example usages:
 
@@ -169,17 +162,24 @@ list
 
 set
 ---
-
 - collection of unique, unsorted strings.
 
 sorted set
 ----------
-
-- Every element is associated with a score.
+- A set where every element (a string) is associated with a score, and
+  sorted by their scores.
 
 - A score is a floating number.
 
-- sorted by score. So it has order, and can talk about ranges.
+- elemented are sorted by:
+
+  1) score ascendingly
+
+  2) lexicographically if score equals (by memcmp(3), 因此是纯二进制比较.)
+
+- Because a sorted set has ordering, there are commands acting on ranges.
+
+- a sorted set is implemented by a skip list and a hash table.
 
 - It's useful:
  
@@ -188,18 +188,21 @@ sorted set
 
 hash
 ----
-
 - a map of strings to strings.
+
+- there's no limit on the number of fields a hash can hold.
+
+- small hashes (i.e., a few elements with small values) are encoded in special
+  way in memory that make them very memory efficient.
 
 HyperLogLog (HLL)
 -----------------
-
 - a probabilistic data structure which is used in order to estimate the
-  cardinality of a set (like counting unique things).
+  cardinality of a set.
 
-- 使用统计学的方法, 可以避免存储已经见过的每个 unique element,
-  从而大大降低内存使用. 然而 tradeoff 是结果的精度. 对于 Redis 的 HLL
-  implementation, 估计结果的标准差小于 1%.
+- 使用统计学的方法, 可以避免存储已经见过的每个 unique element, 从而大大降低内存
+  使用 (constant amount of memory, 12KB in worst case). 然而 tradeoff 是结果的
+  精度. 对于 Redis 的 HLL implementation, 估计结果的标准差小于 1%.
 
 - HLLs in Redis, while technically a different data structure, are encoded as a
   Redis string, so you can call GET to serialize a HLL, and SET to deserialize
@@ -213,7 +216,7 @@ HyperLogLog (HLL)
   * 估计一组非常大量的数据中 unique elements 的数量. 并且这个 unique element
     的数量可能非常大.  
 
-  * 例如, number of unique queries performed by users.
+  * 例如, number of unique search queries performed by users on a site.
 
 redis expires
 =============
@@ -487,6 +490,12 @@ generic
 
 EXISTS
 ^^^^^^
+::
+
+  EXISTS key [key]...
+
+- returns the total number of keys existing. if the same existing key is
+  mentioned in the arguments multiple times, it will be counted multiple times.
 
 DEL
 ^^^
@@ -500,38 +509,238 @@ DEL
 
 TYPE
 ^^^^
+::
 
-- returns the type of value or none.
+  TYPE key
+
+- returns the type of value or none, in string form. (string, list, set, zset,
+  hash and stream, none).
 
 EXPIRE
 ^^^^^^
+::
 
-- 
+  EXPIRE key seconds
+
+- Set or reset a key's EXPIRE time countdown. Return 1 if timeout is set, 0 if
+  key does not exist.
+
+- A key with an associated timeout is called a volatile key.
+
+- The timeout will only be cleared by commands that delete or overwrite the
+  contents of the key, including DEL, SET, GETSET and all the ``*STORE``
+  commands. All the operations that conceptually *alter* the value stored at
+  the key without replacing it with a new one will leave the timeout untouched.
+
+- Use PERSIST to clear timeout.
+
+- When a key is RENAMEd, timeout is transfered to new key.
+
+- When ``seconds`` is negative, or EXPIREAT specified a time in the past, the
+  key is deleted immediately, rather than expired.
+
+- Expire accuracy: the expire error is from 0 to 1 milliseconds.
+
+- Keys expiring information is stored as absolute Unix timestamps in
+  milliseconds. This means that the time is flowing even when the Redis
+  instance is not active. This also means all nodes in a clustered redis setup
+  must have stable, synced time.
+
+- Expire strategies: passive and active expiry.
+
+  * passive expiry. A key is passively expired simply when some client tries to
+    access it, and the key is found to be timed out. 然而一些 key 可能不会再被
+    访问, 造成内存浪费. 因此 passive expiry 是不够的, 还需要 active expiry.
+
+  * active expiry. Periodically Redis tests a few keys at random among keys
+    with an expire set. All the keys that are seen expired are deleted from the
+    keyspace.
+
+    Redis does the following expiry checking for 10 times per second:
+
+    - Test 20 random keys from the set of keys with an associated expire.
+
+    - Delete all the keys found expired.
+
+    - If more than 25% of keys were expired, start again from step 1.
+
+    This means that at any given moment the maximum amount of keys already
+    expired that are using memory is at max equal to max amount of write
+    operations per second divided by 4.
+
+- During replication, the replicas connected to a master will not expire keys
+  independently but will wait for the DEL coming from the master.
 
 PERSIST
 ^^^^^^^
+::
+
+  PERSIST key
+
+- remove expiry on key.
+
+- returns 1 if succuess, 0 if key not exist or no expiry attached.
 
 TTL
 ^^^
+::
 
-- returns: -1 (never expire), -2 (not exist).
+  TTL key
+
+- returns: TTL in seconds, or -1 (never expire), -2 (not exist).
+
+PTTL
+^^^^
+::
+
+  PTTL key
+
+- returns: TTL in milliseconds, or -1 (never expire), -2 (not exist).
+
+KEYS
+^^^^
+::
+
+  KEYS pattern
+
+- Returns all keys matching pattern.
+
+- For very large key space, KEYS may block the server. Therefore, this command
+  is intended for debugging and special operations, such as changing your
+  keyspace layout. Don't use KEYS in your regular application code.
+
+- pattern is file glob. See also PSUBSCRIBE.
 
 SCAN
 ^^^^
+::
+
+  SCAN cursor [MATCH pattern] [COUNT count]
+
+- Incrementally iterate over the set of keys in the currently selected Redis
+  database.
+
+- It allow for incremental iteration, returning only a small number of elements
+  per call, therefore they can be used in production without risking blocking
+  the server when called against big collections of keys.
+
+- The SCAN family of commands only offer limited guarantees about the returned
+  elements since the collection that we incrementally iterate can change during
+  the iteration process.
+
+- SCAN is a cursor based iterator. This means that at every call of the
+  command, the server returns an updated cursor that the user needs to use as
+  the cursor argument in the next call.  An iteration starts when the cursor is
+  set to 0, and terminates when the cursor returned by the server is 0 (a full
+  iteration).
+
+- iteration behaviors.
+
+  * A full iteration always retrieves all the elements that were present in the
+    collection from the start to the end of a full iteration. This means that
+    if a given element is inside the collection when an iteration is started,
+    and is still there when an iteration terminates, then at some point SCAN
+    returned it to the user.
+
+  * A full iteration never returns any element that was NOT present in the
+    collection from the start to the end of a full iteration. 
+
+  * A given element may be returned multiple times.
+
+  * Elements that were not constantly present in the collection during a full
+    iteration, may be returned or not: it is undefined.
+
+- number of returned elements.
+
+  * SCAN do not guarantee that the number of elements returned per call are in
+    a given range.
+
+  * 只有 cursor 回归至 0 才是 full iteration complete 的标识, 中间某次返回的
+    items 为空并不能说明问题.
+
+  * COUNT adjusts the behavior of SCAN. With COUNT the user specified the
+    amount of work that should be done at every call in order to retrieve
+    elements from the collection. This is just a hint for the implementation.
+
+  * default COUNT is 10. there is no need to use the same COUNT value for every
+    iteration. The caller is free to change the count from one iteration to the
+    other as required.
+    
+  * The cursor-based iterator can be implemented, and is useful, only when the
+    aggregate data type that we are scanning is represented as an hash table.
+    When iterating the key space, or a Set, Hash or Sorted Set that is big
+    enough to be represented by a hash table, assuming no MATCH option is used,
+    the server will usually return count or a bit more than count elements per
+    call.
+
+  * Redis uses a memory optimization where small aggregate data types, until
+    they reach a given amount of items or a given max size of single elements,
+    are represented using a compact single-allocation packed encoding. When
+    this is the case, Sets encoded as intsets, or Hashes and Sorted Sets
+    encoded as ziplists, SCAN has no meaningful cursor to return, and must
+    iterate the whole data structure at once, so the only sane behavior it has
+    is to return everything in a call.
+
+    This behavior is specific of SSCAN, HSCAN and ZSCAN. SCAN itself never
+    shows this behavior because the key space is always represented by hash
+    tables.
+
+- MATCH patterns is like KEYS patterns.
+
+  * the MATCH filter is applied after elements are retrieved from the
+    collection, just before returning data to the client. 这可能导致很多次 SCAN
+    的输出都是 empty array, 但是 iteration is not completed.
+
+- State. During a SCAN, the full state is captured by cursor, and it's
+  maintained by client. Server does not preserve any iteration state.
+
+  * Therefore it is possible for an infinite number of clients to iterate the
+    same collection at the same time.
+
+  * The caller is free to terminate an iteration half-way without signaling
+    this to the server in any way.
+
+- Calling SCAN with a broken, negative, out of range, or otherwise invalid
+  cursor, will result into undefined behavior but never into a crash. What will
+  be undefined is that the guarantees about the returned elements can no longer
+  be ensured by the SCAN implementation.
+
+- Termination. The SCAN algorithm is guaranteed to terminate only if the size
+  of the iterated collection remains bounded to a given maximum size, otherwise
+  iterating a collection that always grows may result into SCAN to never
+  terminate a full iteration.
+
+- Returns an array of two values: the first value is the new cursor to use in
+  the next call, the second value is an array of elements.
 
 string
 ------
-
 GET
 ^^^
+::
+
+  GET key
+
+- If the key does not exist the special value nil is returned.
+
+- Because GET only handles string values, An error is returned if the value
+  stored at key is not a string.
 
 SET
 ^^^
 ::
 
-  SET key value [EX seconds] [PX milliseconds] [NX|XX]
+  SET key value [EX seconds | PX milliseconds] [NX|XX]
 
-- set value to key. By default any existing value is overriden.
+- set value to string value. By default any existing value is overriden.
+
+- Returns OK, or nil if condition not met.
+
+- Any previous TTL associated with the key is discarded on successful SET.
+
+- ``EX``. expire time in seconds.
+
+- ``PX``. expire time in milliseconds.
 
 - ``NX``. set only if not exist.
 
@@ -539,38 +748,92 @@ SET
 
 INCR
 ^^^^
+::
 
-- Parse the value of key is number, increment by 1. If key does not exist, set
-  it to 0 before incrementing. If the value can not be interpreted as integer,
-  abort with error.
+  INCR key
+
+- Parse the value of key as base-10 64 bit signed integer, increment by 1. If
+  key does not exist, set it to 0 before incrementing.
+
+- Return the resulted number. Or abort with error, if value can not be
+  interpreted as integer or out of range.
 
 - limited by 64bit signed integer.
 
-- 解决 race condition. INCR 解决的问题是多个客户端需要递增一个量时, 各自 GET
-  then SET 存在信息不同步的问题, 从而导致 race condition. INCR 由 server 控制,
-  这样就把控制权集中了, 在多线程 (多客户端的一般化) 情况下避免了 race
-  condition. 这是 atomic operation 的意义.
+- Redis stores integers in their integer representation, so for string values
+  that actually hold an integer, there is no overhead for storing the string
+  representation of the integer.
+
+  但在 GET 这样的整数时, 仍然输出的是正确的 number value, in string form.
+
+- Usage. 当一个 key 作为 counter 使用时, 解决 race condition. INCR 解决的问题是
+  多个客户端需要递增一个量时, 各自 GET then SET 存在信息不同步的问题, 从而导致
+  race condition. INCR 由 server 控制, 这样就把控制权集中了, 在多线程 (多客户端
+  的一般化) 情况下避免了 race condition. 这是 atomic operation 的意义.
 
   类似于 database 中的 auto increment field.
 
 INCRBY
 ^^^^^^
+::
+
+  INCRBY key increment
+
+- similar to INCR, by an amount. The amount can be negative to actually
+  decrement.
+
+INCRBYFLOAT
+^^^^^^^^^^^
+::
+
+  INCRBYFLOAT key increment
+
+- like INCRYBY, for float.
+
+- Both the value already contained in the string key and the increment argument
+  can be optionally provided in exponential notation, however the value
+  computed after the increment is stored consistently in the same format, that
+  is, an integer number followed (if needed) by a dot, and a variable number of
+  digits representing the decimal part of the number. Trailing zeroes are
+  always removed.
+
+- The precision of the output is fixed at 17 digits after the decimal point
+  regardless of the actual internal precision of the computation.
+
+- The command is always propagated in the replication link and the Append Only
+  File as a SET operation, so that differences in the underlying floating point
+  math implementation will not be sources of inconsistency.
 
 DECR
 ^^^^
+::
+
+  DECR key
+
+- similar to INCR, negative number is possible.
 
 DECRBY
 ^^^^^^
+::
+
+  DECRBY key decrement
+
+- similar to DECR, by an amount. amount can be negative.
 
 GETSET
 ^^^^^^
+::
 
-- GETSET is atomic.
+  GETSET key value
 
-- 解决 race condition. GETSET 解决的问题是一个客户端现在即要 GET 又要 SET, 如果
-  GET then SET, 则两个操作之间的时间差允许其他客户端对该 key 值进行修改. 之后的
-  SET 就错误 override 了别的客户端的修改. 所以实现一个 atomic 的 GET & SET 操作,
-  消除了这个时间差, 也就消除了引发的 race condition.
+- Atomically sets key to value and returns the old value.
+
+- Returns nil if key is not string.
+
+- Usage. 解决 race condition. GETSET 解决的问题是一个客户端现在即要 GET 又要
+  SET, 如果 GET then SET, 则两个操作之间的时间差允许其他客户端对该 key 值进行修
+  改. 之后的 SET 就错误 override 了别的客户端的修改. 所以实现一个 atomic 的 GET
+  & SET 操作, 消除了这个时间差, 也就消除了引发的 race condition.
 
 - usage examples.
 
@@ -579,158 +842,561 @@ GETSET
 
 MGET
 ^^^^
+::
+
+  MGET key [key]...
+
+- Returns an Array of values, for every key that does not hold a string value
+  or does not exist, the special value nil is returned.
 
 - useful to reduce latency and atomically get multiple values.
 
 MSET
 ^^^^
+::
+
+  MSET key value [key value]...
+
+- Returns OK.
 
 - useful to reduce latency and atomically set multiple values.
 
-SETNX
-^^^^^
+MSETNX
+^^^^^^
 
 bitmap
 ------
-
 GETBIT
 ^^^^^^
+::
+
+  GETBIT key offset
+
+- get bit value at offset from key.
+
+- If offset is beyond the bitmap's length, assume 0.
 
 SETBIT
 ^^^^^^
+::
+
+  SETBIT key offset value
+
+- set bit at offset of key to value.
+
+- The string is grown to make sure it can hold a bit at offset, the grown bits
+  are set to 0. 如果需要 allocate 的长度很大, 则在分配过程中 server blocks.
+
+- offset must be smaller than 2**32, for max string 512MB.
+
+- Returns the original bit at this position.
 
 BITOP
 ^^^^^
+::
+
+  BITOP operation destkey key [key]...
+
+- perform bitwise operations between keys, and store the result in destkey.
 
 - bitwise operation between keys.
 
+- operation can be AND, OR, XOR, NOT.
+
+- 若 keys 长度不同, 按照 bitmap 的正常扩展方向, 填充 0.
+
+- Returns the size of the string stored in the destination key, that is equal
+  to the size of the longest input string.
+
 BITCOUNT
 ^^^^^^^^
+::
 
-- Count the number of set bits (population counting) in a string.
+  BITCOUNT key [start end]
+
+- Count the number of set bit in a key, optionally only from start to end.
+
+- start, end are inclusive, can be negative.
+
+- returns the count.
 
 BITPOS
 ^^^^^^
+::
 
-- Find first position of first bit having the specified value.
+  BITPOS key bit [start] [end]
 
+- Return the position of the first bit set to 1 or 0 in a bitmap.
+
+- start, end are the optional *byte* indices about where to start and end
+  finding for the bit. Inclusive. start, end can be negative.
+
+- 当未指定 end 时, key is assumed to be a bitmap with 0 padded to the right
+  infinity. 注意这可能会影响寻找 0 bit 的效果.
+
+- The position is defined as from left to right, the first byte's most
+  significant bit is at position 0, the second byte's most significant bit is
+  at position 8, and so forth. Same as SETBIT/GETBIT.
+
+- Return value: non-negative position for the found bit, or -1 if not found.
+
+BITFIELD
+^^^^^^^^
 list
 ----
-
-RPUSH
-^^^^^
-
-LPUSH
-^^^^^
 
 LLEN
 ^^^^
 
 LRANGE
 ^^^^^^
+::
 
-- time complexity: O(N). accessing small ranges towards the head or the tail of
-  the list is a constant time operation.
+  LRANGE key start stop
+
+- Returns an Array of elements from start to stop, inclusive.
+
+- indexes are 0-based. negative counts from the end of the list, -1 is the
+  last.
+
+- Out of range indexes will not produce an error but an empty Array, like
+  python slicing. start bigger than stop also produces empty Array.
+
+- accessing small ranges towards the head or the tail of the list is a constant
+  time operation.
+
+LTRIM
+^^^^^
+::
+
+  LTRIM key start stop
+
+- trim a list, leaving the specified range.
+
+- start/stop is the same as LRANGE.
+
+- returns OK.
+
+LREM
+^^^^
+::
+
+  LREM key count value
+
+- remove the first count occurrences of value from key.
+
+- count:
+
+  * positive, remove first count.
+
+  * negative, remove last ``|count|``.
+
+  * 0, remove all elements.
+
+- Returns the number of removed elements.
+
+LPUSH
+^^^^^
+::
+
+  LPUSH key value [value]...
+
+- push values at head of list. 对于一次 push 多个元素的情况, elements are
+  inserted one after the other to the head of the list, from the leftmost
+  element to the rightmost element. 这导致, list 中元素的顺序是 LPUSH 参数
+  列表的逆序.
+
+- Returns the length of list after push. an error is returned when key is not
+  list.
+
+RPUSH
+^^^^^
+::
+
+  RPUSH key value [value]...
+
+- push values at tail of list. 对于多个元素的情况, 结果顺序与参数顺序一致, 这与
+  LPUSH 正好相反.
+
+- Returns the length of list after push. an error is returned when key is not
+  list.
 
 LPOP
 ^^^^
+::
+
+  LPOP key
+
+- pop first element off key.
+
+- returns the value, or nil if key not exist.
 
 RPOP
 ^^^^
+::
+
+  RPOP key
+
+- pop last element off key. otherwise like LPOP.
 
 BLPOP
 ^^^^^
 ::
 
-  BLPOP key [key ...] timeout
+  BLPOP key [key]... timeout
 
-- timeout can be 0 to wait forever.
+- An element is popped from the head of the first list that is non-empty, with
+  the given keys being checked in the order that they are given. Block the
+  connection when there are no elements to pop from any of the given lists
+  (i.e., none of the keys exists).
+
+- timeout is the max seconds to wait, can be 0 to wait forever.
+
+- Returns an Array, the first is the name of the key where element is popped,
+  the second is the value of the popped element. Or nil if no element is
+  available and timeout is expired.
+
+- serving order.
+  
+  * If multiple clients are blocked for the same key, the first client to be
+    served is the one that was waiting for more time (the first that blocked
+    for the key). Once a client is unblocked it does not retain any priority.
+
+  * When a client is blocking for *multiple keys* at the same time, and
+    elements are available at *the same time* in multiple keys (because of a
+    transaction or lua script), the client will be unblocked using the first
+    key that received an element.
+
+  * After the execution of every command/transaction/script, Redis will run a
+    list of all the keys that received data AND that have at least a client
+    blocked. The list is ordered by new element arrival time, from the first
+    key that received data to the last. For every key processed, Redis will
+    serve all the clients waiting for that key in a FIFO fashion, as long as
+    there are elements in this key. When the key is empty or there are no
+    longer clients waiting for this key, the next key that received new data in
+    the previous command / transaction / script is processed, and so forth.
+
+- BLPOP inside a transaction never blocks, it either pops an element immediately
+  or returns nil. Otherwise the operation will block the server.
 
 BRPOP
 ^^^^^
+::
+
+  BRPOP key [key]... timeout
+
+- similar to BLPOP, but for tail.
 
 RPOPLPUSH
 ^^^^^^^^^
+::
+
+  RPOPLPUSH source destination
+
+- atomically RPOP from source and LPUSH to destination.
+
+- returns the popped element, or nil if source does not exist.
+
+- If source and destination is the same list, equivalent to list rotation.
 
 BRPOPLPUSH
 ^^^^^^^^^^
+::
 
-LTRIM
-^^^^^
+  BRPOPLPUSH source destination timeout
+
+- block variant of RPOPLPUSH.
 
 set
 ---
-
-- unordered collection of strings.
-
 SADD
 ^^^^
+::
+
+  SADD key member [member]...
+
+- add members to key.
+
+- returns the number of elements actually added.
 
 SREM
 ^^^^
+::
 
-SISMEMBER
-^^^^^^^^^
+  SREM key member [member]...
 
-SMEMBERS
-^^^^^^^^
+- remove members from key.
 
-SUNION
-^^^^^^
-
-- combine multiple sets into one and returns it
-
-SUNIONSTORE
-^^^^^^^^^^^
-
-SINTER
-^^^^^^
+- returns the number of elements actually removed.
 
 SPOP
 ^^^^
+::
 
-SCARD
-^^^^^
+  SPOP key [count]
 
-- get a set's cardinality, the same thing as LLEN.
+- pop random count (default 1) number of elements from set.
+
+- return the popped element, or an Array of popped elements or nil if set not
+  exist.
+
+- If count is bigger than the number of elements inside the Set, the command
+  will only return the whole set without additional elements.
 
 SRANDMEMBER
 ^^^^^^^^^^^
+::
 
+  SRANDMEMBER key [count]
+
+- returns a random element from set, or an Array of count random elements,
+  or nil if set does not exist.
+
+- For positive count, returned elements must be unique. If count is bigger than
+  the number of elements inside the Set, the command will only return the whole
+  set without additional elements.
+
+- For negative count, returned elements can be duplicates.
+
+SMEMBERS
+^^^^^^^^
+::
+
+  SMEMBERS key
+
+- returns an Array of members.
+
+SINTER
+^^^^^^
+::
+
+  SINTER key [key]...
+
+- returns the intersection of given sets, as an Array.
+
+- Keys that do not exist are considered to be empty sets. With one of the keys
+  being an empty set, the resulting set is also empty.
+
+SINTERSTORE
+^^^^^^^^^^^
+::
+
+  SINTERSTORE destination key [key]...
+
+- SINTER keys then store result at destination (overriden if exists).
+
+- returns the number of elements in the resulting set.
+
+- ``SINTERSTORE`` with one source key can be used to duplicate the set.
+
+SUNION
+^^^^^^
+::
+
+  SUNION key [key]...
+
+- returns the union of given sets, as an Array.
+
+SUNIONSTORE
+^^^^^^^^^^^
+::
+
+  SUNIONSTORE destination key [key]...
+
+- SUNION then store result at destination.
+
+- returns the number of elements in resulting set.
+
+- ``SUNIONSTORE`` with one source key can be used to duplicate the set.
+
+SDIFF
+^^^^^
+::
+
+  SDIFF key [key]...
+
+- returns the members by computing ``key1 - key2 - key3 ...``.
+
+SDIFFSTORE
+^^^^^^^^^^
+::
+
+  SDIFFSTORE destination key [key ...]
+
+- SDIFF then store at destination.
+
+- Returns the number of elements in the resulting set.
+
+SCARD
+^^^^^
+::
+
+  SCARD key
+
+- Returns a set's cardinality, i.e., its length. 0 if key not exist.
+
+SISMEMBER
+^^^^^^^^^
+::
+
+  SISMEMBER key member
+
+- returns 1 if key has member, 0 otherwise.
+
+SSCAN
+^^^^^
 sorted set
 ----------
-
-- elements are unique, non-repeating string elements.
-
-- every element in a sorted set is associated with a floating point value,
-  called the score. This is like mapping elements to scores.
-
-- Elements in a sorted sets are sorted in internal data structure. In other
-  words, order is stored with data.
-
-- elemented are sorted by:
-
-  1) score
-
-  2) lexicographically if score equals (by memcmp(3), 因此是纯二进制比较.)
-
 ZADD
 ^^^^
+::
 
-- calling ZADD against an element already included in the sorted set will
-  update its score (and position) with O(log(N)) time complexity.
+  ZADD key [NX|XX] [CH] [INCR] score member [score member]...
+
+- adds members with scores to the sorted set.
+
+- If a specified member is already a member of the sorted set, the score is
+  updated and the element reinserted at the correct position to ensure correct
+  ordering.
+
+- score value: the string representation of a double precision floating point
+  number (IEEE 754). +inf and -inf are valid.
+
+- NX. only add nonexisting (new) elements, don't update existing elements.
+
+- XX. only update existing elements, don't add new elements.
+
+- CH. return value represents the number of elements changed. Changed elements
+  include new elements and existing elements for which score was changed.
+
+- INCR. make ZADD act like ZINCRBY. only one score-member pair is allowed.
+  This mode can be affected by NX/XX, in which case only non-existing or
+  existing element's score can be INCR-ed.
+
+- Returns
+  
+  * normally: number of elements added, not including existing updated
+    elements.
+
+  * with CH: number of elements changed.
+
+  * with INCR. the new score, like ZINCRBY. If NX/XX condition is invalidated,
+    return nil.
+
+
+ZUNIONSTORE
+^^^^^^^^^^^
+::
+
+  ZUNIONSTORE destination numkeys key [key ...] [WEIGHTS weight [weight ...]]
+  [AGGREGATE SUM|MIN|MAX]
+
+- Computes the union of numkeys sorted sets given by the specified keys, and
+  stores the result in destination.
+
+- numkeys is mandatory.
+
+- WEIGHTS. a multiplication factor for each input sorted set. This means that
+  the score of every element in every input sorted set is multiplied by this
+  factor before being passed to the aggregation function. default WEIGHTS is
+  1.
+
+- AGGREGATE specify how scores of common members in those keys are aggregated.
+  Default AGGREGATE is SUM.
+
+- returns the number of elements in destination.
+
+ZINTERSTORE
+^^^^^^^^^^^
+::
+
+  ZINTERSTORE destination numkeys key [key ...] [WEIGHTS weight [weight ...]]
+  [AGGREGATE SUM|MIN|MAX]
+
+- similar to ZUNIONSTORE, but for interaction.
 
 ZREM
 ^^^^
+::
+
+  ZREM key member [member]...
+
+- Remove members. returns the number of elements actually removed from sorted
+  set.
 
 ZREMRANGEBYSCORE
 ^^^^^^^^^^^^^^^^
+::
+
+  ZREMRANGEBYSCORE key min max
+
+- Removes all elements in the sorted set stored at key with a score between min
+  and max.
+
+- min, max syntax is the same as ZRANGEBYSCORE.
+
+- returns the number of elements actually removed.
+
+ZREMRANGEBYLEX
+^^^^^^^^^^^^^^
+::
+
+  ZREMRANGEBYLEX key min max
+
+- having the same requirements as ZRANGEBYLEX.
+
+- min, max syntax is the same as ZRANGEBYLEX.
+
+- returns the number of elements actually removed.
+
+ZREMRANGEBYRANK
+^^^^^^^^^^^^^^^
+::
+
+  ZREMRANGEBYRANK key start stop
+
+- remove elements with rank from start to stop from key.
+
+- start, stop can be negative numbers, representing offsets starting at the
+  element with the highest rank.
+
+- Returns the nunmber of elements actually removed.
+
+ZINCRBY
+^^^^^^^
+::
+
+  ZINCRBY key increment member
+
+- increment member of key, by increment.
+
+- The increment should be the string representation of a numeric value, and can
+  be double precision floating point numbers. Can be negative to decrement.
+
+- Returns the new score of member.
+
+ZSCORE
+^^^^^^
+::
+
+  ZSCORE key member
+
+- return the score of member at key.
 
 ZRANGE
 ^^^^^^
+::
 
-ZREVRANGE
-^^^^^^^^^
+  ZRANGE key start stop [WITHSCORES]
+
+- Returns the range of elements of sorted set, from start to stop.
+
+- Ranges are computed by elements' ordering.
+
+- start/stop is the same as LRANGE.
+
+- WITHSCORES, return the scores of the elements together with the elements.
+  The returned list is of form: value1,score1,...
 
 ZRANGEBYSCORE
 ^^^^^^^^^^^^^
@@ -738,17 +1404,101 @@ ZRANGEBYSCORE
 
   ZRANGEBYSCORE key min max [WITHSCORES] [LIMIT offset count]
 
-- min, max can be -inf, +inf. 默认是闭区间, prefixing the score with ``(``
-  to specify an open interval.
+- Returns the range of elements with scores between min and max. The elements
+  having the same score are returned in lexicographical order.
+
+- min, max can be any score, -inf, +inf. 默认是闭区间, prefixing the score with
+  ``(`` to specify an open interval.
+
+- LIMIT. select by offset and count in the filtered range of elements.
 
 ZRANGEBYLEX
 ^^^^^^^^^^^
+::
+
+  ZRANGEBYLEX key min max [LIMIT offset count]
+
+- Returns an Array of elements in range.
+
+- Can be used only when all scores in a sorted set are equal. When there're
+  different scores, return value is unspecified.
+
+- min, max must start with ``(``, ``[``, for exclusive or inclusive. ``+`` and
+  ``-`` denotes positively infinite and negatively infinite strings. min, max
+  are strings compared with elements by ``memcmp()`` function, to determine
+  ranges.
+
+ZREVRANGE
+^^^^^^^^^
+::
+
+  ZREVRANGE key start stop [WITHSCORES]
+
+- similar to ZRANGE, in descending order.
+
+ZREVRANGEBYSCORE
+^^^^^^^^^^^^^^^^
+::
+
+  ZREVRANGEBYSCORE key max min [WITHSCORES] [LIMIT offset count]
+
+- Note: max first, min second. Return in descending order. Otherwise similar to
+  ZRANGEBYSCORE.
 
 ZREVRANGEBYLEX
 ^^^^^^^^^^^^^^
+::
 
-ZREMRANGEBYLEX
-^^^^^^^^^^^^^^
+  ZREVRANGEBYLEX key max min [WITHSCORES] [LIMIT offset count]
+
+- similar to ZRANGEBYLEX, in descending order.
+
+ZPOPMIN
+^^^^^^^
+::
+
+  ZPOPMIN key [count]
+
+- pop count (default 1) lowest members from key, as ordered by score and lex.
+
+- Returns an Array of popped elements and scores, in order. Or an empty Array.
+
+ZPOPMAX
+^^^^^^^
+::
+
+  ZPOPMAX key [count]
+
+- Like ZPOPMIN, for highest members.
+
+- In return, the one with the highest score will be the first, followed by the
+  elements with lower scores.
+
+BZPOPMIN
+^^^^^^^^
+::
+
+  BZPOPMIN key [key]... timeout
+
+- a blocking variant of ZPOPMIN.
+
+- The blocking and popping behavior is like BLPOP.
+
+- Returns nil if timeout expired, or an Array with three elements: key, score,
+  member.
+
+BZPOPMAX
+^^^^^^^^
+::
+
+  BZPOPMAX key [key]... timeout
+
+- a blocking variant of ZPOPMAX.
+
+- The blocking and popping behavior is like BRPOP.
+
+- Returns nil if timeout expired, or an Array with three elements: key, score,
+  member.
 
 ZLEXCOUNT
 ^^^^^^^^^
@@ -758,41 +1508,202 @@ ZLEXCOUNT
 
 ZRANK
 ^^^^^
+::
+
+  ZRANK key member
+
+- the rank (i.e., index) of member in key, in ascending order.
+
+- rank is 0-based.
+
+- Returns the rank integer, or nil if member or key does not exist.
 
 ZREVRANK
 ^^^^^^^^
+::
+
+  ZREVRANK key member
+
+- rank in ascending order. otherwise like ZRANK.
+
+ZCOUNT
+^^^^^^
+::
+
+  ZCOUNT key min max
+
+- the number of elements in key, between min and max scores.
+
+- min, max has the same syntax as ZRANGEBYSCORE.
+
+- returns the number of elements in range.
+
+ZLEXCOUNT
+^^^^^^^^^
+::
+
+  ZLEXCOUNT key min max
+
+- the number of elements in key, between min and max strings.
+
+- min, max has the same syntax as ZRANGEBYLEX.
+
+- returns the number of elements in range.
+
+ZSCAN
+^^^^^
+::
+
+  ZSCAN key cursor [MATCH pattern] [COUNT count]
+
+- Work like SCAN. Iterates elements of a sorted set.
+
+- returns an array, cursor and elements, where elements is an array of elements
+  containing two elements, a member and its associated score.
 
 hash
 ----
-- there's no limit on the number of fields a hash can hold.
-
-- small hashes (i.e., a few elements with small values) are encoded in special
-  way in memory that make them very memory efficient.
-
-
 HSET
 ^^^^
+::
 
-HMSET
-^^^^^
+  HSET key field value
+
+- set field of key to value.
+
+- returns 1 if field is created and set; 0 if field is updated.
 
 HGET
 ^^^^
+::
+
+  HGET key field
+
+- get field of key.
+
+- returns the string or nill if field or key not exist.
+
+HMSET
+^^^^^
+::
+
+  HMSET key field value [field value]...
+
+- set multiple fields.
+
+HMGET
+^^^^^
+::
+
+  HMGET key field [field]...
+
+- Returns an Array with values of all matching fields.
+
+- A nil is returned for every non-existent field.
 
 HGETALL
 ^^^^^^^
+::
+
+  HGETALL key
+
+- Returns an Array containing all fields and values of a hash. In the array,
+  every field name is followed by its value. Or an empty list if key not exist.
+
+HDEL
+^^^^
+::
+
+  HDEL key field [field]...
+
+- Remove specified fields from key.
+
+- Returns the number of fields actually removed.
+
+HKEYS
+^^^^^
+::
+
+  HKEYS key
+
+- returns all field names in an Array, or empty Array.
+
+HVALS
+^^^^^
+::
+
+  HVALS key
+
+- similar to HKEYS for values.
+
+HEXISTS
+^^^^^^^
+::
+
+  HEXISTS key field
+
+- returns 1 if field exists in key, 0 otherwise.
+
+HLEN
+^^^^
+::
+
+  HLEN key
+
+- returns the number of fields at key. 0 if not exist.
 
 HINCRBY
 ^^^^^^^
+::
+
+  HINCRBY key field increment
+
+- similar to INCRBY, act on a field of hash.
+
+- returns the value after increment.
+
+HINCRBYFLOAT
+^^^^^^^^^^^^
+::
+
+  HINCRBYFLOAT key field increment
+
+- like INCRBYFLOAT, for hash field.
+
+- The command is always propagated in the replication link and the Append Only
+  File as a HSET operation, so that differences in the underlying floating
+  point math implementation will not be sources of inconsistency.
 
 hyperloglog
 ------------
 PFADD
 ^^^^^
+::
+
+  PFADD key element [element]...
+
+- add elements to HLL at key.
+
+- Returns 1 if the approximated cardinality was changed after this operation,
+  0 otherwise.
 
 PFCOUNT
 ^^^^^^^
+::
 
+  PFCOUNT key [key]...
+
+- With a single key, returns approximated cardinality of the HLL.
+
+- With multiple keys, returns approximated cardinality of the union of the
+  HLLs, by internally merging the HyperLogLogs stored at the provided keys into
+  a temporary HyperLogLog.
+
+- Note: as a side effect of calling this function, it is possible that the
+  HyperLogLog is modified, since the last 8 bytes encode the latest computed
+  cardinality for caching purposes. So PFCOUNT is technically a write command.
+
+- Returns count.
 
 transactions
 ------------
@@ -805,6 +1716,9 @@ WATCH
 - Mark one or more keys to be watched prior to starting a transaction.  If any
   of those keys change prior EXEC of that transaction, the entire transaction
   will be canceled.
+
+- Non-existent key can be watched. If it's added after WATCH before EXEC, the
+  transaction will be canneled.
 
 - WATCH makes EXEC conditional: perform the transaction only if none of the
   WATCHed keys were modified.
@@ -912,7 +1826,7 @@ PSUBSCRIBE
 
   PSUBSCRIBE pattern [pattern ...]
 
-- patterns are file globs. supporting:
+- patterns are file glob. supporting:
 
   * ``?`` one char
 
@@ -1272,6 +2186,8 @@ installation
 overview
 ^^^^^^^^
 - By default, all responses are returned as bytes in Python 3 and str in Python 2.
+  During request, all non-bytes values are encoded into bytes before sending
+  to server, using utf-8 by default.
 
 - redis-py attempts to adhere to the official command syntax. with following
   exceptions:
@@ -1293,7 +2209,6 @@ overview
 
 Redis
 ^^^^^
-
 response callbacks
 """"""""""""""""""
 - The client class uses a set of callbacks to cast Redis responses to the
@@ -1332,6 +2247,14 @@ class attributes
 """"""""""""""""
 - ``RESPONSE_CALLBACKS``. A dict, mapping command names to its response parsing
   callbacks.
+
+class methods
+"""""""""""""
+- ``from_url(url, db=None, **kwargs)``. Create a Redis client from url schemes.
+  This method calls directly ``ConnectionPool.from_url()`` class method to
+  create a connection pool, and create a Redis client using the pool.
+  The interpretation of ``url``, ``db``, available ``kwargs`` are all defered
+  to ConnectionPool.
 
 methods
 """""""
@@ -1373,6 +2296,32 @@ ConnectionPool
 
   这样, Redis client 等上层封装通过 connection pool 使用连接时, 本身具有了
   thread safety.
+
+class methods
+"""""""""""""
+- ``from_url(url, db=None, decode_components=False, **kwargs)``. create a
+  ConnectionPool from url.
+
+  url schemes:
+
+  * ``redis://[:password][@host][:6379][/db | ?db=N]``, TCP
+
+  * ``rediss://[:password][@host][:6379][/db | ?db=N]``, SSL over TCP.
+
+  * ``unix://[:password]@/path/to/socket.sock?db=N``, unix domain socket.
+
+  db specified in url take precedence over separate parameter. default to 0.
+
+  ``decode_components`` whether to decode url-encoded urls. This only applies
+  to the ``hostname``, ``path``, and ``password`` components.
+
+  urls also accepts any querystring parameters that are valid kwargs for the
+  class constructor. They are merged with ``kwargs``, and passed to the class
+  constructor. Special handling for the following kwargs when passed as query
+  string parameters: ``socket_connect_timeout`` and ``socket_timeout`` are
+  parsed as float; ``socket_keepalive`` and ``retry_on_timeout`` are parsed to
+  boolean values that accept True/False, Yes/No values to indicate state;
+  ``max_connections`` is parsed as int.
 
 Connection
 ^^^^^^^^^^
@@ -1586,6 +2535,168 @@ Optimistic locking: Use pipeline with WATCH.
     # or
 
     r.transaction(func)
+
+atomic counter
+^^^^^^^^^^^^^^
+- use INCR related commands
+
+counter with atomic reset
+^^^^^^^^^^^^^^^^^^^^^^^^^
+- use GETSET to make atomic reset and get the old value at the same time,
+  for statistics possibly.
+
+rate limiter
+^^^^^^^^^^^^
+limit rate for every second, every IP
+
+1. ::
+
+    FUNCTION LIMIT_API_CALL(ip)
+    ts = CURRENT_UNIX_TIME()
+    keyname = ip+":"+ts
+    current = GET(keyname)
+    IF current != NULL AND current > 10 THEN
+        ERROR "too many requests per second"
+    ELSE
+        MULTI
+            INCR(keyname,1)
+            EXPIRE(keyname,10)
+        EXEC
+        PERFORM_API_CALL()
+    END
+
+2. ::
+
+    FUNCTION LIMIT_API_CALL(ip)
+    current = LLEN(ip)
+    IF current > 10 THEN
+        ERROR "too many requests per second"
+    ELSE
+        IF EXISTS(ip) == FALSE
+            MULTI
+                RPUSH(ip,ip)
+                EXPIRE(ip,1)
+            EXEC
+        ELSE
+            RPUSHX(ip,ip)
+        END
+        PERFORM_API_CALL()
+    END
+
+listening to multiple queues
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+blocking pop from multiple lists.
+
+reliable message queues
+^^^^^^^^^^^^^^^^^^^^^^^
+Use list, with RPOPLPUSH/BRPOPLPUSH.
+
+简单的 RPOP/BRPOP 等操作, 虽然能实现基本的 consume message 的操作, 但 not
+reliable as messages can be lost, for example in the case there is a network
+problem or if the consumer crashes just after the message is received but it is
+still to process.
+
+RPOPLPUSH (or BRPOPLPUSH for the blocking variant) offers a way to avoid this
+problem: the consumer fetches the message and at the same time pushes it into a
+processing list. It will use the LREM command in order to remove the message
+from the processing list once the message has been processed.
+
+对于 processing list 的处理, 可以有多种方式.
+
+1. An additional client may monitor the processing list for items that remain
+   there for too much time, and will push those timed out items into the queue
+   again if needed.
+
+2. On start, client RPOPLPUSH the elements off processing list to the original
+   queue.
+
+对于 blocking/non-blocking 操作的选择:
+
+- 对于 dedicated message consumer/worker application, 应使用 blocking operation
+  去接收 messages. 而不要使用 polling, 即不要使用以下方式: 使用 nonblocking
+  operation 尝试获取消息, 若没有则等待一段时间再重试.
+  
+  polling 的缺点:
+  
+  * Redis and client application 需要做更多没有价值的操作.
+  
+  * Adds a unnecessary delay to the processing of items, when the message arrives
+    after the application has just tried to consume any message. To make the
+    delay smaller, we could wait less between calls, which amplifies the first
+    problem.
+
+- 对于 non-dedicated message consumer, 可以使用 non-blocking operation 与现有操作
+  逻辑集成.
+
+priority queues
+^^^^^^^^^^^^^^^
+Use sorted set's score as priority.
+
+For multiple items with the same priority, FIFO order needs to be preserved.
+This can be achieved by prefixing message with a INCR-ed value (like a primary
+key).
+
+Each client needs to INCR the primary key and concatenate it with the actual
+message then put the result into the sorted set.
+
+generic index
+^^^^^^^^^^^^^
+A sorted set's score can be seen as an index.
+
+A sorted set where all member's scores are equal, can also be seen as a more
+general index.
+
+leader boards
+^^^^^^^^^^^^^
+With ZADD it's easy to update member's score, thus useful as leader board.
+
+event notification
+^^^^^^^^^^^^^^^^^^
+Use list, with blocking pop for receiving event, and act accordingly.
+
+capped list
+^^^^^^^^^^^
+- LPUSH/RPUSH + LTRIM.
+
+circular list
+^^^^^^^^^^^^^
+Use RPOPLPUSH/BRPOPLPUSH with source and destination are the same list, a
+client can visit all the elements of an N-elements list, one after the other,
+in O(N) without transferring the full list from the server to the client using
+a single LRANGE operation.
+
+The above makes it very simple to implement a system where a set of items must
+be processed by N workers continuously as fast as possible. An example is a
+monitoring system that must check that a set of web sites are reachable, with
+the smallest delay possible, using a number of parallel workers.
+
+weighed random choice
+^^^^^^^^^^^^^^^^^^^^^
+Use sorted set and ZRANGEBYSCORE.
+
+suppose a set of choices with weights::
+
+  {a:1, b:2, c:3}
+
+compute accumulative normalized score and add to a sorted set::
+
+  SUM = ELEMENTS.TOTAL_WEIGHT
+  SCORE = 0
+  FOREACH ELE in ELEMENTS
+      SCORE += ELE.weight / SUM
+      ZADD KEY SCORE ELE
+  END
+
+select random element by::
+
+  ZRANGEBYSCORE key rand() +inf LIMIT 0 1
+  
+
+site visits for each user
+^^^^^^^^^^^^^^^^^^^^^^^^^
+每个用户一个 bitmap, 对用户访问的日期 (as unix timestamp) BITSET 1.
+
+BITCOUNT 可用于统计访问次数.
 
 references
 ==========

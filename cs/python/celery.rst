@@ -585,8 +585,8 @@ attributes
 
 methods
 ^^^^^^^
-
-- ``delay()``. Returns a ``AsyncResult``.
+- ``delay(*args, **kwargs)``. A simplified ``apply_async()``, that can pass
+  args and kwargs directly.
 
 - ``apply_async(args=None, kwargs=None, task_id=None, producer=None, link=None,
   link_error=None, shadow=None, **options)``.
