@@ -668,6 +668,57 @@ test discovery
 
 unittest.mock
 =============
+overview
+--------
+- usage of mock objects.
+
+  * dependency isolation. patching/mocking objects and methods so that dependencies are eliminated.
+  
+  * behavior checking. check the SUT used an object correctly.
+  
+Mock
+----
+
+- arbitrary attributes can be set on a mock object. By default, access to arbitrary attribute of a mock object returns a new descendent mock object.
+
+constructor
+^^^^^^^^^^^
+- name. the name of mock used by its repr, also propagated to mock objects derived from this mock object.
+
+- ``return_value``. the value to be returned when the mock object is called. by default it's a new Mock object with the name ``<name>()``.
+
+- ``side_effect``.
+
+attributes
+^^^^^^^^^^
+- called. whether the mock object has been called
+
+- ``return_value``. same as constructor parameter.
+
+- ``side_effect``. same as constructor parameter.
+
+- ``mock_calls``. a list of all calls to the mock object and all its descendant mocks, in calling order, as ``call`` instances.
+
+assertions
+^^^^^^^^^^
+- ``assert_called()``
+
+- ``assert_called_with()``
+
+- ``assert_called_once()``
+
+- ``assert_called_once_with()``
+
+MagicMock
+---------
+
+utilities
+---------
+patch
+^^^^^
+
+call
+^^^^
 
 - random notes:
 
