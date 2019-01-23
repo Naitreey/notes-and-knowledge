@@ -649,7 +649,6 @@ unit test
 
 design patterns
 ^^^^^^^^^^^^^^^
-
 - 单元测试只对 "变" 的东西进行测试, 不测试 "不变" 的东西. UT should test only
   logic, flows, configuration, etc. that changes, of a UUT.  Don't test
   constants, because it's useless -- constants nevers changes it's written as
@@ -734,6 +733,11 @@ design patterns
 - UTs 的设计应该能够为重构提供保障, 但又不会过度地干预实现细节, 从而变成重构的
   阻碍.
 
+- 测试用例中, 对预期结果的构建, 要避免使用与 SUT 相同的算法进行构建. 这样就起不
+  到测试结果是否相符的目的了. 此时, 应该在测试用例中直接给出预期的结果, 与 SUT
+  生成的结果进行比较. 若 SUT 生成的结果受一些外部因素影响而无法由输入来完全确定,
+  必须要通过 mock 等手段将影响因素剔除, 保证输出的稳定性, 可复现性.
+
 why testing
 -----------
 
@@ -779,7 +783,6 @@ joy
 
 design patterns
 ===============
-
 - Each test should only test one thing. Just like each function should only
   does one thing.
 

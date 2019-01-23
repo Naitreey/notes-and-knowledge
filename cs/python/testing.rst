@@ -672,22 +672,63 @@ overview
 --------
 - usage of mock objects.
 
-  * dependency isolation. patching/mocking objects and methods so that dependencies are eliminated.
+  * dependency isolation. patching/mocking objects and methods so that
+    dependencies are eliminated.
   
   * behavior checking. check the SUT used an object correctly.
   
 Mock
 ----
 
-- arbitrary attributes can be set on a mock object. By default, access to arbitrary attribute of a mock object returns a new descendent mock object.
+- arbitrary attributes can be set on a mock object. By default, access to
+  arbitrary attribute of a mock object returns a new descendent mock object.
 
 constructor
 ^^^^^^^^^^^
-- name. the name of mock used by its repr, also propagated to mock objects derived from this mock object.
+- name. the name of mock used by its repr, also propagated to mock objects
+  derived from this mock object.
 
-- ``return_value``. the value to be returned when the mock object is called. by default it's a new Mock object with the name ``<name>()``.
+- ``return_value``. the value to be returned when the mock object is called. by
+  default it's DEFAULT, in which case a new Mock object with the name
+  ``<name>()`` is returned.
 
-- ``side_effect``.
+- ``side_effect``. The more complex behavior specs when the mock object is
+  called. Its value can be:
+
+  * A function. To be called when the mock is called, signature:
+   
+   - it's passed with the same arguments that are passed to the mock's call.
+     
+   - return value: If DEFAULT is returned, then the ``return_value`` is
+     returned. Otherwise, the function's return value is used as mock call's
+     return value.
+
+  * an exception class or instance, which will be rasied on call.
+
+  * an iterable. an iterator is built from it, which must yield a value on
+    every call. Each value yielded from the iterator can be an exception class
+    or instance to be raised (like the second form), or a value to be returned
+    (like the first form, DEFAULT still applies).
+
+  * None. The side effect is cleared, fallback to ``return_value``.
+
+- spec. a list of strings or an existing object (a class or instance) that acts
+  as the specification for the mock object. If an object is passed, ``dir()``
+  is called to retrieve a list of strings. Unsupported magic attributes and
+  methods are excluded. Accessing any attribute not in this list will raise an
+  AttributeError.
+
+  When spec is an object, the created mock's ``__class__`` is set to be the
+  object's class or the object itself when it's a class. This makes mock object
+  passes ``isinstance()`` test.
+
+  When the spec is a callable object, this also enables a smarter matching of
+  calls made to the mock, where the equivalence of calls to the mock object can
+  be interpreted based on the more accurate parameter assignment semantics,
+  rather than rudimentary positional/kwargs matching.
+
+- ``spec_set``. A stricter variant of ``spec``, also preventing setting
+  attributes that are not on the passed in spec.
 
 attributes
 ^^^^^^^^^^
@@ -697,7 +738,8 @@ attributes
 
 - ``side_effect``. same as constructor parameter.
 
-- ``mock_calls``. a list of all calls to the mock object and all its descendant mocks, in calling order, as ``call`` instances.
+- ``mock_calls``. a list of all calls to the mock object and all its descendant
+  mocks, in calling order, as ``call`` instances.
 
 assertions
 ^^^^^^^^^^
@@ -711,14 +753,75 @@ assertions
 
 MagicMock
 ---------
+MagicMock 相对于 Mock 增加了一些功能. 这包含:
 
-utilities
----------
+* 能够 mock special methods.
+
+patch decorators
+----------------
+``patch()``, ``patch.object()``, ``patch.dict()`` can all be used as function
+decorator, class decorator, context manager.
+
 patch
 ^^^^^
+``patch()`` decorator/context manager is useful when global objects need to be
+patched/mocked. This is because
+
+* patching on global objects must be undone when the relevant test's execution
+  is finished;
+
+* it also serves as a prominent documentation about what dependencies are
+  needed by SUT.
+
+parameters
+""""""""""
+- target. the target of patching, as an import path string. The right target to
+  patch is where they are looked up by the SUT, which is not always the same as
+  where it's defined.
+
+- ``new=DEFAULT``. when DEFAULT, use a MagicMock object. When ``patch`` is used
+  as a decorator and new is omitted, the created mock is passed in as an extra
+  argument to the decorated function.
+
+patch.object
+^^^^^^^^^^^^
+
+parameters
+""""""""""
+- target. the object (rather than import path) on which to make patches.
+
+- attribute. The name of attribute to patch.
+
+- ``new=DEFAULT``. see ``patch()``.
+
+patch.dict
+^^^^^^^^^^
+- Used to setting values in a mapping just during a scope and restoring the
+  dictionary to its original state when the test ends
+
+parameters
+""""""""""
+- target. a dict-like mapping object to patch.
+
+patch start/stop
+^^^^^^^^^^^^^^^^
+
+autospeccing
+------------
+- When mocking a function/method, the original function/method is replaced by
+  an actual mocking function (or method which is also a function). The mocking
+  function has the same call signature as the original function/method, but
+  delegates to a mock object under the hood, so that behavior assertions are
+  possible.
+
+  This also makes accessing the mocked method on a class instance return a
+  bound method as expected.  如果没有使用 autospec, 则无法实现上述现象, 此时,
+  the method is replaced by a mock instance, as a plain class attribute.
+  Without descriptor protocol implementation, the unbound-to-bound conversion
+  is not performed.
 
 call
-^^^^
+----
 
 - random notes:
 
@@ -741,6 +844,33 @@ call
     isolation 问题通过 ST 解决). 无论这个 boundary 是模块之间的 boundary
     (mocked in UTs), 还是服务和组件之间的 boundary (mocked in ITs).
 
+design patterns
+---------------
+- Use ``spec``, ``create_autospec`` 等使 mock object 与 code implementation 的
+  interface 保持一致, 避免构建的 mock 与被 mock 的依赖项的 API 不符. 从而一定程
+  度上避免在测试用例中 patch 的 mock object 的行为与 SUT 依赖项的实际行为已经不
+  符, 而测试仍然通过, 即测试结果已经不能反映 SUT 与依赖项的交互是否正确.
+
+- 对于 callable object 以及 method calls 的 mock, 要使用 spec and auto speccing
+  从而让 call equivalence 的检验能基于准确的语义, 而独立于 actual parameter
+  passing method (positional/kwarg).
+
+- Attributes of built-in/extension types can not be mocked. 若要 mock 相关内容,
+  做法是 make patches in the module that imported the relevant builtin objects.
+  例如, 在 somemodule 中使用了 datetime.datetime.now, 现在想要 mock 这个操作返回
+  固定时间, 做法是
+
+  .. code:: python
+
+    # somemodule.py
+    from datetime import datetime
+
+    def some_op():
+      # use datetime.now
+
+    # test module
+    with patch("somemodule.datetime") as mock_datetime:
+      # make assertions with mock_datetime
 
 doctest
 =======
