@@ -679,9 +679,12 @@ overview
   
 Mock
 ----
+- Without considering autospeccing, arbitrary attributes can be set on a mock
+  object.  access to arbitrary attribute of a mock object returns a new
+  descendent mock object.
 
-- arbitrary attributes can be set on a mock object. By default, access to
-  arbitrary attribute of a mock object returns a new descendent mock object.
+- When subclassing a Mock/MagicMock, all dynamically created attributes,
+  ``return_value`` etc., will use the subclass automatically.
 
 constructor
 ^^^^^^^^^^^
@@ -734,6 +737,14 @@ attributes
 ^^^^^^^^^^
 - called. whether the mock object has been called
 
+- ``call_args``. None (if the mock hasn't been called), or the ``call``
+  instance representing the arguments that the mock was last called with.
+
+- ``call_args_list``. a list of all calls made to the mock object, in calling
+  order, as ``call`` instances.
+
+- ``call_count``. the number of times the mock object has been called.
+
 - ``return_value``. same as constructor parameter.
 
 - ``side_effect``. same as constructor parameter.
@@ -743,13 +754,23 @@ attributes
 
 assertions
 ^^^^^^^^^^
-- ``assert_called()``
+- ``assert_called()``. assert the mock has been called, at least once.
 
-- ``assert_called_with()``
+- ``assert_called_with(*args, **kwargs)``. assert *the last time* the mock was
+  called with the specified args and kwargs.
 
-- ``assert_called_once()``
+- ``assert_called_once()``. assert the mock has been called exactly once.
 
-- ``assert_called_once_with()``
+- ``assert_called_once_with(*args, **kwargs)``. assert the mock has been called
+  exactly once with the specified args and kwargs.
+
+- ``assert_any_call(*args, **kwargs)``. assert the mock has ever been called at
+  least once with the specified args and kwargs.
+
+- ``assert_has_calls(calls, any_order=False)``. assert the mock has been called
+  with the specified calls. If ``any_order=False``, the calls must be happened
+  sequentially in order. The ``mock_calls`` is checked for this, therefore the
+  calls made to descendant mocks are checked too.
 
 MagicMock
 ---------
@@ -871,6 +892,35 @@ design patterns
     # test module
     with patch("somemodule.datetime") as mock_datetime:
       # make assertions with mock_datetime
+
+- 使用 patch 的方法有 3 种:
+
+  * function decorator or class decorator. 这种方式具有最明显的 dependency
+    documentation 效果. 但也会可导致过长的 method signature.
+
+  * context manager. 这种方式避免了多个 patch decorator 导致过长的 method
+    signature. 但仍存在至少一级 indentation 的问题.
+
+  * create patch in test case with start/stop. 这种方式避免了 indentation 问题.
+
+      .. code:: python
+
+        class MyTest(TestCase):
+
+            def create_patch(self, name):
+                patcher = patch(name)
+                thing = patcher.start()
+                self.addCleanup(patcher.stop)
+                return thing
+
+            def test_foo(self):
+                mock_foo = self.create_patch('mymodule.Foo')
+                mock_bar = self.create_patch('mymodule.Bar')
+                mock_spam = self.create_patch('mymodule.Spam')
+
+                assert mymodule.Foo is mock_foo
+                assert mymodule.Bar is mock_bar
+                assert mymodule.Spam is mock_spam
 
 doctest
 =======
