@@ -162,13 +162,16 @@ class method object
     want different ways, give it to them.)
 
     例如, ``datetime.datetime`` 的多个 constructor.
+    
+  * as class level methods and utilities, independent of instances,
+    but dependent of class itself.
 
 static method object
 ^^^^^^^^^^^^^^^^^^^^
 - typical usage.
 
-  * 当一个函数更多的是一种 utility 的地位, 与实例无关, 与 class 也无关, 并且也
-    确实不需要子类去自定义的时候. 就可以用 static method.
+  * 当一个函数更多的是一种 utility 的地位, 与实例无关, 与 class 也无关, 就可以
+    用 static method.
 
     那么, 既然跟类都没有关系, 干嘛要放在类里面呢? 一个解释是, 有时候这样更便于
     用户找到他所需要的 utility, 并且 cls name 为这个 utility 提供了一个有意义
@@ -1670,7 +1673,6 @@ descriptor types
 
 property
 ^^^^^^^^
-
 - property and its alikes (``cached_property``, etc.) 是 python 对 attribute
   getter/setter methods 的一个清晰而简洁的解决方案.
 
@@ -1678,9 +1680,8 @@ property
   property. 通过使用 property, 一个简单的 attribute 数据可以 transparently
   transform into a complex getter/setter combo, 而不做任何 API 改动. 仍然
   保持整洁、简单.
-
-- 这种从 data attribute 与 getter/setter 的透明切换可以看作是 dynamic language
-  的一个 feature, 这是 compiled language 不具有的.
+  
+- 一个类的属于正式 api 的 public data members, 应尽量使用 property 来定义.
 
 built-in constants
 ==================
