@@ -681,11 +681,15 @@ overview
 
 NonCallableMock
 ---------------
+- Useful for mocking non-callable objects.
+
 - 在创建每个 mock 实例时, 会先创建一个这个实例自己使用的子类. 这是避免在创建
   和修改 method definition 时, 不同的 mock 之间相互影响.
 
 Mock
 ----
+- Subclass of CallableMixin and NonCallableMock.
+
 - Without considering autospeccing, arbitrary attributes can be set on a mock
   object.  access to arbitrary attribute of a mock object returns a new
   descendent mock object.
@@ -695,14 +699,14 @@ Mock
 
 constructor
 ^^^^^^^^^^^
-- name. the name of mock used by its repr, also propagated to mock objects
-  derived from this mock object.
+- ``name=None``. the name of mock used by its repr, also propagated to mock
+  objects derived from this mock object.
 
-- ``return_value``. the value to be returned when the mock object is called. by
-  default it's DEFAULT, in which case a new Mock object with the name
-  ``<name>()`` is returned.
+- ``return_value=DEFAULT``. the value to be returned when the mock object is
+  called. by default it's DEFAULT, in which case a new Mock object with the
+  name ``<name>()`` is returned.
 
-- ``side_effect``. The more complex behavior specs when the mock object is
+- ``side_effect=None``. The more complex behavior specs when the mock object is
   called. Its value can be:
 
   * A function. To be called when the mock is called, signature:
@@ -722,11 +726,11 @@ constructor
 
   * None. The side effect is cleared, fallback to ``return_value``.
 
-- spec. a list of strings or an existing object (a class or instance) that acts
-  as the specification for the mock object. If an object is passed, ``dir()``
-  is called to retrieve a list of strings. Unsupported magic attributes and
-  methods are excluded. Accessing any attribute not in this list will raise an
-  AttributeError.
+- ``spec=None``. a list of strings or an existing object (a class or instance)
+  that acts as the specification for the mock object. If an object is passed,
+  ``dir()`` is called to retrieve a list of strings. Unsupported magic
+  attributes and methods are excluded. Accessing any attribute not in this list
+  will raise an AttributeError.
 
   When spec is an object, the created mock's ``__class__`` is set to be the
   object's class or the object itself when it's a class. This makes mock object
@@ -737,8 +741,20 @@ constructor
   be interpreted based on the more accurate parameter assignment semantics,
   rather than rudimentary positional/kwargs matching.
 
-- ``spec_set``. A stricter variant of ``spec``, also preventing setting
+- ``spec_set=None``. A stricter variant of ``spec``, also preventing setting
   attributes that are not on the passed in spec.
+
+- ``wraps=None``. the object for the mock to wrap. Calling the Mock will pass
+  the call through to the wrapped object, getting attribute on the mock will
+  return a Mock object that wraps the corresponding attribute of the wrapped
+  object. This is useful for wrapping stub object.
+
+- ``unsafe=False``. If False, getting any attribute starts with ``assert``,
+  ``assret`` will raise AttributeError, rather than creating a mock as
+  attribute value automatically. This is to partially avoid typo.
+
+- ``**kwargs``. Arbitrary attributes to be set on the mock. same as
+  ``configure_mock()``.
 
 attributes
 ^^^^^^^^^^
@@ -764,6 +780,8 @@ attributes
 
 assertions
 ^^^^^^^^^^
+- ``assert_not_called()``. assert the mock has not been called.
+
 - ``assert_called()``. assert the mock has been called, at least once.
 
 - ``assert_called_with(*args, **kwargs)``. assert *the last time* the mock was
@@ -786,18 +804,41 @@ assertions
 
 configuration
 ^^^^^^^^^^^^^
+- ``reset_mock(*, return_value=False, side_effect=False)``. reset mock's call
+  history. descendant mocks and return value mock are also reset. With
+  ``return_value``, ``side_effect`` parameters, they are reset as well.
+
+- ``mock_add_spec(spec, spec_set=False)``. add spec to mock. like constructor
+  parameters.
+
 - ``attach_mock(mock, attribute)``. Attach a mock as an attribute of this one,
   replacing its name and parent. Calls to the attached mock will be recorded in
   the ``method_calls`` and ``mock_calls`` attributes of this one. In this case,
   the parent mock acts as a manager of the attached mock.
 
-- ``configure_mock(**kwargs)``
+- ``configure_mock(**kwargs)``. Set attributes on the mock. Attributes plus
+  return values and side effects can be set on child mocks using standard dot
+  notation.::
+
+    attrs = {'method.return_value': 3, 'other.side_effect': KeyError}
+
+NonCallableMagicMock
+--------------------
+- subclass of MagicMixin and NonCallableMock.
 
 MagicMock
 ---------
-MagicMock 相对于 Mock 增加了一些功能, 它是 Mock 的子类. 这包含:
+Mock class 没有 override special method, 而是自动继承了来自 ``object`` 的 base
+implementation, 这样在访问 special method 时, 就不会自动创建 descendant mock,
+而是返回相应的 special method, 因此在使用上具有一定局限性.
 
-* 能够 mock special methods.
+MagicMock 以 Mock 为基础, 对 *绝大部分* special method 进行了预先的 override,
+设置了它们为 MagicProxy non-data descriptor, 在 get 时创建一个 descendant mock
+设置到实例的 special method name 属性上.  (The MagicMock class is just a Mock
+variant that has all of the magic methods pre-created for you.)
+
+注意仍有部分 special method 没有进行 override. 它们对 mock object 本身的可用性
+具有影响. 详见 ``unittest.mock._non_defaults``
 
 patch decorators
 ----------------
@@ -826,6 +867,9 @@ parameters
   as a decorator and new is omitted, the created mock is passed in as an extra
   argument to the decorated function.
 
+- ``new_callable=None``. The callable used to create the ``new`` object. by
+  default this is the MagicMock class.
+
 patch.object
 ^^^^^^^^^^^^
 
@@ -840,7 +884,20 @@ parameters
 patch.dict
 ^^^^^^^^^^
 - Used to setting values in a mapping just during a scope and restoring the
-  dictionary to its original state when the test ends
+  dictionary to its original state when the test ends.
+
+parameters
+""""""""""
+- ``in_dict``. the map to be patched, or the import path to it. At the very
+  minimum they must support ``__getitem__()``, ``__setitem__()``,
+  ``__delitem__()`` and either ``__iter__()`` or ``__contains__()``.
+
+- ``values=()``. a dict of values to be patched in the dict, or a an iterable
+  of ``(key, value)`` pairs.
+
+- ``clear=False``. Clear the dict before patching.
+
+- ``**kwargs``. extra keys to be patched in the map.
 
 parameters
 """"""""""
@@ -851,23 +908,34 @@ patch start/stop
 
 autospeccing
 ------------
-- When mocking a function/method, the original function/method is replaced by
-  an actual mocking function (or method which is also a function). The mocking
-  function has the same call signature as the original function/method, but
-  delegates to a mock object under the hood, so that behavior assertions are
-  possible.
+- autospeccing's capability.
+  
+  * When autospeccing a function/method, the original function/method is
+    replaced by an actual mocking function (or method which is also a
+    function). The mocking function has the same call signature as the original
+    function/method, but delegates to a mock object under the hood, so that
+    behavior assertions are possible.
 
-  This also makes accessing the mocked method on a class instance return a
-  bound method as expected.  如果没有使用 autospec, 则无法实现上述现象, 此时,
-  the method is replaced by a mock instance, as a plain class attribute.
-  Without descriptor protocol implementation, the unbound-to-bound conversion
-  is not performed.
+  * When autospeccing a method, accessing the mocked method on a class instance
+    return a bound method as would normally. 如果没有使用 autospec, 则无法实现
+    上述现象, 此时, the method is replaced by a mock instance, as a plain class
+    attribute. Without descriptor protocol implementation, the unbound-to-bound
+    conversion is not performed.
+
+  * When autospeccing a class, the ``__init__`` method's signature is copied,
+    and for a callable object, the ``__call__`` method's signature is copied,
+    so that call signature is examined.
+
+- autospec can be performed via ``autospec`` parameter of ``patch``, or the
+  ``create_autospec()`` function.
 
 helpers
 -------
 call
 ^^^^
 
+sentinel
+^^^^^^^^
 ANY
 ^^^
 可用于辅助进行 equality 检测. ANY equals to anything. 因此当一些 assertion 只想

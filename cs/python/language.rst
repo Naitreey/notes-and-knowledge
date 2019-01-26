@@ -1443,13 +1443,11 @@ inheritance
 
 builtin types
 =============
-
 text sequence type - str
 ------------------------
 
 methods
 ^^^^^^^
-
 - ``isidentifier()``. 检查字符串是否是合法的 python identifier.
   Use ``keyword.iskeyword()`` tests for reserved keywords.
 
@@ -1458,6 +1456,12 @@ methods
   * 虽然 ``somelist.join("...")`` 貌似更合理, 但是实际上并不是这样. 这是因为
     1) any iterable can be joined, 显然把 join logic 放在 str class 中实现是
     最统一的方式; 2) join logic is tightly coupled with str object's internals.
+
+- ``startswith(prefixes[, start[, end]])``. test if string starts with the
+  specified prefix or a tuple of prefixes. start and end specify the position
+  in string to start and stop looking for match. start and end can be negative.
+
+- ``endswith(suffixes[, start[, end]])``. ditto for ends.
 
 - ``__mod__(arg)``. 字符串的 modulo operation 即 string formatting.
   See `docs <https://docs.python.org/3/library/stdtypes.html#printf-style-string-formatting>`_.
