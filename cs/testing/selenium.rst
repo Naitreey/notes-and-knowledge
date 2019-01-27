@@ -102,7 +102,8 @@ window
 """"""
 - ``current_window_handle``. current window's handle.
 
-- ``window_handles``. handles of all windows in the current session.
+- ``window_handles``. handles of all windows in the current session. probably
+  populated in the openning order.
 
 - ``close()``. close current window.
 

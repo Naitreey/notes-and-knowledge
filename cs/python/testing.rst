@@ -916,11 +916,15 @@ autospeccing
     function/method, but delegates to a mock object under the hood, so that
     behavior assertions are possible.
 
-  * When autospeccing a method, accessing the mocked method on a class instance
-    return a bound method as would normally. 如果没有使用 autospec, 则无法实现
-    上述现象, 此时, the method is replaced by a mock instance, as a plain class
-    attribute. Without descriptor protocol implementation, the unbound-to-bound
-    conversion is not performed.
+  * When autospeccing a method *via class*, accessing the mocked method on a
+    class instance return a bound method as would normally. 如果没有使用
+    autospec, 则无法实现上述现象, 此时, the method is replaced by a mock
+    instance, as a plain class attribute. Without descriptor protocol
+    implementation, the unbound-to-bound conversion is not performed. 然而同时,
+    这也导致在 make call assertions 时必须考虑到 self 有传入 bound method. 即::
+
+      # obj is the instance to which m is attached.
+      m.assert_called_once_with(obj, arg, k=v, ...)
 
   * When autospeccing a class, the ``__init__`` method's signature is copied,
     and for a callable object, the ``__call__`` method's signature is copied,
