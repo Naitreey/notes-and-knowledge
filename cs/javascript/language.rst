@@ -1089,7 +1089,6 @@ attributes
 
 methods
 ^^^^^^^
-
 iteration
 """"""""""
 - @@iterator, Symobol.iterator. Returns an ``Array Iterator`` yielding array
