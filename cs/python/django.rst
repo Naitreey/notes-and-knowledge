@@ -1551,6 +1551,8 @@ FileField
   save model instance. 如果需要系统性地修改, 则使用 ``upload_to`` callable
   form.
 
+- 删除 model instance 时, FileField 对应的文件不会自动删除. 需要手动处理.
+
 options
 """""""
 
