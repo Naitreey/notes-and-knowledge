@@ -913,8 +913,8 @@ variant that has all of the magic methods pre-created for you.)
 
 patchers
 --------
-* ``patch()``, ``patch.object()``, ``patch.dict()`` can all be used as function
-  decorator, class decorator, context manager.
+* ``patch()``, ``patch.object()``, ``patch.dict()``, ``patch.multiple`` can all
+  be used as function decorator, class decorator, context manager.
 
 * patchers are convenient to patch global objects, the patches are
   automatically undone when relevant part of code's execution has finished.
@@ -938,10 +938,29 @@ patch
 ^^^^^
 parameters
 """"""""""
-- target. the target of patching, as an import path string. The right target to
-  patch is where they are looked up by the SUT, which is not always the same as
-  where it's defined. 盲目 patch 定义的地方会不可靠, 因为 SUT 的模块可以预先将
-  定义加载到自己的 global scope 中, 创建 alias reference.
+- target. the target of patching, as an import path string. For patching to
+  work you must ensure that you patch the name used by the system under test,
+  which is not always the same as where it's defined. 盲目 patch 定义的地方会不
+  可靠, 因为 SUT 的模块可以预先将定义加载到自己的 global scope 中, 创建 alias
+  reference.
+
+  .. code:: python
+
+    # a.py
+    class A: pass
+    # b.py
+    from a import A
+    # test.py
+    # b use A that is imported into b's global scope, so patch that.
+    patch("b.A")
+
+    # b.py
+    import a
+    # test.py
+    # b use a.A, a is global module, reference A is unique, no alias. we can
+    patch("b.a.A")
+    # or directly
+    patch("a.A")
 
 - ``new=DEFAULT``. when DEFAULT, generate an instance from ``new_callable``.
 
@@ -972,7 +991,8 @@ parameters
 
 - attribute. The name of attribute to patch.
 
-- other parameters see ``patch()``.
+- ``new``, ``spec``, ``spec_set``, ``create``, ``autospec``, ``new_callable``,
+  see ``patch()``.
 
 patch.dict
 ^^^^^^^^^^
@@ -994,11 +1014,48 @@ parameters
 
 patch.multiple
 ^^^^^^^^^^^^^^
+Make multiple patches on a target at once.
+
 parameters
 """"""""""
+- ``target``. a object or the import path of object to be patched. 注意 target
+  本身没有被 patch, patch 的是 target 上的由 ``**kwargs`` 指定的属性.
+
+- ``**kwargs``. keys are the attributes to be patched, values are patched
+  values. Use DEFAULT to create mock.
+
+  When used as decorator, the created mocks are passed into a decorated
+  function *by keyword* (the names of patched attributes are keys, the created
+  mocks are values). 因此与其他 patcher 一起作为 decorator 使用时, 要注意
+  positional mock 的参数在前面, kwarg mock 参数在后面.
+  
+  When used as context manager, an equivalent dictionary is returned via
+  ``__enter__``. 注意只有指定 DEFAULT 后创建的 mock 才会传入 function or
+  context.
+
+- ``spec``, ``spec_set``, ``create``, ``autospec``, ``new_callable``, see
+  ``patch()``.
 
 patch start/stop
 ^^^^^^^^^^^^^^^^
+all patchers returns a patcher instance. They have ``start()``, ``stop()``
+methods.
+
+This is useful to do patching in setUp methods or where you want to do multiple
+patches without nesting decorators or with statements. Remember to use
+``addCleanup()`` to undo pacthes after test.
+
+- ``_patch.start()``
+
+- ``_patcher.stop()``
+
+- ``patch.stopall()``. stop all active patches that are started with
+  ``start()``.
+
+TEST_PREFIX
+^^^^^^^^^^^
+A module-level constant, for class-level patcher decorator's test method
+discovery. Default is ``test``, on par with unittest.defaultTestLoader.testMethodPrefix.
 
 autospeccing
 ------------
@@ -1143,6 +1200,10 @@ design patterns
     m = MagicMock()
     {**m}
     m.mock_calls
+
+- When patching descriptors, patch the class where the descriptor is defined,
+  rather than the instance where it's used. 因为 descriptor 是定义在 class 上的,
+  而且若是 data descriptor 则会 override 对 instance 的修改.
 
 doctest
 =======
