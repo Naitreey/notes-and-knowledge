@@ -686,6 +686,10 @@ NonCallableMock
 - 在创建每个 mock 实例时, 会先创建一个这个实例自己使用的子类. 这是避免在创建
   和修改 method definition 时, 不同的 mock 之间相互影响.
 
+constructor
+^^^^^^^^^^^
+same as Mock. with ``return_value``, ``side_effect`` etc., being useless.
+
 Mock
 ----
 - Subclass of CallableMixin and NonCallableMock.
@@ -741,6 +745,9 @@ constructor
   be interpreted based on the more accurate parameter assignment semantics,
   rather than rudimentary positional/kwargs matching.
 
+  When spec is a class, their return value (the ‘instance’) will have the same
+  spec as the class.
+
 - ``spec_set=None``. A stricter variant of ``spec``, also preventing setting
   attributes that are not on the passed in spec.
 
@@ -758,13 +765,13 @@ constructor
 
 attributes
 ^^^^^^^^^^
-- called. whether the mock object has been called
-
-- ``call_count``. the number of times the mock object has been called.
-
 - ``return_value``. same as constructor parameter.
 
 - ``side_effect``. same as constructor parameter.
+
+- ``called``. whether the mock object has been called.
+
+- ``call_count``. the number of times the mock object has been called.
 
 - ``call_args``. None (if the mock hasn't been called), or the ``call``
   instance representing the arguments that the mock was last called with.
@@ -777,6 +784,10 @@ attributes
 
 - ``mock_calls``. a list of all calls to the mock object and all its descendant
   mocks, in calling order, as ``call`` instances.
+
+- ``__class__``. This is property. Default is just a mock class. If a spec is
+  provided, this returns the class of the spec or spec itself if already a
+  class. Can be assigned, so that mock became instance of that class.
 
 assertions
 ^^^^^^^^^^
@@ -811,16 +822,76 @@ configuration
 - ``mock_add_spec(spec, spec_set=False)``. add spec to mock. like constructor
   parameters.
 
-- ``attach_mock(mock, attribute)``. Attach a mock as an attribute of this one,
-  replacing its name and parent. Calls to the attached mock will be recorded in
-  the ``method_calls`` and ``mock_calls`` attributes of this one. In this case,
-  the parent mock acts as a manager of the attached mock.
-
 - ``configure_mock(**kwargs)``. Set attributes on the mock. Attributes plus
   return values and side effects can be set on child mocks using standard dot
   notation.::
 
     attrs = {'method.return_value': 3, 'other.side_effect': KeyError}
+
+attaching mocks
+^^^^^^^^^^^^^^^
+- ``__setattr__(name, value)`` 包含以下逻辑, when a mock is assigned as
+  attribute of another mock or its return value, it becomes a descendant of
+  that mock. 这相当于通过 ``m.attr`` 使用的 ``__getattr__`` 生成的 descendant
+  mock. 因此, 正常的 parent/child mock 的所有关系自然成立. 注意, 若被赋值的
+  mock 已经有 name, parent 等, 则不会被重新 attach. 此时, 若要 force attach,
+  使用 ``attach_mock()`` method.
+
+- ``attach_mock(mock, attribute)``. Attach a mock as an attribute of this one,
+  replacing its name and parent. Calls to the attached mock will be recorded in
+  the ``method_calls`` and ``mock_calls`` attributes of this one. In this case,
+  the parent mock acts as a manager of the attached mock.
+
+deleting attributes
+^^^^^^^^^^^^^^^^^^^
+- ``__delattr__(name)``. Mock 提供了 custom ``del`` implementation, 这可用于删
+  除并标记一个属性是不存在的, 这样下次在获取该属性时, 不会自动生成 descendant
+  mock, 而是 raise AttributeError.
+
+customization
+^^^^^^^^^^^^^
+- ``_get_child_mock(**kwargs)``. Mock subclass can override this method to
+  create desired mock instance or any modification for descendant mocks.
+  Default use current mock's class. ``*kwargs`` are arguments passed to
+  the mock subclass.
+
+attribute filtering
+^^^^^^^^^^^^^^^^^^^
+- ``__dir__()``. limit mock's dir result to contain only useful public APIs.
+  With spec/autospeccing, also include those attributes. The behavior of this
+  method is controlled by ``FILTER_DIR``.
+
+PropertyMock
+^^^^^^^^^^^^
+注意 MagicMock 不提供 ``__get__``, ``__set__`` 的默认 MagicProxy 实现. 若需要
+对 descriptor 进行 mock, 基本的思路是分别对 ``__get__``, ``__set__`` 赋值为
+两个 mock object, 再进行检查.
+
+PropertyMock 是 Mock 的 subclass, 它在 Mock 的基础上实现了 descriptor protocol
+要求的 ``__get__``, ``__set__``. 可以直接用于 patch descriptor, 省去了手动构造
+的麻烦.
+
+Fetching a PropertyMock instance from an object calls the mock, with no args.
+Setting it calls the mock with the value being set.
+
+.. code:: python
+
+  class A:
+
+    @property
+    def prop(self):
+      return 1
+
+    @prop.setter
+    def prop(self):
+      pass
+
+  with patch('__main__.A.prop', new_callable=PropertyMock) as mock_prop:
+    print(A().prop)
+    mock_prop.assert_called_once_with()
+
+PropertyMock object 必须 attach 在 class object 上, 而不是 instance 上. 因为它
+本质是一个 descriptor.
 
 NonCallableMagicMock
 --------------------
@@ -840,22 +911,31 @@ variant that has all of the magic methods pre-created for you.)
 注意仍有部分 special method 没有进行 override. 它们对 mock object 本身的可用性
 具有影响. 详见 ``unittest.mock._non_defaults``
 
-patch decorators
-----------------
-``patch()``, ``patch.object()``, ``patch.dict()`` can all be used as function
-decorator, class decorator, context manager.
+patchers
+--------
+* ``patch()``, ``patch.object()``, ``patch.dict()`` can all be used as function
+  decorator, class decorator, context manager.
+
+* patchers are convenient to patch global objects, the patches are
+  automatically undone when relevant part of code's execution has finished.
+
+* When used in decorator form, patchers are also a very clear form of
+  documentation, stating the dependencies of SUT.
+
+* patcher's form:
+
+  * decorator: When ``patch`` is used as a decorator and ``new`` is omitted,
+    the created mock is passed in as an extra argument to the decorated
+    function.
+
+    - When used as class decorator: it finds tests by looking for method names
+      that start with ``patch.TEST_PREFIX``.
+
+  * context manager: When ``patch`` is used as a context manager, the created
+    mock is returned from ``__enter__``.
 
 patch
 ^^^^^
-``patch()`` decorator/context manager is useful when global objects need to be
-patched/mocked. This is because
-
-* patching on global objects must be undone when the relevant test's execution
-  is finished;
-
-* it also serves as a prominent documentation about what dependencies are
-  needed by SUT.
-
 parameters
 """"""""""
 - target. the target of patching, as an import path string. The right target to
@@ -863,23 +943,36 @@ parameters
   where it's defined. 盲目 patch 定义的地方会不可靠, 因为 SUT 的模块可以预先将
   定义加载到自己的 global scope 中, 创建 alias reference.
 
-- ``new=DEFAULT``. when DEFAULT, use a MagicMock object. When ``patch`` is used
-  as a decorator and new is omitted, the created mock is passed in as an extra
-  argument to the decorated function.
+- ``new=DEFAULT``. when DEFAULT, generate an instance from ``new_callable``.
 
 - ``new_callable=None``. The callable used to create the ``new`` object. by
   default this is the MagicMock class.
 
+- ``spec=None``, passed to ``new_callable``. can be True, in which case the
+  target is used as spec.
+ 
+- ``spec_set=None``, passed to ``new_callable``. Can be True, in which case the
+  target is used as spec.
+
+- ``autospec=None``. See `autospeccing`_. Can be True/False, some object. When
+  some object is specified, the object is used as the spec, instead of the
+  target object.
+
+- ``create=False``. By default patching non-existing attributes raises
+  AttributeError. When True, it'll be created, and delete it again after the
+  patched function has exited. *Use with caution.*
+
+- ``**kwargs``. arbitrary kwargs passed to ``new_callable``.
+
 patch.object
 ^^^^^^^^^^^^
-
 parameters
 """"""""""
 - target. the object (rather than import path) on which to make patches.
 
 - attribute. The name of attribute to patch.
 
-- ``new=DEFAULT``. see ``patch()``.
+- other parameters see ``patch()``.
 
 patch.dict
 ^^^^^^^^^^
@@ -899,9 +992,10 @@ parameters
 
 - ``**kwargs``. extra keys to be patched in the map.
 
+patch.multiple
+^^^^^^^^^^^^^^
 parameters
 """"""""""
-- target. a dict-like mapping object to patch.
 
 patch start/stop
 ^^^^^^^^^^^^^^^^
@@ -909,6 +1003,11 @@ patch start/stop
 autospeccing
 ------------
 - autospeccing's capability.
+
+  * With ``spec``, mock is created with accessible attributes mirrored from the
+    spec object, and call signature mirrored from the spec object.  With
+    autospec, all attributes of the mock (as individual objects) will also be
+    spec-ed.
   
   * When autospeccing a function/method, the original function/method is
     replaced by an actual mocking function (or method which is also a
@@ -958,6 +1057,19 @@ placeholder.
     get the magic method name exactly right, then you will just get a "normal"
     mock method, which just silently return another mock, and you may not
     realise that you’ve written a test that tests nothing at all.
+
+FILTER_DIR
+^^^^^^^^^^
+- A module-level boolean variable that controls how mock presents its dir.
+
+- True. shows all attributes from mock instance and its class, which is not
+  prefixed by ``_`` and is not magic method. This includes useful public
+  attributes of a mock. Dynamically created descendant mocks are also shown.
+  If the mock was created with a spec/autospec then all the attributes from the
+  original are shown, even if they haven’t been accessed yet.
+
+- False. All attributes is shown, according to standard dir logic, by calling
+  ``object.__dir__(self)``.
 
 design patterns
 ---------------

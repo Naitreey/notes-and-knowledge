@@ -379,7 +379,6 @@ make it callable
 
 attribute access
 ^^^^^^^^^^^^^^^^
-
 - ``object.__getattribute__(self, name)``. 负责一个对象上的所有属性访问.
   In order to avoid infinite recursion in this method, its implementation
   should always call the base class method with the same name to access any
@@ -433,6 +432,9 @@ attribute access
   由于 ``__getattribute__`` 完全决定属性访问, 并且具有以上复杂的逻辑, 所以
   subclass/submetaclass 一般不该完全自定义该方法, 而是在调用父类的方法基础上
   进行适当的自定义.
+
+- ``__delattr__(self, name)``. If this special method is defined,
+  ``del obj.attr`` will call this method for performing deletion.
 
 stringify and formating
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -1394,11 +1396,28 @@ number
 
   无参数时返回 0.0.
 
-scope
------
+namespace
+---------
 - ``vars()``, return ``__dict__`` of any object.
   无参数时, 返回 local dictionary, 即当前 scope 中可以访问到的所有量. 等价于
   ``locals()``.
+
+- ``dir([object])``. Returns a list of names in a namespace (in a general
+  sense). In lexicographical order.
+  
+  * Without arg, return a list of names in local scope.
+
+  * With an argument, call its ``__dir__`` to obtain a list of names.
+    
+    If not defined, gather information from the object’s ``__dict__``
+    attribute, if defined, and from its type object, otherwise may not be
+    accurate.
+
+    - For class, the list contains the names of its attributes and all
+      ancestors' attributes.
+
+    - Otherwise, the list contains the object's attributes, and all class/base
+      class attributes.
 
 memory
 ------
