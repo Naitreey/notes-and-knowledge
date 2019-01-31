@@ -34,7 +34,6 @@ overview
 
 Data model
 ==========
-
 The standard type hierarchy
 ---------------------------
 包含对一系列类型的标准陈述.
@@ -211,7 +210,6 @@ instance method
 
 special attributes & methods
 ----------------------------
-
 instantiation
 ^^^^^^^^^^^^^
 以下属性在 class & metaclass 上有.
@@ -379,10 +377,11 @@ make it callable
 
 attribute access
 ^^^^^^^^^^^^^^^^
-- ``object.__getattribute__(self, name)``. 负责一个对象上的所有属性访问.
-  In order to avoid infinite recursion in this method, its implementation
-  should always call the base class method with the same name to access any
-  attributes it needs.
+- ``object.__getattribute__(self, name)``. 负责一个对象上的所有属性访问, *除去*
+  *special method*. (For that, see `special method lookup`_).  In order to
+  avoid infinite recursion in this method, its implementation should always
+  call the base class method with the same name to access any attributes it
+  needs.
 
   ``object`` base class 实现了基础的 ``__getattribute__``, 即默认情况下, 所有
   ``instance.attr`` 使用以下属性访问逻辑:
@@ -470,6 +469,26 @@ bitwise operators
 - ``__or__``. bitwise or ``|``
 
 - ``__xor__``. exclusive or ``^``
+
+numeric conversion
+^^^^^^^^^^^^^^^^^^
+- ``__int__()``. implement ``int()`` conversion. This is used to coerce objects
+  to integers.
+
+- ``__index__()``. Used whenever Python needs to losslessly convert the numeric
+  object to an integer object, such as in slicing, or in the built-in bin(),
+  hex() and oct() functions. 具有该方法表示该类型是一个 integer type, 但不一定
+  是 int subtype. 这与 ``__int__()`` 的区别在于, 这里是表示这*是*一个整数, 而不
+  是可以给出整数的表达形式. 例如, numpy 中的各种长度的整数类型, 都有实现该方法.
+  It would be inappropriate to allow every object that can be coerced to an
+  integer to be used as an integer everywhere Python expects a true integer.
+
+
+size in memory
+^^^^^^^^^^^^^^
+- ``__sizeof__()``. returns the size of object in bytes. Only the memory
+  consumption directly attributed to the object is accounted for, not the
+  memory consumption of objects it refers to.
 
 context manager protocol
 ------------------------
@@ -733,6 +752,34 @@ methods
     instance into method via ``.`` operator, so ``self`` is introduced as a
     quick fix.
 
+special method lookup
+---------------------
+- explicit lookup for special method from instances, i.e.,::
+
+    instance.__method__
+
+  遵从一般性的 `attribute access`_ 规则.
+
+- implicit lookup for special method, for example::
+
+    str(instance), len(instance), hash(instance), ...
+
+  不走 ``klass.__getattribute__``, 直接从 class 层递归向上获取, 跳过了 instance
+  ``__dict__`` 部分. 因此, special method 只能在 class-level 进行定义才能生效,
+  在 instance 上添加的不会生效.
+
+  这个设计的原因是, 很多 special method 是对 class object and instance object
+  都可以操作的. 例如, 当我们取 ``hash(1)`` 时, 我们希望是根据 int class 定义的
+  ``__hash__`` method 计算实例的哈希值; 当我们取 ``hash(int)`` 时, 我们希望是
+  根据 type class 定义的 ``__hash__`` method 计算 int class 的哈希值. 在 class
+  level, 可获取到对应于自身有效的一组 special methods, 和一组为实例而定义的同名
+  special method, 只有跳过 class 本身定义的那组, 才是该计算的本意.
+
+  此外, 这种跳跃方式还有助于提高解释器性能.
+
+  因此, 统一地, special method's implicit lookup 从 ``type(object)`` 级别开始搜
+  索, 跳过 ``type(object).__getattribute__`` 的属性搜索逻辑.
+  
 Expressions
 ===========
 
