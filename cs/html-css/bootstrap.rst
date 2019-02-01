@@ -491,7 +491,6 @@ media list
 
 components
 ==========
-
 forms
 -----
 - bootstrap form controls are based on Reboot's customization on tags.  It
@@ -502,7 +501,6 @@ forms
 
 form layout
 ^^^^^^^^^^^
-
 stacked
 """""""
 - Most of bootstrap form controls by default have ``display: block``, therefore
