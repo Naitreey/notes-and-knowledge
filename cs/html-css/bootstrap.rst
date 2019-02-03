@@ -1447,6 +1447,178 @@ collapse
   * 当过渡时应用了 ``.collapsing``, 具有 transition 效果.
 
 
+buttons
+-------
+setup
+^^^^^
+- add ``.btn`` class to ``<button>``, ``<a>`` link, or button-like ``<input>``
+  elements. ``.btn`` class 的主要作用是:
+
+  * 设置文字内容水平和竖直居中. text-align, vertical-align.
+
+  * 设置固定宽度的边框.
+
+  * 设置较默认更大的 padding, 左右更宽一些.
+
+  * 设置 color, background-color, border-color, box-shadow 的渐变效果.
+
+  * 在 ``:focus`` 时, 显示 box-shadow.
+
+- Add a semantic color class to the button. there's also outline variants.
+
+  * .btn-primary, .btn-outline-primary
+
+  * .btn-secondary, .btn-outline-secondary
+
+  * .btn-success, .btn-outline-success
+
+  * .btn-danger, .btn-outline-danger
+
+  * .btn-warning, .btn-ouline-warning
+
+  * .btn-info, .btn-outline-info
+
+  * .btn-light, .btn-outline-light
+
+  * .btn-dark, .btn-outline-dark
+
+  * .btn-link, make a button looks like a link.
+
+  ``.btn-<color>`` 的主要作用是:
+
+  * 修改 background-color, border-color 为所需颜色
+
+  * 修改 text color 以提高对比度.
+
+  * 在 ``:hover`` 时, 加深 background-color, border-color.
+
+  * 在 ``:focus`` 时, 相应修改 box-shadow 颜色.
+
+  ``.btn-outline-<color>`` 的主要作用是:
+
+  * 保持 background 为 transparent
+
+  * 设置 text color and border-color 为所需颜色.
+
+  * 在 ``:hover`` 时, 设置 background-color 为所需颜色, 修改 text color 提高对比度.
+
+  * 在 ``:focus`` 时, 相应修改 box-shadow 颜色.
+
+button size and display
+^^^^^^^^^^^^^^^^^^^^^^^
+- Add ``.btn-lg`` or ``.btn-sm``
+
+- For block-level button, add ``.btn-block``
+
+button in active state
+^^^^^^^^^^^^^^^^^^^^^^
+- ``.active`` class gives button the fixed appearance like in ``:active``
+  state.
+
+button in disabled state
+^^^^^^^^^^^^^^^^^^^^^^^^
+- two ways to set disabled state:
+ 
+  * For ``<button>``, set ``disabled`` HTML attribute, will make button in
+    disabled state.
+
+  * For ``<a>`` link emulated button, set ``.disabled`` class.
+
+- ``:disabled`` pseudoclass match, or ``.disabled`` class,
+  
+  * gives button a lighter background color.
+
+  * for ``.disabled``, set pointer-events to none, so clicking has no effect.
+
+toggle button states
+^^^^^^^^^^^^^^^^^^^^
+- Add ``data-toggle="button"`` to a button, which makes a button able to be
+  toggled between two states (normal state and ``.active`` state).
+
+- For pre-toggled button, also add ``.active`` manually.
+
+API methods
+^^^^^^^^^^^
+::
+
+  $().button(<method>)
+
+toggle
+""""""
+- toggle button state
+
+dispose
+"""""""
+- destroy an element's button
+
+button group
+------------
+setup
+^^^^^
+- A buttons div wrapper, add ``.btn-group`` class.
+
+  * makes the div wrapper a inline flex container. So that child buttons
+    可以相互并拢.
+
+- Add ``<button>`` inside ``.btn-group``. With ``.btn`` class and appropriate
+  additional button classes.
+
+  * Inside ``.btn-group``, 中间所有 buttons 的 border-radius 都 0, 并对首尾
+    两个 button 的单边有处理. 效果是所有 buttons 紧挨着.
+
+  * ``.btn`` 作为 flex item, 可自由 grow and shrink, 以自然宽度为伸缩基准.
+
+sizing
+^^^^^^
+- Add ``.btn-group-{sm|lg}`` to button group, to adjust the size of all buttons
+  inside a group, without need to add sizing class to individual buttons.
+
+button toolbar
+^^^^^^^^^^^^^^
+- 用于将多个 button group 合并成一行 toolbar.
+
+- Create a wrapper div outside of multiple button groups, add ``.btn-toolbar``.
+
+  * this creates a flex container.
+
+  * This toolbar wraps if not fitting into parent's width.
+
+  * justify-content is flex-start.
+    
+- Add necessary utitily classes to button groups, to make separation between
+  button groups, e.g., margin utils.
+
+- Inside button toolbar, button groups and input groups can be mixed.
+
+with dropdown
+^^^^^^^^^^^^^
+- Place a ``.btn-group`` within another ``.btn-group`` to wrap a dropdown
+  structure.
+
+vertical button group
+^^^^^^^^^^^^^^^^^^^^^
+- Use ``.btn-group-vertical`` instead of ``.btn-group``.
+
+toggleable button group as form control
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- Create a button group wrapper div as usual, with ``.btn-group``.
+
+- Add ``.btn-group-toggle`` to the wrapper div.
+
+  * This makes checkbox, radio, etc. inside the label invisible, by setting
+    input positioning absolute, and clipping all its visible area.
+
+- Add ``data-toggle="buttons"`` to the wrapper div. This activates javascript
+  toggle effect to buttons.
+
+- Create checkbox/radio form control's label inside this button group. Add
+  ``.btn`` to ``<label>`` to make it a button.
+
+- put checkbox/radio, etc. form control inside the label. They'll be invisible.
+
+- For pre-checked form control, add ``.active`` to label button, and
+  ``checked`` attribute to inner input element.
+
 utilities
 =========
 

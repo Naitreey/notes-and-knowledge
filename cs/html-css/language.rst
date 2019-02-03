@@ -1106,7 +1106,8 @@ button input
 
   * ``autofocus``
 
-  * ``disabled``
+  * ``disabled``, when this attribute is set, button matches ``:disabled`` css
+    pseudoclass.
 
   * ``form``
 
@@ -2145,6 +2146,9 @@ box model
   * margin area. between border edges and margin edges.
     元素之间的分隔区域. 实际效果与 margin collapsing 有关.
 
+- 除了以上 4 个部分, 还有一个虚拟的 outline, 只是用于给出一个虚拟的 element
+  范围标识.
+
 - 对于 non-replaced inline elements, 所占据的高度由 parent block-level element
   的 line-height property 决定, 而不论元素本身的 height 以及 padding, border,
   margin 的高度部分设置的值是什么.
@@ -2190,8 +2194,8 @@ three types of margin collapsing:
 - floated elements & absolutely positioned elements 不参与 margin collapsing.
   因此实际中 margin collapsing 只会发生在 top/bottom margin 之间.
 
-自动计算属性
-^^^^^^^^^^^^
+autofitting
+^^^^^^^^^^^
 对于 non-float block element, margin edge 一定会覆盖整行. 它的 left, right 
 margin 根据 width, padding, border 等方面的属性值的设置综合计算得到.
 
@@ -2245,7 +2249,83 @@ properties
 
   更方便的元素水平和竖直居中问题, 使用 flexbox 解决.
 
-Positioned Layout
+outline
+^^^^^^^
+- outline 是元素所占范围的一种虚拟标识.
+
+- outline's characteristics.
+
+  * outline never takes up space, as they are just an indication of element's
+    scope.
+
+  * Outline is usually rectangular, though not necessarily.
+
+  * Outline if visible, is drawn outside of the border of the element.
+
+  * Outline can overlap other element, because it's virtual.
+
+properties
+""""""""""
+- outline-color. the color of outline.
+
+  non-inherited.
+
+  initial value: invert
+
+  specified values:
+
+  * ``<color>``
+
+  * invert. performs a color inversion of the background of the element.  This
+    value ensures that outline is visible (as long as width and style permits).
+
+- outline-width. width of outline.
+
+  non-inherited.
+
+  initial value: medium.
+
+  specified values:
+
+  * ``<length>``
+
+  * thin. typically 1px
+
+  * medium. typically 3px
+
+  * thick. typically 5px
+
+- outline-style. the style of outline.
+
+  non-inherited.
+
+  initial value: none
+
+  specified values:
+
+  * auto. a user interface default for the platform.
+
+  * none. no outline.
+
+  * other values are same as border-style.
+
+- outline. shorthand for ``outline-{width,style,color}``
+
+  specified value: 指定任意的 1,2,3 个子属性值, in any order.
+
+- outline-offset. space between element's border and outline. The space between
+  an element and its outline is transparent. In other words, it is the same as
+  the parent element's background.
+
+  non-inherited.
+
+  initial value: 0
+
+  specified values:
+
+  * ``<length>``
+
+positioned layout
 -----------------
 - A CSS module that defines how to position elements on the page.
 
@@ -2536,9 +2616,8 @@ value precedence
 - When both ``left`` and ``right`` are not auto, ``left`` prevails if
   ``direction`` property is ``ltr``; otherwise ``right`` prevails.
 
-Flexbox Layout
+flexbox layout
 --------------
-
 overview
 ^^^^^^^^
 - flexible box layout, providing a more efficient way to lay out, align and
@@ -2737,6 +2816,28 @@ flex item properties
    
   * stretch
 
+
+pointer device
+--------------
+properties
+^^^^^^^^^^
+- pointer-events. when an element can become the target of mouse event.
+
+  inherited.
+
+  initial value: auto
+
+  specified values:
+
+  * auto. use default behavior.
+
+  * none. The element is never the target of mouse events; however, mouse
+    events may target its descendant elements if those descendants have
+    pointer-events set to some other value. In these circumstances, mouse
+    events will trigger event listeners on this parent element as appropriate
+    on their way to/from the descendant during the event capture/bubble phases.
+
+  * (some other SVG only values)
 
 transition
 ----------
@@ -3014,7 +3115,6 @@ See also [TransitionVSAnimation]_
 
 properties
 ----------
-
 text
 ^^^^^
 - color. 负责元素的 text content and text decoration 部分的颜色.
@@ -3296,7 +3396,6 @@ text
 
 box
 ^^^
-
 specifying box model
 """"""""""""""""""""
 - ``box-sizing``. 规定该元素上的 width/height 属性指定的是哪个 box 的
