@@ -439,7 +439,7 @@ form events
 
 - input. fired synchronously when the value of form control is changed.
 
-- reset.
+- reset. fired when the form is reset.
 
 focus events
 ^^^^^^^^^^^^

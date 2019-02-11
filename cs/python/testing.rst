@@ -1023,7 +1023,7 @@ parameters
 
 - ``autospec=None``. See `autospeccing`_. Can be True/False, some object. When
   some object is specified, the object is used as the spec, instead of the
-  target object.
+  target object. This calls ``create_autospec()`` to create autospec-ed mock.
 
 - ``create=False``. By default patching non-existing attributes raises
   AttributeError. When True, it'll be created, and delete it again after the
@@ -1173,6 +1173,11 @@ create autospec
     returned mock will only be callable if instances of the mock are callable.
 
   * ``**kwargs``. passed to mock constructor.
+
+- 注意, 若要定义 autospec 返回的 mock instance 的 ``return_value`` 和/或
+  ``return_value`` 衍生的 descendant mock 的行为, 必须对 ``return_value`` kwarg
+  进行定义, 不能简化为 ``configure_mock()`` 中的那种 ``return_value.attr....``
+  的递归指定方式.
 
 helpers
 -------
@@ -1352,7 +1357,6 @@ DocTestSuite
 
 factory boy
 ===========
-
 overview
 --------
 - A fixture tool.
@@ -2107,7 +2111,6 @@ attributes
 
 faker
 =====
-
 overview
 --------
 - Usage of faker module: generate fake data.
@@ -2375,6 +2378,10 @@ lorem
 - ``text(max_nb_chars=200, ext_word_list=None)``. a string.
   Depending on the ``max_nb_chars``, returns a string made of words,
   sentences, or paragraphs.
+
+social security number
+^^^^^^^^^^^^^^^^^^^^^^
+- ``ssn()``
 
 misc
 ^^^^
