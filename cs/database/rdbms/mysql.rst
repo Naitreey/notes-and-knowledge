@@ -242,7 +242,6 @@ NULL, NOT NULL
 
 DEFAULT
 ^^^^^^^
-
 explicit default value
 """"""""""""""""""""""
 - definition format::
@@ -315,7 +314,7 @@ data type attributes
     sequence is reset so that the next automatically generated value follows
     sequentially from the inserted value.
 
-  * 若插入负值, 相当于插入等价正值.
+  * 若插入负值, 相当于插入 unsigned 等价正值.
 
   * 一个表里只能有一个列是 auto-incremented, 必须有 index, 不能有 DEFAULT.
     
@@ -1054,6 +1053,16 @@ formats
     CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
         LIKE old_tbl_name
 
+table name
+""""""""""
+::
+
+  [db_name.]tbl_name
+
+- Unqualified table name is created in default database.
+
+- If you use quoted identifiers, quote the database and table names separately.
+
 CREATE TABLE ... query
 """""""""""""""""""""""
 - 最终创建的表的列是 ``create_definition`` 部分与 query 语句中包含的列的并集.
@@ -1165,16 +1174,30 @@ generated column
   * Virtual generated column 配合索引使用, 比 functional index 使用起来稍方便一
     些, 因查询时无需写明复杂的表达式.
 
-index
-"""""
+constraints
+"""""""""""
 - CONSTRAINT clause is used for naming a constraint explicitly. 这里,
   constraint 指的是 PRIMARY KEY, UNIQUE INDEX, FOREIGN KEY 三种具有限制性的
-  索引. 这个 clause 基本上是多余的, 一般情况下没必要使用. 只是一个类型的表示.
+  索引.
 
   所有 constraint 都具有以下特点: They prevent data from being inserted or
   updated if data would become inconsistent.
 
 - CONSTRAINT 若使用, 其后命名的 symbol name 必须是在整个数据库中唯一的.
+
+- CONSTRAINT clause 基本上是多余的, 除了具有一定的 semantic value 之外, 没有任
+  何实际作用.
+
+primary key
+"""""""""""
+- A special unique index.
+
+- all key parts of a PRIMARY KEY index must be NOT NULL, either explicitly
+  by programmer or implicitly by MySQL parser.
+
+- A table can have only one PRIMARY KEY.
+
+- The index/constraint name is PRIMARY.
 
 foreign key
 """""""""""
@@ -1277,16 +1300,6 @@ foreign key
   * DROP TABLE for a table that is referenced by a FOREIGN KEY constraint is
     disallowed.
 
-table name
-""""""""""
-::
-
-  [db_name.]tbl_name
-
-- Unqualified table name is created in default database.
-
-- If you use quoted identifiers, quote the database and table names separately.
-
 temporary table
 """""""""""""""
 ::
@@ -1316,6 +1329,19 @@ CHECK constraints
 
   check_constraint_definition:
       [CONSTRAINT [symbol]] CHECK (expr) [[NOT] ENFORCED]
+
+implicit column specification
+"""""""""""""""""""""""""""""
+- PRIMARY KEY columns are made NOT NULL, if unspecified.
+
+- Certain data types used by other RDBMS are mapped to mysql types.
+
+- If the specified USING index type is not available for the given storage
+  engine, but there's another type available without affecting query results,
+  the available type is used.
+
+- CHAR/VARCHAR/TEXT with CHARACTER SET binary is converted to
+  BINARY/VARBINARY/BLOB.
 
 table options
 """""""""""""
@@ -1350,6 +1376,8 @@ table options
     | TABLESPACE tablespace_name [STORAGE {DISK|MEMORY|DEFAULT}]
     | UNION [=] (tbl_name[,tbl_name]...)
 
+Table options apply to all storage engines unless otherwise indicated.
+
 - ENGINE. Unquoted or string-quoted engine name. Default is InnoDB.  INNODB,
   MYISAM, MEMORY, CSV, ARCHIVE, EXAMPLE, FEDERATED, MERGE, NDB.
 
@@ -1381,6 +1409,9 @@ table options
   system variable. 这个 table option 用于明确指定所属的 tablespace, override by
   system defaults.
 
+  Only when specifying ``innodb_file_per_table`` TABLESPACE, DATA DIRECTORY
+  can be specified.
+
 - ENCRYPTION. InnoDB page-level data encryption for file-per-table tablespace.
   default is N.
 
@@ -1395,31 +1426,76 @@ table options
 - MIN_ROWS. The minimum number of rows you plan to store in the table. The
   MEMORY storage engine uses this option as a hint about memory use.
 
-- ROW_FORMAT. default is DEFAULT, which is defined by
-  ``innodb_default_row_format``.
+- ROW_FORMAT. The physical format of rows. default is DEFAULT, which is defined
+  by ``innodb_default_row_format``. See `Row formats`_ for detail.
 
 - STATS_PERSISTENT. whether to enable persistent statistics for an InnoDB
   table. default is DEFAULT, which is defined by ``innodb_stats_persistent``.
 
 - STATS_AUTO_RECALC. whether to automatically recalculate persistent statistics
-  for an InnoDB table. default is DEFAULT, defined by
-  ``innodb_stats_auto_recalc``.
+  for an InnoDB table. default is DEFAULT, defined by ``innodb_stats_auto_recalc``.
 
 - STATS_SAMPLE_PAGES. The number of index pages to sample when calculating
   table statistics.
 
-implicit column specification
-"""""""""""""""""""""""""""""
-- PRIMARY KEY columns are made NOT NULL, if unspecified.
+- AVG_ROW_LENGTH.
 
-- Certain data types used by other RDBMS are mapped to mysql types.
+- CHECKSUM.
 
-- If the specified USING index type is not available for the given storage
-  engine, but there's another type available without affecting query results,
-  the available type is used.
+- CONNECTION.
 
-- CHAR/VARCHAR/TEXT with CHARACTER SET binary is converted to
-  BINARY/VARBINARY/BLOB.
+- DELAY_KEY_WRITE.
+
+- INSERT_METHOD.
+
+- PACK_KEYS.
+
+- UNION.
+
+table partitioning
+""""""""""""""""""
+::
+
+  partition_options:
+      PARTITION BY
+          { [LINEAR] HASH(expr)
+          | [LINEAR] KEY [ALGORITHM={1|2}] (column_list)
+          | RANGE{(expr) | COLUMNS(column_list)}
+          | LIST{(expr) | COLUMNS(column_list)} }
+      [PARTITIONS num]
+      [SUBPARTITION BY
+          { [LINEAR] HASH(expr)
+          | [LINEAR] KEY [ALGORITHM={1|2}] (column_list) }
+        [SUBPARTITIONS num]
+      ]
+      [(partition_definition [, partition_definition] ...)]
+  
+  partition_definition:
+      PARTITION partition_name
+          [VALUES
+              {LESS THAN {(expr | value_list) | MAXVALUE}
+              |
+              IN (value_list)}]
+          [[STORAGE] ENGINE [=] engine_name]
+          [COMMENT [=] 'string' ]
+          [DATA DIRECTORY [=] 'data_dir']
+          [INDEX DIRECTORY [=] 'index_dir']
+          [MAX_ROWS [=] max_number_of_rows]
+          [MIN_ROWS [=] min_number_of_rows]
+          [TABLESPACE [=] tablespace_name]
+          [(subpartition_definition [, subpartition_definition] ...)]
+  
+  subpartition_definition:
+      SUBPARTITION logical_name
+          [[STORAGE] ENGINE [=] engine_name]
+          [COMMENT [=] 'string' ]
+          [DATA DIRECTORY [=] 'data_dir']
+          [INDEX DIRECTORY [=] 'index_dir']
+          [MAX_ROWS [=] max_number_of_rows]
+          [MIN_ROWS [=] min_number_of_rows]
+          [TABLESPACE [=] tablespace_name]
+
+See `Partitioning`_.
 
 SHOW CREATE DATABASE
 ^^^^^^^^^^^^^^^^^^^^
@@ -1967,7 +2043,6 @@ view
 
 Optimization
 ============
-
 order by
 --------
 .. XXX 确认以下说法
@@ -2109,9 +2184,16 @@ Composite Index
     ...
 
 
+Index name
+^^^^^^^^^^
+- PRIMARY KEY's name is PRIMARY.
+
+- secondary index's name is specified by programmer, or assigned the same name
+  as the first indexed column, with an optional suffix (``_2``, ``_3``, ...) to
+  make it unique.
+
 SQL statements
 ^^^^^^^^^^^^^^
-
 CREATE INDEX
 """"""""""""
 ::
@@ -2123,15 +2205,15 @@ CREATE INDEX
 
   key_part: {col_name [(length)] | (expr)} [ASC | DESC]
 
-  index_type:
-      USING {BTREE | HASH}
-
   index_option:
       KEY_BLOCK_SIZE [=] value
     | index_type
     | WITH PARSER parser_name
     | COMMENT 'string'
     | {VISIBLE | INVISIBLE}
+
+  index_type:
+      USING {BTREE | HASH}
 
   algorithm_option:
       ALGORITHM [=] {DEFAULT | INPLACE | COPY}
@@ -2141,10 +2223,6 @@ CREATE INDEX
     
 - CREATE INDEX is mapped to ALTER TABLE. It can not create primary key or
   foreign key, but ALTER TABLE can.
-
-- Index order: ASC or DESC specify index values are stored in ascending or
-  descending order. Default is ASC. Index order is not permitted for HASH
-  indexes.
 
 - Index prefix length:
 
@@ -2188,18 +2266,37 @@ CREATE INDEX
 
   * 在查询时, mysql 会根据 query condition 适时使用 functional index.
 
+- Index order: ASC or DESC specify index values are stored in ascending or
+  descending order. Default is ASC. Index order is not permitted for HASH
+  indexes.
+
 - Unique index. Requires every value in the index to be unique. 也就是说, 对于
   表中的每行, 所有 key parts 的组合必须是唯一的.
 
   * 若 column 本身允许 NULL, 则 index 中允许多个 NULL 值, 不算违反 UNIQUE.
 
+  * When only the prefix of a column is indexed, it's the uniqueness of the
+    prefix that is considered.
+
+  * When a PRIMARY KEY or a UNIQUE NOT NULL index contains a single column that
+    is of integer type, ``_rowid`` can be used to refer to the column in SELECT
+    statements.
+
 - Full-text index.
+
+  * For full-text searches.
 
   * can include only CHAR, VARCHAR, TEXT-related columns.
 
   * index prefix length unsupported.
 
   * can include NULL.
+
+- Spatial index.
+
+  * can include only spatial data types.
+
+  * indexed columns must be NOT NULL.
 
 - index options.
 
@@ -2278,8 +2375,14 @@ On-Disk Structures
   indexes are stored in ``.ibd`` file, under its belonging database's
   directory.
 
+- In the created table, the clustered index (PRIMARY KEY) is placed first,
+  followed by all UNIQUE indexes, and then the nonunique indexes.
+
 - For system tablespace, table's data and indexes are stored in ``ibdata*``
   file.
+
+Row formats
+-----------
 
 options
 -------
