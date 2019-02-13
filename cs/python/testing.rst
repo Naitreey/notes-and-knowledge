@@ -1276,6 +1276,11 @@ design patterns
   isolation 导致的集成问题的一部分解决方案 (另一部分解决方案则是更加整体性的测
   试.)
 
+- 注意: autospec 必须适时适量地使用, 不可不加考虑地对所有 mock 都加上 autospec,
+  这是因为不是所有情况下都可以使用 autospec. 此外, 对复杂 class 等对象使用
+  autospec 会大大降低单元测试执行速度 (可能达 10 倍的速度差距), 因此一定要去
+  甄别具体场景是否真的需要 autospec.
+
 - 对于 callable object 以及 method calls 的 mock, 要使用 spec and auto speccing
   从而让 call equivalence 的检验能基于准确的语义, 而独立于 actual parameter
   passing method (positional/kwarg).
