@@ -954,12 +954,10 @@ JSON type
 - storage. 基本相当于 LONGBLOB. 即所需存储空间基本相当于把 JSON stringified
   形式所需存储. 但有一些为了便于更新和查询等的额外 metadata 带来的 overhead.
 
-SQL main statements
-===================
-
-Data Definition Language (DDL)
-------------------------------
-
+Database
+========
+SQL statements
+--------------
 CREATE DATABASE
 ^^^^^^^^^^^^^^^
 ::
@@ -991,6 +989,34 @@ ALTER DATABASE
 
 - If database name is omitted, use current default database.
 
+SHOW CREATE DATABASE
+^^^^^^^^^^^^^^^^^^^^
+::
+
+  SHOW CREATE DATABASE [IF NOT EXISTS] <db_name>
+
+- 输出创建该数据库使用的 CREATE DATABASE statement.
+
+- default charset and collation 也会输出. 如果 collation 部分
+  没有显示, 说明使用的是相应 charset 默认的 collation.
+
+SHOW DATABASES
+^^^^^^^^^^^^^^
+::
+
+  SHOW {DATABASES | SCHEMAS} [LIKE <pattern> | WHERE <expr>]
+
+- You see only those databases for which you have some kind of privilege,
+  unless you have the global ``SHOW DATABASES`` privilege. 如果
+  ``--skip-show-database`` option is specified by server, 则必须要有这个
+  global 权限才能 show databases.
+
+- The output corresponds to INFORMATION_SCHEMA.SCHEMATA table.
+
+Table
+=====
+SQL statements
+--------------
 CREATE TABLE
 ^^^^^^^^^^^^
 - CREATE privilege for the table is required.
@@ -1497,60 +1523,6 @@ table partitioning
 
 See `Partitioning`_.
 
-SHOW CREATE DATABASE
-^^^^^^^^^^^^^^^^^^^^
-::
-
-  SHOW CREATE DATABASE [IF NOT EXISTS] <db_name>
-
-- 输出创建该数据库使用的 CREATE DATABASE statement.
-
-- default charset and collation 也会输出. 如果 collation 部分
-  没有显示, 说明使用的是相应 charset 默认的 collation.
-
-SHOW CREATE TABLE
-^^^^^^^^^^^^^^^^^
-::
-
-  SHOW CREATE TABLE tbl_name
-
-- 显示的 CREATE TABLE statement 是与当前 table definition 一致的, 而不一定是最
-  初创建 table 时使用的 statement.
-
-SHOW DATABASES
-^^^^^^^^^^^^^^
-::
-
-  SHOW {DATABASES | SCHEMAS} [LIKE <pattern> | WHERE <expr>]
-
-- You see only those databases for which you have some kind of privilege,
-  unless you have the global ``SHOW DATABASES`` privilege. 如果
-  ``--skip-show-database`` option is specified by server, 则必须要有这个
-  global 权限才能 show databases.
-
-- The output corresponds to INFORMATION_SCHEMA.SCHEMATA table.
-
-SHOW TABLES
-^^^^^^^^^^^
-::
-
-  SHOW [EXTENDED] [FULL] TABLES
-    [{FROM|IN} <db_name>] [LIKE <pattern> | WHERE <expr>]
-
-- base tables and views are listed. temporary tables are not listed.
-
-- EXTENDED shows also hidden tables created by failed ALTER TABLE statements.
-
-- FULL displays tables' type: BASE TABLE for a table, VIEW for a view, or
-  SYSTEM VIEW for an INFORMATION_SCHEMA table. 这样可以区分 table 和 view.
-
-- Only tables you have some privileges are shown.
-
-- table infos are stored in INFORMATION_SCHEMA.TABLES table.
-
-Data Manipulation Language (DML)
---------------------------------
-
 SELECT
 ^^^^^^
 
@@ -1615,8 +1587,157 @@ SELECT
 - 一个表必须有一个或者一组 unique key 可以唯一识别不同的资源实例, 否则无法完全
   避免多个 session 同时创建同一个实例时导致的重复 (race condition).
 
-transaction statements
-----------------------
+SHOW CREATE TABLE
+^^^^^^^^^^^^^^^^^
+::
+
+  SHOW CREATE TABLE tbl_name
+
+- 显示的 CREATE TABLE statement 是与当前 table definition 一致的, 而不一定是最
+  初创建 table 时使用的 statement.
+
+SHOW TABLES
+^^^^^^^^^^^
+::
+
+  SHOW [EXTENDED] [FULL] TABLES
+    [{FROM|IN} <db_name>] [LIKE <pattern> | WHERE <expr>]
+
+- base tables and views are listed. temporary tables are not listed.
+
+- EXTENDED shows also hidden tables created by failed ALTER TABLE statements.
+
+- FULL displays tables' type: BASE TABLE for a table, VIEW for a view, or
+  SYSTEM VIEW for an INFORMATION_SCHEMA table. 这样可以区分 table 和 view.
+
+- Only tables you have some privileges are shown.
+
+- table infos are stored in INFORMATION_SCHEMA.TABLES table.
+
+SHOW COLUMNS
+^^^^^^^^^^^^
+::
+
+  SHOW [EXTENDED] [FULL] {COLUMNS | FIELDS}
+    {FROM | IN} tbl_name
+    [{FROM | IN} db_name]
+    [LIKE 'pattern' | WHERE expr]
+
+- normal output fields: Field, Type, Null, Key, Default, Extra.
+
+- ``tbl_name`` can be fully-qualified, thus eliminate the need for the ``{FROM
+  | IN} db_name`` clause.
+
+- When showing table in current default database, the second ``FROM`` clause
+  can also be omitted.
+
+- EXTENDED include information about hidden columns that MySQL uses internally
+  and are not accessible by users.
+
+- FULL include the column collation and comments, as well as the privileges you
+  have for each column. (Collation, Privileges, Comment fields.)
+
+- LIKE, filter output by column name using patterns.
+
+- WHERE, filter output by general conditions.
+
+- output field explanations:
+
+  * Field. column name.
+
+  * Type. column data type.
+
+  * Collation. For nonbinary string columns, otherwise NULL.
+
+  * Null. yes if nullable, no otherwise.
+
+  * Key.
+
+    - Empty, when the column is not indexed or is indexed only as a secondary
+      column in a multiple-column, nonunique index.
+
+    - PRI, one of the columns in a PRIMARY KEY.
+
+    - UNI. the first column in a UNIQUE index.
+
+    - MUL. the first column in a nonunique index.
+
+    If more than one of the Key values applies to a given column of a table,
+    Key displays the one with the highest priority, in the order PRI, UNI, MUL.
+
+    A UNIQUE index may be displayed as PRI if it cannot contain NULL values and
+    there is no PRIMARY KEY in the table. A UNIQUE index may display as MUL if
+    several columns form a composite UNIQUE index; although the combination of
+    the columns is unique, each column can still hold multiple occurrences of a
+    given value.
+
+  * Default. default value of the column. This is NULL if the column has an
+    explicit default of NULL, or if the column definition includes no DEFAULT
+    clause, 即使该列定义为 NOT NULL.
+
+  * Extra. additional information about a column.
+
+    - ``auto_increment``
+
+    - ``on update CURRENT_TIMESTAMP``
+
+    - ``VIRTUAL GENERATED`` virtual generated column
+
+    - ``VIRTUAL STORED`` stored generated column
+
+    - ``DEFAULT_GENERATED`` expression default value
+
+  * Privileges. a comma separated list of privileges.
+
+  * Comment. column's comment.
+
+EXPLAIN
+^^^^^^^
+For table structure
+"""""""""""""""""""
+::
+
+  EXPLAIN tbl_name [col_name | wild]
+
+- A simplified version of SHOW COLUMNS.
+  
+- output in the same format as does SHOW COLUMNS.
+
+- If ``col_name`` or ``wild`` pattern is specified, only show information about
+  this column or matching columns.
+
+- ``wild`` uses the same pattern as does ``LIKE`` operator.
+
+For execution plan
+""""""""""""""""""
+::
+
+  EXPLAIN [explain_type] {explainable_stmt | FOR CONNECTION connection_id}
+
+  explain_type: {
+      FORMAT = format_name
+  }
+  
+  format_name: {
+      TRADITIONAL
+    | JSON
+  }
+  
+  explainable_stmt: {
+      SELECT statement
+    | DELETE statement
+    | INSERT statement
+    | REPLACE statement
+    | UPDATE statement
+  }
+
+DESCRIBE
+^^^^^^^^
+- synonymous to EXPLAIN. But usually used for obtain information about table
+  structure.
+
+Transaction
+===========
 - A transaction is an atomic operation that can be committed or rolled back.
   All changes made in a transaction are applied atomically or none applied.
 
@@ -1630,6 +1751,29 @@ transaction statements
 
     SET autocommit = {0 | 1}
 
+statements causing implicit commit
+----------------------------------
+Some statements are handled in its own special transaction, such that they
+implicitly end any transaction active in the current session (as if with
+``COMMIT``) and also cause an implicit commit after executing (除了 transaction
+control and locking statements).
+
+- DDL statements that define or modify database objects (with some additional
+  details).
+
+- Statements that implicitly use or modify tables in the ``mysql`` database.
+  E.g., account system admin statements.
+
+- Transaction-control and locking statements (with some additional details).
+  这些语句不会在执行后再 commit 一次.
+
+- Some admin statements: ANALYZE TABLE, CACHE INDEX, CHECK TABLE, FLUSH, LOAD
+  INDEX INTO CACHE, OPTIMIZE TABLE, REPAIR TABLE, RESET.
+
+- Replication control statements.
+
+SQL statements
+--------------
 START TRANSACTION, BEGIN
 ^^^^^^^^^^^^^^^^^^^^^^^^
 :: 
@@ -1657,27 +1801,6 @@ COMMIT
 
 ROLLBACK
 ^^^^^^^^
-
-statements causing implicit commit
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Some statements are handled in its own special transaction, such that they
-implicitly end any transaction active in the current session (as if with
-``COMMIT``) and also cause an implicit commit after executing (除了 transaction
-control and locking statements).
-
-- DDL statements that define or modify database objects (with some additional
-  details).
-
-- Statements that implicitly use or modify tables in the ``mysql`` database.
-  E.g., account system admin statements.
-
-- Transaction-control and locking statements (with some additional details).
-  这些语句不会在执行后再 commit 一次.
-
-- Some admin statements: ANALYZE TABLE, CACHE INDEX, CHECK TABLE, FLUSH, LOAD
-  INDEX INTO CACHE, OPTIMIZE TABLE, REPAIR TABLE, RESET.
-
-- Replication control statements.
 
 Character set and collation
 ===========================
