@@ -3,9 +3,6 @@
   mysqld 根据 ``--log-error`` option 来决定错误日志输出. 若这个选项没有设置,
   日志写到 stderr. 此时 ``log_error`` system variable 为 ``stderr``.
 
-- 处于安全考虑, ``local_infile`` 默认是 OFF, 需要在 mysql client 和 mysqld
-  同时开启.
-
 SQL Language Structure
 ======================
 
@@ -1587,6 +1584,40 @@ SELECT
 - 一个表必须有一个或者一组 unique key 可以唯一识别不同的资源实例, 否则无法完全
   避免多个 session 同时创建同一个实例时导致的重复 (race condition).
 
+LOAD DATA
+^^^^^^^^^
+::
+
+  LOAD DATA
+    [LOW_PRIORITY | CONCURRENT] [LOCAL]
+    INFILE 'file_name'
+    [REPLACE | IGNORE]
+    INTO TABLE tbl_name
+    [PARTITION (partition_name [, partition_name] ...)]
+    [CHARACTER SET charset_name]
+    [{FIELDS | COLUMNS}
+        [TERMINATED BY 'string']
+        [[OPTIONALLY] ENCLOSED BY 'char']
+        [ESCAPED BY 'char']
+    ]
+    [LINES
+        [STARTING BY 'string']
+        [TERMINATED BY 'string']
+    ]
+    [IGNORE number {LINES | ROWS}]
+    [(col_name_or_user_var
+        [, col_name_or_user_var] ...)]
+    [SET col_name={expr | DEFAULT},
+        [, col_name={expr | DEFAULT}] ...]
+
+- file name is a string literal, interpreted based on
+  ``character_set_filesystem``.
+
+- LOAD DATA 与 SELECT ... INTO 互逆.
+
+- 出于安全考虑, ``local_infile`` 默认是 OFF, 需要在 mysql client 和 mysqld
+  同时开启.
+
 SHOW CREATE TABLE
 ^^^^^^^^^^^^^^^^^
 ::
@@ -1710,26 +1741,7 @@ For table structure
 
 For execution plan
 """"""""""""""""""
-::
-
-  EXPLAIN [explain_type] {explainable_stmt | FOR CONNECTION connection_id}
-
-  explain_type: {
-      FORMAT = format_name
-  }
-  
-  format_name: {
-      TRADITIONAL
-    | JSON
-  }
-  
-  explainable_stmt: {
-      SELECT statement
-    | DELETE statement
-    | INSERT statement
-    | REPLACE statement
-    | UPDATE statement
-  }
+See `Query Execution Plan`_ for detail.
 
 DESCRIBE
 ^^^^^^^^
@@ -2485,6 +2497,50 @@ design pattern
     SELECT * FROM tbl_name
       WHERE hash_col=MD5(CONCAT(val1,val2))
       AND col1=val1 AND col2=val2;
+
+Query Execution Plan
+--------------------
+SQL statements
+^^^^^^^^^^^^^^
+EXPLAIN
+""""""""
+::
+
+  EXPLAIN [explain_type] {explainable_stmt | FOR CONNECTION connection_id}
+
+  explain_type: {
+      FORMAT = format_name
+  }
+  
+  format_name: {
+      TRADITIONAL
+    | JSON
+  }
+  
+  explainable_stmt: {
+      SELECT statement
+    | DELETE statement
+    | INSERT statement
+    | REPLACE statement
+    | UPDATE statement
+  }
+
+- Can explain execution of INSERT, UPDATE, DELETE, REPLACE, SELECT statements.
+
+- When used with FOR CONNECTION connection_id rather than an explainable
+  statement, it displays the execution plan for the statement executing in the
+  named connection.
+
+- MySQL displays information from the optimizer about the statement execution
+  plan, i.e., how it would process the statement.
+
+- output format:
+
+  * TRADITIONAL. output in tabular format.
+
+  * JSON. output in JSON format. containing more detailed info than
+    traditional.
+
 
 InnoDB storage engine
 =====================
@@ -3904,7 +3960,6 @@ USE
 
 CLI
 ===
-
 Option Files
 ------------
 - option files 是 mysql 相关程序通用的一种配置文件系统.
@@ -3982,7 +4037,6 @@ file format
 
 Client Programs
 ---------------
-
 mysql
 ^^^^^
 ::
@@ -4053,6 +4107,10 @@ mysqldump
   relationships, mysqldump automatically includes a statement in the dump
   output to set ``foreign_key_checks`` to 0. This avoids problems with tables
   having to be reloaded in a particular order when the dump is reloaded.
+
+mysqlimport
+^^^^^^^^^^^
+- essentially a CLI wrapper for LOAD DATA statement.
 
 mysqladmin
 ^^^^^^^^^^
