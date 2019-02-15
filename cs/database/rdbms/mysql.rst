@@ -1610,8 +1610,7 @@ LOAD DATA
     [SET col_name={expr | DEFAULT},
         [, col_name={expr | DEFAULT}] ...]
 
-- file name is a string literal, interpreted based on
-  ``character_set_filesystem``.
+- File name is a string literal, interpreted based on ``character_set_filesystem``.
 
 - LOAD DATA 与 SELECT ... INTO 互逆.
 
