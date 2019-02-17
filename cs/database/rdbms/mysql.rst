@@ -1610,12 +1610,213 @@ LOAD DATA
     [SET col_name={expr | DEFAULT},
         [, col_name={expr | DEFAULT}] ...]
 
-- File name is a string literal, interpreted based on ``character_set_filesystem``.
-
 - LOAD DATA 与 SELECT ... INTO 互逆.
+
+file encoding
+"""""""""""""
+- File name is a string literal, interpreted based on ``character_set_filesystem``.
+  
+- ``CHARACTER SET`` clause specifies the encoding used by file content. By
+  default, use ``character_set_database``.
+
+concurrency
+"""""""""""
+- For engines that uses only table-level locking, ``LOW PRIORITY`` cause the
+  statement's execution delayed until no other clients are reading from the
+  table.
+
+- ``CONCURRENT`` is useful with MyISAM engine.
+
+local file
+""""""""""
+- ``LOCAL`` affects where the file is expected to be found:
+
+  * With LOCAL, the file is read by the client program on the client host and
+    sent to the server. A copy of the file is created in the directory where
+    the MySQL server stores temporary files. 
+
+  * Without LOCAL, the file must be located on the server host and is read
+    directly by the server.
+
+- Non-LOCAL load operations read text files located on the server. For security
+  reasons, such operations require that you have the FILE privilege.
 
 - 出于安全考虑, ``local_infile`` 默认是 OFF, 需要在 mysql client 和 mysqld
   同时开启.
+
+duplicate handling
+""""""""""""""""""
+- The REPLACE and IGNORE modifiers control handling of input rows that
+  duplicate existing rows on unique key values.
+
+- If you do not specify either modifier, the behavior depends on whether the
+  LOCAL modifier is specified. Without LOCAL, an error occurs when a duplicate
+  key value is found, and the rest of the text file is ignored. With LOCAL, the
+  default behavior is IGNORE.
+
+field and line handling
+"""""""""""""""""""""""
+- Without FIELDS, LINES clauses, the default is the following::
+
+    FIELDS TERMINATED BY '\t' ENCLOSED BY '' ESCAPED BY '\\'
+    LINES TERMINATED BY '\n' STARTING BY ''
+
+- Anything *after* line terminator and *before* the next line's start prefix is
+  ignored.
+
+- The IGNORE number LINES option can be used to ignore lines at the start of
+  the file.
+
+- When you use SELECT ... INTO OUTFILE in tandem with LOAD DATA to write data
+  from a database into a file and then read the file back into the database
+  later, the field- and line-handling options for both statements must match.
+
+- If not empty, the FIELDS [OPTIONALLY] ENCLOSED BY and FIELDS ESCAPED BY
+  values must be a single character.
+
+column list specification
+"""""""""""""""""""""""""
+- By default, input lines are expected to contain a field for each table
+  column, in the table column's defining order. Specify a column list to define
+  explicitly the mapping between table columns and file fields.
+
+- Column list can contain user variables, useful as
+ 
+  * preprocessing variables.
+
+  * dummy fields to consume redundant fields.
+
+- In SET list, the LHS must be column name, RHS can contain:
+
+  * user variables assigned by column list specs.
+
+  * scalar subqueries.
+
+  * Any functions, constants, etc.
+
+- If an input line has too many fields, the extra fields are ignored and the
+  number of warnings is incremented.
+
+- If an input line has too few fields, the table columns for which input fields
+  are missing are set to their default values.
+
+- Note an empty field is different from a missing field. With empty field, it's
+  equivalent to inserting an empty string to the corresponding column.
+
+usage
+""""""
+- importing data written out by SELECT ... INTO OUTFILE
+
+- importing data from an formatted external source, such as a CSV file.
+
+INSERT
+^^^^^^
+INSERT ... VALUES
+""""""""""""""""""
+::
+
+  INSERT [LOW_PRIORITY | HIGH_PRIORITY] [IGNORE]
+      [INTO] tbl_name
+      [PARTITION (partition_name [, partition_name] ...)]
+      [(col_name [, col_name] ...)]
+      {VALUES | VALUE} (value_list) [, (value_list)] ...
+      [ON DUPLICATE KEY UPDATE assignment_list]
+
+- the parentheses-wrapped column list defines the corresponding columns to
+  insert value lists. If column list is not provided, values for every column
+  in the table must be provided by the VALUES list, in the defining order.
+
+INSERT ... SET
+""""""""""""""
+::
+
+  INSERT [LOW_PRIORITY | HIGH_PRIORITY] [IGNORE]
+      [INTO] tbl_name
+      [PARTITION (partition_name [, partition_name] ...)]
+      SET assignment_list
+      [ON DUPLICATE KEY UPDATE assignment_list]
+
+- The assignment list indicates the columns to be assigned, and their values.
+
+- INSERT ... SET can only insert one row into the table.
+
+INSERT ... query
+""""""""""""""""
+::
+
+  INSERT [LOW_PRIORITY | HIGH_PRIORITY] [IGNORE]
+      [INTO] tbl_name
+      [PARTITION (partition_name [, partition_name] ...)]
+      [(col_name [, col_name] ...)]
+      SELECT ...
+      [ON DUPLICATE KEY UPDATE assignment_list]
+
+- insert rows extracted by query.
+
+- The column list acts like those in INSERT ... VALUES.
+
+- The order in which a SELECT statement with no ORDER BY clause returns rows is
+  nondeterministic.
+
+- The target table of the INSERT statement may appear in the FROM clause of the
+  SELECT part of the query. However, you cannot insert into a table and select
+  from the same table in a subquery.
+
+  To avoid ambiguous column reference problems when the SELECT and the INSERT
+  refer to the same table, provide a unique alias for each table used in the
+  SELECT part, and qualify column names in that part with the appropriate
+  alias.
+
+ON DUPLICATE KEY UPDATE
+"""""""""""""""""""""""
+- enables existing rows to be updated if a row to be inserted would cause a
+  duplicate value in an unique index.
+
+- 对于每个本来要 INSERT 的 row, 最多进行一次 UPDATE. 也就是说, 对于一次插入
+  多行的情况, 可能会 UPDATE 多次, 但不会多于行数.
+
+- With ON DUPLICATE KEY UPDATE, the affected-rows value per row is 1 if the row
+  is inserted as a new row, 2 if an existing row is updated, and 0 if an
+  existing row is set to its current values. 
+
+- For INSERT ... VALUES, RHS of assignment list in the ON DUPLICATE KEY UPDATE
+  clause can use the ``VALUES(col_name)`` function to refer to column values
+  from the INSERT portion.
+
+- For INSERT ... query, RHS of assignment list in the ON DUPLICATE KEY UPDATE
+  clause can reference columns from the query. Restrictions:
+
+  * Columns of a single table or a join over multiple tables can be referenced.
+
+  * To refer to columns of a UNION or GROUP BY's resulting table, a derived
+    table must be used::
+
+      SELECT * FROM (... UNION ...) AS t
+
+- privilege: requires UPDATE privilege for the columns to be updated.
+
+privileges
+""""""""""
+- require INSERT privilege for the table.
+
+about values
+""""""""""""
+- If strict SQL mode is enabled, an INSERT statement generates an error if it
+  does not specify an explicit value for every column that has no default
+  value.
+
+- Use the keyword DEFAULT to set a column explicitly to its default value.
+
+- A value expression can refer to any column that was set earlier in a value
+  list.
+
+modifiers
+"""""""""
+- LOW_PRIORITY, HIGH_PRIORITY. affects only storage engines that use only
+  table-level locking.
+
+- IGNORE. errors that occur while executing the INSERT statement are ignored.
+  The offending row is discarded and operation continues.
 
 SHOW CREATE TABLE
 ^^^^^^^^^^^^^^^^^
@@ -2694,7 +2895,6 @@ Access Privilege System
 
 Privilege types
 ^^^^^^^^^^^^^^^
-
 Static privileges
 """""""""""""""""
 Administrative privileges can only be granted at global level, other static
