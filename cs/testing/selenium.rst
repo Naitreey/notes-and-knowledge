@@ -879,3 +879,5 @@ recipes
                 lambda: self.driver.find_element_by_css_selector(selector)
             )
 
+- download file. selenium 无法直接下载文件, 可以通过读取当前的 session id 等
+  cookies, 然后通过独立的代码或程序来下载文件.
