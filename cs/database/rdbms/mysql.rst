@@ -3,6 +3,63 @@
   mysqld 根据 ``--log-error`` option 来决定错误日志输出. 若这个选项没有设置,
   日志写到 stderr. 此时 ``log_error`` system variable 为 ``stderr``.
 
+.. -------------------------------
+
+- SQL pattern
+
+  * ``_``: any single character, equivalent to ``?`` in shell.
+
+  * ``%``: any number of any character, equivalent to ``*`` in shell.
+
+
+.. -------------------------------
+
+
+  * mysql 不支持 ``SELECT DISTINCT ON (...)``, 聚合时若要根据某列的 distinct 来
+    选择行, 可以通过 ``COUNT(DISTINCT <colname>)`` 来迂回处理. 这很 hack.
+
+- 可以给用户分配不存在的数据库的权限. 然后这个用户可以创建这个数据库.
+
+- NULL
+
+  * The result of any arithmetic comparison with NULL is also NULL, 判断是否是 NULL
+    只能用 ``IS NULL``, ``IS NOT NULL``.
+
+  * Two NULL values are regarded as equal.
+
+  * When doing an ORDER BY, NULL values are presented first if you do ORDER BY ... ASC
+    and last if you do ORDER BY ... DESC.
+
+- In MySQL, 0 or NULL means false and anything else means true. The default truth
+  value from a boolean operation is 1.
+
+- ``LIKE`` 后面的 SQL pattern 必须匹配整个字符串, 才算匹配.
+  ``RLIKE`` ``REGEXP`` 后面的正则 pattern 只需字符串的任何地方匹配即可, 类似 python
+  中的 ``re.search``.
+
+- ``COUNT()`` does not count NULL values. 因此若某个列中有 NULL, ``count(<col>)``
+  不等于 ``count(*)``.
+
+- group
+
+  * If you name columns to select in addition to the ``COUNT()`` value, a ``GROUP BY``
+    clause should be present that names those same columns. This can be enforced by
+    the ``ONLY_FULL_GROUP_BY`` SQL mode.
+
+  * ``select`` 时, 原始数据集本身构成一个 group, 所以可以在这个组上直接使用聚合函数,
+    生成一行结果.
+
+- Joining tables
+
+  * When combining (joining) information from multiple tables, you need to specify
+    how records in one table can be matched to records in the other.
+
+  * Sometimes it is useful to join a table to itself, if you want to compare records
+    in a table to other records in that same table.
+
+- 一个表必须有一个或者一组 unique key 可以唯一识别不同的资源实例, 否则无法完全
+  避免多个 session 同时创建同一个实例时导致的重复 (race condition).
+
 SQL Language Structure
 ======================
 
@@ -1522,67 +1579,160 @@ See `Partitioning`_.
 
 SELECT
 ^^^^^^
+::
 
-- Each select expression is evaluated only when sent to the client. This means
-  that in a HAVING, GROUP BY, or ORDER BY clause, referring to a variable that
-  is assigned a value in the select expression list does not work.
+  SELECT
+    select_expr [, select_expr ...]
+    [FROM table_references
+      [PARTITION partition_list]
+      [WHERE where_condition]
+      [GROUP BY {col_name | expr | position}, ... [WITH ROLLUP]]
+      [HAVING where_condition]
+      [WINDOW window_name as (window_spec) [, window_name as (window_spec)] ...]
+      [ORDER BY {col_name | expr | position} [ASC | DESC], ... [WITH ROLLUP]]
+      [LIMIT {[offset,] row_count | row_count OFFSET offset}]
+      [INTO OUTFILE 'file_name' [CHARACTER SET charset_name] export_options
+        | INTO DUMPFILE 'file_name'
+        | INTO var_name [, var_name]]
+      [FOR {UPDATE | SHARE} [OF tbl_name [, tbl_name] ...] [NOWAIT | SKIP LOCKED]
+        | LOCK IN SHARE MODE]]
 
-.. -------------------------------
+select list
+"""""""""""
+- Select list specifies which columns to retrieve.
 
-- SQL pattern
+- Each ``select_expr`` can be:
 
-  * ``_``: any single character, equivalent to ``?`` in shell.
+  * A column.
 
-  * ``%``: any number of any character, equivalent to ``*`` in shell.
+  * An arbitrary expression that contains column references or not.
 
+  * ``tbl_name.*`` is a qualified shorthand, selecting all columns from the
+    named table.
 
-.. -------------------------------
+  * A single unqualified ``*`` shorthand, selecting all columns from all
+    tables. Use an unqualified ``*`` with other items in the select list may
+    produce a parse error. To avoid this problem, use a qualified
+    ``tbl_name.*`` reference.
 
+- Alias. ``select_expr`` can be given an alias ``[AS] alias``, which is used as
+  expression's column name. Alias can be used in GROUP BY, HAVING, ORDER BY;
+  but can not be used in WHERE, because when the WHERE clause is evaluated, the
+  column value may not yet have been determined (for example column is an
+  aggregate expression).
 
-  * mysql 不支持 ``SELECT DISTINCT ON (...)``, 聚合时若要根据某列的 distinct 来
-    选择行, 可以通过 ``COUNT(DISTINCT <colname>)`` 来迂回处理. 这很 hack.
+  Note that ``AS`` is technically optional.
 
-- 可以给用户分配不存在的数据库的权限. 然后这个用户可以创建这个数据库.
+table references
+""""""""""""""""
+Complete table reference syntax::
 
-- NULL
+  table_references:
+    table_reference [, table_reference] ...
 
-  * The result of any arithmetic comparison with NULL is also NULL, 判断是否是 NULL
-    只能用 ``IS NULL``, ``IS NOT NULL``.
+  table_reference:
+    table_factor | joined_table
 
-  * Two NULL values are regarded as equal.
+  table_factor:
+      tbl_name [PARTITION (partition_names)] [[AS] alias] [index_hint_list]
+    | table_subquery [AS] alias [(col_list)]
 
-  * When doing an ORDER BY, NULL values are presented first if you do ORDER BY ... ASC
-    and last if you do ORDER BY ... DESC.
+  joined_table:
+      table_reference {[INNER | CROSS] JOIN | STRAIGHT_JOIN} table_factor [join_specification]
+    | table_reference {LEFT|RIGHT} [OUTER] JOIN table_reference join_specification
+    | table_reference NATURAL [INNER | {LEFT|RIGHT} [OUTER]] JOIN table_factor
 
-- In MySQL, 0 or NULL means false and anything else means true. The default truth
-  value from a boolean operation is 1.
+  join_specification:
+      ON search_condition | USING (join_column_list)
 
-- ``LIKE`` 后面的 SQL pattern 必须匹配整个字符串, 才算匹配.
-  ``RLIKE`` ``REGEXP`` 后面的正则 pattern 只需字符串的任何地方匹配即可, 类似 python
-  中的 ``re.search``.
+  join_column_list:
+      column_name [, column_name] ...
 
-- ``COUNT()`` does not count NULL values. 因此若某个列中有 NULL, ``count(<col>)``
-  不等于 ``count(*)``.
+  index_hint_list:
+      index_hint [, index_hint] ...
 
-- group
+  index_hint:
+      USE {INDEX|KEY} [FOR {JOIN|ORDER BY|GROUP BY}] ([index_list])
+    | {IGNORE|FORCE} {INDEX|KEY} [FOR {JOIN|ORDER BY|GROUP BY}] (index_list)
 
-  * If you name columns to select in addition to the ``COUNT()`` value, a ``GROUP BY``
-    clause should be present that names those same columns. This can be enforced by
-    the ``ONLY_FULL_GROUP_BY`` SQL mode.
+  index_list:
+      index_name [, index_name] ...
 
-  * ``select`` 时, 原始数据集本身构成一个 group, 所以可以在这个组上直接使用聚合函数,
-    生成一行结果.
+- FROM clause indicates tables to select rows from.
+  
+- If no FROM clause, only arbitrary expressions (not referencing columns) can
+  be selected. This is equivalent to specifying ``FROM DUAL``.
 
-- Joining tables
+- Table name can be aliased in table reference, including in join expressions.
+  When a table is aliased, the original name can not be used anymore, only
+  alias can be used.
 
-  * When combining (joining) information from multiple tables, you need to specify
-    how records in one table can be matched to records in the other.
+- A subquery must be assigned an alias, and may optionally include a list of
+  table column names in parentheses.
 
-  * Sometimes it is useful to join a table to itself, if you want to compare records
-    in a table to other records in that same table.
+- Different JOINs.
 
-- 一个表必须有一个或者一组 unique key 可以唯一识别不同的资源实例, 否则无法完全
-  避免多个 session 同时创建同一个实例时导致的重复 (race condition).
+  * CROSS JOIN. Modeled after cross product, or Cartesian product. Each and
+    every row in the first table is joined to each and every row in the second
+    table.
+
+  * implicit cross join ``,`` and CROSS JOIN are equivalent in the absence of a
+    join condition.
+    
+    From BNF grammar, we can see that all JOIN operators have higher precedence
+    than the comma operator (,).
+
+  * INNER JOIN. Conceptually, CROSS JOIN two tables then returning only rows
+    matching the join predicates. 由于 mysql 里 CROSS JOIN 和 INNER JOIN 都可以
+    指定 join predicates, 所以是等价的.
+
+  * LEFT [OUTER] JOIN. Outer JOINs can be LEFT JOIN and RIGHT JOIN, OUTER is
+    optional. Conceptually, the union of INNER JOIN and left/right table. It's
+    *outer*, because it returns all rows from the left/right side table, even
+    if a row has no matching rows on the other side; whereas for INNER JOIN,
+    only matching rows are included.
+    
+    In the case that no matching row is found, the row at the left/right table
+    is included in the result for once, with NULL values for columns at the
+    other side.
+
+  * RIGHT [OUTER] JOIN. See above.
+
+  * FULL [OUTER] JOIN. not supported by mysql. The union of LEFT OUTER JOIN and
+    RIGHT OUTER JOIN.
+
+  * NATURAL [INNER] JOIN. equivalent to INNER JOIN with a USING clause that
+    automatically use all common columns in both tables.
+
+  * NATURAL {LEFT|RIGHT} [OUTER] JOIN. equivalent to the corresponding normal
+    JOINs with the aforementioned USING clause.
+
+  * STRAIGHT_JOIN. similar to INNER JOIN or CROSS JOIN, except that the left
+    table is always read before the right table. Used to manually enforce a
+    join order to optimizer.
+
+- ON clause specifies join predicates. It can be any conditional expression as
+  the same form of a WHERE clause.
+
+- USING clause is a shortcut predicate, matching rows where the specified
+  columns in both tables must be equal. 此时, result table 中只包含一组
+  matching columns, 不像 ON clause 中如果 ``a.col == b.col``, result table 中包
+  含来自两个 table 的同名的列.
+
+  The order of columns in result table:
+
+  * coalesced USING columns of the two joined tables, in the order in which
+    they occur in the first table.
+
+  * columns unique to the first table, in appearing order.
+
+  * columns unique to the second table, in appearing order.
+
+filtering conditions
+""""""""""""""""""""
+- WHERE clause indicates the conditions that rows must satisfy to be selected
+  from referenced tables. Omitting WHERE clause equals to constant true.  WHERE
+  clause can not contain aggregate functions.
 
 LOAD DATA
 ^^^^^^^^^
