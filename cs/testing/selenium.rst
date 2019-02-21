@@ -881,3 +881,7 @@ recipes
 
 - download file. selenium 无法直接下载文件, 可以通过读取当前的 session id 等
   cookies, 然后通过独立的代码或程序来下载文件.
+
+- match css class by xpath::
+
+    [contains(concat(' ', @class, ' '), ' classname ')]
