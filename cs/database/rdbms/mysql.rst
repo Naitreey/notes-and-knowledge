@@ -15,8 +15,8 @@
 .. -------------------------------
 
 
-  * mysql 不支持 ``SELECT DISTINCT ON (...)``, 聚合时若要根据某列的 distinct 来
-    选择行, 可以通过 ``COUNT(DISTINCT <colname>)`` 来迂回处理. 这很 hack.
+* mysql 不支持 ``SELECT DISTINCT ON (...)``, 聚合时若要根据某列的 distinct 来
+  选择行, 可以通过 ``COUNT(DISTINCT <colname>)`` 来迂回处理. 这很 hack.
 
 - 可以给用户分配不存在的数据库的权限. 然后这个用户可以创建这个数据库.
 
@@ -48,14 +48,6 @@
 
   * ``select`` 时, 原始数据集本身构成一个 group, 所以可以在这个组上直接使用聚合函数,
     生成一行结果.
-
-- Joining tables
-
-  * When combining (joining) information from multiple tables, you need to specify
-    how records in one table can be matched to records in the other.
-
-  * Sometimes it is useful to join a table to itself, if you want to compare records
-    in a table to other records in that same table.
 
 - 一个表必须有一个或者一组 unique key 可以唯一识别不同的资源实例, 否则无法完全
   避免多个 session 同时创建同一个实例时导致的重复 (race condition).
@@ -1582,20 +1574,20 @@ SELECT
 ::
 
   SELECT
+    [ALL | DISTINCT]
     select_expr [, select_expr ...]
     [FROM table_references
       [PARTITION partition_list]
       [WHERE where_condition]
-      [GROUP BY {col_name | expr | position}, ... [WITH ROLLUP]]
+      [GROUP BY {col_name | expr}, ... [WITH ROLLUP]]
       [HAVING where_condition]
       [WINDOW window_name as (window_spec) [, window_name as (window_spec)] ...]
-      [ORDER BY {col_name | expr | position} [ASC | DESC], ... [WITH ROLLUP]]
+      [ORDER BY {col_name | expr} [ASC | DESC], ... [WITH ROLLUP]]
       [LIMIT {[offset,] row_count | row_count OFFSET offset}]
       [INTO OUTFILE 'file_name' [CHARACTER SET charset_name] export_options
         | INTO DUMPFILE 'file_name'
         | INTO var_name [, var_name]]
-      [FOR {UPDATE | SHARE} [OF tbl_name [, tbl_name] ...] [NOWAIT | SKIP LOCKED]
-        | LOCK IN SHARE MODE]]
+      [FOR {UPDATE | SHARE} [OF tbl_name [, tbl_name] ...] [NOWAIT | SKIP LOCKED]]
 
 select list
 """""""""""
@@ -1603,12 +1595,14 @@ select list
 
 - Each ``select_expr`` can be:
 
-  * A column.
+  * A column name. The name can be unqualified, or fully qualified as
+    ``[db_name.]tbl_name.col_name`` for necessary disambiguation. But whatever
+    form is used, only columns made available by FROM clause can be referenced.
 
   * An arbitrary expression that contains column references or not.
 
-  * ``tbl_name.*`` is a qualified shorthand, selecting all columns from the
-    named table.
+  * ``[db_name.]tbl_name.*`` is a qualified shorthand, selecting all columns
+    from the named table.
 
   * A single unqualified ``*`` shorthand, selecting all columns from all
     tables. Use an unqualified ``*`` with other items in the select list may
@@ -1662,6 +1656,9 @@ Complete table reference syntax::
   
 - If no FROM clause, only arbitrary expressions (not referencing columns) can
   be selected. This is equivalent to specifying ``FROM DUAL``.
+
+- Table name can be fully qualified as ``db_name.tbl_name``, for tables in
+  default database, unqualified table name is sufficient.
 
 - Table name can be aliased in table reference, including in join expressions.
   When a table is aliased, the original name can not be used anymore, only
@@ -1733,6 +1730,164 @@ filtering conditions
 - WHERE clause indicates the conditions that rows must satisfy to be selected
   from referenced tables. Omitting WHERE clause equals to constant true.  WHERE
   clause can not contain aggregate functions.
+
+grouping
+""""""""
+- Each GROUP BY field can be: the same as ORDER BY.
+
+- WITH ROLLUP. Causes aggregate result to include extra rows that represent
+  higher-level (that is, super-aggregate) summary.
+
+HAVING clause
+"""""""""""""
+- HAVING is used to conveniently filtering aggregated rows, i.e., filtering
+  based on aggregated result.
+  
+- HAVING clause filters data on the group rows, rather than on individual
+  source rows. Whereas WHERE clause filters on source rows.  HAVING is added
+  just because WHERE can not filter on aggregate results. HAVING 和 WHERE 执行
+  的阶段是不同的.
+
+- HAVING 并不是必须的, 相同的结果可通过 filter on subquery 来实现, 即::
+
+    SELECT ... WHERE where_condition GROUP BY ... HAVING having_condition;
+    -- equivalent to
+    SELECT * FROM (
+      SELECT ... WHERE where_condition GROUP BY ...
+    ) as grouped WHERE having_condition;
+
+- In MySQL, the HAVING clause is applied nearly last, just before items are
+  sent to the client, with no optimization. (LIMIT is applied after HAVING.)
+
+- HAVING should reference only columns in the GROUP BY clause or columns used
+  in aggregate functions. In mysql, HAVING can also refer to normal columns in
+  select list and columns in outer subqueries.
+
+WINDOW clause
+"""""""""""""
+- Defines named windows that can be referred to by window functions.
+
+ordering
+""""""""
+- Each ORDER BY field can be:
+
+  * a column name or its alias name. All columns and aliases in select list
+    and FROM clause can be used.
+
+  * an arbitrary expression, which can contain reference to any column name or
+    its alias.
+
+- Ordering direction. ascending or descending order. ASC is default.
+
+- Actually when sorting, only first ``max_sort_length`` bytes of column values
+  are used.
+
+LIMIT clause
+""""""""""""
+- constrain the rows returned by SELECT statement.
+
+- To retrieve all rows from a certain offset up to the end of the result set,
+  row count can be some extremely large number.
+
+- If LIMIT occurs within a subquery and also is applied in the outer query, the
+  outermost LIMIT takes precedence.
+
+locking read
+""""""""""""
+- FOR UPDATE and FOR SHARE are locking read clauses.
+
+- FOR UPDATE. Rows selected by the query are write-locked until the end of the
+  current transaction. Another transaction is forbidden from locking read of
+  the same row. Non-locking reads can still read that row. It's useful when
+  update must be considered an atomic operation.
+
+- FOR SHARE. The shared lock permits other transactions to read the selected
+  rows but not to update or delete them. It's useful when multiple sessions
+  need readonly share of row values.
+
+- By default, when the matching row is locked, other transactions are blocked.
+  This can be changed with modifiers.
+
+- Modifiers.
+
+  * NOWAIT. Query execute immediately, returning an error if a row lock cannot
+    be obtained due to a lock held by another transaction.
+
+  * SKIP LOCKED. Query execute immediately, excluding rows from the result set
+    that are locked by another transaction.
+
+- ``OF tbl_name``. Specifying the table to be locked. Omitting this clause
+  causes that all tables referenced by the query block are locked (for matching
+  rows).
+
+SELECT modifiers
+""""""""""""""""
+- ALL and DISTINCT specify whether duplicate rows should be returned. default
+  is ALL.
+
+SELECT ... INFO
+"""""""""""""""
+::
+
+  SELECT ... INTO var_list
+
+- select column values and stores them into variables.
+
+- The number of variables must match the number of columns. The query should
+  return a single row.
+
+::
+
+  SELECT ... INTO OUTFILE
+
+- write selected rows into a file.
+
+- intended primarily to let you very quickly dump a table to a text file on the
+  server machine.
+
+- This is the opposite of LOAD DATA. See LOAD DATA for formatting options.
+
+::
+
+  SELECT ... INTO DUMPFILE
+
+- writes a single row to a file without any formatting.
+
+UNION
+"""""
+::
+
+  (SELECT ...)
+  UNION [ALL | DISTINCT]
+  (SELECT ...)
+  [UNION [ALL | DISTINCT]
+  (SELECT ...)]
+  [ORDER BY {col_name | expr} [ASC | DESC], ...]
+  [LIMIT {[offset,] row_count | row_count OFFSET offset}]
+
+- The column names from the first SELECT statement are used as the column names
+  for the results returned.
+
+- Corresponding columns of each SELECT statement should have the same type. If
+  data types do not match, the values retrieved by all of the SELECT statements
+  are taken into consideration.
+
+- The last SELECT can be SELECT ... INTO OUTFILE, then the UNION result is
+  written to the file.
+
+- Modifiers. ALL and DISINTCT specify whether duplicate rows are included. By
+  default is DISTINCT.
+
+- a DISTINCT union overrides any ALL union to its left.
+
+- To apply ORDER BY or LIMIT to an individual SELECT, place the clause inside
+  the parentheses that enclose the SELECT. Use of ORDER BY for individual
+  SELECT statements implies nothing about the order in which the rows appear in
+  the final result because UNION by default produces an unordered set of rows.
+  Therefore, the use of ORDER BY in this context is typically in conjunction
+  with LIMIT, so that it is used to determine the subset of the selected rows
+  to retrieve for the SELECT. If ORDER BY appears without LIMIT in a SELECT, it
+  is optimized away because it will have no effect anyway.
 
 LOAD DATA
 ^^^^^^^^^
