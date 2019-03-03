@@ -1,6 +1,5 @@
 overview
 ========
-
 - In Linux, directory hierarchy from root (/) downwards is standardized by
   the Linux Filesystem Hierarchy Standard (FHS).
 
@@ -9,7 +8,6 @@ overview
 
 the root filesystem
 ===================
-
 /run
 ----
 
@@ -55,6 +53,10 @@ the root filesystem
 
   * Program that runs as some non-root system user and has no access to 
     root privileges: put runtime files under ``/tmp`` or ``/var/tmp``.
+
+/etc
+----
+- ``/etc/conf.d``, configuration files for init scripts.
 
 reference
 =========
