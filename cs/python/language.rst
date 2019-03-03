@@ -782,7 +782,6 @@ special method lookup
   
 Expressions
 ===========
-
 Atoms
 -----
 
@@ -858,7 +857,6 @@ generator expression
 
 Primaries
 ---------
-
 Subscriptions & slicing
 ^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -909,7 +907,7 @@ Calls
     here. 这用于计算传入的 args 数目, 与 function signature 进行比较. (当
     args 数目大于 function 接受的 positional 数量, 则 raise TypeError.)
 
-comparisons
+Comparisons
 -----------
 - comparison operators::
 
@@ -941,6 +939,72 @@ comparisons
 
 - Note that ``a op1 b op2 c`` doesn’t imply any kind of comparison between
   ``a`` and ``c``. So it's legal to say ``x < y > z``
+
+Operator precedence
+-------------------
+由低至高:
+
+- 最低优先级: lambda.
+
+- 次低优先级: if ... else ...
+
+- logical operators::
+ 
+    or
+    and
+    not
+   
+  其中 or 优先级最低, 其次是 and, 最高是 not.
+
+- comparison operators::
+
+    < > == >= <= !=
+    is [not]
+    [not] in
+
+  同等优先级, 从左至右的结合性. 注意 ``in`` 也属于 comparison operator.
+
+- binary bitwise operators (注意不包含 ``~``)::
+
+    |
+    ^
+    &
+    << >>
+
+  优先级依次提高, 注意 ``<<`` ``>>`` 优先级相同,
+  left associative.
+
+- binary arithmetic operators (除了 ``**``)::
+
+    + -
+    * @ / // %
+
+  第二排比第一排优先级高, 同排的算符优先级相同, left associative.
+  当 ``%`` 用于 string formatting 时, 仍使用这里的优先级规则.
+
+- unary arithmetic operator and unary bitwise operator::
+
+    + - ~
+
+  同等优先级, right associative.
+
+- exponentiation ``**``
+
+- 注意 await 的优先级非常高::
+
+    await x
+
+- subscription, slicing, call, attribute reference::
+
+    x[i], x[a:b:c], x(...), x.attribute
+
+  同等优先级, left associative.
+
+- tuple, list, dict, set, etc. display form::
+
+    (...), [...], {k: v, ...}, {e, ...}
+
+  这些是最高优先级的. 一般情况下结合性不是问题.
 
 Statements
 ==========
