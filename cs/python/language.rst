@@ -1008,9 +1008,10 @@ Operator precedence
 
 Statements
 ==========
-
 assignment statements
 ---------------------
+normal assignment statement
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 以下 BNF 有所简化.
 
 ::
@@ -1026,7 +1027,7 @@ assignment statements
              | "*" target
 
 about target list
-^^^^^^^^^^^^^^^^^
+""""""""""""""""""
 - An assignment statement evaluates the expression list and and assigns the
   single resulting object to each of the target lists, from left to right.
 
@@ -1075,7 +1076,7 @@ about target list
     a, b, *(c, *[d, *(e, *()), f], g), h, i, (), j = *range(9), [], 9
 
 about attributeref
-^^^^^^^^^^^^^^^^^^
+""""""""""""""""""
 - If a target is attributeref, LHS 一定是对 instance attribute 的 set 操作,
   右侧则可以是对 class or instance attribute 的 get 操作.::
 
@@ -1085,7 +1086,7 @@ about attributeref
     inst.x = inst.x + 1   # writes inst.x as 4 leaving Cls.x as 3
 
 about slicing
-^^^^^^^^^^^^^
+""""""""""""""
 - If a target is a slicing, (for builtin sequence types) the assigned object
   should also be a sequence object. Then the sequence object is asked to
   replace the slice with the items of the assigned sequence. The length of the
@@ -1093,7 +1094,7 @@ about slicing
   changing the length of the target sequence, if the target sequence allows it.
 
 about evaluation order
-^^^^^^^^^^^^^^^^^^^^^^
+""""""""""""""""""""""
 - LHS & RHS 的运算顺序: RHS 部分先计算完毕, 然后对 LHS target list 进行赋值.
 
   因此, 以下是成立的::
@@ -1109,6 +1110,35 @@ about evaluation order
     i, x[i] = x[i], i
     print(x) # [1, 0]
     
+annotated assignment statement
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+::
+
+  annotated_assignment_stmt ::= augtarget ":" expression ["=" expression]
+
+- Only single target and only single RHS value is allowed.
+
+- variable annotation 仅对 module level 和 class level 的变量才有意义. 对于
+  augtarget 是一个 identifier 并且 annotation 发生在 module or class scope 中的
+  情况, annotations are stored in ``__annotations__`` attribute of the module
+  or class object, which is a dictionary mapping from variable names (mangled
+  if private) to annotations.
+
+- If an identifier is annotated in a function scope, annotations are never
+  evaluated nor stored in function scopes.
+
+- 如果 augtarget 不是 identifier, 而是 attributeref, subscription, slicing 等
+  表达式, annotation is evaluated but not stored anywhere.
+
+- 注意 assignment part is optional.
+
+  * If the right hand side is present, an annotated assignment performs the
+    actual assignment before evaluating annotations.
+  
+  * 当不存在 assignment 部分时, 这仅仅是一个 variable annotation. 单纯的
+    varialbe annotation 并不会在 class/module scope 中定义这个变量, 而仅仅是保
+    存 annotation 至 ``__annotations__``.
+
 import statement
 ----------------
 
@@ -1200,36 +1230,96 @@ design patterns
 - Create custom exception classes for your code, your library etc. Design a
   hierarchy suitable for your need.
 
-- 所有自定义的 exception 都应是 ``Exception`` 的子类, 而不是 ``BaseException`` 的.
-  Catching subclasses of ``BaseException`` is almost always the wrong thing to do.
+- 所有自定义的 exception 都应是 ``Exception`` 的子类, 而不是 ``BaseException``
+  的.  Catching subclasses of ``BaseException`` is almost always the wrong
+  thing to do.
 
-- When catching exceptions, mention specific exceptions whenever possible instead
-  of using a bare ``except:`` clause. If you want to catch all exceptions that
-  signal program errors, use ``except Exception:`` (Bare except is equivalent to
-  ``except BaseException:``).
+- When catching exceptions, mention specific exceptions whenever possible
+  instead of using a bare ``except:`` clause. If you want to catch all
+  exceptions that signal program errors, use ``except Exception:`` (Bare except
+  is equivalent to ``except BaseException:``).
 
 - Design exception hierarchies based on the distinctions that code catching the
   exceptions is likely to need, rather than the locations where the exceptions
   are raised. Aim to answer the question "What went wrong?" programmatically,
   rather than only stating that "A problem occurred".
 
-- For all try/except clauses, limit the try clause to the absolute minimum amount
-  of code necessary. This avoids masking bugs.
+- For all try/except clauses, limit the try clause to the absolute minimum
+  amount of code necessary. This avoids masking bugs.
 
 function definitions
 --------------------
+function annotations
+^^^^^^^^^^^^^^^^^^^^
+- 为什么需要 function annotation? 因为 python 此前缺乏标准的对函数参数和返回值
+  进行注释说明的方式. 因此, community 发明了一些其他 convention, 例如通过
+  docstring 进行说明. 由此可见, 其实 annotation 的需求一直存在. Function and
+  variable annotation provide a single, standard way of specifying this
+  information, reducing the confusion caused by the wide variation in mechanism
+  and syntax that has existed.
 
-- 避免使用递归逻辑. 这是因为 Python 中没有对 tail recursion 进行优化. 所以递归调用
-  都是实实在在地叠加 stack. 如果可能递归次数很多, 很快会触及 ``sys.getrecursionlimit()``
-  的上限, 导致 ``RecursionError``.
-   
-  解决办法:
+- 注意事项:
+
+  * annotations are completely optional.
+
+  * Python itself does not attach any semantics to annotations, it only makes
+    annotations available during runtime. It's up to the tools to decide what
+    to do with the annotations.
+
+- Parameter annotation has the following form::
+
+    param: expression
+
+  * Any parameter can have an annotation, including varargs ``*args`` and
+    varkwargs ``**kwargs``.
+
+  * When a parameter has default value::
+
+      param: annotation = None
+
+- return value's annotation has the following form::
+
+    f() -> expression
+
+- The annotation expression can be any valid python expression.
   
+  * 如果没有使用 postponed evaluation of annotations, annotation expressions
+    are evaluated while the function's definition is executed by the
+    interpreter.
+
+  * 如果开启了 postponed evaluation of annotations,
+   
+    .. code:: python
+
+      from __future__ import annotations
+
+    annotations are preserved as source-code strings at runtime.
+
+- 无论是否有开启 postponed evaluation, annotations are saved in the
+  ``__annotations__`` attribute of the function object, keyed by paramter's
+  name, 对于返回值注释, key 为 ``return`` (注意到 ``return`` 是 reserved word,
+  不可能作为 parameter 出现).
+
+- lambda expression 不能指定 function annotation.
+
+- Usage:
+
+  * type checking
+
+  * documentation
+
+design patterns
+^^^^^^^^^^^^^^^
+- 避免使用递归逻辑. 这是因为 Python 中没有对 tail recursion 进行优化. 所以递归
+  调用都是实实在在地叠加 stack. 如果可能递归次数很多, 很快会触及
+  ``sys.getrecursionlimit()`` 的上限, 导致 ``RecursionError``.
+
+  解决办法:
+
   * 将递归逻辑转变成循环逻辑来实现.
 
-  * 使用一个修改的 Y combinator 将递归算法转变成非递归算法 [SOPyRecur]_, 将运算结果以
-    函数返回, 再循环 unwrap 每层函数. See also tco module [TCO]_.
-
+  * 使用一个修改的 Y combinator 将递归算法转变成非递归算法 [SOPyRecur]_, 将运算
+    结果以函数返回, 再循环 unwrap 每层函数. See also tco module [TCO]_.
 
 class definitions
 -----------------
@@ -1825,6 +1915,7 @@ runtime constants
 
 - ``__debug__``. True if Python is not started with optimization (-O, -OO
   options).
+
 
 References
 ==========
