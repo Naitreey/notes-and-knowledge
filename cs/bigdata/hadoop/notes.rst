@@ -16,8 +16,8 @@ overview
 - Some of the now separate Apache projects were born from Hadoop project,
   including HBase, Hive, Pig, Zookeeper, etc.
 
-architecture
-============
+general architecture
+====================
 All components of Hadoop is designed with a fundamental assumption that
 hardware failures is common and should be automatically handled by the
 framework itself.
@@ -123,6 +123,188 @@ File systems
   * MapR's MapRFS.
 
   * FTP
+
+HDFS
+====
+Architecture
+------------
+design goals
+^^^^^^^^^^^^
+- Highly fault-tolerant, designed to run on commodity hardware. Detection of
+  faults and quick, automatic recovery from hardware failures.
+
+- Streaming access to data set. Hadoop applications are not general purpose
+  application that runs on general purpose file system. HDFS is designed more
+  for batch processing rather than interactive use. The emphasis is on high
+  throughput of data access rather than low latency of data access. POSIX
+  imposes many hard requirements that are not needed for applications that are
+  targeted for HDFS, therefore POSIX semantics in a few key areas has been
+  traded to increase data throughput rates.
+
+- Large data set. Tuned to support large files. high aggregate data bandwidth
+  and scale to hundreds of nodes in a single cluster. It should support tens of
+  millions of files in a single instance.
+
+- simple conherency model, write-once-read-many access model. A file once
+  created, written, and closed need not be changed except for appends and
+  truncates. This assumption simplifies data coherency issues and enables high
+  throughput data access.
+
+- It is often better to migrate the computation closer to where the data is
+  located rather than moving the data to where the application is running.
+  HDFS provides interfaces for applications to move themselves closer to where
+  the data is located.
+
+- Portability across heterogeneous hardware and software platforms. (JVM)
+
+services
+^^^^^^^^
+- Master-salve architecture. An HDFS cluster consists of
+  
+  * a single NameNode, a master server that manages the file system namespace
+    and regulates access to files by clients.
+  
+  * a number of DataNodes, usually one per node in the cluster, which manage
+    storage attached to the nodes that they run on. 
+
+- File storage.
+  
+  * HDFS 创建一个 logical filesystem namespace, application data are stored in
+    this logical filesystem.
+
+  * a file is split into one or more blocks and these blocks are stored in a
+    set of DataNodes.
+
+- NameNode
+
+  * executes file system namespace operations like opening, closing, and
+    renaming files and directories.
+
+  * manage the mapping of blocks to DataNodes.
+
+  * the arbitrator and repository for all HDFS metadata. user data never flows
+    through the NameNode.
+
+- DataNode
+
+  * file blocks are stored in DataNodes.
+
+  * serving read and write requests from clients directly.
+
+  * block creation, deletion, and replication upon instruction from the
+    NameNode.
+
+file system namespace
+^^^^^^^^^^^^^^^^^^^^^
+- traditional hierarchical file organization.
+
+- traditional file/directory operations are supported.
+
+- hardlinks and symlinks are not supported.
+
+- Files are write-once except for append and truncate. Strictly one writer at
+  any time (per file).
+
+data replication
+^^^^^^^^^^^^^^^^
+overview
+""""""""
+- Each file is split into blocks. Blocks are basic storage unit in HDFS.
+
+- Blocks are replicated for fault tolerance.
+
+- replication factor: the number of copies of a file. An application can
+  specify the number of replicas of a file that should be maintained by HDFS.
+
+- HDFS support file-level block size and replication factor. replication factor
+  can be set at file creation time and can be changed later.
+
+- NameNode manages replication. It periodically receives a Heartbeat and a
+  Blockreport from each of the DataNodes in the cluster. Receipt of a Heartbeat
+  implies that the DataNode is functioning properly. A Blockreport contains a
+  list of all blocks on a DataNode.
+
+replica placement (write)
+""""""""""""""""""""""""""
+- rack-aware replica placement policy.
+
+- improves data reliability, availability, network bandwith utilization.
+
+- For the common case, when the replication factor is three, HDFS’s placement
+  policy is to put one replica on the local machine if the writer is on a
+  datanode, otherwise on a random datanode in the same rack as that of the
+  writer, another replica on a node in a different (remote) rack, and the last
+  on a different node in the same remote rack.
+
+- This policy cuts the inter-rack write traffic which generally improves write
+  performance (最可靠的方式是将副本全部放在不同的机架上, 但跨机架的带宽一般是相
+  对比同一个机架内节点之间慢, 这样 write pipeline 就会慢). The chance of rack
+  failure is far less than that of node failure; this policy does not impact
+  data reliability and availability guarantees. However, it does reduce the
+  aggregate network bandwidth used when reading data since a block is placed in
+  only two unique racks rather than three. (对于单个 client 读的情况, 无论怎么
+  放, 都不影响读取速度, 因为每次只读一个 DataNode. 但如果有多个客户端同时读多个
+  文件. 负载只能分布在两个机架上, 而不是三个机架, 这样总体能提供的读带宽就变小
+  了.)
+
+- If the replication factor is greater than 3, the placement of the 4th and
+  following replicas are determined randomly.
+
+- NameNode does not allow DataNodes to have multiple replicas of the same
+  block, maximum number of replicas created is the total number of DataNodes at
+  that time.
+
+- How does HDFS write file? (See also [HDFSReplPaper]_, [hdfsReadAndWrite]_)
+
+  1. HDFS client sends a request to the NameNode to create a new file in the
+     filesystem's namespace.
+
+  2. NameNode returns a list of DataNodes to store data block according to
+     replication factor.
+
+  3. File data is first divided into blocks and then splits into packets. The
+     list of DataNodes forms a pipeline.
+
+  4. Packets are sent to the DataNode1 in the pipeline, to be stored and
+     forwarded to next DataNode in the pipeline, and so forth.
+
+  5. When the client has finished writing data, it calls close() which flushes
+     all remaining packets to DataNode pipeline and wait for acknowledgment.
+
+  6. Datanode sends the acknowledgment to client once required replicas are
+     created.
+
+  7. Client received acknowledgment and contacting the NameNode to signal that
+     file is complete.
+
+replica selection (read)
+""""""""""""""""""""""""
+- When client requested to read a file, NameNode tries to satisfy a read
+  request from a replica that is closest to the reader (location proximity).
+
+- how does HDFS read file? (See also [hdfsReadAndWrite]_)
+
+  1. Client sends a request to the NameNode to open the file.
+
+  2. NameNode provides the locations of the blocks for the first few blocks in
+     the file. For each block, the namenode returns the addresses of the
+     datanodes that have a copy of that block and datanode are sorted according
+     to their proximity to the client.
+
+  3. Client connects to the closest datanode for the first block in the file.
+     When the reading of the block ends, it will close the connection to the
+     datanode and then finds the best datanode for the next block.
+
+  4. When the client has finished reading the data, it closes the reading
+     stream.
+
+NameNode safemode
+""""""""""""""""""
+NameNode 启动后首先进入 safemode, 此时不做 replication. NameNode 此时只接收
+DataNode 的 heartbeat and blockreport. NameNode 根据 blockreport 检查 safely
+replicated blocks 和 unsafe 的 blocks. After a configurable percentage of
+safely replicated data blocks checks in with the NameNode, the NameNode exits
+safemode. 开始 replicate 在 safemode 得到的那些尚未安全地复制的 blocks.
 
 YARN
 ====
@@ -460,6 +642,8 @@ references
 ==========
 .. [OriginHadoop] `Origin of the Name Hadoop <http://www.balasubramanyamlanka.com/origin-of-the-name-hadoop/>`_
 .. [distroToChoose] `What distribution should I choose <https://www.quora.com/What-distribution-should-I-choose-Cloudera-Hortonworks-or-MapR-I-will-need-to-do-some-stream-processing-from-social-networks-and-real-time-too-I%E2%80%99m-thinking-of-using-Apache-Storm-rather-than-Spark-with-Hortonworks-Is-that-a-good-approach>`_.
+.. [hdfsReadAndWrite] `Hadoop HDFS Data Read and Write Operations <https://data-flair.training/blogs/hadoop-hdfs-data-read-and-write-operations/>`_
+.. [HDFSReplPaper] `An Efficient Replication Technique for Hadoop Distributed File System <https://pdfs.semanticscholar.org/dffe/5bfcf3e9300190002aa8456f9b2170507e33.pdf>`_
 
 questions
 =========
@@ -473,4 +657,4 @@ questions
   which the Hadoop daemons execute as well as the configuration parameters for
   the Hadoop daemons?
 
-- starting historyserver, hdfs user, permission?
+- how does HDFS know where the write is? on datanode or on the same rack?
