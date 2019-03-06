@@ -47,29 +47,53 @@ components
 
 services
 --------
+In general, it is recommended that HDFS and YARN run as separate users. In the
+majority of installations, HDFS processes execute as ‘hdfs’. YARN is typically
+using the ‘yarn’ account, MapReduce processes use 'mapred'.
+
+HDFS
+^^^^
 NameNode
-^^^^^^^^
+""""""""
 - Usually running on a dedicated node in the cluster.
+
+- NameNode is a master service.
 
 Secondary NameNode
-^^^^^^^^^^^^^^^^^^
+""""""""""""""""""
 
 DataNode
-^^^^^^^^
+""""""""
 - 对每个需要存储数据的节点都要运行 DataNode (存储节点).
 
+- DataNode is a slave service.
+
+YARN
+^^^^
 ResourceManager
-^^^^^^^^^^^^^^^
+"""""""""""""""
 - Usually running on a dedicated node in the cluster.
 
+- ResourceManager is a master service.
+
 NodeManager
-^^^^^^^^^^^
+"""""""""""
 - 对每个要执行计算任务的节点要运行 NodeManager (计算节点).
+
+- NodeManager is a slave service.
+
+WebAppProxy
+"""""""""""
+
+MapReduce
+^^^^^^^^^
+MapReduce Job History Server
+""""""""""""""""""""""""""""
 
 File systems
 ------------
 - At storage layer, hadoop uses a plugin model, different FS implementation can
-  be used.
+  be used. The default is HDFS.
 
 - Location awareness of Hadoop compatible file systems.
 
@@ -85,7 +109,10 @@ File systems
   * data replication is performed so that data redundancy is ensured across
     multiple racks.
 
-- alternatvie file systems:
+- alternatvie file systems. When Hadoop MapReduce is used with an alternate
+  file system, the NameNode, standby NameNode, and DataNode architecture of
+  HDFS are replaced by the file-system-specific equivalents. The following
+  alternative file systems are notable:
 
   * Amazon S3
 
@@ -97,13 +124,312 @@ File systems
 
   * FTP
 
-HDFS
-^^^^
-- When Hadoop MapReduce is used with an alternate file system, the NameNode,
-  standby NameNode, and DataNode architecture of HDFS are replaced by the
-  file-system-specific equivalents.
+YARN
+====
 
-Distributors
+NodeManager
+-----------
+Monitoring health
+^^^^^^^^^^^^^^^^^
+- NodeManager can periodically run a script to determine if the managed node is
+  healthy or not.
+
+- Any check is allowed in the script.
+
+- If the script detects the node to be in an unhealthy state, it must print a
+  line to standard output beginning with the string ERROR. The NodeManager
+  spawns the script and checks its output. If ERROR, the node’s status is
+  reported as unhealthy and the node is black-listed by the ResourceManager.
+  No further tasks will be assigned to this node. When a subsequent health
+  check does not contain ERROR in output, the node is healthy again and removed
+  from blacklist.
+
+configuration
+=============
+environment configuration
+-------------------------
+- setting site-specific customization of the Hadoop daemons' process environment.
+
+  * /etc/hadoop/hadoop-env.sh
+
+  * /etc/hadoop/yarn-env.sh
+
+  * /etc/hadoop/httpfs-env.sh
+   
+  * /etc/hadoop/kms-env.sh
+   
+  * /etc/hadoop/mapred-env.sh
+
+hadoop-env
+^^^^^^^^^^
+generic
+""""""""
+- JAVA_HOME. required.
+
+- HADOOP_HOME. 建议在 system-wide shell environment configuration 中设置, 例如
+  /etc/profile.d/hadoop.sh. hadoop 的安装路径, 例如 /usr/lib/hadoop.
+
+JVM options
+""""""""""""
+- HADOOP_OPTS. Java runtime options for all Hadoop commands.
+
+- HDFS_NAMENODE_OPTS
+
+- HDFS_SECONDARYNAMENODE_OPTS
+
+- HDFS_DATANODE_OPTS
+
+memory
+""""""
+- HADOOP_HEAPSIZE_MIN
+
+- HADOOP_HEAPSIZE_MAX
+
+file path
+""""""""""
+- HADOOP_CONF_DIR. 建议在 system-wide shell environment configuration 中设置,
+  例如 /etc/profile.d/hadoop.sh.
+
+- HADOOP_LOG_DIR
+
+- HADOOP_PID_DIR
+
+yarn-env
+^^^^^^^^
+JVM options
+""""""""""""
+- YARN_RESOURCEMANAGER_OPTS
+
+- YARN_NODEMANAGER_OPTS
+
+- YARN_PROXYSERVER_OPTS
+
+- YARN_TIMELINESERVER_OPTS
+
+- YARN_TIMELINEREADER_OPTS
+
+memory
+""""""
+- YARN_RESOURCEMANAGER_HEAPSIZE
+
+- YARN_NODEMANAGER_HEAPSIZE
+
+- YARN_PROXYSERVER_HEAPSIZE
+
+- YARN_TIMELINE_HEAPSIZE
+
+mapred-env
+^^^^^^^^^^
+JVM options
+""""""""""""
+- MAPRED_HISTORYSERVER_OPTS
+
+memory
+""""""
+- HADOOP_JOB_HISTORYSERVER_HEAPSIZE
+
+daemon configuration
+--------------------
+- read-only default configuration:
+
+  * core-default.xml
+
+  * hdfs-default.xml
+
+  * yarn-default.xml
+
+  * mapred-default.xml
+
+- site-specific configuration:
+
+  * /etc/hadoop/core-site.xml
+   
+  * /etc/hadoop/hdfs-site.xml
+   
+  * /etc/hadoop/yarn-site.xml
+    
+  * /etc/hadoop/mapred-site.xml
+
+core-site.xml
+^^^^^^^^^^^^^
+- fs.defaultFS
+
+- io.file.buffer.size
+
+hdfs-site.xml
+^^^^^^^^^^^^^
+NameNode
+""""""""
+- dfs.namenode.name.dir
+
+- dfs.hosts
+
+- dfs.hosts.exclude
+
+- dfs.blocksize
+
+- dfs.namenode.handler.count
+
+DataNode
+""""""""
+- dfs.datanode.data.dir
+
+yarn-site.xml
+^^^^^^^^^^^^^
+ResourceManager
+""""""""""""""""
+- yarn.acl.enable
+
+- yarn.admin.acl
+
+- yarn.log-aggregation-enable
+
+- yarn.resourcemanager.address
+
+- yarn.resourcemanager.scheduler.address
+
+- yarn.resourcemanager.resource-tracker.address
+
+- yarn.resourcemanager.admin.address
+
+- yarn.resourcemanager.webapp.address
+
+- yarn.resourcemanager.hostname
+
+- yarn.resourcemanager.scheduler.class
+
+- yarn.scheduler.minimum-allocation-mb
+
+- yarn.scheduler.maximum-allocation-mb
+
+- yarn.resourcemanager.nodes.include-path 
+ 
+- yarn.resourcemanager.nodes.exclude-path
+
+NodeManager
+""""""""""""
+- yarn.acl.enable
+
+- yarn.admin.acl
+
+- yarn.log-aggregation-enable
+
+- yarn.nodemanager.resource.memory-mb
+
+- yarn.nodemanager.vmem-pmem-ratio
+
+- yarn.nodemanager.local-dirs
+
+- yarn.nodemanager.log-dirs
+
+- yarn.nodemanager.log.retain-seconds
+
+- yarn.nodemanager.remote-app-log-dir
+
+- yarn.nodemanager.remote-app-log-dir-suffix
+
+- yarn.nodemanager.aux-services
+
+- yarn.nodemanager.env-whitelist
+
+- yarn.nodemanager.health-checker.script.path
+
+- yarn.nodemanager.health-checker.script.opts
+
+- yarn.nodemanager.health-checker.interval-ms
+
+- yarn.nodemanager.health-checker.script.timeout-ms
+
+History Server
+""""""""""""""
+- yarn.log-aggregation.retain-seconds
+
+- yarn.log-aggregation.retain-check-interval-seconds
+
+mapred-site.xml
+^^^^^^^^^^^^^^^
+MapReduce Applications
+""""""""""""""""""""""
+- mapreduce.framework.name
+
+- mapreduce.map.memory.mb
+
+- mapreduce.map.java.opts
+
+- mapreduce.reduce.memory.mb
+
+- mapreduce.reduce.java.opts
+
+- mapreduce.task.io.sort.mb
+
+- mapreduce.task.io.sort.factor
+
+- mapreduce.reduce.shuffle.parallelcopies
+
+MapReduce Job History Server
+""""""""""""""""""""""""""""
+- mapreduce.jobhistory.address
+
+- mapreduce.jobhistory.webapp.address
+
+- mapreduce.jobhistory.intermediate-done-dir
+
+- mapreduce.jobhistory.done-dir
+
+workers flie
+------------
+- /etc/hadoop/workers
+
+- worker's hostname/ip address, one per line.
+
+- SSH trusts must be established for accounts used to run hadoop.
+
+CLI
+===
+hdfs
+----
+namenode
+^^^^^^^^
+::
+
+  hdfs namenode -format <cluster_name>
+  hdfs [--daemon (start|status|stop)] namenode
+
+datanode
+^^^^^^^^
+::
+
+  hdfs [--daemon (start|status|stop)] datanode
+
+yarn
+----
+resourcemanager
+^^^^^^^^^^^^^^^
+::
+
+  yarn [--daemon (start|status|stop)] resourcemanager
+
+nodemanager
+^^^^^^^^^^^
+::
+
+  yarn [--daemon (start|status|stop)] nodemanager
+
+proxyserver
+^^^^^^^^^^^
+::
+
+  yarn [--daemon (start|status|stop)] proxyserver
+
+mapred
+------
+historyserver
+^^^^^^^^^^^^^
+::
+
+  mapred [--daemon (start|status|stop)] historyserver
+
+distributors
 ============
 See also [distroToChoose]_.
 
@@ -134,3 +460,17 @@ references
 ==========
 .. [OriginHadoop] `Origin of the Name Hadoop <http://www.balasubramanyamlanka.com/origin-of-the-name-hadoop/>`_
 .. [distroToChoose] `What distribution should I choose <https://www.quora.com/What-distribution-should-I-choose-Cloudera-Hortonworks-or-MapR-I-will-need-to-do-some-stream-processing-from-social-networks-and-real-time-too-I%E2%80%99m-thinking-of-using-Apache-Storm-rather-than-Spark-with-Hortonworks-Is-that-a-good-approach>`_.
+
+questions
+=========
+- what's WebAppProxy?
+
+- content of each configuration file
+
+- content of ``*-env.sh``
+
+- To configure the Hadoop cluster you will need to configure the environment in
+  which the Hadoop daemons execute as well as the configuration parameters for
+  the Hadoop daemons?
+
+- starting historyserver, hdfs user, permission?
