@@ -1,7 +1,11 @@
-overview
+Overview
 ========
 - typing module provides tools for specifying function annotations and variable
   annotations.
+
+- Most of the constructs in this module aim to provide utilities for type
+  checking, and interpreted by a type checker, rather than to be useful at
+  runtime.
 
 - See also [pep3107]_, [pep484]_, [pep526]_.
 
@@ -33,11 +37,53 @@ type aliases
     MyMap = Mapping[str, T]
     MyMap[int] # equivalent to Mapping[str, int]
 
+Type object annotation
+----------------------
+- ``Type``. A special construct useful to annotate class objects. 注意一般情况
+  下, ``var: int`` 指的是 var 是 int 实例, 若要指定 var 是 int class object,
+  可使用 ``Type[int]``.
+
 subtype
 -------
 - ``NewType(name, type)`` function indicates to a typechecker a subtype of the
   original ``type``.  At runtime it returns an identity function. Note that
   this does NOT create an actual subtype, 它只对 static type checker 有效.
+
+type variable definition
+------------------------
+- ``TypeVar(name, *constraints, bound=None, covariant=False, contravariant=False)``.
+  定义 type variable. 这是一个 generic type.
+
+  name 是变量名 (必须与被赋值 identifier 相同), constraints 是允许的 concrete
+  types (必须有至少 2 个 constraints), type variable 必须是 constraints 规定的
+  类型, 不能是子类; bound 是允许的类型的 upper boundary, 也就是说允许的
+  concrete type 必须是 subtype of the boundary type; constraints 和 bound 两者
+  只能指定一个; covariant 和 contravariant 只能有一个是 True, 意义见下.
+  
+  usage:
+  
+  * 用于对 generic function 的参数和返回值等进行注释
+   
+  * 对 variable 进行注释
+
+  * 作为 Generic types 中的 type variable.
+
+- A ``TypeVar()`` expression must always directly be assigned to a variable.
+  一般是 type checker 去使用这个信息. At runtime, ``isinstance(x, T)`` will
+  raise TypeError.
+
+- A type variable used in a method of a generic class that coincides with one
+  of the variables that parameterize this class is always bound to that
+  variable. (For the type checker)
+
+- A generic class definition that appears inside a generic function should not
+  use type variables that parameterize the generic function.
+
+- A generic class definition that appears inside a generic function should not
+  use type variables that parameterize the generic function.
+
+- A generic class nested in another generic class cannot use the same type
+  variables.
 
 callable
 --------
@@ -53,13 +99,17 @@ callable
 
 Generic types
 -------------
-- User defined generic types are defined as::
+- ``Generic``. ABC for generic types.
 
-    Generic[<params>]
+- User defined generic types is typically declared by inheriting from an
+  instantiation of this class with one or more type variables.::
 
-  It can be used as base class for concrete class definition. 这样定义的
-  subclass 除了可正常使用之外, 还可用在 type annotation 中, 与 base generic
-  class 相同, 指定接收的 ``<params>`` 参数.
+    class GenericKlass(Generic[<params>]):
+      pass
+
+  这样定义的 subclass 除了可用在 type annotation 中之外, 还可以正常在 runtime
+  实例化. 它接收的 type variables 与 base generic class 相同, 即 ``<params>``
+  参数.
 
   .. code:: python
 
@@ -75,6 +125,17 @@ Generic types
   须是可分辨的. 这不代表根据 generic type 具体化的某个 type 的具体参数类型必须
   unique.
 
+- The metaclass used by Generic is a subclass of abc.ABCMeta. A generic class
+  can be an ABC by including abstract methods or properties, and generic
+  classes can also have ABCs as base classes without a metaclass conflict.
+
+- Generic ABC can be used in multiple inheritance, 从而引入一些其他 ABC 的行为.
+
+  .. code:: python
+
+    class MyMapping(Iterable[Tuple[K, V]], Container[Tuple[K, V]], Generic[K, V]):
+      pass
+
 - Using a generic class without specifying type parameters assumes Any for each
   position.
 
@@ -89,6 +150,20 @@ Generic containers
     Sequence[dict]
 
 - pre-defined generic container classes: Mapping, Sequence, Set, List,
+  这些 generic container class 同时也是 ABC, 地位类似于 collections.abc 里面那
+  些.
+
+covariance and contravariance
+-----------------------------
+A generic type ``GenType`` defined using a type variable can be covariant or
+contravariant. For a subtype t2 of type t1,
+
+* GenType is covariant, if ``GenType[t2]`` is subtype of ``GenType[t1]``.
+
+* GenType is contravariant, if ``GenType[t2]`` is supertype of ``GenType[t1]``.
+
+* GenType is invariant, if neither of the above is true.
+
 
 The Any type and object type
 ----------------------------
@@ -120,8 +195,11 @@ object
   assigning it to a variable (or using it as a return value) of a more
   specialized type is a type error.
 
+Utilities
+=========
 References
 ==========
 .. [pep3107] `PEP 3107 -- Function Annotations <https://www.python.org/dev/peps/pep-3107/>`_
+.. [pep483] `PEP 483 -- The Theory of Type Hints <https://www.python.org/dev/peps/pep-0483/>`_
 .. [pep484] `PEP 484 -- Type Hints <https://www.python.org/dev/peps/pep-0484/>`_
 .. [pep526] `PEP 526 -- Syntax for Variable Annotations <https://www.python.org/dev/peps/pep-0526/>`_
