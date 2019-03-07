@@ -36,7 +36,7 @@ components
   across the cluster.
 
 - Hadoop YARN. managing computing resources in clusters and scheduling user
-  applications.
+  applications. YARN - Yet Another Resource Negotiator.
 
 - Hadoop MapReduce. An implementation of MapReduce programming model for
   big data processing, based on YARN.
@@ -259,8 +259,8 @@ replica placement (write)
   1. HDFS client sends a request to the NameNode to create a new file in the
      filesystem's namespace.
 
-  2. NameNode returns a list of DataNodes to store data block according to
-     replication factor.
+  2. NameNode returns a list of DataNodes (using replication target choosing
+     algorithm) to store data block according to replication factor.
 
   3. File data is first divided into blocks and then splits into packets. The
      list of DataNodes forms a pipeline.
@@ -305,6 +305,93 @@ DataNode 的 heartbeat and blockreport. NameNode 根据 blockreport 检查 safel
 replicated blocks 和 unsafe 的 blocks. After a configurable percentage of
 safely replicated data blocks checks in with the NameNode, the NameNode exits
 safemode. 开始 replicate 在 safemode 得到的那些尚未安全地复制的 blocks.
+
+
+metadata persistence
+^^^^^^^^^^^^^^^^^^^^
+- EditLog.
+
+  * NameNode uses EditLog to record changes to file system metadata. EditLog is
+    a persistent transaction log.
+  
+  * EditLog is stored as a file in NameNode's local host OS file system.
+
+  * 需要 EditLog 是因为, even though it is efficient to read a FsImage, it is
+    not efficient to make incremental edits directly to a FsImage.
+
+- FsImage.
+
+  * A file which stores the entire file system namespace, including the mapping
+    of blocks to files and file system properties.
+
+  * FsImage is stored as a file in NameNode's local host OS file system.
+
+- NameNode keeps an image of the entire file system namespace and file Blockmap
+  in memory. A FsImage checkpoint is triggered at NameNode startup and a
+  configured interval. During the checkpoint, NameNode reads EditLog from disk,
+  applies all the transactions from the EditLog to the in-memory representation
+  of the FsImage, and flushes out this new version into a new FsImage on disk.
+  It can then truncate the old EditLog.
+
+data persistence
+^^^^^^^^^^^^^^^^
+- DataNode has no knowledge about HDFS files.
+
+- each block of HDFS data is stored in a separate file in DataNode's local file
+  system.
+
+- Datanode uses a heuristic to determine the optimal number of files per
+  directory and creates subdirectories appropriately.
+
+- blockreport. When a DataNode starts up, it scans through its local file
+  system, generates a list of all HDFS data blocks, and sends this report to
+  the NameNode.
+
+fault tolerance
+^^^^^^^^^^^^^^^
+- heartbeats. Each DataNode sends a heartbeat message to NameNode periodically.
+  The NameNode marks DataNodes without recent Heartbeats as dead and does not
+  forward any new IO requests to them. DataNode death may cause the replication
+  factor of some blocks to fall below their specified value. When this happens,
+  NameNode initiates re-replication of those blocks.
+
+- The necessity for re-replication may arise due to many reasons: a DataNode
+  may become unavailable, a replica may become corrupted, a hard disk on a
+  DataNode may fail, or the replication factor of a file may be increased.
+
+- Data integrity. HDFS client software implements checksum checking on the
+  contents of HDFS files. When a client creates an HDFS file, it computes a
+  checksum of each block of the file and stores these checksums in a separate
+  hidden file in the same HDFS namespace. When a client retrieves file contents
+  it verifies that the data it received from each DataNode matches the checksum
+  stored in the associated checksum file. If not, then the client can opt to
+  retrieve that block from another DataNode that has a replica of that block.
+
+- metadata fail-safety. Corruption of FsImage and/or EditLog can cause HDFS
+  instance non-functional. Fail-safety can be achieved via:
+ 
+  * maintaining multiple copies of the FsImage and EditLog at NameNode. Any
+    update to either the FsImage or EditLog causes each of the FsImages and
+    EditLogs to get updated synchronously.
+
+  * HA with distributed edit log.
+
+- Snapshot. useful to roll back a corrupted HDFS instance to a previously known
+  good point in time.
+
+data accessibility
+^^^^^^^^^^^^^^^^^^
+multiple ways to access hdfs data:
+
+* FileSystem Java API
+
+* C wrapper for the said API
+
+* CLI: FS shell.
+
+* REST API.
+
+* NFS gateway.
 
 YARN
 ====
@@ -452,6 +539,10 @@ NameNode
 
 - dfs.namenode.handler.count
 
+- dfs.namenode.checkpoint.period.
+
+- dfs.namenode.checkpoint.txns.
+
 DataNode
 """"""""
 - dfs.datanode.data.dir
@@ -570,15 +661,30 @@ CLI
 ===
 hdfs
 ----
+admin commands
+^^^^^^^^^^^^^^
+dfsadmin
+""""""""
+::
+
+  hdfs dfsadmin -report
+
+client commands
+^^^^^^^^^^^^^^^
+dfs
+""""
+
+daemon commands
+^^^^^^^^^^^^^^^
 namenode
-^^^^^^^^
+""""""""
 ::
 
   hdfs namenode -format <cluster_name>
   hdfs [--daemon (start|status|stop)] namenode
 
 datanode
-^^^^^^^^
+""""""""
 ::
 
   hdfs [--daemon (start|status|stop)] datanode
