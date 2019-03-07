@@ -664,6 +664,27 @@ esac
 
 # initialization files
 
+## shell modes
+initialization files 的加载取决于 shell 的执行模式. 有以下两种 shell modes,
+它们的组合成为 4 种可能的执行模式:
+
+*   login. user logs in to the system, e.g., via terminal, via ssh. 或者
+    ``-l``, ``--login`` options are specified.
+*   interactive. shell has a prompt and its stdout and stderr are connected
+    to a terminal. 或者 ``-i`` option are specified.
+
+Common scenarios:
+
+-   login via ssh: login, interactive
+-   execute a shell script, without special options: non-login,
+    non-interactive.
+-   start a new shell process without special options: non-login,
+    interactive.
+-   open a graphical terminal: login/non-login based on terminal app's
+    settings, interactive.
+
+See also [Unix shell initialization](#unix-shell-init).
+
 ## For bash
 
 *   interactive shell (无论 login 或 nonlogin) 的初始化结果是基本相同的, 他
@@ -759,3 +780,5 @@ nothing
 <span id="prompt-command">bash prompt command</span> [What is the difference between PS1 and PROMPT_COMMAND](https://stackoverflow.com/questions/3058325/what-is-the-difference-between-ps1-and-prompt-command)
 
 <span id="bash.bashrc">bash.bashrc</span> [When is /etc/bash.bashrc invoked?](https://unix.stackexchange.com/questions/187369/when-is-etc-bash-bashrc-invoked)
+
+<span id="unix-shell-init">[shell-init]</span> [Unix shell initialization](https://github.com/pyenv/pyenv/wiki/Unix-shell-initialization)
