@@ -11,6 +11,58 @@ Overview
 
 Type definition syntax
 ======================
+type
+----
+- A type is a set of values and a set of functions that can be applied to these
+  values.
+
+subtype relationship
+--------------------
+Type B is a subtype of type A, if and only if the following two criteria holds:
+
+- every value from B is also a value from A
+
+- every function that can be applied to A can also be applied to B
+
+- additional rules about Any.
+
+  * Any is consistent with every type. (But Any is not a subtype of every
+    type.)
+
+  * Every type is consistent with Any. (But every type is not a subtype of
+    Any.)
+
+这些标准导致的一些现象:
+
+- List[int] is not a subtype of List[float], Because: The first condition of
+  subtyping holds, but appending a float only works with List[float].
+
+- this places Any partially at the top (it has all values) and bottom (it has
+  all methods) of the type hierarchy.
+
+types vs clases
+---------------
+- In Python, class is object factory. it's a dynamic, runtime concept. Used
+  by interpreter.
+
+- Type appear in variable and function type annotation. it's a static, author
+  time concept. Used by static type checker.
+
+- static types described in PEP 484, should not be confused with the runtime
+  classes.
+
+- 构成一个 type 的所有元素不一定是同一个 class 的实例.
+
+- subtype 不一定是 subclass, subclass 也不一定是 subtype.
+
+- Except for non-abstract subclasses of ``Generic``, no types can be
+  instantiated.
+
+- Except for ``Generic`` and its subclasses, no types can be subclassed.
+
+- Except for unparameterized generics, all types will raise TypeError if
+  used in isinstance or issubclass.
+
 acceptable type hints
 ---------------------
 - any classes.
