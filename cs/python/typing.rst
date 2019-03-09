@@ -60,8 +60,8 @@ types vs clases
 
 - Except for ``Generic`` and its subclasses, no types can be subclassed.
 
-- Except for unparameterized generics, all types will raise TypeError if
-  used in isinstance or issubclass.
+- Except for unparameterized generics, all types will raise TypeError if used
+  in isinstance or issubclass.
 
 acceptable type hints
 ---------------------
@@ -95,34 +95,49 @@ Type object annotation
   下, ``var: int`` 指的是 var 是 int 实例, 若要指定 var 是 int class object,
   可使用 ``Type[int]``.
 
-subtype
--------
-- ``NewType(name, type)`` function indicates to a typechecker a subtype of the
-  original ``type``.  At runtime it returns an identity function. Note that
-  this does NOT create an actual subtype, 它只对 static type checker 有效.
+- ``Type[C]`` refers to the subclasses of C.
 
-type variable definition
-------------------------
+- it is legal to use a Union of classes as the parameter for Type[].
+
+- Plain Type without brackets is equivalent to Type[Any] and this in turn is
+  equivalent to type.
+
+- Type[T] where T is a type variable is allowed when annotating the first
+  argument of a class method.
+
+- Any other special constructs like Tuple or Callable are not allowed as an
+  argument to Type.
+
+- Type is covariant in its parameter.
+
+type variable
+-------------
 - ``TypeVar(name, *constraints, bound=None, covariant=False, contravariant=False)``.
-  定义 type variable. 这是一个 generic type.
+  定义 type variable.
 
   name 是变量名 (必须与被赋值 identifier 相同), constraints 是允许的 concrete
   types (必须有至少 2 个 constraints), type variable 必须是 constraints 规定的
-  类型, 不能是子类; bound 是允许的类型的 upper boundary, 也就是说允许的
+  类型, subclasses of the constrains are replaced by the most-derived base
+  class among t1, etc.; bound 是允许的类型的 upper boundary, 也就是说允许的
   concrete type 必须是 subtype of the boundary type; constraints 和 bound 两者
-  只能指定一个; covariant 和 contravariant 只能有一个是 True, 意义见下.
+  只能指定一个; covariant 和 contravariant 只能有一个是 True, 意义见
+  `covariance and contravariance`_.
   
   usage:
   
   * 用于对 generic function 的参数和返回值等进行注释
    
-  * 对 variable 进行注释
-
   * 作为 Generic types 中的 type variable.
 
 - A ``TypeVar()`` expression must always directly be assigned to a variable.
   一般是 type checker 去使用这个信息. At runtime, ``isinstance(x, T)`` will
   raise TypeError.
+
+- 对一个 generic function 进行注释时, 多处出现的同一个 type variable is always
+  bound to the same concrete type.
+
+- 使用 type variable 定义 generic type 时, 多处出现的同一个 type variable is
+  always bound to the same concrete type.
 
 - A type variable used in a method of a generic class that coincides with one
   of the variables that parameterize this class is always bound to that
@@ -137,27 +152,26 @@ type variable definition
 - A generic class nested in another generic class cannot use the same type
   variables.
 
-callable
---------
-- Specifying the signature of a callable object::
-
-    Callable[[argType, argType, ...], ReturnType]
-
-  To omit the parameter signature, but declare the return type, use::
-
-    Callable[..., ReturnType]
-
-- ``Callable`` is also an ABC, similar to collections.abc.Callable.
-
 Generic types
 -------------
-- ``Generic``. ABC for generic types.
+- Generic type constructor: takes a type and "returns" a type.
 
-- User defined generic types is typically declared by inheriting from an
-  instantiation of this class with one or more type variables.::
+- Generic type: Classes, that behave as generic type constructors are called
+  generic types.  A generic type when given concrete types as type arguments,
+  returns a concrete type.
+
+  * Tuple, Callable, Mapping, etc. 都是 generic types.
+
+  * ``Generic`` is ABC for defining generic type class.
+
+- User defined generic types is declared by inheriting from an instantiation of
+  Generic abstract type with one or more type variables.::
 
     class GenericKlass(Generic[<params>]):
       pass
+
+  The previous code defines a generic type GenericKlass over type variables
+  ``<params>``. GenericKlass itself becomes parameterizable.
 
   这样定义的 subclass 除了可用在 type annotation 中之外, 还可以正常在 runtime
   实例化. 它接收的 type variables 与 base generic class 相同, 即 ``<params>``
@@ -177,11 +191,17 @@ Generic types
   须是可分辨的. 这不代表根据 generic type 具体化的某个 type 的具体参数类型必须
   unique.
 
+- If Generic appears in the base class list, then it should contain all type
+  variables needed by the generic type, and the order of type parameters is
+  determined by the order in which they appear in Generic.
+
 - The metaclass used by Generic is a subclass of abc.ABCMeta. A generic class
   can be an ABC by including abstract methods or properties, and generic
   classes can also have ABCs as base classes without a metaclass conflict.
 
-- Generic ABC can be used in multiple inheritance, 从而引入一些其他 ABC 的行为.
+- Classes that derive from generic types become generic. A class can subclass
+  multiple generic types, 从而引入一些其他 ABC 的行为. However, classes derived
+  from specific types returned by generics are not generic.
 
   .. code:: python
 
@@ -189,7 +209,7 @@ Generic types
       pass
 
 - Using a generic class without specifying type parameters assumes Any for each
-  position.
+  position. Such form could be used as a fallback to dynamic typing.
 
 Generic containers
 ------------------
@@ -201,24 +221,73 @@ Generic containers
     Mapping[str, int]
     Sequence[dict]
 
-- pre-defined generic container classes: Mapping, Sequence, Set, List,
-  这些 generic container class 同时也是 ABC, 地位类似于 collections.abc 里面那
-  些.
+- pre-defined generic classes:
+  
+  * Everything from collections.abc, 它们仍然是 ABC, 但是作为 generic types,
+    注意原来的 Set renamed to AbstractSet. 因为 Set 要留给 set.
+
+  * Dict, DefaultDict, List, Set, FrozenSet.
+
+- The readonly collection classes are all declared covariant in their type
+  variables.
+
+- The mutable collection classes are declared invariant.
 
 covariance and contravariance
 -----------------------------
-A generic type ``GenType`` defined using a type variable can be covariant or
-contravariant. For a subtype t2 of type t1,
+- A generic type ``GenType`` defined using a type variable can be covariant or
+  contravariant. If t2 is a subtype of t1, then a generic type constructor
+  GenType is:
 
-* GenType is covariant, if ``GenType[t2]`` is subtype of ``GenType[t1]``.
+  * covariant, if ``GenType[t2]`` is subtype of ``GenType[t1]``, for all such
+    t1 and t2.
 
-* GenType is contravariant, if ``GenType[t2]`` is supertype of ``GenType[t1]``.
+  * contravariant, if ``GenType[t2]`` is supertype of ``GenType[t1]``, for all
+    such t1 and t2.
 
-* GenType is invariant, if neither of the above is true.
+  * invariant, if neither of the above is true.
 
+- common type's variance property:
 
-The Any type and object type
-----------------------------
+  * Union is covariant in all its arguments.
+  
+  * FrozenSet is covariant.
+  
+  * List is invariant. 虽然两个集合符合子集关系, ``List[T1]`` 可以 append T1 元
+    素, ``List[T2]`` 不能 append T1 元素. Mutable types are typically
+    invariant.
+  
+  * Callable is covariant in the return type, but contravariant in the
+    parameter types.
+  
+    - covariant 的部分很容易理解.
+  
+    - contravariant 的部分的解释如下: 允许的参数值越广, 对函数的限制越强, 因此,
+      ``Callable[[t2], None]`` 所包含的可能函数要比 ``Callable[[t1], None]`` 更
+      少.  具体来说, 如果一个函数允许任意 t1 类型的参数值, 它当然允许 t2 类型的
+      参数值, 即一个 ``Callable[[t1], None]`` 的函数可以替代 ``Callable[[t2],
+      None]`` 的函数; 反之越不然.
+  
+      This shows how to make more precise type annotations for functions:
+      choose the most general type for every argument, and the most specific
+      type for the return value. 这其实就是 axiomatic semantics 中的 the rule
+      of consequence 所表达的思想.
+
+- To declare the variance for user defined generic types, use ``covariant`` and
+  ``contravariant`` kwargs of type variables being used. User defined generic
+  types are invariant by default.
+
+  By convention, type variable with ``covariant=True`` or
+  ``contravariant=True`` should be named with ``_co`` or ``_contra`` suffix.
+
+  Covariance or contravariance is not a property of a type variable, but a
+  property of a generic class defined using this variable. Variance is only
+  applicable to generic types; generic functions do not have this property.
+  Generic function's annotation should not use type variables with variance
+  defined.
+
+Any type and object type
+------------------------
 - Use object to indicate that a variable could be any type in a typesafe
   manner.  Use Any to indicate that a variable is dynamically typed.
 
@@ -247,11 +316,353 @@ object
   assigning it to a variable (or using it as a return value) of a more
   specialized type is a type error.
 
-Utilities
+Union
+-----
+- Types that are subtype of at least one of types in the Union are subtypes of
+  the Union::
+
+    Union[t1, t2, ...]
+
+- Unions whose components are all subtypes of a Union's types are subtypes of
+  this Union. E.g., ``Union[int, str]`` is subtype of ``Union[int, float, str]``.
+
+- If ti in a Union is itself a Union, the type is flattened.::
+
+    Union[Union[int, float], str] == Union[int, float, str]
+
+- If ti and tj in Union have a subtype relationship, it's equivalent to a Union
+  with only the less specific type.::
+
+    Union[int, float] == Union[float]
+    Union[..., object, ...] == Union[object] == object
+
+- ``Union[t]`` is just ``t``.
+
+Tuple
+-----
+- A tuple whose items are instances of ti types.::
+
+    Tuple[t1, t2, ...]
+
+- ``Tuple[u1, u2, ..., um]`` is a subtype of ``Tuple[t1, t2, ..., tn]`` if they
+  have the same length n==m and each ui is a subtype of ti.
+
+- Type of empty tuple: ``Tuple[()]``
+
+- A variadic homogeneous tuple type can be written ``Tuple[t1, ...]``.
+
+callable
+--------
+- Specifying the signature of a callable object::
+
+    Callable[[argType, argType, ...], ReturnType]
+
+  To omit the parameter signature, but declare the return type, use::
+
+    Callable[..., ReturnType]
+
+- ``Callable`` is also an ABC, similar to collections.abc.Callable.
+
+- There is no way to indicate optional or keyword arguments, nor varargs.
+
+- A bare Callable as annotation is equivalent to::
+
+    Callable[..., Any]
+
+type or None
+-------------
+- A value of a type, or None.::
+
+    Optional[t] == Union[t, None] == Union[t, type(None)]
+
+numeric tower
+-------------
+- ABCs in numbers module can be used.
+
+- Variance is only applicable to generic types; generic functions do not have
+  this property.
+
+NoReturn type
+-------------
+useful to annoatate a function's return value, when the function never returns
+normally. E.g., when a function raises exception unconditionally.
+
+The NoReturn type is only valid as a return annotation of functions, and
+considered an error if it appears in other positions
+
+singleton as annotation
+-----------------------
+python 中 singleton 有多种实现方式, 为了限制 singleton 参数的类型,
+应该使用 class 去定义 singleton.
+
+annotating instance and class methods
+-------------------------------------
+- In most cases the first argument of class and instance methods does not need
+  to be annotated, and it is assumed to have the type of the containing class
+  for instance methods, and a type object type corresponding to the containing
+  class object for class methods.
+
+annotating args and kwargs
+--------------------------
+- For ``*args`` in function signature, annotate the type of each element in the
+  tuple.::
+
+    def f(*args: int):
+      pass
+
+  在函数内部, args 类型成为 ``Tuple[int, ...]``
+
+- For ``*kwargs`` in function signature, annotate the value of each key in the 
+  dict, 注意到 key 必然是 str, 无需注释.::
+
+    def f(**kwargs: int):
+      pass
+
+  在函数内部, kwargs 类型成为 ``Dict[str, int]``.
+
+Annotating generator functions and coroutines
+---------------------------------------------
+- the return type of a generator function is Generator, annotate it with the
+  following::
+
+    Generator[yield_type, send_type, return_type]
+
+  注意 Generator type is covariant in ``yield_type`` and ``return_type``;
+  contravariant in ``send_type``.
+
+- Coroutines are annotated with the same syntax as ordinary functions.  The
+  return type annotation corresponds to the type of await expression, not to
+  the coroutine type.
+
+- ``Coroutine`` generic type should be used to annotate coroutine object.::
+
+    Coroutine[yield_type, send_type, return_type]
+
+  注意 Coroutine type is covariant in ``yield_type`` and ``return_type``;
+  contravariant in ``send_type``.
+
+- More abstract generic ABCs: Awaitable, AsyncIterable, AsyncIterator.
+
+Typed NamedTuple
+----------------
+- ``NamedTuple``, a typed version of namedtuple. The resulting class has extra
+  ``__annotations__`` and ``_field_types`` attributes, giving an ordered dict
+  mapping field names to types. 用法:
+
+  .. code:: python
+
+    class Employee(NamedTuple):
+        name: str
+        id: int
+
+    # or
+    Employee = NamedTuple('Employee', name=str, id=int)
+
+    # or
+    Employee = NamedTuple('Employee', [('name', str), ('id', int)])
+
+IO types
+--------
+以下仅用于 annotation
+
+- ``IO[AnyStr]`` generic type
+
+- ``BinaryIO``, subtype of ``IO[bytes]``.
+
+- ``TextIO``, subtype of ``IO[str]``
+
+regular expresion types
+-----------------------
+以下是 generic type, actual classes.
+
+- ``Pattern[AnyStr]``
+
+- ``Match[AnyStr]``
+
+class and instance attribute annotations
+----------------------------------------
+- class and instance attributes can be annotated in class scope.
+
+- Use ``ClassVar[T_co]`` to mark class variable, otherwise it's instance
+  variable.  这倒是提供了一个好方法来清晰分辨哪些是 class attribute, 哪些是提供
+  了默认值的 instance attribute.
+
+- ``ClassVar[T_co]`` accepts only types as argument, the type argument can not
+  include any type variables.
+
+- ``ClassVar`` generic type is covariant.
+
+- instance variables can be annotated in ``__init__`` or other methods, rather
+  than in the class. But they won't be processed at runtime nor will they be
+  saved in ``__annotations__``.
+
+forward references
+------------------
+- 默认情况下, type annotations are evaluated at module import time, 这样如果一
+  个 module level annotation 中要引用下面才定义的全局对象, 就会造成 NameError.
+  此时, 解决办法是使用 string literal form of annotation. 这样的 annotation
+  type checker 会识别. 若在 runtime 需要使用 annotation, 使用
+  ``get_type_hints()`` 会将 string form 解析成真实的 reference.
+
+  这种 evaluation at import time 的 annotation will be deprecated at
+  python3.8+. 所有 type annotation 都应该使用下述的 postponed 模式.
+
+- 由于涉及 forward reference 的 annotation 需要程序员去识别并转换成 string
+  form, 比较繁琐. python3.7 引入了 postponed evaluation of annotation 机制,
+  作为 optional ``__future__`` feature. (Enforced at python4.0)::
+
+    from __future__ import annotations
+
+  Function and variable annotations will no longer be evaluated at definition
+  time. Instead, a string form will be preserved in the respective
+  ``__annotations__`` dictionary. Static type checkers will see no difference
+  in behavior.
+
+  The string form is obtained from the AST during the compilation step, which
+  means that the string form might not preserve the exact formatting of the
+  source. Note: if an annotation was a string literal already, it will still be
+  wrapped in a string (which makes it a double string...).
+
+  To resolve the annotations at runtime, ``get_type_hints()`` can be used as
+  before.
+
+  注意, 在 postponed evaluation of annotation 时, 由于不在 import time 运算
+  annotations, using local state in annotations is no longer possible in
+  general. 只有 global state can be used reliably. 例如:
+
+  .. code:: python
+
+    def generate():
+        A = Optional[int]
+        class C:
+            field: A = 1
+            def method(self, arg: A) -> None: ...
+        return C
+
+    X = generate()
+
+  type alias A is local, trying to resolve annotations of X will fail.
+
+- Forward references in other typing areas is not addressed by the postponed
+  evaluation scheme. This involves all constructs where a type object is
+  required:
+
+  * type variable definition
+
+  * new type definition
+
+  * Type aliases
+
+  * type casting
+
+  * generic types as base class
+
+  Depending on the specific case, some of the cases listed above might be
+  worked around by placing the usage in a if TYPE_CHECKING: block. 
+ 
+utilities
 =========
+- TYPE_CHECKING. A flag indicates whether the code is being run under type
+  checker. Useful to make some code conditional according to we are at type
+  checking time or runtime.
+
+- ``no_type_check`` decorator. prevent class or function from being
+  type-checked.
+
+- ``no_type_check_decorator`` makes a class or function decorator not checking
+  type.
+
+- ``cast(type, expr)``. tells the type checker that we are confident that the
+  type of expr is type. At runtime a cast always returns the expression
+  unchanged.
+
+- ``NewType(name, type)`` function indicates to a typechecker a subtype of the
+  original ``type``.   Note that this does NOT create an actual subtype, 它只对
+  static type checker 有效.
+
+  ``name`` is new type's name; ``type`` should be a proper class.  At runtime
+  it returns an identity function, which accepts a value of the ``type``.
+
+  useful for creating simple subclasses to avoid logical errors. NewType at
+  runtime has almost zero overhead. Type checkers require explicit casts from
+  ``type`` where new type is expected, while implicitly casting from new type
+  where ``type`` is expected.
+
+- ``overload(func)``. decorator for marking overloaded function, in stub file.
+  如果只在 regular modules 做注释, a series of @overload-decorated definitions
+  must be followed by exactly one non-@overload-decorated definition. We
+  recommend that @overload is only used in cases where a type variable is not
+  sufficient.
+
+- ABCs for special methods: SupportsAbs, SupportsComplex, SupportsFloat,
+  SupportsInt, SupportsRound, SupportsBytes.
+
+- ``Text``. alias for str in py3, unicode in py2.
+
+- ``AnyStr``, a type variable constrainted to be Text or bytes.
+
+- ``get_type_hints(obj, globalns=None, localns=None)``. Given a function,
+  method, class, or module object, it returns a dict with the same format as
+  ``__annotations__``, but evaluating forward references.
+
+stub file
+=========
+why need stub file
+------------------
+stub file 专门用于记录 type hinting, only type checker will use it, not at
+runtime. 如果在源代码中进行 type annotation, 则不需要 stub file, 然而有些时候
+无法在源代码中直接 type annotation, 这时就需要 stub file 来补充说明, 而不动
+源代码. 基于这个设计目的, 常见的 stub file use case 包含:
+
+* for C-level extension module 进行 type annotation.
+
+* for third play modules whose authors have not yet added type hints 添加注释.
+
+* for standard library modules for which type hints have not yet been written.
+
+* modules that must be compatible with both python2 and python3.
+
+* modules that uses inline annotations for other purposes.
+
+format
+------
+- syntactically valid Python modules, but use ``.pyi`` extension.
+
+- Place in the same directory as the corresponding real module. If a stub file
+  is found the type checker should not read the corresponding "real" module.
+
+- variable annotations are allowed in stub files.
+
+- It is recommended that function bodies in stub files just be a single
+  ellipsis.
+
+- Modules and variables imported into the stub are not considered exported from
+  the stub unless the import uses the import ... as ... form or the equivalent
+  from ... import ... as ... form. However, all objects imported into a stub
+  using from ... import * are considered exported.
+
+- Just like in normal Python files, submodules automatically become exported
+  attributes of their parent module when imported.
+
+- Stub files may be incomplete. To make type checkers aware of this, the file
+  can contain the following code
+
+  .. code:: python
+
+    def __getattr__(name) -> Any: ...
+
+where to store stub files
+-------------------------
+- If you can control source code, put them alongside Python modules in the same
+  directory.
+
+- If you cannot control source code, third-party stubs installable by pip from
+  PyPI are also supported.
+
 References
 ==========
 .. [pep3107] `PEP 3107 -- Function Annotations <https://www.python.org/dev/peps/pep-3107/>`_
 .. [pep483] `PEP 483 -- The Theory of Type Hints <https://www.python.org/dev/peps/pep-0483/>`_
 .. [pep484] `PEP 484 -- Type Hints <https://www.python.org/dev/peps/pep-0484/>`_
 .. [pep526] `PEP 526 -- Syntax for Variable Annotations <https://www.python.org/dev/peps/pep-0526/>`_
+.. [pep563] `PEP 563 -- Postponed Evaluation of Annotations <https://www.python.org/dev/peps/pep-0563/>`_
