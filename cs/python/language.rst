@@ -1116,19 +1116,31 @@ annotated assignment statement
 
   annotated_assignment_stmt ::= augtarget ":" expression ["=" expression]
 
-- Only single target and only single RHS value is allowed.
+- Only single target and only single RHS value are allowed.
 
-- variable annotation 仅对 module level 和 class level 的变量才有意义. 对于
-  augtarget 是一个 identifier 并且 annotation 发生在 module or class scope 中的
-  情况, annotations are stored in ``__annotations__`` attribute of the module
-  or class object, which is a dictionary mapping from variable names (mangled
-  if private) to annotations.
+- 对于 type checker 而言, 任何 lexical context 下出现的对 LHS 的 type
+  annotation 可能都是有价值的. 然而, 对于 python runtime 而言, 只有对变量的发生
+  在 module level and class level 的注释才会被保存下来. 对于 augtarget 是一个
+  identifier 并且 annotation 发生在 module or class scope 中的情况, annotations
+  are stored in ``__annotations__`` attribute of the module or class object,
+  which is a dictionary mapping from variable names (mangled if private) to
+  annotations.
 
-- If an identifier is annotated in a function scope, annotations are never
-  evaluated nor stored in function scopes.
+- Note that for variable annotations in module or class scope, if annotations
+  are not found statically, then the ``__annotations__`` dictionary is not
+  created at all.
 
-- 如果 augtarget 不是 identifier, 而是 attributeref, subscription, slicing 等
-  表达式, annotation is evaluated but not stored anywhere.
+- If an identifier is annotated in a function scope, python runtime will never
+  evaluate the annotations nor store them in function scopes. But a type
+  checker might do something about it.
+
+  对于 function scope 中的注释 runtime 会完全忽略的原因是: The value of having
+  annotations available locally does not offset the cost of having to create
+  and populate the annotations dictionary on every function call.
+
+- 如果 augtarget 不是 identifier, 而是 attributeref, subscription, slicing 等表
+  达式, python runtime will evaluate the annotations but will not store them
+  anywhere. But a type checker might do something about it.
 
 - 注意 assignment part is optional.
 
@@ -1136,8 +1148,21 @@ annotated assignment statement
     actual assignment before evaluating annotations.
   
   * 当不存在 assignment 部分时, 这仅仅是一个 variable annotation. 单纯的
-    varialbe annotation 并不会在 class/module scope 中定义这个变量, 而仅仅是保
-    存 annotation 至 ``__annotations__``.
+    varialbe annotation 并不会在 class/module scope 中显式定义这个变量, 而只是
+    保存 annotation 至 ``__annotations__``.
+
+    允许不包含 assignment part 是为了允许在对同一变量多次赋值的使用场景下, 能
+    首先统一地 type annotation, 而无需在每个分支都做重复的 annotation.
+
+    .. code:: python
+
+      a: int
+      if True:
+        a = 1
+      else:
+        a = 2
+
+- 对一个标识符多次注释, 最后一次的生效.
 
 import statement
 ----------------
