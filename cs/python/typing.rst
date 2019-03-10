@@ -7,7 +7,25 @@ Overview
   checking, and interpreted by a type checker, rather than to be useful at
   runtime.
 
-- See also [pep3107]_, [pep484]_, [pep526]_.
+- See also [pep3107]_, [pep483]_, [pep484]_, [pep526]_, [pep563]_.
+
+why type annotation and checking
+================================
+- type annotation makes it possible for static type checking of python program,
+  which in turn makes it easier to find bugs at earlier stages of development,
+  so that it's easier to fix bug, with less cost, less debugging, etc.
+
+- type annotation serves as an machine-checked documentation of interfaces.
+
+- 注意, type annotation 并没有让 python 失去 dynamic typing 的灵活性. 实际上,
+  类型注释 combined the power of dynamic typin and static typing. 这是因为, 一
+  些注释的类型不过是 interface (例如 Sized, Awaitable, 不过是要求具有某些
+  special methods), 这样不但保持了 python 原有的 dynamic typing 特性, 还更准确
+  地说明了对参数的要求是什么.
+
+- With type annotation, fully dynamic typed code and static type-annotated code
+  can live together. Use static typing when it makes sense. There's no need to
+  be fully statically-typed.
 
 Type definition syntax
 ======================
@@ -658,6 +676,29 @@ where to store stub files
 
 - If you cannot control source code, third-party stubs installable by pip from
   PyPI are also supported.
+
+typeshed
+========
+overview
+--------
+- contains external type annotation *stub files* for python stdlib and
+  builtins, as well as some third-party packages.
+
+- it's used primarily for static anlysis, including static type checking and
+  type inference.
+
+- typeshed is bundled with mypy, to use typeshed rather than develop it,
+  there's no need to clone it directly.
+
+mypy
+====
+overview
+--------
+- mypy is static type checker for python.
+
+install
+-------
+- install from pypi, typeshed is included automatically.
 
 References
 ==========
