@@ -13,6 +13,8 @@ overview
 
   * MapReduce: Simplified Data Processing on Large Clusters (December 2004)
 
+- Hadoop was born out of Apache Nutch project, a web crawler/search engine.
+
 - Some of the now separate Apache projects were born from Hadoop project,
   including HBase, Hive, Pig, Zookeeper, etc.
 
@@ -395,6 +397,9 @@ multiple ways to access hdfs data:
 
 YARN
 ====
+Architecture
+------------
+
 
 NodeManager
 -----------
