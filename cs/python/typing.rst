@@ -126,7 +126,8 @@ Type object annotation
 - Any other special constructs like Tuple or Callable are not allowed as an
   argument to Type.
 
-- Type is covariant in its parameter.
+- Type is covariant in its parameter. This implies that all subtypes of C
+  should implement the same class method signatures as C.
 
 type variable
 -------------
@@ -134,12 +135,12 @@ type variable
   定义 type variable.
 
   name 是变量名 (必须与被赋值 identifier 相同), constraints 是允许的 concrete
-  types (必须有至少 2 个 constraints), type variable 必须是 constraints 规定的
-  类型, subclasses of the constrains are replaced by the most-derived base
-  class among t1, etc.; bound 是允许的类型的 upper boundary, 也就是说允许的
-  concrete type 必须是 subtype of the boundary type; constraints 和 bound 两者
-  只能指定一个; covariant 和 contravariant 只能有一个是 True, 意义见
-  `covariance and contravariance`_.
+  types (必须有至少 2 个 constraints), type 必须是 constraints 规定的类型,
+  subclasses of the constrained types are allowed, but replaced by the
+  most-derived base class among t1, etc.; bound 是允许的类型的 upper boundary,
+  也就是说允许的 concrete type 必须是 subtype of the boundary type; constraints
+  和 bound 两者只能指定一个; covariant 和 contravariant 只能有一个是 True, 意义
+  见 `covariance and contravariance`_.
   
   usage:
   
@@ -239,12 +240,73 @@ Generic containers
     Mapping[str, int]
     Sequence[dict]
 
-- pre-defined generic classes:
-  
-  * Everything from collections.abc, 它们仍然是 ABC, 但是作为 generic types,
-    注意原来的 Set renamed to AbstractSet. 因为 Set 要留给 set.
+pre-defined generic classes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- Everything from collections.abc, 它们仍然是 ABC, 但是作为 generic types,
+  注意原来的 Set renamed to AbstractSet. 因为 Set 要留给 set.
 
-  * Dict, DefaultDict, List, Set, FrozenSet.
+  * ``Iterable[T_co]``
+
+  * ``Iterator[T_co]``
+
+  * ``Reversible[T_co]``
+
+  * ``Container[T_co]``
+
+  * ``Hashable``, not generic
+
+  * ``Sized``, not generic
+
+  * ``Collection[T_co]``
+
+  * ``AbstractSet[T_co]``
+
+  * ``MutableSet[T]``
+
+  * ``Mapping[KT, VT_co]``, note only covariant in value.
+
+  * ``MutableMapping[KT, VT]``
+
+  * ``Sequence[T_co]``
+
+  * ``MutableSequence[T]``
+
+  * ``ByteString``, not generic, ABC for bytes, bytearray, memoryview.
+
+  * ``MappingView[T_co]``
+
+  * ``KeysView[KT_co]``
+
+  * ``ValuesView[VT_co]``
+
+  * ``ItemsView[KT_co, VT_co]``
+
+  * ``Awaitable[T_co]``
+
+  * ``Coroutine[T_co, T_contra, V_co]``, type variables for types of yield,
+    send, return.
+
+  * ``Generator[T_co, T_contra, V_co]``, type variables for types of yield,
+    send, return. send and/or return types can be None, if no need for send
+    and/or return.
+
+    Alternatively, annotate your generator as having a return type of either
+    ``Iterable[YieldType]`` or ``Iterator[YieldType]``.
+
+  * ``AsyncGenerator[T_co, T_contra]``. for yield and send types. Send type
+    can be None, like above. Or alternatively, annotate your generator as
+    having a return type of either ``Iterable[YieldType]`` or
+    ``Iterator[YieldType]``.
+
+  * ``AsyncIterable[T_co]``
+
+  * ``AsyncIterator[T_co]``
+
+- ``Dict[KT, VT]``, ``DefaultDict[KT, VT]``, ``OrderedDict[KT, VT]``,
+  ``List[T]``, ``Set[T]``, ``FrozenSet[T_co]``, ``Deque[T]``,
+  ``ContextManager[T_co]``, ``AsyncContextManager[T_co]``, ``Counter[T]``,
+  ``ChainMap[KT, VT]``, ``IO[AnyStr]``, ``TextIO``, ``BinaryIO``,
+  ``Pattern[AnyStr]``, ``Match[AnyStr]``
 
 - The readonly collection classes are all declared covariant in their type
   variables.
@@ -356,6 +418,10 @@ Union
 
 - ``Union[t]`` is just ``t``.
 
+- Duplicate types in Union are skipped::
+
+    Union[int, str, int] == Union[int, str]
+
 Tuple
 -----
 - A tuple whose items are instances of ti types.::
@@ -381,7 +447,8 @@ callable
 
 - ``Callable`` is also an ABC, similar to collections.abc.Callable.
 
-- There is no way to indicate optional or keyword arguments, nor varargs.
+- There is no way to indicate optional or keyword arguments, nor varargs; such
+  function types are rarely used as callback types.
 
 - A bare Callable as annotation is equivalent to::
 
@@ -464,14 +531,24 @@ Annotating generator functions and coroutines
 Typed NamedTuple
 ----------------
 - ``NamedTuple``, a typed version of namedtuple. The resulting class has extra
-  ``__annotations__`` and ``_field_types`` attributes, giving an ordered dict
-  mapping field names to types. 用法:
+  attributes:
+
+  * ``__annotations__``
+
+  * ``_fields``, a tuple of field names.
+   
+  * ``_field_types``, an ordered dict mapping field names to types
+   
+  * ``_field_defaults``, a dict mapping field names to default values.
+
+  Fields with a default value must come after any fields without a default. 用
+  法:
 
   .. code:: python
 
     class Employee(NamedTuple):
         name: str
-        id: int
+        id: int = 3
 
     # or
     Employee = NamedTuple('Employee', name=str, id=int)
@@ -578,17 +655,31 @@ forward references
   Depending on the specific case, some of the cases listed above might be
   worked around by placing the usage in a if TYPE_CHECKING: block. 
  
-utilities
-=========
-- TYPE_CHECKING. A flag indicates whether the code is being run under type
-  checker. Useful to make some code conditional according to we are at type
-  checking time or runtime.
+mark ignore type checking
+-------------------------
+- ``# type: ignore`` comment. should be put on the line that the error refers
+  to. A ``# type: ignore`` comment on a line by itself means to ignore type
+  checking for the rest of current indented block. If used at top indentation
+  level, the rest of the file is not type-checked.
+
+  In some cases, linting tools or other comments may be needed on the same line
+  as a type comment. In these cases, the type comment should be before other
+  comments and linting markers.
 
 - ``no_type_check`` decorator. prevent class or function from being
-  type-checked.
+  type-checked, indicating that annotations (if exists) are not type hints.
 
-- ``no_type_check_decorator`` makes a class or function decorator not checking
-  type.
+  With a class, it applies recursively to all methods defined in that class
+  (but not to methods defined in its superclasses or subclasses).
+
+- ``no_type_check_decorator`` gives the wrapped class or function decorator
+  the ability to prevent type checking.
+
+utilities
+=========
+- ``TYPE_CHECKING``. A flag indicates whether the code is being run under type
+  checker. Useful to make some code conditional according to we are at type
+  checking time or runtime.
 
 - ``cast(type, expr)``. tells the type checker that we are confident that the
   type of expr is type. At runtime a cast always returns the expression
@@ -608,20 +699,33 @@ utilities
 
 - ``overload(func)``. decorator for marking overloaded function, in stub file.
   如果只在 regular modules 做注释, a series of @overload-decorated definitions
-  must be followed by exactly one non-@overload-decorated definition. We
-  recommend that @overload is only used in cases where a type variable is not
-  sufficient.
+  must be followed by exactly one non-@overload-decorated definition. The
+  @overload-decorated definitions are for the benefit of the type checker only,
+  since they will be overwritten by the non-@overload-decorated definition,
+  while the latter is used at runtime but should be ignored by a type checker.
+  At runtime, calling a @overload-decorated function directly will raise
+  NotImplementedError.
+  
+  @overload should be used only in cases where a type variable is not
+  sufficient. 例如, 输入允许多种格式, 每种格式对应的输出具有不同格式, 存在
+  一一对应的关系. 这样使用 Union 等方式无法表达这种对应关系.
 
 - ABCs for special methods: SupportsAbs, SupportsComplex, SupportsFloat,
   SupportsInt, SupportsRound, SupportsBytes.
 
 - ``Text``. alias for str in py3, unicode in py2.
 
-- ``AnyStr``, a type variable constrainted to be Text or bytes.
+- ``AnyStr``, a type variable constrainted to be Text or bytes. It is meant to
+  be used for functions that may accept any kind of string without allowing
+  different kinds of strings to mix (注意是一个 type variable, 所以若出现多次必
+  须是积类型一致).
 
 - ``get_type_hints(obj, globalns=None, localns=None)``. Given a function,
   method, class, or module object, it returns a dict with the same format as
-  ``__annotations__``, but evaluating forward references.
+  ``__annotations__``, but evaluating forward references. If necessary,
+  ``Optional[t]`` is added for function and method annotations if a default
+  value equal to None is set. For a class C, return a dictionary constructed by
+  merging all the ``__annotations__`` along ``C.__mro__`` in reverse order.
 
 stub file
 =========
@@ -644,7 +748,8 @@ runtime. 如果在源代码中进行 type annotation, 则不需要 stub file, �
 
 format
 ------
-- syntactically valid Python modules, but use ``.pyi`` extension.
+- syntactically valid Python modules, but use ``.pyi`` extension (refering:
+  python interface).
 
 - Place in the same directory as the corresponding real module. If a stub file
   is found the type checker should not read the corresponding "real" module.
@@ -677,6 +782,16 @@ where to store stub files
 - If you cannot control source code, third-party stubs installable by pip from
   PyPI are also supported.
 
+migrating codes
+===============
+- Python's type annotation design makes it very easy to migrate existing codes
+  to be statically type checked. Because dynamic typed and static typed codes
+  can be mixed together. Static typing can be added incrementally.
+
+- when you are prototyping a new feature, it may be convenient to initially
+  implement the code using dynamic typing and only add type hints later once
+  the code is more stable.
+
 typeshed
 ========
 overview
@@ -694,11 +809,90 @@ mypy
 ====
 overview
 --------
-- mypy is static type checker for python.
+- mypy is static type checker for python, meaning it will check for errors
+  without ever running the code.
+
+- By default, mypy will not type check dynamically typed functions.
 
 install
 -------
 - install from pypi, typeshed is included automatically.
+
+behaviors
+---------
+- Type inference. When type hints are added to a function, mypy will
+  automatically check the function's body, by interpreting its logic and type
+  inference.
+
+- Mypy follows imports by default.
+
+- how mypy handles imports.
+
+  * mypy finds the module similar to the way python finds it.
+
+  * mypy's own module search path. including:
+
+    - MYPYPATH environ
+
+    - ``mypy_path`` config file option.
+
+    - directories containing files passed to mypy, by crawling up from the
+      given file or package to the nearest directory that does not contain an
+      ``__init__.py`` or ``__init__.pyi`` file.
+
+    - installed packages.
+
+    - directories of typeshed repo.
+
+  * When searching a module in the said search path, the order of precendence
+    is:
+
+    - a package with matching name, i.e., a directory containing
+      ``__init__.py`` or ``__init__.pyi`` file.
+
+    - a stub file with matching name.
+
+    - a python module with matching name.
+
+  * missing imports.
+
+    - For project's own codebase, ensure the code can be found by mypy by
+      looking into its search path.
+
+    - For stdlib, update mypy; if typeshed does not provide the module, or does
+      not provide a complete set of type annotations file a bug; in the
+      meantime, ``# type: ignore`` the relevant errors or add the module to
+      ``ignore_missing_imports`` config option.
+
+    - For third-party library, write your own stub files; or silence the
+      missing import error, by ``# type: ignore`` the relevant errors or add
+      the module to ``ignore_missing_imports`` config option.
+
+CLI
+---
+::
+
+  mypy {[-m MODULE | -p PACKAGE]... | -c PROGRAM_TEXT | [file]...}
+
+- Paths passed to mypy are type-checked, which can be a python source or
+  directories that is recursed by mypy. Any file path starting with ``@`` reads
+  additional command-line options and files from the file.
+
+- check a module with ``-m MODULE``. specify module as would do import.
+  Only the module itself is checked, not any submodule/subpackage etc.
+
+- check a package with ``-p PACKAGE``. recursively check the package.
+
+- check a program as string with ``-c PROGRAM_TEXT``.
+
+
+configuration
+-------------
+
+monkeytype
+==========
+- You can collect types of existing codes from test runs. This is a good
+  approach if the project's current test coverage is high.
 
 References
 ==========
