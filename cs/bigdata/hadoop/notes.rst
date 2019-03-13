@@ -1,7 +1,71 @@
+design problems
+===============
+- 一个大数据分析系统设计面临什么问题:
+  
+  * 单盘读写速度慢. 解决办法是多个盘并行读写.
+  
+  * hardware failure. As soon as you start using many pieces of hardware, the
+    chance that one will fail is fairly high. 解决办法是 replication. RAID 是
+    一种 replication 方法, 分布式存储采用块复制的方法.
+  
+  * most analysis tasks need to combine data in some way, and combine data read
+    from any disks. MapReduce 提供了一种解决 combine 的方法.
+  
+  那么 hadoop 就是对这些问题的一个解决方案: Hadoop is a reliable, scalable
+  platform for storage and analysis.
+
+- 为什么不能用传统 RDBMS 进行大数据分析 (使用大量硬盘来放数据)?
+
+  RDBMS 的设计目的要求能够频繁进行小比例数据 (相对于数据总量) 的随机读写更新.
+  也就是说, RDBMS 对硬盘的基本数据访问操作是 seek (寻道). 硬盘的 Seek rate 是数
+  据库读写效率的最根本瓶颈. 相应地, 以 B-tree 为基础数据结构的 RDBMS, 其更新速
+  度以 seek rate 为上限.
+  
+  大数据系统的设计目的要求能够进行大比例数据的顺序读写, write once, read many
+  times. 也就是说, RDBMS 对硬盘的基本数据访问操作是顺序读写. 硬盘的 Transfer
+  rate 是大数据系统读写效率的最根本瓶颈.
+
+  也就是说, RDBMS 和大数据系统的设计目的是不同的. 若使用 RDBMS 的 B-tree 结构来
+  进行大数据所需的大量数据顺序读写, 将以 seek rate 为瓶颈来更新 B-tree, 这样就
+  远比 transfer rate 慢. 与之相比, 使用 Sort/Merge 来顺序重建数据库的方式在这种
+  大比例数据读写的场景下更合适.
+
+  此外, RDBMS is designed to work with structured data that have a defined
+  format, which maps to a database schema; While big data system is designed to
+  work with semi-structured or unstructured data because it interpret the data
+  at processing time.
+
+  In RDBMS, data is normalized to retain its integrity and remove redundancy.
+  For big data system, normalization makes reading a record a nonlocal
+  operation, thus problematic. Also, big data system is good for processing
+  data that are not normalized, e.g., log files.
+
+- 为什么不用并行计算/高性能计算/Grid computing 等技术进行大数据分析? 与大数据分
+  析的区别是什么?
+
+  HPC 的基本方法是将 work 分布至集群的每个节点, 每个节点访问一个共享的存储, 即
+  shared disk architecture. HPC 的特点是计算密集型, 共享的数据一般是 GB 级别即
+  可.
+
+  如果数据量更大, HPC 集群中节点与存储通信带宽将成为瓶颈, 导致计算节点一部分时
+  间是闲置的. 而大数据分析就是需要 TB/PB 级别的数据量, 因此一个共享的数据存储
+  是不合适的.
+
+  big data system, 例如 hadoop, 通过 data locality, 来避免大量的数据传输, 从而
+  数据访问效率非常高, 避免带宽成为瓶颈. 并且, hadoop 中具有根据网络拓扑对存储
+  进行优化的机制, 从而更进一步地节省了带宽使用.
+
+  HPC 的编程接口往往是比较底层的, Hadoop 中的编程抽象级别比较高. 省去程序员处理
+  底层处理的麻烦, 对于程序员而言, data flow is implicit.
+
+  HPC 中对部分节点计算出错的处理需要程序员自己去做, 在 hadoop 中, 集群自己去管
+  理 failure 和重新分配任务等.
+
 overview
 ========
-- Hadoop is a framework for distributed storage and distributed processing
-  of big data using the MapReduce programming model.
+- Hadoop is a framework for distributed storage and distributed processing of
+  big data using the MapReduce programming model. The term "Hadoop" also refers
+  to the larger ecosystem of projects, built on top of Hadoop.
 
 - naming: Hadoop the name is meaningless, the yellow elephant is also
   meaningless.  According to Doug Cutting, it's the name his kid given to a
@@ -17,6 +81,8 @@ overview
 
 - Some of the now separate Apache projects were born from Hadoop project,
   including HBase, Hive, Pig, Zookeeper, etc.
+
+- originally created by Doug Cutting.
 
 general architecture
 ====================
@@ -397,6 +463,9 @@ multiple ways to access hdfs data:
 
 YARN
 ====
+- YARN is a cluster resource management system, which allows any distributed
+  program, not just MapReduce, to run on data in a Hadoop cluster.
+
 Architecture
 ------------
 
@@ -417,6 +486,49 @@ Monitoring health
   No further tasks will be assigned to this node. When a subsequent health
   check does not contain ERROR in output, the node is healthy again and removed
   from blacklist.
+
+MapReduce
+=========
+- MapReduce is a batch processing system, which is like a brute-force approach.
+  MapReduce provides capability that the entire dataset can be processed for
+  each query. Questions that took too long to get answered before can now be
+  answered.
+
+- MapReduce is:
+
+  * suitable for batch processing, offline analysis, problems that need to
+    analyze the whole dataset in a batch fashion.
+
+  * suitable for applications where data is written once and read many times.
+
+  * not suitable for interactive analysis.
+
+- MapReduce vs RDBMS.
+
+  * RDBMS 适合 point queries or updates, where dataset has been indexed to
+    deliver low-latency retrieval and update times for a small portion of data.
+
+  * RDBMS 适合 dataset that are continually updated.
+
+  * MapReduce 适合 problems that need to analyze the whole or large portion of
+    data set in a batch fashion.
+
+  * MapReduce 适合 dataset that is written once and read many times.
+
+  * Data size. RDBMS: GB level. MapReduce: PB level.
+
+  * Access. RDBMS: interactive and batch. MapReduce: batch.
+
+  * Transaction. RDBMS: ACID. MapReduce: None.
+
+  * Structure. RDBMS: schema on write. MapReduce: schema on read, it's designed
+    to interpret the data at processing time.
+
+  * Integrity. RDBMS: High. MapReduce: Low.
+
+  * Scaling. RDBMS: nonlinear. MapReduce: linear. If cluster size is doubled,
+    it's capable of processing a double size of data at the same speed as does
+    previously.
 
 configuration
 =============
@@ -721,6 +833,23 @@ historyserver
 ::
 
   mapred [--daemon (start|status|stop)] historyserver
+
+processing patterns
+===================
+- batch processing. i.e., MapReduce.
+
+- interactive SQL. using a distributed query engine, like Impala (daemon), Hive
+  on Tez (container reuse).
+
+- iterative processing. hold intermediate working set in memory to improve
+  efficiency, like Spark.
+
+- stream processing. like Storm, Spark Streaming, Samza. real-time, distirbuted
+  computations on unbound streams of data and emit results to HDFS or external
+  systems.
+
+- Search. Solr can run on Hadoop, indexing documents as they are added to HDFS,
+  and serving queries from indexes stored in HDFS.
 
 distributors
 ============
