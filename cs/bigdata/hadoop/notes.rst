@@ -489,6 +489,8 @@ Monitoring health
 
 MapReduce
 =========
+overview
+--------
 - MapReduce is a batch processing system, which is like a brute-force approach.
   MapReduce provides capability that the entire dataset can be processed for
   each query. Questions that took too long to get answered before can now be
@@ -529,6 +531,8 @@ MapReduce
   * Scaling. RDBMS: nonlinear. MapReduce: linear. If cluster size is doubled,
     it's capable of processing a double size of data at the same speed as does
     previously.
+
+- API. Java, Ruby, Python, etc.
 
 configuration
 =============
