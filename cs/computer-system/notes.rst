@@ -837,3 +837,12 @@ bus & connector
 references
 ==========
 .. [ASUSSecureboot] `How to Disable or Enable Secure Boot on Your Computer via ASUS UEFI BIOS Utility <https://www.technorms.com/45538/disable-enable-secure-boot-asus-motherboard-uefi-bios-utility>`_
+storage
+-------
+- 磁盘性能的三个维度:
+
+  * capacity. 容量是多大.
+
+  * bandwith. 读写速度.
+
+  * latency. 延迟由磁头寻道 (seek) 时间决定.
