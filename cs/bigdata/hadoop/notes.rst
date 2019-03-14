@@ -532,7 +532,145 @@ overview
     it's capable of processing a double size of data at the same speed as does
     previously.
 
-- API. Java, Ruby, Python, etc.
+- API. Java, C++, Ruby, Python, etc.
+
+Tools
+=====
+Hadoop Streaming
+----------------
+- Hadoop streaming is a utility that allows MapReduce jobs to be created and
+  run with any executables/scripts as mapper or reducer.
+
+- 称这种处理为 streaming, 只是因为以 executable/script 的输入输出做 map 和
+  reduce 各自的输入和输出. 就像流过了用户提供的 mapper 和 reducer 程序. 但
+  这并不是实时的流处理那种感觉.
+
+Mechanism
+^^^^^^^^^
+- mapper.
+ 
+  * Each mapper task will launch the executable as a separate process when the
+    mapper is initialized. As the mapper task runs, it converts its inputs into
+    lines and feed the lines to the stdin of the process. In the meantime, the
+    mapper collects the line oriented outputs from the stdout of the process
+    and converts each line into a key/value pair, which is collected as the
+    output of the mapper.
+
+  * By default, the prefix of a line up to the first tab character is the key
+    and the rest of the line will be the value. If there is no tab character in
+    the line, then entire line is considered as key and the value is null.
+
+- reducer.
+
+  * When an executable is specified for reducers, each reducer task will launch
+    the executable as a separate process then the reducer is initialized. As
+    the reducer task runs, it converts its input key/values pairs into lines
+    and feeds the lines to the stdin of the process. In the meantime, the
+    reducer collects the line oriented outputs from the stdout of the process,
+    converts each line into a key/value pair, which is collected as the output
+    of the reducer.
+
+  * By default, the prefix of a line up to the first tab character is the key
+    and the rest of the line is the value.
+
+- By default, streaming tasks exiting with non-zero status are considered to be
+  failed tasks. Can be customized by ``stream.non.zero.exit.is.failure``.
+
+packaging files during job submission
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- any executable can be mapper, reducer, or other components. 但是它们必须提供
+  给集群, 通过 ``-files`` generic option.
+
+specify number of reducers
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+Use ``-D mapreduce.job.reduces=N``. for map-only jobs, use N=0.
+
+customize how lines are split into key/value pairs
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+customize field separators and nth separator char as the separator between
+key and value:
+
+- ``-D stream.map.input.field.separator=SEP``
+
+- ``-D stream.map.output.field.separator=SEP``
+
+- ``-D stream.num.map.output.key.fields=NUM``
+
+- ``-D stream.reduce.input.field.separator=SEP``
+
+- ``-D stream.reduce.output.field.separator=SEP``
+
+- ``-D stream.num.reduce.output.fields=NUM``
+
+CLI
+^^^
+两种调用方式
+
+.. code:: sh
+
+  hadoop jar /usr/lib/hadoop/share/hadoop/tools/lib/hadoop-streaming-X.X.X.jar \
+    [genericOptions] [commandOptions]
+  $HADOOP_HOME/bin/mapred streaming \
+    [genericOptions] [commandOptions]
+
+- generic options
+
+  * ``-conf <config-file>``
+
+  * ``-D property=value``. specify/override configs of mapred-site.xml.
+
+  * ``-fs host:port or local``. namenode to connect to.
+
+  * ``-files file1,fil2,...``. comma-separated files to be made available to
+    jobs. Each file is URI to the file or archive that you have already
+    uploaded to HDFS.
+
+  * ``-libjars file1,file2,...``. comma-separated jar files to include in the
+    classpath. Each jar is URI to the file or archive that you have already
+    uploaded to HDFS.
+
+  * ``-archives archive1,...``. archives to be unarchived on the compute
+    machines.
+
+- streaming options
+
+  * ``-input <file-or-directory>``. input for mapper.
+
+  * ``-output <directory>``. output location for reducer.
+
+  * ``-mapper <executable-path-or-java-class-name>``. mapper used for map
+    stage. default is org.apache.hadoop.mapred.lib.IdentityMapper.
+
+  * ``-reducer <executable-path-or-java-class-name>``. reducer used for reduce
+    stage. default is org.apache.hadoop.mapred.lib.IdentityMapper.
+
+  * ``-inputformat <java-class-name>``. Input format class to parse input to
+    mapper. The class you supply for the input format should return key/value
+    pairs of Text class. the TextInputFormat is used as the default. Since the
+    TextInputFormat returns keys of LongWritable class, which are actually not
+    part of the input data, the keys will be discarded; only the values will be
+    piped to the streaming mapper.
+
+  * ``-outputformat <java-class-name>``. Output format class to parse output
+    from reducer. The class you supply for the output format is expected to
+    take key/value pairs of Text class. the TextOutputFormat is used as the
+    default.
+
+  * ``-partitioner <java-class-name>``
+
+  * ``-combiner <executable-path-or-java-class-name>``
+
+  * ``-cmdenv key=val`` environ to be passed to streaming cmds.
+
+  * ``-verbose``
+
+  * ``-lazyOutput``
+
+  * ``-numReduceTasks <n>``. the number of reduce tasks.
+
+  * ``-mapdebug <executable-path>``. script to call when map task failed.
+
+  * ``-reducedebug <executable-path>``. script to call when reduce task failed.
 
 configuration
 =============
