@@ -872,8 +872,10 @@ CLI
 ---
 ::
 
-  mypy {[-m MODULE | -p PACKAGE]... | -c PROGRAM_TEXT | [file]...}
+  mypy [options] {[-m MODULE | -p PACKAGE]... | -c PROGRAM_TEXT | [file]...}
 
+specifying what to check
+^^^^^^^^^^^^^^^^^^^^^^^^
 - Paths passed to mypy are type-checked, which can be a python source or
   directories that is recursed by mypy. Any file path starting with ``@`` reads
   additional command-line options and files from the file.
@@ -885,9 +887,334 @@ CLI
 
 - check a program as string with ``-c PROGRAM_TEXT``.
 
+config file
+^^^^^^^^^^^
+- ``--config-file CONFIG_FILE``. read config from file. default is mypy.ini
+  or setup.cfg in cwd, or fallback to ``$XDG_CONFIG_HOME/mypy/config``,
+  ``~/.config/mypy/config``, and ``~/.mypy.ini``, in that order.
+
+- ``--warn-unused-configs``, warn about unused ``[mypy-<pattern>]`` section.
+
+import discovery
+^^^^^^^^^^^^^^^^
+- ``--namespace-packages``. also discover namespace packages.
+
+- ``--ignore-missing-imports``. ignore all unresolved module imports. this flag
+  does not suppress errors about missing names in successfully resolved
+  modules.
+
+- ``--follow-imports {normal|silent|skip|error}``. how mypy follows imported
+  modules that were not explicitly passed in via the command line. default is
+  normal.
+
+- ``--python-executable EXECUTABLE``. collect type information for packages
+  installed for EXECUTABLE. default collect for python executable that is
+  running mypy.
+
+- ``--no-site-packages``. Use this flag if mypy cannot find a Python executable
+  for the version of Python being checked, and you don’t need to use PEP 561
+  typed packages.
+
+- ``--no-silence-site-packages``. By default, mypy will suppress any error
+  messages generated within PEP 561 compliant packages. This disables that.
+
+platform configuration
+^^^^^^^^^^^^^^^^^^^^^^
+- ``--python-version X.Y``. make mypy type check your code as if it were run
+  under Python version X.Y.  by default use current python version. This flag
+  will attempt to find a Python executable of the corresponding version to
+  search for PEP 561 compliant packages.
+
+- ``-2, --py2``. alias to ``--python-version 2.7``
+
+- ``--platform PLATFORM``. This flag will attempt to find a Python executable
+  of the corresponding version to search for PEP 561 compliant packages.
+  default is current platform.
+
+- ``--always-true NAME``. make NAME a compile-time constant that is always
+  true.
+
+- ``--always-false NAME``. ditto for false.
+
+disallow dynamic typing
+^^^^^^^^^^^^^^^^^^^^^^^
+- ``--disallow-any-unimported``. disallows usage of types that come from
+  unfollowed imports.
+
+- ``--disallow-any-expr``. disallows all expressions in the module that have
+  type Any. If an expression of type Any appears anywhere in the module mypy
+  will output an error unless the expression is immediately used as an argument
+  to cast or assigned to a variable with an explicit type annotation. declaring
+  a variable of type Any or casting to type Any is not allowed. Note that
+  calling functions that take parameters of type Any is still allowed.
+
+- ``--disallow-any-decorated``. disallows functions that have Any in their
+  signature after decorator transformation.
+
+- ``--disallow-any-explicit``. disallows explicit Any in type positions such as
+  type annotations and generic type parameters.
+
+- ``--disallow-any-generics``. disallows usage of generic types that do not
+  specify explicit type parameters.
+
+- ``--disallow-subclassing-any``. This flag reports an error whenever a class
+  subclasses a value of type Any. This may occur when the base class is
+  imported from a module that doesn’t exist, or is ignored. Since the module is
+  silenced, the imported class is given a type of Any.
+
+untyped definitions and calls
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- ``--disallow-untyped-calls``. reports an error whenever a function with type
+  annotations calls a function defined without annotations.
+
+- ``--disallow-untyped-defs``. reports an error whenever it encounters a
+  function definition without type annotations.
+
+- ``--disallow-incomplete-defs``. reports an error whenever it encounters a
+  partly annotated function definition.
+
+- ``--check-untyped-defs``. type checks the body of every function, regardless
+  of whether it has type annotations. (By default the bodies of functions
+  without annotations are not type checked.)
+
+- ``--disallow-untyped-decorators``. reports an error whenever a function with
+  type annotations is decorated with a decorator without annotations.
+
+None and Optional handling
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+- ``--no-implicit-optional``. stop treating arguments with a None default value
+  as having an implicit Optional[...] type.
+
+- ``--no-strict-optional``.
+
+configure warnings
+^^^^^^^^^^^^^^^^^^
+- ``--warn-redundant-casts``. report an error whenever your code uses an
+  unnecessary cast that can safely be removed.
+
+- ``--warn-unused-ignores``. report an error whenever your code uses a
+  ``# type: ignore`` comment on a line that is not actually generating an error
+  message.
+
+- ``--no-warn-no-return``. By default, mypy will generate errors when a
+  function is missing return statements in some execution paths. The only
+  exceptions are when: 1) The function has a None or Any return type; 2)
+  The function has an empty body or a body that is just ellipsis.
+
+- ``--warn-return-any``. This flag causes mypy to generate a warning when
+  returning a value with type Any from a function declared with a non-Any
+  return type.
+
+misc strictness flags
+^^^^^^^^^^^^^^^^^^^^^
+- ``--allow-untyped-globals``. suppress errors caused by not being able to
+  fully infer the types of global and class variables.
+
+- ``--allow-redefinition``. By default, mypy won’t allow a variable to be
+  redefined with an unrelated type. This flag enables redefinion of a variable
+  with an arbitrary type in some contexts: only redefinitions within the same
+  block and nesting depth as the original definition are allowed.
+
+- ``--strict``. enables all optional error checking flags.
+
+configuring error messages
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+- ``--show-error-context``. precede all errors with “note” messages explaining
+  the context of the error.
+
+- ``--show-column-numbers``. add column offsets to error messages.
+
+incremental mode
+^^^^^^^^^^^^^^^^
+By default, mypy will store type information into a cache. Mypy will use this
+information to avoid unnecessary recomputation when it type checks your code
+again. 
+
+- ``--no-incremental``. do not reference cache. Note that mypy will still write
+  out to the cache even when incremental mode is disabled.
+
+- ``--cache-dir DIR``. By default, mypy stores all cache data inside of a
+  folder named ``.mypy_cache`` in the current directory. To disable writing to
+  the cache, use ``--cache-dir=/dev/null``
+
+- ``--skip-version-check``. By default, mypy will ignore cache data generated
+  by a different version of mypy. 
+
+report generation
+^^^^^^^^^^^^^^^^^
+- ``--any-exprs-report DIR``. generate a text file report documenting how many
+  expressions of type Any are present within your codebase.
+
+- ``--linecount-report DIR``. Causes mypy to generate a text file report
+  documenting the functions and lines that are typed and untyped within your
+  codebase.
+
+- ``--linecoverage-report DIR``. generate a JSON file that maps each source
+  file’s absolute filename to a list of line numbers that belong to typed
+  functions in that file.
+
+- ``--cobertura-xml-report DIR``. generate a Cobertura XML type checking
+  coverage report.
+
+- ``--html-report DIR, --xslt-html-report DIR``. generate an HTML type checking
+  coverage report.
+
+- ``--txt-report DIR, --xslt-txt-report DIR``. generate a text file type
+  checking coverage report.
+
+- ``--junit-xml JUNIT_XML``. generate a JUnit XML test result document with
+  type checking results.
+
+- ``--find-occurrences CLASS.MEMBER``. print out all usages of a class member
+  based on static type information. 
+
+advanced flags
+^^^^^^^^^^^^^^
+for people who are interested in developing or debugging mypy internals.
 
 configuration
 -------------
+- configuration prcedence:
+
+  * cmdline args
+
+  * config file
+
+  * mypy defaults
+
+- config file format: ini file.
+
+- Most options correspond closely to command-line flags.
+
+- sections:
+
+  * ``[mypy]`` must be present. specify the global flags.
+
+  * ``[mypy-PATTERN1,PATTERN2,...]`` specify per-module flags, where each
+    pattern is a fully-qualified module names, with some components optionally
+    replaced by the ``*`` character. Pattern without ``*`` matches only the
+    named module. Stars match zero or more module components, can be present in
+    the middle of patterns. e.g.,::
+
+      foo.bar.* matches foo.bar, foo.bar.baz, ...
+      foo.*.bar matches foo.bar. foo.baz.bar, ...
+
+gloal and per-module options
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+import discovery
+""""""""""""""""
+- ``ignore_missing_imports``. boolean. When used in a per-module section,
+  the module name should match the name of the imported module, not the module
+  containing the import statement.
+
+- ``follow_imports``. string. In per-module section, the module name should
+  match the name of the imported module, not the module containing the import
+  statement.
+
+- ``follow_imports_for_stubs``. boolean.
+
+disallow dynamic typing
+""""""""""""""""""""""""
+- ``disallow_any_unimported``. boolean.
+
+- ``disallow_any_expr``. boolean.
+
+- ``disallow_any_decorated``. boolean.
+
+- ``disallow_any_explicit``. boolean.
+
+- ``disallow_any_generics``. boolean.
+
+- ``disallow_subclassing_any``. boolean.
+
+untyped definitions and calls
+""""""""""""""""""""""""""""""
+- ``disallow_untyped_calls``. boolean.
+
+- ``disallow_untyped_defs``. boolean.
+
+- ``disallow_incomplete_defs``. boolean.
+
+- ``check_untyped_defs``. boolean.
+
+- ``disallow_untyped_decorators``. boolean.
+
+None and optional handing
+""""""""""""""""""""""""""
+- ``no_implicit_optional``. boolean.
+
+- ``strict_optional``. boolean. default True.
+
+configuring warnings
+""""""""""""""""""""
+- ``warn_unused_ignores``. boolean.
+
+- ``warn_no_return``. boolean. default True.
+
+- ``warn_return_any``. boolean.
+
+suppressing errors
+""""""""""""""""""
+- ``show_none_errors``. boolean, default True. Shows errors related to strict
+  None checking, if the global ``strict_optional`` flag is enabled.
+
+- ``ignore_errors``. boolean. ignores all non-fatal errors.
+
+misc strictness flags
+""""""""""""""""""""""
+- ``allow_redefinition``. boolean.
+
+global-only options
+^^^^^^^^^^^^^^^^^^^
+import discovery
+""""""""""""""""
+- ``namespace_packages``. boolean.
+
+- ``python_executable``. string.
+
+- ``no_silence_site_packages``. boolean.
+
+- ``mypy_path``. string. Specifies the paths to use, after trying the paths
+  from ``MYPYPATH`` environment variable.
+
+platform configuration
+""""""""""""""""""""""
+- ``python_version``. string.
+
+- ``platform``. string.
+
+- ``always_true``. comma separated list of strings.
+
+- ``always_false``. comma separated list of strings.
+
+incremental mode
+""""""""""""""""
+- ``incremental``. boolean. default True.
+
+- ``cache_dir``. string.
+
+- ``skip_version_check``. boolean.
+
+configuring error messages
+""""""""""""""""""""""""""
+- ``show_error_context``. boolean.
+
+- ``show_column_numbers``. boolean.
+
+configuring warnings
+""""""""""""""""""""
+- ``warn_redundant_casts``. boolean.
+
+- ``warn_unused_configs``. boolean.
+
+misc
+""""
+- ``scripts_are_modules``. boolean.
+
+- ``verbosity``. integer. default 0.
+
+advanced options
+""""""""""""""""
 
 monkeytype
 ==========
