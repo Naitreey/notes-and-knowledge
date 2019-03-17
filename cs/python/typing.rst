@@ -1,7 +1,7 @@
 Overview
 ========
-- typing module provides tools for specifying function annotations and variable
-  annotations.
+- ``typing`` module and ``typing_extensions`` modules provides tools for
+  specifying function annotations and variable annotations.
 
 - Most of the constructs in this module aim to provide utilities for type
   checking, and interpreted by a type checker, rather than to be useful at
@@ -16,6 +16,10 @@ why type annotation and checking
   so that it's easier to fix bug, with less cost, less debugging, etc.
 
 - type annotation serves as an machine-checked documentation of interfaces.
+
+- Static typing makes it practical to build very useful development tools that
+  can improve programming productivity or software quality, including IDEs with
+  precise and reliable code completion, static analysis tools, etc.
 
 - 注意, type annotation 并没有让 python 失去 dynamic typing 的灵活性. 实际上,
   类型注释 combined the power of dynamic typin and static typing. 这是因为, 一
@@ -107,6 +111,15 @@ type aliases
     MyMap = Mapping[str, T]
     MyMap[int] # equivalent to Mapping[str, int]
 
+- Generic type aliases.
+
+  * Subscripted aliases are equivalent to original types with substituted type
+    variables, so the number of type arguments must match the number of free
+    type variables in the generic type alias.
+    
+  * Unsubscripted aliases are treated as original types with free variables
+    replaced with Any.
+
 Type object annotation
 ----------------------
 - ``Type``. A special construct useful to annotate class objects. 注意一般情况
@@ -147,6 +160,21 @@ type variable
   * 用于对 generic function 的参数和返回值等进行注释
    
   * 作为 Generic types 中的 type variable.
+
+  * upper bound 可用于定义 decorator that preserves the signature of the
+    function it decorates.
+
+    .. code:: python
+
+      FuncType = Callable[..., Any]
+      F = TypeVar('F', bound=FuncType)
+      
+      # A decorator that preserves the signature.
+      def my_decorator(func: F) -> F:
+          def wrapper(*args, **kwds):
+              print("Calling", func)
+              return func(*args, **kwds)
+          return cast(F, wrapper)
 
 - A ``TypeVar()`` expression must always directly be assigned to a variable.
   一般是 type checker 去使用这个信息. At runtime, ``isinstance(x, T)`` will
@@ -212,7 +240,9 @@ Generic types
 
 - If Generic appears in the base class list, then it should contain all type
   variables needed by the generic type, and the order of type parameters is
-  determined by the order in which they appear in Generic.
+  determined by the order in which they appear in Generic. If there are no
+  ``Generic[...]`` in immediate bases, then all type variables are collected in
+  the lexicographic order (i.e. by first appearance).
 
 - The metaclass used by Generic is a subclass of abc.ABCMeta. A generic class
   can be an ABC by including abstract methods or properties, and generic
@@ -229,6 +259,18 @@ Generic types
 
 - Using a generic class without specifying type parameters assumes Any for each
   position. Such form could be used as a fallback to dynamic typing.
+
+- During runtime, the type of an instance of an indexed generic type (i.e. a
+  concrete type) is the generic type itself. The concrete type itself can not
+  be used in ``isinstance()`` check.::
+
+    class A(Generic[T]):
+      pass
+
+    a = A[int]()
+    isinstance(a, A) # True
+
+  This can be seen as the type variables are erased at runtime.
 
 Generic containers
 ------------------
@@ -467,6 +509,9 @@ numeric tower
 - Variance is only applicable to generic types; generic functions do not have
   this property.
 
+- For type checking, ``float`` is a subtype of ``complex``, and ``int`` is a
+  subtype of ``float``.
+
 NoReturn type
 -------------
 useful to annoatate a function's return value, when the function never returns
@@ -525,6 +570,8 @@ Annotating generator functions and coroutines
 
   注意 Coroutine type is covariant in ``yield_type`` and ``return_type``;
   contravariant in ``send_type``.
+
+  ``Coroutine`` generic type is a subtype of ``Awaitable[T]``.
 
 - More abstract generic ABCs: Awaitable, AsyncIterable, AsyncIterator.
 
@@ -675,16 +722,200 @@ mark ignore type checking
 - ``no_type_check_decorator`` gives the wrapped class or function decorator
   the ability to prevent type checking.
 
-utilities
-=========
-- ``TYPE_CHECKING``. A flag indicates whether the code is being run under type
-  checker. Useful to make some code conditional according to we are at type
-  checking time or runtime.
+declaring multiple variable types at a time
+-------------------------------------------
+To declare types of multiple variables at once, only type comment can be used.
 
-- ``cast(type, expr)``. tells the type checker that we are confident that the
-  type of expr is type. At runtime a cast always returns the expression
-  unchanged.
+.. code:: python
 
+  i, found = 0, False # type: int, bool
+  p, q, *rs = 1, 2 # type: int, int, List[int]
+
+Protocols and structural subtyping
+----------------------------------
+Mypy provides support for both nominal subtyping and structural subtyping.
+
+* Nominal subtyping is strictly based on the class hierarchy. B is a subtype of
+  A if B is a subclass of A. Instance of B can be used when instances of A are
+  expected (principle of substitution).
+
+* Structural subtyping is based on the structure of classes. B is a subtype of
+  A if the former has all attributes and methods of the latter, and with
+  compatible types. B need not be a subclass of A.
+
+Structural subtyping can be thought of as “static duck typing”.
+
+一些类型实际上是 interface 定义, type checker 只需检查 actual parameter 的类型
+是否满足 interface 即可, 而不去判断是否是子类实例.
+
+pre-defined protocols
+^^^^^^^^^^^^^^^^^^^^^
+- iterable protocol ``Iterable[T]``.
+
+  .. code:: python
+
+    def __iter__(self) -> Iterator[T]
+
+- iterator protocol ``Iterator[T]``.
+
+  .. code:: python
+
+    def __next__(self) -> T
+    def __iter__(self) -> Iterator[T]
+
+- async iterable protocol ``AsyncIterable[T]``
+
+  .. code:: python
+
+    def __aiter__(self) -> AsyncIterator[T]
+
+- async iterator protocol ``AsyncIterator[T]``
+
+  .. code:: python
+
+    def __aiter__(self) -> AsyncIterator[T]
+    def __anext__(self) -> Awaitable[T]
+
+- awaitable protocol ``Awaitable[T]``
+
+  .. code:: python
+
+    def __await__(self) -> Generator[Any, None, T]
+
+- sized protocol ``Sized``.
+
+  .. code:: python
+
+    def __len__(self) -> int
+
+- container protocol ``Container[T]``.
+
+  .. code:: python
+
+    def __contains__(self, x: object) -> bool
+
+- collection protocol ``Collection[T]``.
+
+  .. code:: python
+
+    def __len__(self) -> int
+    def __contains__(self, x: object) -> bool
+    def __iter__(self) -> Iterator[T]
+
+- reversible protocol ``Reversible[T]``.
+
+  .. code:: python
+
+    def __reversed__(self) -> Iterator[T]
+
+- supports abs protocol ``SupportsAbs[T]``.
+
+  .. code:: python
+
+    def __abs__(self) -> T
+
+- supports bytes protocol ``SupportBytes``.
+
+  .. code:: python
+
+    def __bytes__(self) -> bytes
+
+- supports complex protocol ``SupportsComplex``.
+
+  .. code:: python
+
+    def __complex__(self) -> complex
+
+- Supports float protocol ``SupportsFloat``.
+
+  .. code:: python
+
+    def __float__(self) -> float
+
+- supports int protocol ``SupportsInt``.
+
+  .. code:: python
+
+    def __int__(self) -> int
+
+- supports round protocol ``SupportsRound[T]``
+
+  .. code:: python
+
+    def __round__(self) -> T
+
+- context manager protocol ``ContextManager[T]``
+
+  .. code:: python
+
+    def __enter__(self) -> T
+    def __exit__(self,
+                 exc_type: Optional[Type[BaseException]],
+                 exc_value: Optional[BaseException],
+                 traceback: Optional[TracebackType]) -> Optional[bool]
+
+- async context manager protocol ``AsyncContextManager[T]``
+
+  .. code:: python
+
+    def __aenter__(self) -> Awaitable[T]
+    def __aexit__(self,
+                 exc_type: Optional[Type[BaseException]],
+                 exc_value: Optional[BaseException],
+                 traceback: Optional[TracebackType]) -> Awaitable[Optional[bool]]
+
+user-defined protocol
+^^^^^^^^^^^^^^^^^^^^^
+- define protocol by inheriting ``typing_extensions.Protocol``, and define the
+  interface methods.
+
+- Protocols can be extended and merged using multiple inheritance. Note that
+  inheriting from an existing protocol does not automatically turn the subclass
+  into a protocol – it just creates a regular (non-protocol) class or ABC that
+  implements the given protocol (or protocols). The ``Protocol`` base class
+  must always be explicitly present if you are defining a protocol
+
+- The interface stub methods need full annotation, function body 可以是 ``...``
+  placeholder, 或者 defult implementation (只有明确继承 Protocol 才有用).
+
+- type checker 会根据实际值的类型是否与 annotation 定义的 protocol 相符, 来判断
+  是否满足 structural subtyping.
+
+- Explicitly including a protocol as a base class is also a way of documenting
+  that your class implements a particular protocol, and it forces the type
+  checker to verify that your class implementation is actually compatible with
+  the protocol.
+
+runtime protocol check
+^^^^^^^^^^^^^^^^^^^^^^
+Predefined protocols and user-defined protocols decorated with
+``typing_extensions.runtime`` class decorator can be checked at runtime,
+using ``isinstance()``.
+
+``isinstance()`` with protocols is not completely safe at runtime. For example,
+signatures of methods are not checked. The runtime implementation only checks
+that all protocol members are defined.
+
+define callback types using protocol
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- Protocols can be used to define flexible callback types that are hard (or
+  even impossible) to express using the ``Callable[...]`` syntax, such as
+  variadic, overloaded, and complex generic callbacks. They are defined with a
+  special ``__call__`` member.
+
+- Callback protocols and ``Callable[...]`` types can be used interchangeably.
+
+generic protocol
+^^^^^^^^^^^^^^^^
+- ``Protocol`` can be parametrized like ``Generic``, to form a generic
+  protocol.
+
+- Protocol's can be invariant, covariant, contravariant. A Type checker checks
+  that the declared variances of generic type variables in a protocol match how
+  they are used in the protocol definition. 
+
+new type
+--------
 - ``NewType(name, type)`` function indicates to a typechecker a subtype of the
   original ``type``.   Note that this does NOT create an actual subtype, 它只对
   static type checker 有效.
@@ -692,11 +923,13 @@ utilities
   ``name`` is new type's name; ``type`` should be a proper class.  At runtime
   it returns an identity function, which accepts a value of the ``type``.
 
-  useful for creating simple subclasses to avoid logical errors. NewType at
+- useful for creating simple subclasses to avoid logical errors. NewType at
   runtime has almost zero overhead. Type checkers require explicit casts from
   ``type`` where new type is expected, while implicitly casting from new type
   where ``type`` is expected.
 
+function overloading
+--------------------
 - ``overload(func)``. decorator for marking overloaded function, in stub file.
   如果只在 regular modules 做注释, a series of @overload-decorated definitions
   must be followed by exactly one non-@overload-decorated definition. The
@@ -706,9 +939,164 @@ utilities
   At runtime, calling a @overload-decorated function directly will raise
   NotImplementedError.
   
-  @overload should be used only in cases where a type variable is not
-  sufficient. 例如, 输入允许多种格式, 每种格式对应的输出具有不同格式, 存在
-  一一对应的关系. 这样使用 Union 等方式无法表达这种对应关系.
+- @overload should be used only in cases where a type variable is not
+  sufficient. 例如, 输入允许多种格式, 每种格式对应的输出具有不同格式, 存在一一
+  对应的关系. 这样使用 Union 等方式无法表达这种对应关系.
+
+- 注意由于我们此时已经将 function signature 做了 static typing, 一个函数名可以
+  有多个形式的 signature 和不同的 function body 这就是 function overloading, ad
+  hoc polymorphism. 最后定义的 non-overload function 是一般的 dynamic language
+  中的 generic function, parametric polymorphism.
+
+- If there are multiple equally good matching variants, a type checker will
+  select the variant that was defined first.
+
+  Due to the “pick the first match” rule, changing the order of your overload
+  variants can change how the checker type checks your program. To minimize
+  potential issues, order your variants and runtime checks from most to least
+  specific. 
+
+typed dict
+----------
+- ``TypedDict(name, specs, total=True)`` define a dict that has predefined keys
+  and value types for each of the keys. It's suitable when using dicts to
+  represent simple data only objects.
+
+  ``name`` is TypedDict's name, ``specs`` is a dict of key to value types,
+  ``total`` flag defines whether to allow keys to be left out (partial
+  TypedDict) when creating a TypedDict object.
+
+  .. code:: python
+
+    Movie = TypedDict('Movie', {"name": str, "year": int})
+
+- class-based syntax to define a TypedDict:
+
+  .. code:: python
+
+    class Movie(TypedDict):
+      name: str
+      year: int
+
+  Note it doesn’t actually define a real class. This syntax also supports a
+  form of inheritance – subclasses can define additional items. 
+
+  In addition to allowing reuse across TypedDict types, class-based syntax also
+  allows you to mix required and non-required items in a single TypedDict.
+
+  .. code:: python
+
+    class ChildMovie(Movie, total=False):
+      based_on: str
+
+- ``TypedDict`` is mypy specific, defined in ``mypy_extensions``.
+
+- Mypy will also reject a runtime-computed expression as a key, as it can’t
+  verify that it’s a valid key. You can only use string literals as TypedDict
+  keys.
+
+- The TypedDict type object can also act as a constructor. It returns a normal
+  dict object at runtime – a TypedDict does not define a new runtime type.
+
+  .. code:: python
+
+    movie = Movie(name="title", year=1995)
+
+- Like all types, TypedDicts can be used as components to build arbitrarily
+  complex types. For example, you can define nested TypedDicts and containers
+  with TypedDict items. Unlike most other types, mypy uses structural
+  compatibility checking (or structural subtyping) with TypedDicts. A TypedDict
+  object with extra items is a compatible with (a subtype of) a narrower
+  TypedDict, assuming item types are compatible
+
+- A TypedDict object is not a subtype of the regular ``Dict[...]`` type (and
+  vice versa), since Dict allows arbitrary keys to be added and removed, unlike
+  ``TypedDict``. However, any TypedDict object is a subtype of (that is,
+  compatible with) ``Mapping[str, object]``, since typing.Mapping only provides
+  read-only access to the dictionary items.
+
+final names, methods and classes
+--------------------------------
+final names
+^^^^^^^^^^^
+- Final names are variables or attributes that should not reassigned after
+  initialization. They are useful for declaring constants.
+
+- Use ``Final`` (defined in ``typing_extensions``) to define a final
+  identifier.
+
+- A type checker will prevent further assignments to final names in
+  type-checked code. Another use case for final attributes is to protect
+  certain attributes from being overridden in a subclass.
+
+- How to use:
+ 
+  * Provide an explicit type when using Final ``Final[<type>]``:
+
+    .. code:: python
+
+      ID: Final[float] = 1
+
+  * Omit the type:
+
+    .. code:: python
+
+      ID: Final = 1
+
+    The actual type is inferred by the type checker. Note that unlike for
+    generic classes this is not the same as ``Final[Any]``.
+
+  Final can be used for module-level variables; class-level attributes;
+  instance attributes assigned in ``__init__``.
+
+- There can be at most one final declaration per module or class for a given
+  attribute. There can’t be separate class-level and instance-level constants
+  with the same name.
+
+- There must be exactly one assignment to a final name.
+
+- A final attribute declared in a class body without an initializer must be
+  initialized in the ``__init__`` method.
+
+- Final can’t be used in annotations for function arguments.
+
+final methods
+^^^^^^^^^^^^^
+- Final methods should not be overridden in a subclass.
+
+- Use ``final`` decorator (defined in ``typing_extensions``) to make a method
+  final.
+
+- This @final decorator can be used with instance methods, class methods,
+  static methods, and properties.
+
+final classes
+^^^^^^^^^^^^^
+- Final classes should not be subclassed.
+
+- Use ``final`` decorator to make a class final.
+
+- Useful when:
+  
+  * A class wasn’t designed to be subclassed. Perhaps subclassing would not
+    work as expected, or subclassing would be error-prone.
+
+  * Subclassing would make code harder to understand or maintain. For example,
+    you may want to prevent unnecessarily tight coupling between base classes
+    and subclasses.
+
+  * You want to retain the freedom to arbitrarily change the class
+    implementation in the future, and these changes might break subclasses.
+
+utilities
+=========
+- ``TYPE_CHECKING``. A flag indicates whether the code is being run under type
+  checker. Useful to make some code conditional according to we are at type
+  checking time or runtime.
+
+- ``cast(type, expr)``. tells the type checker that we are confident that the
+  type of expr is type. At runtime a cast always returns the expression
+  unchanged.
 
 - ABCs for special methods: SupportsAbs, SupportsComplex, SupportsFloat,
   SupportsInt, SupportsRound, SupportsBytes.
@@ -792,6 +1180,31 @@ migrating codes
   implement the code using dynamic typing and only add type hints later once
   the code is more stable.
 
+PEP 561 compatible packages
+===========================
+- PEP 561 notes three main ways to distribute type information.
+  
+  * The first is a package that has only inline type annotations in the code
+    itself.
+    
+  * The second is a package that ships stub files with type information
+    alongside the runtime code.
+  
+  * The third method, also known as a “stub only package” is a package that
+    ships type information for a package separately as stub files.
+
+- packages that supply type information via type comments or annotations in the
+  code should put a ``py.typed`` in their package directory.
+
+  packages that supply type information via type comments or annotations in the
+  code should put a ``py.typed`` in their package directory.
+
+  Stub files are placed next to the module they annotate.
+
+- If the package is stub-only (not imported at runtime), the package should
+  have a prefix of the runtime package name and a suffix of ``-stubs``. A
+  ``py.typed`` file is not needed for stub-only packages.
+
 typeshed
 ========
 overview
@@ -818,12 +1231,17 @@ install
 -------
 - install from pypi, typeshed is included automatically.
 
-behaviors
----------
-- Type inference. When type hints are added to a function, mypy will
-  automatically check the function's body, by interpreting its logic and type
-  inference.
+Type inference
+--------------
+- When type hints are added to a function, mypy will automatically check the
+  function's body, by interpreting its logic and type inference.
 
+- Mypy considers the initial assignment as the definition of a variable. When a
+  variable's type is not explicitly annotated, it's inferred by mypy based on
+  the static type of the value expression.
+
+handling imports
+----------------
 - Mypy follows imports by default.
 
 - how mypy handles imports.
@@ -1215,6 +1633,44 @@ misc
 
 advanced options
 """"""""""""""""
+
+daemon
+------
+run mypy as a long-running daemon (server) process using ``dmypy`` and use a
+command-line client to send type-checking requests to the server. 
+
+This way mypy can perform type checking much faster, since program state cached
+from previous runs is kept in memory and doesn’t have to be read from the file
+system on each run.
+
+running mypy using the mypy daemon can be 10 or more times faster for bigger
+codebase than the regular command-line mypy tool.
+
+Each mypy daemon process supports one user and one set of source files, and it
+can only process one type checking request at a time. You can run multiple mypy
+daemon processes to type check multiple repositories.
+
+The mypy daemon is experimental. In particular, the command-line interface may
+change in future mypy releases.
+
+mypy plugins
+------------
+- Mypy supports a plugin system that lets you customize the way mypy type
+  checks code. This can be useful if you want to extend mypy so it can type
+  check code that uses a library that is difficult to express using just PEP
+  484 types.
+
+- The plugin system is experimental and prone to change.
+
+- Plugins are Python files that can be specified in a mypy config file, under
+  global ``[mypy]`` section, ``plugins`` key, using one of the two formats:
+  
+  * relative or absolute path to the plugin to the plugin file
+   
+  * a module name (if the plugin is installed using pip install in the same
+    virtual environment where mypy is running).
+  
+  The two formats can be mixed.
 
 monkeytype
 ==========
