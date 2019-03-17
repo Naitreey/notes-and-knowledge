@@ -344,10 +344,79 @@ instance method attributes
 
 - ``instance_method.__module__``, same as ``__func__.__module__``, readonly.
 
+sized protocol
+^^^^^^^^^^^^^^
+- ``objec.__len__()``. return the length of the object, called by ``len(o)``.
+  Length should be an non-negative integer. If the object does not have
+  ``__bool__()`` method, length is also used to test the object's truthfulness
+  under boolean context.
+
+reversible protocol
+^^^^^^^^^^^^^^^^^^^
+- ``object.__reversed__()``. return a new iterator that iterate over all items
+  in the container in reverse order. Used by ``reversed(o)``. If not provided,
+  fall back to use sequence protocol. Objects that support sequence protocol
+  should provide this method only if they can provide an implementation that is
+  more efficient than the one provided by ``reversed()``.
+
+iterable protocol
+^^^^^^^^^^^^^^^^^
+- ``object.__iter__()``. returns an iterator for container that can iterate
+  over all items in the container.
+
+iterator protocol
+^^^^^^^^^^^^^^^^^
+- ``object.__iter__()``. for an iterator, this method is required to return
+  itself. This is required to allow both containers and iterators to be used
+  with the for and in statements. otherwise see `iterable protocol`_.
+
+- ``object.__next__()``. returns the next item from the container. If no
+  further items, raises StopIteration. Once an iterator’s ``__next__()`` raises
+  StopIteration, it must continue to do so on subsequent calls. 
+
 container protocol
 ^^^^^^^^^^^^^^^^^^
+- ``object.__contains__(item)``. membership test, used by ``in`` operator.  If
+  this method is not defined, but ``__iter__()`` is defined, ``in`` is
+  performed by iterating the container. If ``__iter__()`` is not defined, but
+  sequence protocol is implemented, ``in`` is performed by checking all indices
+  of sequence in ascending order, if there is a non-negative integer index i
+  such that ``x == y[i]``, and all lower integer indices do not raise
+  IndexError exception.
 
-- ``object.__len__()``
+collection protocol
+^^^^^^^^^^^^^^^^^^^
+- ``object.__len__()``. see `sized protocol`_.
+
+- ``object.__contains__(item)``.
+
+- ``object.__iter__()``.
+
+sequence protocol
+^^^^^^^^^^^^^^^^^
+- ``object.__len__()``. see `sized protocol`_.
+
+- ``object.__len_hint__()``, optional.
+
+- ``object.__getitem__(index)``
+
+- ``object.__setitem__(key, value)``
+
+- ``object.__delitem__(key)``
+
+- ``object.__iter__()``
+
+- ``object.__reversed__()``, optional. see `reversible protocol`_.
+
+- ``object.__contains__(value)``, optional.
+
+- ``object.index(value, start=0, stop=None)``
+
+- ``object.count(value)``
+
+mapping protocol
+^^^^^^^^^^^^^^^^
+- ``object.__len__()``. see `sized protocol`_.
 
 - ``object.__len_hint__()``, optional.
 
@@ -365,9 +434,29 @@ container protocol
 
 - ``object.__iter__()``
 
-- ``object.__reversed__()``, optional.
+- ``object.__reversed__()``, optional. see `reversible protocol`_.
 
 - ``object.__contains__()``, optional.
+
+- ``object.get(key, default=None)``
+
+- ``object.__eq__(other)``
+
+- ``object.keys()``
+
+- ``object.items()``
+
+- ``object.values()``
+
+- ``object.pop(key[, default])``
+
+- ``object.popitem()``
+
+- ``object.clear()``
+
+- ``object.update(*args, **kwargs)``
+
+- ``object.setdefault(key, default=None)``
 
 make it callable
 ^^^^^^^^^^^^^^^^
