@@ -160,8 +160,8 @@ MapReduce Job History Server
 
 File systems
 ------------
-- At storage layer, hadoop uses a plugin model, different FS implementation can
-  be used. The default is HDFS.
+- At storage layer, hadoop has a general-purpose filesystem abstration. It uses
+  a plugin model, different FS implementation can be used. The default is HDFS.
 
 - Location awareness of Hadoop compatible file systems.
 
@@ -209,14 +209,20 @@ design goals
   targeted for HDFS, therefore POSIX semantics in a few key areas has been
   traded to increase data throughput rates.
 
-- Large data set. Tuned to support large files. high aggregate data bandwidth
-  and scale to hundreds of nodes in a single cluster. It should support tens of
-  millions of files in a single instance.
+- Large data set. Tuned to support large files (大文件指的是: 10^3 MB, GB, TB
+  量级的文件).  high aggregate data bandwidth and scale to hundreds of nodes in
+  a single cluster. It should support tens of millions of files in a single
+  instance.
 
-- simple conherency model, write-once-read-many access model. A file once
-  created, written, and closed need not be changed except for appends and
-  truncates. This assumption simplifies data coherency issues and enables high
-  throughput data access.
+- simple conherency model, write-once-read-many access model. In this access
+  model, a file once created, written, and closed need not be changed except
+  for appends and truncates. This assumption simplifies data coherency issues
+  and enables high throughput data access.
+
+  After a dataset is written to HDFS, various analyses are performed on that
+  dataset over time. Each analysis will involve a large proportion of the
+  dataset. So the time to read the whole dataset is more important than the
+  latency in reading one record.
 
 - It is often better to migrate the computation closer to where the data is
   located rather than moving the data to where the application is running.
@@ -224,6 +230,57 @@ design goals
   the data is located.
 
 - Portability across heterogeneous hardware and software platforms. (JVM)
+
+
+non design goals
+^^^^^^^^^^^^^^^^
+- low-latency data access. In the range of 10^1 ms 量级, will not work well
+  with HDFS. Use HBase for that.
+
+- Lots of small files. The number of files a HDFS can store is limited by the
+  amount of memory of NameNode. Each file, directory, block takes about
+  150bytes.
+
+- multiple writers, arbitrary file modifications. HDFS 中, 每个文件同时最多只能
+  有一个 writer, 并且是 append-only 的. No support for multiple concurrent
+  writes on the same file, or for modifications at arbitrary offsets in the
+  file.
+
+concepts
+^^^^^^^^
+blocks
+""""""
+- A HDFS block 与硬盘的 block 在概念上是相同的. 即 block 是 HDFS 这个文件系统数
+  据读写的单元. Block size 是数据读写的最小单元. File is broken into
+  block-sized chunks which are stored as independent units (NameNode 保存每个
+  block 的位置).
+
+- Unlike a filesystem for a single disk, a file in HDFS that is smaller than a
+  single block does not occupy a full block’s worth of underlying storage. 由于
+  HDFS block size 很大, 这样的设计是为了避免大量浪费.
+
+- 当前, HDFS 默认 block size 是 128MB.
+
+- Why HDFS block size is so large? 这是为了尽量降低 seek time 在总的 disk
+  access time 中所占的比例. 从而能够让数据读写速度以 transfer speed 为主导.  例
+  如, 若希望 seek time 是 transfer time 的 1%, 当 transfer speed 为 128MB/s 且
+  硬盘每次 seek 所用时间为 10ms 时, block size 至少要 128MB. (注意到每访问一个
+  block 就要 seek 一次.)
+
+- advantages of HDFS's block abstraction.
+
+  * A file can be larger than any single disk in the cluster. 因为存储单元是
+    block, 文件只需要通过 blocks 能抽象地重组起来即可.
+
+  * making the unit of abstraction a block rather than a file simplifies the
+    storage subsystem. The storage subsystem manages blocks of the fixed size,
+    and it does not need to manage file metadata because it does not see files.
+
+  * Blocks fit well with replication for providing fault tolerance and
+    availability. 如果由于 disk corruption or node failure 一个一些 block
+    replica 不再 available, 只需再次复制相关的 blocks 即可, 无需复制整个文件.
+    此外, some applications may choose to set a high replication factor for the
+    blocks in a popular file to spread the read load on the cluster
 
 services
 ^^^^^^^^
@@ -496,7 +553,7 @@ overview
   each query. Questions that took too long to get answered before can now be
   answered.
 
-- MapReduce is:
+- MapReduce 的适用场景:
 
   * suitable for batch processing, offline analysis, problems that need to
     analyze the whole dataset in a batch fashion.
@@ -532,18 +589,210 @@ overview
     it's capable of processing a double size of data at the same speed as does
     previously.
 
-- API. Java, C++, Ruby, Python, etc.
+Mechanism
+---------
+job and task
+^^^^^^^^^^^^
+Job. A MapReduce job is a unit of work that a client wants to be performed.  It
+consists of input data, the MapReduce program, and configuration.
+
+Task. Hadoop runs a job by dividing it into tasks. There are map tasks and
+reduce tasks. Tasks are scheduled using YARN. If a task fails, it's rescheduled
+automatically on a different node in the cluster.
+
+split and record
+^^^^^^^^^^^^^^^^
+Hadoop divides the input to a MapReduce job into fixed-size pieces called input
+splits or splits. Hadoop create one map task for each split, which runs the
+user defined map function for each record in the split.  注意到, 在一个 map
+task 中, map function is normally called many times, one time for each record
+of a split. (Java API 还支持 pull API, 此时, 由 map function 决定要如何处理
+input.)
+
+The size of a split shouldn't be too big or too small.
+
+* When the splits are small, the processing is better load balanced, since a
+  faster machine will be able to process more splits over the course of the job
+  than a slower machine. Also, if a task failed, the impact is more limited, we
+  can restart the same small portion of job on another node. Overall, the
+  quality of load balancing increases as the splits become more fine grained.
+
+* WHen the splits are too small, the overhead of managing splits and map task
+  creation begins to dominate the total job execution time.
+
+For most jobs, a good split size tends to be the size of an HDFS block or
+smaller, which is 128MB by default. split 不该比 block 大的原因是, 若是这样,
+一个 map 的输入 split 必然会跨越 2 个以上的 blocks, 这样有很大可能需要从另一个
+节点获取至少一个 block.
+
+注意一个 split 的实际 size 还取决于文件的 size. 如果文件本身比配置的 split max
+size 小, 则 split 只能达到文件那么大. 这也是为什么推荐尽量使用大文件的原因. 即
+太多小文件会创建更多的 map tasks, overhead of map task creation 对执行时间的影
+响逐渐增大.
+
+data locality optimization
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+Data locality optimization. Hadoop 尽量保证在一个 map task 所需数据所在的节点上
+运行 map task. 这样可以尽量节省带宽. 若这一点不能保证 (因为一个 split 的所有
+blocks 所在的节点都在运行 map task), 则会 fallback 至同一个 rack 上的其他空闲节
+点 (inter-node transfer). 若这样的机器也不能找到, 则 fallback 至不同 rack 上的
+空闲节点 (inter-rack transfer).
+
+map output handling
+^^^^^^^^^^^^^^^^^^^
+Map tasks write their output to the local disk, not to HDFS. Map output is
+intermediate output: it’s processed by reduce tasks to produce the final
+output, and once the job is complete, the map output can be thrown away. So,
+storing it in HDFS with replication would be overkill. All outputs of a map
+task (multiple key value pairs) are sorted, partitioned then transferred to the
+reduce tasks.
+
+partition
+^^^^^^^^^
+每个 map task 将所有输出的 key value pairs 分成多组 (partition), 组的数目与
+reduce task 的数目相同. Partition 时, 保证对于每个 key 的所有 key value pairs
+都位于一个 partition 中 (从而 reduce 时才能是正确的结果). Partition function
+可以由用户指定, 默认的 partition function 将 key hash 至 hash buckets, 对每个
+bucket 作为一个 partition.
+
+reduce task
+^^^^^^^^^^^
+Reduce tasks normally don't have the property of data locality. The input to a
+single reduce task often comes from all map tasks' output. 来自各个 map task 的
+sorted key value pairs are merged into pairs of key and a list of values, then
+passed to the user defined reduce function. The output of reduce is normally
+stored in HDFS for reliability. For each HDFS block of the reduce output, the
+first replica is stored on the local node, with other replicas being stored on
+off-rack nodes for reliability.
+
+一个 MapReduce job 可以没有 reduce 阶段. 这样的任务具有完全并行执行的特点.
+即不存在聚合步骤, 完全是并行 map 处理 (filter, extract, transform, etc.).
+
+shuffle
+^^^^^^^
+The shuffle. map task 对输出进行 partition, 传输至 reduce tasks, 以及 reduce
+task 对输入进行 merge 这些流程总称为 shuffle.
+
+combiner function
+^^^^^^^^^^^^^^^^^
+Combiner function 的意义在于, 对 map task 的输出预先 locally aggregate 一次, 从
+而降低 shuffle 阶段的网络传输量, 从而避免带宽成为 MapReduce job 的执行效率瓶颈.
+Combiner function runs on the map output, its output forms the final output of
+mapper node, feeded to reduce task.
+
+Hadoop does not provide a guarantee of how many times it will call it for a
+particular map output record. In other words, calling the combiner function
+zero, one, or many times should produce the same output from the reducer.
+因此, combiner function 作为一个算符必须具有 commutativity and associativity.
+
+map and reduce input/output
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+map and reduce phases have key-value pairs as input and output. Programmer
+defines what the input/output is for each phase, and defines the map and reduce
+function to operate on the input and produce the output.
+
+- map phase: 由用户提供.
+
+  * 输入: 原始数据. key: offset. value: 数据
+
+  * 输出: 关键信息 key value pairs.
+
+  * 操作: 对原始数据进行过滤和关键信息提取等操作.
+
+- shuffle phase: 由 Hadoop 完成.
+
+  * 输入: map phase 输出的关键信息 key value pairs.
+
+  * 输出: key 是一组 unique keys, 对应于 map phase 输出的 keys. 对于每个 key,
+    其值是 map phase 输出的这个 key 对应的所有可能 value 值的列表.
+
+  * 操作: 对 key 进行排序, 对 values 按 key 进行分组 (grouping).
+
+- reduce phase: 由用户提供.
+
+  * 输入: shuffle phase 输出的 key value pairs. 其中 value 为 a list of values
+    corresponding to the key.
+
+  * 输出: key 是一组 unique keys, 对于每个 key, 其值是对 value list 的聚合结果.
+    结果最终写入 HDFS, 对于每个 reducer, 生成一个 ``part-r-NNNN`` 文件.
+
+  * 操作: 对于每个 key, 对它的 a list of values 进行所需的分析和聚合操作.
+
+Debugging
+---------
+- mapreduce job's log output provides many useful information.
+
+  * job id
+
+  * Counters section 有助于确认 mapreduce job 的执行情况是否与预期一致.
+
+Java API
+--------
+- packages.
+ 
+  * org.apache.hadoop.io package 提供了一些 Hadoop 定义的 basic types,
+    optimized for network serialization.
+
+  * org.apache.hadoop.mapreduce 即 Apache Hadoop MapReduce Core, 是 mapreduce
+    的 client library.
+
+- ``Job`` is the specification for a mapreduce job.
+
+  methods:
+
+  * ``setJarByClass()``
+
+  * ``setJobName()``
+
+  * ``setMapperClass()``
+
+  * ``setReducerClass()``
+
+  * ``setOutputKeyClass()``
+
+  * ``setOutputValueClass()``
+
+  * ``waitForCompletion()``
+
+- ``Mapper`` generic type. four type parameters:
+
+  * type of input key
+  
+  * type of input value
+  
+  * type of output key
+  
+  * type of output value
+  
+  methods:
+  
+  * ``map(LongWritable key, Text value, Context context)`` abstract method.
+
+- ``Reducer`` generic type.
+
+  * type of input key, matching type of Mapper output key
+  
+  * type of input value, matching type of Mapper output value
+  
+  * type of output key
+  
+  * type of output value
 
 Tools
 =====
 Hadoop Streaming
 ----------------
+- tool path: ``$HADOOP_HOME/share/hadoop/tools/lib/hadoop-streaming-*.jar``
+
 - Hadoop streaming is a utility that allows MapReduce jobs to be created and
   run with any executables/scripts as mapper or reducer.
 
-- 称这种处理为 streaming, 只是因为以 executable/script 的输入输出做 map 和
-  reduce 各自的输入和输出. 就像流过了用户提供的 mapper 和 reducer 程序. 但
-  这并不是实时的流处理那种感觉.
+- 称这种处理为 streaming, 是因为以 Unix standard streams (stdin/stdout) 作为
+  hadoop 与 mapper/reducer 程序的交互界面. 就像数据了用户提供的 mapper 和
+  reducer 程序. 注意与实时的流处理区分开来.
+
+- Hadoop streaming 由于是通过 standard stream 传输输入输出, it's naturally
+  suited for text processing.
 
 Mechanism
 ^^^^^^^^^
@@ -556,9 +805,14 @@ Mechanism
     and converts each line into a key/value pair, which is collected as the
     output of the mapper.
 
-  * By default, the prefix of a line up to the first tab character is the key
-    and the rest of the line will be the value. If there is no tab character in
-    the line, then entire line is considered as key and the value is null.
+  * Input for the mapper. By default, use TextInputFormat. the offset from the
+    beginning of the file is key and the line will be the value. But key is
+    discarded for some *unknown* reason.
+
+  * Output from the mapper. By default, the prefix of a line up to the first tab
+    character is the key and the rest of the line will be the value. If there
+    is no tab character in the line, then entire line is considered as key and
+    the value is null.
 
 - reducer.
 
@@ -570,8 +824,18 @@ Mechanism
     converts each line into a key/value pair, which is collected as the output
     of the reducer.
 
-  * By default, the prefix of a line up to the first tab character is the key
-    and the rest of the line is the value.
+  * Input for the reducer. By default, the prefix of a line up to the first tab
+    character is the key and the rest of the line is the value. 注意这与 Java
+    API 的 reduce method 的输入是不同的. 在这里, 并没有一次输入一个 Iterable of
+    values of a key. 对于一个 key 的多个 values, 是一行一行输入的, 即需要通过前
+    后 key 值的异同, 来判断何时对一组 key 的 values 值的聚合结束. (Shuffle 保证
+    keys are ordered.)
+
+  * Output from the reducer. ditto.
+
+- 注意 mapper and reducer program 应该在从 stdin 遍历读取多个数据. 这与 Java
+  API 中一条一条操作是不同的. 这是 pull API. 对于每个 map task 和 reduce task,
+  启动一个 mapper/reducer process.
 
 - By default, streaming tasks exiting with non-zero status are considered to be
   failed tasks. Can be customized by ``stream.non.zero.exit.is.failure``.
@@ -608,7 +872,7 @@ CLI
 
 .. code:: sh
 
-  hadoop jar /usr/lib/hadoop/share/hadoop/tools/lib/hadoop-streaming-X.X.X.jar \
+  yarn jar $HADOOP_HOME/share/hadoop/tools/lib/hadoop-streaming-X.X.X.jar \
     [genericOptions] [commandOptions]
   $HADOOP_HOME/bin/mapred streaming \
     [genericOptions] [commandOptions]
@@ -622,8 +886,7 @@ CLI
   * ``-fs host:port or local``. namenode to connect to.
 
   * ``-files file1,fil2,...``. comma-separated files to be made available to
-    jobs. Each file is URI to the file or archive that you have already
-    uploaded to HDFS.
+    jobs. Each file is a path to the local file or archive.
 
   * ``-libjars file1,file2,...``. comma-separated jar files to include in the
     classpath. Each jar is URI to the file or archive that you have already
@@ -639,10 +902,12 @@ CLI
   * ``-output <directory>``. output location for reducer.
 
   * ``-mapper <executable-path-or-java-class-name>``. mapper used for map
-    stage. default is org.apache.hadoop.mapred.lib.IdentityMapper.
+    stage. default is org.apache.hadoop.mapred.lib.IdentityMapper. 对于
+    executable path, 直接使用 ``-files`` 中文件的 filename (不包含 parent
+    directory).
 
   * ``-reducer <executable-path-or-java-class-name>``. reducer used for reduce
-    stage. default is org.apache.hadoop.mapred.lib.IdentityMapper.
+    stage. default is org.apache.hadoop.mapred.lib.IdentityMapper. 路径同上.
 
   * ``-inputformat <java-class-name>``. Input format class to parse input to
     mapper. The class you supply for the input format should return key/value
@@ -656,9 +921,10 @@ CLI
     take key/value pairs of Text class. the TextOutputFormat is used as the
     default.
 
-  * ``-partitioner <java-class-name>``
+  * ``-partitioner <java-class-name>``. java class for partition function.
 
-  * ``-combiner <executable-path-or-java-class-name>``
+  * ``-combiner <executable-path-or-java-class-name>``. combiner function can
+    be a java class or executable program. 路径同上.
 
   * ``-cmdenv key=val`` environ to be passed to streaming cmds.
 
@@ -671,6 +937,11 @@ CLI
   * ``-mapdebug <executable-path>``. script to call when map task failed.
 
   * ``-reducedebug <executable-path>``. script to call when reduce task failed.
+
+
+Dumbo
+-----
+- A more pythonic API to code MapReduce in Python.
 
 configuration
 =============
@@ -950,20 +1221,30 @@ datanode
 
 yarn
 ----
-resourcemanager
+client commands
 ^^^^^^^^^^^^^^^
+jar
+""""
+::
+
+  yarn jar <jar-path> [mainClass] [arg ...]
+
+daemon commands
+^^^^^^^^^^^^^^^
+resourcemanager
+""""""""""""""""
 ::
 
   yarn [--daemon (start|status|stop)] resourcemanager
 
 nodemanager
-^^^^^^^^^^^
+""""""""""""
 ::
 
   yarn [--daemon (start|status|stop)] nodemanager
 
 proxyserver
-^^^^^^^^^^^
+""""""""""""
 ::
 
   yarn [--daemon (start|status|stop)] proxyserver
