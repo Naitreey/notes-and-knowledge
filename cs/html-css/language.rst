@@ -1416,7 +1416,6 @@ interactive elements
 
 embedded content
 ^^^^^^^^^^^^^^^^
-
 - ``<iframe>``, 将另一个 html document 嵌入外层的 html document. 这种嵌套构建了
   nested browsing context. 每个 browsing context 有它自己的 session history.
 
@@ -1473,9 +1472,82 @@ embedded content
   nested browsing context, or a resource to be handled by a plugin. 这东西
   曾经用于 flash, svg 等, 现在基本没啥用.
 
+scripting
+^^^^^^^^^
+- ``<script>``, embed inline or reference external executable code.
+
+  attributes.
+
+  * async. a boolean indicating that the browser should, if possible, load the
+    script asynchronously. If absent, browser usually assume the worst case
+    scenario and load scripts synchronously (equal to ``async="false"``).
+
+  * defer. a boolean indicating that the script is meant to be executed after
+    the document has been parsed, but before firing DOMContentLoaded. Scripts
+    with the defer attribute will execute in the order in which they appear in
+    the document.
+
+  * crossorigin. HTML CORS setting to configure the CORS requests for the
+    element's fetched data.
+
+  * integrity. inline metadata that a user agent can use to verify that a
+    fetched resource has been delivered correctly.
+
+  * nomodule. a boolean indicating that the script should not be executed in
+    browsers that support ES2015 modules. can be used to serve fallback scripts
+    to older browsers.
+
+  * nonce.
+
+  * referrerpolicy. 何时加上或不加 Referer header, 以及其值是什么.
+
+  * src. URI of an external script.
+
+  * text.
+
+  * type. the type of script.
+
+    - Omitted or a JavaScript MIME type: For HTML5-compliant browsers this
+      indicates the script is JavaScript. HTML5 specification urges authors to
+      omit the attribute rather than provide a redundant MIME type.
+
+    - module. the code is treated as a JavaScript module. 
+
+    - Any other value: The embedded content is treated as a data block which
+      won't be processed by the browser. Developers must use a valid MIME type
+      that is not a JavaScript MIME type to denote data blocks.
+
+  Which to use, async or defer? See also [JSasyncdefer]_.
+
+  * 如果一个 referenced ``<script>`` 没有 defer or async, 会被浏览器同步加载.
+    即浏览器在解析 html markup 过程中, 当遇到 ``<script>`` tag, 暂停对 html 的
+    解析, 开始下载 script 并执行, 结束后再继续解析 html. 这时, 如果
+    ``<script>`` 放在 ``<head>`` 中, 会体验较差, 因为页面 blank 的时间长.
+
+  * 传统的解决办法是将 ``<script>`` 放在 ``<body>`` 最末尾. Doing so, the
+    script is loaded and executed after all the page is already parsed and
+    loaded, 从而体验更好. 但注意 script 的下载和执行都是同步的.
+
+  * async and defer 让位于 ``<head>`` 中的 script tag 的加载更高效, 提升了用户
+    体验的同时让编码位置更合理. They are useless if you put the script in the
+    end of body.
+
+  * async 的 script 是异步下载的, 但下载后立即同步解析, 期间对 html 的解析会
+    暂停. Scripts marked async are executed in casual order, when they become
+    available.
+
+  * defer 的 script 是异步下载的, but it’s executed only after the HTML parsing
+    is done. Scripts marked defer are executed (after parsing completes) in the
+    order which they are defined in the markup.
+
+  因此, 最好的用法是 put them in the head, and add a defer attribute.
+
+  Scripts without async, defer or type="module" attributes, as well as inline
+  scripts, are fetched and executed immediately, before the browser continues
+  to parse the page.
+
 web components
 ^^^^^^^^^^^^^^
-
 
 global attributes
 -----------------
@@ -4094,3 +4166,4 @@ references
 .. [FlexMarginAuto] `Flexbox’s Best-Kept Secret <https://hackernoon.com/flexbox-s-best-kept-secret-bd3d892826b6>`_
 .. [SOBodyOverflow] `body tag overflow (auto, visible?) <https://stackoverflow.com/questions/36794306/body-tag-overflow-auto-visible>`_
 .. [TransitionVSAnimation] `Transition or Animation: Which One Should You Use? <http://www.adobepress.com/articles/article.asp?p=2300569>`_
+.. [JSasyncdefer] `Efficiently load JavaScript with defer and async <https://flaviocopes.com/javascript-async-defer/>`_
