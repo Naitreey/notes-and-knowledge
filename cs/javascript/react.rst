@@ -1,6 +1,5 @@
 overview
 ========
-
 - 在使用 React 构建前端的情景下, frontend and backend's 各自的功能是什么?
  
   * Frontend 完全负责展示. UI components are defined by JS code (React), not by
@@ -16,3 +15,11 @@ overview
   与之相比, 传统的前端, 无论使用什么 UI component 和代码设计模式, 对一个组件的
   构建, 都需要分到两块相互孤立的代码中: 即 UI 放在一个 html 代码中, 初始化和
   交互等放在另一个 js 代码中. 明明是强耦合的相互关联, 却不得不分开写, 很不统一.
+
+feature
+=======
+- declarative
+
+- component-based
+
+- learn once, write anywhere.
