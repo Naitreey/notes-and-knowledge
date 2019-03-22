@@ -194,10 +194,8 @@ File systems
 
 HDFS
 ====
-Architecture
-------------
 design goals
-^^^^^^^^^^^^
+------------
 - Highly fault-tolerant, designed to run on commodity hardware. Detection of
   faults and quick, automatic recovery from hardware failures.
 
@@ -233,7 +231,7 @@ design goals
 
 
 non design goals
-^^^^^^^^^^^^^^^^
+----------------
 - low-latency data access. In the range of 10^1 ms 量级, will not work well
   with HDFS. Use HBase for that.
 
@@ -247,9 +245,9 @@ non design goals
   file.
 
 concepts
-^^^^^^^^
+--------
 blocks
-""""""
+^^^^^^
 - A HDFS block 与硬盘的 block 在概念上是相同的. 即 block 是 HDFS 这个文件系统数
   据读写的单元. Block size 是数据读写的最小单元. File is broken into
   block-sized chunks which are stored as independent units (NameNode 保存每个
@@ -282,8 +280,8 @@ blocks
     此外, some applications may choose to set a high replication factor for the
     blocks in a popular file to spread the read load on the cluster
 
-services
-^^^^^^^^
+Architecture
+------------
 - Master-salve architecture. An HDFS cluster consists of
   
   * a single NameNode, a master server that manages the file system namespace
@@ -300,40 +298,269 @@ services
   * a file is split into one or more blocks and these blocks are stored in a
     set of DataNodes.
 
-- NameNode
+NameNode
+--------
+functionalities
+^^^^^^^^^^^^^^^
+- maintains filesystem tree and metadata for all the files and directories in
+  the tree.
 
-  * executes file system namespace operations like opening, closing, and
-    renaming files and directories.
+- executes file system namespace operations like opening, closing, and
+  renaming files and directories.
 
-  * manage the mapping of blocks to DataNodes.
+- Provides DataNode cluster membership by handling registrations, and periodic
+  heart beats.
 
-  * the arbitrator and repository for all HDFS metadata. user data never flows
-    through the NameNode.
+- manage the mapping of blocks to DataNodes.
 
-- DataNode
+- Supports block related operations such as create, delete, modify and get
+  block location. (user data never flows through the NameNode.)
 
-  * file blocks are stored in DataNodes.
+- Manages replica placement, block replication for under replicated blocks, and
+  deletes blocks that are over replicated.
 
-  * serving read and write requests from clients directly.
+metadata
+^^^^^^^^
+- EditLog.
 
-  * block creation, deletion, and replication upon instruction from the
-    NameNode.
+  * NameNode uses EditLog to record changes to file system metadata. EditLog is
+    a persistent transaction log.
+  
+  * EditLog is stored as a file in NameNode's local host OS file system.
+
+  * 需要 EditLog 是因为, even though it is efficient to read a FsImage, it is
+    not efficient to make incremental edits directly to a FsImage.
+
+- FsImage.
+
+  * A file which stores the entire file system namespace, including the mapping
+    of blocks to files and file system properties.
+
+  * FsImage is stored as a file in NameNode's local host OS file system.
+
+  * FsImage is also constantly kept in NameNode's memory for fast access.
+
+- file blockmap.
+
+  * a map from a file to its blocks and where those blocks are located.
+
+  * blockmap is kept in NameNode's memory. It does not persist on NameNode's
+    local disk, because this information is reconstructed from DataNode when
+    the system starts.
+
+- FsImage checkpoint. A FsImage checkpoint is triggered at NameNode startup and
+  a configured interval. During the checkpoint, NameNode reads EditLog from
+  disk, applies all the transactions from the EditLog to the in-memory
+  representation of the FsImage, and flushes out this new version into a new
+  FsImage on disk.  It can then truncate the old EditLog.
+
+safemode
+^^^^^^^^
+NameNode 启动后首先进入 safemode, 此时不做 replication. NameNode 此时只接收
+DataNode 的 heartbeat and blockreport. NameNode 根据 blockreport 检查 safely
+replicated blocks 和 unsafe 的 blocks. After a configurable percentage of
+safely replicated data blocks checks in with the NameNode, the NameNode exits
+safemode. 开始 replicate 在 safemode 得到的那些尚未安全地复制的 blocks.
+
+fault tolerance
+^^^^^^^^^^^^^^^
+- metadata fail-safety. Corruption of FsImage and/or EditLog can cause HDFS
+  instance non-functional. There are several solutions to fail-safety of
+  NameNode: backup metadata on NameNode, secondary NameNode, NameNode HA.
+
+metadata replication on NameNode
+""""""""""""""""""""""""""""""""
+- NameNode can be configured to write its persistent state to multiple
+  filesystems. These writes are synchronous and atomic. The usual configuration
+  choice is to write to local disk as well as a remote NFS mount.
+ 
+Run a secondary NameNode
+""""""""""""""""""""""""
+- Secondary NameNode is not a NameNode, its main role is to periodically merge
+  the FsImage with the EditLog to prevent the edit log from becoming too large.
+
+- It keeps a copy (a checkpoint) of the merged FsImage, which can be used in the
+  event of NameNode failure. 但是由于这个同步是周期性的, 具有一定延迟, 所以如果
+  NameNode 挂掉, 则会丢失最后一次同步至宕机时间内的数据.
+
+- Secondary NameNode runs on a separate physical machine.
+
+NameNode HA using QJM
+"""""""""""""""""""""
+- With metadata replication on NameNode or secondary NameNode, the NameNode is
+  still a single point of failure (SPOF). 这导致以下问题:
+
+  * In the case of an unplanned event such as a machine crash, the cluster
+    would be unavailable until an operator restarted the NameNode.
+
+  * Planned maintenance events such as software or hardware upgrades on the
+    NameNode machine would result in windows of cluster downtime.
+  
+  HDFS HA 解决了这个问题.
+
+- active NameNode and standby NameNode architecture.
+
+  * 为了保证 FsImage 的高可用, standby NameNode 仍然要像 secondary NameNode 那
+    样, 定期 checkpoint active NameNode's filesystem namespace, 即自己维护一份
+    FsImage.
+
+  * 为了保证 active NameNode 与 standby NameNode 的一致性, 两者需要能够访问相同
+    的 EditLog 以保证两者都能实时更新 filesystem namespace, standby 不依赖于
+    active 来获取 namespace 的变动. 这要求 EditLog 是放在共享的存储上的, 而不是
+    放在 active 的本地硬盘.
+
+  * DataNodes 的 blockreport and heartbeat 要发给 active 的同时也发给 standby,
+    这样完全消除依赖性.
+
+  * Clients must be configured to handle NameNode failover.
+
+- Hadoop 3.0 以后可以有多个 standby. The minimum number of NameNodes for HA is
+  two, but you can configure more. Its suggested to not exceed 5 - with a
+  recommended 3 NameNodes - due to communication overheads.
+
+- QJM: quorum journal manager 是一个分布式存储, 专门用于存储 EditLog, 以保证
+  EditLog 是高可用的且是唯一的. active 和 standby 访问 QJM 以读写 EditLog, 保证
+  了一致性.
+
+  * QJM 本质上是一个专门用于分布式存储 EditLog 的 HDFS implementation. 需要将
+    EditLog 的存储设计为分布式的, 是因为如果只是把 EditLog 从 active NN 共享出
+    来至某个网络存储, 仍然具有存储本身的单点问题 (只是把单点从 NN 转移到了别处).
+
+  * The QJM only allows one namenode to write to the edit log at one time.
+    Otherwise, the namespace state would quickly diverge between the two,
+    risking data loss or other incorrect results.
+  
+- QJM consists of a group of journal nodes (JN). Each edit to EditLog must be
+  written to a majority of journal nodes. there can be at least 3 JNs, and
+  overall number of JournalNodes must be odd. the system can tolerate at most
+  (N - 1) / 2 failures and continue to function normally.
+
+  QJM implementation does not use ZooKeeper. ZooKeeper is used for active
+  NameNode election and failover.
+
+- NameNode failover. Failover is managed by a failover controller. The default
+  implementation uses ZooKeeper failover controller (ZKFC). Each NameNode runs
+  a lightweight failover controller process whose job is to monitor its
+  namenode for failures (using a simple heartbeating mechanism) and trigger a
+  failover should a namenode fail.
+
+  * graceful failover. A failover that is initiated by intention, e.g., for
+    routine maintenance. In this, the failover controller arranges an orderly
+    transition for both namenodes to switch roles.
+
+  * ungraceful failover. A failover that is initiated in any event of active
+    NameNode failure. In this situation, it's impossible to be sure that the
+    failed NameNode has stopped running. Various fencing methods are employed
+    to prevent the previously active NameNode from doing any damage and causing
+    corruption.
+
+  In the event of a failover, the Standby will ensure that it has read all of
+  the edits from the JournalNodes before promoting itself to the Active state.
+
+- Fencing. Fencing methods 是用于在 ungraceful failover 过程中可能需要强制移除
+  previously active NameNode, 避免它不知道自己已经不是 active 了, 却仍然在
+  serve client 的读操作. 相关的 fencing method 有:
+
+  * ssh fencing.
+
+  * shell fencing.
+
+  * STONITH -- shoot the other node in the head. Use a specialized power
+    distribution unit to forcibly power down the host machine.
+
+- HDFS URI with active and standby NameNode. The HDFS URI uses a logical
+  hostname that is mapped to a pair of namenode addresses (in the configuration
+  file), and the client library tries each namenode address until the operation
+  succeeds.
+
+- configuration of NameNode HA using QJM.
+
+  * NameNode machines. the machines on which you run the Active and Standby
+    NameNodes should have equivalent hardware to each other.
+
+  * JournalNode machines. the machines on which you run the Active and Standby
+    NameNodes should have equivalent hardware to each other.
+
+NameNode HA using NFS filer
+"""""""""""""""""""""""""""
+- QJM is prefered over NFS filer, because the former can ensure that there's
+  only one NameNode and only the NameNode with the newer Epoch number to write
+  to the EditLog at one time.
+
+DataNode
+--------
+functionalities
+^^^^^^^^^^^^^^^
+- file blocks are stored in DataNodes. DataNode has no knowledge about HDFS
+  files.
+
+- serving read and write requests from clients directly.
+
+- block creation, deletion, and replication upon instruction from the NameNode.
+
+- blockreport. DataNode periodically scans through its local file system,
+  generates a list of all HDFS data blocks, and sends this report to the
+  NameNode. This also happens at DataNode startup time.
+
+local storage scheme
+^^^^^^^^^^^^^^^^^^^^
+- each block of HDFS data is stored in a separate file in DataNode's local file
+  system.
+
+- Datanode uses a heuristic to determine the optimal number of files per
+  directory and creates subdirectories appropriately.
+
+fault tolerance
+^^^^^^^^^^^^^^^
+- heartbeats. Each DataNode sends a heartbeat message to NameNode periodically.
+  The NameNode marks DataNodes without recent Heartbeats as dead and does not
+  forward any new IO requests to them. DataNode death may cause the replication
+  factor of some blocks to fall below their specified value. When this happens,
+  NameNode initiates re-replication of those blocks.
+
+- The necessity for re-replication may arise due to many reasons: a DataNode
+  may become unavailable, a replica may become corrupted, a hard disk on a
+  DataNode may fail, or the replication factor of a file may be increased.
+
+data integrity
+^^^^^^^^^^^^^^
+- Data integrity. HDFS client software implements checksum checking on the
+  contents of HDFS files. When a client creates an HDFS file, it computes a
+  checksum of each block of the file and stores these checksums in a separate
+  hidden file in the same HDFS namespace. When a client retrieves file contents
+  it verifies that the data it received from each DataNode matches the checksum
+  stored in the associated checksum file. If not, then the client can opt to
+  retrieve that block from another DataNode that has a replica of that block.
+
+block caching
+^^^^^^^^^^^^^
+- for frequently accessed files the blocks may be explicitly cached in the
+  datanode’s memory, in an off-heap block cache.
+
+- By default, a block is cached in one DataNode's memory, but it's configurable
+  on a per-file basis.
+
+- Users or applications instruct the namenode which files to cache (and for how
+  long) by adding a cache directive to a cache pool. Cache pools are an
+  administrative grouping for managing cache permissions and resource usage.
 
 file system namespace
-^^^^^^^^^^^^^^^^^^^^^
-- traditional hierarchical file organization.
+---------------------
+- HDFS uses a traditional hierarchical file organization.
 
-- traditional file/directory operations are supported.
+- HDFS supports traditional file/directory operations.
 
 - hardlinks and symlinks are not supported.
 
 - Files are write-once except for append and truncate. Strictly one writer at
   any time (per file).
 
-data replication
-^^^^^^^^^^^^^^^^
+- POSIX-like interface can be presented by client library.
+
+data access
+-----------
 overview
-""""""""
+^^^^^^^^
 - Each file is split into blocks. Blocks are basic storage unit in HDFS.
 
 - Blocks are replicated for fault tolerance.
@@ -350,7 +577,7 @@ overview
   list of all blocks on a DataNode.
 
 replica placement (write)
-""""""""""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^^^^^^^
 - rack-aware replica placement policy.
 
 - improves data reliability, availability, network bandwith utilization.
@@ -403,7 +630,7 @@ replica placement (write)
      file is complete.
 
 replica selection (read)
-""""""""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^^^^^^
 - When client requested to read a file, NameNode tries to satisfy a read
   request from a replica that is closest to the reader (location proximity).
 
@@ -423,89 +650,48 @@ replica selection (read)
   4. When the client has finished reading the data, it closes the reading
      stream.
 
-NameNode safemode
-""""""""""""""""""
-NameNode 启动后首先进入 safemode, 此时不做 replication. NameNode 此时只接收
-DataNode 的 heartbeat and blockreport. NameNode 根据 blockreport 检查 safely
-replicated blocks 和 unsafe 的 blocks. After a configurable percentage of
-safely replicated data blocks checks in with the NameNode, the NameNode exits
-safemode. 开始 replicate 在 safemode 得到的那些尚未安全地复制的 blocks.
+HDFS federation
+---------------
+- HDFS federation 的目的是为了解决单机 NameNode 的内存大小成为 HDFS 可存储文件
+  数目的瓶颈.
 
+architecture
+^^^^^^^^^^^^
+- With HDFS federation, each NameNode manages a namespace volume, which is
+  made up of the metadata for the namespace and a block pool containing all
+  the blocks for the files in the namespace.
 
-metadata persistence
-^^^^^^^^^^^^^^^^^^^^
-- EditLog.
+- Namespace volumes are independent of each other, which means NameNode do not
+  communicate with one another, and furthermore the failure of one NameNode
+  does not affect the availability of the namespaces managed by other
+  namenodes.
 
-  * NameNode uses EditLog to record changes to file system metadata. EditLog is
-    a persistent transaction log.
-  
-  * EditLog is stored as a file in NameNode's local host OS file system.
+- A Namespace Volume is a self-contained unit of management. When a
+  Namenode/namespace is deleted, the corresponding block pool at the Datanodes
+  is deleted. Each namespace volume is upgraded as a unit, during cluster
+  upgrade.
 
-  * 需要 EditLog 是因为, even though it is efficient to read a FsImage, it is
-    not efficient to make incremental edits directly to a FsImage.
+- DataNodes register with each NameNode in the cluster and store blocks from
+  multiple block pools. They also send periodic heartbeats and block reports
+  to each NameNodes as usual.
 
-- FsImage.
+benefits
+^^^^^^^^
+- Namespace horizontal scalability. 大量的文件如单机内存无法承受, 可多台机器
+  来存储.
 
-  * A file which stores the entire file system namespace, including the mapping
-    of blocks to files and file system properties.
+- Performance. File system throughput is not limited by a single Namenode.
+  Adding more Namenodes to the cluster scales the file system read/write
+  throughput.
 
-  * FsImage is stored as a file in NameNode's local host OS file system.
+- Isolation. By using multiple Namenodes, different categories of applications
+  and users can be isolated to different namespaces.
 
-- NameNode keeps an image of the entire file system namespace and file Blockmap
-  in memory. A FsImage checkpoint is triggered at NameNode startup and a
-  configured interval. During the checkpoint, NameNode reads EditLog from disk,
-  applies all the transactions from the EditLog to the in-memory representation
-  of the FsImage, and flushes out this new version into a new FsImage on disk.
-  It can then truncate the old EditLog.
+configuration
+^^^^^^^^^^^^^
 
-data persistence
-^^^^^^^^^^^^^^^^
-- DataNode has no knowledge about HDFS files.
-
-- each block of HDFS data is stored in a separate file in DataNode's local file
-  system.
-
-- Datanode uses a heuristic to determine the optimal number of files per
-  directory and creates subdirectories appropriately.
-
-- blockreport. When a DataNode starts up, it scans through its local file
-  system, generates a list of all HDFS data blocks, and sends this report to
-  the NameNode.
-
-fault tolerance
-^^^^^^^^^^^^^^^
-- heartbeats. Each DataNode sends a heartbeat message to NameNode periodically.
-  The NameNode marks DataNodes without recent Heartbeats as dead and does not
-  forward any new IO requests to them. DataNode death may cause the replication
-  factor of some blocks to fall below their specified value. When this happens,
-  NameNode initiates re-replication of those blocks.
-
-- The necessity for re-replication may arise due to many reasons: a DataNode
-  may become unavailable, a replica may become corrupted, a hard disk on a
-  DataNode may fail, or the replication factor of a file may be increased.
-
-- Data integrity. HDFS client software implements checksum checking on the
-  contents of HDFS files. When a client creates an HDFS file, it computes a
-  checksum of each block of the file and stores these checksums in a separate
-  hidden file in the same HDFS namespace. When a client retrieves file contents
-  it verifies that the data it received from each DataNode matches the checksum
-  stored in the associated checksum file. If not, then the client can opt to
-  retrieve that block from another DataNode that has a replica of that block.
-
-- metadata fail-safety. Corruption of FsImage and/or EditLog can cause HDFS
-  instance non-functional. Fail-safety can be achieved via:
- 
-  * maintaining multiple copies of the FsImage and EditLog at NameNode. Any
-    update to either the FsImage or EditLog causes each of the FsImages and
-    EditLogs to get updated synchronously.
-
-  * HA with distributed edit log.
-
-- Snapshot. useful to roll back a corrupted HDFS instance to a previously known
-  good point in time.
-
-data accessibility
-^^^^^^^^^^^^^^^^^^
+HDFS clients
+------------
 multiple ways to access hdfs data:
 
 * FileSystem Java API
