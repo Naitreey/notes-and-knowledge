@@ -158,10 +158,19 @@ MapReduce
 MapReduce Job History Server
 """"""""""""""""""""""""""""
 
-File systems
-------------
-- At storage layer, hadoop has a general-purpose filesystem abstration. It uses
-  a plugin model, different FS implementation can be used. The default is HDFS.
+Hadoop File systems
+===================
+overview
+--------
+- At storage layer, hadoop has a general-purpose filesystem abstration.
+  Different FS implementation exists. By default Hadoop uses HDFS
+  implementation.
+
+  Abstract client interface to hadoop compatible filesystems:
+
+  .. code:: java
+
+    org.apache.hadoop.fs.FileSystem
 
 - Location awareness of Hadoop compatible file systems.
 
@@ -172,25 +181,154 @@ File systems
   Location-awareness makes the following possible:
   
   * Schedule map and reduce tasks on nodes which the data is located at or near
-    (e.g., on the same rack/switch).
+    (e.g., on the same rack/switch). This is data locality optimization.
   
   * data replication is performed so that data redundancy is ensured across
     multiple racks.
 
-- alternatvie file systems. When Hadoop MapReduce is used with an alternate
-  file system, the NameNode, standby NameNode, and DataNode architecture of
-  HDFS are replaced by the file-system-specific equivalents. The following
-  alternative file systems are notable:
+- 注意到 NameNode, DataNode, etc. concepts 是 HDFS 中才存在的实体. When Hadoop
+  is used with an alternate file system, architecture of HDFS are replaced by
+  the file-system-specific equivalents.
 
-  * Amazon S3
+implementations
+---------------
+Local
+^^^^^
+- URI scheme: file.
 
-  * Windows Azure Storage Blobs file system
+- Java implementation:
+ 
+  with checksum
 
-  * IBM General Parallel File System
+  .. code:: java
 
-  * MapR's MapRFS.
+    org.apache.hadoop.fs.LocalFileSystem
 
-  * FTP
+  without checksum
+
+  .. code:: java
+
+    org.apache.hadoop.fs.RawLocalFileSystem
+
+- use local disk, with/without client-side checksum, for hadoop's
+  standalone mode. 
+
+HDFS
+^^^^
+- URI scheme: hdfs
+
+- Java implementation:
+
+  .. code:: java
+
+    org.apache.hadoop.hdfs.DistributedFileSystem
+
+- Hadoop's default fs.
+
+WebHDFS
+^^^^^^^
+- URI scheme: webhdfs
+
+- Java implementation:
+
+  .. code:: java
+
+    org.apache.hadoop.hdfs.web.WebHdfsFileSystem
+
+- A filesystem providing authenticated access to HDFS over http.
+
+Secure WebHDFS
+^^^^^^^^^^^^^^
+- URI scheme: swebhdfs
+
+- Java implementation:
+
+  .. code:: java
+
+    org.apache.hadoop.hdfs.web.SWebHdfsFileSystem
+
+- An https version of WebHDFS.
+
+HAR
+^^^
+- URI scheme: har.
+
+- Java implementation:
+
+  .. code:: java
+
+    org.apache.hadoop.fs.HarFileSystem
+
+- A filesystem layered on another filesystem for archiving files. Hadoop
+  Archives are used for packing lots of files in HDFS into a single archive
+  file to reduce the namenode’s memory usage.
+
+View
+^^^^
+- URI scheme: viewfs.
+
+- Java implementation:
+
+  .. code:: java
+
+    org.apache.hadoop.viewfs.ViewFileSystem
+
+- A client-side mount table for other hadoop filesystems.
+
+FTP
+^^^
+- URI scheme: ftp.
+
+- Java implementation:
+
+  .. code:: java
+
+    org.apache.hadoop.fs.ftp.FTPFileSystem
+
+- A filesystem backed by FTP server.
+
+Amazon S3
+^^^^^^^^^
+- URI scheme: s3a
+
+- Java implementation:
+
+  .. code:: java
+
+    org.apache.hadoop.fs.s3a.S3AFileSystem
+
+- A filesystem backed by Amazon S3.
+
+Microsoft Azure Storage Blobs file system
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- URI scheme: azure
+
+- Java implementation:
+
+  .. code:: java
+
+    org.apache.hadoop.fs.azure.NativeAzureFileSystem
+
+- A filesystem backed by Azure.
+
+OpenStack Swift
+^^^^^^^^^^^^^^^
+- URI scheme: swift
+
+- Java implementation:
+
+  .. code:: java
+
+    org.apache.hadoop.fs.swift.snative.SwiftNativeFileSystem
+
+- A filesystem backed by Swift.
+
+IBM General Parallel File System
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+MapRFS
+^^^^^^
+
 
 HDFS
 ====
@@ -362,6 +500,7 @@ replicated blocks 和 unsafe 的 blocks. After a configurable percentage of
 safely replicated data blocks checks in with the NameNode, the NameNode exits
 safemode. 开始 replicate 在 safemode 得到的那些尚未安全地复制的 blocks.
 
+
 fault tolerance
 ^^^^^^^^^^^^^^^
 - metadata fail-safety. Corruption of FsImage and/or EditLog can cause HDFS
@@ -438,11 +577,46 @@ NameNode HA using QJM
   QJM implementation does not use ZooKeeper. ZooKeeper is used for active
   NameNode election and failover.
 
-- NameNode failover. Failover is managed by a failover controller. The default
-  implementation uses ZooKeeper failover controller (ZKFC). Each NameNode runs
-  a lightweight failover controller process whose job is to monitor its
-  namenode for failures (using a simple heartbeating mechanism) and trigger a
-  failover should a namenode fail.
+- NameNode automatic failover.
+  
+  Mechanism. Automatic failover is managed by a failover controller. The
+  default implementation uses ZooKeeper and ZooKeeper failover controller
+  (ZKFC). ZooKeeper quorum runs in the cluster, which is responsible for:
+
+  * Failure detection - each of the NameNode machines in the cluster maintains
+    a persistent session in ZooKeeper. If the machine crashes, the ZooKeeper
+    session will expire, notifying the other NameNode(s) that a failover should
+    be triggered.
+
+  * Active NameNode election - ZooKeeper provides a simple mechanism to
+    exclusively elect a node as active. If the current active NameNode crashes,
+    another node may take a special exclusive lock in ZooKeeper indicating that
+    it should become the next active.
+
+  ZKFC is a lightweight process runs on each NameNode machine, which is
+  responsible for:
+
+  * Health monitoring - ZKFC pings its local NameNode periodically with a
+    health-check command. As long as the NameNode responds timely with a
+    healthy status, ZKFC considers the node healthy. Otherwise it's unhealthy.
+    For a NameNode, it will only responds as healthy when it has read all of
+    the edits from the JournalNodes.
+
+  * ZooKeeper session management - when the local NameNode is healthy, the ZKFC
+    holds a session open in ZooKeeper. If the local NameNode is active, it also
+    holds a special “lock” znode. If it's unhealthy, ZKFC releases the session;
+    or in terms of node crash, session will automatically expire. Either way,
+    the lock znode will be automatically deleted.
+
+  * ZooKeeper-based election - if the local NameNode is healthy, and the ZKFC
+    sees that no other node currently holds the lock znode, it will itself try
+    to acquire the lock. If it succeeds, then it has “won the election”, and is
+    responsible for running a failover to make its local NameNode active. The
+    failover process is similar to the manual failover: first, the previous
+    active is fenced if necessary, and then the local NameNode transitions to
+    active state.
+
+  Two kinds of failover.
 
   * graceful failover. A failover that is initiated by intention, e.g., for
     routine maintenance. In this, the failover controller arranges an orderly
@@ -453,9 +627,6 @@ NameNode HA using QJM
     failed NameNode has stopped running. Various fencing methods are employed
     to prevent the previously active NameNode from doing any damage and causing
     corruption.
-
-  In the event of a failover, the Standby will ensure that it has read all of
-  the edits from the JournalNodes before promoting itself to the Active state.
 
 - Fencing. Fencing methods 是用于在 ungraceful failover 过程中可能需要强制移除
   previously active NameNode, 避免它不知道自己已经不是 active 了, 却仍然在
@@ -478,14 +649,26 @@ NameNode HA using QJM
   * NameNode machines. the machines on which you run the Active and Standby
     NameNodes should have equivalent hardware to each other.
 
-  * JournalNode machines. the machines on which you run the Active and Standby
-    NameNodes should have equivalent hardware to each other.
+  * JournalNode machines. the machines on which you run the JournalNodes. The
+    JournalNode daemon is relatively lightweight, so these daemons may
+    reasonably be collocated on machines with other Hadoop daemons.
+
+  * ZooKeeper machines. Since ZooKeeper itself has light resource requirements,
+    it is acceptable to collocate the ZooKeeper nodes on the same hardware as
+    the HDFS NameNode and Standby Node. Many operators choose to deploy the
+    third ZooKeeper process on the same node as the YARN ResourceManager. It is
+    advisable to configure the ZooKeeper nodes to store their data on separate
+    disk drives from the HDFS metadata for best performance and isolation.
 
 NameNode HA using NFS filer
 """""""""""""""""""""""""""
 - QJM is prefered over NFS filer, because the former can ensure that there's
   only one NameNode and only the NameNode with the newer Epoch number to write
   to the EditLog at one time.
+
+Web UI
+^^^^^^
+- port: 9870
 
 DataNode
 --------
@@ -546,6 +729,8 @@ block caching
 
 file system namespace
 ---------------------
+overview
+^^^^^^^^
 - HDFS uses a traditional hierarchical file organization.
 
 - HDFS supports traditional file/directory operations.
@@ -556,6 +741,25 @@ file system namespace
   any time (per file).
 
 - POSIX-like interface can be presented by client library.
+
+file permissions
+^^^^^^^^^^^^^^^^
+- similar to the POSIX. with the following exception:
+
+  * For regular file, execution permission (x) is ignored, since files can't
+    be executed in HDFS. For directory, it's like POSIX.
+
+- permission checking.
+
+  * can be enabled/disabled by dfs.permissions.enabled property.
+
+  * When permissions checking is enabled, the owner permissions are checked if
+    the client’s username matches the owner, and the group permissions are
+    checked if the client is a member of the group; otherwise, the other
+    permissions are checked.
+
+  * For superuser, permissions are not checked. The NameNode process is the
+    superuser.
 
 data access
 -----------
@@ -690,19 +894,101 @@ benefits
 configuration
 ^^^^^^^^^^^^^
 
-HDFS clients
-------------
-multiple ways to access hdfs data:
+client interfaces
+-----------------
+Java API
+^^^^^^^^
+- the hadoop-native API.
 
-* FileSystem Java API
+- java class: org.apache.hadoop.fs.FileSystem
 
-* C wrapper for the said API
+- also a generic interface to any hadoop compatible filesystem, not only to
+  HDFS.
 
-* CLI: FS shell.
+HTTP REST API
+^^^^^^^^^^^^^
+- The HTTP REST API exposed by the WebHDFS protocol makes it easier for other
+  languages to interact with HDFS. Note that the HTTP interface is slower than
+  the native Java client, should be avoided for very large data transfers.
 
-* REST API.
+- two ways for accessing HDFS over HTTP.
 
-* NFS gateway.
+  * directly, where the HDFS daemons serve HTTP requests to clients;
+
+  * via HttpFS proxy, which accesses HDFS on the client’s behalf using the
+    usual DistributedFileSystem API. clients speak WebHDFS with proxies.
+
+- There are also two equivalent URI schemes can be used with HTTP REST API.
+
+  * When using hadoop's filesystem tools, webhdfs scheme is recognized::
+
+      [s]webhdfs://<host>:<http_port>/<path>
+
+  * When using generic http tools, http scheme can be used::
+
+      http[s]://<host>:<http_port>/webhdfs/v1/<path>?op=...
+
+  注意到 webhdfs 访问的端口就是 NameNode and DataNode 配置的 http server 端口
+  (因为它就是用 http 协议的).
+
+via WebHDFS directly
+""""""""""""""""""""
+- The embedded web servers in the namenode and datanodes act as WebHDFS
+  endpoints.
+
+- File metadata operations are handled by the namenode.
+  
+- file read and write operations are sent first to the namenode, which sends an
+  HTTP redirect to the client indicating the datanode to stream file data from
+  or to.
+
+via HttpFS proxy
+""""""""""""""""
+- The HttpFS proxy is started independently of the namenode and datanode
+  daemons.
+
+- clients speak WebHDFS with proxies. Proxies accesses HDFS on the client’s
+  behalf using the usual DistributedFileSystem API.
+
+- The proxies are stateless, so they can run behind a standard load balancer.
+  All traffic to the cluster passes through the proxy. The client never
+  accesses the namenode or datanode directly.
+
+- This allows for stricter firewall and bandwidth-limiting policies to be put
+  in place.
+
+
+C API
+^^^^^
+- libhdfs C library mirrors the Java FileSystem interface.
+
+- Despite its name, it's a generic interface to any hadoop compatible
+  filesystem, not only to HDFS.
+
+- It uses Java Native Interface (JNI) to call a Java filesystem client.
+
+POSIX API via NFS gateway
+^^^^^^^^^^^^^^^^^^^^^^^^^
+- Using Hadoop's NFSv3 gateway, it's possible to mount HDFS on local client's
+  filesystem so that HDFS can be accessed in the POSIX way.
+
+- The following usage patterns are supported:
+
+  * browse HDFS filesystem through local filesystem.
+
+  * download files from HDFS
+
+  * upload files to HDFS.
+
+  * stream data directly to HDFS through mount point. File appending is
+    supported, but random write is not supported.
+
+POSIX API via FUSE
+^^^^^^^^^^^^^^^^^^
+- Fuse-DFS is implemented in C using libhdfs as the interface to HDFS.
+
+- Since it uses libhdfs, it's a generic interface to any hadoop compatible
+  filesystem, not only to HDFS.
 
 YARN
 ====
@@ -712,6 +998,10 @@ YARN
 Architecture
 ------------
 
+
+ResourceManager
+---------------
+- port: 8088
 
 NodeManager
 -----------
@@ -964,6 +1254,10 @@ Java API
   
   * type of output value
 
+History server
+--------------
+- port: 19888
+
 Tools
 =====
 Hadoop Streaming
@@ -1129,8 +1423,152 @@ Dumbo
 -----
 - A more pythonic API to code MapReduce in Python.
 
+Security
+========
+user authentication
+-------------------
+- By default, Hadoop runs with security disabled, which means that a client’s
+  identity is not authenticated. Because clients are remote, it is possible for
+  a client to become an arbitrary user simply by creating an account of that
+  name on the remote system.
+
+Running Hadoop
+==============
+standalone mode
+---------------
+- no daemon running and everything runs in a single JVM.
+
+- the local filesystem and the local MapReduce job runner are used.
+
+- suitable for running MapReduce programs during development.
+
+minimal configurations
+^^^^^^^^^^^^^^^^^^^^^^
+- core-site.xml
+
+  * fs.defaultFS: ``file:///``
+
+- mapred-site.xml
+
+  * mapreduce.framework.name: ``local``
+
+Pseudo-distributed mode
+-----------------------
+- daemons run on the local machine. simulating a cluster.
+
+- HDFS and YARN daemons are used, MapReduce is configured to use YARN.
+
+- Hadoop doesn’t actually distinguish between pseudo-distributed and fully
+  distributed modes; it merely starts daemons on the set of hosts in the
+  cluster (defined by the ``workers`` file) by SSHing to each host and starting
+  a daemon process. Pseudodistributed mode is just a special case of fully
+  distributed mode in which the (single) host is ``localhost``.
+
+minimal configurations
+^^^^^^^^^^^^^^^^^^^^^^
+- core-site.xml
+
+  * fs.defaultFS: ``hdfs://localhost/``
+
+- hdfs-site.xml
+
+  * dfs.replication: ``1``
+
+- mapred-site.xml
+
+  * mapreduce.framework.name: ``yarn``
+
+- yarn-site.xml
+
+  * yarn.resourcemanager.hostname: ``localhost``
+
+  * yarn.nodemanager.aux-services: ``mapreduce_shuffle``
+
+setup
+^^^^^
+See `setup`_ in `Fully distributed mode`_, with hostname substituted
+by localhost.
+
+Fully distributed mode
+----------------------
+- daemons run on a cluster of machines.
+
+- HDFS and YARN daemons are used, MapReduce is configured to use YARN.
+
+minial configurations
+^^^^^^^^^^^^^^^^^^^^^
+- core-site.xml
+
+  * fs.defaultFS: ``hdfs://<namenode>/``
+
+- hdfs-site.xml
+
+  * dfs.replication: ``3``
+
+- mapred-site.xml
+
+  * mapreduce.framework.name: ``yarn``
+
+- yarn-site.xml
+
+  * yarn.resourcemanager.hostname: ``<resourcemanager>``
+
+  * yarn.nodemanager.aux-services: ``mapreduce_shuffle``
+
+setup
+^^^^^
+- configure passwordless ssh to each ``workers`` node, for each of Hadoop users:
+  hadoop, hdfs, yarn, mapred. hadoop 的各种启动、停止脚本需要使用 ssh 访问各个
+  节点, 从而在整个集群各个节点上一起操作.
+
+- formatting the HDFS filesystem:
+
+  .. code:: sh
+
+    hdfs namenode -format
+
+- start HDFS, YARN, MapReduce daemons:
+
+  .. code:: sh
+
+    start-dfs.sh
+    start-yarn.sh
+    mapred --daemon start historyserver
+
+- stop MapReduce, YARN, HDFS daemons:
+
+  .. code:: sh
+
+    mapred --daemon stop historyserver
+    stop-yarn.sh
+    stop-dfs.sh
+
 configuration
 =============
+shell-specific configuration
+----------------------------
+- Add hadoop binaries to PATH (in bashrc):
+
+  .. code:: sh
+
+    [[ -d "$HADOOP_HOME" ]] && {
+        [[ ":${PATH}:" == *:$HADOOP_HOME/bin:* ]] || PATH="${PATH:+$PATH:}$HADOOP_HOME/bin"
+        [[ ":${PATH}:" == *:$HADOOP_HOME/sbin:* ]] || PATH="${PATH:+$PATH:}$HADOOP_HOME/sbin"
+    }
+
+- Add java home environ (in bashrc):
+
+  .. code:: sh
+
+    declare -x JAVA_HOME=/usr/lib/jvm/default
+
+- specify ``HADOOP_HOME`` and ``HADOOP_CONF_DIR`` (in /etc/profile.d/hadoop.sh)
+
+  .. code:: sh
+
+    export HADOOP_HOME=/usr/lib/hadoop
+    export HADOOP_CONF_DIR=/etc/hadoop
+
 environment configuration
 -------------------------
 - setting site-specific customization of the Hadoop daemons' process environment.
@@ -1139,12 +1577,12 @@ environment configuration
 
   * /etc/hadoop/yarn-env.sh
 
+  * /etc/hadoop/mapred-env.sh
+
   * /etc/hadoop/httpfs-env.sh
    
   * /etc/hadoop/kms-env.sh
    
-  * /etc/hadoop/mapred-env.sh
-
 hadoop-env
 ^^^^^^^^^^
 generic
@@ -1215,7 +1653,8 @@ memory
 
 daemon configuration
 --------------------
-- read-only default configuration:
+- read-only default configurations for all properties, under various
+  subdirectories of ``$HADOOP_HOME/share/doc/hadoop``:
 
   * core-default.xml
 
@@ -1225,33 +1664,56 @@ daemon configuration
 
   * mapred-default.xml
 
+  * httpfs-default.html
+
 - site-specific configuration:
 
-  * /etc/hadoop/core-site.xml
+  * /etc/hadoop/core-site.xml, common properties.
    
-  * /etc/hadoop/hdfs-site.xml
+  * /etc/hadoop/hdfs-site.xml, HDFS properties.
    
-  * /etc/hadoop/yarn-site.xml
+  * /etc/hadoop/yarn-site.xml, YARN properties.
     
-  * /etc/hadoop/mapred-site.xml
+  * /etc/hadoop/mapred-site.xml, MapReduce properties.
+
+  * /etc/hadoop/httpfs-site.xml, HttpFS properties.
 
 core-site.xml
 ^^^^^^^^^^^^^
-- fs.defaultFS
+- fs.defaultFS. default: ``file:///``. The name of the default file system. A
+  URI whose scheme and authority determine the FileSystem implementation. The
+  uri's scheme determines the config property (fs.SCHEME.impl) naming the
+  FileSystem implementation class. The uri's authority is used to determine the
+  host, port, etc. for a filesystem. 注意这个属性决定 hadoop 使用哪个文件系统
+  implementation.
 
 - io.file.buffer.size
 
 hdfs-site.xml
 ^^^^^^^^^^^^^
-NameNode
-""""""""
-- dfs.namenode.name.dir
-
+HDFS
+""""
 - dfs.hosts
 
 - dfs.hosts.exclude
 
 - dfs.blocksize
+
+- dfs.replication. default: 3. default block replication. Per-file replication
+  factor overrides this.
+
+- dfs.permissions.enabled. default true. enable permission checking in HDFS.
+  Switching between true/false does not change the mode, owner or group of
+  files or directories.
+
+NameNode
+""""""""
+- dfs.namenode.rpc-address. RPC address that handles all client requsts.
+  default RPC port is 8020.
+
+- dfs.namenode.http-address. default: 0.0.0.0:9870. namenode web UI.
+
+- dfs.namenode.name.dir
 
 - dfs.namenode.handler.count
 
@@ -1365,6 +1827,10 @@ MapReduce Job History Server
 
 - mapreduce.jobhistory.done-dir
 
+httpfs-site.xml
+^^^^^^^^^^^^^^^
+- httpfs.http.port. default 14000. http port for rest api.
+
 workers flie
 ------------
 - /etc/hadoop/workers
@@ -1375,6 +1841,123 @@ workers flie
 
 CLI
 ===
+hadoop
+------
+client commands
+^^^^^^^^^^^^^^^
+fs
+""
+- This the hadoop's generic file system shell. It implements the client
+  interface to any hadoop compatible filesystems.
+
+help
+~~~~
+::
+
+  hadoop fs -help [cmd ...]
+
+- display help for each specified command or all commands if none given.
+
+- this is much more verbose than ``-usage``.
+
+put
+~~~
+::
+
+  hadoop fs -put [-f] [-p] [-l] [-d] <localsrc> ... <dst>
+
+- copy files from local file system to a hadoop filesystem. by default fails if dst exists.
+
+- dst can be:
+ 
+  * a fully qualified hadoop filesystem uri, e.g. ``hdfs://<namenode>/path/to/file``
+   
+  * absolute path, omitting scheme part (in which case the fs.defaultFS is
+    assumed), e.g. ``/path/to/file``
+
+  * relative path, relative to user's home directory in a hadoop filesystem, e.g.,
+    ``path/to/file``.
+
+- options.
+
+  * ``-f``. overwrites the destination if exists.
+
+copyFromLocal
+~~~~~~~~~~~~~
+::
+
+  hadoop fs -copyFromLocal [-f] [-p] [-l] [-d] [-t <thread-count>] <localsrc> ... <dst>
+
+- same as -put. except for thread option.
+
+- options.
+
+  * ``-t <thread count>``. number of threads to be used, default 1.
+
+get
+~~~
+::
+
+  hadoop fs -get [-f] [-p] [-ignoreCrc] [-crc] <src> ... <localdst>
+
+- src can be a file glob pattern.
+
+- When copying multiple files, dst must be a directory.
+
+copyToLocal
+~~~~~~~~~~~
+- identical to -get.
+
+mkdir
+~~~~~
+::
+
+  hadoop fs -mkdir [-p] <path> ...
+
+- create paths as directories.
+
+- options:
+
+  * ``-p``. do not fail if directory already exists, making parent directories
+    as necessary.
+
+rmdir
+~~~~~
+::
+
+  hadoop fs -rmdir [--ignore-fail-on-non-empty] <dir> ...
+
+- remove empty directories.
+
+- won't remove non empty ones.
+
+ls
+~~
+::
+
+  hadoop fs -ls [-C] [-d] [-h] [-q] [-R] [-t] [-S] [-r] [-u] [-e] [<path> ...]
+
+- ls paths matching file glob patterns. If none given, list the content of
+  ``/user/<current user>``.
+
+- output columns:
+
+  1. same as ls -l
+
+  2. replication factor of the file. For directory, this is empty, because
+     directory is implemented as metadata and stored by NameNode. (assuming
+     HDFS)
+
+  3. same as ls -l
+
+  4. same as ls -l
+
+  5. file size in bytes. for directory, this is 0. (assuming HDFS)
+
+  6. same as ls -l
+
+  7. same as ls -l
+
 hdfs
 ----
 admin commands
@@ -1389,6 +1972,8 @@ client commands
 ^^^^^^^^^^^^^^^
 dfs
 """"
+- this an alias of ``hadoop fs`` filesystem shell, specific to HDFS client
+  interface.
 
 daemon commands
 ^^^^^^^^^^^^^^^
@@ -1404,6 +1989,12 @@ datanode
 ::
 
   hdfs [--daemon (start|status|stop)] datanode
+
+httpfs
+""""""
+::
+
+  hdfs [--daemon (start|status|stop)] httpfs
 
 yarn
 ----
