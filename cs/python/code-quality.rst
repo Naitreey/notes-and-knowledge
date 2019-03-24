@@ -68,3 +68,481 @@ useful for automated CI.
 1, dead code found, or invalid input.
 
 2, invalid cli usage.
+
+yapf
+====
+overview
+--------
+- yapf -- yet another python formatter.
+
+- yapf is based off of clang-format and gofmt. In essence, the algorithm takes
+  the code and reformats it to the best formatting that conforms to the style
+  guide, even if the original code didn't violate the style guide.
+
+- The goal is straightforward: end all holy wars about formatting - if the
+  whole codebase of a project is simply piped through YAPF whenever
+  modifications are made, the style remains consistent throughout the project
+  and there's no point arguing about style in every code review.
+
+- version support: 2.7, 3.6.4+. Run yapf under the interpreter whose version
+  matches that of code to be formatted.
+
+usage
+-----
+::
+
+  yapf [options] [file ...]
+
+- Read from stdin if no files are specified.
+
+- options.
+
+  * ``-d``, ``--diff``, print the diff for the fixed source
+
+  * ``-i``, change in-place
+
+  * ``-r``, run recursively over directories
+
+  * ``-l <start>-<end>``, reformat from "start" line to "end" line. lines are
+    1-based.
+
+  * ``-e PATTERN``, exclude files matching PATTERN from being formatted.
+
+  * ``--style STYLE``. the formatting style. See `formatting style`_ for
+    detail.
+
+  * ``--style-help``. show style settings and exit. this output can be saved to
+    .style.yapf to make your settings permanent
+
+  * ``--no-local-style``. don't search for a local style definition.
+
+  * ``-p``. run yapf in parallel when formatting.
+
+  * ``-vv``, print out file names while processing.
+
+- return code:
+
+  * normally: 0 on success, non-0 otherwise.
+
+  * with ``--diff``, 0 if no changes, non-0 otherwise. can be used in a CI
+    workflow to test that code has been YAPF-formatted.
+
+- formatting style search order.
+
+  * specified by the command line option ``--style``.
+
+  * In the ``[style]`` section of a ``.style.yapf`` file in either the current
+    directory or one of its parent directories.
+
+  * In the ``[yapf]`` section of a ``setup.cfg`` file in either the current
+    directory or one of its parent directories.
+
+  * In the ``~/.config/yapf/style`` file.
+
+  * Use pep8 style as default.
+  
+yapfignore
+----------
+In addition to exclude patterns provided on commandline, YAPF looks for
+additional patterns specified in a file named ``.yapfignore`` located in the
+working directory from which YAPF is invoked.
+
+formatting style
+----------------
+- ``--style`` option value can be
+  
+  * a style name. valid style names: pep8, google, Chromium, facebook.
+   
+  * a path to a file with style settings.
+
+  * a dict of key-value pairs, equivalent to a style config file's content.
+
+- config file format:
+
+  * ini format.
+
+  * keys are case-insensitive.
+
+- config keys. a full list of configuration keys are defined in ``style.py``.
+
+  * ``based_on_style``, which of the predefined styles this custom style is
+    based on.
+
+  * ``ALIGN_CLOSING_BRACKET_WITH_VISUAL_INDENT``, Align closing bracket with
+    visual indentation. (??)
+
+  * ``ALLOW_MULTILINE_LAMBDAS``, Allow lambdas to be formatted on more than one
+    line. (??)
+
+  * ``ALLOW_MULTILINE_DICTIONARY_KEYS``, Allow dictionary keys to exist on
+    multiple lines.
+
+      .. code:: python
+
+      x = {
+          ('this is the first element of a tuple',
+           'this is the second element of a tuple'):
+               value,
+      }
+
+  * ``ALLOW_SPLIT_BEFORE_DEFAULT_OR_NAMED_ASSIGNS``, Allow splitting before a
+    default / named assignment in an argument list. (??)
+
+  * ``ALLOW_SPLIT_BEFORE_DICT_VALUE``. Allow splits before the dictionary
+    value.
+
+      .. code:: python
+
+      x = {
+          ('this is the first element of a tuple', 'this is the second element of a tuple'):
+          value,
+      }
+
+      # vs
+
+      x = {
+          ('this is the first element of a tuple', 'this is the second element of a tuple'): value,
+      }
+
+  * ``ARITHMETIC_PRECEDENCE_INDICATION``. Let spacing indicate operator
+    precedence. 
+
+
+    .. code:: python
+
+      a = 1 * 2 + 3 / 4
+      b = 1 / 2 - 3 * 4
+      c = (1 + 2) * (3 - 4)
+      d = (1 - 2) / (3 + 4)
+      e = 1 * 2 - 3
+      f = 1 + 2 + 3 + 4
+
+      # vs
+
+      a = 1*2 + 3/4
+      b = 1/2 - 3*4
+      c = (1+2) * (3-4)
+      d = (1-2) / (3+4)
+      e = 1*2 - 3
+      f = 1 + 2 + 3 + 4
+
+  * ``BLANK_LINE_BEFORE_NESTED_CLASS_OR_DEF``. Insert a blank line before a
+    ``def`` or ``class`` immediately nested within another ``def`` or
+    ``class``.
+
+    .. code:: python
+
+      class Foo:
+                         # <------ this blank line
+          def method():
+              pass
+
+  * ``BLANK_LINE_BEFORE_MODULE_DOCSTRING``. Insert a blank line before a module
+    docstring.
+
+    .. code:: python
+
+      #!/usr/bin/env python
+                         # <------ this blank line
+      """
+      1111
+      """
+  * ``BLANK_LINE_BEFORE_CLASS_DOCSTRING``.  Insert a blank line before a
+    class-level docstring.
+
+    .. code:: python
+
+       class A:
+                         # <------ this blank line
+           """
+           sefsef
+           """
+       
+           def f(self):
+               pass
+
+  * ``BLANK_LINES_AROUND_TOP_LEVEL_DEFINITION``.  Sets the number of desired
+    blank lines surrounding top-level function and class definitions.
+
+    .. code:: python
+
+      class Foo:
+          pass
+                         # <------ having two blank lines here
+                         # <------ is the default setting
+      class Bar:
+          pass
+
+  * ``COALESCE_BRACKETS``.  Do not split consecutive brackets. Only relevant
+    when ``DEDENT_CLOSING_BRACKETS`` is set.
+
+    .. code:: python
+
+      call_func_that_takes_a_dict(
+          {
+              'key1': 'value1',
+              'key2': 'value2',
+          }
+      )
+
+      # would reformat to:
+
+      call_func_that_takes_a_dict({
+          'key1': 'value1',
+          'key2': 'value2',
+      })
+
+  * ``COLUMN_LIMIT``.  The column limit (or max line-length)
+
+  * ``CONTINUATION_ALIGN_STYLE`` The style for continuation alignment. (??)
+    Possible
+    values are:
+
+    - ``SPACE``: Use spaces for continuation alignment. This is default
+      behavior.
+
+    - ``FIXED``: Use fixed number (``CONTINUATION_INDENT_WIDTH``) of columns
+      (ie: ``CONTINUATION_INDENT_WIDTH``/``INDENT_WIDTH`` tabs) for
+      continuation alignment.
+
+    - ``VALIGN-RIGHT``: Vertically align continuation lines with indent
+      characters. Slightly right (one more indent character) if cannot
+      vertically align continuation lines with indent characters.
+
+    For options ``FIXED``, and ``VALIGN-RIGHT`` are only available when
+    ``USE_TABS`` is enabled.
+
+  * ``CONTINUATION_INDENT_WIDTH``.  Indent width used for line continuations.
+
+  * ``DEDENT_CLOSING_BRACKETS``.  Put closing brackets on a separate line,
+    dedented, if the bracketed expression can't fit in a single line. Applies
+    to all kinds of brackets, including function definitions and calls.
+
+    .. code:: python
+
+      config = {
+          'key1': 'value1',
+          'key2': 'value2',
+      }  # <--- this bracket is dedented and on a separate line
+
+  * ``DISABLE_ENDING_COMMA_HEURISTIC``.  Disable the heuristic which places
+    each list element on a separate line if the list is comma-terminated.
+
+    .. code:: python
+
+      a = [
+          1, 2, 3, 4, 5,
+          6, 7, 8, 9, 10,
+      ]
+
+      # whether to format into this
+
+      a = [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+      ]
+
+  * ``EACH_DICT_ENTRY_ON_SEPARATE_LINE``. 当 dict 在一行中放不下时, place each
+    dictionary entry onto its own line.
+
+    .. code:: python
+      a = {
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa": 1,
+          "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb": 2, "c": 3, "d": 4
+      }
+
+      # vs
+
+      a = {
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa": 1,
+          "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb": 2,
+          "c": 3,
+          "d": 4
+      }
+
+  * ``I18N_COMMENT``.  The regex for an internationalization comment. The
+    presence of this comment stops reformatting of that line, because the
+    comments are required to be next to the string they translate.
+
+  * ``I18N_FUNCTION_CALL``.  The internationalization function call names. The
+    presence of this function stops reformatting on that line, because the
+    string it has cannot be moved away from the i18n comment. (??)
+
+  * ``INDENT_DICTIONARY_VALUE``. 当 value cannot fit on the same line as the
+    dictionary key 从而需要放到下一行时, 将 value indent 一下.
+
+    .. code:: python
+
+      a = {
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa":
+              1,
+          "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb":
+              2,
+          "c":
+              3,
+          "d":
+              4
+      }
+
+  * ``INDENT_WIDTH``.  The number of columns to use for indentation.
+
+  * ``INDENT_BLANK_LINES``. 对于需要空出的行, prefer indented blank lines
+    rather than empty.
+
+  * ``JOIN_MULTIPLE_LINES``.  Join short lines into one line. E.g., single line
+    if statements. (??)
+
+  * ``NO_SPACES_AROUND_SELECTED_BINARY_OPERATORS``.  Do not include spaces
+    around selected binary operators.  a string of comma separated list of
+    operators.
+
+  * ``SPACES_AROUND_POWER_OPERATOR`` Set to True to prefer using spaces around
+    ``**``.
+
+  * ``SPACES_AROUND_DEFAULT_OR_NAMED_ASSIGN``.  Set to True to prefer spaces
+    around the assignment operator for default or keyword arguments.
+
+  * ``SPACES_BEFORE_COMMENT``.  The number of spaces required before a trailing
+    comment. This can be a single value (representing the number of spaces
+    before each trailing comment) or a python list of values (representing
+    alignment column values; trailing comments within a block will be aligned
+    to the first column value that is greater than the maximum line length
+    within the block).  (???)
+
+  * ``SPACE_BETWEEN_ENDING_COMMA_AND_CLOSING_BRACKET``.  Insert a space between
+    the ending comma and closing bracket of a list, etc.
+
+    .. code:: python
+
+      a = [1, 2, 3, 4, 5, 6, 7, 8,]
+      # vs
+      a = [1, 2, 3, 4, 5, 6, 7, 8, ]
+
+  * ``SPLIT_ARGUMENTS_WHEN_COMMA_TERMINATED``.  Split before arguments if the
+    argument list is terminated by a comma. (??)
+
+  * ``SPLIT_ALL_COMMA_SEPARATED_VALUES``.  If a comma separated list (dict,
+    list, tuple, or function def) is on a line that is too long, split such
+    that all elements are on a single line.
+
+    .. code:: python
+
+      a = [1111111111111111111111111,2222222222222222222,3333333333333333333,44444444444444444444,55555555555555555]
+
+      # to this
+      a = [
+          1111111111111111111111111, 2222222222222222222, 3333333333333333333,
+          44444444444444444444, 55555555555555555
+      ]
+
+      # vs to this
+
+      a = [
+          1111111111111111111111111,
+          2222222222222222222,
+          3333333333333333333,
+          44444444444444444444,
+          55555555555555555
+      ]
+
+  * ``SPLIT_BEFORE_BITWISE_OPERATOR``.  Set to True to prefer splitting before
+    '&', '|' or '^' rather than after.
+
+    .. code:: python
+
+      if (aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa & bbbbbbbbbbbbbbbbbbbbbbb
+              & ccccccccccccccc & ddddddddddddddd):
+          pass
+
+  * ``SPLIT_BEFORE_ARITHMETIC_OPERATOR``.  Set to True to prefer splitting
+    before '+', '-', '*', '/', '//', or '@' rather than after.
+
+    .. code:: python
+
+      a = (bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb+ cccccccccccccccccccc+ddddddddddddddddddd+eeeeeeeeeeeeeeeeeee+ffffffffffffffffffffffffffff)
+      # vs
+      a = (bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb + cccccccccccccccccccc
+           + ddddddddddddddddddd + eeeeeeeeeeeeeeeeeee
+           + ffffffffffffffffffffffffffff)
+
+  * ``SPLIT_BEFORE_CLOSING_BRACKET``.  Split before the closing bracket if a
+    list or dict literal doesn't fit on a single line.
+
+    .. code:: python
+
+      a = [111111111111111,22222222222222222222222,333333333333333,444444444,5555555]
+      # to this
+      a = [
+          111111111111111, 22222222222222222222222, 333333333333333, 444444444,
+          5555555
+      ]
+
+      # vs to this
+
+      a = [
+          111111111111111, 22222222222222222222222, 333333333333333, 444444444,
+          5555555]
+
+  * ``SPLIT_BEFORE_DICT_SET_GENERATOR``. 当 list/set/dict etc. comprehension
+    expression 太长时, Split before ``for``.
+
+  * ``SPLIT_BEFORE_DOT``. 当需要 split 一个很长的代码至多行时, 并且能够
+    split before dot 时, 就这么做.
+
+    .. code:: python
+
+      a = ("111111111111111111111111111111111111111111111111111111111111111111{}".format(2))
+      # to
+      a = ("111111111111111111111111111111111111111111111111111111111111111111{}"
+           .format(2))
+
+      # vs
+
+      a = ("111111111111111111111111111111111111111111111111111111111111111111{}".
+           format(2))
+
+  * ``SPLIT_BEFORE_EXPRESSION_AFTER_OPENING_PAREN``. Split after the opening
+    paren which surrounds an expression if it doesn't fit on a single line.
+    (??)
+
+  * ``SPLIT_BEFORE_FIRST_ARGUMENT``. If an argument / parameter list is going
+    to be split, then split before the first argument.
+
+    .. code:: python
+
+      ffffffffffffffffffffffff(aaaaaaaaaaa, bbbbbbbbbbbbbbbbb, ccccccccccc, 44444444444444)
+      # to
+      ffffffffffffffffffffffff(aaaaaaaaaaa, bbbbbbbbbbbbbbbbb, ccccccccccc,
+                               44444444444444)
+      # vs to
+      ffffffffffffffffffffffff(
+          aaaaaaaaaaa, bbbbbbbbbbbbbbbbb, ccccccccccc, 44444444444444)
+
+  * ``SPLIT_BEFORE_LOGICAL_OPERATOR``. Set to True to prefer splitting before
+    and or or rather than after.
+
+API
+---
+- ``yapf.yapflib.yapf_api.FormatCode``
+
+- ``yapf.yapflib.yapf_api.FormatFile``
+
+- parameters:
+
+  * ``style_config``, Either a style name or a path to a file that contains
+    formatting style settings. If None is specified, use the default style as
+    set in style.DEFAULT_STYLE_FACTORY.
+
+  * ``lines``, A lines argument: A list of tuples of lines ``(start, end)``
+    that we want to format. The lines are 1-based indexed.
+
+  * ``print_diff``, bool. Instead of returning the reformatted source, return a
+    diff that turns the formatted source into reformatter source.
