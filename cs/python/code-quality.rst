@@ -529,6 +529,101 @@ formatting style
   * ``SPLIT_BEFORE_LOGICAL_OPERATOR``. Set to True to prefer splitting before
     and or or rather than after.
 
+    .. code:: python
+
+      if (aaaaaaaaaaaaaaaaaaaaaaaaa and bbbbbbbbbbbbbbbbbb or cccccccccccccc
+              and ddddddddddddddddd > eeeeeeeee and not fffffffffffffff):
+          pass
+
+  * ``SPLIT_BEFORE_NAMED_ASSIGNS``. Split named assignments onto individual lines.
+
+    .. code:: python
+
+      a = dict(aaaaaaaaaaaaaaaaaaaaaaaaa=11111111111111111111,bbbbbbbbbbbbbbbbbbbb=2222222222222222222,c=3,d=4)
+      # to this
+      a = dict(aaaaaaaaaaaaaaaaaaaaaaaaa=11111111111111111111,
+               bbbbbbbbbbbbbbbbbbbb=2222222222222222222, c=3, d=4)
+      # vs to this
+      a = dict(aaaaaaaaaaaaaaaaaaaaaaaaa=11111111111111111111,
+               bbbbbbbbbbbbbbbbbbbb=2222222222222222222,
+               c=3,
+               d=4)
+
+  * ``SPLIT_COMPLEX_COMPREHENSION``.  For list comprehensions and generator
+    expressions with multiple clauses (e.g multiple "for" calls, "if" filter
+    expressions) and which need to be reflowed, split each clause onto its own
+    line.
+
+    .. code:: python
+
+      result = [a_var + b_var for a_var in xrange(1000) for b_var in xrange(1000) if a_var % b_var]
+      # to this
+      result = [
+          a_var + b_var for a_var in range(1000) for b_var in range(1000)
+          if a_var % b_var
+      ]
+      # vs to this
+      result = [
+          a_var + b_var
+          for a_var in range(1000)
+          for b_var in range(1000)
+          if a_var % b_var
+      ]
+
+  * ``SPLIT_PENALTY_AFTER_OPENING_BRACKET``.  The penalty for splitting right
+    after the opening bracket.
+
+  * ``SPLIT_PENALTY_AFTER_UNARY_OPERATOR``.  The penalty for splitting the line
+    after a unary operator.
+
+  * ``SPLIT_PENALTY_ARITHMETIC_OPERATOR``. The penalty of splitting the line
+    around the ``+, -, *, /, //, %, and @`` operators.
+
+  * ``SPLIT_PENALTY_BEFORE_IF_EXPR``. The penalty for splitting right before
+    an if expression.
+
+  * ``SPLIT_PENALTY_BITWISE_OPERATOR``. The penalty of splitting the line
+    around the ``&, |, ^`` operators.
+
+  * ``SPLIT_PENALTY_COMPREHENSION``.  The penalty for splitting a list
+    comprehension or generator expression.
+
+  * ``SPLIT_PENALTY_EXCESS_CHARACTER``.  The penalty for characters over the
+    column limit.
+
+  * ``SPLIT_PENALTY_FOR_ADDED_LINE_SPLIT``.  The penalty incurred by adding a
+    line split to the unwrapped line. The more line splits added the higher the
+    penalty.
+
+  * ``SPLIT_PENALTY_IMPORT_NAMES``. The penalty of splitting a list of
+    ``from ... import ...`` names.
+
+  * ``SPLIT_PENALTY_LOGICAL_OPERATOR``.  The penalty of splitting the line
+    around the ``and`` and ``or`` operators.
+
+  * ``USE_TABS``. Use the Tab character for indentation.
+
+
+directives
+----------
+- ``# yapf: disable``
+  
+  * on a line by itself. disable formatting for the following code.
+
+  * on a line following code. disable formatting for the current line or the
+    current expression for multi-line expression.
+
+    .. code:: python
+
+    a = [
+        (1, 2, 3),
+        (2, 3, 4),
+        (3, 4, 5),
+    ] # yapf: disable
+
+- ``# yapf: enable`` on a line by itself. (re-)enable formatting for the
+  following code.
+
 API
 ---
 - ``yapf.yapflib.yapf_api.FormatCode``
@@ -546,3 +641,20 @@ API
 
   * ``print_diff``, bool. Instead of returning the reformatted source, return a
     diff that turns the formatted source into reformatter source.
+
+Noticeable problems
+-------------------
+- 注意 yapf will format things to coincide with the style guide, but that may
+  not equate with readability. 有时 hand-written formatting is better than
+  auto-formatting.
+
+- 注意 yapf 不会 modify original source code's token stream, 也就是说, 它不会
+  添加或删除任何代码, 只做 reformatting. 这样完全避免 altering the semantics
+  of original code. 然而另一方面, 这也让一些代码无法被自动 reformatting. 例如,
+
+  .. code:: python
+
+    # won't be formatted
+    FOO = my_variable_1 + my_variable_2 + my_variable_3 + my_variable_4 + my_variable_5 + my_variable_6 + my_variable_7 + my_variable_8
+    # will be formatted
+    FOO = (my_variable_1 + my_variable_2 + my_variable_3 + my_variable_4 + my_variable_5 + my_variable_6 + my_variable_7 + my_variable_8)
