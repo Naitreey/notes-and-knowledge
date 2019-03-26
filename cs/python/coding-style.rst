@@ -17,7 +17,7 @@ indentation and line continuation
 
 - Always use space for indentation, avoid hard tab character.
 
-- 关于 implicit line continuation 的两种缩进处理方式:
+- 关于 implicit line continuation 的三种缩进处理方式:
 
   1. 每行元素与 opening parenthesis/bracket/brace 等对齐. 例如
 
@@ -26,35 +26,36 @@ indentation and line continuation
        abc = function_something(a, b, c,
                                 d, e, f)
 
-  2. hanging indent 风格, 类似 javascript 中的风格. 此时, opening delimiter 是
-     首行的最后一个字符, 此后的元素按照标准缩进对齐, 最后 closing delimiter 单独
-     位于最后一行, 与首行的第一个字符对齐. 例如
+  2. hanging indent 风格. 此时, opening delimiter 是首行的最后一个字符, 此后的
+     元素按照标准缩进对齐. closing delimiter 紧跟最后一个元素. 例如
 
      .. code:: python
 
        abc = function_something(
-           a, b,
-           c, d,
-           e, f,
-       )
+           a, b, c,
+           d, e, f)
 
-  对于 simple statement, hanging indent 更常用一些.
-  在 compound statement 中的头部, 即开启一个 code block 的位置, 应该尽量使用第一种
-  对齐方式, 因为 hanging indent 可能显得很怪.
+  3. javascript 风格. 在 hanging indent 基础上, 将 closing delimiter 断行至新的
+     一行, 与首行的第一个字符对齐. 例如
+
+     .. code:: python
+
+       a = [
+           1, 2, 3, 4, 5,
+           6, 7, 8, 9, 10,
+       ]
+
+  对于一般表达式, javascript 风格更常用一些. 在 compound statement 中的头部, 即
+  开启一个 code block 的位置, 应该尽量使用第一种对齐方式.
 
   .. code:: python
-
-    def func(
-        var1, var2, var3
-    ):
-        pass
 
     def func(var1, var2,
              var3):
         pass
 
   然而, 如果 compound statement 的头部太长, 第一种对齐方式带来的换行效果不明显,
-  因此应该酌情只 hanging 起始部分, 但结束部分不单独换行对齐.
+  因此应该酌情使用 hanging indent 风格甚至 javascript 风格.
 
   .. code:: python
 
@@ -62,14 +63,10 @@ indentation and line continuation
             nic_names, macaddresses, nic_models):
         pass
 
-  起始本质上这种情况下该在哪里换行哪里对齐还是要看具体的语义, 比如如果是函数定义,
-  就应该使用第一种方式, 因为参数列表应该对齐.
-
-  .. code:: python
-
-    def this_is_very_long_how_can_it_be_so_long(and_it_has, many_many_very_long,
-                                                parameters_like_this, yeah,
-                                                so_cool):
+    def this_is_very_long_how_can_it_be_so_long(
+        and_it_has, many_many_very_long, parameters_like_this,
+        yeah, so_cool,
+    ):
         pass
 
 - 若在 compound statement 的头部, line continuation 之后在缩进时导致与 code block
@@ -194,8 +191,7 @@ strings literal
 - For triple-quoted string, always use double quote character.
   即 ``"""abcdef"""``, 而不要用 ``'''abdef'''``.
 
-- 在可行时, ``[]`` 里的 key 使用 single quote char, value 使用 double quote char.
-  dict literal 全部使用 double quote char, 与 json 对应.
+- 在可行时, dict 全部使用 double quote char, 与 json 对应.
 
 whitespace in expressions and statements
 ========================================
@@ -319,70 +315,104 @@ docstrings
 
 naming conventions
 ==================
-- 所有的 identifier 应该使用 ASCII 字符集之内的字符.
-  (注意 py3 中支持 unicode identifier.)
+- 所有的 identifier 应该使用 ASCII 字符集之内的字符. (注意 py3 中支持 unicode
+  identifier.)
 
 - identifier 的命名应是能体现其含义的英文单词组合或恰当的缩写形式.
 
-- Names that are visible to the user as public parts of the API should
-  reflect usage rather than implementation.
+- 若 identifier 与 keyword or reserved word 冲突, 用 ``<word>_``.
+
+- 不要自创 ``__name__``, 这些是 python 定义的 magic objects/methods, 每一项都有
+  特殊用途, 不要混淆这个命名空间.
+
+public and internal interfaces in general
+-----------------------------------------
+- An interface is considered internal if any containing namespace (package,
+  module or class) is considered internal.
+
+- Names that are visible to the user as public parts of the class API
+  should reflect usage rather than implementation.
+
+- Documented interfaces are considered public, unless the documentation
+  explicitly declares them to be provisional or internal interfaces exempt from
+  the usual backwards compatibility guarantees. All undocumented interfaces
+  should be assumed to be internal.
+
+module
+------
+- modules 命名使用全小写, 并允许使用 ``_`` 进行分隔. 当我们命名一个 top-level
+  module 时, 要首先检查 pypi 上是否有重名的 module, 避免冲突.
+
+- 私有模块命名以 ``_`` 起始.
+
+- 表示 module 共有 API 的部分使用 ``identifier`` 命名, 没有 leaing ``_``.
+
+- 表示 module 内部使用的量用 ``_name`` 命名. ``from module import *`` 不会
+  import 这个量.
+
+- Imported names should always be considered an implementation detail, unless
+  it's imported to constitute part of API.
+
+- To better support introspection, modules should explicitly declare the names
+  in their public API using the ``__all__`` attribute. Setting ``__all__`` to
+  an empty list indicates that the module has no public API.
+
+class
+-----
+- 一般情况下 Class names 以 CamelCase 方式命名. 若这个类主要是当作一个函数来
+  使用, 而不是看作实例化, 则可以按照函数的方式命名. 例如, ``slice()``,
+  ``range()``, ``bool()`` 等 builtin function/class.
 
 - class name 使用 CamelCase 时, 注意当名字中包含缩写时, 需要将所有缩写大写,
   而不是只大写缩写的首字母, e.g., 是 ``HTTPConnection``, 不是 ``HttpConnection``.
 
-- 表示公有 API 的一部分使用 ``identifier``. 谁都可以访问.
+- 若一个 exception class 确实是错误, 应该以 ``Error`` 结尾.
 
-- 表示内部使用的量用 ``_name`` 命名. 如果这个量在 module level 定义,
-  ``from module import *`` 不会 import 这个量. 如果这个量定义为 class
-  成员, 则不是 public API 的一部分. 这个量会被子类继承, 相当于 Java 中的
-  protected member.
+- 表示 class 公有 API 的部分使用 ``identifier``, without leading ``_``. 谁都可
+  以访问.
+
+- 属于 public API 的 data members 部分, 一开始可以只 expose attribute name, 若
+  后续需要 get/set 等复杂逻辑时, 封装成 property 或 general descriptor (类属性
+  的话确实不太容易做到, python 的 literal 设计原则导致就没法限制得太死). 这样的
+  好处是: 1) get/set data member 更灵活, 可在保证 client side API 不变的同时,
+  方便地调整实现细节与读写过滤; 可对 data member 的 read/write/delete 进行限制. 
+
+  property 之类的特殊方法, 是作为 attributes 来使用, 因此应该放在 class 最
+  前面, ``__init__`` 后面. 与普通 instance attributes 靠得比较近, 这样意义
+  更清晰.
+
+  Avoid using properties for computationally expensive operations; the
+  attribute notation makes the caller believe that access is (relatively)
+  cheap.
+
+- 以 ``_name`` 命名的类成员, 不是 public API 的一部分. 这个成员会被子类继承, 相
+  当于 Java 中的 protected member.
 
 - 表示类的私有成员的量用 ``__name`` 命名, Java 的 private member. 这样的量在
   class 或 instance 的 namespace 中定义后, 就会被 name mangling. 不能在不失去灵
   活性的前提下 在子类中直接访问.  如果某个类成员确实只应该这个类自己去使用不 让
   子类访问, 请这样命名.
 
-- 避免与 keyword 冲突时, 用 ``keyword_``.
-
-- 不要自创 ``__name__``, 这些是 python 定义的 magic objects/methods, 每一项都有特殊
-  用途, 不要混淆这个命名空间.
-
-- modules 命名使用全小写, 并允许使用 ``_`` 进行分隔. 当我们命名一个 top-level
-  module 时, 要首先检查 pypi 上是否有重名的 module, 避免冲突.
-
-- 私有模块命名以 ``_`` 起始.
-
-- 一般情况下 Class names 以 CamelCase 方式命名. 若这个类主要是当作一个函数来
-  使用, 而不是看作实例化, 则可以按照函数的方式命名. 例如, ``slice()``,
-  ``range()``, ``bool()`` 等 builtin function/class.
-
-- 若一个 exception class 确实是错误, 应该以 ``Error`` 结尾.
-
-- 全局常量命名全部大写和 ``_``.
-
-- 全局变量、非全局变量和函数使用全小写加 ``_`` 的命名方式.
+function
+--------
+- Function names should be lowercase, with words separated by underscores as
+  necessary to improve readability.
 
 - instance method 的第一个变量用 ``self`` 命名, class method 的第一个变量用
   ``cls`` 命名.
 
-- 属于 public API 的 data members 部分, 尽量设置为 property 或 general
-  descriptor (类属性的话确实不太容易做到, python 的 literal 设计原则导致就没法
-  限制得太死). 这样的好处是: 1) get/set data member 更灵活, 可在保证 client
-  side API 不变的同时, 方便地调整实现细节与读写过滤; 可对 data member 的
-  read/write/delete 进行限制. 
+variable
+--------
+- Variable names follow the same convention as function names.
 
-  property 之类的特殊方法, 是作为 attributes 来使用, 因此应该放在 class 最
-  前面, ``__init__`` 后面. 与普通 instance attributes 靠得比较近, 这样意义
-  更清晰.
+- 全局常量命名全部大写和 ``_``.
 
-- module 应该设置 ``__all__`` 来定义自己提供的公有 API. 注意此时非公有的部分仍然
-  应该加上 ``_``.
+- 全局变量使用全小写加 ``_`` 的命名方式.
 
-- An interface is considered internal if any containing namespace (package,
-  module or class) is considered internal.
-
-- Imported names should always be considered an implementation detail, unless
-  it's imported to constitute part of API.
+- Names of type variables in type annotations normally use CapWords preferring
+  short names: T, AnyStr, Num. It is recommended to add suffixes _co or _contra
+  to the variables used to declare covariant or contravariant behavior
+  correspondingly.
 
 Programming
 ===========
@@ -395,16 +425,22 @@ Programming
 - 实现 rich comparisons 时, 要实现全部 6 个比较操作, 或者借助
   ``functools.total_ordering``.
 
-- 如果需要把 lambda 表达式赋值给变量, 那就不该用 lambda, 用 ``def``.
+- Don't compare boolean values to True or False with ``is`` or ``==``.
+
+- Derive exceptions from Exception rather than BaseException. Design exception
+  hierarchies based on the distinctions that code catching the exceptions is
+  likely to need, rather than the locations where the exceptions are raised. 
+
+- When catching exceptions, mention specific exceptions whenever possible
+  instead of using a bare ``except:`` clause.
+
+- When catching operating system errors, prefer the explicit exception
+  hierarchy introduced in Python 3.3 over introspection of errno values.
 
 - 一个函数里可以完全没有 return; 但如果有 return statement, 所有的返回点都要
   有 return, 且如果没有明确的返回值, 需要 ``return None``.
 
 - 使用 ``isinstance()`` 进行类型判断, 不要使用 ``type(obj) is sometype``.
-
-- function annotation 可能并不一定是好的. python 是 duck type language, 函数的输入
-  和返回值都可以是恰当的任何类型的量, 过早地使用 annotation 可能限制函数的使用范围
-  和可扩展性.
 
 - 在 python2 中, finally clause 一定要小心. 这个 statement 里面的东西最好不可能再
   raise exception, 否则 解释器将不再处理 try 里面的 exception, 而去处理新的
