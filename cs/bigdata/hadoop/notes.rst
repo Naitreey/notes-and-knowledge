@@ -810,7 +810,7 @@ replica placement (write)
   block, maximum number of replicas created is the total number of DataNodes at
   that time.
 
-- How does HDFS write file? (See also [HDFSReplPaper]_, [hdfsReadAndWrite]_)
+- How does HDFS write file? (See also [hdfsReadAndWrite]_)
 
   1. HDFS client sends a request to the NameNode to create a new file in the
      filesystem's namespace.
@@ -840,19 +840,56 @@ replica selection (read)
 
 - how does HDFS read file? (See also [hdfsReadAndWrite]_)
 
-  1. Client sends a request to the NameNode to open the file.
+  1. 客户端调用 ``FileSystem.open()`` 读取文件. 对于 HDFS, 这是
+     DistributedFileSystem.
 
-  2. NameNode provides the locations of the blocks for the first few blocks in
-     the file. For each block, the namenode returns the addresses of the
-     datanodes that have a copy of that block and datanode are sorted according
-     to their proximity to the client.
+  2. DistributedFileSystem 对象向 namenode 发起 RPC, 获取 the locations of the
+     first few blocks in the file.
 
-  3. Client connects to the closest datanode for the first block in the file.
-     When the reading of the block ends, it will close the connection to the
-     datanode and then finds the best datanode for the next block.
+  3. 对于每个 block, namenode 给出一个保存着这个 block 的副本的所有 datanode 地
+     址列表. the datanodes are sorted according to their proximity to the
+     client (according to the topology of the cluster’s network).
 
-  4. When the client has finished reading the data, it closes the reading
-     stream.
+  4. The DistributedFileSystem returns an FSDataInputStream to the client for
+     it to read data from.
+
+  5. The client calls ``read()`` on the stream.
+
+  6. FSDataInputStream 根据自身保存的前几个 blocks 与 datanode address 的映射
+     关系, connects to the first (closest) datanode for the first block in the
+     file.
+
+  7. Data is streamed from the datanode back to the client, which calls
+     ``read()`` repeatedly on the stream. When the end of the block is
+     reached, FSDataInputStream will close the connection to the datanode,
+     then find the best datanode for the next block.
+
+     读的过程中, 若 FSDataInputStream 与 datanode 的交互出错, 它自动尝试下一个
+     最近的 datanode. It will also remember datanodes that have failed so that
+     it doesn’t needlessly retry them for later blocks.
+
+     FSDataInputStream 读取 block 时还会计算 checksum. 若 checksum 与 checksum
+     file 不一致, 则认为 block 损坏. FSDataInputStream 转而从下一个 datanode
+     读取这个 block. 它同时还会把坏块上报给 namenode.
+     
+  8. Blocks are read in order, with the FSDataInputStream opening new connections
+     to datanodes as the client reads through the stream. It will also call
+     the namenode to retrieve the datanode locations for the next batch of
+     blocks as needed. When the client has finished reading, it calls ``close()``
+     on the FSDataInputStream.
+
+- 从 HDFS 读取数据有两个重要特征:
+
+  * client 直接与 datanode 交互, namenode 只提供 metadata 和调度的作用. block
+    data 不会流经 namenode, 从而 namenode 不会成为集群 throughput 的瓶颈.
+
+  * client 从离他最近的 datanode 读取数据, 从而能更好地利用带宽.
+
+  这两个特性 allows HDFS to scale to a large number of concurrent clients
+  because the data traffic is spread across all the datanodes in the cluster.
+
+  注意 HDFS 的这种特性让集群的总 throughput 很大, 然而对单个客户端而言, 并没有
+  速度上的提升.
 
 HDFS federation
 ---------------
@@ -1423,6 +1460,39 @@ Dumbo
 -----
 - A more pythonic API to code MapReduce in Python.
 
+network topology
+================
+network topology structure
+--------------------------
+- network is represented as a tree, leaf 为 nodes, parent node 为交换机和路由器
+  等网络设备.
+
+- By default, Hadoop assumes that the network is flat -- a single level
+  hierarchy that all nodes are on a single rack in a single data center.
+
+distance of nodes
+-----------------
+- In the context of high-volume data processing, the limiting factor is the
+  rate at which we can transfer data between nodes. Therefore, bandwidth is
+  used as a measure of distance between two nodes.
+
+- When the network is represented as a tree, the distance between two nodes is
+  the sum of their distances to their closest common ancestor.
+
+- The levels in the tree are commonly defined as data centers, racks, and
+  nodes.
+
+- 由于实际中难以测量节点之间的带宽, Hadoop 以集群的网络拓扑结构为依据来建立
+  节点之间的距离关系. 这是基于以下带宽关系假定 (由大至小):
+  
+  * Processes are on the same node
+  
+  * Different nodes on the same rack
+  
+  * Nodes on different racks in the same data center
+  
+  * Nodes in different data centers
+
 Security
 ========
 user authentication
@@ -1432,8 +1502,8 @@ user authentication
   a client to become an arbitrary user simply by creating an account of that
   name on the remote system.
 
-Running Hadoop
-==============
+Setup
+=====
 standalone mode
 ---------------
 - no daemon running and everything runs in a single JVM.
@@ -2051,6 +2121,219 @@ processing patterns
 - Search. Solr can run on Hadoop, indexing documents as they are added to HDFS,
   and serving queries from indexes stored in HDFS.
 
+Java API
+========
+org.apache.hadoop.fs
+--------------------
+public class FileSystem
+^^^^^^^^^^^^^^^^^^^^^^^
+- An abstract base class for a fairly generic hadoop compatible filesystem.
+
+static methods
+""""""""""""""
+- ``public static FileSystem get(Configuration conf)``. get the default FileSystem
+  matching the configuration.
+
+- ``public static FileSystem get(URI uri, Configuration conf)``. get a FileSystem
+  for uri's scheme and authority. Fallback to the default filesystem if no scheme
+  is specified in the uri.
+
+- ``public static FileSystem get(URI uri, Configuration conf, String user)``. get
+  a FileSystem for uri's scheme and authority, perform the get as user. Useful if
+  security is enabled.
+
+- ``public static LocalFileSystem getLocal(Configuration conf)``. get the local
+  FileSystem.
+
+instance methods
+""""""""""""""""
+- ``public FSDataInputStream open(Path f)``. Opens an FSDataInputStream at the
+  indicated Path. Use 4K buffer.
+
+- ``public abstract FSDataInputStream open(Path f, int bufferSize)``. Open an
+  FSDataInputStream at the Path f, using a buffer of bufferSize.
+
+- ``public FSDataOutputStream create(Path f) throws IOException``. Create an
+  FSDataOutputStream at the indicated Path. Files are overwritten by default.
+
+- ``public FSDataOutputStream create(Path f, Progressable progress) throws IOException``.
+  Create an FSDataOutputStream at the indicated Path with write-progress
+  reporting. Files are overwritten by default.
+
+- ``public FSDataOutputStream append(Path f) throws IOException``. append to an
+  existing file.
+
+- ``public boolean exists(Path f) throws IOException``. Check if a path exists.
+
+- ``public boolean mkdirs(Path f) throws IOException``. Create directory and
+  all necessary parent directories with default permissions. Reutrns true if
+  directories are successfully created.
+
+- ``public abstract FileStatus getFileStatus(Path f) throws IOException``.
+  Return a FileStatus object that represents the path. Throws
+  FileNotFoundException when path does not exist.
+
+- ``public abstract FileStatus[] listStatus(Path f) throws FileNotFoundException, IOException``.
+  List the statuses of the files/directories in the given path if the path is a
+  directory.
+
+- ``public FileStatus[] listStatus(Path f, PathFilter filter) throws FileNotFoundException, IOException``.
+  List files/directories using filter.
+
+- ``public FileStatus[] listStatus(Path[] files) throws FileNOtFoundException, IOException``.
+  List the statuses of the files/directories in the given list of paths.
+
+- ``public FileStatus[] listStatus(Path[] files, PathFilter filter) throws FileNOtFoundException, IOException``.
+  List files/directories using filter.
+
+- ``public FileStatus[] globStatus(Path pathPattern) throws IOException``.
+  Return all the files that match filePattern and are not checksum files.
+  Results are sorted by their names. Hadoop supports the same set of glob
+  characters as the Unix bash shell.
+
+- ``public FileStatus[] globStatus(Path pathPattern, PathFilter filter) throws IOException``.
+  Return an array of FileStatus objects whose path names match pathPattern and
+  is accepted by the user-supplied path filter.
+
+- ``public abstract boolean delete(Path f, boolean recursive) throws IOException``.
+  delete a file or directory. If path is a directory and set to true, the
+  directory is deleted. In case of a file the recursive can be set to either
+  true or false.
+
+public class FsUrlStreamHandlerFactory
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- A factory class for handler of hadoop compatible filesystem's url scheme.
+
+public class Path
+^^^^^^^^^^^^^^^^^
+- Names a file or directory in a FileSystem. Path strings use slash as the
+  directory separator.
+
+public class FileStatus
+^^^^^^^^^^^^^^^^^^^^^^^
+- A class encapsulates filesystem metadata for files and directories.
+
+instance methods
+""""""""""""""""
+- ``public Path getPath()``.
+
+- ``public boolean isDirectory()``.
+
+- ``public long getLen()`` the length of this file, in bytes.
+
+- ``public long getModificationTime()``. get modification time of the file,
+  as milliseconds since Epoch.
+
+- ``public short getReplication()``. get replication factor.
+
+- ``public long getBlockSize()``. block size of the file, in bytes.
+
+- ``public String getOwner()``. owner of the file in string.
+
+- ``public String getGroup()``. group of the file in string.
+
+- ``public FsPermission getPermission()``.
+
+
+public class FileUtil
+^^^^^^^^^^^^^^^^^^^^^
+- A collection of file-processing util methods.
+
+static methods
+""""""""""""""
+- ``public static Path[] stat2Paths(FileStatus[] stats)``. convert an array of
+  FileStatus to an array of Path.
+
+public class FSDataInputStream
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- a specialization of java.io.DataInputStream with support for random access.
+
+public class FSDataOutputStream
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- Utility that wraps a OutputStream in a DataOutputStream. does not permit
+  seeking. This is because HDFS allows only sequential writes to an open file
+  or appends to an already written file.
+
+instance methods
+""""""""""""""""
+- ``public long getPos()``. get current position in the output stream.
+
+public interface Seekable
+^^^^^^^^^^^^^^^^^^^^^^^^^
+- Stream that permits seeking
+
+instance methods
+""""""""""""""""
+- ``void seek(long pos) throws IOException``. Seek to the pos from the start of
+  the file. Calling ``seek()`` with a position that is greater than the length
+  of the file will result in an IOException. Calling ``seek()`` is a relatively
+  expensive operation and should be done sparingly.
+
+- ``long getPos() throws IOException``. Return the current offset from the
+  start of the file.
+
+public interface PositionedReadable
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- Stream that permits positional reading.
+
+instance methods
+""""""""""""""""
+- ``int read(long position, byte[] buffer, int offset, int length) throws IOException``.
+  Read up to the length number of bytes, from a given position within a file,
+  into buffer, starting at offset, and return the number of bytes read. *This
+  does not change the current offset of a file.*
+
+- ``void readFully(long position, byte[] buffer, int offset, int length) throws IOException``.
+  Read *exact* length number of bytes, from a given position within a file.
+  This does not change the current offset of a file. Throws EOFException if the
+  end of the data was reached before the read operation completed.
+
+- ``void readFully(long position, byte[] buffer) throws IOException``.
+  Read *exact* buffer.length number of bytes, from a given position within a
+  file. This does not change the current offset of a file. Throws EOFException
+  as above.
+
+public interface PathFilter
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- a filter for file Path.
+
+instance methods
+""""""""""""""""
+- ``boolean accept(Path path)``. returns true if path should be included in a
+  pathname list. false otherwise.
+
+org.apache.hadoop.io
+--------------------
+class IOUtils
+^^^^^^^^^^^^^
+- An utility class for I/O related functionality.
+
+static methods
+""""""""""""""
+- ``public static void copyBytes(InputStream in, OutputStream out, int buffSize, boolean close)``.
+  copy from in stream to out stream, using a buffer of buffSize, optionally
+  close in and out stream at the end (in finally clause, therefore always
+  performed).
+
+- ``public static void closeStream(Closable stream)``. close the stream ignoring Throwable.
+
+
+org.apache.hadoop.conf
+----------------------
+public class Configuration
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+- A class representing hadoop's configuration.
+
+org.apache.hadoop.util
+----------------------
+public interface Progressable
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- A facility for reporting progress.
+
+instance methods
+""""""""""""""""
+- ``void progress()``. Report progress.
+
 distributors
 ============
 See also [distroToChoose]_.
@@ -2083,18 +2366,13 @@ references
 .. [OriginHadoop] `Origin of the Name Hadoop <http://www.balasubramanyamlanka.com/origin-of-the-name-hadoop/>`_
 .. [distroToChoose] `What distribution should I choose <https://www.quora.com/What-distribution-should-I-choose-Cloudera-Hortonworks-or-MapR-I-will-need-to-do-some-stream-processing-from-social-networks-and-real-time-too-I%E2%80%99m-thinking-of-using-Apache-Storm-rather-than-Spark-with-Hortonworks-Is-that-a-good-approach>`_.
 .. [hdfsReadAndWrite] `Hadoop HDFS Data Read and Write Operations <https://data-flair.training/blogs/hadoop-hdfs-data-read-and-write-operations/>`_
-.. [HDFSReplPaper] `An Efficient Replication Technique for Hadoop Distributed File System <https://pdfs.semanticscholar.org/dffe/5bfcf3e9300190002aa8456f9b2170507e33.pdf>`_
 
 questions
 =========
 - what's WebAppProxy?
-
-- content of each configuration file
 
 - content of ``*-env.sh``
 
 - To configure the Hadoop cluster you will need to configure the environment in
   which the Hadoop daemons execute as well as the configuration parameters for
   the Hadoop daemons?
-
-- how does HDFS know where the write is? on datanode or on the same rack?
