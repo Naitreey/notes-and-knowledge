@@ -784,54 +784,96 @@ replica placement (write)
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 - rack-aware replica placement policy.
 
-- improves data reliability, availability, network bandwith utilization.
+  * For the common case, when the replication factor is three, HDFS’s placement
+    policy is to put one replica on the local machine if the writer is on a
+    datanode, otherwise on a random datanode in the same rack as that of the
+    writer, another replica on a node in a different (remote) rack, and the
+    last on a different node in the same remote rack.
+  
+    If the replication factor is greater than 3, the placement of the 4th and
+    following replicas are determined randomly.
+  
+    NameNode does not allow DataNodes to have multiple replicas of the same
+    block, maximum number of replicas created is the total number of DataNodes
+    at that time.
 
-- For the common case, when the replication factor is three, HDFS’s placement
-  policy is to put one replica on the local machine if the writer is on a
-  datanode, otherwise on a random datanode in the same rack as that of the
-  writer, another replica on a node in a different (remote) rack, and the last
-  on a different node in the same remote rack.
+  * Overall, this strategy gives a good balance among reliability (blocks are
+    stored on two racks), write bandwidth (writes only have to traverse a
+    single network switch), read performance (there’s a choice of two racks to
+    read from), and block distribution across the cluster (clients only write a
+    single block on the local rack).
 
-- This policy cuts the inter-rack write traffic which generally improves write
-  performance (最可靠的方式是将副本全部放在不同的机架上, 但跨机架的带宽一般是相
-  对比同一个机架内节点之间慢, 这样 write pipeline 就会慢). The chance of rack
-  failure is far less than that of node failure; this policy does not impact
-  data reliability and availability guarantees. However, it does reduce the
-  aggregate network bandwidth used when reading data since a block is placed in
-  only two unique racks rather than three. (对于单个 client 读的情况, 无论怎么
-  放, 都不影响读取速度, 因为每次只读一个 DataNode. 但如果有多个客户端同时读多个
-  文件. 负载只能分布在两个机架上, 而不是三个机架, 这样总体能提供的读带宽就变小
-  了.)
-
-- If the replication factor is greater than 3, the placement of the 4th and
-  following replicas are determined randomly.
-
-- NameNode does not allow DataNodes to have multiple replicas of the same
-  block, maximum number of replicas created is the total number of DataNodes at
-  that time.
+  * This policy cuts the inter-rack write traffic which generally improves
+    write performance (最可靠的方式是将副本全部放在不同的机架上, 但跨机架的带宽
+    一般是相对比同一个机架内节点之间慢, 这样 write pipeline 就会慢). The chance
+    of rack failure is far less than that of node failure; this policy does not
+    impact data reliability and availability guarantees. However, it does
+    reduce the aggregate network bandwidth used when reading data since a block
+    is placed in only two unique racks rather than three. (对于单个 client 读的
+    情况, 无论怎么放, 都不影响读取速度, 因为每次只读一个 DataNode. 但如果有多个
+    客户端同时读多个文件. 负载只能分布在两个机架上, 而不是三个机架, 这样总体能
+    提供的读带宽就变小了.)
 
 - How does HDFS write file? (See also [hdfsReadAndWrite]_)
 
-  1. HDFS client sends a request to the NameNode to create a new file in the
-     filesystem's namespace.
+  1. The client creates the file by calling ``FileSystem.create()``.
 
-  2. NameNode returns a list of DataNodes (using replication target choosing
-     algorithm) to store data block according to replication factor.
+  2. DistributedFileSystem 向 namenode 发起 RPC call, 请求在 filesystem
+     namespace 中创建这个文件. 此时没有任何 block.
 
-  3. File data is first divided into blocks and then splits into packets. The
-     list of DataNodes forms a pipeline.
+  3. namenode 做一系列检查, 包括该路径是否已经存在, client 是否有权限创建等.
+     若通过, 则创建这个文件, 否则 IOException is thrown. 若通过,
+     DistributedFileSystem 返回一个 FSDataOutputStream, 用于写文件数据.
 
-  4. Packets are sent to the DataNode1 in the pipeline, to be stored and
-     forwarded to next DataNode in the pipeline, and so forth.
+  4. client 写数据时, FSDataOutputStream 将收到的数据封装成一个个 packets, 加入
+     data queue. 同时, 它创建一个 ack queue, 对每个写入的 packets 它预期收到
+     一个 ack.
 
-  5. When the client has finished writing data, it calls close() which flushes
-     all remaining packets to DataNode pipeline and wait for acknowledgment.
+  5. DataStreamer 向 namenode 请求 datanodes 以保存数据. namenode 选择并给出 a
+     list of datanodes 用于保存 block 副本. The list of datanodes forms a
+     pipeline.
 
-  6. Datanode sends the acknowledgment to client once required replicas are
-     created.
+  6. DataStreamer 消费 data queue, streaming the packets to the first datanode
+     in the pipeline. 第一个 datanode 保存 packets 并转发给第二个 datanode. 如
+     此继续直至 pipeline 的最后一个 datanode.
 
-  7. Client received acknowledgment and contacting the NameNode to signal that
-     file is complete.
+  7. 最后一个节点保存 packet 后, 向前一个节点发送 ack packet, 如此继续直至第一
+     个节点给 FSDataOutputStream 返回 ack. 注意只有整个 pipeline 每个节点都保存
+     了这个 packet, 才会向 client-side 发送 ack.
+
+     If any datanode fails while data is being written to it, then the
+     following actions are taken, which are transparent to the client writing
+     the data. First, the pipeline is closed, and any packets in the ack queue
+     are added to the front of the data queue so that datanodes that are
+     downstream from the failed node will not miss any packets. The current
+     block on the good datanodes is given a new identity, which is communicated
+     to the namenode, so that the partial block on the failed datanode will be
+     deleted if the failed datanode recovers later on. The failed datanode is
+     removed from the pipeline, and a new pipeline is constructed from the two
+     good datanodes. The remainder of the block’s data is written to the good
+     datanodes in the pipeline. The namenode notices that the block is
+     under-replicated, and it arranges for a further replica to be created on
+     another node. Subsequent blocks are then treated as normal.
+
+     It’s possible, but unlikely, for multiple datanodes to fail while a block
+     is being written. As long as dfs.namenode.replication.min replicas (which
+     defaults to 1) are written, the write will succeed, and the block will be
+     asynchronously replicated across the cluster until its target replication
+     factor is reached (dfs.replication, which defaults to 3).
+
+  8. FSDataOutputStream 收到 ack 后, remove the packet from the ack queue.
+
+     注意这个 ack 与 TCP 层的 ack 是不一样的. 这个 ack 的意义是一个 packet 已经
+     经过整个 pipeilne 所有 datanode 都接收到了. TCP 的 ack 只是告知 connection
+     对端自己接收到了对方的 packet.
+
+  9. client 写完数据后, 调用 ``FSDataOutputStream.close()``. This action
+     flushes all the remaining packets to the datanode pipeline and waits for
+     acknowledgments. client 接收到所有 packets 的 ack 之后, 访问 namenode to
+     signal that the file is complete.
+
+  10. The namenode wait for blocks to be minimally replicated before returning
+      successfully.
 
 replica selection (read)
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -891,6 +933,28 @@ replica selection (read)
   注意 HDFS 的这种特性让集群的总 throughput 很大, 然而对单个客户端而言, 并没有
   速度上的提升.
 
+filesystem coherency model
+--------------------------
+- A coherency model for a filesystem describes the data visibility of reads and
+  writes for a file.
+
+- HDFS trades off some POSIX requirements for performance. Hence some aspects
+  of behavior differences.
+
+  * After creating a file by ``FileSystem.create()`` (not writing data yet), it
+    is visible in the filesystem namespace.
+
+  * When writing data, the current block being written is not visible to other
+    readers. To force all buffers to be flushed to the datanodes, use
+    ``hflush()``.
+
+  * To force data having been written to datanode's disk, use ``hsync()``.
+
+- With no calls to ``hflush()`` or ``hsync()``, application should be prepared
+  to lose up to a block of data in the event of client or system failure. 因为
+  当前的 block 可能还在 client-side 的 FSDataOutputStream 的 buffer 中, 尚未写
+  入 datanode.
+
 HDFS federation
 ---------------
 - HDFS federation 的目的是为了解决单机 NameNode 的内存大小成为 HDFS 可存储文件
@@ -930,6 +994,61 @@ benefits
 
 configuration
 ^^^^^^^^^^^^^
+
+Extended file attributes
+------------------------
+Extended attributes in HDFS are modeled after extended attributes in Linux.
+An extended attribute is a name-value pair, with a string name and binary
+value. xattrs names must also be prefixed with a namespace. Multiple xattrs can
+be associated with a single inode.
+
+- five namespaces in HDFS: user, trusted, system, security, raw.
+
+user
+""""
+- Commonly used by client applications.
+  
+- Access to extended attributes in the user namespace is controlled by the
+  corresponding file permissions.
+
+trusted
+""""""""
+- The trusted namespace is available only to HDFS superusers.
+
+system
+""""""
+- The system namespace is reserved for internal HDFS use.
+  
+- This namespace is not accessible through userspace methods, and is reserved
+  for implementing internal HDFS features.
+
+security
+""""""""
+- The security namespace is reserved for internal HDFS use.
+  
+- This namespace is generally not accessible through userspace methods.
+
+- security.hdfs.unreadable.by.superuser.
+  
+  * can only be set on files, and it will prevent the superuser from reading
+    the file’s contents.  The superuser can still read and modify file
+    metadata, such as the owner, permissions, etc.
+    
+  * can be set and accessed by any user, assuming normal filesystem
+    permissions.
+    
+  * write-once, and cannot be removed once set.
+    
+  * does not allow a value to be set.
+
+raw
+""""
+- reserved for internal system attributes that sometimes need to be exposed.
+
+- they are not visible to the user except when getfattr is called on a file or
+  directory in the ``/.reserved/raw`` HDFS directory hierarchy.
+
+- These attributes can only be accessed by the superuser.
 
 client interfaces
 -----------------
@@ -1776,6 +1895,16 @@ HDFS
   Switching between true/false does not change the mode, owner or group of
   files or directories.
 
+xattrs
+""""""
+- dfs.namenode.xattrs.enabled. 是否开启 extended attributes. by default, true.
+
+- dfs.namenode.fs-limits.max-xattrs-per-inode. 每个 inode 最多的 xattrs 数目,
+  默认 32.
+
+- dfs.namenode.fs-limits.max-xattr-size. combined size of the name and value
+  of an xattr in bytes. by default, 16384 bytes (16KB).
+
 NameNode
 """"""""
 - dfs.namenode.rpc-address. RPC address that handles all client requsts.
@@ -2028,6 +2157,230 @@ ls
 
   7. same as ls -l
 
+cp
+~~
+::
+
+  hadoop fs -cp [-f] [-p | -p[topax]] URI [URI ...] <dest>
+
+- cp 的 source URI 和 dest 必须是 hadoop compatible filesystem 中的路径/URI. 不
+  能是本地文件. 似乎不能复制目录.
+
+- raw xattrs. ‘raw.*’ namespace extended attributes are preserved if (1) the
+  source and destination filesystems support them (HDFS only), and (2) all
+  source and destination pathnames are in the /.reserved/raw hierarchy.
+  Determination of whether ``raw.*`` namespace xattrs are preserved is
+  independent of the -p (preserve) flag.
+
+- options.
+
+  * ``-f``. overwrite the destination.
+
+  * ``-p``. preserve file attributes (timestamps, ownership, permission, acl,
+    xattr). Without arg, it's equivalent to ``top``.
+
+getfattr
+~~~~~~~~
+::
+
+  hadoop fs -getfattr [-R] {-n name | -d} [-e en] <path>
+
+- display xattr names and values for a file or directory.
+
+- options.
+
+  * ``-R``. like getfattr(1)
+
+  * ``-n``. like getfattr(1)
+
+  * ``-d``. like getfattr(1)
+
+  * ``-e <encoding>``. like getfattr(1)
+
+setfattr
+~~~~~~~~
+::
+
+  hadoop fs -setattr {-n name [-v value] | -x name} <path>
+
+- set or remove xattr for path.
+
+- options.
+
+  * ``-n``. like setfattr(1)
+
+  * ``-v``. like setfattr(1)
+
+  * ``-x``. like setfattr(1)
+
+distcp
+""""""
+::
+
+  hadoop distcp [options] [<source> ...] <dest>
+
+overview
+~~~~~~~~
+- distcp -- distributed copy, is a tool used for large inter/intra-cluster
+  copying. It uses MapReduce to effect its distribution, error handling and
+  recovery, and reporting.
+
+- distcp can be unreliable. After a copy, it is recommended that one generates
+  and cross-checks a listing of the source and destination to verify that the
+  copy was truly successful. Since DistCp employs both Map/Reduce and the
+  FileSystem API, issues in or between any of the three could adversely and
+  silently affect the copy. Some have had success running with ``-update``
+  enabled to perform a second pass.
+
+- If another client is still writing to a source file, the copy will likely
+  fail. Attempting to overwrite a file being written at the destination should
+  also fail on HDFS. If a source file is (re)moved before it is copied, the
+  copy will fail with a FileNotFoundException.
+
+architecture
+~~~~~~~~~~~~
+
+mechanism
+~~~~~~~~~
+- The files/directories in source are expanded into a list of files under that
+  namespace, and saved into a temporary file. It partitions the temporary
+  file's contents among a set of map tasks.
+
+- Each NodeManager must be able to reach and communicate with both the source
+  and destination file systems. For HDFS, both the source and destination must
+  be running *the same version of the protocol or use a backwards-compatible
+  protocol*.
+
+
+behaviors
+~~~~~~~~~
+- When copying from multiple sources, distcp will abort the copy with an error
+  message if two sources collide (指的是两个 source 中存在同名的文件, 这样复制
+  到 dest 时路径冲突.)
+
+- By default, files already existing at the destination are skipped. A count of
+  skipped files is reported at the end of each job.
+
+- without ``-update`` or ``-overwrite``, source directories are copied into the
+  target directory. With one of either options, it's different.
+
+- raw xattr namespace. If the target and all of the source pathnames are in the
+  ``/.reserved/raw`` hierarchy, then ‘raw’ namespace extended attributes will
+  be preserved.  raw xattrs are preserved based solely on whether
+  ``/.reserved/raw`` prefixes are supplied. The -p (preserve, see below) flag
+  does not impact preservation of raw xattrs.
+
+options
+~~~~~~~
+- ``-update``. Overwrite if source and destination differ in size, blocksize,
+  or checksum.
+
+  * when this option is specified, the *contents* of the source-directories are
+    copied to target, and not the source directories themselves.
+
+- ``-append``. If the source file is greater in length than the destination
+  file, the checksum of the common length part is compared. If the checksum
+  matches, only the difference is copied using read and append functionalities.
+  The ``-append`` option only works with ``-update`` without ``-skipcrccheck``.
+
+- ``-overwrite``. overwrite destination. If a map fails and -i is not
+  specified, all the files in the split, not only those that failed, will be
+  recopied.
+
+  * when this option is specified, the *contents* of the source-directories are
+    copied to target, and not the source directories themselves.
+
+- ``-delete``. Delete the files existing in the dst but not in src. Delete is
+  applicable only with -update or -overwrite options.
+
+- ``-strategy <strategy>``. Choose the copy-strategy. Can be dynamic,
+  uniformsize. By default, uniformsize is used.
+
+- ``-p[rbugpcaxt]``. preserve: replication number, block size, user, group,
+  permission, checksum-type, acl, xattrs, timestamp. By default, block size
+  is preserved. When ``-update`` is specified, status updates will not be
+  synchronized unless the file sizes also differ (i.e. unless the file is
+  re-created).
+
+- ``-i``. ignore failures.
+
+- ``-log <logdir>``. write log to this directory. Logs are actually generated
+  as map's output. Therefore one log is generated for each file it attempts to
+  copy.
+
+- ``-v``. verbose logging. only be used with -log option.
+
+- ``-m <num>``. maximum number of simultaneous copies, i.e., the number of
+  map tasks.
+
+- ``-f <urilist_uri>``. use an uri to a file containing a list of file uris as
+  source list.
+
+- ``-filters <file_uri>``. The path to a file containing a list of pattern
+  strings, one string per line, such that paths matching the pattern will be
+  excluded from the copy.
+
+- ``-bandwidth``. bandwidth per map, in MB/second. Each map will be restricted
+  to consume only the specified bandwidth.
+
+- ``-atomic``. copy the source data to a temporary target location, and then
+  move the temporary target to the final-location atomically. Data will either
+  be available at final target in a complete and consistent form, or not at
+  all.
+
+- ``-tmp <tmp_dir>``. only used with -atomic. used to specify the location of
+  the tmp-target. If not specified, a default is chosen. ``tmp_dir`` must be on
+  the final target cluster.
+
+- ``-async``. Run DistCp asynchronously. Quits as soon as the Hadoop Job is
+  launched. The Hadoop Job-id is logged, for tracking.
+
+- ``-diff <oldSnapshot> <newSnapshot>``. Use snapshot diff report between given
+  two snapshots to identify the difference between source and target, and apply
+  the diff to the target to make it in sync with source. This option is valid
+  only with -update option and the following conditions should be satisfied.
+
+  This option is valid only with -update option and the following conditions
+  should be satisfied:
+
+  * Both the source and the target FileSystem must be DistributedFileSystem.
+
+  * Two snapshots <oldSnapshot> and <newSnapshot> have been created on the
+    source FS, and <oldSnapshot> is older than <newSnapshot>.
+
+  * The current state of the target has the same content as <oldSnapshot>.
+
+- ``-rdiff <newSnapshot> <oldSnapshot>``. Use snapshot diff report between
+  given two snapshots to identify what has been changed on the target since the
+  snapshot <oldSnapshot> was created on the target, and apply the diff
+  reversely to the target, and copy modified files from the source’s
+  <oldSnapshot>, to make the target the same as <oldSnapshot>.   
+
+  This option is valid only with -update option and the following conditions
+  should be satisfied.
+
+- ``-numListstatusThreads <num>``. Number of threads to use for building file
+  listing. at most 40.
+
+- ``-skipcrccheck``. skip CRC checks between source and target paths.
+
+- ``-blocksperchunk <blocks>``. If set to a positive value, files with more
+  blocks than this value will be split into chunks of <blocks> blocks to be
+  transferred in parallel, and reassembled on the destination. By default,
+  <blocks> is 0 and the files will be transmitted in their entirety without
+  splitting. 这有助于更好地处理很大的文件, 将它分块并行传输. 默认不对文件切分,
+  uniformsize 遇到个别很大的文件并不能完全做到 uniform.
+  
+  This switch is only applicable when the source file system implements
+  getBlockLocations method and the target file system implements concat method.
+
+- ``-copybuffersize <size>``. size of copy buffer to use.
+
+usage
+~~~~~
+- A very common use case for distcp is for transferring data between two HDFS
+  clusters.
+
 hdfs
 ----
 admin commands
@@ -2257,6 +2610,13 @@ public class FSDataOutputStream
 instance methods
 """"""""""""""""
 - ``public long getPos()``. get current position in the output stream.
+
+- ``public void hflush() throws IOException``. Flush out the data in client's
+  user buffer. After the return of this call, new readers will see the data.
+
+- ``public void hsync() throws IOException``. Similar to posix fsync, flush out
+  the data in client's user buffer all the way to the disk device (but the disk
+  may have it in its cache).
 
 public interface Seekable
 ^^^^^^^^^^^^^^^^^^^^^^^^^
