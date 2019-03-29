@@ -2237,20 +2237,25 @@ overview
   also fail on HDFS. If a source file is (re)moved before it is copied, the
   copy will fail with a FileNotFoundException.
 
-architecture
-~~~~~~~~~~~~
+- ``hadoop distcp`` is preferred over ``hadoop fs -cp`` even for single file
+  copy because ``hadoop fs -cp`` copies the file via the client running the
+  command.
 
 mechanism
 ~~~~~~~~~
 - The files/directories in source are expanded into a list of files under that
   namespace, and saved into a temporary file. It partitions the temporary
-  file's contents among a set of map tasks.
+  file's contents among a set of map tasks. 默认情况下, 每个 map task 输入一组
+  要 copy 的文件列表. There's no reduce task.
+
+- At present, the smallest unit of work for DistCp is a file. i.e., a file is
+  processed by only one map. 在一个 map 中, ``-blocksperchunk`` 可以对很大的
+  文件进行多线程传输.
 
 - Each NodeManager must be able to reach and communicate with both the source
   and destination file systems. For HDFS, both the source and destination must
   be running *the same version of the protocol or use a backwards-compatible
   protocol*.
-
 
 behaviors
 ~~~~~~~~~
@@ -2269,6 +2274,16 @@ behaviors
   be preserved.  raw xattrs are preserved based solely on whether
   ``/.reserved/raw`` prefixes are supplied. The -p (preserve, see below) flag
   does not impact preservation of raw xattrs.
+
+sources and destination
+~~~~~~~~~~~~~~~~~~~~~~~
+- Sources and destination are hadoop compatible filesystem URIs, typically
+  hdfs:// namespace URIs.
+
+- To copy between different major versions of HDFS, use WebHdfsFileSystem,
+  i.e., webhdfs:// URIs.
+
+- If dest does not exist, it will be created.
 
 options
 ~~~~~~~
@@ -2311,7 +2326,13 @@ options
 - ``-v``. verbose logging. only be used with -log option.
 
 - ``-m <num>``. maximum number of simultaneous copies, i.e., the number of
-  map tasks.
+  map tasks. default 20.
+
+  Number of map tasks should be specified so that file blocks are balanced,
+  i.e., they are evenly spread across the cluster. If you specified -m 1, a
+  single map would do the copy, which—apart from being slow and not using the
+  cluster resources efficientlywould mean that the first replica of each block
+  would reside on the node running the map (until the disk filled up).
 
 - ``-f <urilist_uri>``. use an uri to a file containing a list of file uris as
   source list.
@@ -2368,13 +2389,28 @@ options
   blocks than this value will be split into chunks of <blocks> blocks to be
   transferred in parallel, and reassembled on the destination. By default,
   <blocks> is 0 and the files will be transmitted in their entirety without
-  splitting. 这有助于更好地处理很大的文件, 将它分块并行传输. 默认不对文件切分,
-  uniformsize 遇到个别很大的文件并不能完全做到 uniform.
+  splitting. 这有助于更好地处理很大的文件, 将它分块并行传输.
   
   This switch is only applicable when the source file system implements
   getBlockLocations method and the target file system implements concat method.
 
 - ``-copybuffersize <size>``. size of copy buffer to use.
+
+copy strategies
+~~~~~~~~~~~~~~~
+- uniformsize. make each map copy roughly the same number of bytes. The listing
+  file is split into groups of paths, such that the sum of file-sizes in each
+  InputSplit is nearly equal to every map.
+
+- dynamic. The listing-file is split into several “chunk-files”, the exact
+  number of chunk-files being a multiple of the number of maps requested for in
+  the Hadoop Job. Each map task is “assigned” one of the chunk-files, before
+  the Job is launched. After all the paths in a chunk are processed, the
+  current chunk is deleted and a new chunk is acquired. The process continues
+  until no more chunks are available. This “dynamic” approach allows faster
+  map-tasks to consume more paths than slower ones, thus speeding up the DistCp
+  job overall. Dynamic strategy provides superior performance under most
+  conditions.
 
 usage
 ~~~~~
