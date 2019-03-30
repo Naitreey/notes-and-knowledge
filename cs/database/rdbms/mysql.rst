@@ -1655,7 +1655,7 @@ Complete table reference syntax::
 - FROM clause indicates tables to select rows from.
   
 - If no FROM clause, only arbitrary expressions (not referencing columns) can
-  be selected. This is equivalent to specifying ``FROM DUAL``.
+  be selected. This is equivalent to specifying ``FROM DUAL`` dummy table.
 
 - Table name can be fully qualified as ``db_name.tbl_name``, for tables in
   default database, unqualified table name is sufficient.
@@ -1666,6 +1666,11 @@ Complete table reference syntax::
 
 - A subquery must be assigned an alias, and may optionally include a list of
   table column names in parentheses.
+
+  * The subquery must be a table subquery.
+
+  * By default, column names are defined by SELECT list of subquery. This can
+    be overriden by providing a list of table column names in parentheses.
 
 - Different JOINs.
 
@@ -2252,6 +2257,149 @@ DESCRIBE
 ^^^^^^^^
 - synonymous to EXPLAIN. But usually used for obtain information about table
   structure.
+
+subquery syntax
+^^^^^^^^^^^^^^^
+- A subquery is a query statement within another statement.
+
+- It's possible to nest subqueries within other subqueries to a considerable
+  depth.
+
+- A subquery is always surrounded by parentheses.
+
+- scalar, column, row, table subquery: A subquery that returns a scalar, a
+  column of values, a single row, or a table.
+
+- A subquery's outer statement can be any of: SELECT, INSERT, UPDATE, DELETE,
+  SET or DO.
+
+- In general, tables containing NULL values and empty tables are “edge cases.”
+  *When writing subqueries, always consider whether you have taken those two
+  possibilities into account.*
+
+- correlated subquery. A subquery that contains a reference to a table that
+  also appears in the outer query.
+
+  * For subqueries in HAVING or ORDER BY clauses, MySQL also looks for column
+    names in the outer select list.
+
+- In MySQL, you cannot modify a table and select from the same table in a
+  subquery.
+
+scalar subquery
+""""""""""""""""
+- A scalar subquery can be used almost anywhere a single column value or
+  literal is legal. But if a statement permits only a literal value, you cannot
+  use a subquery.
+
+- The result of a scalar query has characteristics that all operands have: a
+  data type, a length, an indication that it can be NULL, and so on.
+
+- If the subquery result is empty, the result is NULL.
+
+- A scalar subquery can be part of an expression, but remember the parentheses,
+  even if the subquery is an operand that provides an argument for a function.::
+
+    SELECT UPPER((SELECT c FROM t));
+
+- scalar subquery in comparison::
+
+    non_subquery_operand comparison_operator (subquery)
+
+- Some of the subquery comparisons can be achieved using table joins. But not
+  all of them can.
+
+row subqueries
+""""""""""""""
+- A row subquery returns a single row that contains any number of columns.
+  Can be used in row subquery comparison.
+
+- A row constructor is either of the two::
+
+    (col1, col2, ...)
+    ROW(col1, col2, ...)
+
+- In a row subquery comparison, a row constructor is compared against the
+  result of a row subquery.::
+
+    row_constructor comparison_operator (subquery)
+
+  * When the subquery produces no rows, the expression is NULL.
+
+  * For a comparison of the subquery to a row constructor, the subquery must be
+    a row subquery that returns the same number of columns.
+
+  * In a row subquery comparison, the row subquery must returns at least two
+    columns.
+
+column subqueries
+""""""""""""""""""
+- subquery that returns multiple rows of single column values.
+  Can be used in ANY, IN, SOME, ALL comparisons.
+
+table subqueries
+""""""""""""""""
+- subqueries that returns a table of data. can be used in
+
+  * FROM clause of SELECT.
+
+  * IN comparison where the LHS is a row constructor.
+
+subqueries with ANY, IN, SOME, ALL comparison
+""""""""""""""""""""""""""""""""""""""""""""""
+- format::
+
+  operand comparison_operator {ANY | SOME} (subquery)
+  operand IN (subquery)
+  operand comparison_operator ALL (subquery)
+
+- ANY/SOME. return TRUE if the comparison is TRUE for ANY of the values in the
+  column that the subquery returns. 注意 subquery must be a column subquery.
+
+  * SOME is alias to ANY. SOME is useful when comparison operator is negated::
+
+      SELECT s1 FROM t1 WHERE s1 != SOME (SELECT s1 FROM t2);
+      SELECT s1 FROM t1 WHERE s1 != ANY (SELECT s1 FROM t2);
+
+    注意到第二句的字面意思与它的实际 semantics 是不同的, 所以 SOME 更合适.
+
+  * the comparison is NULL if the column values of all rows from subquery are
+    NULL.
+
+- IN. IN is alias for ``= ANY``. NOT IN is an alias for ``!= ALL``.
+
+- ALL. return TRUE if the comparison is TRUE for ALL of the values in the
+  column that the subquery returns.
+
+  * the comparison is NULL if the column values from subquery contains NULL and
+    all other non-NULL column values satisfying the comparison.::
+
+      SELECT 1 > ALL (SELECT 0 UNION ALL SELECT NULL); -- returns NULL.
+
+  * the comparison is True if subquery is empty.
+
+subqueries with EXISTS or NOT EXISTS
+""""""""""""""""""""""""""""""""""""
+::
+
+  EXISTS (subquery)
+  NOT EXISTS (subquery)
+
+- Tests whether subquery returns any rows at all. Even rows with NULL values.
+
+- MySQL ignores select list in a subquery that tests whether there's any rows,
+  because it's the conditional clauses that are important.
+
+subquery optimization
+""""""""""""""""""""""
+- MySQL executes uncorrelated subqueries only once. Use EXPLAIN to make sure
+  that a given subquery really is uncorrelated.
+
+- MySQL rewrites IN, ALL, ANY, and SOME subqueries in an attempt to take
+  advantage of the possibility that the select-list columns in the subquery are
+  indexed.
+
+- Sometimes rewriting subqueries as joins can make query more efficient.
 
 Transaction
 ===========
@@ -4812,6 +4960,17 @@ Client Programming Design Patterns
       UPDATE `table` SET `counter` = `counter`+1 WHERE ...;
       COMMIT;
 
+- database normalization and denormalization, 该如何权衡.
+
+  数据库设计首先应该尽量去 normalized, 因为这些 normalization forms 具有很多价
+  值; 只有当 normalized design 确实成为了性能瓶颈之后才应适当地增加数据的冗余度
+  以改善性能.  Denormalization 应当是以 normalized 数据库设计为基础进行的优化.
+  而不是空中楼阁. 首先做好 normalized design, 才谈得上 denormalization 优化.
+  只有在 profiling 之后发现 denormalization 可以解决性能瓶颈, 才选择进行
+  denormalization. Denormalized form is NOT unnormalized form. 
+
+  See also [SENormalization]_, [WikiDenormalization]_.
+
 References
 ==========
 .. [DOMysqlSlave] `How To Set Up Master Slave Replication in MySQL <https://www.digitalocean.com/community/tutorials/how-to-set-up-master-slave-replication-in-mysql>`_
@@ -4823,3 +4982,5 @@ References
 .. [SOIndexWorking] `How does database indexing work? [closed] <https://stackoverflow.com/questions/1108/how-does-database-indexing-work>`_
 .. [DocDefaultValue] https://dev.mysql.com/doc/refman/8.0/en/data-type-defaults.html
 .. [DocGenColumn] https://dev.mysql.com/doc/refman/8.0/en/create-table-generated-columns.html
+.. [SENormalization] `How far should you go with normalization? <https://dba.stackexchange.com/questions/505/how-far-should-you-go-with-normalization>`_
+.. [WikiDenormalization] `Denormalization <https://en.wikipedia.org/wiki/Denormalization>`_
