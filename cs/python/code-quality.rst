@@ -127,26 +127,26 @@ usage
   * with ``--diff``, 0 if no changes, non-0 otherwise. can be used in a CI
     workflow to test that code has been YAPF-formatted.
 
-- formatting style search order.
-
-  * specified by the command line option ``--style``.
-
-  * In the ``[style]`` section of a ``.style.yapf`` file in either the current
-    directory or one of its parent directories.
-
-  * In the ``[yapf]`` section of a ``setup.cfg`` file in either the current
-    directory or one of its parent directories.
-
-  * In the ``~/.config/yapf/style`` file.
-
-  * Use pep8 style as default.
-  
 yapfignore
 ----------
 In addition to exclude patterns provided on commandline, YAPF looks for
 additional patterns specified in a file named ``.yapfignore`` located in the
 working directory from which YAPF is invoked.
 
+formatting style search order
+-----------------------------
+* specified by the command line option ``--style``.
+
+* In the ``[style]`` section of a ``.style.yapf`` file in either the current
+  directory or one of its parent directories.
+
+* In the ``[yapf]`` section of a ``setup.cfg`` file in either the current
+  directory or one of its parent directories.
+
+* In the ``~/.config/yapf/style`` file.
+
+* Use pep8 style as default.
+  
 formatting style
 ----------------
 - ``--style`` option value can be
