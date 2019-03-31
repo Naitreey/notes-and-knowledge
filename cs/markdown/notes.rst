@@ -161,3 +161,27 @@ comment
   * method 2. abuse reference link syntax::
 
         [//]: # (comment)
+
+table
+-----
+- ``|`` is column separator. They are not needed to be vertically aligned
+  perfectly. 最左侧和最右侧的两排 ``|`` 并不是必须的.
+
+- separate header row with table data row with ``-``. at least three dashes
+  must be drawn to separate each header cell.
+
+- Use ``:`` at begin or end of dashes to indicate cell alignment (left
+  ``:---``, right ``---:``, centered ``:---:``). 
+
+- examples::
+
+  | Tables        | Are           | Cool  |
+  | ------------- |:-------------:| -----:|
+  | col 3 is      | right-aligned | $1600 |
+  | col 2 is      | centered      |   $12 |
+  | zebra stripes | are neat      |    $1 |
+
+  Markdown | Less | Pretty
+  --- | --- | ---
+  *Still* | `renders` | **nicely**
+  1 | 2 | 3
