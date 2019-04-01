@@ -1149,11 +1149,162 @@ POSIX API via FUSE
 YARN
 ====
 - YARN is a cluster resource management system, which allows any distributed
-  program, not just MapReduce, to run on data in a Hadoop cluster.
+  program, not just MapReduce, to run on a Hadoop cluster.
+
+- Why do we need YARN?
+  
+  YARN 在 hadoop 这样的分布式计算系统中的地位, 就相当于操作系统在单个计算机中的
+  地位. YARN 上层的各种应用程序与 YARN 的关系, 就相当于进程与操作系统 (或更具体
+  地讲, 调度器) 的关系.
+
+  集群的资源, 包括 CPU 资源, 内存资源, 存储资源, 带宽资源等. 这些资源需要一个一
+  般化的统筹管理者. 这样的价值是很多的. 上层应用的逻辑专注于自身应用逻辑, 只需
+  调用 API 申请资源即可. 集群资源可控, 不会允许应用程序滥用. 此外, hadoop 中还
+  存在 data locality 优化的问题. YARN 可以自动选择最近的节点运行应用, 节省带宽
+  资源. 这对应用是透明的. 总之, 只要想让 hadoop 的资源使用能够一般化到各个应用
+  程序, 而不是仅仅能跑 MapReduce, 需要 YARN 这样的资源调度层是很自然的设计.
+
+- YARN provides APIs for requesting and working with cluster resources, but
+  these APIs are not typically used directly by user code. Instead, users write
+  to higher-level APIs provided by distributed computing frameworks, which
+  themselves are built on YARN and hide the resource management details from
+  the user.
 
 Architecture
 ------------
+- Resource Manager (RM) -- one per cluster. Managing and allocating resources
+  across the cluster, and scheduling applications. RM has two components:
 
+  * Applications Manager (AsM) -- accept job submissions from clients, select
+    node with sufficient resources to start AM for job/application, and also
+    provide service to relaunch AM in case of failure.
+
+  * Scheduler -- schedule the submitted and accepted applications for
+    execution.
+
+- Node Manager (NM) -- one per computing nodes. RM is master and NMs are
+  workers/slaves. NM has following functionalities:
+
+  * Track the total available resources to the local node, and their
+    utilization status. NM sends these information as report periodically to
+    RM.
+
+  * Responsible for launching the containers on the local node, monitor their
+    resource usage (CPU, memory, storage and network), and report these status
+    to the RM.
+
+  * NM 从节点的角度把控该节点内运行的所有容器的资源使用和运行状态.
+
+- Application Master (AM) -- one per application. Executing applications and
+  providing failover.
+
+  * AM is run in a dedicated container. AsM negotiates for the container in
+    which an application's AM runs when the application is scheduled by the
+    YARN's scheduler.
+
+  * Each application provides its dedicated AM that knows what to do next when
+    being spawned up (do some computing works, request more containers,
+    communicate with clients, etc.). An application's AM can be written in any
+    language, since it's just an process run in a container, and it
+    communicates with RM and NMs via networking.
+
+  * responsibility of an application's AM
+    
+    1) manage the application's lifecycle;
+
+    2) dynamically adjust application's resource consumption;
+
+    3) manage application's execution flow;
+
+    4) handle faults during application task's run
+
+    5) monitor task processes and provide their status; 
+
+  * AM 从一个 application 的角度整体把控它手下所有容器 (和里面的进程) 的运行情
+    况.
+
+- container. A container executes an application-specific process with a
+  constrained set of resources including CPU, memory, etc. A job/application is
+  split in tasks and each task gets executed in one container.
+
+  * A container may be a process on generic Unix or a cgroup on Linux.
+
+  * There can be one or more containers on given computing node (slave node)
+    depending upon the available resources and the task's requested resources.
+
+- How is a YARN application run? See also [QuoraAppMaster]_ and [MapRAM]_.
+
+  * Client submits a new application/job request to RM.
+
+  * RM (AsM part) accepts the job request. The job/application is queued in
+    scheduler.
+    
+  * When the application is scheduled, AsM finds a slave node and instructs the
+    NM on this node to launch a container and run AM process of this
+    application inside of it. The AM process commandline is provided by client.
+
+  * After AM is spawned up, it sends request to RM, asking for resources
+    required to run the application. In the request, AM includes resource's
+    locality preferences and attributes of the containers.
+
+  * RM considers the locality preferences and resource requirements, responds
+    with a list of containers along with a list of slave nodes that containers
+    can be spawned on. RM 尽量满足 AM 的 locality 需求, 在所需的节点上分配容器,
+    或者在同一个机架上其他节点分配容器, 实在不行才在其他机架上分配容器.
+    
+    The allocated resources is provided in the form of a lease. AM pulls the
+    lease on subsequent heartbeats. 生成 lease 的同时, 还生成了一个 security
+    token, 它用于 NM 校验 AM 的资源请求是否合法.
+
+  * AM contacts NMs of the node where the container has been allocated, present
+    to them the lease, thereby gaining access to the resources. AM needs to
+    provide to NMs a container launch context (CLC) that includes the following
+    information:
+
+    - Environment variables
+
+    - Dependencies (local resources such as data files or shared objects needed
+      prior to launch)
+
+    - security token
+
+    - commandline of process to run
+    
+  * NMs grant the requested resources by spawning up containers, running the
+    specified commands. In the meantime, AM might report progress status to
+    client.
+
+- 几点需要注意的:
+
+  * AM 与 NM 都是从某个整体上对运行进行监控和负责. 但两者的角度是不同的, AM 是
+    对应用的所有容器 (和里面的进程) 进行监控和管理, NM 是对这个节点上的所有容器
+    进行监控和管理.
+
+  * 一个 YARN application 由三部分构成: client, application master (AM), task
+    processes. 一个应用的这几个部分之间如何交互, 由程序本身去定义. YARN 不提供
+    应用组件之间的交流机制.
+
+YARN application
+----------------
+- Application lifespan.
+
+  * one application per user job.
+    
+    e.g., MapReduce.
+
+  * one application per workflow or user session of possibly unrelated jobs.
+    Containers can be reused between jobs, data can also be potentially cached
+    between jobs.
+    
+    e.g., Spark.
+
+  * a long-running application that is shared by different users. Often acts in
+    some kind of coordination role. The “always on” application master means
+    that users have very low latency responses to their queries since the
+    overhead of starting a new application master is avoided.
+    
+    e.g., Impala (providing a proxy application that the Impala daemons
+    communicate with to request cluster resources.).
 
 ResourceManager
 ---------------
@@ -2762,6 +2913,8 @@ references
 .. [OriginHadoop] `Origin of the Name Hadoop <http://www.balasubramanyamlanka.com/origin-of-the-name-hadoop/>`_
 .. [distroToChoose] `What distribution should I choose <https://www.quora.com/What-distribution-should-I-choose-Cloudera-Hortonworks-or-MapR-I-will-need-to-do-some-stream-processing-from-social-networks-and-real-time-too-I%E2%80%99m-thinking-of-using-Apache-Storm-rather-than-Spark-with-Hortonworks-Is-that-a-good-approach>`_.
 .. [hdfsReadAndWrite] `Hadoop HDFS Data Read and Write Operations <https://data-flair.training/blogs/hadoop-hdfs-data-read-and-write-operations/>`_
+.. [QuoraAppMaster] `What is container and Application Master in Hadoop. Can anyone explain this? <https://www.quora.com/What-is-container-and-Application-Master-in-Hadoop-Can-anyone-explain-this>`_
+.. [MapRAM] `ApplicationMaster <https://mapr.com/docs/60/MapROverview/c_application_master.html>`_
 
 questions
 =========
