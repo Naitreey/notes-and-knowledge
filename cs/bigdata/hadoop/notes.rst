@@ -1151,19 +1151,6 @@ YARN
 - YARN is a cluster resource management system, which allows any distributed
   program, not just MapReduce, to run on a Hadoop cluster.
 
-- Why do we need YARN?
-  
-  YARN 在 hadoop 这样的分布式计算系统中的地位, 就相当于操作系统在单个计算机中的
-  地位. YARN 上层的各种应用程序与 YARN 的关系, 就相当于进程与操作系统 (或更具体
-  地讲, 调度器) 的关系.
-
-  集群的资源, 包括 CPU 资源, 内存资源, 存储资源, 带宽资源等. 这些资源需要一个一
-  般化的统筹管理者. 这样的价值是很多的. 上层应用的逻辑专注于自身应用逻辑, 只需
-  调用 API 申请资源即可. 集群资源可控, 不会允许应用程序滥用. 此外, hadoop 中还
-  存在 data locality 优化的问题. YARN 可以自动选择最近的节点运行应用, 节省带宽
-  资源. 这对应用是透明的. 总之, 只要想让 hadoop 的资源使用能够一般化到各个应用
-  程序, 而不是仅仅能跑 MapReduce, 需要 YARN 这样的资源调度层是很自然的设计.
-
 - YARN provides APIs for requesting and working with cluster resources, but
   these APIs are not typically used directly by user code. Instead, users write
   to higher-level APIs provided by distributed computing frameworks, which
@@ -1306,9 +1293,49 @@ YARN application
     e.g., Impala (providing a proxy application that the Impala daemons
     communicate with to request cluster resources.).
 
+- build a YARN application.
+
+  * It's better to use Apache Twill abstraction layer to reduce the complexity
+    of developing distributed applications on YARN.
+
+  * To build an application on YARN from scratch, you can reference the
+    distributed shell application that is part of YARN.
+
+Benefits of YARN
+----------------
+- Why do we need YARN?
+  
+  YARN 在 hadoop 这样的分布式计算系统中的地位, 就相当于操作系统在单个计算机中的
+  地位. YARN 上层的各种应用程序与 YARN 的关系, 就相当于进程与操作系统 (或更具体
+  地讲, 调度器) 的关系.
+
+  集群的资源, 包括 CPU 资源, 内存资源, 存储资源, 带宽资源等. 这些资源需要一个一
+  般化的统筹管理者. 这样的价值是很多的. 上层应用的逻辑专注于自身应用逻辑, 只需
+  调用 API 申请资源即可. 集群资源可控, 不会允许应用程序滥用. 此外, hadoop 中还
+  存在 data locality 优化的问题. YARN 可以自动选择最近的节点运行应用, 节省带宽
+  资源. 这对应用是透明的. 总之, 只要想让 hadoop 的资源使用能够一般化到各个应用
+  程序, 而不是仅仅能跑 MapReduce, 需要 YARN 这样的资源调度层是很自然的设计.
+
+- The benefit of a generalized architecture like YARN.
+
+  * improved scalability. 由于使用了 loose coupling 的架构, RM, NM, AM, 等每个
+    组件的功能是相对专一的, 提高了水平扩展性.
+
+  * Availability. 同样由于每个组件功能专一, 对每个组件实现 HA 是可行的.
+
+  * Resource utilization. RM 了解整个集群的资源情况, 整个集群相当于一个资源池.
+    可以划分任意大小的资源去运行容器, 并且应用可以动态申请或释放资源. 这样提高
+    了资源利用率, 降低了浪费.
+
+  * Multitenancy. YARN 一般化的资源管理和调度架构, 让 Hadoop 上面可以运行的不止
+    有 MapReduce, 而是可以运行多种分布式应用.
+
 ResourceManager
 ---------------
 - port: 8088
+
+Scheduling
+^^^^^^^^^^
 
 NodeManager
 -----------
@@ -1564,6 +1591,42 @@ Java API
 History server
 --------------
 - port: 19888
+
+MapReduce 1
+-----------
+- MapReduce 1 refers to the implementation of MapReduce in Hadoop 1 and
+  earlier.
+
+- Both the old and new MapReduce APIs run on both MapReduce 1 and 2, giving all
+  four combinations of usage.
+
+architecture
+^^^^^^^^^^^^
+- two types of daemon:
+
+  * jobtracker -- one per cluster.
+
+  * tasktracker -- many per cluster.
+
+- The jobtracker.
+ 
+  * scheduling tasks to run on tasktrackers.
+
+  * task progress monitoring.
+
+  * storing job history for completed jobs, or store it in job history server.
+
+  In YARN, the jobtracker's functionalities are separated and generalized into
+  Resource Manager, Application Master, Timeline server and Job History Server.
+
+- The tasktracker.
+  
+  * run tasks
+   
+  * send progress reports to the jobtracker.
+
+  In YARN, tasktracker's functionalities are separated and generalized into
+  Node Manager and Application Master.
 
 Tools
 =====
