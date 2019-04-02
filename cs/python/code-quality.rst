@@ -658,3 +658,21 @@ Noticeable problems
     FOO = my_variable_1 + my_variable_2 + my_variable_3 + my_variable_4 + my_variable_5 + my_variable_6 + my_variable_7 + my_variable_8
     # will be formatted
     FOO = (my_variable_1 + my_variable_2 + my_variable_3 + my_variable_4 + my_variable_5 + my_variable_6 + my_variable_7 + my_variable_8)
+flake8
+======
+overview
+--------
+- flake8 is a wrapper around: pyflakes, pycodestyle, McCabe.
+
+installation
+------------
+- Install flake8 on the correct version of python for your needs.
+
+CLI
+---
+::
+
+  flake8 [options] [file-or-directory ...]
+
+- Specify files and/or directories you wanna check. Otherwise, all files in
+  current directory is processed.
