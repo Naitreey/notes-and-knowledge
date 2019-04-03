@@ -676,3 +676,268 @@ CLI
 
 - Specify files and/or directories you wanna check. Otherwise, all files in
   current directory is processed.
+
+behavior
+^^^^^^^^
+- by default exit non-zero if there are errors.
+
+- by default run in parallel according to the number of logical CPUs.
+
+options
+^^^^^^^
+- ``-v``, ``--verbose``. Increase the verbosity of Flake8’s output. Each time
+  you specify it, it will print more and more information.
+
+  In config::
+ 
+    verbose = <N>
+
+- ``-q``, ``--quiet``. Decrease the verbosity of Flake8’s output. Each time you
+  specify it, it will print less and less information.
+
+  In config::
+ 
+    quiet = <N>
+
+- ``--count``, print error count in addition to normal output.
+
+  In config::
+ 
+    count = True
+
+- ``--diff``. Use the unified diff provided on standard in to only check the
+  modified files and report errors included in the diff.
+
+- ``--exclude=<patterns>``. a comma-separated list of glob patterns to exclude
+  from checks. 每个 pattern 匹配包含这个 pattern 的路径, 或者 pattern 本身是路
+  径的一部分. Defaults to: ``.svn,CVS,.bzr,.hg,.git,__pycache__,.tox``. 
+
+  In config::
+
+    exclude =
+        .tox,
+        .git,
+        ...
+
+- ``--filename=<patterns>``. a comma-separate list of glob patterns to include
+  for checks. default to: ``*.py``.
+
+  In config::
+
+    filename = *.py
+
+- ``--stdin-display-name=<display_name>``. 当代码从 stdin 传入时, 指定错误输出中
+  使用的文件名, 默认 ``stdin``.
+
+- ``--format=<format>``. select formatter used to display errors to the user.
+  default to ``default``. users can specify their own format string: keys include
+  the following: path, row, col, code, text. The default formatter's formatting::
+
+    %(path)s:%(row)d:%(col)d: %(code)s %(text)s
+
+  In config::
+
+    format = ...
+
+- ``--hang-closing``. When you specify this, pycodestyle will prefer that you
+  hang the closing bracket with the same amount of indentation rather than
+  match the indentation of the first line.
+
+  In config::
+
+    hang-closing = True
+
+- ``--ignore=<errors>``. Specify a list of codes to ignore. The list is
+  expected to be comma-separated, and can be a prefix of error codes to be
+  ignored. default: ``E121,E123,E126,E226,E24,E704,W503,W504``.
+
+  In config::
+
+    ignore = E121,E123
+
+- ``--extend-ignore=<errors>``. this option can be used to selectively add
+  individual codes without overriding the default list entirely. Otherwise
+  similar to ``--ignore``.
+
+  In config::
+
+    extend-ignore = E4,E51
+
+- ``--per-file-ignores='<filename:errors>[ <filename:errors> ...]'`` Specify a
+  list of mappings of files and the codes that should be ignored for the
+  entirety of the file. This allows for a project to have a default list of
+  violations that should be ignored as well as file-specific violations for
+  files that have not been made compliant with the project rules.
+
+  In config::
+
+    per-file-ignores = other_project/*:W9
+
+- ``--max-line-length=<n>``. max line length with certain exceptions.
+  Exceptions include lines that are either strings or comments which are
+  entirely URLs. These exceptions won't be marked as violation. deafult 79.
+
+  In config::
+
+    max-line-length = 79
+
+- ``--select=<errors>``. select a list of error codes flake8 should report.
+  format similar to ``--ignore``. default E,F,W,C. Using ``--select`` alone
+  will override the default ``--ignore`` list. ``--select`` and ``--ignore``
+  can be used together, 这样一部分 error 被 select, 一部分被 ignore.
+
+  In config::
+
+    select = E,F,W,C
+
+- ``--disable-noqa``. Disable ``# noqa`` lines. Sometimes, users will want to
+  see what errors are being silenced without editing the file.
+
+  In config::
+
+    disable-noqa = True
+
+- ``--show-source``. Print the source code generating the error/warning in
+  question.
+
+  In config::
+
+    show-source = True
+
+- ``--statistics``. Count the number of occurrences of each error/warning code
+  and print a report.
+
+  In config::
+
+    statistics = True
+
+- ``--enable-extensions=<errors>``. Enable error codes of off-by-default
+  extensions.
+
+  In config::
+
+    enable-extensions = H111,G123
+
+- ``--exit-zero``. Force Flake8 to use the exit status code 0 even if there are
+  errors. by default nonzero if there are errors.
+
+- ``--install-hook=VERSION_CONTROL_SYSTEM``. Install a hook for your version
+  control system that is executed before or during commit.
+
+- ``--jobs=<n>``. the number of subprocesses that Flake8 will use to run checks
+  in parallel. default is auto, using ``multiprocessing.cpu_count()``.
+
+  In config::
+
+    jobs = 8
+
+- ``--output-file=<path>``. print output to this file.
+
+  In config::
+
+    output-file = output.txt
+
+- ``--tee``. Also print output to stdout if output-file has been configured.
+
+  In config::
+
+    tee = True
+
+- ``--append-config=<config>``. Provide extra config files to parse in after
+  and in addition to the files that Flake8 found on its own.
+
+- ``--config=<config>``. The file if provided, will be the only config file
+  read and used.
+
+- ``--isolated``. ignore any config files.
+
+- ``--builtins=<builtins>``. Provide a custom list of builtin functions,
+  objects, names, etc.  This allows you to let pyflakes know about builtins
+  that it may not immediately recognize so it does not report warnings for
+  using an undefined name.
+
+  In config::
+
+    builtins = int,float
+
+- ``--doctests``. Enable PyFlakes syntax checking of doctests in docstrings.
+
+  In config::
+
+    doctests = True
+
+- ``--include-in-doctest=<paths>``. Specify which files are checked by PyFlakes
+  for doctest syntax.
+
+  In config::
+
+    include-in-doctests = file1.py,file2.py
+
+- ``--exclude-from-doctest=<paths>``. Specify which files are not to be checked
+  by PyFlakes for doctest syntax.
+
+  In config::
+
+    exclude-in-doctest = file1,file2
+
+- ``--benchmark``. Collect and print benchmarks for this run of Flake8.
+  aggregate the total number of: tokens, physical lines, logical lines, files.
+
+- ``--max-complexity=<n>``. Set the maximum allowed McCabe complexity value for
+  a block of code.
+
+  In config::
+
+    max-complexity = 15
+
+configuration
+-------------
+- configuration precedence (lowest to highest):
+
+  * user's global configuration: ``~/.config/flake8``
+
+  * project configuration: one of ``setup.cfg``, ``tox.ini``, ``.flake8``.
+
+  * config file passed via ``--append-config=<config>``.
+
+  * cmdline options.
+
+- configuration format: ini.
+
+  * in ``[flake8]`` section.
+
+  * Each option is its corresponding command-line option with leading hyphens
+    stripped and optionally with ``-`` replaced by ``_``.
+
+Error codes
+-----------
+- C90. All C90 class violations are reported when the user specifies flake8
+  ``--max-complexity``.
+
+- E. All E class violations are “errors” reported by pycodestyle.
+
+- F. All F class violations are reported by pyflakes.
+
+- W. All W class violations are “warnings” reported by pycodestyle.
+
+See:
+
+- http://flake8.pycqa.org/en/latest/user/error-codes.html
+
+- https://pycodestyle.readthedocs.io/en/latest/intro.html#error-codes
+
+directives
+----------
+::
+
+  # noqa[: <error>,...]
+
+- ``# noqa`` is case-insensitive.
+
+- without error code list, all errors are ignored.
+
+plugins
+-------
+local plugin
+^^^^^^^^^^^^
+- In configuration section: ``[flake8:local-plugins]``
