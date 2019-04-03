@@ -41,7 +41,7 @@ old-style class and new-style class
          D
 
     old-style class: DACBC (left-to-right, depth first.)
-    new-style class: BABC
+    new-style class: DABC
 
 - syntax.
 
@@ -529,7 +529,7 @@ raw_input, reduce, reload.
 
 - comparision and key functions.::
  
-    orted(), min(), max(),
+    sorted(), min(), max(),
     heapq.nlargest(), heapq.nsmallest(),
     itertools.groupby()
 
