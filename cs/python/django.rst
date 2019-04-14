@@ -8583,11 +8583,29 @@ django logging handlers
 
 AdminEmailHandler
 ^^^^^^^^^^^^^^^^^
-sends an email to the site ADMINS for each log message it receives.
+- constructor.
+
+  * ``include_html=False``. control whether the traceback email includes an
+    HTML attachment containing the full content of the debug Web page that
+    would have been produced if DEBUG were True.
+
+  * ``email_backend=None``. specify an alternative email backend. by default
+    use ``settings.EMAIL_BACKEND``.
+
+- behaviors.
+  
+  * sends an email to the site ADMINS for each log message it receives.
+
+  * If the log record contains a ``request`` attribute, the full details of the
+    request will be included in the email. The email subject will include the
+    phrase “internal IP” if the client’s IP address is in the
+    ``settings.INTERNAL_IPS``; if not, it will include “EXTERNAL IP”.
+  
+  * If the log record contains stack trace information, that stack trace will
+    be included in the email.
 
 django logging filters
 ----------------------
-
 CallbackFilter
 ^^^^^^^^^^^^^^
 简化创建新的 filter, 直接传一个 filter function 即可.
@@ -8598,6 +8616,357 @@ only pass on records when ``settings.DEBUG`` is False.
 
 RequireDebugTrue
 ^^^^^^^^^^^^^^^^
+
+Email
+=====
+- module: django.core.mail
+
+- 如果只需要简单地发送邮件, 使用 utility functions 已经足够. 但若需要更高级、
+  更细致的需求, 则应该使用 EmailMessage 等 OOP interfaces.
+
+  utility functions 的 API 已经不再更新, 这是因为它们的存在纯粹为了向后兼容.
+  由于 the list of parameters they accepted was slowly growing over time, it
+  made sense to move to a more object-oriented design for email messages.
+
+utilities
+---------
+- ``send_mail(subject, message, from_email, recipient_list, fail_silently=False, auth_user=None, auth_password=None, connection=None, html_message=None)``.
+  从任意发件人给任意收件人发邮件.
+
+  * ``subject`` and ``message`` are just strings.
+
+  * ``from_email``. email address of sender. This is required.
+    ``DEFAULT_FROM_EMAIL`` is not used here. It's used in EmailMessage.
+
+  * ``recipient_list``. a list of receiver email addresses.
+
+  * ``fail_silently=False``. Fail silently if any error occurs.
+
+  * ``auth_user=None``. used by SMTP backend, by default use ``EMAIL_HOST_USER``.
+
+  * ``auth_password=None``. used by SMTP backend, by default use
+    ``EMAIL_HOST_PASSWORD``.
+
+  * ``connection=None``. a connection is an instance of a mail backend. 这可用
+    于重用邮件服务器连接或使用非默认 mail backend. 默认情况下, 每次调用
+    ``send_mail()`` 都会创建一个 ``EMAIL_BACKEND`` 实例, 不会去重用. 这对于
+    smtp 之类的后端意味着每发一封邮件都创建一遍连接. 可能具有效率问题 (但仍需要
+    根据具体情况具体分析).
+
+  * ``html_message=None``. string of html version of the mail message. If this
+    is provided, the resulting email will be a multipart/alternative email with
+    message as the text/plain content type and ``html_message`` as the
+    text/html content type.
+
+  Return 0 if sending failed, 1 if successful. 实际是发送成功的邮件数目. 由于
+  这里只发送一封 (注意即使有多个收件人也是 *发送了* 一封邮件).
+
+- ``send_mass_mail(datatuple, fail_silently=False, auth_user=None, auth_password=None, connection=None)``.
+  邮件群发. 给多个收件人发送多封 (可能不同的) 邮件.
+
+  * ``datatuple``, an iterable in which each element is a sequence in the
+    following format::
+
+      (subject, message, from_email, recipient_list)
+
+    Each separate element of datatuple results in a separate email message.
+
+  If ``connection`` is not specified, only one mail backend is instantiated
+  and used to send all messages (via ``.send_messages()`` method).
+
+- ``mail_admins(subject, message, fail_silently=False, connection=None, html_message=None)``.
+  A shortcut for sending email to ADMINS. 这用于系统管理方面的邮件, 例如告警.
+  发件人自动设为 ``SERVER_EMAIL``. Subject is prefixed with
+  ``EMAIL_SUBJECT_PREFIX`` automatically.
+
+- ``mail_managers(subject, message, fail_silently=False, connection=None, html_message=None)``.
+  like ``mail_admins()``, for sending to MANAGERS.
+
+safe MIME types
+---------------
+- include SafeMIMEMessage, SafeMIMEText, SafeMIMEMultipart.
+
+- 这些 mime types 对 header injection attack 进行了防范. They forbidding
+  newlines in header values. If any ``subject``, ``from_email`` or
+  ``recipient_list`` contains a newline (in either Unix, Windows or Mac style),
+  the email function (e.g. ``send_mail()``) will raise
+  ``django.core.mail.BadHeaderError`` (a subclass of ValueError) and, hence,
+  will not send the email.
+
+EmailMessage classes
+--------------------
+- EmailMessage is responsible for creating the email message itself.
+
+EmailMessage
+^^^^^^^^^^^^
+constructor
+"""""""""""
+- ``subject=""``. email subject line.
+
+- ``body=""``. email body text.
+
+- ``from_email=None``. default is ``settings.DEFAULT_FROM_EMAIL``.
+
+- ``to=None``. an iterable of recipient addresses.
+
+- ``bcc=None``. an iterable of Bcc addresses.
+
+- ``connection=None``. the email backend instance to use for send this
+  EmailMessage during ``.send()``.
+
+- ``attachments=None``. a list of attachments. Each attachment can be either
+  MIMEBase instance, or ``(filename, content, mimetype)`` tuple. If mimetype
+  is not provided, guess it from filename or use a default
+  ``application/octet-stream``. content can be a string or bytes form of file.
+
+- ``headers=None``. A dict of extra headers to put on the message.
+
+- ``cc=None``. an iterable of Cc addresses.
+
+- ``reply_to=None``. an iterable of Reply-To addresses.
+
+instance attributes
+""""""""""""""""""""
+- ``subject``
+
+- ``body``
+
+- ``from_email``
+
+- ``to``
+
+- ``bcc``
+
+- ``connection``
+
+- ``attachments``
+
+- ``extra_headers``
+
+- ``cc``
+
+- ``reply_to``
+
+instance methods
+""""""""""""""""
+- ``send(fail_silently=False)``. Send the message via ``self.connection`` or by
+  instantiating a default mail backend. If ``fail_silently`` is True,
+  exceptions raised while sending the message will be quashed.
+
+- ``message()``. Construct a django.core.mail.SafeMIMEText object (a subclass
+  of Python’s MIMEText class) or a django.core.mail.SafeMIMEMultipart object
+  (a subclass of MiMEMultipart) holding the message to be sent.
+
+- ``attach(filename=None, content=None, mimetype=None)``. add attachment to
+  ``self.attachments``. Argument format:
+ 
+  * one argument that is a MIMEBase instance
+   
+  * 3 arguments ``(filename, content, mimetype)``. filename is the name of the
+    file attachment as it will appear in the email, content is the data that
+    will be contained inside the attachment and mimetype is the optional MIME
+    type for the attachment. If you omit mimetype, the MIME content type will
+    be guessed from the filename of the attachment.
+
+  If you specify a mimetype of message/rfc822, it will also accept
+  django.core.mail.EmailMessage and email.message.Message.
+
+  For a mimetype starting with text/, content is expected to be a string.
+  Binary data will be decoded using UTF-8, and if that fails, the MIME type
+  will be changed to application/octet-stream and the data will be attached
+  unchanged.
+
+- ``attach_file(path, mimetype=None)``. a shortcut method to attach a file from
+  filesystem. If the MIME type is omitted, it will be guessed from the
+  filename.
+
+EmailMultiAlternatives
+^^^^^^^^^^^^^^^^^^^^^^
+- subclass of EmailMessage.
+
+- Useful to include multiple versions of the content in an email.
+
+constructor
+"""""""""""
+- inherit all parameters from EmailMessage.
+
+- ``alternatives=None``. an iterable of alternatives. Each alternative is a
+  tuple of ``(content, mimetype)``.
+
+instance methods
+""""""""""""""""
+- inherit all methods from EmailMessage.
+
+- ``attach_alternative(content, mimetype)``. include extra versions of the
+  message body in the email.
+
+email backends
+--------------
+- The email backend is responsible for sending the email.
+
+- support context manager protocol.
+
+- email backend protocol:
+  
+  * Custom email backends should subclass BaseEmailBackend that is located in
+    the django.core.mail.backends.base module.
+    
+  * A custom email backend must implement the ``send_messages(email_messages)``
+    method. This method receives a list of EmailMessage instances and returns
+    the number of successfully delivered messages.
+    
+  * If your backend has any concept of a persistent session or connection, you
+    should also implement the ``open()`` and ``close()`` methods.
+
+utilities
+^^^^^^^^^
+- ``get_connection(backend=None, fail_silently=False, **kwargs)``. get an
+  instance of the specified or default email backend. ``backend`` is its
+  import path, ``fail_silently`` and ``kwargs`` are passed to constructor.
+
+base.BaseEmailBackend
+^^^^^^^^^^^^^^^^^^^^^
+- defines the interface of email backends.
+
+instance methods
+""""""""""""""""
+- ``open()``. open a connection to mail server.
+
+- ``close()``. close the opened connection.
+
+- ``send_messages(email_messages)``. send a list of EmailMessages, return the
+  number of emails sent. If the connection is not open, this call will
+  implicitly open the connection, and close the connection afterwards. If the
+  connection is already open, it will be left open after mail has been sent.
+
+- ``__enter__()``. open on entering context. return self.
+
+- ``__exit__(exc_type, exc_value, traceback)``. close on exiting from context.
+
+smtp.EmailBackend
+^^^^^^^^^^^^^^^^^
+- subclass of BaseEmailBackend.
+
+- send email via SMTP protocol.
+
+constructor
+""""""""""""
+以下参数若省略某个, 则 fallback 至相应的各个 settings 配置项.
+
+- ``host=None``
+
+- ``port=None``
+
+- ``username=None``
+
+- ``password=None``
+
+- ``use_tls=None``
+
+- ``use_ssl=None``
+
+- ``timeout=None``
+
+- ``ssl_keyfile=None``
+
+- ``ssl_certfile=None``
+
+- ``fail_silently=False``
+
+console.EmailBackend
+^^^^^^^^^^^^^^^^^^^^
+- subclass of BaseEmailBackend.
+
+- writes the emails that would be sent to the specified stream or stdout.
+
+- It utilizes the ``.as_bytes()`` method of mime subtype messages.
+
+constructor
+""""""""""""
+- all from BaseEmailBackend.
+
+- ``stream=sys.stdout``. the stream where to write email.
+
+filebased.EmailBackend
+^^^^^^^^^^^^^^^^^^^^^^
+- subclass of console.EmailBackend. 主要重用了 ``.send_messages()``.
+
+- write emails to a file.
+
+- A new file is created for each new session that is opened on this backend
+  instance.  注意这指的是, 一组从 ``.open()`` 到 ``.close()`` 的组合是一个
+  session. The directory to which the files are written is either taken from
+  the ``file_path`` constructor parameter, or fallback to
+  ``settings.EMAIL_FILE_PATH``.
+
+constructor
+""""""""""""
+- ``file_path=None``. directory where to put email files. fallback to
+  ``settings.EMAIL_FILE_PATH``.
+
+locmem.EmailBackend
+^^^^^^^^^^^^^^^^^^^
+- subclass of BaseEmailBackend.
+
+- An email backend for use during test sessions. The test connection stores
+  email messages in a dummy outbox (django.core.mail.outbox), rather than
+  sending them out on the wire.
+
+- ``outbox`` is a list of EmailMessage instances for each message that would
+  be sent.
+
+dummy.EmailBackend
+^^^^^^^^^^^^^^^^^^
+- subclass of BaseEmailBackend.
+- the dummy backend does nothing with your messages.
+
+settings
+--------
+- ``EMAIL_BACKEND``. backend used for sending email. default
+  django.core.mail.backends.smtp.EmailBackend.
+
+- ``EMAIL_HOST``. server hostname for sending email. default localhost.
+
+- ``EMAIL_PORT``. server port for sending email. default 25.
+
+- ``EMAIL_HOST_USER``. username for SMTP email server authentication. if empty
+  authentication is not performed. default "".
+
+- ``EMAIL_HOST_PASSWORD``. password for SMTP email server authentication. if
+  empty authentication if not performed. default "".
+
+- ``EMAIL_USE_TLS``. whether to use explicit TLS when talking to SMTP server.
+  default False.
+
+- ``EMAIL_USE_SSL``. whether to use implicit TLS when talking to SMTP server.
+  default False. Note that EMAIL_USE_TLS/EMAIL_USE_SSL are mutually exclusive,
+  so only set one of those settings to True.
+
+- ``EMAIL_SSL_CERTFILE``. the path to a PEM-formatted certificate chain file to
+  use for the SSL/TLS connection. default None.
+
+- ``EMAIL_SSL_KEYFILE``. the path to a PEM-formatted private key file to use
+  for the SSL/TLS connection. default None.
+
+- ``DEFAULT_FROM_EMAIL``. Default email address to use for various automated
+  correspondence from the site manager(s). This doesn’t include error messages
+  sent to ADMINS and MANAGERS. default webmaster@localhost.
+
+- ``SERVER_EMAIL``. The email address that error messages come from. default
+  root@localhost.
+
+- ``EMAIL_FILE_PATH``. The directory used by the ``file`` email backend to
+  store output files.
+
+- ``EMAIL_SUBJECT_PREFIX``. Subject-line prefix for email messages sent with
+  django.core.mail.mail_admins or django.core.mail.mail_managers. default
+  ``[Django] ``.
+
+- ``EMAIL_TIMEOUT``. a timeout in seconds for blocking email operations like
+  the connection attempt. default None.
+
+- ``EMAIL_USE_LOCALTIME``. Whether to send the SMTP Date header of email
+  messages in the local time zone or in UTC. default False.
 
 i18n
 ====
