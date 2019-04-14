@@ -4971,6 +4971,24 @@ Client Programming Design Patterns
 
   See also [SENormalization]_, [WikiDenormalization]_.
 
+Installation
+=============
+- Purge MySQL from the system [SERemoveMySQL]_::
+
+    sudo -i
+    service mysql stop
+    killall -KILL mysql mysqld_safe mysqld
+    apt-get --yes purge mysql-server mysql-client
+    apt-get --yes autoremove --purge
+    apt-get autoclean
+    deluser --remove-home mysql
+    delgroup mysql
+    rm -rf /etc/apparmor.d/abstractions/mysql /etc/apparmor.d/cache/usr.sbin.mysqld /etc/mysql /var/lib/mysql /var/log/mysql* /var/log/upstart/mysql.log* /var/run/mysqld
+    updatedb
+    mkdir -p /etc/apparmor.d/abstractions/mysql
+    mkdir -p /etc/mysql/conf.d/
+    exit
+
 References
 ==========
 .. [DOMysqlSlave] `How To Set Up Master Slave Replication in MySQL <https://www.digitalocean.com/community/tutorials/how-to-set-up-master-slave-replication-in-mysql>`_
@@ -4984,3 +5002,4 @@ References
 .. [DocGenColumn] https://dev.mysql.com/doc/refman/8.0/en/create-table-generated-columns.html
 .. [SENormalization] `How far should you go with normalization? <https://dba.stackexchange.com/questions/505/how-far-should-you-go-with-normalization>`_
 .. [WikiDenormalization] `Denormalization <https://en.wikipedia.org/wiki/Denormalization>`_
+.. [SERemoveMySQL] `How do I uninstall MySQL completely? <https://askubuntu.com/q/640899/348299>`_
