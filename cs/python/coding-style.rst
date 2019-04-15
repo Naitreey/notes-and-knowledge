@@ -128,6 +128,8 @@ line length
 
 blank lines
 ===========
+- Surround top-level assignments with one blank lines.
+
 - Surround top-level function and class definitions with two blank lines.
 
 - Method definitions inside a class are surrounded by a single blank line.

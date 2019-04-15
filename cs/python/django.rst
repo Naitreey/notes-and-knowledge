@@ -10254,7 +10254,6 @@ django source repo 里提供了 bash completion script.
 
 plugins
 =======
-
 reusable django packages 可以从 django packages 网站查询. 这个网站的好处是,
 对于一个 package, 它上面有详细信息, 包含版本支持情况, 最近更新时间, 有多少
 人在使用, 以及同类 packages 之间的比较 grid.
@@ -10523,15 +10522,19 @@ environ.Env
 
   * read env file: ``Env.read_env()``
 
-- cast spec and corresponding value formats:
+- ``cast`` 参数值和对应的环境变量形式:
 
-  * str
+  * str. specify string.
 
-  * bool
+  * bytes, convert to string then encode to bytes.
 
-  * int
+  * bool, True in string form: true, on, ok, y, yes, 1. otherwise False.
 
-  * float
+  * int. any string that is legal for ``int()``.
+
+  * float. any string that is legal for ``float()``.
+
+  * json. any string taht is legal for ``json.loads()``
 
   * list. value format: ``a,b,c``
 
@@ -10539,11 +10542,31 @@ environ.Env
 
   * dict. value format: ``key=val,key=val``
 
-  * ``{"key": cast, "value": cast, "cast": {"key": cast, ...}}``. ``key`` 和
-    ``value`` keys 表达的是 generic key 和 value 的 cast spec. ``cast`` 表达的
-    是根据具体 key 名字进行的分别 cast spec.
+  * 另一种更细致的 dict 转换形式: cast 参数值为::
+    
+      {"key": <cast>, "value": <cast>, "cast": {"key": <cast>, ...}}
+     
+    value format::
 
-  * 任意函数. 例如 json (json.loads), url (urlparse).
+      key=val;key=val
+
+    外层的 ``key`` 值表达的是将各个字段的 key 进行统一使用指定的 ``<cast>`` 形
+    式; 外层的 ``value`` 值表达的是各个字段转换的 fallback 类型.  外层的
+    ``cast`` key 的值是一个 dict, 里面的 keys 是原始形式中的各个 key 字段名, 其
+    值是要对相应 value 进行转换的类型, 若没有指定, 则 fallback 至外层指定的
+    value 类型.
+
+  * url. parsed by urlparse.
+
+  * path. 转换成 ``environ.Path``. value format is string.
+
+  * ``db_url``.
+
+  * ``cache_url``
+
+  * ``search_url``
+
+  * ``email_url``
 
 - If the key is not available in environ, raise ImproperlyConfigured.
 
@@ -10628,6 +10651,10 @@ methods
 - ``__contains__(item)``. whether item is current path's subpath.
 
 - ``__fspath__()``. os.PathLike object interface.
+
+django-stubs
+------------
+- provide pep484 type annotation stub files for django framework.
 
 References
 ==========
