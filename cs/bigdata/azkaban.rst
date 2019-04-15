@@ -253,6 +253,27 @@ Job node configurations is located under ``nodes`` top-level key.
 
 - ``config``. a dict of configurations required by a specific job type.
 
+common configuration paramters under config key
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- ``retries``. The number of retries that will be automatically attempted for
+  failed jobs.
+
+- ``retry.backoff``. The millisec time between each retry attempt
+
+- ``working.dir``. Override the working directory for the execution. This is by
+  default the directory that contains the job file that is being run.
+
+- ``env.<name>``. Set the named environment variable
+
+- ``failure.emails``. Comma delimited list of emails to notify during a
+  failure.
+
+- ``success.emails``. Comma delimited list of emails to notify during a
+  success.
+
+- ``notify.emails``. Comma delimited list of emails to notify during either a
+  success or failure.
+
 flow configuration
 ^^^^^^^^^^^^^^^^^^
 Global flow configurations is located under ``config`` top-level key. 这里的每
@@ -282,6 +303,57 @@ conditional workflow
   * Comparison and logical operators can be used to connect individual condition
     components. Supported operators: ``==, !=,  >, >=, <, <=, &&, ||, !``.
 
+runtime parameters
+^^^^^^^^^^^^^^^^^^
+- Use ``${parameter}`` in ``basic.flow`` definition file to access value of any
+  parameters available at runtime.
+
+- 对于一个 job, 它可用的 parameters 包含:
+
+  * metadata parameters made available by azkaban (see below).
+
+  * 这个 job 本身的 ``config`` key 和从全局 ``config`` 继承的所有参数.
+
+  * parent jobs' output parameters written to their ``$JOB_OUTPUT_PROP_FILE``.
+
+  这些参数全部通过 ``$JOB_PROP_FILE`` 文件提供给 job. 并且可通过
+  ``${parameter}`` 语法来获取和使用.
+
+- The following parameters are made available to job automatically at runtime.
+
+  * azkaban.job.attempt. The attempt number for the job. Starts with attempt 0
+    and increments with every retry.
+
+  * azkaban.job.id. The job name.
+
+  * azkaban.flow.flowid. The flow name that the job is running in.
+
+  * azkaban.flow.execid. The execution id that is assigned to the running flow.
+
+  * azkaban.flow.projectid. The numerical project id.
+
+  * azkaban.flow.projectversion. The project upload version.
+
+  * azkaban.flow.uuid. A unique identifier assigned to a flow’s execution.
+
+  * azkaban.flow.start.timestamp. The millisecs since epoch start time.
+
+  * azkaban.flow.start.year. The start year.
+
+  * azkaban.flow.start.month. The start month of the year (1-12)
+
+  * azkaban.flow.start.day. The start day of the month.
+
+  * azkaban.flow.start.hour. The start hour in the day.
+
+  * azkaban.flow.start.minute. The start minute.
+
+  * azkaban.flow.start.second. The start second in the minute.
+
+  * azkaban.flow.start.milliseconds. The start millisec in the sec
+
+  * azkaban.flow.start.timezone. The start timezone that is set.
+
 uploading project files
 -----------------------
 - The project files are packaged into an archive file, then uploaded to
@@ -299,6 +371,98 @@ uploading project files
 - Uploads overwrite all files in the project. Any changes made to jobs will be
   wiped out after a new zip file is uploaded.
 
+executing flow
+--------------
+- disable/enable jobs. From the Flow View panel, you can right click on the
+  graph and disable or enable jobs. Disabled jobs will be skipped during
+  execution as if their dependencies have been met. Disabled jobs will appear
+  translucent.
+
+- email override. Azkaban will use the default notification emails set in the
+  final job in the flow. If overridden, a user can change the email addresses
+  where failure or success emails are sent. The list can be delimited by
+  commas, whitespace or a semi-colon.
+
+- failure options.
+  
+  * Finish Current Running: will finish the jobs that are currently running,
+    but it will not start new jobs. The flow will be put in the FAILED
+    FINISHING state and be set to FAILED once everything completes.
+
+  * Cancel All: will immediately kill all running jobs and set the state of the
+    executing flow to FAILED.
+
+  * Finish All Possible: will keep executing jobs in the flow as long as its
+    dependencies are met. The flow will be put in the FAILED FINISHING state
+    and be set to FAILED once everything completes.
+
+- concurrent options.
+
+  * Skip Execution option will not run the flow if its already running.
+
+  * Run Concurrently option will run the flow regardless of if its running.
+    Executions are given different working directories.
+
+  * Pipeline runs the the flow in a manner that the new execution will not
+    overrun the concurrent execution.
+
+    - Level 1: blocks executing job A until the the previous flow’s job A has
+      completed.
+
+    - Level 2: blocks executing job A until the the children of the previous
+      flow’s job A has completed. This is useful if you need to run your flows
+      a few steps behind an already executing flow.
+
+- flow parameters. Allows users to override flow parameters. The flow
+  parameters override the global properties for a job, but not the properties
+  of the job itself.
+
+flow execution page
+-------------------
+- Cancel - kills all running jobs and fails the flow immediately. The flow
+  state will be KILLED.
+
+- Pause - prevents new jobs from running. Currently running jobs proceed as
+  usual.
+
+- Resume - resume a paused execution.
+
+- Retry Failed - only available when the flow is in a FAILED FINISHING state.
+  Retry will restart all FAILED jobs while the flow is still active. Attempts
+  will appear in the Jobs List page.
+
+- Prepare Execution - only available on a finished flow, regardless of success
+  or failures. This will auto disable successfully completed jobs.
+
+schedule flow
+-------------
+- Any flow options set will be preserved for the scheduled flow.
+
+- scheduling syntax: Quartz syntax.
+
+SLA
+---
+- SLA -- Service Level Agreement.
+
+- Set SLA notification email or preemption actions.
+
+- Rules can be added and applied to individual jobs or the flow itself.
+
+- If duration threshold is exceeded, then an alert email can be set and/or the
+  flow or job can be auto killed. If a job is killed due to missing the SLA, it
+  will be retried based on the retry configuration of that job.
+
+job edit
+--------
+- The changes to the job property parameters will affect an executing flow only
+  if the job hasn’t started to run yet. These overwrites of job properties will
+  be overwritten by the next project upload.
+
+job logs
+--------
+- The job logs are stored in the database. They contain all the stdout and
+  stderr output of the job.
+
 job types
 =========
 command
@@ -312,6 +476,26 @@ command
 
   * 若要指定多个命令, specify ``command.1``, ``command.2``, etc., in addition
     to ``command``.
+
+job property precedence
+=======================
+from lowest to highest.
+
+- ``global.properties`` in ``conf`` directory. global to all jobtypes.
+
+- ``common.properties`` in ``jobtype`` directory. global to all jobtypes.
+
+- ``plugin.properties`` in ``jobtype/<jobtype-name>`` directory. specific to
+  a one jobtype.
+
+- global ``config`` in ``basic.flow`` file of a project's zip archive. apply to
+  all jobs in the flow.
+
+- flow properties specified at GUI while triggering flow execution. apply to all
+  jobs in the flow.
+
+- node-specific ``config`` in ``basic.flow`` file of a project's zip archive.
+  apply to a specific job node in the flow.
 
 project permissions
 ===================
@@ -327,3 +511,17 @@ project permissions
 - If proxy users are turned on, proxy users allows the project workflows to run
   as those users. This is useful for locking down which headless accounts jobs
   can proxy to. They are removed by clicking on the ‘Remove’ button once added.
+
+- supported permissions:
+
+  * ADMIN. Allows the user to do anything with this project, as well as add
+    permissions and delete the project.
+
+  * READ. The user can view the job, the flows, the execution logs.
+
+  * WRITE. Project files can be uploaded, and the job files can be modified.
+
+  * EXECUTE. The user is allowed to execute, pause, cancel jobs.
+
+  * SCHEDULE. The user is allowed to add, modify and remove a flow from the
+    schedule.
