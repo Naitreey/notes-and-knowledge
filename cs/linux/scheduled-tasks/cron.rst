@@ -158,6 +158,14 @@ croniter
 
   注意到 optional seconds 作为第 6 列.
 
+Quartz
+------
+- a java library for job scheduling.
+
+- 支持秒级的精度, 并支持指定年份.
+
+- See `cs/java/quartz.rst`_.
+
 references
 ==========
 - crontab(5)
