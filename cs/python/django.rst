@@ -6511,6 +6511,12 @@ database connection
 - Connection & cursor implement Python DB-API (PEP-249).
   SQL statement 使用 ``%s`` placeholder.
 
+- 由于 db backend 实际使用的 driver 创建的 Connection object (according to DB
+  API) 可能只具有 threadsafety = 1, 即 Connection object 不能在线程间共享, 所以
+  ConnectionHandler 保存了一个 thread-local 的 ``self._connections`` 存储, 用于
+  保存线程独立的 db backend 实例 (backend 实例中 wrap 底层的 Connection
+  object).
+
 persistent connection
 ^^^^^^^^^^^^^^^^^^^^^
 - ``settings.DATABASES.CONN_MAX_AGE`` 设置数据库连接的最大持续时间. 即

@@ -4838,9 +4838,9 @@ options.
 mysqlbinlog
 ^^^^^^^^^^^
 
-Language driver
-===============
-- python driver 需要根据应用场景和需求来选择.
+Language drivers
+================
+- python drivers 列表和选择 -- 需要根据应用场景和需求来选择.
 
   目前主要的 python driver 以及各自的特点:
 
@@ -4892,11 +4892,11 @@ Language driver
 
     - much slow than those written as C extension. (see reference above)
 
-      (Though MySQL Connector is a pure Python library, while MySQLdb is largely
-      written in C, and we could expect that the new module is a bit slower than
-      the current one, performance may actually be improved. This is because the
-      new module is eventlet aware, meaning threads will be able to switch while
-      waiting for I/O from a database server.
+      (Though MySQL Connector is a pure Python library, while MySQLdb is
+      largely written in C, and we could expect that the new module is a bit
+      slower than the current one, performance may actually be improved. This
+      is because the new module is eventlet aware, meaning threads will be able
+      to switch while waiting for I/O from a database server.
       http://specs.openstack.org/openstack/oslo-specs/specs/juno/enable-mysql-connector.html
       )
 
@@ -4917,7 +4917,6 @@ Language driver
 
 mysqlclient
 -----------
-
 - mysqlclient 在连接时, socket object 会设置 ``SO_KEEPALIVE`` option.
 
 mysql data types in python
