@@ -278,7 +278,6 @@ statement syntax
 
 Data types
 ==========
-
 general attributes
 ------------------
 
@@ -2127,6 +2126,54 @@ modifiers
 
 - IGNORE. errors that occur while executing the INSERT statement are ignored.
   The offending row is discarded and operation continues.
+
+UPDATE
+^^^^^^
+::
+
+  UPDATE [LOW_PRIORITY] [IGNORE] table_references
+    SET assignment_list
+    [WHERE where_condition]
+    [ORDER BY ...]
+    [LIMIT row_count]
+
+  assignment_list:
+    assignment [, assignment] ...
+
+  assignment:
+    col_name = value
+
+  value:
+    {expr | DEFAULT}
+
+- UPDATE can be for single-table or for multiple tables.
+
+- If ``expr`` contains column names from the table to updated, UPDATE uses the
+  current value of the column, 此外注意 assignments are evaluated from left to
+  right. 例如, ``UPDATE t1 SET col1 = col1 + 1, col2 = col1`` 中, 第二个赋值使
+  用第一个赋值更新的值.
+  
+- For multiple tables, ``table_references`` is a table join expression. 即使一
+  个 row 在 joined table 中出现多次 (例如 join 导致 FK 指向的行出现多次), 它也
+  会只更新一次.
+
+- The WHERE clause, if given, specifies the conditions that identify which rows
+  to update. With no WHERE clause, all rows are updated.
+
+- If the ORDER BY clause is specified, the rows are updated in the order that
+  is specified.
+
+- The LIMIT clause is a rows-matched restriction. The statement stops as soon
+  as it has found ``row_count`` rows that satisfy the WHERE clause, whether or
+  not they actually were changed.
+
+- For multiple table update, ORDER BY and LIMIT can not be used.
+
+- Privileges: need UPDATE privilege only for columns referenced in an UPDATE
+  that are actually updated. need only the SELECT privilege for any columns
+  that are read but not modified.
+
+- UPDATE returns the number of rows that were actually changed.
 
 SHOW CREATE TABLE
 ^^^^^^^^^^^^^^^^^
