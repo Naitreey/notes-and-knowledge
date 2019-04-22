@@ -145,7 +145,8 @@ Cursor
 - Cursor represents a database cursor, which is used to manage the context of
   a fetch operation.
 
-- 一个线程内, 同时可以维持多个 cursor instances. 即维持多个 fetch context.
+- 一个线程内, 同时能维持的 cursor instances 的数目, 是由 threadsafety 等级决定
+  的.  也就是能维持的 fetch context 数目由 threadsafety 等级决定.
 
 - Cursors created from the same connection are not isolated, i.e., any changes
   done to the database by a cursor are immediately visible by the other
@@ -160,7 +161,8 @@ instance attributes
 
   * ``name``. column name.
 
-  * ``type_code``.
+  * ``type_code``. 列的类型 code, 由具体的 db-api implementation 给出列类型与
+    type code 的映射关系.
 
   * ``display_size``.
 
@@ -170,7 +172,7 @@ instance attributes
 
   * ``scale``
 
-  * ``null_ok``
+  * ``null_ok``. 该列是否 NULL-able.
 
 - ``rowcount``. Readonly. the number of rows that the last ``execute*()``
   produced. It's -1 in case no ``.execute*()`` has been performed on the

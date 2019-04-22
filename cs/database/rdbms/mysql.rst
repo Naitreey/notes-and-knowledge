@@ -4917,12 +4917,300 @@ Language drivers
 
 mysqlclient
 -----------
+- ``_mysql`` 提供 mysql C-API 的面向对象形式. MySQLdb 其他 python modules 是
+  thin python wrapper around ``_mysql``, which makes the driver interface
+  compatible with DB API.
+
 - mysqlclient 在连接时, socket object 会设置 ``SO_KEEPALIVE`` option.
 
-mysql data types in python
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+package structure
+^^^^^^^^^^^^^^^^^
+- MySQLdb.connections -- implements Connection API.
 
-- BIT(N): bytes
+- MySQLdb.cursors -- implements Cursors of various types for Connection.
+
+- MySQLdb.converters -- handles all the type conversions for MySQL. If the
+  default type conversions aren’t what you need, you can make your own. Two
+  kinds of conversions are defined here:
+
+  * from mysql types (``MySQLdb.constants.FIELD_TYPE.*``) to python types.
+
+    - key is a field type enumeration value.
+
+    - conversion function signature: input: sql value as string; output:
+      corresponding python object.
+
+  * from python types to mysql types.
+
+    - key is a python type object
+
+    - conversion function signature: input: python object of the indicated
+      type, conversion dictionary; output: sql literal value.
+
+- ``MySQLdb.constants.CLIENT.*`` mapped from ``CLIENT_*``. Client constants
+  used to create the connection. Use bitwise-OR to combine options together,
+  and pass them as the ``client_flags`` parameter to ``MySQLdb.Connection``.
+
+- ``MySQLdb.constants.CR.*`` mapped from ``CR_*``. client errors.
+
+- ``MySQLdb.constants.ER.*`` mapped from ``ER_*``. server errors.
+
+- ``MySQLdb.constants.FIELD_TYPE.*`` mapped from ``FIELD_TYPE_*``. 包含 column
+  types supported by MySQL, as an enumeration.
+
+- ``MySQLdb.contants.FLAG.*`` mapped from ``FLAG_*``. column property flags in
+  a result set. Can be OR-ed to attach multiple properties to a column.
+
+_mysql C extension module
+^^^^^^^^^^^^^^^^^^^^^^^^^
+- 实现了 ``_mysql.connection`` class, and ``_mysql.result`` class.
+
+- In general,
+  
+  * any function which takes ``MYSQL *mysql`` as an argument is now a method of
+    the connection object, 
+ 
+  * any function which takes ``MYSQL_RES *result`` as an argument is a method
+    of the result object.
+  
+  * Functions requiring none of the MySQL data structures are implemented as
+    functions in the module. Functions requiring none of the MySQL data
+    structures are implemented as functions in the module.
+
+module-level functions
+""""""""""""""""""""""
+- ``connect(*args, **kwargs)``
+
+  * ``host``. When specifying ``localhost``, UNIX domain socket will be used,
+    otherwise TCP will be used. default is localhost. To connect to the
+    localhost with TCP, specifying the machine's hostname, FQDN, or IP address
+    of localhost.
+
+  * ``port``. default 3306.
+
+  * ``user``. default is current effective user.
+
+  * ``passwd``. default does not use password.
+
+  * ``db``. default do not USE a default database.
+
+  * ``conv``. a dict for automatic column value conversion. For format of key
+    value pairs, see ``MySQLdb.converters.conversions`` and that module's
+    documentation. Any column type that can’t be found in conv is returned as a
+    string.
+
+  * ``read_default_file``.
+
+connection object
+"""""""""""""""""
+instance methods
+~~~~~~~~~~~~~~~~
+- ``query(sql)``. make a query with the passed-in complete sql string.
+
+- ``store_result()``. returns the entire result set to the client immediately.
+  Returns a ``result`` object. Use ``store_result()`` unless your result set
+  is really huge and you can’t use LIMIT for some reason, and in that case,
+  use ``use_result()``.
+
+
+- ``use_result()``. keeps the result set in the server and sends it row-by-row
+  when you fetch. You cannot do any more queries until you have fetched all the
+  rows.  Returns a ``result`` object.
+
+result object
+"""""""""""""
+instance methods
+~~~~~~~~~~~~~~~~
+- ``fetch_row(maxrows=1, how=0)``. returns a tuple of rows. It may return
+  fewer rows than ``maxrows``, but never more. If ``maxrows=0``, all rows of
+  the result set are returned. Returns an empty tuple when no more rows to
+  fetch.
+
+  When ``how=0``, each row is returned as a tuple. When ``how=1``, each row
+  is returned as a dict, where the keys are the column names, or
+  ``<table>.<column>`` if there are two columns with the same name. When
+  ``how=2``, each row is returned as a dict, and keys are always
+  ``<table>.<column>``.
+
+  Each column value is returned as strings, and conversion to actual data type
+  should be handled by user or by ``conv`` connect parameter.
+
+exceptions
+""""""""""
+- MySQLError. top level exception.
+
+- Other exceptions conform to python DB API, and are subclasses of MySQLError.
+
+module-level functions
+^^^^^^^^^^^^^^^^^^^^^^
+- ``connect(*args, **kwargs)``. create a connection to database. Returns a
+  Connection object. parameters:
+
+  * ``_mysql.connect()`` parameters.
+
+  * ``unix_socket``. default ``/run/mysqld/mysqld.sock``.
+
+  * ``conv``. same as ``_mysql.connect()`` parameter, but default to
+    ``MySQLdb.converters.conversions``.
+
+  * ``compress``. enable protocol compression. default no compression.
+
+  * ``connect_timeout``. Abort if connect is not completed within given number
+    of seconds. Default: no timeout.
+
+  * ``named_pipe``. Use a named pipe (windows). default: do not use.
+
+  * ``init_command``. initial command to issue to server upon connection.
+    default nothing.
+
+  * ``read_default_file``. MySQL configuration file to read. Read options from
+    the named option file instead of from my.cnf.
+
+  * ``read_default_group``. default group to read. Read options from the named
+    group from ``read_default_file``.
+
+  * ``cursorclass``. cursor class to be used by ``Connection.cursor()``.
+    default to ``MySQLdb.cursors.Cursor``.
+
+  * ``use_unicode``. If True, CHAR, VARCHAR, TEXT columns are converted to
+    unicode strings. Otherwise they are returned as bytes.
+
+  * ``charset``. Set connection charset (via SET NAMES).
+
+  * ``sql_mode``. set session sql mode.
+
+  * ``ssl``. This parameter takes a dictionary or mapping, where the keys are
+    parameter names used by the ``mysql_ssl_set`` MySQL C API call. If this is
+    set, it initiates an SSL connection to the server.
+
+module-level constants
+^^^^^^^^^^^^^^^^^^^^^^
+- ``apilevel``. 2.0
+
+- ``threadsafety``. 1 -- threads may share the module, but threads may not
+  share the connection. 这是因为:
+
+  * Server-side cursor (SSCursor) 在 server 端维持 fetch context, 这是在
+    connection 级别的. 一个 connection 同时只能维持一个 server-side cursor.
+    跨线程使用更不可能.
+
+  * transaction 状态是 connection 级别的. Two threads simply cannot share a
+    connection while a transaction is in progress, in addition to not being
+    able to share it during query execution.
+
+- ``paramstyle``. "format". 由于 ``cursor.execute()`` 支持传入 mapping 作为
+  formatting argument, 所以实际上也支持 "pyformat".
+
+Connection
+^^^^^^^^^^
+- ``begin()``. start a transaction. only useful when autocommit mode is on.
+
+- ``commit()``. see db-api.
+
+- ``rollback()``. see db-api.
+
+- ``cursor(cursorclass=None)``. see db-api. If ``cursorclass`` is not given, it
+  defaults to the value given when creating the connection object.
+
+- ``autocommit(on)``. turn on/off autocommit mode.
+
+- ``warning_count()``. Return the number of warnings generated from the last
+  query.
+
+- ``show_warnings()``. Return detailed information about warnings as a sequence
+  of tuples of ``(Level, Code, Message)``.
+
+- ``set_character_set(charset)``. Set the connection character set to charset.
+
+- ``set_sql_mode(sql_mode)``. set session sql mode.
+
+cursors
+^^^^^^^
+BaseCursor
+""""""""""
+instance attributes
+~~~~~~~~~~~~~~~~~~~
+- ``description_flags``. Tuple of column flags for last query, one entry per
+  column in the result set.
+
+instance methods
+~~~~~~~~~~~~~~~~
+- ``execute(query, args=None)``. args is a sequence or mapping. Note that any
+  literal percent signs in the ``query`` string passed to must be escaped.
+  Parameter placeholders in ``query`` can only be used to insert column values.
+  They can not be used for other parts of SQL, such as table names, statements,
+  etc.
+
+  Parameter placeholders in ``query`` can be ``%s`` or ``%(name)s``. 注意全部使
+  用 ``%s`` 字符串 formatting. 这是因为, ``args`` 传入的参数首先会经过
+  ``MySQLdb.converters.conversions`` 进行转换. 转换为 SQL literal 形式 (在
+  python 中以字符串形式出现) 后才与 ``query`` template 合并.
+
+- ``executemany(query, args)``. ``args`` is a sequence of sequences or
+  mappings. Returns the number of rows affected. This method improves
+  performance on multiple-row INSERT and REPLACE. Otherwise it is equivalent to
+  looping over args with ``execute()``.
+
+
+- ``fetchone()``. see db-api.
+
+- ``fetchmany(size)``. see db-api.
+
+- ``fetchall()``. see db-api.
+
+- ``callproc(procname, args)``. see db-api.
+
+- ``close()``. Closes the cursor. When using server-side cursors, it is very
+  important to close the cursor when you are done with it and before creating a
+  new one.
+
+- ``__enter__()``
+
+- ``__exit__(*exc_info)``. close cursor on exiting from context.
+
+- ``nextset()``. Advances the cursor to the next result set, discarding the
+  remaining rows in the current result set. If there are no additional result
+  sets, it returns None; otherwise it returns a true value.
+
+- ``setinputsizes(*args)``. does nothing.
+
+- ``setoutputsizes(*args)``. does nothing.
+
+CursorStoreResultMixIn
+""""""""""""""""""""""
+- Causes the Cursor to use the ``connection.store_result()`` to get the query
+  result. The entire result set is stored on the client side.
+
+CursorUseResultMixIn
+""""""""""""""""""""
+- Causes the cursor to use the ``connection.use_result()`` function to get the
+  query result. The result set is stored on the server side and is transferred
+  row by row using fetch operations.
+
+CursorTupleRowsMixIn
+""""""""""""""""""""
+- return rows as tuples.
+
+CursorDictRowsMixIn
+""""""""""""""""""""
+- return rows as dicts.
+
+Cursor
+""""""
+- the default cursor class. subclass of CursorStoreResultMixIn,
+  CursorTupleRowsMixIn, BaseCursor.
+
+DictCursor
+""""""""""
+- like Cursor, but return rows as dicts.
+
+SSCursor
+""""""""
+- Server-side Cursor. subclass of CursorUseResultMixIn.
+
+SSDictCursor
+""""""""""""
+- like SSCursor, but return rows as dicts.
 
 Client Programming Design Patterns
 ==================================
