@@ -1677,12 +1677,6 @@ Complete table reference syntax::
     every row in the first table is joined to each and every row in the second
     table.
 
-  * implicit cross join ``,`` and CROSS JOIN are equivalent in the absence of a
-    join condition.
-    
-    From BNF grammar, we can see that all JOIN operators have higher precedence
-    than the comma operator (,).
-
   * INNER JOIN. Conceptually, CROSS JOIN two tables then returning only rows
     matching the join predicates. 由于 mysql 里 CROSS JOIN 和 INNER JOIN 都可以
     指定 join predicates, 所以是等价的.
@@ -1712,8 +1706,26 @@ Complete table reference syntax::
     table is always read before the right table. Used to manually enforce a
     join order to optimizer.
 
+- In MySQL, JOIN, CROSS JOIN, INNER JOIN are syntactic equivalents, 注意这不包
+  含 OUTER JOINs. Implicit cross join ``,``, CROSS JOIN and INNER JOIN, are
+  equivalent in the absence of a join condition.
+  
+  From BNF grammar, we can see that all JOIN operators have higher precedence
+  than the comma operator (,).
+
 - ON clause specifies join predicates. It can be any conditional expression as
   the same form of a WHERE clause.
+
+  对于 MySQL, join predicates 还可以放在 WHERE clause 中. [SOJoinWhere]_
+  [SOCommaJoinDiff]_ 例如::
+
+    SELECT * FROM a JOIN b ON (a.id = b.id)
+    -- equivalent to
+    SELECT * FROM a JOIN b WHERE a.id = b.id
+
+  两者生成的 query plan 是完全相同的. 然而注意, 两种写法的 semantics 是有区别的.
+  前者是通过条件来筛选要 join 的行, 生成一个表. 后者是先生成一个表, 然后过滤满
+  足条件的行. 前者是更可读、意义更清晰的形式.
 
 - USING clause is a shortcut predicate, matching rows where the specified
   columns in both tables must be equal. 此时, result table 中只包含一组
@@ -5337,3 +5349,5 @@ References
 .. [SENormalization] `How far should you go with normalization? <https://dba.stackexchange.com/questions/505/how-far-should-you-go-with-normalization>`_
 .. [WikiDenormalization] `Denormalization <https://en.wikipedia.org/wiki/Denormalization>`_
 .. [SERemoveMySQL] `How do I uninstall MySQL completely? <https://askubuntu.com/q/640899/348299>`_
+.. [SOJoinWhere] `MySQL Join clause vs WHERE clause <https://stackoverflow.com/q/4160637/1602266>`_
+.. [SOCommaJoinDiff] `What's the difference between comma separated joins and join on syntax in MySQL? <https://stackoverflow.com/q/20138355/1602266>`_
