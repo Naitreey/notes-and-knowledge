@@ -1109,7 +1109,7 @@ formats
     
     reference_option:
         RESTRICT | CASCADE | SET NULL | NO ACTION | SET DEFAULT
-    
+
 - "CREATE TABLE" by queried data::
 
     CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
@@ -2189,7 +2189,77 @@ UPDATE
 
 DELETE
 ^^^^^^
-- A DML that removes rows from a table
+- A DML that removes rows from a table(s).
+
+single table syntax
+"""""""""""""""""""
+::
+
+  DELETE [LOW_PRIORITY] [QUICK] [IGNORE] FROM tbl_name [[AS] tbl_alias]
+    [PARTITION (partition_name [, partition_name] ...)]
+    [WHERE where_condition]
+    [ORDER BY ...]
+    [LIMIT row_count]
+
+- delete rows from ``tbl_name`` and returns the number of deleted rows.
+
+multiple table syntax
+"""""""""""""""""""""
+::
+
+  DELETE [LOW_PRIORITY] [QUICK] [IGNORE]
+      tbl_name [, tbl_name] ...
+      FROM table_references
+      [WHERE where_condition]
+
+  DELETE [LOW_PRIORITY] [QUICK] [IGNORE]
+      FROM tbl_name [, tbl_name] ...
+      USING table_references
+      [WHERE where_condition]
+
+- delete rows from one or more tables depending WHERE conditions.
+  ``table_references`` constructs the rows to be filtered by WHERE clause.
+  根据筛选出来的 joined rows, 推出来自各个表的原始行, 进行删除.
+
+- Syntax of ``table_references`` aligns with the SELECT statement.
+
+- 对于第一种格式, FROM 前面列出的表中的匹配行被删除; 对于第二种格式, FROM 后面
+  USING 前面的列出的表中的匹配行被删除. The effect is that you can delete rows
+  from many tables at the same time and have additional tables that are used
+  only for searching.
+
+WHERE clause
+""""""""""""
+- WHERE clause identifies which rows to delete. Without WHERE clause, all rows
+  from ``tbl_name`` for single table syntax, or all rows from
+  ``table_references`` for multiple table syntax are deleted.
+
+ORDER BY and LIMIT
+""""""""""""""""""
+- If the ORDER BY clause is specified, the rows are deleted in the order that
+  is specified. The LIMIT clause places a limit on the number of rows that can
+  be deleted.
+
+- ORDER BY and LIMIT can only be used in single table syntax.
+
+privileges
+""""""""""
+- the DELETE privilege on a table to delete rows from it.
+  
+- the SELECT privilege for any columns that are only read.
+
+performance
+"""""""""""
+- TRUNCATE TABLE is faster than a DELETE without WHERE.
+
+auto-increment column behavior
+""""""""""""""""""""""""""""""
+- deleting the row containing the maximum value for an ``AUTO_INCREMENT``
+  column, the value is not reused for a MyISAM or InnoDB table. 
+
+- deleting all rows in the table (by DELETE without a WHERE clause) in
+  autocommit mode, the sequence starts over for all storage engines except
+  InnoDB and MyISAM.
 
 SHOW CREATE TABLE
 ^^^^^^^^^^^^^^^^^
