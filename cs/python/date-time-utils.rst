@@ -531,7 +531,6 @@ parser
 
 relativedelta
 -------------
-
 constructor
 ^^^^^^^^^^^
 两种实例化方式:
@@ -552,7 +551,6 @@ constructor
 
 methods
 ^^^^^^^
-
 operation
 """"""""""
 - When a relativedelta is added to a datetime,

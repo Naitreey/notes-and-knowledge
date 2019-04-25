@@ -2187,6 +2187,10 @@ UPDATE
 
 - UPDATE returns the number of rows that were actually changed.
 
+DELETE
+^^^^^^
+- A DML that removes rows from a table
+
 SHOW CREATE TABLE
 ^^^^^^^^^^^^^^^^^
 ::

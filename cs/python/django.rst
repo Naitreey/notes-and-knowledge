@@ -10002,8 +10002,8 @@ deployment checks
 
 builtin checks
 --------------
-- See https://docs.djangoproject.com/en/2.1/ref/checks/ for a list of builtin
-  checks.
+- See https://docs.djangoproject.com/en/stable/ref/checks/ for a list of
+  builtin checks.
 
 model checks
 ^^^^^^^^^^^^
