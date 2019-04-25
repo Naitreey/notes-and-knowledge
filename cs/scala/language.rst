@@ -77,6 +77,37 @@ Unit
 - 由于每个 scala expression/statement 都必须有值, 没有合适的返回值时就使用
   Unit.
 
+Tuple
+-----
+- A tuple is a value that contains a fixed number of elements, each with a
+  distinct type.
+
+- Tuples are immutable.
+
+- A tuple type is associated with its elements' types:
+
+  * ``TupleN[e1_type, e2_type, ...]``, N 从 1-22, inclusive.
+
+  * Shorthand form: ``(e1_type, e2_type, ...)``
+
+- instantiation.
+
+  * N = 1 时, 必须使用 ``Tuple1(e)`` 形式
+
+  * N >= 2 时, 可以使用 ``TupleN(e1, e2, ...)``, 或 ``(e1, e2, ...)``.
+
+- Access elements. 每个元素是 tuple instance 上名为 ``_n`` 的属性值. 所以, 对于
+  获取第 n 个元素, 使用 ``tuple._<n>``.
+
+pattern matching on tuples
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+- scala 支持类似 python 中的 iterable unpacking assignment 语法. 在 scala 这
+  属于 pattern matching 的一种形式.
+
+  .. code:: scala
+
+    val (a, b) = tuple
+
 Null
 ----
 - Null is a special subtype of all reference types.
@@ -161,6 +192,9 @@ methods
 
   * a parameter can have default value, which makes it optional at call site.
 
+- When a method takes 0 parameters, the parameter list can be omitted during
+  method call.
+
 - parameter passing syntax.
 
   * can be positional form.
@@ -189,7 +223,7 @@ classes
   * Unlike many other languages, the primary constructor is in the class
     signature.
 
-  * Constructor definition syntax is the same as other methods.
+  * Constructor definition syntax is the same as normal methods.
 
   * names in constructor list automatically become the data members of the
     class.
@@ -197,14 +231,49 @@ classes
   * When the constructor list is not specified, a default constructor with no
     parameters is used.
 
+- members accessibility.
+
+  * members are public by default.
+
+  * Can be made private by ``private`` access modifier.
+
+  * Primary constructor parameters without ``val`` or ``var`` are private;
+    whereas with ``val`` or ``var`` are public by default.
+
+- inheritance.
+
+  * A class can inherit only one base class with ``extends`` keyword.
+
+  * A class can be composed with multiple trait mixins with ``with`` keyword.
+
+  * The mixin traits and base class can have the same superclass.
+
 - The simplest class definition::
 
     class <name>
 
-- instantiate a class with ``new``.
+- class instantiation.
+  
+  * instantiate a class with ``new``.
+
+  * constructor call syntax is the same as normal method calls.
 
 - To override a parent class's method, use prefix ``override`` keyword to
   method definition.
+
+- getter/setter syntax.
+
+  * getter: a parameterless method whose name is property name to get and whose
+    body returns a value.::
+
+      def property = <expression>
+
+  * setter: a method whose name is ``<property>_=`` and that takes a value to
+    set.::
+
+      def property_=(value) = <expression>
+
+    注意 ``_=`` suffix 代表这是 setter method.
 
 case classes
 ============
@@ -215,6 +284,13 @@ case classes
 - By default, case classes are immutable and compared by value.
 
 - Case classes can be instantiated with or without ``new`` keyword.
+
+- Tuple 与 case class 之间的选择.
+ 
+  * Case class 的意义在于属性可由名称获取. The names can improve the
+    readability of some kinds of code.
+
+  * Tuple 可用于 easy unpacking and pattern matching.
 
 objects
 =======
@@ -236,13 +312,20 @@ traits
     // definitions
   }
 
+- Traits are used to share interfaces and fields between classes.
+
 - Traits are types containing certain fields and methods. Multiple traits can
-  be combined.
+  be combined.  Traits can also be defined as generic types.
 
-- Traits can also have default implementations.
+- Trait/Class can extend traits with the ``extends`` keyword and implement
+  abstract methods or override the default implementation with the ``override``
+  keyword.
 
-- Trait/Class can extend traits with the ``extends`` keyword and override an
-  implementation with the ``override`` keyword.
+- Class can be composed by traits as mixins, with ``with`` keyword.
+  
+- Trait itself is abstract, therefore can not be instantiated.
+
+- Abstract methods of traits can have default implementations.
 
 runtime systems
 ===============
