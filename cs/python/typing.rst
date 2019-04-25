@@ -1677,6 +1677,11 @@ monkeytype
 - You can collect types of existing codes from test runs. This is a good
   approach if the project's current test coverage is high.
 
+design pattern
+==============
+- 一个项目中构建的所有 type variables, type alias, 引用的所有类型变量等都应
+  放在一个模块中, 然后在各处引用这个模块中的定义即可.
+
 References
 ==========
 .. [pep3107] `PEP 3107 -- Function Annotations <https://www.python.org/dev/peps/pep-3107/>`_
