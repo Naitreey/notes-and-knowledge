@@ -1,3 +1,118 @@
+Why study concepts of programming languages
+===========================================
+- 懂得越完善, 能使用/能表达的就越完善. 在编程时, 程序员的思路, 他所实现的算法形
+  式, 他能使用的数据结构、控制结构等, 都受到他所使用的编程语言的限制. Awareness
+  of a wider variety of programming language features can reduce such
+  limitations in software development. the study of programming language
+  concepts builds an appreciation for valuable language features and constructs
+  and encourages programmers to use them, even when the language they are using
+  does not directly support such features and constructs (in which case they
+  can be simulated).
+
+  在自然语言中也有类似现象, 即 the depth at which people can think is
+  influenced by the expressive power of the language in which they communicate
+  their thoughts. It is difficult for people to conceptualize structures they
+  cannot describe, verbally or in writing.
+
+- 了解更多种类的语言, 了解更多的语言特性, 有助于面对具体的项目需求选择最合适的
+  语言. 如果程序员不能根据需要去选择合适的语言, 结果就是他们会选择使用自己最熟
+  悉的语言, 即使该语言对具体项目而言并不合适.
+
+- 学习编程语言概念有助于学习新语言. Once a thorough understanding of the
+  fundamental concepts of languages is acquired, it becomes far easier to see
+  how these concepts are incorporated into the design of the language being
+  learned, 从而能够更快地掌握新语言.
+
+  在自然语言中也有类似现象. The better you know the grammar of your native
+  language, the easier it is to learn a second language. Furthermore, learning
+  a second language has the benefit of teaching you more about your first
+  language.
+
+- Better understanding of the significance of implementation.
+  
+  In some cases, an understanding of implementation issues leads to an
+  understanding of why languages are designed the way they are. In turn, this
+  knowledge leads to the ability to use a language more intelligently, as it
+  was designed to be used.
+
+  Certain kinds of program bugs can be found and fixed only by a programmer who
+  knows some related implementation details.
+
+  In some cases, some knowledge of implementation issues provides hints about
+  the relative efficiency of alternative constructs that may be chosen for a
+  program.
+
+- 学习编程语言概念, 有助于更好地使用已经学会的语言. 例如, learn about
+  previously unknown and unused parts of the languages and begin to use those
+  features.
+
+- 学习编程语言概念, 有助于从宏观上了解计算机科学过去的发展历程和未来的方向.
+
+Programming domains
+===================
+- scientific applications.
+
+  * 科学计算是计算机编程的最早应用 (1940s - 1950s).
+
+  * 科学计算要求大量的浮点数学运算.
+
+  * 早期科学计算主要用汇编语言, 因效率是最重要因素.
+
+  * Fortran 是最早用于科学计算的高级语言.
+
+- Business applications.
+
+  * 狭义的 Business application 主要指的是 producing elaborate reports, precise
+    ways of describing and storing decimal numbers and character data, and the
+    ability to specify decimal arithmetic operations. 这种狭义的商业应用后期没
+    有多少发展, 因为它们被通用的办公软件如 office 等替代了.
+    
+  * 广义的商业应用指的是 any software or set of computer programs used by
+    business users to perform various business functions. 这种广义的商业应用
+    可由任意语言实现.
+
+  * 始于 1950s.
+
+  * COBOL 是最早用于商业应用的高级语言.
+
+  * COBOL 至今仍然是商业应用领域最广泛使用的语言. 因为该编程领域被办公软件替代
+    了.
+
+- artificial intelligence.
+
+  * 传统的人工智能专注于 symbolic computation rather than numeric computation.
+
+  * symbolic computation is more conveniently done with linked lists of data
+    rather than arrays. And it requires more flexibility.
+
+  * Lisp 是最早用于 AI 应用的语言 (1960s).
+
+  * Most AI applications developed prior to 1990 were written in Lisp or one of
+    its close relatives.
+
+  * 1970s, 出现了以 Prolog 为首的逻辑编程 (logic programming), 用于解决部分人工
+    智能问题.
+
+  * 最近, 一些 AI 应用开始用 C 等传统语言实现.
+
+- web applications.
+
+  * 涉及众多的语言, 包括多种标记语言 (html, xml, etc.), 数据格式 (json, xml,
+    yaml, etc.), 通用编程语言 (java, php, javascript, python, etc.).
+
+Language evolutions
+===================
+Fortran
+-------
+- Fortran 且至今仍然被科学计算领域使用. 这有以下几个原因:
+  
+  * 在科学计算领域, 效率是最主要考虑的因素, 而在这个方面后来的语言并没有显著提
+    高.
+
+  * Many legacy code are written in Fortran.
+
+  * Fortran is easy to learn.
+
 entity
 ======
 - first-class entity and second-class entity. it is a term that barely has a
