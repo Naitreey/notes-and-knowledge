@@ -168,14 +168,25 @@ functions
 =========
 - Functions are expressions that take parameters.
 
-anonymous function
-------------------
+anonymous function -- lambda expression
+---------------------------------------
 ::
 
   (<param>, ...) => <expression>
 
 - On the left of => is a list of parameters. On the right is an expression
   involving the parameters.
+
+- lambda expression 的定义可以通过 ``_`` placeholder 来简化. 此时只需在
+  expression 中需要参数化的位置用 ``_`` 来代替即可.
+
+partial application -- currying
+-------------------------------
+- 使用 ``_`` placeholder 参数化的方式是构建 partial application (currying) 的一
+  种方式. 如果转化成 ``=>`` 的完整形式, 就会发现这样本质上不过是定义了一个
+  function wrapper, 固化了部分参数而已.
+
+- ``f _`` 是另一种构建 partial application 的方式.
 
 methods
 =======
@@ -191,6 +202,8 @@ methods
 - parameter definition syntax.
 
   * a parameter can have default value, which makes it optional at call site.
+
+- Scala allows nested method definition.
 
 - When a method takes 0 parameters, the parameter list can be omitted during
   method call.
@@ -281,9 +294,25 @@ case classes
 
   case class <name>(<param>, ...)
 
-- By default, case classes are immutable and compared by value.
+- member accessibility.
 
-- Case classes can be instantiated with or without ``new`` keyword.
+  * constructor parameters are public and immutable (``val``) by default.
+
+  * It's possible to make members mutable by ``var``, but it's discouraged.
+
+- comparison.
+
+  * Case classes are compared by structure and not by reference.
+
+- instantiation.
+  
+  * Case classes can be instantiated with or without ``new`` keyword. This is
+    because case classes have an apply method by default which takes care of
+    object construction.
+
+- A minimal case class::
+
+    case class A()
 
 - Tuple 与 case class 之间的选择.
  
@@ -291,6 +320,12 @@ case classes
     readability of some kinds of code.
 
   * Tuple 可用于 easy unpacking and pattern matching.
+
+- Case classes are good for modeling immutable data.
+
+instance methods
+----------------
+- ``copy()``. create a shallow copy of this instance.
 
 objects
 =======
