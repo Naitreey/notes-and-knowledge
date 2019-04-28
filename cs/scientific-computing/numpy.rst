@@ -1,72 +1,168 @@
 overview
 ========
-
 - fundamental package for scientific computing with python.
 
-- 核心是 ``ndarray``.
+- features:
 
-- vectorization & broadcasting.
+  * vectorization & broadcasting -- basis of much of numpy's power.
 
-- tools for C/C++, Fortran code integration.
+  * a multidimensional array object, various derived objects (such as masked
+    arrays and matrices)
 
-- linear algebra, Fourier transform, random number capabilities.
+  * an assortment of routines for fast operations on arrays, including
+    mathematical, logical, shape manipulation, sorting, selecting, I/O,
+    discrete Fourier transforms, basic linear algebra, basic statistical
+    operations, random simulation and much more.
 
-- multi-dimensional container of generic data.
+  * tools for C/C++, Fortran code integration.
+
+  * multi-dimensional container of generic data. Arbitrary data-types can be
+    defined.
+
+- At the core of numpy is the ``ndarray``.
 
 terms
 =====
-- axis: one dimension.
+- vectorization: Vectorization describes the absence of any explicit looping,
+  indexing, etc., in the code.
+
+- broadcasting: Broadcasting is the term used to describe the implicit
+  element-by-element behavior of operations.
 
 - rank: the number of dimensions.
 
-e.g. 下面这个是 2-rank, the first axis's length is 2, second axis's
-length is 3.
-.. code:: python
-  [[1, 0, 0],
-   [0, 1, 2],]
+Routines
+========
+Array creation routines
+-----------------------
+ones and zeros
+^^^^^^^^^^^^^^
+- ``zeros(shape, dtype=float, order="C")``. Return a new array of given shape
+  and type, filled with zeros.
+
+  * ``shape``. int or tuple of ints.
+
+  * ``dtype``.
+
+  * ``order="C"``.
+
+- ``ones(shape, dtype=None, order="C")``. return a new array of ones.
+  parameters see above.
+
+- ``empty(shape, dtype=float, order="C")``. returns a new array without
+  initializing entries, the initial values depend on the state of the memory.
+
+from existing data
+^^^^^^^^^^^^^^^^^^
+- ``array(object, dtype=None, copy=True, order="K", subok=False, ndmin=0)``.
+  create an ndarray.
+
+  * ``object``. any array-like object, an object implemented ``__array__``
+    method, or any nested sequences.
+
+  * ``dtype``. desired data type for the array. If not given, then the type
+    will be determined as the minimum type required to hold the objects in the
+    sequence. This argument can only be used to ‘upcast’ the original array.
+    For downcasting, use the ``.astype(t)`` method.
+
+  * ``copy``. whether to copy the object. If False, a copy will only be made if
+    ``__array__`` returns a copy, if obj is a nested sequence, or if a copy is
+    needed to satisfy any of the other requirements.
+
+  * ``order``. Specify the memory layout of the array.
+
+  * ``subok``. If True, then sub-classes will be passed-through, otherwise the
+    returned array will be forced to be a base-class array (default).
+
+  * ``ndmin``. Specifies the minimum number of dimensions that the resulting
+    array should have. Ones will be pre-pended to the shape as needed to meet
+    this requirement.
+
+- ``fromfunction()``, 给出一个 ndarray, 其任一元素的值是该座标点上的函数值.
+  即给出了 index 定义域下的值数组.
+
+numerical ranges
+^^^^^^^^^^^^^^^^
+- ``arange([start, ]stop, [step, ]dtype=None)``. array range, 类似 builtin
+  ``range()``, 给出 ndarray (eager evaluation). 支持 floating point number.
+
+  对于整数参数, 与 ``range()`` 行为一致.
+
+  对于 floating point 参数, 由于精度问题, it is generally not possible to
+  predict the number of elements obtained, due to the finite floating point
+  precision. 并且, 得到的数组中的最后一个元素可能 ``>= stop``.  所以对于非整型
+  参数, 应该使用 ``linspace()`` 得到精确数列.
+
+  * ``start``. default is 0.
+
+  * ``stop``. stop value is excluded.
+
+  * ``step``. default is 1. can be passed as kwargs. If passed as positional,
+    ``start`` must be given as well.
+
+  * ``dtype``. If dtype is not given, infer the data type from the other input
+    arguments.
+
+- ``linspace(start, stop, num=50, endpoint=True, retstep=False, dtype=None, axis=0)``.
+  Return linearly spaced numbers/arrays from start to stop, the total number of
+  samples is ``num``.
+
+  * ``start``. a number or array-like.
+
+  * ``stop``. a number or array-like.
+
+  * ``num``. default is 50. must be non-negative.
+
+  * ``endpoint``. When False, the sequence consists of all but the last of
+    ``num + 1`` evenly spaced samples, so that stop is excluded. 注意到
+    endpoint is False 时, stop - start 的长度被分了 ``num+1`` 份.
+
+  * ``retstep``. If True, return (samples, step), where step is the spacing
+    between samples. When start/stop is array-like, step is also an array-like
+    of the same shape.
+
+  * ``dtype``. If dtype is not given, infer the data type from the other input
+    arguments.
+
+  * ``axis``.
+
+  When start/stop is array-like, start/stop array 中的对应元素作为范围进行等分.
+  效果是, 从 start array 至 stop array, 等分平移, 每个节点都是一个同等 shape
+  的 ndarray.
 
 ndarray
 =======
+- ``np.ndarray``: it encapsulates n-dimensional arrays of homogeneous data
+  types, with many operations being performed in compiled code for performance.
 
-- ``np.ndarray``.
+- A ndarray is a table of elements, all of the same type, indexed by a tuple
+  of positive integers.
 
-- 主要对象.
-
-- a homogeneous multidimensional array of same type elements.
-
-- concepts of methods.
-
-  * common mathematical and logical operators are elementwise/broadcasting.
-  
-  * Many unary operations are implemented as methods of ndarray. 默认情况下
-    将 array 看作 a flattened list of numbers; ``axis`` 参数指定操作沿哪个
-    轴进行. 即结果的 shape 是剩下的 dimensions.
-    这相当于把整个数组进行某种转置, 让指定的 axis 成为最后一个轴, 再计算.
-  
-  * 运算结果数组的 dtype 是输入数组里面更一般化的那个.
+- An axis of a ndarray is one of its dimensions.
 
 attributes
 ----------
+- ``ndim``. the rank of the ndarray, i.e., the number of dimensions.
 
-- ndim. rank.
+- ``shape``. a tuple of axis lengthes. length of shape is ndim.
 
-- shape. a tuple of axes. length of shape is ndim.
+- ``size``. total number of element in array, equal to product of shape tuple.
 
-- size. total number of element in array. product of shape tuple is size.
+- ``dtype``. element data type.
 
-- dtype. element data type.
+- ``itemsize``. size in bytes of each array element. also ``ndarray.dtype.itemsize``.
 
-- itemsize. size in bytes of each array element. also ``ndarray.dtype.itemsize``.
-
-- data. a ``memoryview`` of data buffer of this ndarray.
+- ``data``. a ``memoryview`` of data buffer of this ndarray, containing the
+  actual elements of the array.
 
 - flat. an iterator over array as if it's 1-dimensional.
 
 methods
 -------
+- ``reshape(shape, order="C")``.
 
-- reshape().
-
+representation
+^^^^^^^^^^^^^^
 - ``__str__()``. ndarray 的 string 形式定义为:
 
   * the last axis is printed from left to right,
@@ -79,33 +175,41 @@ methods
   * if array is too large, only corners are displayed and central parts are
     skipped.
 
-- dot(). matrix product. 注意相对的 ``*`` 只是 brodcasting 元素之间的乘法.
+arithmetic, matrix multiplication, comparison operations
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+common mathematical and logical operators are element-wise/broadcasted.
 
-- sum().
+- mathematical and logical operators::
 
-- min(), max().
+    +, -, *, /, //, %, divmod, **, <<, >>, &, ^, |, <, <=, >, >=, ==, !=,
+    +=, -=, *=, /=, //=, %=, **=, >>=, <<=, &=, |=, ^=
+
+  * Upcasting. When operating with arrays of different types, the type of the
+    resulting array corresponds to the more general or precise one.
+
+- matrix product can be performed using ``@`` or ``.dot()`` method.
+
+- ``dot()``. matrix product.
+
+calculation
+^^^^^^^^^^^
+Calculations are implemented as methods of ndarray. 它们都接收 ``axis`` 参数.
+
+- If axis is None (the default), the array is treated as a 1-D array and the
+  operation is performed over the entire array. This behavior is also the
+  default if self is a 0-dimensional array or array scalar.
+  
+- If axis is an integer, 它指定操作沿哪个轴进行 (for each 1-D subarray that can
+  be created along the given axis). 作为结果的 ndarray 的 shape 是剩下的
+  dimensions.
+
+- ``sum()``.
+
+- ``min()``.
+ 
+- ``max()``.
 
 - cumsum(). cumulative sum.
-
-factory functions
------------------
-
-- ``array()``, 输入数组值, 给出 ndarray. dtype is based on elements from input.
-
-- ``zeros()``, 输入数组形状, 给出 ndarray. dtype by default is float64.
-
-- ``ones()``, 输入数组形状, 给出 ndarray. dtype by default is float64.
-
-- ``empty()``, 输入数组形状, 给出 ndarray. dtype by default is float64.
-
-- ``arange()``, (array range), 类似 builtin range(), 给出 ndarray. 支持 non-integer.
-  对于 floating point 参数, 由于精度问题, 得到的数组中的最后一个元素可能 ``>= stop``.
-  所以对于非整型参数, 应该使用 ``linspace``.
-
-- ``linspace()``, linearly spaced numbers from start to stop.
-
-- ``fromfunction()``, 给出一个 ndarray, 其任一元素的值是该座标点上的函数值.
-  即给出了 index 定义域下的值数组.
 
 subscription & slicing
 ----------------------
@@ -149,6 +253,25 @@ iteration
 - Iterating over multidimensional arrays is done with respect to the first axis.
 
 - 若需要挨个元素的 iterator, 使用 ``ndarray.flat`` attribute.
+
+ndarray vs python list
+----------------------
+- Fixed size. NumPy arrays have a fixed size at creation, unlike Python lists
+  (which can grow dynamically). Changing the size of an ndarray will create a
+  new array and delete the original.
+
+- Same data type. The elements in a NumPy array are all required to be of the
+  same data type, and thus will be the same size in memory.
+
+- Advanced and fast operations. NumPy arrays facilitate advanced mathematical
+  and other types of operations on large numbers of data. Typically, such
+  operations are executed more efficiently and with less code than is possible
+  using Python’s built-in sequences.
+
+- Foundation of python scientific computing. A growing plethora of scientific
+  and mathematical Python-based packages are using NumPy arrays; though these
+  typically support Python-sequence input, they convert such input to NumPy
+  arrays prior to processing, and they often output NumPy arrays. 
 
 universal functions
 ===================
