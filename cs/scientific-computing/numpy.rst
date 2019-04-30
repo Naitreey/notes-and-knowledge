@@ -130,6 +130,50 @@ numerical ranges
   效果是, 从 start array 至 stop array, 等分平移, 每个节点都是一个同等 shape
   的 ndarray.
 
+Mathematical functions
+----------------------
+sum, product, differences
+^^^^^^^^^^^^^^^^^^^^^^^^^
+- ``sum(a, axis=None, dtype=None, out=None, keepdims=<no value>, initial=<no value>, where=<no value>)``.
+  sum of an array, over a given axis.
+
+  * ``a``. array-like to sum.
+
+  * ``axis``. see ndarray `calculation`_ 部分.
+
+  * ``dtype``. see ndarray `calculation`_ 部分.
+
+  * ``out``. see ndarray `calculation`_ 部分.
+
+  * ``keepdims``. If this is set to True, the axes which are reduced are left
+    in the result as dimensions with size one. If the default value is passed,
+    then keepdims will not be passed through to the sum method of sub-classes
+    of ndarray, however any non-default value will be.
+
+  * ``initial``. Starting value for sum of each axis. see
+    `numpy.ufunc.reduce`_.
+
+  * ``where``. array-like of bool. Elements to include in the sum. see
+    `numpy.ufunc.reduce`_.
+
+- ``cumsum(a, axis=None, dtype=None, out=None)``. Return the cumulative sum of
+  the elements along a given axis.
+
+  * ``axis``. see ndarray `calculation`_ 部分.
+
+  * ``dtype``. see ndarray `calculation`_ 部分.
+
+  * ``out``. see ndarray `calculation`_ 部分.
+
+Statistics
+----------
+Order statistics
+^^^^^^^^^^^^^^^^
+- ``amin(a, axis=None, out=None, keepdims=<no-value>, initial=<no-value>, where=<no-value>)``.
+  Return the minimum of an array or minimum along an axis. See `numpy.sum`_ for
+  parameters. NaN values are propagated, that is if at least one item is NaN,
+  the corresponding min value will be NaN as well.
+
 ndarray
 =======
 - ``np.ndarray``: it encapsulates n-dimensional arrays of homogeneous data
@@ -193,7 +237,9 @@ common mathematical and logical operators are element-wise/broadcasted.
 
 calculation
 ^^^^^^^^^^^
-Calculations are implemented as methods of ndarray. 它们都接收 ``axis`` 参数.
+Calculations are implemented as methods of ndarray. Common parameters:
+
+``axis`` 参数.
 
 - If axis is None (the default), the array is treated as a 1-D array and the
   operation is performed over the entire array. This behavior is also the
@@ -203,13 +249,36 @@ Calculations are implemented as methods of ndarray. 它们都接收 ``axis`` 参
   be created along the given axis). 作为结果的 ndarray 的 shape 是剩下的
   dimensions.
 
-- ``sum()``.
+- If axis is a tuple of ints, a sum is performed on all of the axes specified
+  in the tuple. 作为结果的 ndarray 的 shape 是剩下的 dimensions.
 
-- ``min()``.
+- Each axis number can be negative, which counts from the last to the first
+  axis.
+
+``dtype`` 参数. The parameter ``dtype`` specifies the data type over which a
+reduction operation (like summing) should take place. The default reduce data
+type is the same as the data type of self, unless a has an integer dtype of
+less precision than the default platform integer. In that case, if a is signed
+then the platform integer is used while if a is unsigned then an unsigned
+integer of the same precision as the platform integer is used. To avoid
+overflow, it can be useful to perform the reduction using a larger data type.
+
+``out`` 参数. For several methods, an optional ``out`` argument can also be
+provided and the result will be placed into the output array given. The out
+argument must be an ndarray and have the same number of elements. It can have a
+different data type in which case casting will be performed.
+
+- ``sum(axis=None, dtype=None, out=None, keepdims=False, initial=0, where=True)``.
+  Return the sum of the array elements over the given axis. See above and
+  ``numpy.sum()`` for parameters.
+
+- ``min(axis=None, out=None, keepdims=False, initial=<no-value>, where=True)``.
+  return the minimum along a given axis.
  
 - ``max()``.
 
-- cumsum(). cumulative sum.
+- ``cumsum(axis=None, dtype=None, out=None)``. Return cumulative sum of the
+  elements along the given axis.
 
 subscription & slicing
 ----------------------
