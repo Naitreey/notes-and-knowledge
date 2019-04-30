@@ -408,6 +408,33 @@ covariance and contravariance
   Generic function's annotation should not use type variables with variance
   defined.
 
+- 注意对于 generic types 之间由于 variance 性质引起的 subtype 关系的适用性.
+  例如下面 class 层级::
+
+    class A:
+      pass
+
+    class B(A):
+      pass
+
+    class ImmutableList[Generic[T_co]]:
+      pass
+
+    class List1(ImmutableList[A]):
+      pass
+
+    class List2(ImmutableList[B]):
+      pass
+
+  由于 ImmutableList is covariant generic class, ImmutableList[B] 是
+  ImmutableList[A] 的子类. 但是 List2 不是 List1 的子类. 事实上, 这两个类没有
+  任何继承关系. 注意以下赋值:
+
+  .. code:: python
+
+    x: ImmutableList[A] = List2()  # valid, covariant subtype
+    x: List1 = List2()  # invalid, no relationship
+
 Any type and object type
 ------------------------
 - Use object to indicate that a variable could be any type in a typesafe
