@@ -65,6 +65,12 @@ AnyRef
 
 - Every user-defined type in Scala is a subtype of AnyRef.
 
+String
+^^^^^^
+instance methods
+""""""""""""""""
+- ``r``
+
 Unit
 ----
 - Subclass of AnyVal.
@@ -153,6 +159,68 @@ named values
 
 - type can be ignored if it can be correctly inferred from the computation.
 
+match expression
+----------------
+::
+
+  <expr> match {
+    case <pattern> => <expr>
+    ...
+  }
+
+- A way of doing pattern matching in scala.
+
+- pattern can be:
+
+  * literal values
+
+  * case class patterns::
+
+      <name>(param, ...) [if <boolean-expr>]
+
+    - case class 匹配后, 相应位置的值赋值给 pattern 中相应位置的参数.
+      
+    - 支持 ``_`` 作为参数名来忽略相应位置的值.
+      
+    - Optional ``if`` 部分是 pattern guards.
+
+  * 任意 object constructor call, 当该 object 具有 ``unapply()`` method 时.
+
+  * 任意变量作为 pattern 时是 catchall pattern, 包括 ``_``.
+
+  * 任意变量后可加 ``: <type>`` 类型限制, 只有类型匹配时才匹配 pattern. This is
+    useful when the case needs to call a method on the pattern. It is also a
+    convention to use the first letter of the type as the case identifier.
+
+for comprehensions
+------------------
+::
+
+  for (enumerators) [yield e]
+
+- enumerators refers to a semicolon-separated list of enumerators. An
+  enumerator is either a generator which introduces new variables, or it is a
+  filter.::
+
+    enumerators := enumerator[; enumerator]...
+    enumerator := <var> <- <expr> [if <boolean-expr>]
+
+- For comprehension generates a List.
+
+- 当 ``enumerators`` 中由 semicolon 分隔多个 generator 时, 相当于多层嵌套的
+  for loop::
+
+    val x = for (i <- List(1,2,3); j <- List(4,5,6)) yield (i, j)
+    // equals to pseudo-code
+    for (i <- List(1, 2, 3))
+      for (j <- List(4, 5, 6))
+        ...
+
+- ``yield`` expression can be omitted in a for comprehension. In that case,
+  comprehension will return Unit.
+
+- ``<var>`` used in for comprehension is locally defined in expression's scope.
+
 blocks
 ======
 ::
@@ -225,6 +293,8 @@ main method
 
 classes
 =======
+normal class
+------------
 ::
 
   class <name>[(<param>, ...)][ {
@@ -289,7 +359,7 @@ classes
     注意 ``_=`` suffix 代表这是 setter method.
 
 case classes
-============
+------------
 ::
 
   case class <name>(<param>, ...)
@@ -324,23 +394,86 @@ case classes
 - Case classes are good for modeling immutable data.
 
 instance methods
-----------------
+^^^^^^^^^^^^^^^^
 - ``copy()``. create a shallow copy of this instance.
 
 objects
-=======
+-------
 ::
 
   object <name> {
     // definitions
   }
 
-- Objects are single instances of their own definitions.
+- An object is a class that has exactly one instance. The instance is created
+  lazily when it is referenced.
 
 - The object can be accessed by its name.
 
+- As a top-level value, an object is a singleton.
+  As a member of an enclosing class or as a local value, it behaves exactly
+  like a lazy val.
+
+companion object and companion class
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- When a class and an object with the same name as the class are defined
+  together, the object is called the class's companion object, and the class is
+  called the object's companion class.
+
+- If a class or object has a companion, both must be defined in the same file.
+  To define companions in the REPL, either define them on the same line or
+  enter :paste mode.
+
+- A companion class or object can access the private members of its companion.
+
+- 在 companion class 中一般会去 import companion object 中的所有成员至 class
+  namespace 下.::
+
+    case class Circle(radius: Double) {
+        import Circle._
+        def area: Double = calculateArea(radius)
+    }
+
+    object Circle {
+        private def calculateArea(radius: Double): Double = Pi * pow(radius, 2)
+    }
+
+- Usage.
+
+  * Use a companion object for methods and values which are not specific to
+    instances of the companion class. 这类似于其他 OOP 语言中的静态成员 (包含
+    静态数据和静态方法).
+
+
+extractor objects
+^^^^^^^^^^^^^^^^^
+- An extractor object is an object with an ``unapply()`` or ``unapplySeq()``
+  method.
+
+- ``unapply()`` takes an object and tries to give back the arguments.
+  The return value of ``unapply()`` method:
+
+  * If it is just a test, return a ``Boolean``. E.g., ``case even()``.
+
+  * If it returns a single sub-value of type ``T``, return an ``Option[T]``.
+
+  * If you want to return several sub-values ``T1,...,Tn``, group them in an
+    optional tuple ``Option[(T1,...,Tn)]``.
+
+- ``unapplySeq()`` takes an object and tries to give back the arguments, useful
+  when the number of values to extract isn’t fixed and we would like to return
+  an arbitrary number of arguments.
+
+  * Returns an ``Option[Seq[T]]``. e.g., ``case List(x, y, z)``.
+
+- Usage:
+
+  * pattern matching.
+
+  * partial function.
+
 traits
-======
+------
 ::
 
   trait <name> {
@@ -361,6 +494,38 @@ traits
 - Trait itself is abstract, therefore can not be instantiated.
 
 - Abstract methods of traits can have default implementations.
+
+sealed clases
+-------------
+- Traits and classes can be marked sealed which means all subtypes must be
+  declared in the same file. This assures that all subtypes are known (So that
+  the definitions are sealed).
+
+- Sealed classes are useful for pattern matching, because when left operand of
+  ``match`` expression is confined as the base class of sealed classes, the
+  ``match`` expression does not need a catch-all case.
+
+generic classes
+---------------
+- defining generic class: Generic classes take a type parameter within square
+  brackets.
+
+- Use generic class: Generic class name followed by a concrete type in the
+  square brackets.
+
+variance
+^^^^^^^^
+- Scala supports variance annotations of type parameters of generic classes.
+
+- All three variances are defined: covariant, contravariant and invariant.
+
+- generic classes are invariant by default.
+
+- Syntax to annotate variances of generic class::
+
+    class Foo[A]  // invariant
+    class Foo[+A] // covariant
+    class Foo[-A] // contravariant
 
 runtime systems
 ===============
