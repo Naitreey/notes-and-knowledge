@@ -2122,6 +2122,9 @@ privileges
 
 about values
 """"""""""""
+- For any column value of a row, it's either provided by INSERT statement or
+  using the column's default value.
+
 - If strict SQL mode is enabled, an INSERT statement generates an error if it
   does not specify an explicit value for every column that has no default
   value.
@@ -2261,6 +2264,67 @@ auto-increment column behavior
   autocommit mode, the sequence starts over for all storage engines except
   InnoDB and MyISAM.
 
+REPLACE
+^^^^^^^
+::
+
+  REPLACE [LOW_PRIORITY]
+    [INTO] tbl_name
+    [PARTITION (partition_name [, partition_name] ...)]
+    [(col_name [, col_name] ...)]
+    VALUES (value_list) [, (value_list)] ...
+
+  REPLACE [LOW_PRIORITY]
+    [INTO] tbl_name
+    [PARTITION (partition_name [, partition_name] ...)]
+    SET assignment_list
+
+  REPLACE [LOW_PRIORITY]
+    [INTO] tbl_name
+    [PARTITION (partition_name [, partition_name] ...)]
+    [(col_name [, col_name] ...)]
+    SELECT ...
+
+- Similar to INSERT, except that if an old row in the table has the same value
+  as a new row for a PRIMARY KEY or a UNIQUE index, the old row is deleted
+  before the new row is inserted.
+
+  * 对于 REPLACE ... SET, ``assignment_list`` 对 unique index 列设置的值决定
+    去替换哪些行.
+
+- A REPLACE statement either inserts or deletes and inserts.
+
+- REPLACE makes sense only if a table has a PRIMARY KEY or UNIQUE index.
+  Otherwise, it becomes equivalent to INSERT, because there is no index to be
+  used to determine whether a new row duplicates another.
+
+- Values for all columns are taken from the values specified in the REPLACE
+  statement. Any missing columns are set to their default values
+
+- When setting values for new row, the original row's values can not be
+  referred. If original value of a column is referred, it's replaced by the
+  column's default value.
+
+- privileges: INSERT and DELETE.
+
+- If a generated column is replaced explicitly, the only permitted value is
+  DEFAULT.
+
+- The REPLACE statement returns a count to indicate the number of rows
+  affected. This is the sum of the rows deleted *and* inserted. 
+
+- Procedure performed for REPLACE.
+
+  1. Try to insert the new row into the table
+
+  2. If the insertion fails because of a duplicate-key error for a primary key
+     or unique index:
+     
+     a. Delete from the table the conflicting row that has the duplicate key
+        value.
+
+     b. Try again to insert the new row into the table
+
 SHOW CREATE TABLE
 ^^^^^^^^^^^^^^^^^
 ::
@@ -2351,9 +2415,9 @@ SHOW COLUMNS
 
   * Extra. additional information about a column.
 
-    - ``auto_increment``
+    - ``AUTO_INCREMENT``
 
-    - ``on update CURRENT_TIMESTAMP``
+    - ``ON UPDATE CURRENT_TIMESTAMP``
 
     - ``VIRTUAL GENERATED`` virtual generated column
 
