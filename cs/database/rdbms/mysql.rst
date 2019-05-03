@@ -2325,6 +2325,87 @@ REPLACE
 
      b. Try again to insert the new row into the table
 
+WITH
+^^^^
+::
+
+  WITH [RECURSIVE]
+      cte_name [(col_name [, col_name] ...)] AS (subquery)
+      [, cte_name [(col_name [, col_name] ...)] AS (subquery)] ...
+
+- WITH is used to build common table expression (CTE), which is a named
+  temporary result set that exists within the scope of a single statement and
+  that can be referred to later within that statement, possibly multiple times.
+
+- A CTE name defined earlier can be referenced in CTEs defined later, enabling
+  CTEs to be defined based on other CTEs.
+
+- A CTE in a given query block can refer to CTEs defined in query blocks at a
+  more outer level, but not CTEs defined in query blocks at a more inner level.
+
+- A CTE can refer to itself to define a recursive CTE. The RECURSIVE keyword
+  must be included if any CTE in the WITH clause is recursive.
+
+  The structure of a cursive CTE:
+
+  * The recursive CTE subquery has two parts, separated by UNION [ALL] or UNION
+    DISTINCT. The first SELECT produces the initial row or rows for the CTE and
+    does not refer to the CTE name. The second SELECT produces additional rows
+    and recurses by referring to the CTE name in its FROM clause. Recursion
+    ends when this part produces no new rows.
+
+  * The types of the CTE result columns are inferred from the column types of
+    the nonrecursive SELECT part only, and the columns are all nullable.
+
+  * Each iteration of the recursive part operates only on the rows produced by
+    the previous iteration.
+
+  * If the recursive part of a CTE produces wider values for a column than the
+    nonrecursive part, it may be necessary to widen the column in the
+    nonrecursive part to avoid data truncation.
+
+  * The recursive SELECT part must reference the CTE only once and only in its
+    FROM clause, not in any subquery. It can reference tables other than the
+    CTE and join them with the CTE. If used in a join like this, the CTE must
+    not be on the right side of a LEFT JOIN.
+
+  Recursive CTE examples:
+
+  .. code:: sql
+
+    WITH RECURSIVE dates (date) AS
+    (
+      SELECT MIN(date) FROM sales
+      UNION ALL
+      SELECT date + INTERVAL 1 DAY FROM dates
+      WHERE date + INTERVAL 1 DAY <= (SELECT MAX(date) FROM sales)
+    )
+    SELECT dates.date, COALESCE(SUM(price), 0) AS sum_price
+    FROM dates LEFT JOIN sales ON dates.date = sales.date
+    GROUP BY dates.date
+    ORDER BY dates.date;
+
+- Column names of a CTE can be specified after ``cte_name`` or provided by
+  subquery.
+
+- WITH clause can be used with SELECT, UPDATE, DELETE statements. For SELECT
+  statement, it can be associated with any kind of SELECT, including subquery,
+  statements that include a SELECT (e.g., INSERT ... query).
+
+- CTE and derived tables often can be used interchangeably. However, CTEs have
+  some advantages over derived tables:
+
+  * A derived table can be referenced only a single time within a query. A CTE
+    can be referenced multiple times. To use multiple instances of a derived
+    table result, you must derive the result multiple times.
+
+  * A CTE can be self-referencing (recursive).
+
+  * One CTE can refer to another.
+
+  * A CTE may be easier to read because its definition appears at the beginning
+    of the statement rather than embedded within it.
+
 SHOW CREATE TABLE
 ^^^^^^^^^^^^^^^^^
 ::
