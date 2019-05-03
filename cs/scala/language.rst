@@ -144,6 +144,32 @@ type casting
 
 - Casting is unidirectional. 即不能向下做 type casting.
 
+type inference
+==============
+- Type inference means the scala compiler can often infer the type of an
+  expression when it's declared explicitly by programmer.
+
+- Situations where type inference is performed:
+
+  * variable declaration missing type (val, var, etc.)
+
+  * method definition missing return type.
+
+  * polymorphic method call without passing type parameters. compiler will
+    infer such missing type parameters from the context and from the types of
+    the actual method parameters.
+
+  * generic class instantiation without passing type parameters. compiler will
+    infer such missing type parameters from the context and from the types of
+    the actual constructor parameters.
+
+  * In certain cases, anonymous function parameter types can be inferred when
+    the function is passed as argument.
+
+- Situation where type inference is not performed:
+
+  * method parameter types are not inferred.
+
 expression
 ==========
 - expressions are computable statements.
@@ -221,6 +247,7 @@ for comprehensions
 
 - ``<var>`` used in for comprehension is locally defined in expression's scope.
 
+
 blocks
 ======
 ::
@@ -258,31 +285,110 @@ partial application -- currying
 
 methods
 =======
+
+method definition
+-----------------
 ::
 
-  def <name>[(<param>, ...)[(<param>, ...)]...][: <type>] = <expression>
+  def <name>[([implicit] <param>, ...)[([implicit] <param>, ...)]...][: <type>] = <expression>
 
 - Methods are defined with the ``def`` keyword. ``def`` is followed by a name,
   parameter lists, a return type, and a body.
 
 - A method can take 0 to many parameter lists.
 
-- parameter definition syntax.
-
-  * a parameter can have default value, which makes it optional at call site.
-
 - Scala allows nested method definition.
 
+parameter definition syntax
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- a parameter can be defined as pass-by-value parameter (default) or
+  pass-by-name parameter. (two different parameter-passing methods.)
+
+- pass-by-value parameter::
+
+    <var-name>: <type> [= <default>]
+
+- pass-by-name parameter::
+
+    <var-name>: => <type> [= <default>]
+
+  * 注意 ``=> <type>`` 的意义: 这相当于是声明一个函数类型 -- 该函数不接收任何
+    参数, 返回一个 ``<type>`` 类型的值. 这也就是 pass-by-name 下, 对参数表达式
+    的要求. 从这点来看, ``=> <type>`` 并不是特殊的语法, 与 pass-by-value 的类型
+    声明是统一的.
+
+  * pass-by-name parameter 接收一个任意结构, 只要求其返回值与声明的类型一致.
+
+  * pass-by-name parameters have the advantage that they are not evaluated if
+    they are not used in the function body. This can be desirable for example
+    when the parameter's value involves computationally intensive or
+    long-running procedures.
+    
+    On the other hand, pass-by-value parameters have the advantage that they
+    are evaluated only once.
+
+- a parameter can have default value, which makes it optional at call site.
+  Both pass-by-value and pass-by-name parameters can have default values.
+
+  * Unlike python, in scala a parameter with default value can be followed by
+    parameters without default values.
+    
+    Naturally, if the former parameters are omitted in method call, the latter
+    parameters must be bound by keyword argument form.
+
+  * Where you might do overloaded methods in Java, you can use methods with
+    optional parameters to achieve the same effect.
+
+  * Default parameters in Scala are not optional when called from Java code.
+
+method call
+-----------
 - When a method takes 0 parameters, the parameter list can be omitted during
   method call.
 
-- parameter passing syntax.
+- parameter binding syntax. Scala supports two parameter binding methods --
+  positional arguments and keyword arguments. And they can be mixed in a single
+  function call.
 
-  * can be positional form.
+  * keyword argument parameter binding syntax does not work with calls to Java
+    code.
 
-  * can be keyword argument form.
+implicit parameter list
+-----------------------
+- A method can have an implicit parameter list starting with ``implicit``
+  keyword.
 
-  * can be a mixture of positional and kwargs form.
+- If the parameters in that parameter list are not passed as usual, Scala
+  will look if it can get *an implicit value of the correct type*, and if it
+  can, pass it automatically.
+
+  注意只要能找到正确类型的值, 就会被当作隐性参数值来使用.
+
+- implicit parameter value lookup procedure:
+
+  * Scala will first look for implicit definitions and implicit parameters that
+    can be accessed directly (without a prefix) at the point the method with
+    the implicit parameter block is called.
+
+  * Then it looks for members marked implicit in all the companion objects
+    associated with the implicit candidate type.
+
+- implicit value definition:
+
+  * prefix normal instance member definition with ``implicit`` keyword.
+
+polymorphic methods
+-------------------
+::
+
+  def method[<type-param>, ...](param, ...)
+
+- Methods can take type parameters, which are enclosed in square brackets,
+  similar to generic types.
+
+- When calling a type-parametrized method, concrete types can be provided to
+  make confinement. Type parameter isn't needed necessarily. The compiler can
+  often infer it based on context or on the types of the value arguments.
 
 main method
 -----------
@@ -290,6 +396,27 @@ main method
   
 - JVM requires a main method to be named ``main`` and take one argument, an
   array of strings.
+
+operators
+---------
+- Any method with a single parameter can be used as an infix operator.
+
+- Arithmetic/logical/etc. operators are just infix form of these overriden
+  methods defined on operand's class.
+
+- operator precedence: operator precedence is evaluated based on the priority
+  of its first character (from highest to lowest)::
+
+    (characters not shown below)
+    * / %
+    + -
+    :
+    = !
+    < >
+    &
+    ^
+    |
+    (all letters)
 
 classes
 =======
@@ -526,6 +653,222 @@ variance
     class Foo[A]  // invariant
     class Foo[+A] // covariant
     class Foo[-A] // contravariant
+
+type bounds
+-----------
+- Type parameters and abstract type members may be constrained by a type bound.
+
+- Upper type bound::
+
+    T <: A
+
+  T must be a subtype of A.
+
+- Lower type bound::
+
+    T >: A
+
+  T must be a supertype of A.
+
+- 对于 lower type bound ``T >: A``, 常用于以下场景: generic type is covariant
+  on type parameter, and at least one of the generic type's method's signature
+  takes a value of parametrized type. 此时, 常见的类型声明效果是: A will be the
+  type parameter of the generic class and B will be the type paramter of the
+  method.
+
+  例如, 理解以下单向链表的实现::
+
+    trait Node[+B] {
+      def prepend[U >: B](elem: U): Node[U]
+    }
+
+    case class ListNode[+B](h: B, t: Node[B]) extends Node[B] {
+      def prepend[U >: B](elem: U): ListNode[U] = ListNode(elem, this)
+      def head: B = h
+      def tail: Node[B] = t
+    }
+
+    case class NilNode[+B]() extends Node[B] {
+      def prepend[U >: B](elem: U): ListNode[U] = ListNode(elem, this)
+    }
+
+  对该实现的解释:
+
+  * 由于 +B, Node, ListNode, NilNode 三个泛型都对 B 是协变的. 即对于 subtype C
+    of B, Node[C] is subtype of Node[B].
+
+  * Node[C] 若要是 Node[B] 的子类, 则要求可以用 Node[C] 的实例替换所有 Node[B]
+    实例使用的情况 (principle of substitution). 由于 Node[B].prepend 应该可以接
+    收所有 B 的子类, Node[C].prepend 也必须能接收所有 B 的子类. 所以要求
+    prepend 允许的参数类型以 B 为下限, 即 ``U >: B``.
+
+  * 注意 ``U >: B`` 意味着接收所有 B 的父类直到 ``Any`` type. 这是合理的, 因为
+    Node[Any].prepend 接收所有类型实例, Node[B].prepend 也要这样.
+
+  * ListNode 和 NilNode 是 Node 的子类泛型. 对于 subtype C of B, 至少有以下关系
+    成立:
+
+              Node[B]
+              /    \
+             /      \
+      ListNode[B]  Node[C]
+             \      /
+              \    /
+            ListNode[C]
+
+  * 使用测试::
+
+      trait Bird
+      case class AfricanSwallow() extends Bird
+      case class EuropeanSwallow() extends Bird
+
+      val africanSwallowList= ListNode[AfricanSwallow](AfricanSwallow(), NilNode())
+      val birdList: Node[Bird] = africanSwallowList
+      birdList.prepend(new EuropeanSwallow)
+
+    注意到, birdList.prepend 调用的是 (via dynamic dispatch)
+    ListNode[AfricanSwallow].prepend. 后者接收所有 Bird 类型实例 (事实上任意类
+    型实例, 包括 1, 2.3, "sef", etc.).
+
+
+inner classes
+-------------
+- A inner class is an instance member defined inside another class.
+
+- Inner classes are path-depedent types. They are instance members rather than
+  class members, and bound to the instances of the outer class. Each outer
+  class's instance has distinct inner class, which makes it path-dependent.
+
+- 对于 outer class ``Outer`` 的不同 instance ``x, y`` 中, inner class ``Inner``
+  是不同的类型, 即 ``x.Inner`` 与 ``y.Inner`` 是不同的类型, 但是它们都是同一个
+  class 级别的 inner class ``Outer#Inner`` 的子类.
+
+abstract type members
+---------------------
+- abstract types (traits, abstract classes, etc.) can have abstract type
+  members.
+
+- Subclass can redefine abstract type members, e.g., to add constraints to it.
+  The concrete subclass must have all abstract type members defined.
+
+- Traits or classes with abstract type members are often used in combination
+  with anonymous class instantiations. 
+
+- In some cases, it's possible to turn abstract type members into type
+  parameters of classes and vice versa.
+
+compound types
+--------------
+::
+
+  A with B with C
+
+- A compound type is a mixin of several types (classes and traits).
+
+- A compound type can be used in:
+ 
+  * type declaration.
+
+  * type definition along with class inheritance.
+
+self-types
+----------
+::
+
+  identifier: otherTrait1 with otherTrait2 ... =>
+
+- Self-types are a way to declare that a trait must be mixed into another
+  trait, even though it doesn’t directly extend it. 
+
+- Cake pattern. dependency injection.
+
+annotations
+===========
+- Annotations associate meta-information with definitions.
+
+- An annotation clause applies to the first definition or declaration following
+  it. More than one annotation clause may precede a definition and declaration.
+  The order in which these clauses are given does not matter.
+
+builtin annotations
+-------------------
+- ``@deprecated``
+
+- ``@tailrec``
+
+- ``@inline``
+
+packages and imports
+====================
+packages
+--------
+- Packages are created by declaring one or more package names at the top of a
+  Scala file. Each Scala file in the package could have the same package
+  declaration.
+
+- One convention is to name the package the same as the directory containing
+  the Scala file. However, Scala is agnostic to file layout. 
+
+- Package declaration can be nested.
+
+- The package name should be all lower case.
+
+- If the code is being developed within an organization which has a website, it
+  should be the following format convention::
+
+    <top-level-domain>.<domain-name>.<project-name>
+
+imports
+-------
+- import can be used anywhere, both globally and locally.
+
+syntax
+^^^^^^
+- import everything from a package::
+
+    import package._
+
+- import single entity from a package::
+
+    import package.entity
+
+- import multiple entities from a package::
+
+    import package.{entity1, entity2, ...}
+
+- import entities from a package and rename::
+
+    import package.{entity1 => name1, entity2 => name2, ...}
+
+auto-imported entities
+^^^^^^^^^^^^^^^^^^^^^^
+The following entities are imported automatically.
+
+- scala package
+
+- java.lang package
+
+- Predef object
+
+package object
+--------------
+::
+
+  package object <package-name> {
+    ...
+  }
+
+- A package object is a special object, containing arbitrary definitions, used
+  for extending the referenced package.
+
+- Package objects can inherit Scala classes and traits like a normal object.
+  Method overloading doesn’t work in package objects.
+
+- By convention, the source code for a package object is usually put in a
+  source file named ``package.scala`` under the same package.
+
+- Each package is allowed to have one package object. Any definitions placed in
+  a package object are considered members of the package itself.
 
 runtime systems
 ===============
