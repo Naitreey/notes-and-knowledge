@@ -100,6 +100,70 @@ Programming domains
   * 涉及众多的语言, 包括多种标记语言 (html, xml, etc.), 数据格式 (json, xml,
     yaml, etc.), 通用编程语言 (java, php, javascript, python, etc.).
 
+Language evaluation criteria
+============================
+- Readability. 可读性很重要是因为在软件的生命周期中, 对代码的维护工作占很大的部
+  分. 而软件是否容易维护基本上是由可读性决定的. (1970 年代, 发展出了 software
+  life cycle 概念, 编程从 computer-oriented 转向了 human-oriented.)
+
+  * overall simplicity. 包含以下方面:
+   
+    - 语言中 basic constructs 的数目多少. A language with a large number of
+      basic constructs is more difficult to learn than one with a smaller
+      number.
+
+    - feature multiplicity -- having more than one way to accomplish a
+      particular operation.
+
+    - operator overloading. Although this is often useful, it can lead to
+      reduced readability if users are allowed to create their own overloading
+      and do not do it sensibly.
+
+    Simplicity in languages can, of course, be carried too far. E.g., 汇编语言
+    往往都很简单, 但正因为过于简单, 需要大量代码表达一个基本的操作, 反而降低了
+    可读性.
+
+  * orthogonality (正交性) -- a relatively small set of primitive constructs
+    can be combined in a relatively small number of ways to build the control
+    and data structures of the language. Furthermore, every possible
+    combination of primitives is legal and meaningful. Orthogonality follows
+    from a symmetry of relationships among primitives. A lack of orthogonality
+    leads to exceptions to the rules of the language.
+
+    Orthogonality is closely related to simplicity: The more orthogonal the
+    design of a language, the fewer exceptions the language rules require.
+    Fewer exceptions mean a higher degree of regularity in the design, which
+    makes the language easier to learn, read, and understand.
+
+    例如, C 语言的数据类型设计是有比较强的正交性的, 而在一些其他方面缺乏正交性.
+    structs and arrays 是 C 具有的 structured data types, structs 可作为函数
+    返回值, 但 arrays 不可以. C 中参数一般是 pass-by-value, 而对于数组却是
+    pass-by-reference.
+
+    Too much orthogonality can also cause problems. The most orthogonal
+    language is ALGOL 68. In combinational freedom allows extremely complex
+    constructs. And even if the combinations are simple, the sheer numbers
+    lead to complexity.
+
+  * data type. It improves readability that a language has adequate facilities
+    for defining data types and data structures.
+
+  * syntax design. 例如以下语法设计决策会影响可读性.
+
+    - special words. program appearance and thus program readability are
+      strongly influenced by the forms of a language's special words.
+
+      复合语句的结构设计尤其重要. 一些语言采用 matching pairs of special words
+      or symbols to form compound statement, 这有助于提高可读性. C and its
+      descendants use braces to specify compound statements. All of these
+      languages have diminished readability.
+
+    - form and meaning. Designing statements so that their appearance at least
+      partially indicates their purpose is an obvious aid to readability.
+      Semantics, or meaning, should follow directly from syntax, or form.
+
+      反例, C 中 static 在不同的语境下意义不同.
+
 Language evolutions
 ===================
 Fortran
