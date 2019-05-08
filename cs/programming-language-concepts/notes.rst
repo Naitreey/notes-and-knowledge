@@ -164,6 +164,87 @@ Language evaluation criteria
 
       反例, C 中 static 在不同的语境下意义不同.
 
+- writability. Writability is a measure of how easily a language can be used
+  to create programs for a chosen problem domain. 影响 readability 的各个语言
+  特性同样影响 writability, 这是因为写代码的过程中就需要重读已经写下的代码.
+
+  * overall simplicity and orthogonality. a smaller number of primitive
+    constructs and a consistent set of rules for combining them (that is,
+    orthogonality) is much better than simply having a large number of
+    primitives.
+
+    If a language has a large number of different constructs, some programmers
+    might not be familiar with all of them. This situation can lead to a misuse
+    of some features and a disuse of others that may be either more elegant or
+    more efficient, or both, than those that are used.
+
+    too much orthogonality can be a detriment to writability. Errors in
+    programs can go undetected when nearly any combination of primitives is
+    legal.
+
+  * Expressivity -- a language has relatively convenient, rather than
+    cumbersome, ways of specifying computations
+
+- reliability. a program is reliable if it performs to its specifications under
+  all conditions.
+
+  * type checking. testing for type errors in a given program, either by the
+    compiler or by the runtime. Run-time type checking is expensive,
+    compile-time type checking is more desirable. the earlier errors in
+    programs are detected, the less expensive it is to make the required
+    repairs.
+
+  * exception handling. the ability to intercept runtime errors (as well as
+    other unusual conditions detectable by the program), take corrective
+    measures, and then continue.
+
+  * aliasing. aliasing is having two or more distinct names in a program that
+    can be used to access the same memory cell. Aliasing is a dangerous
+    feature.
+
+  * readability and writability. The easier a program is to write, the more
+    likely it is to be correct. Readability affects reliability in both the
+    writing and maintenance phases of the life cycle.
+
+- cost.
+
+  * the cost of training programmers to use the language, which is a function
+    of the simplicity and orthogonality of the language and the experience of
+    the programmers.
+
+  * the cost of writing programs in the language, which is a function of the
+    writability of the language. (早期设计 high-level languages 的一个重要目的
+    就是降低软件开发成本.)
+
+  * the cost of compiling programs in the language.
+
+  * the cost of executing programs written in a language is greatly influenced
+    by that language's design. A language that requires many runtype checks
+    will prohibit fast code execution, regardless of the quality of the
+    compiler.
+
+  * the cost of the language implementation system. A language whose
+    implementation system is either expensive or runs only on expensive
+    hardware will have a much smaller chance of becoming widely used (e.g.,
+    mathematica).
+
+  * the cost of poor reliability.
+
+  * the cost of maintaining programs, which includes both corrections and
+    modifications to add new functionality. The cost maintenance depends on
+    readability. Because maintenance is often done by individuals other than
+    the original author of the software, poor readability can make the task
+    extremely challenging.
+
+- portability -- the ease with which programs can be moved from one
+  implementation to another. Portability is most strongly influenced by the
+  degree of standardization of the language.
+
+- generality. the applicability of language to a wide range of applications.
+
+- well-definedness. the completeness and precision of the language's official
+  document.
+
 Language evolutions
 ===================
 Fortran

@@ -2228,7 +2228,7 @@ disable auto escaping:
 - 在 block 级别上, 使用 ``autoescape`` tag 来开启或关闭 auto escaping.
   ``autoescape`` tag 的影响包含在 child template 中的同名 block.
 
-- 在代码中, 使用 ``make_safe()``
+- 在代码中, 使用 ``mark_safe()``
 
 安全性问题. 默认对模板变量的 auto-escaping 有助于避免 XSS attack. 若要
 disable auto-escaping, 需小心谨慎.
