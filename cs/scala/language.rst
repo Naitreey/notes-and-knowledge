@@ -8,141 +8,125 @@ overview
 - scala the name: scalable language -- signifying that it is designed to grow
   with the demands of its users.
 
+programming paradigms
+---------------------
 - support OOP and FP programming paradigms.
 
-  * its OOP support: every value is an object, traits, Classes are extended by
-    subclassing and a flexible mixin-based composition mechanism as a clean
-    replacement for multiple inheritance.
+- Scala's FP constructs make it easy to build interesting things quickly from
+  simple parts; its OOP constructs make it easy to structure larger systems
+  and adapt them to new demands.
 
-  * its FP is strongly influenced by Scheme, Standard ML, Haskell etc.,
-    including: every function is a value, no distinction between statements and
-    expressions, currying, higher-order functions, type inference,
-    immutability, lazy evaluation, case classes, pattern matching.
+OOP
+^^^
+- Scala is an OOP language in pure form -- every value is an object and every
+  operation is a method call (it doesn't have static fields/methods).
 
-- type system.
-  
-  * strong type checking, static typing system
+- OOP support: every value is an object, traits, Classes are extended by
+  subclassing and a flexible mixin-based composition mechanism as a clean
+  replacement for multiple inheritance.
 
-  * Advanced type system, supporting algebraic data types, covariance and
-    contravariance, higher-order types, annoymous types.
+FP
+^^
+- scala's FP is strongly influenced by Scheme, Standard ML, Haskell etc.,
+  including: every function is a value, no distinction between statements and
+  expressions, currying, higher-order functions, type inference, immutability,
+  lazy evaluation, case classes, pattern matching.
 
-  * support: inner classes and abstract type members as object members,
-    structural types, path-dependent types, compound types, explicitly typed
-    self references, generic classes, polymorphic methods, upper and lower type
-    bounds, variance, annotations, implicit parameters, conversions, views.
+type system
+-----------
+- strong type checking, static typing system
 
-type hierarchy
-==============
-Any
----
-- The supertype of all types -- the top type.
+- advanced type system, supporting: type inference, algebraic data types,
+  higher-order types, annoymous types, inner classes and abstract type members
+  as object members, structural types, path-dependent types, compound types,
+  explicitly typed self references, generic classes, polymorphic methods, upper
+  and lower type bounds, variance, annotations, implicit parameters,
+  conversions, views.
 
-- defines certain universal methods.
+- assess static typing system of scala.
 
-AnyVal
-------
-- subclass of Any.
+  * 静态类型系统的好处. 见 `cs/programming-language-concepts/notes.rst#data-types`_
 
-- AnyVal represents value types.
+  * static typing system 经常具有 verbose 和 inflexible 的问题. 然而, scala 通
+    过 type inference 避免了 verbosity 问题, 通过 pattern matching and several
+    new ways to write and compose types 来提供了 type flexibility.
 
-- 9 predefined value types and they are non-nullable:
-  Double, Float, Long, Int, Short, Byte, Char, Unit, Boolean.
+  * scala 具有静态类型系统的好处, 又解决了静态类型系统的一些常见问题, 这样在
+    整体上具有较好的使用效果.
 
-- Like in Java, AnyVal *subclasses* are stack allocated, wherever possible (例
-  如作为 local variable 等 automatic storage duration 的量就可以是
-  stack-allocated, 作为类成员、实例成员等 dynamic storage duration 的量就需要
-  dump-allocated).
+  * It’s not uncommon for user code to have no explicit types at all.
+    Therefore, Scala programs often look a bit like programs written in a
+    dynamically typed scripting language.
 
-- AnyVal 子类的实例 (注意不是 AnyVal 本身的实例) 当在栈上分配时, 不使用指针
-  引用的方式. 而是变量本身就是值.
+- Design choice for postfix type syntax. 这是因为 type inference, 要允许 omit
+  type annotation. ``var|val variable: Type`` 可以比较方便、无歧义地支持 omit
+  type annotation. C-style ``Type variable``, 就不太方便, 因为省去 ``Type``
+  的话, 需要其他 keyword 来与 variable assignment 等语法区别开来. 这样降低了
+  语言的统一感.
 
-AnyRef
-------
-- subclass of Any.
+scalability
+-----------
+- scalability of types
 
-- AnyRef represents reference types. In Java runtime, AnyRef corresponds to
-  java.lang.Object.
+- scalability of control structures
 
-- Every user-defined type in Scala is a subtype of AnyRef.
+- OOP provides better structure of programs, improves scalability.
 
-String
-^^^^^^
-instance methods
-""""""""""""""""
-- ``r``
+- Because of scalability (including scalability of types and control
+  constructs), Scala allows users to grow and adapt the language in the
+  directions they need by defining easy-to-use libraries that *feel* like
+  native language support.
 
-Unit
-----
-- Subclass of AnyVal.
+conciseness
+-----------
+compared to java: less typing -- on average about half number of the lines.
 
-- Unit type has exactly one singleton value ``()``.
+- Scala's syntax avoids boilerplate that burdens Java program.
 
-- usually used for method's return type, meaning nothing to return. (similar to
-  void in Java and C.)
+- Scala's type inference contributes to its conciseness
 
-- 由于每个 scala expression/statement 都必须有值, 没有合适的返回值时就使用
-  Unit.
+- powerful libraries that let you capture and factor out common behavior. For
+  instance, different aspects of library classes can be separated out into
+  traits, which can then be mixed together in ﬂexible ways.
 
-Tuple
------
-- A tuple is a value that contains a fixed number of elements, each with a
-  distinct type.
+Influences on scala's design
+----------------------------
+- only a few features of Scala are genuinely new; most have been already
+  applied in some form in other languages. Scala’s innovations come primarily
+  from how its constructs are put together.
 
-- Tuples are immutable.
+- Scala adopts a large part of the syntax of Java and C#. Expressions,
+  statements, blocks, syntax of classes, packages and imports are mostly as in
+  Java. Besides syntax, Scala adopts other elements of Java, such as its basic
+  types, its class libraries, and its execution model.
 
-- A tuple type is associated with its elements' types:
+- Scala's uniform object model -- Smalltalk and Ruby.
 
-  * ``TupleN[e1_type, e2_type, ...]``, N 从 1-22, inclusive.
+- universal nesting -- almost every construct in scala can be nested inside
+  any other construct -- ALGOL 60/68, Simula, Beta, gbeta.
 
-  * Shorthand form: ``(e1_type, e2_type, ...)``
+- uniform access principle for method invocation and ﬁeld selection -- Eiffel.
 
-- instantiation.
+- Functional programming approach -- ML family of languages, Standard ML,
+  OCaml, F#. Many higher-order functions in Scala’s standard library are also
+  present in ML or Haskell.
 
-  * N = 1 时, 必须使用 ``Tuple1(e)`` 形式
+- Scala’s main actor-based concurrency library, Akka -- Erlang.
 
-  * N >= 2 时, 可以使用 ``TupleN(e1, e2, ...)``, 或 ``(e1, e2, ...)``.
+- Extensible language -- Iswim.
 
-- Access elements. 每个元素是 tuple instance 上名为 ``_n`` 的属性值. 所以, 对于
-  获取第 n 个元素, 使用 ``tuple._<n>``.
+- The idea of treating an inﬁx operator as a function, permit a function
+  literal (or block) as a parameter -- Iswim and Smalltalk.
 
-pattern matching on tuples
-^^^^^^^^^^^^^^^^^^^^^^^^^^
-- scala 支持类似 python 中的 iterable unpacking assignment 语法. 在 scala 这
-  属于 pattern matching 的一种形式.
+- postfix type annoatation -- Pascal, Modula-2, Eiffel.
 
-  .. code:: scala
+- integrate OOP and FP -- Ruby, Smalltalk, Python, Pizza, NIce, Multi-Java,
+  OCaml, F#, PLT-Scheme.
 
-    val (a, b) = tuple
-
-Null
-----
-- Null is a special subtype of all reference types.
-
-- Null has a singleton value ``null``.
-
-- Null is provided mostly for interoperability with other JVM languages and
-  should almost never be used in Scala code.
-
-Nothing
--------
-- Nothing is a special subtype of all types -- bottom type.
-
-- There's no value that has type Nothing.
-
-- It is the type of an expression which does not evaluate to a value, or a
-  method that does not return normally. A common use is to signal
-  non-termination such as a thrown exception, program exit, or an infinite
-  loop.
-
-type casting
-------------
-- rules:
-
-  * Byte -> Short -> Int -> Long -> Float -> Double
-
-  * Char -> Int
-
-- Casting is unidirectional. 即不能向下做 type casting.
+- scala's original innovations -- its abstract types provide a more
+  object-oriented alternative to generic types, its traits allow for ﬂexible
+  component assembly, and its extractors provide a representation-independent
+  way to do pattern matching.
 
 type inference
 ==============
@@ -607,7 +591,8 @@ traits
     // definitions
   }
 
-- Traits are used to share interfaces and fields between classes.
+- Traits are used to share interfaces and fields between classes. They are like
+  interfaces in Java but have more features.
 
 - Traits are types containing certain fields and methods. Multiple traits can
   be combined.  Traits can also be defined as generic types.
@@ -616,8 +601,10 @@ traits
   abstract methods or override the default implementation with the ``override``
   keyword.
 
-- Class can be composed by traits as mixins, with ``with`` keyword.
-  
+- mixin composition. Class can be composed by traits as mixins, with ``with``
+  keyword. Traits and mixin composition avoids the diamond inheritance problems
+  of multiple inheritance.
+
 - Trait itself is abstract, therefore can not be instantiated.
 
 - Abstract methods of traits can have default implementations.
@@ -802,6 +789,9 @@ packages and imports
 ====================
 packages
 --------
+- Packages partition the global namespace and provide a mechanism for
+  information hiding.
+
 - Packages are created by declaring one or more package names at the top of a
   Scala file. Each Scala file in the package could have the same package
   declaration.
@@ -882,6 +872,13 @@ JVM runtime
 - interoperability with Java. libraries written in Java or Scala may be
   referenced in code of either language.
 
+- On JVM runtime, almost all scala code makes heavy use of java libraries.
+
+- On JVM runtime, Scala heavily re-uses Java types. All of Java's primitive
+  types have corresponding classes in the ``scala`` package. Scala arrays are
+  mapped to Java arrays. Scala also re-uses many of the standard Java library
+  types.
+
 JavaScript runtime
 ------------------
 - Scala.js -- A scala compiler that compiles scala source to js code, making
@@ -891,6 +888,18 @@ Native runtime
 --------------
 - Scala Native -- A scala compiler that targets the LLVM compiler
   infrastructure.
+
+design patterns
+===============
+static typing
+-------------
+- application code 与 library code 在 type annotation 应用方面的区别.
+
+  * application code 往往需要相对较少的类型注释, 因为它使用 library code, 后者
+    一般具有明确的类型. 所以 type inference 经常足够确定变量的类型.
+
+  * library code 的 API 部分, 应该提供明确的完整的类型注释. they constitute an
+    essential part of the contract between the component and its clients.
 
 tools
 =====
