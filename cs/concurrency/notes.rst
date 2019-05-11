@@ -33,3 +33,28 @@ synchronization
   
   - 当资源竞争的单位是可能涉及多个进程的一个流程时, 同步适合使用数据库字段或文件是否
     存在来加锁.
+
+actor model
+===========
+- Actor model is a mathematical model of concurrent computation that treats
+  "actors" as the universal primitives of concurrent computation.
+
+- In response to a message that it receives, an actor can: make local
+  decisions, create more actors, send more messages, and determine how to
+  respond to the next message received.
+
+- Actors may modify their own private state, but can only affect each other
+  through messages, avoiding the need for any locks.
+
+- Actor model has been used both as a framework for a theoretical understanding
+  of computation and as the theoretical basis for several practical
+  implementations of concurrent systems.
+
+- Decoupling the sender from communications sent was a fundamental advance of
+  the Actor model enabling asynchronous communication and control structures as
+  patterns of passing messages.
+
+- Recipients of messages are identified by address, sometimes called "mailing
+  address". Thus an actor can only communicate with actors whose addresses it
+  has. It can obtain those from a message it receives, or if the address is for
+  an actor it has itself created.
