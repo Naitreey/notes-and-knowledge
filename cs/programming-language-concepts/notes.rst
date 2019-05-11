@@ -278,25 +278,49 @@ paradigms
 - different paradigms of programming are essentially different design
   patterns, i.e. different ways to organize your code.
 
+imperative programming
+----------------------
+- A programming paradigm that uses statements that changes a program's
+  state.
+
+- procedural programming is a type of imperative programming.
+
+- 注意 OOP 不一定就是 imperative programming. 主流的 OOP 语言基本上都是
+  imperative 的, 但 OOP 概念本身并不意味着 imperative programming. 例如
+  scala 就可以是 OOP + FP.
+
 procedural programming
 ----------------------
 
-
-functional programming
-----------------------
-- Functional programming 似乎可以很好地使用 tail recursion, 让递归代码十分高效.
-  所以 FP 从来不怕递归.
-
-- the essence of functional programming: function as first-class entity --
-  functions can be passed as arguments, can be returned from functions.
-
-- higher-order functions: Functions which take other functions as arguments,
-  and/or which return other functions as their results
 
 object-oriented programming
 ---------------------------
 - Class is an optional design pattern in software design. You can use it or
   not.
+
+- In principle, the motivation for object-oriented programming is very simple:
+  all but the most trivial programs need some sort of structure. The most
+  straightforward way to do this is to put data and operations into some form
+  of containers. The great idea of object-oriented programming is to make these
+  containers fully general, so that they can contain operations as well as
+  data, and that they are themselves values that can be stored in other
+  containers, or passed as parameters to operations. In this way the simplest
+  object has the same construction principle as a full computer: it combines
+  data with operations under a formalized interface.
+
+- The concept of OOP is very natural. It simulates the structure of the real
+  world and the interactions of real world objects.
+
+- 一门语言支持 OOP, 有助于提高它的可扩展性 (scalability). 因为实行 OOP 的相关设
+  计概念有助于提高程序的结构性, 让它更清晰, 更易读, 更易写, 更易维护.
+
+- deviations from OOP.
+
+  * primitive values that are not objects.
+
+  * static fields and methods that are not members of any object.
+
+  These deviations have an tendency to complicate things and limit scalability.
 
 concepts
 ^^^^^^^^
@@ -337,6 +361,50 @@ other concepts
   runtime for its class hierarchy and other static information.
 
 - duck typing. Duck typing 是 interface/protocol 的一般化, 是一种更广泛的多态性.
+
+functional programming
+----------------------
+- The foundation of FP: Alonzo Church's lambda calculus (1930s).
+
+- Lisp is the first FP language.
+
+- Popular FP languages: Lisp, Scheme, Standard ML, Erlang, Haskell, OCaml, F#.
+
+- Functional programming 似乎可以很好地使用 tail recursion, 让递归代码十分高效.
+  所以 FP 从来不怕递归.
+
+- Two main ideas of FP: 
+  
+  * function as first-class entity, meaning that:
+   
+    - functions can be passed as arguments, like other values.
+     
+    - functions can be returned from functions, like other values.
+
+    - functions can be stored in variables, like other values.
+
+    - functions can be defined inside another function, like other value
+      definitions.
+
+    - functions can be used without a name -- function literals, like other
+      value literals.
+
+    This property provides great expressiveness to a language, which often
+    leads to very concise and legible programs.
+
+  * functions shouldn't have side effects. They should only map input values
+    to output values, rather than change data in place.
+
+    This property 意味着 immutable data structures.
+
+- higher-order functions: Functions which take other functions as arguments,
+  and/or which return other functions as their results
+
+- referential transparency. A function call without any side effect could be
+  replaced by its result without affecting the program's semantics.
+
+- Functional languages encourage immutable data structures and referentially
+  transparent functions.
 
 scope
 =====
@@ -383,9 +451,35 @@ lazy evaluation
 - In order to evaluate an expression in the language, you only evaluate as much
   of the expression as is needed to get the final result.
 
-typing
-======
+data types
+==========
+type checking
+-------------
+- the benefits of static type checking system.
 
-- static typing and dynamic typing
+  * verifiable properties. Static type systems can prove the absence of certain
+    run-time errors. E.g., 一个运算符的两个算子类型是否相符; 函数调用与它的定义
+    signature 是否相符等问题.
 
-- strong typing and weak typing
+    可以看到, 静态类型检查能做的只是一些相对简单的检查. 那么静态类型检查又有
+    什么用呢? 这些检查完全可以由单元测试覆盖到 (还能覆盖更多问题). 答案是:
+
+    - static type checking 可以减少单元测试的数量, 一些性质由静态类型检查来
+      保证即可.
+
+    - 单元测试不能取代静态类型检查带来的保证. 因为测试永远不能证明没有 bug, 而
+      静态类型检查虽然能提供的保证很有限, 却是在数学上可证明的正确性保证. (the
+      guarantees that static typing gives may be simple, but they are real
+      guarantees of a form no amount of testing can deliver.)
+
+  * Safe refactorings. A static type system provides a safety net that lets you
+    make changes to a codebase with a high degree of conﬁdence. 对于很多简单重
+    构, 所做的修改会让类型检查失败, 对所有 type checking violation 的地方进行
+    更正, 即是对所有需要修改的地方做了相应的修改.
+
+  * Documentation. Static types are program documentation that is checked by
+    the compiler for correctness.
+
+Language constructs
+===================
+Programs of different sizes tend to require different programming constructs.
