@@ -1,8 +1,5 @@
-types
-=====
-- All of Java's primitive types (int, float, boolean, etc.) have corresponding
-  classes in the ``scala`` package.
-
+standard types
+==============
 Any
 ---
 - The supertype of all types -- the top type.
@@ -47,11 +44,16 @@ Unit
 
 - Unit type has exactly one singleton value ``()``.
 
-- usually used for method's return type, meaning nothing to return. (similar to
-  void in Java and C.)
+- Unit is usually used for method's result type, meaning nothing to return.
+  (similar to void in Java and C.)
 
 - 由于每个 scala expression/statement 都必须有值, 没有合适的返回值时就使用
   Unit.
+
+- Every void-returning method in Java is mapped to a Unit-resulting method in
+  Scala.
+
+- A Unit-resulting function/method is only executed for its side effect.
 
 Tuple
 -----
@@ -114,3 +116,27 @@ type casting
 
 - Casting is unidirectional. 即不能向下做 type casting.
 
+
+container types
+===============
+Array
+-----
+- Array 实现了 ``apply`` method, 输入 index, 输出相应的数组元素.
+
+value members
+-------------
+iteration
+^^^^^^^^^
+- ``foreach(f: (A) => Unit): Unit``. apply f to each element of the array.
+
+utilities
+=========
+object Console
+--------------
+console output
+^^^^^^^^^^^^^^
+- ``print(obj: Any): Unit``. Print obj to ``out``, using its toString method.
+
+- ``println(obj: Any): Unit``. like ``print``, with a newline.
+  
+- ``println(): Unit``. ditto, only newline is printed.

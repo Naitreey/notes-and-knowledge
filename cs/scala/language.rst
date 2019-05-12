@@ -128,6 +128,13 @@ Influences on scala's design
   component assembly, and its extractors provide a representation-independent
   way to do pattern matching.
 
+lexical analysis
+================
+- A logical line is optionally terminated by a semicolon.
+
+- If semicolon is omitted, a logical line can be extended into multiple
+  physical lines automatically by heuristics.
+
 type inference
 ==============
 - Type inference means the scala compiler can often infer the type of an
@@ -137,7 +144,7 @@ type inference
 
   * variable declaration missing type (val, var, etc.)
 
-  * method definition missing return type.
+  * method definition missing result type.
 
   * polymorphic method call without passing type parameters. compiler will
     infer such missing type parameters from the context and from the types of
@@ -154,9 +161,45 @@ type inference
 
   * method parameter types are not inferred.
 
-expression
-==========
+  * When a function/method is recursive, its result type must be specified
+    explicitly. 这是因为, 函数表达式本身使用了函数的结果值, 而函数的结果值
+    类型是未知的, 从而表达式整体的类型是未知的.
+
+design patterns
+---------------
+- 关于 type annotation 信息的提供和省略.
+
+  * 对于变量定义, 若表达式有清晰的合适的类型, 则变量本身的类型注释可省略.
+
+  * 若表达式的类型与变量所需类型不完全相同, 则需要类型注释去指定.
+
+  * 若变量类型需要用于作为清晰的 documentation 目的, 则可以明确注释类型.
+
+  * 对于函数的 result type annotation, 即使能推断出类型也最好明确注释, 否则读者
+    必须通过理解函数体表达式来推断结果类型, 这样降低了可读性.
+
+- Application code 与 library code 在 type annotation 应用方面的区别.
+
+  * application code 往往需要相对较少的类型注释, 因为它使用 library code, 后者
+    一般具有明确的类型. 所以 type inference 经常足够确定变量的类型.
+
+  * library code 的 API 部分, 应该提供明确的完整的类型注释. they constitute an
+    essential part of the contract between the component and its clients.
+
+expressions
+===========
 - expressions are computable statements.
+
+variables
+---------
+::
+
+  var x[: <type>] = <expression>
+
+- 在 scala REPL 中, 为了方便使用, 可以用 var 重新定义新的 variable. 即::
+
+    var x = 1
+    var x = 2
 
 named values
 ------------
@@ -168,6 +211,20 @@ named values
   一个 ``val`` 量不能被重新赋值.
 
 - type can be ignored if it can be correctly inferred from the computation.
+
+- 在 scala REPL 中, 为了方便使用, 可以用 val 重新定义新的 named value. 即::
+
+    val x = 1
+    val x = 2
+
+if expression
+-------------
+::
+
+  if (<boolean-expr>)
+    <then-expr>
+  [else
+    <else-expr>]
 
 match expression
 ----------------
@@ -206,14 +263,18 @@ for comprehensions
 ------------------
 ::
 
-  for (enumerators) [yield e]
+  for (enumerators) <expression>
 
 - enumerators refers to a semicolon-separated list of enumerators. An
-  enumerator is either a generator which introduces new variables, or it is a
-  filter.::
+  enumerator is either a generator which introduces new named values, or it is
+  a filter.::
 
     enumerators := enumerator[; enumerator]...
-    enumerator := <var> <- <expr> [if <boolean-expr>]
+    enumerator := <val> <- <expr> [if <boolean-expr>]
+
+- ``<val>`` used in for comprehension is locally defined in expression's scope.
+  注意在 enumerator 中, 定义的量实为 named value ``val``. 在每次循环中定义一个
+  新的 ``<val>`` 量, 赋予新的值. 在 ``expression`` 中, 不能修改 ``<val>`` 的值.
 
 - For comprehension generates a List.
 
@@ -227,10 +288,18 @@ for comprehensions
         ...
 
 - ``yield`` expression can be omitted in a for comprehension. In that case,
-  comprehension will return Unit.
+  comprehension will result in Unit.
 
-- ``<var>`` used in for comprehension is locally defined in expression's scope.
+- ``(arg <- args)`` 形式, 可以读为 "for arg in args".
 
+while expression
+----------------
+::
+
+  while (<boolean-expr>)
+    <expr>
+
+- work like a normal while statement in imperative languages.
 
 blocks
 ======
@@ -238,17 +307,26 @@ blocks
 
   { ... }
 
-- A block is a multi-line expression.
+- A block is a multi-line expression, including one or more expressions and
+  declarations. Another definition: A block is an encapsulation construct
+  for which you can only see side effects and a result value.
 
 - The result of the last expression in the block is the result of the overall
   block.
+
+- blocks are commonly used as the expression of function/method body, for
+  expressions, while expressions, etc.
+
+- Note that the curly braces surrounding a class or object definition do not
+  form a block, but a template (for class instances), because fields and
+  methods may be visible from the outside.
 
 functions
 =========
 - Functions are expressions that take parameters.
 
-anonymous function -- lambda expression
----------------------------------------
+function literal -- anonymous function -- lambda expression
+------------------------------------------------------------
 ::
 
   (<param>, ...) => <expression>
@@ -258,6 +336,9 @@ anonymous function -- lambda expression
 
 - lambda expression 的定义可以通过 ``_`` placeholder 来简化. 此时只需在
   expression 中需要参数化的位置用 ``_`` 来代替即可.
+
+- Because in scala function is a first-class entity, they have literals just
+  like does any other standard data types. This is function literals.
 
 partial application -- currying
 -------------------------------
@@ -269,7 +350,6 @@ partial application -- currying
 
 methods
 =======
-
 method definition
 -----------------
 ::
@@ -277,9 +357,20 @@ method definition
   def <name>[([implicit] <param>, ...)[([implicit] <param>, ...)]...][: <type>] = <expression>
 
 - Methods are defined with the ``def`` keyword. ``def`` is followed by a name,
-  parameter lists, a return type, and a body.
+  parameter lists, a result type, and a body.
 
 - A method can take 0 to many parameter lists.
+
+- 对于每个 parameter, 必须有 type annotation. scala 不会 infer 函数和方法参数的
+  类型.
+
+- 从 FP 角度看, 函数、方法映射输入值至输出值, 输出的类型称为 result type, 应避
+  免使用 stateful statement 性质的 return type 这种术语. (函数生成一个值, 即称
+  为 a function results in a value.)
+
+- 注意到, 在语法上, method body 相当于是通过 ``=`` 赋值给 method name. 从 FP 角
+  度来看, a function/method defines an expression that results in a value. 这
+  类似于数学上 ``f(x) = expr`` 的定义形式.
 
 - Scala allows nested method definition.
 
@@ -434,6 +525,9 @@ normal class
   * Primary constructor parameters without ``val`` or ``var`` are private;
     whereas with ``val`` or ``var`` are public by default.
 
+- The part between curly braces is the template for class intances, it's not
+  a block expression.
+
 - inheritance.
 
   * A class can inherit only one base class with ``extends`` keyword.
@@ -458,7 +552,7 @@ normal class
 - getter/setter syntax.
 
   * getter: a parameterless method whose name is property name to get and whose
-    body returns a value.::
+    body results in a value.::
 
       def property = <expression>
 
@@ -562,20 +656,21 @@ extractor objects
   method.
 
 - ``unapply()`` takes an object and tries to give back the arguments.
-  The return value of ``unapply()`` method:
+  The result value of ``unapply()`` method:
 
-  * If it is just a test, return a ``Boolean``. E.g., ``case even()``.
+  * If it is just a test, result in a ``Boolean``. E.g., ``case even()``.
 
-  * If it returns a single sub-value of type ``T``, return an ``Option[T]``.
+  * If it generates a single sub-value of type ``T``, result in an
+    ``Option[T]``.
 
-  * If you want to return several sub-values ``T1,...,Tn``, group them in an
+  * If you want to generate several sub-values ``T1,...,Tn``, group them in an
     optional tuple ``Option[(T1,...,Tn)]``.
 
 - ``unapplySeq()`` takes an object and tries to give back the arguments, useful
-  when the number of values to extract isn’t fixed and we would like to return
-  an arbitrary number of arguments.
+  when the number of values to extract isn’t fixed and we would like to
+  generate an arbitrary number of arguments.
 
-  * Returns an ``Option[Seq[T]]``. e.g., ``case List(x, y, z)``.
+  * Result in an ``Option[Seq[T]]``. e.g., ``case List(x, y, z)``.
 
 - Usage:
 
@@ -601,11 +696,16 @@ traits
   abstract methods or override the default implementation with the ``override``
   keyword.
 
-- mixin composition. Class can be composed by traits as mixins, with ``with``
-  keyword. Traits and mixin composition avoids the diamond inheritance problems
-  of multiple inheritance.
+- mixin composition. Class/trait can be composed by traits as mixins, with
+  ``with`` keyword. Traits and mixin composition avoids the diamond inheritance
+  problems of multiple inheritance. When a trait is being mixed into a class or
+  trait, it's called a mixin.
 
-- Trait itself is abstract, therefore can not be instantiated.
+- A trait is abstract, it can not take any value parameters, i.e., can not be
+  instantiated.
+
+- A trait may take type parameters, in that case, ``trait[type]`` is a type,
+  and ``trait`` is the trait of ``trait[type]`` type.
 
 - Abstract methods of traits can have default implementations.
 
@@ -769,6 +869,11 @@ self-types
 
 - Cake pattern. dependency injection.
 
+special methods
+---------------
+- ``apply()``. 对任意实例的 call ``()`` syntax 会转换成对实例的 ``apply()``
+  方法的调用.
+
 annotations
 ===========
 - Annotations associate meta-information with definitions.
@@ -787,6 +892,12 @@ builtin annotations
 
 packages and imports
 ====================
+terms
+-----
+- simple name. A class's simple name is its defining name -- its identifier.
+
+- full name. A class's full name is its package path plus its simple name.
+
 packages
 --------
 - Packages partition the global namespace and provide a mechanism for
@@ -860,46 +971,11 @@ package object
 - Each package is allowed to have one package object. Any definitions placed in
   a package object are considered members of the package itself.
 
-runtime systems
-===============
-JVM runtime
------------
-- compiles to Java bytecode. executable code runs on JVM. In fact, Scala code
-  can be decompiled to readable Java code, with the exception of certain
-  constructor operations. To the Java virtual machine (JVM), Scala code and
-  Java code are indistinguishable.
+comments
+========
+- line comment: ``//``
 
-- interoperability with Java. libraries written in Java or Scala may be
-  referenced in code of either language.
-
-- On JVM runtime, almost all scala code makes heavy use of java libraries.
-
-- On JVM runtime, Scala heavily re-uses Java types. All of Java's primitive
-  types have corresponding classes in the ``scala`` package. Scala arrays are
-  mapped to Java arrays. Scala also re-uses many of the standard Java library
-  types.
-
-JavaScript runtime
-------------------
-- Scala.js -- A scala compiler that compiles scala source to js code, making
-  it possible to run on browser.
-
-Native runtime
---------------
-- Scala Native -- A scala compiler that targets the LLVM compiler
-  infrastructure.
-
-design patterns
-===============
-static typing
--------------
-- application code 与 library code 在 type annotation 应用方面的区别.
-
-  * application code 往往需要相对较少的类型注释, 因为它使用 library code, 后者
-    一般具有明确的类型. 所以 type inference 经常足够确定变量的类型.
-
-  * library code 的 API 部分, 应该提供明确的完整的类型注释. they constitute an
-    essential part of the contract between the component and its clients.
+- block comment: ``/* ... */``
 
 tools
 =====

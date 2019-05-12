@@ -1,3 +1,7 @@
+indentation
+===========
+- prefered: 2 space indentation.
+
 type
 ====
 - It is generally considered more readable to declare the type of members

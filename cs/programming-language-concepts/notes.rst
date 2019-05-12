@@ -273,6 +273,11 @@ entity
 
 .. [SOFST] `About first-,second- and third-class value Ask Question <https://stackoverflow.com/questions/2578872/about-first-second-and-third-class-value/2582804#2582804>`_
 
+subprogram
+==========
+- recursion. A function is recursive if it calls itself. If the only place the
+  function calls itself is the last expression of the function, then the
+  function is tail-recursive.
 paradigms
 =========
 - different paradigms of programming are essentially different design
@@ -281,7 +286,8 @@ paradigms
 imperative programming
 ----------------------
 - A programming paradigm that uses statements that changes a program's
-  state.
+  state. In imperative languages, programmer gives imperative commands
+  to computer, to mutate program's state.
 
 - procedural programming is a type of imperative programming.
 
@@ -400,8 +406,10 @@ functional programming
 - higher-order functions: Functions which take other functions as arguments,
   and/or which return other functions as their results
 
-- referential transparency. A function call without any side effect could be
-  replaced by its result without affecting the program's semantics.
+- referential transparency. A property of functions that are independent of
+  temporal context and have no side effects. An invocation of a referentially
+  transparent function could be replaced by its result without affecting the
+  program's semantics.
 
 - Functional languages encourage immutable data structures and referentially
   transparent functions.
