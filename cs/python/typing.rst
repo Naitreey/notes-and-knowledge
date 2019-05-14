@@ -305,7 +305,11 @@ pre-defined generic classes
 
   * ``MutableSet[T]``
 
-  * ``Mapping[KT, VT_co]``, note only covariant in value.
+  * ``Mapping[KT, VT_co]``, note only covariant in value. KT 是 invariant, 这是
+    因为 key 会在 ``.get(k)``, ``__getitem__(k)`` 等方法中使用. 对于
+    ``Mapping[double, VT_co]`` 和 ``Mapping[int, VT_co]``, 后者的 ``.get()``
+    等方法只支持传入 int, 不支持其他 double 类型输入, 因此后者不是前者的子类.
+    因此, Mapping is invariant on KT.
 
   * ``MutableMapping[KT, VT]``
 
