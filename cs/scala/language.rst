@@ -165,27 +165,6 @@ type inference
     explicitly. 这是因为, 函数表达式本身使用了函数的结果值, 而函数的结果值
     类型是未知的, 从而表达式整体的类型是未知的.
 
-design patterns
----------------
-- 关于 type annotation 信息的提供和省略.
-
-  * 对于变量定义, 若表达式有清晰的合适的类型, 则变量本身的类型注释可省略.
-
-  * 若表达式的类型与变量所需类型不完全相同, 则需要类型注释去指定.
-
-  * 若变量类型需要用于作为清晰的 documentation 目的, 则可以明确注释类型.
-
-  * 对于函数的 result type annotation, 即使能推断出类型也最好明确注释, 否则读者
-    必须通过理解函数体表达式来推断结果类型, 这样降低了可读性.
-
-- Application code 与 library code 在 type annotation 应用方面的区别.
-
-  * application code 往往需要相对较少的类型注释, 因为它使用 library code, 后者
-    一般具有明确的类型. 所以 type inference 经常足够确定变量的类型.
-
-  * library code 的 API 部分, 应该提供明确的完整的类型注释. they constitute an
-    essential part of the contract between the component and its clients.
-
 expressions
 ===========
 - expressions are computable statements.
@@ -418,8 +397,14 @@ parameter definition syntax
 
 method call
 -----------
-- When a method takes 0 parameters, the parameter list can be omitted during
-  method call.
+- When calling a method, it can be parameterized with types and values. To
+  parameterize the instance with types: specify types in square brackets; To
+  parameterize the instance with values: specify values in parentheses. Type
+  parameterization comes before value parameterization.
+
+- When a method takes 0 value parameters, the parameter list can be omitted
+  during method call. 这是因为, scala 的设计思路认为, ``(value, ...)`` 表示对
+  method call 进行参数化, 若无需参数化, 则无需 ``(value, ...)`` 参数化部分.
 
 - parameter binding syntax. Scala supports two parameter binding methods --
   positional arguments and keyword arguments. And they can be mixed in a single
@@ -472,9 +457,16 @@ main method
 - JVM requires a main method to be named ``main`` and take one argument, an
   array of strings.
 
-operators
----------
+operators and methods
+---------------------
+- Scala doesn't technically have operators in the traditional sense. Operators
+  are just normal method calls as infix form. Therefore, There's technically
+  no operator overloading.
+
 - Any method with a single parameter can be used as an infix operator.
+  When used in operator notation, the method is normally invoked on the left
+  operand; Unless if the method ends with a ``:``, it's invoked on the right
+  operand.
 
 - Arithmetic/logical/etc. operators are just infix form of these overriden
   methods defined on operand's class.
@@ -544,7 +536,10 @@ normal class
   
   * instantiate a class with ``new``.
 
-  * constructor call syntax is the same as normal method calls.
+  * When instantiating an instance, it can be parameterized with types and
+    values. To parameterize the instance with types: specify types in square
+    brackets; To parameterize the instance with values: specify values in
+    parentheses. Type parameterization comes before value parameterization.
 
 - To override a parent class's method, use prefix ``override`` keyword to
   method definition.
@@ -874,6 +869,9 @@ special methods
 - ``apply()``. 对任意实例的 call ``()`` syntax 会转换成对实例的 ``apply()``
   方法的调用.
 
+- ``update()``. 对任意实例的 call ``()`` syntax 赋值的操作会转换成对实例的
+  ``update()`` 方法的调用.
+
 annotations
 ===========
 - Annotations associate meta-information with definitions.
@@ -922,6 +920,8 @@ packages
 imports
 -------
 - import can be used anywhere, both globally and locally.
+
+- 一个 class/trait 的 companion object 与 class/trait 本身一同 import.
 
 syntax
 ^^^^^^
