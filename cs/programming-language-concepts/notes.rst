@@ -1,5 +1,7 @@
+overview
+========
 Why study concepts of programming languages
-===========================================
+-------------------------------------------
 - 懂得越完善, 能使用/能表达的就越完善. 在编程时, 程序员的思路, 他所实现的算法形
   式, 他能使用的数据结构、控制结构等, 都受到他所使用的编程语言的限制. Awareness
   of a wider variety of programming language features can reduce such
@@ -49,7 +51,7 @@ Why study concepts of programming languages
 - 学习编程语言概念, 有助于从宏观上了解计算机科学过去的发展历程和未来的方向.
 
 Programming domains
-===================
+-------------------
 - scientific applications.
 
   * 科学计算是计算机编程的最早应用 (1940s - 1950s).
@@ -99,6 +101,210 @@ Programming domains
 
   * 涉及众多的语言, 包括多种标记语言 (html, xml, etc.), 数据格式 (json, xml,
     yaml, etc.), 通用编程语言 (java, php, javascript, python, etc.).
+
+Influences on language design
+-----------------------------
+编程语言的设计受以下因素影响:
+
+- 受计算机的架构的影响. 由于当今计算机基本都是基于冯诺伊曼架构设计和实现的, 很
+  多语言都是以此架构为基础进行设计的. 这就是以指令和状态操纵为特征的 imperative
+  languages.
+  
+  在冯诺伊曼架构上, 函数式语言天然不具有执行效率上的优势.
+
+- 受 programming design methodologies 影响. 例如, 编程设计是基于哪种思想 --
+  procedure-oriented 或 data-oriented, 或更进一步 object-oriented.
+
+- 对可读性、可写性的考虑. 这包括 overall simplicity, orthogonality, adequate
+  data types, syntax design, expressivity.
+
+- 对可靠性的考虑. 这包括 type checking 设计, exception handling, aliasing 设计.
+
+Language categories/paradigms
+=============================
+- different categories/paradigms of programming are essentially different
+  design patterns, i.e. different ways to organize your code.
+
+imperative programming
+----------------------
+- A programming paradigm that uses statements that changes a program's
+  state. In imperative languages, programmer gives imperative commands
+  to computer, to mutate program's state.
+
+- 指令式编程是基于冯诺伊曼架构来设计的. 与冯诺伊曼架构相对应, 指令式编程中, 最
+  核心的特征是:
+  
+  * 变量, 即状态, 它是对 memory cell 的抽象.
+
+  * 赋值语句, 基于 piping operation.
+
+  * the iterative form of repetition (循环遍历), which is the most efficient
+    way to implement repetition on this architecture. (在冯诺伊曼架构中, 循环比
+    递归更高效, 是因为 less overhead. A loop is basically a test followed by a
+    conditional jump, while a recursion must also include the test and
+    conditional jump, but additionally has the overhead of creating a
+    subroutine call and return.)
+
+- procedural programming is a type of imperative programming.
+
+- 注意 OOP 不一定就是 imperative programming. 主流的 OOP 语言基本上都是
+  imperative 的, 但 OOP 概念本身并不意味着 imperative programming. 例如
+  scala 就可以是 OOP + FP.
+
+object-oriented programming
+---------------------------
+- Class is an optional design pattern in software design. You can use it or
+  not. But data abstraction is (almost) always good.
+
+- In principle, the motivation for object-oriented programming is very simple:
+  all but the most trivial programs need some sort of structure. The most
+  straightforward way to do this is to put data and operations into some form
+  of containers. The great idea of object-oriented programming is to make these
+  containers fully general, so that they can contain operations as well as
+  data, and that they are themselves values that can be stored in other
+  containers, or passed as parameters to operations. In this way the simplest
+  object has the same construction principle as a full computer: it combines
+  data with operations under a formalized interface.
+
+- The concept of OOP is very natural. It simulates the structure of the real
+  world and the interactions of real world objects.
+
+- 一门语言支持 OOP, 有助于提高它的可扩展性 (scalability). 因为实行 OOP 的相关设
+  计概念有助于提高程序的结构性, 让它更清晰, 更易读, 更易写, 更易维护.
+
+- deviations from OOP.
+
+  * primitive values that are not objects.
+
+  * static fields and methods that are not members of any object.
+
+  These deviations have an tendency to complicate things and limit scalability.
+
+- OOP 不是一个单独的语言类别, 而是一个编程范式. 指令式语言和函数式语言都可以
+  扩展为支持 OOP 范式的语言.
+
+concepts
+^^^^^^^^
+class
+""""""
+- class (or data structure), as the unit of encapsulation, which contains
+  data and its associated operations (例如你能对这个类 (或者它的实例) 做什么,
+  或者这个类 (或者它的实例) 能为你做什么 -- 根据它所包含的数据、状态).
+
+- class instance. 一般来讲 class 是对象的模板. 而对象, 即实例才是真正能为你办事
+  的小黄人. (当然, class 作为另一种更抽象的对象, 本身也可包含 class-level 的数据
+  和操作, 即 class-level attributes 和 methods.)
+
+three properties of OOP
+""""""""""""""""""""""""
+
+- encapsulation. 封装是 class 的天然属性. 很显然, 将一组数据和一组相应操作整理在了
+  一个类这个创建的概念下. 封装也是一种模块化思想.
+
+- inheritance. 继承是子类和父类之间的共性. 它们可以有共同的数据, 共同的方法 (即操作).
+
+- polymorphism. 多态是子类相比父类的特性. 同一个操作, 子类可以与父类相比略有调整
+  或完全不相同, 却保持相同的 API. 多态可以看作是 duck typing 的弱化形式.
+
+  个人认为, 多态还可以指子类相比父类原创的部分, 即增加的、在父类中完全不存在的
+  数据和功能. 这也是一种分化, 一种演化, 也即多态.
+
+
+一个好的类体系的设计, 是一种艺术. 在一个系统中, 如何将多个相互关联的概念整理
+成一个个相互作用的实体 (即 class), 如何设计实体之间的相互作用, 如何设计一系列
+同类实体之间的共性和特性 (即设计抽象类与具体类的继承和多态). 这些学问, 都是
+需要不断思考、不断体会的.
+
+other concepts
+""""""""""""""
+- introspection. Introspection is an operation that inspects an instance at
+  runtime for its class hierarchy and other static information.
+
+- duck typing. Duck typing 是 interface/protocol 的一般化, 是一种更广泛的多态性.
+
+functional programming
+----------------------
+- The foundation of FP: Alonzo Church's lambda calculus (1930s).
+
+- Lisp is the first FP language.
+
+- Popular FP languages: Lisp, Scheme, Standard ML, Erlang, Haskell, OCaml, F#.
+
+- Functional programming 似乎可以很好地使用 tail recursion, 让递归代码十分高效.
+  所以 FP 从来不怕递归.
+
+- Two main ideas of FP: 
+  
+  * function as first-class entity, meaning that:
+   
+    - functions can be passed as arguments, like other values.
+     
+    - functions can be returned from functions, like other values.
+
+    - functions can be stored in variables, like other values.
+
+    - functions can be defined inside another function, like other value
+      definitions.
+
+    - functions can be used without a name -- function literals, like other
+      value literals.
+
+    This property provides great expressiveness to a language, which often
+    leads to very concise and legible programs.
+
+  * functions shouldn't have side effects. They should only map input values
+    to output values, rather than change data in place.
+
+    This property 意味着 immutable data structures. 若与 OOP 结合, 则意味着
+    immutable objects.
+
+    函数没有 side effects 的价值:
+
+    - 每个函数的作用是清晰的, 独立的, 与环境无关的. 函数之间不存在依赖性. 这样
+      提高了函数的可重用性和可靠性.
+
+    - 在静态类型检查的语言中, 函数与外界唯一的交互 (即输入和输出) 经过 type
+      checker 的类型检查, so logic errors are more likely to manifest
+      themsevles as type errors.
+
+    - 函数更易于测试.
+
+- higher-order functions: Functions which take other functions as arguments,
+  and/or which return other functions as their results
+
+- referential transparency. A property of functions that are independent of
+  temporal context and have no side effects. An invocation of a referentially
+  transparent function could be replaced by its result without affecting the
+  program's semantics.
+
+- Functional languages encourage immutable data structures and referentially
+  transparent functions.
+
+- FP paradigm 的价值:
+
+  * 使用 FP paradigm 容易写出更简洁、更易于理解的代码
+
+  * 由于代码更简洁, 所以更不容易出错.
+
+logic programming
+-----------------
+- Logic programming languages are rule-based languages. In a rule-based
+  language, however, rules are specified in no particular order, and the
+  language implementation system must choose an order in which the rules are
+  used to produce the desired result.
+
+miscs
+-----
+markup languages
+^^^^^^^^^^^^^^^^
+- Markup languages are not programming languages.
+
+- Some programming capability has crept into some extensions to HTML and XML.
+
+scripting languages
+^^^^^^^^^^^^^^^^^^^
+- 这是通过语言的实现方式来分类的, 而不是通过语言的设计. 所以并不是这里要考虑的
+  分类.
 
 Language evaluation criteria
 ============================
@@ -278,142 +484,6 @@ subprogram
 - recursion. A function is recursive if it calls itself. If the only place the
   function calls itself is the last expression of the function, then the
   function is tail-recursive.
-paradigms
-=========
-- different paradigms of programming are essentially different design
-  patterns, i.e. different ways to organize your code.
-
-imperative programming
-----------------------
-- A programming paradigm that uses statements that changes a program's
-  state. In imperative languages, programmer gives imperative commands
-  to computer, to mutate program's state.
-
-- procedural programming is a type of imperative programming.
-
-- 注意 OOP 不一定就是 imperative programming. 主流的 OOP 语言基本上都是
-  imperative 的, 但 OOP 概念本身并不意味着 imperative programming. 例如
-  scala 就可以是 OOP + FP.
-
-procedural programming
-----------------------
-
-
-object-oriented programming
----------------------------
-- Class is an optional design pattern in software design. You can use it or
-  not.
-
-- In principle, the motivation for object-oriented programming is very simple:
-  all but the most trivial programs need some sort of structure. The most
-  straightforward way to do this is to put data and operations into some form
-  of containers. The great idea of object-oriented programming is to make these
-  containers fully general, so that they can contain operations as well as
-  data, and that they are themselves values that can be stored in other
-  containers, or passed as parameters to operations. In this way the simplest
-  object has the same construction principle as a full computer: it combines
-  data with operations under a formalized interface.
-
-- The concept of OOP is very natural. It simulates the structure of the real
-  world and the interactions of real world objects.
-
-- 一门语言支持 OOP, 有助于提高它的可扩展性 (scalability). 因为实行 OOP 的相关设
-  计概念有助于提高程序的结构性, 让它更清晰, 更易读, 更易写, 更易维护.
-
-- deviations from OOP.
-
-  * primitive values that are not objects.
-
-  * static fields and methods that are not members of any object.
-
-  These deviations have an tendency to complicate things and limit scalability.
-
-concepts
-^^^^^^^^
-
-class
-""""""
-- class (or data structure), as the unit of encapsulation, which contains
-  data and its associated operations (例如你能对这个类 (或者它的实例) 做什么,
-  或者这个类 (或者它的实例) 能为你做什么 -- 根据它所包含的数据、状态).
-
-- class instance. 一般来讲 class 是对象的模板. 而对象, 即实例才是真正能为你办事
-  的小黄人. (当然, class 作为另一种更抽象的对象, 本身也可包含 class-level 的数据
-  和操作, 即 class-level attributes 和 methods.)
-
-three properties of OOP
-""""""""""""""""""""""""
-
-- encapsulation. 封装是 class 的天然属性. 很显然, 将一组数据和一组相应操作整理在了
-  一个类这个创建的概念下. 封装也是一种模块化思想.
-
-- inheritance. 继承是子类和父类之间的共性. 它们可以有共同的数据, 共同的方法 (即操作).
-
-- polymorphism. 多态是子类相比父类的特性. 同一个操作, 子类可以与父类相比略有调整
-  或完全不相同, 却保持相同的 API. 多态可以看作是 duck typing 的弱化形式.
-
-  个人认为, 多态还可以指子类相比父类原创的部分, 即增加的、在父类中完全不存在的
-  数据和功能. 这也是一种分化, 一种演化, 也即多态.
-
-
-一个好的类体系的设计, 是一种艺术. 在一个系统中, 如何将多个相互关联的概念整理
-成一个个相互作用的实体 (即 class), 如何设计实体之间的相互作用, 如何设计一系列
-同类实体之间的共性和特性 (即设计抽象类与具体类的继承和多态). 这些学问, 都是
-需要不断思考、不断体会的.
-
-other concepts
-""""""""""""""
-- introspection. Introspection is an operation that inspects an instance at
-  runtime for its class hierarchy and other static information.
-
-- duck typing. Duck typing 是 interface/protocol 的一般化, 是一种更广泛的多态性.
-
-functional programming
-----------------------
-- The foundation of FP: Alonzo Church's lambda calculus (1930s).
-
-- Lisp is the first FP language.
-
-- Popular FP languages: Lisp, Scheme, Standard ML, Erlang, Haskell, OCaml, F#.
-
-- Functional programming 似乎可以很好地使用 tail recursion, 让递归代码十分高效.
-  所以 FP 从来不怕递归.
-
-- Two main ideas of FP: 
-  
-  * function as first-class entity, meaning that:
-   
-    - functions can be passed as arguments, like other values.
-     
-    - functions can be returned from functions, like other values.
-
-    - functions can be stored in variables, like other values.
-
-    - functions can be defined inside another function, like other value
-      definitions.
-
-    - functions can be used without a name -- function literals, like other
-      value literals.
-
-    This property provides great expressiveness to a language, which often
-    leads to very concise and legible programs.
-
-  * functions shouldn't have side effects. They should only map input values
-    to output values, rather than change data in place.
-
-    This property 意味着 immutable data structures.
-
-- higher-order functions: Functions which take other functions as arguments,
-  and/or which return other functions as their results
-
-- referential transparency. A property of functions that are independent of
-  temporal context and have no side effects. An invocation of a referentially
-  transparent function could be replaced by its result without affecting the
-  program's semantics.
-
-- Functional languages encourage immutable data structures and referentially
-  transparent functions.
-
 scope
 =====
 - Scope is a set of nested lookup table.
