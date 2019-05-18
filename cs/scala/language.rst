@@ -130,10 +130,22 @@ Influences on scala's design
 
 lexical analysis
 ================
-- A logical line is optionally terminated by a semicolon.
+semicolon handling
+------------------
+- scala 中, semicolon 用于结束一个 statement.
 
-- If semicolon is omitted, a logical line can be extended into multiple
-  physical lines automatically by heuristics.
+- 一行中可以有多个 statements. statements 之间用 semicolon 终结.
+
+- 出现以下情况之一时, 一个 statement 可以跨行书写:
+
+  * A line ends in a word that would not be legal as the end of a statement,
+    such as a period or an infix operator.
+
+  * The next line begins with a word that cannot start a statement.
+
+  * A line ends while inside parentheses or brackets.
+
+- 否则, line ending 自动被识别为 semicolon, 以终结一个 statement.
 
 type inference
 ==============
@@ -340,27 +352,22 @@ method definition
 
 - A method can take 0 to many parameter lists.
 
-- 对于每个 parameter, 必须有 type annotation. scala 不会 infer 函数和方法参数的
-  类型.
-
-- 从 FP 角度看, 函数、方法映射输入值至输出值, 输出的类型称为 result type, 应避
-  免使用 stateful statement 性质的 return type 这种术语. (函数生成一个值, 即称
-  为 a function results in a value.)
-
-- 注意到, 在语法上, method body 相当于是通过 ``=`` 赋值给 method name. 从 FP 角
-  度来看, a function/method defines an expression that results in a value. 这
-  类似于数学上 ``f(x) = expr`` 的定义形式.
-
 - Scala allows nested method definition.
 
 parameter definition syntax
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- 对于每个 parameter, 必须有 type annotation. scala 不会 infer 函数和方法参数的
+  类型.
+
 - a parameter can be defined as pass-by-value parameter (default) or
   pass-by-name parameter. (two different parameter-passing methods.)
 
 - pass-by-value parameter::
 
     <var-name>: <type> [= <default>]
+
+  * pass-by-value parameters are ``val``'s. 也就是说, 在函数体中不可变. 这才符
+    合 FP 思路.
 
 - pass-by-name parameter::
 
@@ -394,6 +401,31 @@ parameter definition syntax
     optional parameters to achieve the same effect.
 
   * Default parameters in Scala are not optional when called from Java code.
+
+method body
+-----------
+- 注意到, 在语法上, method body 相当于是通过 ``=`` 赋值给 method name. 从 FP 角
+  度来看, a function/method defines an expression that results in a value. 这
+  类似于数学上 ``f(x) = expr`` 的定义形式.
+
+- 函数体表达式可以是单个表达式, 或者 complex expressions wrapped by curly
+  braces.
+
+method result type and value
+----------------------------
+- 从 FP 角度看, 函数、方法映射输入值至输出值, 输出的类型称为 result type, 应避
+  免使用 stateful statement 性质的 return type 这种术语. (函数生成一个值, 即称
+  为 a function results in a value.)
+
+- 从 FP 角度看, 我们说函数的结果值, 而不说函数的返回值. 函数体就是一个表达式,
+  它可能由多个更小的表达式构成. 函数的结果值即最后一个表达式的值.
+
+- Scala 函数中, ``return`` statement 一般情况下是多余的, 不必要的, 把函数体看作
+  表达式即可. 这有助于将函数逻辑设计得更为精炼 (compact), to factor larger
+  methods into multiple smaller ones.
+
+  而另一方面, 也应记得具体情况具体分析, 若在一些情况下, return 是合适的, 则应使
+  用.
 
 method call
 -----------
@@ -450,13 +482,6 @@ polymorphic methods
   make confinement. Type parameter isn't needed necessarily. The compiler can
   often infer it based on context or on the types of the value arguments.
 
-main method
------------
-- The ``main`` method is an entry point of a program.
-  
-- JVM requires a main method to be named ``main`` and take one argument, an
-  array of strings.
-
 operators and methods
 ---------------------
 - Scala doesn't technically have operators in the traditional sense. Operators
@@ -510,12 +535,12 @@ normal class
 
 - members accessibility.
 
-  * members are public by default.
+  * member's default access level: public.
 
-  * Can be made private by ``private`` access modifier.
+  * members can be made private with ``private`` access modifier.
 
-  * Primary constructor parameters without ``val`` or ``var`` are private;
-    whereas with ``val`` or ``var`` are public by default.
+  * constructor parameters without ``val`` or ``var`` are private; whereas with
+    ``val`` or ``var`` are public by default.
 
 - The part between curly braces is the template for class intances, it's not
   a block expression.
@@ -597,30 +622,48 @@ instance methods
 ^^^^^^^^^^^^^^^^
 - ``copy()``. create a shallow copy of this instance.
 
-objects
--------
+singleton objects
+-----------------
 ::
 
   object <name> {
     // definitions
   }
 
-- An object is a class that has exactly one instance. The instance is created
-  lazily when it is referenced.
+- ``object`` keyword defines a singleton object of ``<name>``.
+  
+- singleton object 的类型是一个由编译器生成的 internal synthetic class, 名为
+  ``<name>$``. 在 ``object`` 语法中可以像普通 ``class`` definition 语法一样地
+  extends superclass, mix in traits etc. 这实际上就是在对这个 ``<name>$`` 类型
+  操作. 而 singleton object ``<name>`` 是这个类型的唯一实例.
 
-- The object can be accessed by its name.
+- ``object`` definition 不能定义 constructor signature. 因为是自动实例化的.
 
-- As a top-level value, an object is a singleton.
-  As a member of an enclosing class or as a local value, it behaves exactly
-  like a lazy val.
+- The singleton object is created lazily when it's first time referenced.
+
+- As a top-level value, an object is a singleton.  As a member of an enclosing
+  class or as a local value, it behaves exactly like a lazy val.
+
+standalone object
+^^^^^^^^^^^^^^^^^
+- A singleton object that doesn't have a companion class is a standalone
+  object.
+
+- Usage.
+
+  * collecting utility methods.
+
+  * defining entrypoint to a program.
 
 companion object and companion class
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-- When a class and an object with the same name as the class are defined
-  together, the object is called the class's companion object, and the class is
-  called the object's companion class.
+- When a class and a singleton object with the same name as the class are
+  defined in the same source file, the object is the class's companion object,
+  and the class is the object's companion class.
 
-- If a class or object has a companion, both must be defined in the same file.
+- Note that for a class and singleton object to be each other's companion, both
+  must be defined in the same file.
+  
   To define companions in the REPL, either define them on the same line or
   enter :paste mode.
 
@@ -888,8 +931,8 @@ builtin annotations
 
 - ``@inline``
 
-packages and imports
-====================
+package and import
+==================
 terms
 -----
 - simple name. A class's simple name is its defining name -- its identifier.
@@ -923,33 +966,37 @@ imports
 
 - 一个 class/trait 的 companion object 与 class/trait 本身一同 import.
 
+- scala 中除了可以 import 一个 package 中定义的全局的 entity 之外, 还可以
+  import members from any object.
+
 syntax
 ^^^^^^
-- import everything from a package::
+- import everything from a package/object::
 
-    import package._
+    import package_or_object._
 
-- import single entity from a package::
+- import single entity from a package/object::
 
-    import package.entity
+    import package_or_object.entity
 
-- import multiple entities from a package::
+- import multiple entities from a package/object::
 
-    import package.{entity1, entity2, ...}
+    import package_or_object.{entity1, entity2, ...}
 
-- import entities from a package and rename::
+- import entities from a package/object and rename::
 
-    import package.{entity1 => name1, entity2 => name2, ...}
+    import package_or_object.{entity1 => name1, entity2 => name2, ...}
 
 auto-imported entities
 ^^^^^^^^^^^^^^^^^^^^^^
-The following entities are imported automatically.
+The following entities are imported automatically into every scala
+source file.
 
-- scala package
+- entities from ``scala`` package
 
-- java.lang package
+- entities from ``java.lang`` package
 
-- Predef object
+- members of ``scala.Predef`` singleton object.
 
 package object
 --------------
@@ -971,11 +1018,31 @@ package object
 - Each package is allowed to have one package object. Any definitions placed in
   a package object are considered members of the package itself.
 
+compilation unit
+----------------
+- 一个 compilation unit 中, 可以包含任何 class, code etc.
+
+- In general, in the case of non-scripts, it's recommended style to name files
+  after the classes they contain, as is done in Java.
+
 comments
 ========
 - line comment: ``//``
 
 - block comment: ``/* ... */``
+
+scala application
+=================
+- To run a compiled scala application, the name of a standalone singleton
+  object with a ``main`` method of following signature, must be supplied to
+  runtime system.::
+
+    def main(args: Array[String]): Unit
+
+- The ``main`` method is the entry point of a program.
+
+- 对于 scala script, 无需指定这个 standalone singleton object 的名字, 解释器
+  会自动寻找符合的 singleton object.
 
 tools
 =====

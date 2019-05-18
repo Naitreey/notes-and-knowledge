@@ -243,6 +243,50 @@ convenient methods handling on default output (``Console.out``).
   
 - ``println(): Unit``. ditto, only newline is printed.
 
+object Predef
+-------------
+- provides definitions accessible to all scala compilation units without
+  explicit qualification.
+
+type aliases
+^^^^^^^^^^^^
+aliases of commonly used types.
+
+console output
+^^^^^^^^^^^^^^
+- ``print(x: Any): Unit``. redirect to Console.print
+
+- ``printf(text: String, xs: Any*): Unit``. redirect to Console.printf.
+
+- ``println(x: Any): Unit``. redirect to Console.println
+
+- ``println(): Unit``. redirect to Console.println.
+
+assertions
+^^^^^^^^^^
+Invocations of assert can be elided at compile time by providing the command
+line option ``-Xdisable-assertions``, which raises ``-Xelide-below`` above
+``elidable.ASSERTION``, to the scalac command.
+
+Variants of assert intended for use with static analysis tools are also
+provided.
+
+utility methods
+^^^^^^^^^^^^^^^
+
+trait App
+---------
+- can be used to quickly turn objects into executable programs.::
+
+    object Main extends App {
+      // main body
+    }
+
+- ``args`` returns the current command line arguments as an array.
+
+- the main method should not be overridden: the whole class body becomes the “
+  main method”.
+
 references
 ==========
 .. [SOTupleVSCaseClass] `When does it make sense to use tuples over case class <https://stackoverflow.com/questions/49054094/when-does-it-make-sense-to-use-tuples-over-case-class>`_

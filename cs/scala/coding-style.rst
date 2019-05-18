@@ -37,6 +37,11 @@ type annotation
   * library code 的 API 部分, 应该提供明确的完整的类型注释. they constitute an
     essential part of the contract between the component and its clients.
 
+method definition
+=================
+- 一般情况下, 函数体中不应出现 return statement, 使用函数体中最后一个表达式的值
+  作为函数的结果值.
+
 method call
 ===========
 - keyword argument parameter binding syntax, 与 python 的风格不同, 这里 ``=``
@@ -66,3 +71,7 @@ functional style
   Prefer vals, immutable objects, and methods without side effects. Reach for
   them ﬁrst. Use vars, mutable objects, and methods with side effects when you
   have a speciﬁc need and justiﬁcation for them.
+packaging
+=========
+- In general, in the case of non-scripts, it's recommended style to name files
+  after the classes they contain, as is done in Java.

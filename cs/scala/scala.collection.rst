@@ -139,6 +139,9 @@ value members
 - ``apply[A, B](elems: (A, B)*): Map[A, B]``. generate a Map containing key,
   value pairs as specified by elems.
 
+- ``empty[K, V]: Map[K, V]``. Create an empty immutable map with the specified
+  type parameters.
+
 HashMap
 -------
 
@@ -168,3 +171,8 @@ abstract value members
 ^^^^^^^^^^^^^^^^^^^^^^
 - ``+=(kv: (K, V)): Map.this.type``. Add ``(k, v)`` pair to this map,
   overriding original mapping value if k exists.
+class WeakHashMap
+-----------------
+- A hash map with references to entries which are weakly reachable. Entries are
+  removed from this map when the key is no longer (strongly) referenced. This
+  class wraps java.util.WeakHashMap.
