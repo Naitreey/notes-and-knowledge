@@ -484,6 +484,10 @@ subprogram
 - recursion. A function is recursive if it calls itself. If the only place the
   function calls itself is the last expression of the function, then the
   function is tail-recursive.
+
+- procedure. A function that is executed only for its side effect is a
+  procedure.
+
 scope
 =====
 - Scope is a set of nested lookup table.
