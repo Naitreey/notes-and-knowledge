@@ -68,3 +68,11 @@ von Neumann architecture
   transfers from the operating system to a user program for its execution and
   then back to the operating system when the user program execution is
   complete.
+
+- von Neumann bottleneck. The speed of the connection between a computer’s
+  memory and its processor is the primary limiting factor in the speed of a von
+  Neumann architecture computer, because instructions often can be executed
+  faster than they can be moved to the processor for execution. This speed is
+  non Neumann bottleneck.
+
+  由于量子隧道效应和冯诺伊曼瓶颈, 所以需要研究并行计算和分布式计算.

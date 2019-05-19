@@ -289,9 +289,9 @@ functional programming
 logic programming
 -----------------
 - Logic programming languages are rule-based languages. In a rule-based
-  language, however, rules are specified in no particular order, and the
-  language implementation system must choose an order in which the rules are
-  used to produce the desired result.
+  language, rules are specified in no particular order, and the language
+  implementation system must choose an order in which the rules are used to
+  produce the desired result.
 
 miscs
 -----
@@ -308,6 +308,8 @@ scripting languages
 
 Language evaluation criteria
 ============================
+criteria
+--------
 - Readability. 可读性很重要是因为在软件的生命周期中, 对代码的维护工作占很大的部
   分. 而软件是否容易维护基本上是由可读性决定的. (1970 年代, 发展出了 software
   life cycle 概念, 编程从 computer-oriented 转向了 human-oriented.)
@@ -450,6 +452,19 @@ Language evaluation criteria
 
 - well-definedness. the completeness and precision of the language's official
   document.
+
+trade-offs of criteria
+----------------------
+不同的 language evaluation criteria 具有相互冲突的地方, 因此语言设计必须在上述
+的多方面评估标准中进行权衡.
+
+- balance between reliability and cost of execution. E.g., Java vs C on array
+  index check.
+
+- balance between expressivity (regarding to writability) and readability.
+  E.g., APL.
+
+- balance between writability and reliability. E.g., pointers in C/C++.
 
 Language evolutions
 ===================
