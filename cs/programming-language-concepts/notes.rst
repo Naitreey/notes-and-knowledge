@@ -120,6 +120,20 @@ Influences on language design
 
 - 对可靠性的考虑. 这包括 type checking 设计, exception handling, aliasing 设计.
 
+programming environments
+------------------------
+- A programming environment is a collection of tools used in the development of
+  software. It consists of a filesystem, a text editor, a compiler, a linker,
+  etc.
+
+- Examples of programming environment:
+
+  * UNIX
+
+  * Microsoft Visual Studio
+
+  * NetBeans
+
 Language categories/paradigms
 =============================
 - different categories/paradigms of programming are essentially different

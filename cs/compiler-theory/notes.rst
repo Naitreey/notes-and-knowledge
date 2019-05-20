@@ -87,11 +87,55 @@ compilation
     lexical analyzer and syntax analyzer, and is used by semantic analyzer
     and code generator.
 
+- Preprocessor. A program that processes source code before it's compiled.
+  Preprocessor is essentially a macro expander.
+
 pure interpretation
 ^^^^^^^^^^^^^^^^^^^
+- Source programs are interpreted by interpreter, with no translation
+  whatsoever.
+
+- 解释器+底层软硬件层, 整体就是一个以高级语言为机器语言的 virtual machine (同时
+  也是 virtual computer).
+
+- 优缺点. 优点:
+
+  * source-level debugging
+
+  缺点:
+
+  * execution is orders of magnitude slower than compiled system. 执行效率低的
+    原因是: 1) 对源程序的解析非常慢, 这是因为解析高级语言比机器语言复杂很多;
+    2) 同样的 statements 每次执行都必须解析一遍.
+
+  * requires more runtime space than compiled system, including source program
+    and symbol table.
+
+- 在纯解释实现方法中, 对源程序的解析 (lexical analysis, syntax analysis,
+  semantic analysis, etc.) 是执行速度瓶颈, 而不是 CPU 和内存之间的连接速度.
+
+- 纯解释型的方法在 1960s 用得很多, 包括 APL, SNOBOL, Lisp. 至 1980s 时已经很少
+  使用.
 
 hybrid implementation
 ^^^^^^^^^^^^^^^^^^^^^
+- A hybrid implementation system is a mix of compilation and interpretation.
+
+- procedure.
+  
+  * lexical analysis.
+
+  * syntax analysis.
+
+  * intermediate code generation.
+
+  * interpretation. intermediate code is interpreted by interpreter.
+
+- A Just-in-Time (JIT) implementation compiles intermediate language code into
+  machine language when they are called. Machine language code is kept for
+  subsequent calls.
+
+- Language examples: Perl, Python, Java (JIT), .NET languages (JIT).
 
 misc
 ====
