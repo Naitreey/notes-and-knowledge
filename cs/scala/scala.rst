@@ -12,8 +12,19 @@ AnyVal
 
 - AnyVal represents value types.
 
+- Scala compiles instances of value types that correspond to Java primitive
+  types down to Java primitive type values or instances of wrapper types, in
+  the bytecode it produces.
+
 - 9 predefined value types and they are non-nullable:
   Double, Float, Long, Int, Short, Byte, Char, Unit, Boolean.
+
+  * integral types: Byte, Short, Int, Long, Char.
+
+  * numeric types: integral types plus Float and Double.
+
+  Scala's basic types have the exact same ranges as the corresponding types in
+  Java.
 
 - Like in Java, AnyVal *subclasses* are stack allocated, wherever possible (例
   如作为 local variable 等 automatic storage duration 的量就可以是
@@ -100,8 +111,19 @@ Nothing
   non-termination such as a thrown exception, program exit, or an infinite
   loop.
 
+
+Byte
+----
+- 8-bit signed 2's complement integer.
+
+Short
+-----
+- 16-bit signed 2's complement integer.
+
 Int
 ---
+- 32-bit signed 2's complement integer.
+
 concrete value members
 ^^^^^^^^^^^^^^^^^^^^^^
 - ``to(end: Int): Inclusive``.
@@ -111,6 +133,17 @@ concrete value members
 
 - ``max(that: Int): Int``. return the greater one between this and that int.
 
+Long
+----
+- 64-bit signed 2's complement integer.
+
+Char
+----
+- Char 是一种 integral type. 它存储的实际是 16-bit unsigned integer, 对应于
+  相应的 unicode codepoint. 即 0 - 65535.
+
+- 注意到 Scala/Java 的一个 Char 只能保存 BMP 上的字符.
+
 String
 ------
 value members
@@ -118,6 +151,54 @@ value members
 - ``*(n: Int): String``. return this string repeated n times.
 
 - ``r: Regex``. return a Regex with string as pattern.
+
+- ``stripMargin: String``. For every line (``\n``-terminated) in this string:
+  Strip a leading prefix consisting of blanks or control characters followed by
+  ``|``.
+
+Float
+-----
+- 32-bit IEEE 754 single-precision float
+
+Double
+------
+- 64-bit IEEE 754 double-precision float
+
+Boolean
+-------
+
+class Symbol
+------------
+- A symbol is a unique object for equal strings.
+
+- Symbols are interned. They can be compared using reference equality. 
+  注意到同一个 symbol name 只有一个实例.
+
+- Usage.
+
+  * Symbol 可用于代表 a name for code, 而不是数据. 例如需要 method name,
+    identifier name, etc. 这是将 code 与 data 做一个区分. 又考虑到 interned
+    性质, 这种唯一性也适合用于需要表示 name/identifier 等的场景.
+
+    A Symbol Literal comes into play where it clearly differentiates just any
+    old string data with a construct being used in the code. It's just really
+    there where you want to indicate, this isn't just some string data, but in
+    fact in some way part of the code. [SOScalaSymbol1]_
+
+  * Symbols are used where you have a closed set of identifiers that you want
+    to be able to compare quickly. With Symbol instances, comparisons are a
+    simple eq check (i.e. == in Java), so they are constant time (i.e. O(1)) to
+    look up. [SOScalaSymbol2]_
+
+value members
+^^^^^^^^^^^^^
+- ``name: String``. symbol's name string.
+
+object Symbol
+-------------
+value members
+^^^^^^^^^^^^^
+- ``apply(name: String): Symbol``. factory method to create a Symbol instance.
 
 type casting
 ------------
@@ -129,6 +210,94 @@ type casting
 
 - Casting is unidirectional. 即不能向下做 type casting.
 
+- 注意不存在从 Boolean 向任何 integral types 的 type casting.
+
+literals
+--------
+integer literals
+^^^^^^^^^^^^^^^^
+- base: decimal and hexadecimal. 注意 scala 不支持 octal literal.
+
+  * decimal: decimal literal may *not* have a leading zero.
+
+  * hexadecimal: hexadecimal literal starts with a ``0x`` or ``0X``; letters
+    can be any any combination of uppercase and lowercase.
+
+- type: Int or Long.
+
+  * If an integer literal ends with ``L`` or ``l``, then it's Long literal.
+
+  * otherwise it's Int literal.
+
+  * 不存在自动类型转换. 若 Int literal 超过了 Int 值域, 会编译出错, 而不是自动
+    转换至 Long.
+
+  * 不存在 Byte, Short 类型的 literal.
+
+- Int literal 可以赋值给 Byte, Short 类型变量. 前提是 literal 的值在相应类型的
+  范围内, 否则会编译错误. 注意必须是 Int literal 才可以. 若是 Long literal, 不
+  能赋值给 Byte 或 Short.
+
+floating point literals
+^^^^^^^^^^^^^^^^^^^^^^^
+- decimal digits, optionally containing a decimal point, optionally followed
+  by an E or e and an exponent.
+
+- type:
+
+  * If a floating-point literal ends with a ``F`` or ``f``, then it's a Float.
+
+  * otherwise it's a Double.
+
+  * A Double can optionally ends with a ``D`` or ``d``.
+
+character literals
+^^^^^^^^^^^^^^^^^^
+- A BMP unicode char within a single quote.
+
+- A unicode escape sequence within a single quote::
+
+    '\uXXXX'
+
+  ``X`` can be uppercase or lowercase hexadecimal digit.
+
+  this syntax is intended to allow Scala source ﬁles that include non-ASCII
+  Unicode characters to be represented in ASCII.
+
+- Special backslash escape sequences.::
+
+    \n \r \b \t \f \r \" \' \\
+
+string literals
+^^^^^^^^^^^^^^^
+- normal strings:
+
+  * characters surrounded by double quotes.
+
+  * allowable characters are the same as character literals.
+
+- multiline strings:
+
+  * Any characters, including newline, surrounded by triple double quotes::
+
+      """sefsef
+         sefsefsef"""
+
+  * 里面的所有字符, 包括 newline, 都 literally kept.
+
+symbol literals
+^^^^^^^^^^^^^^^
+- Any legal identifier prefixed by a single quote char::
+
+    'ident
+
+- They are literals of scala.Symbol type.
+
+- A ``'ident`` literal is equivalent to ``Symbol("ident")``.
+
+boolean literals
+^^^^^^^^^^^^^^^^
+- ``true`` and ``false``.
 
 container types
 ===============
@@ -290,3 +459,5 @@ trait App
 references
 ==========
 .. [SOTupleVSCaseClass] `When does it make sense to use tuples over case class <https://stackoverflow.com/questions/49054094/when-does-it-make-sense-to-use-tuples-over-case-class>`_
+.. [SOScalaSymbol1] `What are some example use cases for symbol literals in Scala? <https://stackoverflow.com/a/780485/1602266>`_
+.. [SOScalaSymbol2] `Purpose of Scala's Symbol? <https://stackoverflow.com/a/3555381/1602266>`_
