@@ -292,6 +292,26 @@ while expression
 
 - work like a normal while statement in imperative languages.
 
+equality checking
+-----------------
+content equality
+^^^^^^^^^^^^^^^^
+- In scala, ``==``, ``!=`` operators apply to all objects. 这是因为所有类型都是
+  实现这些方法.
+
+- ``==``, ``!=`` have been carefully crafted so that it tests content equality
+  rather than referential equality. Content equality checks are actually
+  implemented by ``.equals()`` method of each specific type.
+
+- ``==``, ``!=`` 已经做了 null check, 用户不需要再 prepend 一个 null check.
+
+- ``==``, ``!=`` operator 的这种 content equality 检测机制是由各个类型的 ``==``
+  ``!=``, ``.equals()`` 等方法来具体实现的. 这需要各个类型去配合实现.
+
+referential equality
+^^^^^^^^^^^^^^^^^^^^
+- implemented by ``AnyRef.eq()`` method.
+
 blocks
 ======
 ::
@@ -388,6 +408,9 @@ parameter definition syntax
     On the other hand, pass-by-value parameters have the advantage that they
     are evaluated only once.
 
+  * pass-by-name parameter 的一个很好的用例是 Boolean type 上 ``&&`` ``||``
+    方法的 short-circuit 定义.
+
 - a parameter can have default value, which makes it optional at call site.
   Both pass-by-value and pass-by-name parameters can have default values.
 
@@ -482,24 +505,40 @@ polymorphic methods
   make confinement. Type parameter isn't needed necessarily. The compiler can
   often infer it based on context or on the types of the value arguments.
 
-operators and methods
----------------------
+methods in operator form
+------------------------
 - Scala doesn't technically have operators in the traditional sense. Operators
-  are just normal method calls as infix form. Therefore, There's technically
-  no operator overloading.
+  are just normal method calls in prefix/infix/suffix forms. Therefore, There's
+  technically no operator overloading.
 
-- Any method with a single parameter can be used as an infix operator.
-  When used in operator notation, the method is normally invoked on the left
-  operand; Unless if the method ends with a ``:``, it's invoked on the right
-  operand.
+- Any method can be used in operator form.
 
-- Arithmetic/logical/etc. operators are just infix form of these overriden
-  methods defined on operand's class.
+  * 当 method 接收 1 个参数时, 可作为 infix operator 使用, 以参数为 right
+    operand 即可.
+
+  * 当 method 接收多个参数时, 可作为 infix operator 使用, 必须将这些参数放在
+    parenthenses 中, 整体作为右参数.
+
+  * 当 method 名为 ``unary_<ident>``, 不接受任何参数, 且 ``ident`` 只包含
+    ``+-!~`` 字符时, ``<ident>`` 可作为 prefix operator 使用. 注意 ident 包含这
+    4 个字符即可, 可以任意排列组合. 若 ident 包含其他任何字符, 都只能作为一般
+    方法使用或 postfix operator 使用, 不能作为 prefix operator.
+
+  * 当 method 不接受任何参数时, 均可作为 postfix operator 使用. 使用方式可以是
+    以下 4 种::
+
+      obj.m()
+      obj.m
+      obj m()
+      obj m
+
+    The convention is that you include parentheses if the method has side
+    effects, but you can leave them off if the method has no side effects.
 
 - operator precedence: operator precedence is evaluated based on the priority
   of its first character (from highest to lowest)::
 
-    (characters not shown below)
+    (all other special characters)
     * / %
     + -
     :
@@ -509,6 +548,32 @@ operators and methods
     ^
     |
     (all letters)
+    (all assignment operators)
+
+  * operators on the same line have the same precedence.
+
+  * assignment operators 指的是 operator that ends in an ``=`` character, and
+    the operator is not one of the ``<=, >=, ==, !=``, i.e., ``=, +=, -=, *=,
+    /=`` etc. 这些 operator 具有最低的优先级, 且与 ``=`` 的优先级相同.
+
+- operator associativity.
+
+  * any operator that ends in a ``:`` is invoked on its right operand, passing
+    the left operand as argument.
+
+  * operator that ends in any other character is invoked on its left operand,
+    passing the right operand as argument.
+
+  * No matter what associativity an operator has, its operands are always
+    evaluated left to right. 对于一个 right-associative 的算符, 这等价于以下特
+    殊操作步骤::
+
+      a op: b
+      // equivalent to
+      { val x = a; b.op:(x) }
+
+- it is good style to use parentheses to clarify what operators are operating
+  upon what expressions.
 
 classes
 =======

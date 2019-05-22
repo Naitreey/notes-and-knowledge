@@ -49,6 +49,15 @@ method call
 
     func(a = 1, b = 2)
 
+- operator form:
+
+  * postfix operator form: when calling a method in postfix form, include
+    parentheses if the method has side effects, but leave them off if the
+    method has no side effects.
+
+- it is good style to use parentheses to clarify what operators are operating
+  upon what expressions.
+
 functional style
 ================
 - 尽量多用 val, 少用 var. 但如果在具体场景下, var 就是更合适的选择, 就去使用.

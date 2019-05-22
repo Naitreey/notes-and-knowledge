@@ -6,6 +6,13 @@ Any
 
 - defines certain universal methods.
 
+concrete value members
+^^^^^^^^^^^^^^^^^^^^^^
+- ``==(arg0: Any): Boolean``. Test two objects for equality. ``x == that`` is
+  equivalent to ``if (x eq null) that eq null else x.equals(that)``. 注意这个
+  方法已经做了 null check, 用户没必要自己再做 null check. 注意 ``==`` checks
+  redirects to ``.equals()`` method for the type's specific implementation.
+
 AnyVal
 ------
 - subclass of Any.
@@ -116,33 +123,261 @@ Byte
 ----
 - 8-bit signed 2's complement integer.
 
+- Byte can compare with any numeric type values with relational methods.
+
+abstract value members
+^^^^^^^^^^^^^^^^^^^^^^
+arithmetic operations
+"""""""""""""""""""""
+常用的 infix ``+-*/%``, prefix ``+-``.
+
+relational operation methods: ``<, >, <=, >=``
+
+- ``unary_+: Int``. note return value is Int.
+
+- ``unary_-: Int``. note return value is Int.
+
+bitwise operations
+""""""""""""""""""
+- ``&(x: Byte): Int``. 注意 result type is Int.
+
+- ``&(x: Short): Int``. 注意 result type is Int.
+
+- ``&(x: Int): Int``. 注意 result type is Int.
+
+- ``&(x: Char): Int``. 注意 result type is Int.
+
+- ``&(x: Long): Long``
+
+- ``|(x: Byte): Int``. 注意 result type is Int.
+
+- ``|(x: Short): Int``. 注意 result type is Int.
+
+- ``|(x: Int): Int``. 注意 result type is Int.
+
+- ``|(x: Char): Int``. 注意 result type is Int.
+
+- ``|(x: Long): Long``
+
+- ``^(x: Byte): Int``. 注意 result type is Int.
+
+- ``^(x: Short): Int``. 注意 result type is Int.
+
+- ``^(x: Int): Int``. 注意 result type is Int.
+
+- ``^(x: Char): Int``. 注意 result type is Int.
+
+- ``^(x: Long): Long``.
+
+- ``unary_~: Int``. 注意 result type is Int.
+
+- ``<<(x: Int): Int``.
+
+- ``>>(x: Int): Int``. signed shift right. fills the highest bit value as it
+  shifts.
+
+- ``>>>(x: Int): Int``. unsigned shift right.
+
 Short
 -----
 - 16-bit signed 2's complement integer.
+
+abstract value members
+^^^^^^^^^^^^^^^^^^^^^^
+arithmetic operations
+"""""""""""""""""""""
+常用的 infix ``+-*/%``, prefix ``+-``.
+
+relational operation methods: ``<, >, <=, >=``
+
+- ``unary_+: Int``. note return value is Int.
+
+- ``unary_-: Int``. note return value is Int.
+
+bitwise operations
+""""""""""""""""""
+- ``&(x: Byte): Int``. 注意 result type is Int.
+
+- ``&(x: Short): Int``. 注意 result type is Int.
+
+- ``&(x: Int): Int``. 注意 result type is Int.
+
+- ``&(x: Char): Int``. 注意 result type is Int.
+
+- ``&(x: Long): Long``
+
+- ``|(x: Byte): Int``. 注意 result type is Int.
+
+- ``|(x: Short): Int``. 注意 result type is Int.
+
+- ``|(x: Int): Int``. 注意 result type is Int.
+
+- ``|(x: Char): Int``. 注意 result type is Int.
+
+- ``|(x: Long): Long``
+
+- ``^(x: Byte): Int``. 注意 result type is Int.
+
+- ``^(x: Short): Int``. 注意 result type is Int.
+
+- ``^(x: Int): Int``. 注意 result type is Int.
+
+- ``^(x: Char): Int``. 注意 result type is Int.
+
+- ``^(x: Long): Long``.
+
+- ``unary_~: Int``. 注意 result type is Int.
+
+- ``<<(x: Int): Int``.
+
+- ``>>(x: Int): Int``. signed shift right. fills the highest bit value as it
+  shifts.
+
+- ``>>>(x: Int): Int``. unsigned shift right.
 
 Int
 ---
 - 32-bit signed 2's complement integer.
 
+abstract value members
+^^^^^^^^^^^^^^^^^^^^^^
+arithmetic operations
+"""""""""""""""""""""
+常用的 infix ``+-*/%``, prefix ``+-``.
+
+relational operation methods: ``<, >, <=, >=``
+
+- ``unary_+: Int``.
+
+- ``unary_-: Int``.
+
+bitwise operations
+""""""""""""""""""
+- ``&(x: Byte): Int``. 注意 result type is Int.
+
+- ``&(x: Short): Int``. 注意 result type is Int.
+
+- ``&(x: Int): Int``. 注意 result type is Int.
+
+- ``&(x: Char): Int``. 注意 result type is Int.
+
+- ``&(x: Long): Long``
+
+- ``|(x: Byte): Int``. 注意 result type is Int.
+
+- ``|(x: Short): Int``. 注意 result type is Int.
+
+- ``|(x: Int): Int``. 注意 result type is Int.
+
+- ``|(x: Char): Int``. 注意 result type is Int.
+
+- ``|(x: Long): Long``
+
+- ``^(x: Byte): Int``. 注意 result type is Int.
+
+- ``^(x: Short): Int``. 注意 result type is Int.
+
+- ``^(x: Int): Int``. 注意 result type is Int.
+
+- ``^(x: Char): Int``. 注意 result type is Int.
+
+- ``^(x: Long): Long``.
+
+- ``unary_~: Int``. 注意 result type is Int.
+
+- ``<<(x: Int): Int``.
+
+- ``>>(x: Int): Int``. signed shift right. fills the highest bit value as it
+  shifts.
+
+- ``>>>(x: Int): Int``. unsigned shift right.
+
 concrete value members
 ^^^^^^^^^^^^^^^^^^^^^^
 - ``to(end: Int): Inclusive``.
-  
+
   Returns: A scala.collection.immutable.Range from this up to and including
   end.
 
+- ``min(that: Int): Int``. return the smaller one between this and that int.
+
 - ``max(that: Int): Int``. return the greater one between this and that int.
+
+- ``abs: Int``. absolute value of this.
 
 Long
 ----
 - 64-bit signed 2's complement integer.
 
+abstract value members
+^^^^^^^^^^^^^^^^^^^^^^
+arithmetic operations
+"""""""""""""""""""""
+常用的 infix ``+-*/%``, prefix ``+-``.
+
+relational operation methods: ``<, >, <=, >=``
+
+- ``unary_+: Long``.
+
+- ``unary_-: Long``.
+
+bitwise operations
+""""""""""""""""""
+- ``&(x: Byte): Long``. 注意 result type is Long.
+
+- ``&(x: Short): Long``. 注意 result type is Long.
+
+- ``&(x: Int): Long``. 注意 result type is Long.
+
+- ``&(x: Char): Long``. 注意 result type is Long.
+
+- ``&(x: Long): Long``
+
+- ``|(x: Byte): Long``. 注意 result type is Long.
+
+- ``|(x: Short): Long``. 注意 result type is Long.
+
+- ``|(x: Int): Long``. 注意 result type is Long.
+
+- ``|(x: Char): Long``. 注意 result type is Long.
+
+- ``|(x: Long): Long``
+
+- ``^(x: Byte): Long``. 注意 result type is Long.
+
+- ``^(x: Short): Long``. 注意 result type is Long.
+
+- ``^(x: Int): Long``. 注意 result type is Long.
+
+- ``^(x: Char): Long``. 注意 result type is Long.
+
+- ``^(x: Long): Long``.
+
+- ``unary_~: Long``. 注意 result type is Long.
+
+- ``<<(x: Int): Long``.
+
+- ``<<(x: Long): Long``.
+
+- ``>>(x: Int): Long``. signed shift right. fills the highest bit value as it
+  shifts.
+
+- ``>>(x: Long): Long``. signed shift right. fills the highest bit value as it
+  shifts.
+
+- ``>>>(x: Int): Long``. unsigned shift right.
+
+- ``>>>(x: Long): Long``. unsigned shift right.
+
 Char
 ----
-- Char 是一种 integral type. 它存储的实际是 16-bit unsigned integer, 对应于
+- Char 是一种 integer type. 它存储的实际是 16-bit unsigned integer, 对应于
   相应的 unicode codepoint. 即 0 - 65535.
 
 - 注意到 Scala/Java 的一个 Char 只能保存 BMP 上的字符.
+
+- 由于 Char 是一种 integer type, 常用的 arithmetic operation is allowed on
+  Char.
 
 String
 ------
@@ -156,16 +391,85 @@ value members
   Strip a leading prefix consisting of blanks or control characters followed by
   ``|``.
 
+- ``indexOf[B >: Char](elem: B): Int``. index of first occurrence of elem in
+  the string. 注意 B >: Char 条件, 这是因为 String is immutable sequence of
+  Char. 相当于它是 covariant 的. 所以理论上要支持 Char 的父类为参数的情况.
+
+- ``indexOf[B >: Char](elem: B, from: Int): Int``. ditto, starting from
+  ``from`` index.
+
+- ``captialize: String``.
+
 Float
 -----
 - 32-bit IEEE 754 single-precision float
+
+abstract value members
+^^^^^^^^^^^^^^^^^^^^^^
+arithmetic operations
+"""""""""""""""""""""
+常用的 infix ``+-*/%``, prefix ``+-``.
+
+Float can compute modulo operation (``%``). The ﬂoating-point remainder you
+get with ``%`` is not the one deﬁned by the IEEE 754 standard. The IEEE 754
+remainder uses rounding division, not truncating division, in calculating the
+remainder. Use ``scala.math.IEEEremainder``.
+
+relational operation methods: ``<, >, <=, >=``
+
+- ``unary_+: Float``.
+
+- ``unary_-: Float``.
 
 Double
 ------
 - 64-bit IEEE 754 double-precision float
 
+abstract value members
+^^^^^^^^^^^^^^^^^^^^^^
+arithmetic operations
+"""""""""""""""""""""
+常用的 infix ``+-*/%``, prefix ``+-``.
+
+Double can compute modulo operation (``%``). The ﬂoating-point remainder you
+get with ``%`` is not the one deﬁned by the IEEE 754 standard. The IEEE 754
+remainder uses rounding division, not truncating division, in calculating the
+remainder. Use ``scala.math.IEEEremainder``.
+
+relational operation methods: ``<, >, <=, >=``
+
+- ``unary_+: Double``.
+
+- ``unary_-: Double``.
+
+concrete value members
+^^^^^^^^^^^^^^^^^^^^^^
+- ``round: Long``.
+
+- ``isInfinity: Boolean``.
+
 Boolean
 -------
+abstract value members
+^^^^^^^^^^^^^^^^^^^^^^
+注意 ``&`` 和 ``|`` 在 integral types 中是 bitwise operator methods, 在 boolean
+type 中是 non-short-circuit logical operator methods.
+
+- ``unary_!: Boolean``. negate the boolean.
+
+- ``&&(x: => Boolean): Boolean``. This method uses short-circuit evaluation,
+  meaning if this instance is false, pass-by-name parameter ``x`` won't be
+  evaluated.
+
+- ``||(x: => Boolean): Boolean``. This method uses short-circuit evaluation,
+  meaning if this instance is true, pass-by-name parameter ``x`` won't be
+  evaluated.
+
+- ``&(x: Boolean): Boolean``. Both this instance and ``x`` are evaluated, even
+  if this instance is already false.
+
+- ``|(x: Boolean): Boolean``. Both this instance and ``x`` are evaluated, even
+  if this instance is already true.
 
 class Symbol
 ------------
@@ -276,6 +580,8 @@ string literals
 
   * allowable characters are the same as character literals.
 
+  * normal string 是不能跨行的, 若要跨行的字符串, 必须使用 multiline string.
+
 - multiline strings:
 
   * Any characters, including newline, surrounded by triple double quotes::
@@ -284,6 +590,49 @@ string literals
          sefsefsef"""
 
   * 里面的所有字符, 包括 newline, 都 literally kept.
+
+processed string literals
+^^^^^^^^^^^^^^^^^^^^^^^^^
+::
+
+  <expr>"string"
+  <expr>"""string"""
+
+- ``<expr>`` is a string interpolator expression.
+
+- 注意 normal string and multiline string literals 都支持 interpolation.
+
+- string interpolation is a more readable alternative to string concatenation.
+
+- string interpolation is implemented by rewriting code at compile time. The
+  compiler will treat any expression consisting of an identiﬁer followed
+  immediately by the open double quote of a string literal as a string
+  interpolator expression.
+
+- builtin string interpolators:
+
+  * ``s``. evaluate each embedded expressions, invoke ``.toString`` to each
+    result, and replace the embedded expressions with the stringified results.
+
+    支持的 interpolation 格式:
+    
+    - ``$expr``. value of the named variable. ``expr`` is the name of variable,
+      the name is composed of all characters up to the first non-identifier
+      character.
+     
+    - ``${expr}``. value of general expression.
+
+  * ``raw``. like ``s``, except all characters are preserved in raw form,
+    including backslash escape sequences.
+
+  * ``f``. a formatted ``s``::
+
+      $expr<format-specifier>
+      ${expr}<format-specifier>
+
+    format specifier is in printf-style, and is optional. format specifier
+    uses java.util.Formatter. If no format specifier is specified, default to
+    ``%s``.
 
 symbol literals
 ^^^^^^^^^^^^^^^
