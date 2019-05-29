@@ -269,9 +269,6 @@ functional programming
   * functions shouldn't have side effects. They should only map input values
     to output values, rather than change data in place.
 
-    This property 意味着 immutable data structures. 若与 OOP 结合, 则意味着
-    immutable objects.
-
     函数没有 side effects 的价值:
 
     - 每个函数的作用是清晰的, 独立的, 与环境无关的. 函数之间不存在依赖性. 这样
@@ -293,6 +290,25 @@ functional programming
 
 - Functional languages encourage immutable data structures and referentially
   transparent functions.
+
+- immutable data structure 的价值:
+
+  * immutable data structures are easier to reason about, because they do not
+    have complex state spaces that change over time.
+
+  * immutable data structures can be passed more freely, whereas defensive
+    copies may be needed when passing along mutable data structures.
+
+  * there is no way for two threads concurrently accessing an immutable to
+    corrupt its state once it has been properly constructed.
+
+  * Immutable data structures make safe hash table keys.
+
+  缺点:
+
+  * they sometimes require that a large object graph be copied, whereas an
+    update could be done in its place. In some cases this can be awkward to
+    express and might also cause a performance bottleneck.
 
 - FP paradigm 的价值:
 

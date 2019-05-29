@@ -50,6 +50,13 @@ AnyRef
 
 - Every user-defined type in Scala is a subtype of AnyRef.
 
+value members
+^^^^^^^^^^^^^
+- ``toString(): String``. Create a string representation of this object. The
+  default representation is platform dependent. On the java platform it is the
+  concatenation of the class name, "@", and the object's hashcode in
+  hexadecimal.
+
 Unit
 ----
 - Subclass of AnyVal.
@@ -784,10 +791,23 @@ assertions
 ^^^^^^^^^^
 Invocations of assert can be elided at compile time by providing the command
 line option ``-Xdisable-assertions``, which raises ``-Xelide-below`` above
-``elidable.ASSERTION``, to the scalac command.
+``elidable.ASSERTION``, to the scalac command. 注意这只影响 ``assert()``
+function.
 
 Variants of assert intended for use with static analysis tools are also
 provided.
+
+- ``assert(assertion: Boolean, message: => Any): Unit``. throws AssertionError
+  if false.
+
+- ``assert(assertion: Boolean)``.
+
+- ``require(requirement: Boolean, message: => Any): Unit``.  throws
+  IllegalArgumentException if false. 这个方法的语义在于要求 precondition of
+  a method/operation 满足一定条件. 若不满足这个条件, 责任在于 caller 传入了
+  非法的参数.
+
+- ``require(requirement: Boolean): Unit``
 
 utility methods
 ^^^^^^^^^^^^^^^

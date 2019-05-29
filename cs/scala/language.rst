@@ -147,6 +147,55 @@ semicolon handling
 
 - 否则, line ending 自动被识别为 semicolon, 以终结一个 statement.
 
+identifiers
+-----------
+- 4 forms of identifiers in scala.
+
+alphanumeric identifiers
+^^^^^^^^^^^^^^^^^^^^^^^^
+- An alphanumeric identifier starts with a letter or underscore, which can be
+  followed by further letters, underscores and digits.
+
+- In scala, ``$`` is also a letter. ``$`` is reserved for identifiers generated
+  by compiler. Identifiers in user programs should avoid containing ``$``.
+
+- identifier naming convention.
+
+  * in consistent with java.
+
+  * camelCase for class members, method parameters, local variables, function
+    names.
+    
+  * CamelCase for class names and trait names.
+
+operator identifiers
+^^^^^^^^^^^^^^^^^^^^
+- An operator identifier consists of one or more operator characters.
+
+- An operator character is:
+ 
+  * a Unicode character belonging to mathematical symbols(Sm) or other
+    symbols(So) 
+
+  * a 7-bit ASCII character that is not letters, digits, parentheses, square
+    brackets, curly braces, single or double quotes, underscore, period,
+    semicolon, comma, backtick.
+
+- At Java runtime, The Scala compiler will internally “mangle” operator identiﬁ
+  ers to turn them into legal Java identiﬁers with embedded $ characters.
+
+mixed identifiers
+^^^^^^^^^^^^^^^^^
+- A mixed identifier consists of an alphanumeric identifier followed by an
+  underscore and an operator identifier.
+
+literal identifiers
+^^^^^^^^^^^^^^^^^^^
+- A literal identifier is an arbitrary string enclosed in backticks.
+
+- A typical use case is to work around scala's reserved words, to use them as
+  identifiers. E.g., accessing the static yield method in Java’s Thread class.
+
 type inference
 ==============
 - Type inference means the scala compiler can often infer the type of an
@@ -582,33 +631,58 @@ normal class
 ::
 
   class <name>[(<param>, ...)][ {
-    // definitions
+    // body
   }]
 
-- Constructor.
-  
-  * Unlike many other languages, the primary constructor is in the class
-    signature.
+- Class parameter list.
 
-  * Constructor definition syntax is the same as normal methods.
+  * ``(...)`` list in class signature is the class parameter list. 这些参数在
+    整个 class body 的 scope 中都是可见的. 各个 method 都可以访问这些参数. 若
+    class parameter list 仅出现在 primary constructor body 中时, 无需在实例中
+    保存初始化时传入的参数值; 否则, 需要在实例中保存这些参数值, 以供 methods
+    调用. 注意这些保存的初始化参数值不属于 instance members.
 
-  * names in constructor list automatically become the data members of the
-    class.
+- primary constructor.
 
-  * When the constructor list is not specified, a default constructor with no
-    parameters is used.
+  * the primary constructor is built with: 1) class parameter list as
+    constructor parameters; 2) Any code in class body as constructor body that
+    isn't a field or method definition.
 
-- members accessibility.
+  * When the class parameter list is not specified, the primary constructor
+    accepts no actual parameters.
+
+  * Only primary constructor can invoke a superclass constructor.
+
+- auxiliary constructor.
+
+  * auxiliary constructor is defined as following::
+
+      def this([param]...) = ...
+
+  * auxiliary constructor does NOT have result type annotation.
+
+  * every auxiliary constructor must invoke another constructor of the same
+    class as its ﬁrst action. The invoked constructor is either the primary
+    constructor, or another auxiliary constructor that comes textually before
+    the calling constructor.
+    
+    Therefore, every constructor invocation will end up eventually calling the
+    primary constructor of the class. The primary constructor is thus the
+    single point of entry of a class.
+
+  * 如果想要在调用另一个 constructor 之前进行任意的操作, 则不能创建一个
+    auxiliary constructor 来实现, 而是应该在 companion object 中创建一个
+    factory method.
+
+- members' external accessibility.
 
   * member's default access level: public.
 
   * members can be made private with ``private`` access modifier.
 
-  * constructor parameters without ``val`` or ``var`` are private; whereas with
-    ``val`` or ``var`` are public by default.
-
-- The part between curly braces is the template for class intances, it's not
-  a block expression.
+- The part between curly braces is the template for class intances, it's not a
+  block expression. If a class doesn't need a body template, curly braces are
+  not necessary.
 
 - inheritance.
 
@@ -631,8 +705,15 @@ normal class
     brackets; To parameterize the instance with values: specify values in
     parentheses. Type parameterization comes before value parameterization.
 
-- To override a parent class's method, use prefix ``override`` keyword to
-  method definition.
+- method overriding. To override a parent class's method, prefix ``override``
+  modifier to method definition.
+
+- method overloading. In a class definition, there can be multiple methods of
+  the same name, each consisting of a different signatures.
+  
+  During a method call, the compiler picks the version of an overloaded method
+  that best matches the static types of the arguments. When the compiler can
+  not determine an unique best match, an ambiguous reference error is raised.
 
 - getter/setter syntax.
 
@@ -647,6 +728,14 @@ normal class
       def property_=(value) = <expression>
 
     注意 ``_=`` suffix 代表这是 setter method.
+
+- self references. keyword ``this`` refers to the object instance on which the
+  currently executing method was invoked, or if used in a constructor, the
+  object instance being constructed.
+
+- name resolution order inside class.
+
+  * instance members.
 
 case classes
 ------------
@@ -979,6 +1068,9 @@ special methods
 
 - ``update()``. 对任意实例的 call ``()`` syntax 赋值的操作会转换成对实例的
   ``update()`` 方法的调用.
+
+implicit conversions
+====================
 
 annotations
 ===========

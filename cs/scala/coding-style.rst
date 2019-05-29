@@ -42,6 +42,18 @@ method definition
 - 一般情况下, 函数体中不应出现 return statement, 使用函数体中最后一个表达式的值
   作为函数的结果值.
 
+- operator method definition. Conciseness and readability 之间必须找到平衡.
+
+  * although operator methods will usually make client code more concise, they
+    will only make it more readable to the extent client programmers will be
+    able to recognize and remember the meaning of each operator.
+
+  * The goal you should keep in mind as you design libraries is not merely
+    enabling concise client code, but readable, understandable client code.
+    By designing libraries that enable tastefully concise and at the same time
+    understandable client code, you can help those client programmers work
+    productively.
+
 method call
 ===========
 - keyword argument parameter binding syntax, 与 python 的风格不同, 这里 ``=``
@@ -84,3 +96,27 @@ packaging
 =========
 - In general, in the case of non-scripts, it's recommended style to name files
   after the classes they contain, as is done in Java.
+identifier
+==========
+- alphanumeric identifier naming convention.
+
+  * in consistent with java.
+
+  * camelCase for class members, method parameters, local variables, function
+    names.
+    
+  * CamelCase for class names and trait names.
+
+  * underscore should be avoided in identifier.
+
+  * user defined identifiers should avoid containing ``$``.
+
+- constant in scala.
+
+  * 注意 constant 指的不是 ``val`` variables. ``val`` variables 只是在一次
+    function call 中保持不变, 然而对于多次调用, 完全可以输入不同的值, 因此
+    才称为 variable.
+
+  * A constant 指的是恒定不变的量, 某种全局常量, 某种 magic literal values.
+
+  * Constants 的命名规范是: CamelCase, 这不同于 java.
