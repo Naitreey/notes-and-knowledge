@@ -108,15 +108,203 @@ big data challenges
     processing to where the data is stored, avoiding choking the network. 典型
     系统: MapReduce.
   
-application
-===========
+architecture
+============
+::
+
+  1
+
+                                            +------------------------------------------------------------------------------+
+                                            |                                                                              |
+                                            |   big data ecosystem                                                         |
+                                            |                                                                              |
+                                            |                                                                              |
+                                            |   +--------------+    +---------------------------+     +-----------------+  |     +------------------------------+
+                                            |   |              |    |                           |     |                 |  |     |                              |
+  +-----------------------------------+     |   |              |    |                           |     |                 |  |     |   data consumption           |
+  |                                   |     |   |              +--->+ stream processing         +----->                 |  |     |                              |
+  |      Data sources                 |     |   |              |    |                           |     |  data organizing|  |     |                              |
+  |                                   |     |   |              |    |                           |     |                 |  |     |      data mining             |
+  |                                   |     |   |              |    +---------------------------+     |                 |  |     |                              |
+  |    human-human communications     |     |   |              |                                      |                 |  |     |      data visualization      |
+  |                                   |     |   |              |                                      |                 |  |     |                              |
+  |    human-machine communications   +-------->+ data ingest  |                                      |                 |  |     |      dashboards              |
+  |                                   |     |   |              |                                      |                 +------->+                              |
+  |    machine-machine communications |     |   |              |                                      |                 |  |     |      reports                 |
+  |                                   |     |   |              |                                      |                 |  |     |                              |
+  |    business transactions          |     |   |              |    +----------------------------+    |                 |  |     |                              |
+  |                                   |     |   |              |    |                            |    |                 |  |     |                              |
+  |                                   |     |   |              +--->+ batch processing           +--->+                 |  |     |                              |
+  |                                   |     |   |              |    |                            |    |                 |  |     |                              |
+  +-----------------------------------+     |   |              |    |                            <----+                 |  |     +------------------------------+
+                                            |   +--------------+    +----------------------------+    |                 |  |
+                                            |                                                         +-----------------+  |
+                                            |                                                                              |
+                                            |   +-----------------------------------------------------------------------+  |
+                                            |   |                   distributed file system                             |  |
+                                            |   |                                                                       |  |
+                                            |   +-----------------------------------------------------------------------+  |
+                                            |                                                                              |
+                                            |                                                                              |
+                                            |   +-----------------------------------------------------------------------+  |
+                                            |   |                   compute, storage, network infrastructure            |  |
+                                            |   |                                                                       |  |
+                                            |   +-----------------------------------------------------------------------+  |
+                                            +------------------------------------------------------------------------------+
+
+data sources
+------------
+human-human communications
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+examples:
+
+- social media
+
+  * In social media, people communicate with asynchronous messages. 注意只需要
+    发送方把消息发出至接收方即完成了发送操作, 无需等待接收方读到消息. 因此是
+    异步的.
+
+human-machine communications
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+examples:
+
+- physical sensors
+
+- world wide web
+
+- personal assistant
+
+- wearable devices
+
+machine-machine communications
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+examples:
+
+- IoT
+
+  * RFID (radio frequency identification). An RFID tag responds to and
+    communicate with a special reader via RF channel.
+
+  * Sensors observe and record physical and chemical parameters in environment.
+
+
+standard big data architecture
+------------------------------
+workflow
+^^^^^^^^
+- data are ingested from multiple data sources.
+
+- Then data is forked into two processing systems:
+
+  * A stream processing system
+
+  * A batch processing system
+
+- The outcome of these processing systems are
+  
+  * sent into NoSQL databases for later retrieval
+
+  * directly sent for consumption by applications
+
+layers
+^^^^^^
+- data source layer
+
+  * The choice of sources of data for an application depends upon what data is
+    required to perform the kind of analyses you need.
+
+- data ingest layer
+
+  * responsible for acquiring data from data sources.
+
+  * there may be a scalable set of input points
+
+- stream processing layer
+
+  * input data from the ingest point, process in real time
+
+  * output data to distributed file system or NoSQL database.
+
+- batch processing layer
+
+  * input data from the ingest point or distributed file system or NoSQL
+    database.
+
+  * output data to distributed file system, reporting, or NoSQL database.
+
+- data orgranizing layer
+
+  * represented by NoSQL databases
+
+  * receive data from batch and stream processing layers.
+
+- infrastructure layer
+
+  * manage hardware resources
+
+  * probably provided by cloud platform.
+
+- distributed file system layer
+
+  * 上层必须能快速而安全地访问存储的数据, 它要提供高可用性.
+
+- data consumption layer
+
+common architectures
+--------------------
+- ingest:
+
+  * kafka
+
+- stream processing:
+
+  * spark streaming
+
+  * storm
+
+  * flink
+
+  * samza
+
+- batch processing:
+
+  * hive
+
+  * mapreduce
+
+- data organzing:
+
+  * hbase
+
+  * Cassandra
+
+  * druid
+
+  * gemfire
+
+  * titan graphical database
+
+- distributed file system:
+
+  * hdfs
+
+  * aws s3
+
+  * parquet
+
+- data consumption:
+
+  * excel
+
+  * tableau
+
+  * spark sql
+
+applications
+============
 - 多个领域的发展都遇到了大数据问题, 因此需要发展相应的大数据处理方法. 例如:
   internet search, fintech, informatics, genomics, complex physics simulations,
   IoT, social media, etc.
-
-- Searching the world wide web was the first true big data application. Google
-  perfected this application and developed many path-breaking big data
-  technologies we see in use today.
 
 - 3 major types of big data applications:
 
@@ -126,8 +314,59 @@ application
 
   * new product development.
 
+monitoring and tracking applications
+------------------------------------
+- these are basic applications of big data. They help improve the efficiency.
+
+- examples:
+
+  * public health monitoring
+
+  * consumer sentiment monitoring
+
+  * asset tracking
+
+  * supply chain monitoring
+
+  * electricity consumption tracking
+
+  * preventive machine maintenance
+
+analysis and insight applications
+---------------------------------
+- next level applications of big data. They help improve the effectiveness
+  of business.
+
+- examples
+
+  * predictive policing
+
+  * winning policitical election
+
+  * personal health -- disease diagnosis
+
+new product development
+-----------------------
+- these application introduces totally new concepts that did not exist earlier.
+  They have transformational potential to disrupt entire industry.
+
+- examples.
+  
+  * Searching the world wide web was the first true big data application.
+    Google perfected this application and developed many path-breaking big data
+    technologies we see in use today.
+
+  * flexible auto insurance
+
+  * location-based retail promotion
+
+  * recommendation service
+
 visions to build big data system
 ================================
+- 构建一个大数据平台应该首先从一个 proven architecture 出发, 然后根据需求
+  来创造性地、循序渐进地改进和增删优化组件.
+
 - big data should be used to solve a real pain-point. It should be deployed for
   specific business objectives in order to have management avoid being
   overwhelmed by the enormity of Big Data.
@@ -145,3 +384,20 @@ visions to build big data system
   usually has value beyond what one initially anticipates.
 
 - Big Data is growing exponentially, so one should plan for exponential growth.
+history
+=======
+Google
+------
+google 为了做搜索引擎这个大数据应用, 发明了一系列大数据技术.
+
+- google 开发了网络爬虫技术 (web crawling agents). 爬虫 follow 每个网页链接,
+  将获取到的页面结果缓存下来.
+
+- Google File System. google 开发的这个分布式文件系统, 可以线性水平扩展. 为了
+  存放爬虫缓存下来的所有网页. 这是 Hadoop 的源头.
+
+- NoSQL database. google 为了对庞大的网页数据进行索引, 便于搜索, 发明了
+  key-value 式的 NoSQL 数据库. 这是 HBase 的源头.
+
+- MapReduce parallel processing architecture. google 为了能够对巨量的分布式的数
+  据进行计算, 发明了 MapReduce 计算模型. 这是 Hadoop MapReduce 计算模型的源头.
