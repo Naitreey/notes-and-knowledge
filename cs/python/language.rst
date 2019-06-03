@@ -812,7 +812,6 @@ instance method 定义第一个参数是 ``cls``, class method 的第一个
 
 metaclass methods
 """""""""""""""""
-
 - ``metaclass.__prepare__(metaclass, name, bases, **kwargs)``.
   这是一个 class method. 定义时需要使用 classmethod decorator.
   在上述的 prepare class body namespace 步骤中调用, 返回一个准备好的
@@ -1240,8 +1239,9 @@ annotated assignment statement
     varialbe annotation 并不会在 class/module scope 中显式定义这个变量, 而只是
     保存 annotation 至 ``__annotations__``.
 
-    允许不包含 assignment part 是为了允许在对同一变量多次赋值的使用场景下, 能
-    首先统一地 type annotation, 而无需在每个分支都做重复的 annotation.
+    允许不包含 assignment part 有多种价值, 例如允许在对同一变量多次赋值的使用场
+    景下, 能首先统一地 type annotation, 而无需在每个分支都做重复的 annotation;
+    以及 dataclass, NamedTuple 等用法.
 
     .. code:: python
 

@@ -5571,7 +5571,9 @@ concrete forward relations.
 
     * ``symmetrical``, M2M relationship pointing to self 时, 可能希望
       ``related_name`` 与 field name 相同, 此时, 希望 ``a.relations.add(b)`` 之
-      后, ``b.relations`` 自动也包含 ``a``. 
+      后, ``b.relations`` 自动也包含 ``a``. 对称的 M2M 关系是通过在 through
+      table 中自动添加反向的关联关系来实现的. 例如, 添加 a->b 时, 同时添加 b->a
+      关系至 through table 中.
 
     * ``through``. through model. 多对多关系实际上是通过一个关系表来实现的. 这
       个关系表的 model 可通过 ``ManyToManyField.through`` attribute 获得. 并可
@@ -10511,7 +10513,7 @@ overview
 
 env file format
 ^^^^^^^^^^^^^^^
-- basic shell variable format
+- basic shell variable format, 支持 single/double quotes for value.
 
 - support ``$var`` for referencing another variable.
 

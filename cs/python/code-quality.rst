@@ -941,3 +941,28 @@ plugins
 local plugin
 ^^^^^^^^^^^^
 - In configuration section: ``[flake8:local-plugins]``
+pylint
+======
+overview
+--------
+features
+^^^^^^^^
+- checkings including for coding standards, coding errors, etc.
+
+  * checking line length
+  
+  * checking variable names according to coding standard
+
+  * checking declared interfaces are implemented.
+
+  * checking if modules are imported.
+
+  * see full list `here <https://pylint.readthedocs.io/en/latest/technical_reference/features.html>`_.
+
+- help refactoring, by detecting duplicate code
+
+- fully customizable with pylintrc
+
+- editor and IDE integration
+
+- create UML for code
