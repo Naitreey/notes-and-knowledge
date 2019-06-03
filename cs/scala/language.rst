@@ -646,7 +646,12 @@ normal class
 
   * the primary constructor is built with: 1) class parameter list as
     constructor parameters; 2) Any code in class body as constructor body that
-    isn't a field or method definition.
+    isn't a method definition.
+
+  * Every variable declared in primary constructor become a member field of
+    the class. 在 scala 中, 没有任何办法在 primary constructor 中使用 purely
+    local variable. 若要这样的效果, 必须构造 factory method in companion
+    object.
 
   * When the class parameter list is not specified, the primary constructor
     accepts no actual parameters.
@@ -771,10 +776,6 @@ case classes
   * Tuple 可用于 easy unpacking and pattern matching.
 
 - Case classes are good for modeling immutable data.
-
-instance methods
-^^^^^^^^^^^^^^^^
-- ``copy()``. create a shallow copy of this instance.
 
 singleton objects
 -----------------
