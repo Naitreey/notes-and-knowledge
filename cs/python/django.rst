@@ -3558,9 +3558,6 @@ makemigrations
 - Providing one or more app names as arguments will limit the migrations
   created to the app(s) specified *and any dependencies needed*.
 
-  提供 app name 还可用于创建 app 的 ``migrations/`` directory. 如果一个 app 还
-  没有 ``migrations/`` directory, 默认会在 makemigrations 时自动跳过这个 app.
-
   ``makemigrations`` 和 ``migrate`` 操作一般不要限制 ``app_label``, 要对所有
   apps 同时进行. 因为 model 之间经常是相互依赖的. 如果只对某个 model 更新数据库
   状态可能 break dependency.

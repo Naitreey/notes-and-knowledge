@@ -1232,7 +1232,8 @@ container
   设置的环境变量 override ``--env-file`` 中设置的同名变量.
 
   ``--env-file={file}``. 读取 env file 进入进程的环境变量中. 可指定多次. 其中的
-  语法是 ``--env`` 支持的两种形式, 以及 ``#`` line comment.
+  语法是 ``--env`` 支持的两种形式, 以及 ``#`` line comment. 注意在文件中, ``=``
+  右边的全部内容成为环境变量的值, 不会进行类似 shell 的解析和 unquote 等操作.
 
 - docker container exec.
 

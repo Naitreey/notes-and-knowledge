@@ -21,21 +21,35 @@ Node properties
 anchors
 ~~~~~~~
 
-- ``&`` marks a node for furture reference.
+- ``&`` marks a node for future reference. A node can be:
+
+  * the value of a key
+
+  * an element in an array
 
 - ``*`` marks an alias node, which refers to the most recent preceding
   node having the same anchor.
 
 - ``<<`` extends a node with alias node.
 
-examples::
-    foo: &anchor
-        k1: 1
-        k2: 2
+example for mapping::
 
-    bar:
-        <<: *anchor
-        k3: 3
-        k4: 4
+  foo: &anchor
+      k1: 1
+      k2: 2
+
+  bar:
+      <<: *anchor
+      k3: 3
+      k4: 4
+
+example for array::
+
+  - &ref
+    k1: v1
+    k2: v2
+  - *ref
+  - k3: v3
+    <<: *ref
 
 anchor 和 alias 为 YAML 提供了变量赋值和引用功能.
