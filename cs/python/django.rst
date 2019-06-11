@@ -4831,7 +4831,7 @@ constructor
   migration framework 的 serialization 要求.
 
   * 若需要根据参数动态生成 callable, 不能使用 wrapper function return another
-    function 的方式. 这样不可 serialize. 必须创建一个 deconstrucible callable
+    function 的方式. 这样不可 serialize. 必须创建一个 deconstructible callable
     class.
 
     .. code:: python
