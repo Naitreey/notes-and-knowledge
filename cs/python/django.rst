@@ -5667,6 +5667,8 @@ builtin validators ``django.core.validators``.
 
   - RegexValidator, 通用正则 validator.
 
+    * regex pattern is ``.search()``-ed within value.
+
   - URLValidator, a RegexValidator subclass for url.
 
   - EmailValidator.
