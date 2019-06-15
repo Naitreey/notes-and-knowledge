@@ -4919,7 +4919,8 @@ constructor
   .. TODO read with form
 
 - ``editable``.
-  若 False, 不在 model form 中出现, 并且 skipped during model validation.
+  若 False, 不在 model form 中出现, 并且 skipped during model validation (这是
+  在 ``Field.validate()`` 中定义的.)
 
   .. TODO read with form
 
