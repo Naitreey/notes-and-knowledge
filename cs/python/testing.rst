@@ -2283,6 +2283,8 @@ internet
 
 - ``ascii_company_email()``.
 
+- ``hostname(levels=1)``. hostname with ``levels`` levels subdomains.
+
 file
 ^^^^
 
