@@ -1223,6 +1223,17 @@ dropdown selection input
   * ``value``, 单独指定 option 的 value, 以不同于 option text content. 若不设置,
     option value 就是文字内容.
 
+  设置一个 placeholder option::
+
+    <option value="" disabled selected>
+        Please choose...
+    </option>
+
+    // corresponding css
+    option[value=""][disabled] {
+      display: none;
+    }
+
 - ``<optgroup>`` option group. 在 select element 中使用. 里面允许 zero or more
   option elements.
 

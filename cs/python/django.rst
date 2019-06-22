@@ -10408,6 +10408,22 @@ NullBit1BooleanField
 
 - NullBooleanField subclass.
 
+more form fields
+^^^^^^^^^^^^^^^^
+JSONField
+""""""""""
+- accept json encoded data, generate a json.decode value.
+
+SimpleListField
+""""""""""""""""
+- accept a comma separated list, generate a list. Empty items, resulting from
+  leading, trailing, or double commas, are disallowed.
+
+SimpleSetField
+""""""""""""""
+- accept a comma separated list, generate a set. Empty items, resulting from
+  leading, trailing, or double commas, are disallowed.
+
 extra field lookups
 ^^^^^^^^^^^^^^^^^^^
 

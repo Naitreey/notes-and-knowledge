@@ -881,7 +881,8 @@ PropertyMock
 ^^^^^^^^^^^^
 注意 MagicMock 不提供 ``__get__``, ``__set__`` 的默认 MagicProxy 实现. 若需要
 对 descriptor 进行 mock, 基本的思路是分别对 ``__get__``, ``__set__`` 赋值为
-两个 mock object, 再进行检查.
+两个 mock object, 再进行检查. PropertyMock 还可以用于对 attribute access 的
+检查.
 
 PropertyMock 是 Mock 的 subclass, 它在 Mock 的基础上实现了 descriptor protocol
 要求的 ``__get__``, ``__set__``. 可以直接用于 patch descriptor, 省去了手动构造

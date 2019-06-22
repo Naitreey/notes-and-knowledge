@@ -1042,7 +1042,7 @@ sizing
 ^^^^^^
 - Add the following class to ``.modal-dialog`` for large and small responsive modal::
 
-    .modal-{sm|lg}
+    .modal-{sm|lg|xl}
 
 API methods
 ^^^^^^^^^^^
