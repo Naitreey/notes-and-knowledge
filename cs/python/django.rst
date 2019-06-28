@@ -7821,11 +7821,6 @@ method 是什么都会生效. 不如相应的 decorator 灵活.
 
   * ``test_func()``. 要进行的检查.
 
-若要求对未登录用户和已登录却权限不足的用户分别做不同的处理, 则不能同时使用
-LoginRequiredMixin 和 PermissionRequiredMixin, 因为它们使用同一个
-``AccessMixin.handle_no_permission()``. 此时, 需要使用一个 decorator 形式配合一
-个 Mixin 形式, 或者两个 decorator 形式, 才能设置不同的处理方式.
-
 context processors
 ------------------
 
