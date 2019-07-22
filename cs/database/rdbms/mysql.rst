@@ -435,6 +435,12 @@ DECIMAL
 - DECIMAL(M, D). M is precision, D is digits after decimal point.
   M <= 65, D <= 30. default M is 10, D is 0.
 
+  * The precision represents the number of significant digits that are stored
+    for values, and the scale represents the number of digits that can be
+    stored following the decimal point.
+
+  * 注意到, M 必须 >= D.
+
 - synonyms: DEC, NUMERIC, FIXED.
 
 floating-point types
