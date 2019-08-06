@@ -247,6 +247,12 @@ type
 ~~~~
 参数值格式检查和类型转换.
 
+- ``type`` can take any callable that takes a single string argument and
+  returns the converted value. Common built-in types and functions can be used
+  directly as the value.
+
+- default is string.
+
 choices
 ~~~~~~~
 any sequence supporting ``in`` operator will do.

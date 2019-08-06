@@ -5285,6 +5285,10 @@ module-level functions
 
   * ``_mysql.connect()`` parameters.
 
+  * ``password``. alias of ``passwd``.
+
+  * ``database``. alias of ``db``.
+
   * ``unix_socket``. default ``/run/mysqld/mysqld.sock``.
 
   * ``conv``. same as ``_mysql.connect()`` parameter, but default to
@@ -5319,6 +5323,13 @@ module-level functions
   * ``ssl``. This parameter takes a dictionary or mapping, where the keys are
     parameter names used by the ``mysql_ssl_set`` MySQL C API call. If this is
     set, it initiates an SSL connection to the server.
+
+  * ``local_infile``. boolean, whether to enable LOAD LOCAL INFILE.
+
+  * ``autocommit``. default False. enable autocommit.
+
+  * ``binary_prefix``. boolean. If set, the '_binary' prefix will be used for
+    raw byte query arguments (e.g. Binary). This is disabled by default.
 
 module-level constants
 ^^^^^^^^^^^^^^^^^^^^^^
