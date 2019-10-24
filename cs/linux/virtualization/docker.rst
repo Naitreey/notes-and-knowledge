@@ -448,6 +448,7 @@ instructions
 FROM
 ^^^^
 ::
+
   FROM <image>[:<tag>|@<digest>] [AS <name>]
 
 - ``<image>`` 可以是任何 image identifier, local or remote, with or without tag,
@@ -461,6 +462,7 @@ FROM
 SHELL
 ^^^^^
 ::
+
   SHELL ["cmd", ...]
 
 - 指定默认的 shell. 这个 shell 用于执行所有使用 shell form 的 instructions.
@@ -472,6 +474,7 @@ SHELL
 RUN
 ^^^
 ::
+
   RUN <command>
   RUN ["cmd", ...]
 
@@ -490,7 +493,9 @@ RUN
   从而 apt-get update 重新执行. This is called "cache busting".  必要时, 还可以
   在 install 参数后面固定 package 的版本, 从而保证 apt cache 总是能及时更新, 
   即使只是修改要安装的软件版本.
+
   .. code:: dockerfile
+
     RUN apt-get update && apt-get install -y \
         abc=1.2.* \
         def \
@@ -510,6 +515,7 @@ RUN
 ENTRYPOINT
 ^^^^^^^^^^
 ::
+
   ENTRYPOINT ["cmd", ...]
 
 - 不建议使用 shell form entrypoint, 因进程不是 PID1, 而是 sh -c 的子进程,
@@ -533,7 +539,9 @@ ENTRYPOINT
     总是可以被命令行参数 override.
 
 - 容器运行时, 执行的命令总是由两部分组成::
+
     entrypoint + args
+
   两部分都可以使用默认值或在 docker run 时 override 默认值.
 
   entrypoint:
@@ -567,6 +575,7 @@ ENTRYPOINT
 CMD
 ^^^
 ::
+
   CMD ["cmd", ...]
   CMD ["param", ...]
   CMD <command>
@@ -588,6 +597,7 @@ CMD
 EXPOSE
 ^^^^^^
 ::
+
   EXPOSE <port>[/<protocol>] ...
 
 - Expose one or more ports. expose port 指的是将容器的端口绑定到 host system
@@ -606,6 +616,7 @@ EXPOSE
 ARG
 ^^^
 ::
+
   ARG <name>[=<default>]
 
 - 设置 current build stage 的环境变量.
@@ -640,6 +651,7 @@ ARG
 ENV
 ^^^
 ::
+
   ENV <key>=<value> ...
 
 - 设置 build-time 和 runtime 环境变量.
@@ -655,6 +667,7 @@ ENV
 COPY
 ^^^^
 ::
+
   COPY [--chown=<user|id>:<group|id>] <src> ... <dest>
 
 - ``<src>`` may be file, directory.
@@ -685,6 +698,7 @@ COPY
 ADD
 ^^^
 ::
+
   ADD [--chown=<user|id>:<group|id>] <src> ... <dest>
 
 - ADD 不支持 COPY 的 ``--from`` flag. 除此之外, 支持 COPY 的所有功能.
@@ -704,6 +718,7 @@ ADD
 VOLUME
 ^^^^^^
 ::
+
   VOLUME ["mountpoint", ...]
 
 指定一系列 mountpoints, 在容器运行时, 会自动创建一个 anonymous volume 挂载在
@@ -718,6 +733,7 @@ changes will be discarded.
 USER
 ^^^^
 ::
+
   USER <user|id>[:<group|id>]
 
 Specify user and/or group name/id used by any following RUN, CMD, ENTRYPOINT
@@ -726,6 +742,7 @@ instructions.
 WORKDIR
 ^^^^^^^
 ::
+
   WORKDIR /path
 
 - Set working directory in image for any following RUN, CMD, ENTRYPOINT,
@@ -741,6 +758,7 @@ WORKDIR
 STOPSIGNAL
 ^^^^^^^^^^
 ::
+
   STOPSIGNAL <signal|id>
 
 Set the signal to be sent to container when ``docker stop``.
@@ -748,6 +766,7 @@ Set the signal to be sent to container when ``docker stop``.
 HEALTHCHECK
 ^^^^^^^^^^^
 ::
+
   HEALTHCHECK [--interval=<duration>|--timeout=<duration>|
                --retries=N|--start-period=<duration>]
                (CMD <command>) | NONE
@@ -810,6 +829,7 @@ generated with the new status.
 LABEL
 ^^^^^
 ::
+
   LABEL <key>=<value> ...
 
 - add metadata to image.
@@ -820,6 +840,7 @@ LABEL
 ONBUILD
 ^^^^^^^
 ::
+
   ONBUILD <instruction>
 
 - The ONBUILD instruction adds to the image a trigger instruction to be
@@ -835,6 +856,7 @@ ONBUILD
 - 当一个镜像本身的目的是作为 build 应用镜像的工具时, ONBUILD instruction 很有用.
   例如用于 automating the build of your chosen software stack.
   .. code:: dockerfile
+
     FROM maven:3-jdk-8
     
     RUN mkdir -p /usr/src/app
@@ -871,6 +893,7 @@ entries. 因为 dockerignore file 控制的是 build context 的组成. 进而�
 例如 ``COPY .`` 等复制进镜像的文件有哪些.
 
 如果希望只在 build context 中包含指定文件, 排除所有其他文件::
+
   *
   !file-1
   !file-2
@@ -2530,6 +2553,7 @@ python
 
 注意 python 应用为了能够稳定输出日志给 ``docker logs``, 需要设置解释器为 unbuffered
 mode::
+
   ENV PYTHONUNBUFFERED=1
 
 用 pip 安装应用依赖时, 要避免生成 pip cache directory::

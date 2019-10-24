@@ -1,40 +1,3 @@
-\RequirePackage[l2tabu, orthodox]{nag}
-\documentclass{article}
-
-%\usepackage[a4paper,hscale=0.61,hmargin={1:2},marginparwidth=3cm]{geometry}
-\usepackage[a4paper,hcentering,textwidth=0.63\paperwidth,includemp,marginparwidth=3cm]{geometry}
-\usepackage{xeCJK}
-
-\usepackage[pdfborder={0 0 0},colorlinks]{hyperref}
-\usepackage{graphicx,amsmath,amssymb,bm,mathtools,subcaption,caption,cleveref}
-\usepackage[Q=yes]{examplep}
-\usepackage{listings}
-\usepackage{enumitem}
-\usepackage{booktabs}
-
-%customize description list to get fixed-width label
-\setlist[description]{leftmargin=6em,style=nextline,font=\normalfont}
-%文献源 \addbibresource{•}
-
-%设置字体
-\setmainfont{Adobe Garamond Pro}
-\setCJKmainfont[BoldFont={Adobe Heiti Std R},ItalicFont={Adobe Kaiti Std R}]{Adobe Song Std L}
-\setCJKmonofont{Adobe Fangsong Std R}
-\setCJKsansfont{Hiragino Sans GB W3}
-
-%代码宏包
-\usepackage{listings}
-\lstset{basicstyle=\ttfamily,texcl=true,mathescape=true,morecomment=[s][\normalfont\itshape]{<}{>}} 
-% [LaTeX]TeX or mathematica or etc?
-
-%一些定义
-\newcommand{\key}[1]{\PVerb{#1}}
-\newcommand{\syntax}[1]{\PVerb{#1}}
-\newcommand{\command}[1]{\PVerb{#1}}
-\newcommand{\dq}[1]{``#1''}
-\newcommand{\sq}[1]{`#1'}
-\newcommand{\marginnote}[1]{\marginpar{\footnotesize #1}}
-
 \title{Vim Note}
 \author{Naitree Zhu}
 \date{\today}
@@ -186,14 +149,19 @@ Vim stands for \emph{vi improved}.} Command-Line mode is also enabled when we pr
   \item[\syntax{:[range]co[py] {address}}] Copy the lines given by \syntax{[range]} to below the line given by \syntax{{address}}.
  As the syntax indicates, \command{:copy} command does not use register. This feature can be useful when you do not want the current value in the default register to be overwritten.
   \item[\syntax{:t}] Synonym for \command{:copy}. The command does not use register.
+
   \item[\syntax{:[range]m[ove] {address}}] Move the lines given by \syntax{[range]} to below the line given by \syntax{{address}}. The command does not use register.
   \item[\syntax{:[range]j[oin][!]}] Join \syntax{[range]} lines. With \syntax{[!]} the \syntax{join} does not insert or delete any spaces. If a \syntax{[range]} has equal start and end values, this command does nothing. The default behavior is to join the current line with the line below it.
   \item[\syntax{:norm[al][!] {commands}}] Execute Normal mode commands \syntax{{commands}} and return to Normal mode afterward. \syntax{{commands}} are executed like they are typed. For \syntax{undo}, all commands are undone together. Execution stops when an error is encountered. \syntax{{commands}} should be a complete command. If \syntax{{commands}} does not finish a command, the last one will be aborted as if \syntax{<Esc>} or \syntax{<C-C>} was typed. If the \syntax{[!]} is given, mappings will not be used. \syntax{{commands}} cannot start with a space. Put a count of 1 before it, namely ``\syntax{1 }'' is one space.
+
   \item[\syntax{:{range}norm[al][!] {commands}}] Execute Normal mode commands \syntax{{commands}} for each line in the \syntax{{range}}. Before executing the \syntax{{commands}}, the cursor will be positioned in the first column of the range, for each line. Except for that, it is the same as the ``\syntax{:normal}'' command without a range.
+
   \item[\syntax{:[range]s[ubstitute]/{pattern}/{string}/[flags] [count]}] For each line in \syntax{[range]} replace a match of \syntax{{pattern}} with \syntax{{string}}. When \syntax{[range]} and \syntax{[count]} are omited, replace in the current line only. When \syntax{[count]} is given, replace in \syntax{[count]} lines, starting in the current line only.
+
   \item[\syntax{:[range]g[lobal]/{pattern}/[cmd]}] Execute the Ex command \syntax{[cmd]} (default ``\syntax{:p}'') on the lines within \syntax{[range]} where \syntax{{pattern}} matches.
   \item[\syntax{:[range]g[lobal]!/{pattern}/[cmd]}] Execute the Ex command \syntax{[cmd]} (default ``\syntax{:p}'') on the lines within \syntax{[range]} where \syntax{{pattern}} does NOT match.
   \item[\syntax{[count]@:}] Repeat last Command-line command \syntax{[count]} times.
+
   \item[\syntax{<C-d>}] List names  that match the pattern in front of the cursor.
   \item[\syntax{<Tab>}] A match is done and inserted on the pattern in front of the cursor. When typed again and there were multiple matches, the next match is inserted like a cycle. When the pattern is supposed to match with filepaths, \syntax{<Tab>} willmatch directories and filenames relative to the current working directory.
   \item[\syntax{<S-Tab>}] The last match is inserted. The matches cycle in the opposite direction. 
@@ -204,6 +172,7 @@ Vim stands for \emph{vi improved}.} Command-Line mode is also enabled when we pr
   \item[\syntax{|}] Used to separate commands, so that multiple commands can be entered in one line.
   \item[\syntax{<C-f>}] Open Command-Line window.
     %buffer
+
   \item[\syntax{:ls[!]}] Show all buffers. When the \syntax{!} is included the list will also show unlisted buffers.
     There are indicators (\cref{tab:bufferindicator}) proceeding the name of a buffer. Each buffer has a unique number. That number will not change, and can be used as a reference to the buffer.
     \begin{table}[hbtp]
@@ -222,6 +191,7 @@ Vim stands for \emph{vi improved}.} Command-Line mode is also enabled when we pr
       \caption{The indicators of buffer.}
       \label{tab:bufferindicator}
     \end{table}
+---------------
   \item[\syntax{:[N]b[uffer][!] [N]}] Edit buffer \syntax{[N]} from the buffer list. If \syntax{[N]} is not given, the current buffer remains being edited.
   \item[\syntax{:[N]b[uffer][!] {bufname}}] Edit buffer named \verb|{bufname}|. The \verb|{bufname}| need only contain enough characters from the filepath to uniquely identify the buffer. Note that \syntax{<Tab>}-autocompletion can be used here.
   \item[\syntax{:[N]bp[revious][!] [N]}] Go to \syntax{[N]}th previous buffer in the buffer list. \syntax{[N]} defaults to one. Wraps around the start of the buffer list.

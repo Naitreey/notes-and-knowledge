@@ -687,9 +687,6 @@ See also [Unix shell initialization](#unix-shell-init).
 
 ## For bash
 
-*   interactive shell (无论 login 或 nonlogin) 的初始化结果是基本相同的, 他
-    们都执行了 /etc/profile.d/*.sh, ~/.bashrc, /etc/bashrc 或
-    /etc/bash.bashrc.
 *   non-interactive shell 对于 login 和 nonlogin 初始化结果不同. 前者与
     interactive shell 相同, 后者基本不执行初始化.
 

@@ -1198,6 +1198,20 @@ about evaluation order
     i, x[i] = x[i], i
     print(x) # [1, 0]
     
+
+augmented assignment statements
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+::
+
+  augmented_assignment_stmt ::=  augtarget augop (expression_list | yield_expression)
+  augtarget                 ::=  identifier | attributeref | subscription | slicing
+  augop                     ::=  "+=" | "-=" | "*=" | "@=" | "/=" | "//=" | "%=" | "**="
+                                 | ">>=" | "<<=" | "&=" | "^=" | "|="
+
+- 对于 augmented assignment, 首先尝试对 LHS 进行 inplace 操作, 例如调用相关的
+  special methods; 若无法进行 inplace 操作, 则 fallback 至 "先操作再重新赋值"
+  的逻辑.
+
 annotated assignment statement
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ::

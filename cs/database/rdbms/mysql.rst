@@ -1,57 +1,3 @@
-- error logging
-
-  mysqld 根据 ``--log-error`` option 来决定错误日志输出. 若这个选项没有设置,
-  日志写到 stderr. 此时 ``log_error`` system variable 为 ``stderr``.
-
-.. -------------------------------
-
-- SQL pattern
-
-  * ``_``: any single character, equivalent to ``?`` in shell.
-
-  * ``%``: any number of any character, equivalent to ``*`` in shell.
-
-
-.. -------------------------------
-
-
-* mysql 不支持 ``SELECT DISTINCT ON (...)``, 聚合时若要根据某列的 distinct 来
-  选择行, 可以通过 ``COUNT(DISTINCT <colname>)`` 来迂回处理. 这很 hack.
-
-- 可以给用户分配不存在的数据库的权限. 然后这个用户可以创建这个数据库.
-
-- NULL
-
-  * The result of any arithmetic comparison with NULL is also NULL, 判断是否是 NULL
-    只能用 ``IS NULL``, ``IS NOT NULL``.
-
-  * Two NULL values are regarded as equal.
-
-  * When doing an ORDER BY, NULL values are presented first if you do ORDER BY ... ASC
-    and last if you do ORDER BY ... DESC.
-
-- In MySQL, 0 or NULL means false and anything else means true. The default truth
-  value from a boolean operation is 1.
-
-- ``LIKE`` 后面的 SQL pattern 必须匹配整个字符串, 才算匹配.
-  ``RLIKE`` ``REGEXP`` 后面的正则 pattern 只需字符串的任何地方匹配即可, 类似 python
-  中的 ``re.search``.
-
-- ``COUNT()`` does not count NULL values. 因此若某个列中有 NULL, ``count(<col>)``
-  不等于 ``count(*)``.
-
-- group
-
-  * If you name columns to select in addition to the ``COUNT()`` value, a ``GROUP BY``
-    clause should be present that names those same columns. This can be enforced by
-    the ``ONLY_FULL_GROUP_BY`` SQL mode.
-
-  * ``select`` 时, 原始数据集本身构成一个 group, 所以可以在这个组上直接使用聚合函数,
-    生成一行结果.
-
-- 一个表必须有一个或者一组 unique key 可以唯一识别不同的资源实例, 否则无法完全
-  避免多个 session 同时创建同一个实例时导致的重复 (race condition).
-
 SQL Language Structure
 ======================
 
@@ -285,6 +231,12 @@ NULL, NOT NULL
 ^^^^^^^^^^^^^^
 - If unspecified, default is NULL.
 
+- The result of any arithmetic comparison with NULL is also NULL, 判断是否是
+  NULL 只能用 ``IS NULL``, ``IS NOT NULL``.
+
+- When doing an ORDER BY, NULL values are presented first if you do ORDER BY
+  ... ASC and last if you do ORDER BY ... DESC.
+
 DEFAULT
 ^^^^^^^
 explicit default value
@@ -383,14 +335,12 @@ data type attributes
 
 integer types
 ^^^^^^^^^^^^^
-
-TINYINT
-"""""""
-
-- 1 byte.
-
+BOOL
+""""
 - BOOL, BOOLEAN are synonyms for TINYINT(1). 所以实际上 BOOL 可以存 0-255
   的数据. FUCKED UP.
+
+- TRUE, FALSE 实际上是 1, 0 数值.
 
 - Which data type to use for BOOL, BOOL a.k.a. TINYINT(1) or BIT(1)?
 
@@ -398,6 +348,15 @@ TINYINT
 
   * TINYINT(1) 的默认输出就是 1, 0 integer. 无需额外转换, 与 true/false
     一致. BIT(1) 可能需要应用去额外转换.
+
+- falsy values: 0, FALSE, NULL.
+
+- truthy values: anything else.
+
+TINYINT
+"""""""
+
+- 1 byte.
 
 SMALLINT
 """"""""
@@ -3087,6 +3046,29 @@ convert utf8mb3 to utf8mb4
 
 Functions and Operators
 =======================
+String Functions and Operations
+-------------------------------
+String Comparison Functions and Operatiors
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+LIKE
+""""
+- SQL pattern
+
+  * ``_``: any single character, equivalent to ``?`` in shell.
+
+  * ``%``: any number of any character, equivalent to ``*`` in shell.
+
+- ``LIKE`` 后面的 SQL pattern 必须匹配整个字符串, 才算匹配.
+
+Regular Expressions
+^^^^^^^^^^^^^^^^^^^
+- ``RLIKE`` ``REGEXP`` 后面的正则 pattern 只需字符串的任何地方匹配即可, 类似
+  python 中的 ``re.search``.
+
+Aggregate Functions
+-------------------
+- ``COUNT()`` does not count NULL values. 因此若某个列中有 NULL, ``count(<col>)``
+  不等于 ``count(*)``.
 
 Date and Time Functions
 -----------------------
@@ -5552,6 +5534,9 @@ Client Programming Design Patterns
   denormalization. Denormalized form is NOT unnormalized form. 
 
   See also [SENormalization]_, [WikiDenormalization]_.
+
+- 一个表必须有一个或者一组 unique key 可以唯一识别不同的资源实例, 否则无法完全
+  避免多个 session 同时创建同一个实例时导致的重复 (race condition).
 
 Installation
 =============

@@ -71,19 +71,25 @@ preparation
   设置.
 
 - admin node 用于控制部署过程. 安装 ceph-deploy package::
+
     wget -q -O- 'https://download.ceph.com/keys/release.asc' | sudo apt-key add -
     echo deb https://download.ceph.com/debian-{ceph-release}/ {ubuntu-release} main | sudo tee /etc/apt/sources.list.d/ceph.list
     sudo apt-get update && sudo apt-get install ceph-deploy
+
   其中, ceph-release 为 `ceph release`_ code name; ubuntu-release 为恰当的
   官方支持的 ubuntu release code name. 很不幸官方到底支持哪些 ubuntu 版本,
   需要去 `download directory`_ 找. 例如, 17.10 系统也得使用 xenial.
 
 - cluster node 上安装 ssh server::
+
     sudo apt-get install openssh-server
 
 - admin node 设置至所有 cluster node 某用户的 password-less ssh::
+
     ssh-copy-id {username}@{node}
+
   设置 ``~/.ssh/config`` 从而连接某个 host 时, 自动使用配置好的用户::
+
     Host node1
        Hostname node1
        User {username}
@@ -95,12 +101,16 @@ preparation
        User {username}
 
 - 每个 cluster node 上的 ssh 用户需要有 passwordless sudo 权限::
+
     echo "{username} ALL = (root) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/{username}
     sudo chmod 0440 /etc/sudoers.d/{username}
 
 - cluster node 上安装 ntp server::
+
     sudo apt install ntp
+
   配置节点之间互为 ntp peer 并重启::
+
     # /etc/ntp.conf
     ...
     peer {another-node-hostname}
@@ -115,84 +125,111 @@ preparation
 deploy RADOS cluster
 ~~~~~~~~~~~~~~~~~~~~
 - install ceph packages on all cluster nodes::
+
     ceph-deploy install --release {ceph-release} {node}...
 
 - create new cluster::
+
     ceph-deploy new {monitor-node}...
 
 - 修改 ``ceph.conf`` 添加 ``public network`` setting 为节点 IP 所在子网.
 
 - deploy initial monitors::
+
     ceph-deploy mon create-initial
+
   创建 cluster 时, 同时会生成管理员 ``client.admin`` keyring 以及各种 bootstrap
   keyrings, 每个 keyring (用户) 具有用于部署相应的服务的所需权限.
 
 - push configuration and admin.client keyrings to Ceph Nodes. 让
   各个节点成为 admin node, 执行 ceph CLI 时自动以 client.admin 认证::
+
     ceph-deploy admin {node}...
 
 - add/remove a monitor::
+
     ceph-deploy mon add {node}
     ceph-deploy mon destroy {node}...
+
   Ensure that you add or remove monitors such that they may arrive at a consensus
   among a majority of monitors according to Paxos algorithm.
 
 - deploy manager daemons on all monitor hosts::
+
     ceph-deploy mgr create {monitor-node}...
 
 - deploy Ceph OSD::
+
     ceph-deploy osd create {node}:{device} ...
+
   若 OSD 设备本身有分区表信息, 创建会失败. 需要先破坏分区表信息::
+
     ceph-deploy disk zap {node}:{device}
 
 - remove Ceph OSD::
+
     ceph osd out {N}
     systemctl stop ceph-osd@{N}.service
     ceph osd purge {N} --yes-i-really-mean-it
     umount /var/lib/ceph/osd/ceph-{N}
 
 - push/pull configuration to cluster nodes::
+
     ceph config {push|pull} {node}...
 
 - 设置节点为 admin node::
+
     ceph admin {node}...
 
 deploy CephFS
 ~~~~~~~~~~~~~
 - create MDS servers::
+
     ceph-deploy mds create {node}...
 
 - create a cephfs filesystem and pools for its data::
+
     ceph osd pool create <fs>_data <pg_num>
     ceph osd pool create <fs>_metadata <pg_num>
     ceph fs new <fs> <fs>_metadata <fs>_data 
+
   只能创建一个, 目前创建多个 cephfs 还没有 production ready.
 
 - 创建文件系统的 ceph user, 进行访问控制::
+
     ceph fs authorize <fs> client.<user> [<directory> <permission>]+
+
   输出的 key 即是 mount 时需要使用的密码.
 
 - CephFS client kernel >=4.5 才能支持 jewel release 以上的 CRUSH tunables v5
   配置. 否则需要切换至 hammer release 的 tunables v4 profile::
+
     ceph osd crush tunables hammer
 
 - cephfs user node 安装 ceph packages::
+
     ceph-deploy install --release {ceph-release} {client-node}...
+
   客户端系统需要是 ceph 支持的版本.
 
 - 客户端 mount cephfs. 需要 4.x kernel::
+
     mount -t ceph -o name=<user>,secretfile=<secret-file> \
           <monitor-1>:6789,<monitor-2>:6789,...:<dir-in-fs> <mountpoint>
+
   secret-file 应保证只有相关用户可读.
 
 - 修改所需访问目录的 owner, group 以及读写权限让客户端 non-root 程序可以读写::
+
     chown ...
     chmod ...
 
 deploy RGW
 ~~~~~~~~~~
 - 如果需要 RESTful API 访问 ceph cluster, deploy RGW server::
+
     ceph-deploy rgw create {gateway-node}...
+
   可以部署在一个 client node 或 cluster node 上.
 
 steps to uninstall
@@ -200,9 +237,11 @@ steps to uninstall
 - 各客户端停止使用 RGW, unmap RBD images, unmount CephFS.
 
 - 删除节点和客户端上的 ceph packages::
+
     ceph-deploy purge <hostname>...
 
 - 删除节点上的 ceph data::
+
     ceph-deploy purgedata <hostname>...
 
 - admin node 上删除 ceph-deploy package.
@@ -648,16 +687,25 @@ authorization
   type and the user ID ``TYPE.ID``. types are: client, osd, mgr, mds.
 
 - A user capability has following format::
+
     <daemon-type> '<cap-list>'
+
   其中 ``cap-list`` is a comma separated list of capabilities::
+
     cap-list := <cap>, <cap>*
+
   ``cap`` 的具体格式为::
+
     cap := allow <access-spec> <match-spec>?
     cap := profile <name>
+
   ``access-spec`` 限制可以进行的操作, profile 指的是使用预设的某个权限 profile::
+
     access-spec := * | all | [ r || w || x ]
     access-spec := class <class-name> <method-name>?
+
   ``match-spec`` 进一步限制允许的 pool 或 namespace::
+
     match-sepc := pool=<pool-name> [namespace=<namespace-name>]? [object_prefix <prefix>]?
     match-spec := [namespace=<namespace-name>]? tag <application> <key>=<value>
 
